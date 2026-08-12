@@ -285,6 +285,7 @@ h1 {
 
 .guide-card img {
   width: 100%;
+  max-width: 112px;
   aspect-ratio: 0.78;
   border-radius: 6px;
   object-fit: cover;
@@ -469,10 +470,6 @@ h1 {
   .guide-card,
   .workshop-card {
     grid-template-columns: 1fr;
-  }
-
-  .guide-card img {
-    max-height: 220px;
   }
 
   .flow-steps {

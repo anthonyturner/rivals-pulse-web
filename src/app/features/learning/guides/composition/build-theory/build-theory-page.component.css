@@ -290,6 +290,7 @@ dd {
 
 .build-card img {
   width: 100%;
+  max-width: 104px;
   aspect-ratio: 0.78;
   border-radius: 7px;
   object-fit: cover;
@@ -422,10 +423,6 @@ dd {
 
   .build-card {
     grid-template-columns: 1fr;
-  }
-
-  .build-card img {
-    max-height: 230px;
   }
 
   .signal-grid {

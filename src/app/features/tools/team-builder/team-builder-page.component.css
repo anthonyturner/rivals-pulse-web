@@ -155,6 +155,7 @@ h2 {
 
 .team-slot img {
   width: 100%;
+  max-width: 118px;
   height: 118px;
   object-fit: cover;
   object-position: top center;
@@ -388,6 +389,7 @@ meter {
 
 .hero-thumb img {
   width: 100%;
+  max-width: 128px;
   aspect-ratio: 1;
   border-radius: 7px;
   object-fit: cover;
