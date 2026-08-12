@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  --modal-gold: #ffd866;
+  --heroes-box-shadow: inset 1px 0 var(--modal-gold), inset 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.heroes-page {
+  min-height: 100%;
+  padding: 32px;
+}
+
+app-hero-grid {
+  margin-bottom: 1rem !important;
+}
+
+app-hero-page-header,
+app-hero-grid,
+app-hero-content {
+  width: 100%;
+  margin: 0 auto;
+}
+
+app-hero-grid,
+app-hero-content {
+  display: block;
+  min-width: 0;
+}
+
+@media (max-width: 920px) {
+  .heroes-page {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .heroes-page {
+    padding: var(--mobile-page-gutter);
+  }
+}

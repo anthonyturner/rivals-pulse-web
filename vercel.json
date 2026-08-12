@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run vercel:build",
-  "outputDirectory": "dist/marvel-rivals-coach/browser",
+  "outputDirectory": "dist/rivals-pulse-coach/browser",
   "rewrites": [
     {
       "source": "/((?!api/).*)",
@@ -11,7 +11,7 @@
   "crons": [
     {
       "path": "/api/sync/home-news",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/sync/tier-list",

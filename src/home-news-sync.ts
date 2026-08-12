@@ -1,12 +1,54 @@
 import { createClient } from '@tursodatabase/serverless/compat';
 
-type NewsItem = {
+import { StringUtility } from './app/shared/utilities/string-utility.js';
+
+export type NewsItem = {
   label: string;
   title: string;
   description: string;
   sourceUrl: string;
   thumbnailUrl: string;
   thumbnailAlt: string;
+  publishedAt?: string;
+  videoUrl?: string;
+  videoPosterUrl?: string;
+  videoTitle?: string;
+};
+
+type SeasonUpdate = {
+  category: string;
+  date: string;
+  title: string;
+  description: string;
+  sourceUrl: string;
+  videoUrl?: string;
+  videoPosterUrl?: string;
+  videoTitle?: string;
+};
+
+type SeasonHighlight = {
+  label: string;
+  title: string;
+  description: string;
+};
+
+type DashboardSection = {
+  eyebrow: string;
+  title: string;
+  description: string;
+};
+
+type SeasonDashboardContent = {
+  heroUsage: DashboardSection;
+  officialUpdates: DashboardSection;
+  events: DashboardSection & { sourceLabel: string; sourceUrl: string };
+};
+
+type SeasonGlanceContent = {
+  ariaLabel: string;
+  status: { label: string; value: string };
+  latestHero: { label: string; name: string; detail: string; imageUrl: string };
+  tuning: { label: string; sourceLabel: string };
 };
 
 type QuickLink = {
@@ -27,7 +69,10 @@ export type HomeNewsSyncResult = {
   updatedAt: string;
   latestNews: NewsItem[];
   battlePass: BattlePassSnapshot;
-  steamItemsRead: number;
+  officialItemsRead: number;
+  seasonUpdates: SeasonUpdate[];
+  latestTuning?: SeasonUpdate;
+  seasonEvents: SeasonHighlight[];
 };
 
 const officialHomeSource = {
@@ -44,6 +89,17 @@ const fallbackBattlePassSnapshot: BattlePassSnapshot = {
   latestHeroImageUrl: '/images/heroes/jubilee.png',
 };
 const fallbackThumbnail = '/images/site/heroes-banner.jpg';
+const {
+  cleanText,
+  extractByClass,
+  formatList,
+  parseAttributes,
+  truncate,
+} = StringUtility;
+const absoluteUrl = (value: string) => StringUtility.absoluteUrl(value, officialHomeSource.url);
+const firstImage = (html: string) => StringUtility.firstImage(html, officialHomeSource.url);
+const titleCaseName = StringUtility.titleCase;
+const slugifyHeroName = StringUtility.heroSlug;
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;
@@ -68,7 +124,38 @@ export async function syncHomeNews(): Promise<HomeNewsSyncResult> {
     const fetchedAt = new Date().toISOString();
     const officialSnapshot = parseOfficialHomeSnapshot(officialHomeHtml);
     const battlePassSnapshot = officialSnapshot.battlePass;
-    const latestNews = buildLatestNewsCards(officialSnapshot.news, battlePassSnapshot);
+    const latestTuning = officialSnapshot.news
+      .find((item) => item.label === 'Balance Update');
+    const latestPatch = officialSnapshot.news
+      .find((item) => item.label === 'Patch Notes');
+    const latestSeasonUpdate = officialSnapshot.news
+      .find((item) => item.label === 'Season Update');
+    const latestPatchHtml = latestPatch ? await fetchText(latestPatch.sourceUrl) : undefined;
+    const latestSeasonUpdateHtml = latestSeasonUpdate
+      ? await fetchOptionalText(latestSeasonUpdate.sourceUrl)
+      : undefined;
+    const seasonUpdateVideo = latestSeasonUpdateHtml
+      ? extractArticleVideo(latestSeasonUpdateHtml)
+      : undefined;
+    const enrichedNews = officialSnapshot.news.map((item) => (
+      item.sourceUrl === latestPatch?.sourceUrl && latestPatchHtml
+        ? {
+            ...item,
+            description: buildPatchDescription(item.description, latestPatchHtml),
+          }
+        : item.sourceUrl === latestSeasonUpdate?.sourceUrl && seasonUpdateVideo
+          ? { ...item, ...seasonUpdateVideo }
+          : item
+    ));
+    const latestNews = buildLatestNewsCards(enrichedNews);
+    const seasonUpdates = enrichedNews.slice(0, 3).map(toSeasonUpdate);
+    const seasonEvents = latestPatchHtml ? parseSeasonEvents(latestPatchHtml) : [];
+    const seasonDashboard = buildSeasonDashboardContent(
+      battlePassSnapshot,
+      latestPatch?.sourceUrl ?? officialHomeSource.url,
+      fetchedAt,
+    );
+    const seasonGlance = buildSeasonGlanceContent(battlePassSnapshot);
 
     await Promise.all([
       upsertExternalSource(db, officialHomeSource, officialSnapshot, fetchedAt, 'success', null),
@@ -77,6 +164,12 @@ export async function syncHomeNews(): Promise<HomeNewsSyncResult> {
       upsertContentBlock(db, 'currentFocusTitle', focusTitle(latestNews), fetchedAt),
       upsertContentBlock(db, 'currentFocusDescription', focusDescription(latestNews), fetchedAt),
       upsertContentBlock(db, 'lastChecked', fetchedAt.slice(0, 10), fetchedAt),
+      upsertContentBlock(db, 'seasonUpdates', seasonUpdates, fetchedAt),
+      upsertContentBlock(db, 'latestTuning', latestTuning ? toSeasonUpdate(latestTuning) : null, fetchedAt),
+      upsertContentBlock(db, 'seasonEvents', seasonEvents, fetchedAt),
+      upsertContentBlock(db, 'seasonEventsSourceUrl', latestPatch?.sourceUrl ?? officialHomeSource.url, fetchedAt),
+      upsertContentBlock(db, 'seasonDashboard', seasonDashboard, fetchedAt),
+      upsertContentBlock(db, 'seasonGlance', seasonGlance, fetchedAt),
     ]);
 
     await finishSyncRun(db, runId, 'success', `Synced ${latestNews.length} home news cards`, fetchedAt);
@@ -85,7 +178,10 @@ export async function syncHomeNews(): Promise<HomeNewsSyncResult> {
       updatedAt: fetchedAt,
       latestNews,
       battlePass: battlePassSnapshot,
-      steamItemsRead: officialSnapshot.news.length,
+      officialItemsRead: officialSnapshot.news.length,
+      seasonUpdates,
+      latestTuning: latestTuning ? toSeasonUpdate(latestTuning) : undefined,
+      seasonEvents,
     };
   } catch (error) {
     const finishedAt = new Date().toISOString();
@@ -102,7 +198,7 @@ async function fetchText(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: {
       accept: 'text/html,application/xhtml+xml',
-      'user-agent': 'marvel-rivals-coach-content-sync/1.0',
+      'user-agent': 'rivals-pulse-content-sync/1.0',
     },
   });
 
@@ -113,16 +209,109 @@ async function fetchText(url: string): Promise<string> {
   return response.text();
 }
 
-function buildLatestNewsCards(
-  officialNews: NewsItem[],
-  battlePass: BattlePassSnapshot,
-): NewsItem[] {
-  const seasonCard = officialNews.find((item) => item.title.includes(battlePass.currentSeason));
-  const cards = seasonCard
-    ? [seasonCard, ...officialNews.filter((item) => item !== seasonCard)]
-    : officialNews;
+async function fetchOptionalText(url: string): Promise<string | undefined> {
+  try {
+    return await fetchText(url);
+  } catch {
+    return undefined;
+  }
+}
 
-  return cards.slice(0, 4);
+function buildLatestNewsCards(officialNews: NewsItem[]): NewsItem[] {
+  return officialNews.slice(0, 4);
+}
+
+export function buildPatchDescription(teaser: string, html: string): string {
+  const beforeFixes = html.split(/<h2[^>]*>\s*Fixes and Optimizations\s*<\/h2>/i)[0];
+  const additions = Array.from(beforeFixes.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>/gi))
+    .map((match) => describePatchAddition(cleanText(match[1])))
+    .filter((value): value is string => Boolean(value));
+  const uniqueAdditions = [...new Set(additions)].slice(0, 5);
+  const fixesHtml = html.slice(beforeFixes.length);
+  const fixAreas = Array.from(fixesHtml.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>/gi))
+    .map((match) => cleanText(match[1]))
+    .filter((heading) => /^(Heroes|System|Console|PC|All Platforms|Maps and Modes)$/i.test(heading))
+    .map(normalizeFixArea);
+  const details = [
+    uniqueAdditions.length ? `It includes ${formatList(uniqueAdditions)}` : '',
+    fixAreas.length ? `${formatList([...new Set(fixAreas)])} fixes` : '',
+  ].filter(Boolean);
+
+  return details.length ? truncate(`${teaser} ${details.join(', plus ')}.`, 420) : teaser;
+}
+
+function normalizeFixArea(heading: string): string {
+  const normalized: Record<string, string> = {
+    heroes: 'hero',
+    'all platforms': 'all-platform',
+    'maps and modes': 'map and mode',
+  };
+
+  return normalized[heading.toLowerCase()] ?? heading.toLowerCase();
+}
+
+function describePatchAddition(heading: string): string | undefined {
+  if (/^New In Store$/i.test(heading)) return 'new store bundles and cosmetics';
+  if (/^New Event:\s*/i.test(heading)) return heading.replace(/^New Event:\s*/i, '');
+  if (/Battle Pass/i.test(heading)) return `the ${heading}`;
+  if (/Event|Chrono-Rush|POP & WIN|Twitch Drops|Rank Rewards/i.test(heading)) return heading;
+  return undefined;
+}
+
+function buildSeasonDashboardContent(
+  battlePass: BattlePassSnapshot,
+  eventsSourceUrl: string,
+  fetchedAt: string,
+): SeasonDashboardContent {
+  const checkedDate = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeZone: 'UTC',
+  }).format(new Date(fetchedAt));
+
+  return {
+    heroUsage: {
+      eyebrow: `${battlePass.currentSeason} meta`,
+      title: 'Most-used heroes',
+      description:
+        'All-ranks pick rate, with mirror matches excluded from win-rate calculations.',
+    },
+    officialUpdates: {
+      eyebrow: 'Official updates',
+      title: 'Latest news and patch notes',
+      description:
+        `The most relevant announcements for the current season, newest first. Official site checked ${checkedDate}.`,
+    },
+    events: {
+      eyebrow: 'In season now',
+      title: 'Events and rewards',
+      description:
+        `Current objectives and unlocks from the latest official patch notes. Official site checked ${checkedDate}.`,
+      sourceLabel: 'Official patch notes',
+      sourceUrl: eventsSourceUrl,
+    },
+  };
+}
+
+function buildSeasonGlanceContent(battlePass: BattlePassSnapshot): SeasonGlanceContent {
+  const latestHero = battlePass.latestHero ?? '';
+
+  return {
+    ariaLabel: `${battlePass.currentSeason} at a glance`,
+    status: {
+      label: 'Season status',
+      value: 'Live now',
+    },
+    latestHero: {
+      label: 'Newest hero',
+      name: latestHero,
+      detail: `${battlePass.currentSeason} latest release`,
+      imageUrl: battlePass.latestHeroImageUrl ?? '',
+    },
+    tuning: {
+      label: 'Latest tuning',
+      sourceLabel: 'Official balance post',
+    },
+  };
 }
 
 async function buildQuickLinks(
@@ -200,21 +389,26 @@ function parseOfficialHomeSnapshot(html: string): { news: NewsItem[]; battlePass
   };
 }
 
-function parseOfficialNewsCards(html: string): NewsItem[] {
-  const banner = html.match(/<div class="banner">([\s\S]*?)<\/div>\s*<div class="list">/i)?.[1] ?? '';
+export function parseOfficialNewsCards(html: string): NewsItem[] {
+  const newsRegion = html.match(/<div class="newsCms"[^>]*>([\s\S]*?)<div class="news-tab">/i)?.[1]
+    ?? html.match(/<div class="banner">([\s\S]*?)<\/div>\s*<div class="list">/i)?.[1]
+    ?? '';
   const cards: NewsItem[] = [];
+  const seenTitles = new Set<string>();
   const anchorPattern = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
   let match: RegExpExecArray | null;
 
-  while ((match = anchorPattern.exec(banner))) {
+  while ((match = anchorPattern.exec(newsRegion))) {
     const attrs = parseAttributes(match[1]);
     const body = match[2];
-    const title = cleanText(extractByClass(body, 'title'));
+    const title = cleanText(extractByClass(body, 'title') || extractByClass(body, 'til'));
     const description = cleanText(extractByClass(body, 'desc'));
 
-    if (!title) {
+    if (!title || seenTitles.has(title)) {
       continue;
     }
+
+    seenTitles.add(title);
 
     cards.push({
       label: labelForOfficialNews(title),
@@ -223,6 +417,9 @@ function parseOfficialNewsCards(html: string): NewsItem[] {
       sourceUrl: absoluteUrl(attrs['href'] ?? officialHomeSource.url),
       thumbnailUrl: firstImage(body) ?? fallbackThumbnail,
       thumbnailAlt: `${title} thumbnail`,
+      publishedAt: cleanText(
+        extractByClass(body, 'date') || extractByClass(body, 'time'),
+      ) || undefined,
     });
   }
 
@@ -234,6 +431,108 @@ function parseOfficialNewsCards(html: string): NewsItem[] {
     thumbnailUrl: fallbackThumbnail,
     thumbnailAlt: 'Marvel Rivals Season 9 thumbnail',
   }];
+}
+
+export function parseSeasonEvents(html: string): SeasonHighlight[] {
+  const article = html.match(/<div[^>]*class="[^"]*artText[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i)?.[1]
+    ?? html;
+  const content = article.split(/<h2[^>]*>\s*Fixes and Optimizations\s*<\/h2>/i)[0];
+  const candidates: Array<SeasonHighlight & { score: number; order: number }> = [];
+  const sectionPattern = /<h3[^>]*>([\s\S]*?)<\/h3>([\s\S]*?)(?=<h[23]\b|$)/gi;
+  let match: RegExpExecArray | null;
+  let order = 0;
+
+  while ((match = sectionPattern.exec(content))) {
+    const title = cleanText(match[1]).replace(/^New Event:\s*/i, '');
+    const fullDescription = cleanText(match[2]);
+    const description = truncate(fullDescription, 240);
+    const searchable = `${title} ${fullDescription}`.toLowerCase();
+    const score = eventScore(searchable);
+
+    if (!title || !description || score === 0) {
+      continue;
+    }
+
+    candidates.push({
+      label: eventLabel(searchable),
+      title,
+      description,
+      score,
+      order: order++,
+    });
+  }
+
+  return candidates
+    .sort((first, second) => second.score - first.score || first.order - second.order)
+    .slice(0, 3)
+    .map(({ label, title, description }) => ({ label, title, description }));
+}
+
+function extractArticleVideo(
+  html: string,
+): Pick<NewsItem, 'videoUrl' | 'videoPosterUrl' | 'videoTitle'> | undefined {
+  const match = html.match(/<div[^>]*class="[^"]*video_ctn[^"]*"([^>]*)>/i);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const attrs = parseAttributes(match[1]);
+  const videoUrl = attrs['data-hdmovieurl'] ?? attrs['data-movieurl'];
+
+  if (!videoUrl) {
+    return undefined;
+  }
+
+  return {
+    videoUrl: absoluteUrl(videoUrl),
+    videoPosterUrl: absoluteUrl(attrs['data-startimg'] ?? fallbackThumbnail),
+    videoTitle: cleanText(attrs['data-name']) || undefined,
+  };
+}
+
+function eventScore(value: string): number {
+  if (/new event|event missions|event period|during the event|chrono-rush/.test(value)) return 100;
+  if (/battle pass/.test(value)) return 90;
+  if (
+    /twitch drops|rank rewards|free rewards|exclusive rewards|unlock an exclusive|earn \d+ units/.test(
+      value,
+    )
+  ) {
+    return 80;
+  }
+  if (/pop & win|limited.time|limited time/.test(value)) return 60;
+  return 0;
+}
+
+function eventLabel(value: string): string {
+  if (value.includes('battle pass')) return 'Battle Pass';
+  if (value.includes('twitch drops')) return 'Twitch Drops';
+  if (value.includes('rank reward')) return 'Rank reward';
+  if (/unlock an exclusive|earn \d+ units/.test(value)) return 'Event rewards';
+  return 'Limited-time event';
+}
+
+function toSeasonUpdate(item: NewsItem): SeasonUpdate {
+  return {
+    category: item.label,
+    date: formatOfficialDate(item.publishedAt),
+    title: item.title,
+    description: item.description,
+    sourceUrl: item.sourceUrl,
+    videoUrl: item.videoUrl,
+    videoPosterUrl: item.videoPosterUrl,
+    videoTitle: item.videoTitle,
+  };
+}
+
+function formatOfficialDate(value: string | undefined): string {
+  const match = value?.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+
+  if (!match) return value ?? 'Recently';
+
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' })
+    .format(new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`));
 }
 
 function parseLatestOfficialHero(html: string): { name: string; imageUrl?: string } | undefined {
@@ -370,76 +669,4 @@ function requireEnv(name: string): string {
   }
 
   return value;
-}
-
-function extractByClass(html: string, className: string): string {
-  const match = html.match(new RegExp(`<[^>]*class="${className}"[^>]*>([\\s\\S]*?)<\\/[^>]+>`, 'i'));
-
-  return match?.[1] ?? '';
-}
-
-function firstImage(html: string): string | undefined {
-  const match = html.match(/<img\b[^>]*\bsrc="([^"]+)"/i);
-
-  return match ? absoluteUrl(decodeHtml(match[1])) : undefined;
-}
-
-function parseAttributes(value: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  const attrPattern = /([a-zA-Z0-9_-]+)="([^"]*)"/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = attrPattern.exec(value))) {
-    attrs[match[1]] = decodeHtml(match[2]);
-  }
-
-  return attrs;
-}
-
-function absoluteUrl(value: string): string {
-  if (value.startsWith('//')) {
-    return `https:${value}`;
-  }
-
-  if (value.startsWith('/')) {
-    return `https://www.marvelrivals.com${value}`;
-  }
-
-  return value;
-}
-
-function cleanText(value: string): string {
-  return decodeHtml(value)
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function decodeHtml(value: string): string {
-  return value
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
-
-function titleCaseName(value: string): string {
-  return cleanText(value)
-    .toLowerCase()
-    .split(/(\s+|-|&)/)
-    .map((part) => /^[a-z]/.test(part) ? part[0].toUpperCase() + part.slice(1) : part)
-    .join('')
-    .replace(/\bAnd\b/g, '&');
-}
-
-function slugifyHeroName(value: string): string {
-  return cleanText(value)
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/['.]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
 }

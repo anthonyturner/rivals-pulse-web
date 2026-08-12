@@ -6,7 +6,7 @@ import { createTursoClient } from './turso-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const glossaryPath = join(projectRoot, 'src', 'app', 'data', 'glossary.mock.json');
+const glossaryPath = join(projectRoot, 'data', 'seeds', 'glossary.mock.json');
 const requestedTerms = process.argv.slice(2).map((value) => normalizeLookupValue(value));
 
 if (requestedTerms.length === 0) {

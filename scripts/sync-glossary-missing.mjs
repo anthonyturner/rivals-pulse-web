@@ -14,7 +14,7 @@ if (vercelProductionOnly && process.env.VERCEL_ENV !== 'production') {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const glossaryPath = join(projectRoot, 'src', 'app', 'data', 'glossary.mock.json');
+const glossaryPath = join(projectRoot, 'data', 'seeds', 'glossary.mock.json');
 const glossaryTerms = JSON.parse(readFileSync(glossaryPath, 'utf8'));
 const db = createTursoClient();
 

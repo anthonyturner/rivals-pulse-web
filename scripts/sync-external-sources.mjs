@@ -36,7 +36,7 @@ for (const source of sources) {
     const response = await fetch(source.url, {
       headers: {
         accept: 'application/json',
-        'user-agent': 'marvel-rivals-coach-content-sync/1.0',
+        'user-agent': 'rivals-pulse-content-sync/1.0',
       },
     });
 

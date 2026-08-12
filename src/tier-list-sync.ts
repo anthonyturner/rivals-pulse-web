@@ -7,7 +7,7 @@ import type {
   TierListSeason,
   TierListTier,
   TierName,
-} from './tier-list.model.js';
+} from './contracts/tier-list.model.js';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;

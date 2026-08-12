@@ -1,0 +1,80 @@
+:host {
+  display: block;
+}
+
+.season-glance {
+  display: grid;
+  gap: 12px;
+}
+
+.season-glance article {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(7, 17, 31, 0.28);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px) saturate(125%);
+}
+
+.season-glance span {
+  margin: 0;
+  color: #43d8cd;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.season-glance .newest-hero-card {
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+}
+
+.newest-hero-card img {
+  width: 72px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: top center;
+  background: #07111f;
+}
+
+.newest-hero-card div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.season-glance strong {
+  font-size: 1.25rem;
+}
+
+.season-glance small {
+  color: rgba(255, 255, 255, 0.67);
+}
+
+.season-glance article > a {
+  width: fit-content;
+  color: #8ff8ef;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.season-glance article > a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1080px) {
+  .season-glance {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .season-glance {
+    grid-template-columns: 1fr;
+  }
+}

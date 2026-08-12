@@ -173,15 +173,16 @@ async function handleApiResponse(res: express.Response, getBody: () => unknown |
 }
 
 function isAuthorizedSyncRequest(req: express.Request): boolean {
-  if (req.headers['x-vercel-cron'] === '1') {
-    return true;
-  }
+  const syncSecrets = [
+    process.env['CRON_SECRET'],
+    process.env['SYNC_SECRET'],
+  ].filter((value): value is string => Boolean(value));
 
-  const syncSecret = process.env['SYNC_SECRET'];
-
-  if (!syncSecret) {
+  if (syncSecrets.length === 0) {
     return req.hostname === 'localhost' || req.hostname === '127.0.0.1';
   }
 
-  return req.headers.authorization === `Bearer ${syncSecret}`;
+  return syncSecrets.some(
+    (secret) => req.headers.authorization === `Bearer ${secret}`,
+  );
 }

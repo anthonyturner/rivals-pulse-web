@@ -164,7 +164,7 @@ async function fetchText(url) {
   const response = await fetch(url, {
     headers: {
       accept: 'text/html,application/xhtml+xml',
-      'user-agent': 'marvel-rivals-coach-official-hero-sync/1.0',
+      'user-agent': 'rivals-pulse-official-hero-sync/1.0',
     },
   });
 

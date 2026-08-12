@@ -3,39 +3,49 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import { syncGameStats } from '../../src/game-stats-sync.js';
 import { sendJson } from '../../src/vercel-api.js';
 
+const noStoreHeaders = {
+  'cache-control': 'private, no-store, max-age=0',
+};
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method && req.method !== 'GET' && req.method !== 'POST') {
-    sendJson(res, 405, { error: 'Method not allowed' });
+    sendJson(res, 405, { error: 'Method not allowed' }, noStoreHeaders);
     return;
   }
 
   if (!isAuthorizedSyncRequest(req)) {
-    sendJson(res, 401, { error: 'Missing sync authorization' });
+    sendJson(res, 401, { error: 'Missing sync authorization' }, noStoreHeaders);
     return;
   }
 
   try {
-    sendJson(res, 200, await syncGameStats());
+    sendJson(res, 200, await syncGameStats(), noStoreHeaders);
   } catch (error) {
     console.error('Game stats sync failed', error);
-    sendJson(res, 500, {
-      error: error instanceof Error ? error.message : 'Failed to sync game stats',
-    });
+    sendJson(
+      res,
+      500,
+      {
+        error: error instanceof Error ? error.message : 'Failed to sync game stats',
+      },
+      noStoreHeaders,
+    );
   }
 }
 
 function isAuthorizedSyncRequest(req: IncomingMessage): boolean {
-  if (req.headers['x-vercel-cron'] === '1') {
-    return true;
-  }
+  const syncSecrets = [
+    process.env['CRON_SECRET'],
+    process.env['SYNC_SECRET'],
+  ].filter((value): value is string => Boolean(value));
 
-  const syncSecret = process.env['SYNC_SECRET'];
-
-  if (!syncSecret) {
+  if (syncSecrets.length === 0) {
     return isLocalRequest(req);
   }
 
-  return req.headers.authorization === `Bearer ${syncSecret}`;
+  return syncSecrets.some(
+    (secret) => req.headers.authorization === `Bearer ${secret}`,
+  );
 }
 
 function isLocalRequest(req: IncomingMessage): boolean {

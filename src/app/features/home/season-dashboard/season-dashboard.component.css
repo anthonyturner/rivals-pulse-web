@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+.season-dashboard {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(1320px, 100%);
+  gap: 28px;
+  margin-inline: auto;
+  padding-top: 54px;
+  isolation: isolate;
+}
+
+.season-dashboard::before {
+  position: absolute;
+  z-index: -1;
+  inset: 20px -72px -64px;
+  border-radius: 18px;
+  content: '';
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 216, 102, 0.28), transparent 34%),
+    radial-gradient(circle at 82% 58%, rgba(3, 159, 159, 0.2), transparent 36%),
+    url('/images/site/heroes-fandom-background.png') center 120px / min(1050px, 88vw) auto repeat-y;
+  opacity: 0.22;
+}

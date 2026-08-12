@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.season-section {
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid rgba(42, 67, 101, 0.18);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 203, 0.34), rgba(255, 255, 255, 0.72)),
+    rgba(255, 255, 255, 0.54);
+  backdrop-filter: blur(14px) saturate(110%);
+}
+
+.section-heading {
+  display: flex;
+  gap: 28px;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.section-heading h2,
+.section-heading p {
+  margin: 0;
+}
+
+.section-heading h2 {
+  margin-top: 7px;
+  color: #0f172a;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.section-heading .eyebrow {
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.section-heading .description {
+  max-width: 670px;
+  margin-top: 12px;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .section-heading {
+    display: grid;
+    align-items: start;
+  }
+}

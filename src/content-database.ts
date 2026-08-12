@@ -1,9 +1,9 @@
 import { createClient, type Client } from '@tursodatabase/serverless/compat';
 
-import { GlossaryTerm } from './app/glossary/glossary.model.js';
-import { HomeContent, PortalCard } from './app/home/home-content.model.js';
-import { Hero, HeroVideo } from './app/heroes/hero.model.js';
-import { TierListResponse } from './tier-list.model.js';
+import { GlossaryTerm } from './app/features/reference/glossary/glossary.model.js';
+import { HomeContent, PortalCard } from './app/features/home/home-content.model.js';
+import { Hero, HeroVideo } from './app/features/heroes/hero.model.js';
+import { TierListResponse } from './contracts/tier-list.model.js';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;

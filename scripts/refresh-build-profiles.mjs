@@ -7,7 +7,7 @@ import { createTursoClient } from './turso-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const heroesPath = join(projectRoot, 'src', 'app', 'data', 'heroes.mock.json');
+const heroesPath = join(projectRoot, 'data', 'seeds', 'heroes.mock.json');
 
 const mockHeroes = JSON.parse(readFileSync(heroesPath, 'utf8'));
 const refreshedMockHeroes = mockHeroes.map(refreshHeroProfile);

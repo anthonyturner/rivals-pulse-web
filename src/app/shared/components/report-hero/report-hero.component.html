@@ -1,0 +1,87 @@
+<header class="report-hero" [class.report-hero--card]="variant() === 'card'">
+  <div class="hero-copy">
+    <p class="eyebrow">{{ eyebrow() }}</p>
+
+    @switch (headingLevel()) {
+      @case (2) {
+        <h2>{{ title() }}</h2>
+      }
+      @case (3) {
+        <h3>{{ title() }}</h3>
+      }
+      @default {
+        <h1>{{ title() }}</h1>
+      }
+    }
+
+    <p class="lede">{{ description() }}</p>
+
+    <div class="hero-controls">
+      <ng-content select="[reportHeroControls]" />
+    </div>
+
+    @if (actions().length) {
+      <div class="hero-actions">
+        @for (action of actions(); track action.label) {
+          @if (action.routerLink) {
+            <a
+              [class.primary-action]="action.primary"
+              [routerLink]="action.routerLink"
+              [attr.aria-label]="action.accessibleLabel ?? null"
+            >
+              {{ action.label }}
+            </a>
+          } @else if (action.href) {
+            <a
+              [class.primary-action]="action.primary"
+              [href]="action.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              [attr.aria-label]="action.accessibleLabel ?? null"
+            >
+              {{ action.label }}
+            </a>
+          }
+        }
+      </div>
+    }
+
+    @if (sourceNote()) {
+      <p class="source-note">{{ sourceNote() }}</p>
+    }
+  </div>
+
+  @if (media(); as activeMedia) {
+    <figure class="media-shell">
+      @if (activeMedia.kind === 'video' && videoEmbedUrl(); as embedUrl) {
+        <iframe
+          [src]="embedUrl"
+          [title]="activeMedia.title"
+          loading="lazy"
+          allow="
+            accelerometer;
+            autoplay;
+            clipboard-write;
+            encrypted-media;
+            gyroscope;
+            picture-in-picture;
+            web-share;
+          "
+          allowfullscreen
+        ></iframe>
+      } @else if (activeMedia.kind === 'image' && activeMedia.imageUrl) {
+        <img
+          [src]="activeMedia.imageUrl"
+          [alt]="activeMedia.imageAlt ?? ''"
+          loading="lazy"
+        />
+      }
+
+      <figcaption>
+        <span>{{ activeMedia.label }}</span>
+        <strong>{{ activeMedia.title }}</strong>
+        <small>{{ activeMedia.meta }}</small>
+      </figcaption>
+    </figure>
+  }
+</header>

@@ -1,0 +1,132 @@
+.section-meta {
+  display: grid;
+  gap: 7px;
+  min-width: max-content;
+  color: #64748b;
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.section-meta a {
+  color: #264bce;
+  font-weight: 820;
+  text-decoration: none;
+}
+
+.hero-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.usage-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  column-gap: 10px;
+  overflow: hidden;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(42, 67, 101, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 30px rgba(17, 35, 57, 0.08);
+}
+
+.usage-card img {
+  grid-row: 1 / 3;
+  display: block;
+  width: 62px;
+  height: 62px;
+  border-radius: 8px;
+  object-fit: contain;
+  object-position: center;
+  background: #0b1525;
+}
+
+.usage-rank {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 6px;
+  display: grid;
+  width: 28px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(7, 17, 31, 0.84);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.usage-copy {
+  display: contents;
+}
+.usage-copy > span {
+  align-self: end;
+  color: #039f9f;
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.usage-copy h3 {
+  align-self: start;
+  margin: 3px 0 0;
+  color: #111827;
+  font-size: 1.1rem;
+  font-weight: 840;
+  line-height: 1.2;
+}
+.usage-copy dl {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0;
+  margin: 10px 0 0;
+}
+.usage-copy dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0 0;
+  border-top: 1px solid #e8edf4;
+}
+.usage-copy dt {
+  color: #718096;
+  font-size: 0.76rem;
+}
+.usage-copy dd {
+  margin: 0;
+  color: #111827;
+  font-size: 0.82rem;
+  font-weight: 840;
+}
+
+@media (max-width: 1080px) {
+  .hero-usage-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .section-meta {
+    min-width: 0;
+    text-align: left;
+  }
+  .hero-usage-grid {
+    grid-template-columns: 1fr;
+  }
+  .usage-card {
+    grid-template-columns: 62px minmax(0, 1fr);
+    padding: 10px;
+  }
+  .usage-copy dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .usage-copy dl div {
+    display: grid;
+    justify-content: start;
+  }
+}

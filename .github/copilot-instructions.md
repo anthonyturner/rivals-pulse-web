@@ -1,6 +1,6 @@
 # Repository Instructions
 
-Marvel Rivals Coach is an Angular SSR app with Turso-backed content APIs. Prefer small, verified changes that preserve the existing component structure.
+Rivals Pulse Coach is an Angular SSR app with Turso-backed content APIs. Prefer small, verified changes that preserve the existing component structure.
 
 ## Before Editing
 

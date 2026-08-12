@@ -1,0 +1,312 @@
+<article class="win-rates-page">
+  @if (report(); as activeReport) {
+  <app-report-hero
+    [eyebrow]="'Season ' + activeReport.season + ' · Week ' + activeReport.week + ' report'"
+    [title]="activeReport.title"
+    [description]="activeReport.description"
+    [actions]="reportHeroActions()"
+    [media]="reportHeroMedia()"
+    [sourceNote]="activeReport.methodology"
+  >
+    <div reportHeroControls class="report-selectors" aria-label="Choose win-rate report">
+      <label>
+        <span>Season</span>
+        <select [value]="season()" (change)="selectSeason($event)">
+          @for (seasonOption of availableSeasons; track seasonOption) {
+            <option [value]="seasonOption" [selected]="seasonOption === season()">
+              Season {{ seasonOption }}
+            </option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Week</span>
+        <select [value]="selectedWeek()" (change)="selectWeek($event)">
+          @for (week of availableWeeks(); track week) {
+            <option [value]="week" [selected]="week === selectedWeek()">Week {{ week }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </app-report-hero>
+
+  <main class="report-content">
+    <section class="finding-grid" aria-label="Key findings">
+      @for (callout of activeReport.callouts; track callout.label) {
+        <article>
+          <span>{{ callout.label }}</span>
+          <strong>{{ callout.value }}</strong>
+          <p>{{ callout.description }}</p>
+        </article>
+      }
+    </section>
+
+    <section class="report-section meta-map" aria-labelledby="meta-map-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Pick rate × win rate</p>
+          <h2 id="meta-map-title">The Week {{ activeReport.week }} meta map</h2>
+        </div>
+        <p>
+          A win rate gains meaning when paired with popularity. The four boxes separate proven
+          power from sleepers, traps, and low-impact picks.
+        </p>
+      </div>
+
+      <div class="quadrant-grid">
+        @for (quadrant of metaQuadrants(); track quadrant.id) {
+          <article [class]="'quadrant ' + quadrant.id">
+            <div>
+              <span>{{ quadrant.definition }}</span>
+              <strong>{{ quadrant.label }}</strong>
+              <b>{{ quadrant.count }} heroes</b>
+            </div>
+            <p>{{ quadrant.note }}</p>
+            <ul>
+              @for (hero of quadrant.heroes; track hero) {
+                <li>{{ hero }}</li>
+              }
+            </ul>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="report-section role-war" aria-labelledby="role-war-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">The role war</p>
+          <h2 id="role-war-title">Tank value scales with the lobby.</h2>
+        </div>
+        <p>
+          Space creation matters more as teammates improve. DPS gets harder when opponents hold
+          angles correctly, while support retains a reliable baseline simply by sustaining the team.
+        </p>
+      </div>
+
+      <div class="role-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Vanguard</th>
+              <th>Strategist</th>
+              <th>Duelist</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of roleLadder(); track row.rank) {
+              <tr>
+                <th>
+                  <img
+                    class="rank-table-icon"
+                    [src]="rankIconUrl(row.rank)"
+                    [alt]="row.rank"
+                    [title]="row.rank"
+                  />
+                </th>
+                <td>{{ row.vanguard }}</td>
+                <td>{{ row.strategist }}</td>
+                <td>{{ row.duelist }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="composition-callout">
+        <div>
+          <span>2–2–2 usage</span>
+          <strong>67%</strong>
+          <small>Diamond</small>
+        </div>
+        <div>
+          <span>2–2–2 usage</span>
+          <strong>71%</strong>
+          <small>Grandmaster</small>
+        </div>
+        <div>
+          <span>2–2–2 usage</span>
+          <strong>74%</strong>
+          <small>Celestial</small>
+        </div>
+        <p>
+          The roster is built around paired tanks: one Vanguard rarely holds the same line or
+          survives the same pressure as two complementary tank jobs.
+        </p>
+      </aside>
+    </section>
+
+    <section class="report-section" aria-labelledby="one-tricks-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Consistency over hype</p>
+          <h2 id="one-tricks-title">The best one-trick commitments</h2>
+        </div>
+        <p>
+          One-tricking rewards repeatable value across maps and lobbies—not merely the strongest
+          theoretical pick in one matchup.
+        </p>
+      </div>
+
+      <div class="one-trick-grid">
+        @for (pick of oneTricks(); track pick.hero) {
+          <a [routerLink]="['/heroes']" [queryParams]="{ hero: pick.heroId }">
+            <img
+              [src]="'/images/heroes/' + pick.heroId + '.png'"
+              [alt]="pick.hero"
+              (error)="onImageError($event)"
+            />
+            <span>{{ pick.role }}</span>
+            <strong>{{ pick.hero }}</strong>
+            <p>{{ pick.reason }}</p>
+          </a>
+        }
+      </div>
+    </section>
+
+    <section class="report-section roster-report" aria-labelledby="roster-report-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">{{ activeReport.heroInsights.length }} hero-role snapshots</p>
+          <h2 id="roster-report-title">Find your hero’s curve and fight job.</h2>
+        </div>
+        <p>
+          “Archetype” translates the video’s described job into a practical label such as
+          Off-Tank, Anchor Tank, Flyer, Main Healer, Flanker, or Flexible DPS.
+        </p>
+      </div>
+
+      <div class="report-filters">
+        <label>
+          <span>Search</span>
+          <input
+            type="search"
+            placeholder="Hero, archetype, or takeaway"
+            [value]="searchTerm()"
+            (input)="updateSearch($event)"
+          />
+        </label>
+
+        <div>
+          <span>Role</span>
+          <div class="filter-buttons">
+            @for (role of roleFilters; track role) {
+              <button
+                type="button"
+                [class.active]="selectedRole() === role"
+                (click)="selectRole(role)"
+              >
+                {{ role }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div>
+          <span>Curve</span>
+          <div class="filter-buttons">
+            @for (trend of trendFilters; track trend) {
+              <button
+                type="button"
+                [class.active]="selectedTrend() === trend"
+                (click)="selectTrend(trend)"
+              >
+                {{ trend }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <p class="result-count">{{ filteredInsights().length }} hero-role snapshots shown</p>
+
+      <div class="hero-report-grid">
+        @for (insight of filteredInsights(); track insight.displayName + insight.role) {
+          <article class="hero-report-card">
+            <header>
+              <img
+                [src]="insight.imageUrl"
+                [alt]="insight.displayName"
+                loading="lazy"
+                (error)="onImageError($event)"
+              />
+              <div>
+                <span>{{ insight.role }}</span>
+                <h3>{{ insight.displayName }}</h3>
+                <strong>{{ insight.archetype }}</strong>
+              </div>
+              <em [class]="'trend ' + insight.trend.toLowerCase()">{{ insight.trend }}</em>
+            </header>
+
+            <div class="rank-curve" aria-label="Win rate from Bronze through Celestial">
+              @for (rank of insight.rankWinRates; track rank.rank) {
+                <div [class]="'rank-point ' + rankTone(rank.percentage)">
+                  <img
+                    [src]="rankIconUrl(rank.rank)"
+                    [alt]="rank.rank"
+                    [title]="rank.rank"
+                    loading="lazy"
+                  />
+                  <strong>{{ rank.value }}</strong>
+                </div>
+              }
+            </div>
+
+            <p>{{ insight.takeaway }}</p>
+
+            <footer>
+              <a [routerLink]="['/heroes']" [queryParams]="{ hero: insight.heroId }">Hero profile</a>
+              <a [href]="insight.videoUrl" target="_blank" rel="noopener noreferrer">
+                Video · {{ insight.timestamp }}
+              </a>
+            </footer>
+          </article>
+        } @empty {
+          <div class="empty-state">
+            <strong>No matching hero snapshots</strong>
+            <p>Clear a filter or try another hero or archetype.</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="report-section climb-plan" aria-labelledby="climb-plan-title">
+      <div>
+        <p class="eyebrow">The practical read</p>
+        <h2 id="climb-plan-title">Three decisions to take into queue</h2>
+      </div>
+      <ol>
+        @for (action of activeReport.actions; track action.title; let index = $index) {
+          <li>
+            <span>{{ index + 1 < 10 ? '0' + (index + 1) : index + 1 }}</span>
+            <div>
+              <strong>{{ action.title }}</strong>
+              <p>{{ action.description }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+  </main>
+  } @else {
+    <section class="unavailable-report">
+      <p class="eyebrow">Season {{ season() }}</p>
+      <h1>No report is available yet.</h1>
+      <p>
+        This template already supports Season {{ season() }}, but no transcript-backed weekly
+        snapshot has been added for it.
+      </p>
+      <label>
+        <span>Choose another season</span>
+        <select [value]="season()" (change)="selectSeason($event)">
+          @for (seasonOption of availableSeasons; track seasonOption) {
+            <option [value]="seasonOption" [selected]="seasonOption === season()">
+              Season {{ seasonOption }}
+            </option>
+          }
+        </select>
+      </label>
+    </section>
+  }
+</article>

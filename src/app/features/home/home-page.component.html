@@ -1,0 +1,114 @@
+<section class="home-page">
+  <div
+    class="home-page-background"
+    [class.is-foreground]="backgroundVideoForeground"
+    [class.is-popout]="backgroundVideoPoppedOut"
+    [attr.role]="backgroundVideoForeground ? 'dialog' : 'button'"
+    [attr.aria-modal]="backgroundVideoForeground ? 'true' : null"
+    [attr.aria-label]="
+      backgroundVideoForeground
+        ? heroMedia().title + ' video player'
+        : backgroundVideoPoppedOut
+          ? 'Open the floating video player'
+          : 'Play the background video in the foreground'
+    "
+    [attr.tabindex]="backgroundVideoForeground ? -1 : 0"
+    (click)="onBackgroundVideoSurfaceClick(backgroundVideo)"
+    (keydown)="onBackgroundVideoKeydown($event, backgroundVideo)"
+  >
+    <video
+      #backgroundVideo
+      class="home-page-background-video"
+      autoplay
+      [controls]="backgroundVideoForeground"
+      [muted]="backgroundVideoMuted"
+      [src]="heroMedia().videoUrl"
+      loop
+      playsinline
+      preload="metadata"
+      [poster]="heroMedia().posterUrl"
+      tabindex="-1"
+      (canplay)="startBackgroundVideo(backgroundVideo)"
+      (click)="onForegroundVideoClick($event)"
+      (volumechange)="syncBackgroundVideoSound(backgroundVideo)"
+    >
+      Your browser does not support embedded video playback.
+    </video>
+
+    @if (backgroundVideoForeground) {
+      <button
+        class="home-page-video-close"
+        type="button"
+        aria-label="Close foreground video"
+        autofocus
+        (click)="$event.stopPropagation(); closeBackgroundVideo()"
+      >
+        Close
+      </button>
+    }
+  </div>
+
+  <button
+    class="home-page-sound-toggle"
+    type="button"
+    [attr.aria-label]="backgroundVideoMuted ? 'Unmute background video' : 'Mute background video'"
+    [attr.aria-pressed]="!backgroundVideoMuted"
+    (click)="toggleBackgroundVideoSound(backgroundVideo)"
+  >
+    {{ backgroundVideoMuted ? 'Sound off' : 'Sound on' }}
+  </button>
+
+  <header #heroBanner class="season-hero">
+    <div class="hero-copy">
+      <p class="eyebrow">{{ seasonHeroCopy().eyebrow }}</p>
+      <h1>{{ seasonHeroCopy().title }}</h1>
+      <p class="lede">
+        Jubilee has arrived, the Team-Up system has been rebuilt, and a murder mystery now surrounds
+        the fall of Apocalypse. Track the live season, its patches, and the heroes shaping the early
+        meta.
+      </p>
+
+      <div class="hero-actions" aria-label="Season 9 actions">
+        <a
+          [href]="latestPatchUrl()"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Read patch notes
+        </a>
+        <a routerLink="/tier-list">View full tier list</a>
+        <a routerLink="/hero-guides">Browse guides</a>
+      </div>
+    </div>
+
+    <div class="hero-sidecar">
+      <app-season-glance />
+
+      @if (seasonUpdateSpotlight(); as spotlight) {
+        <section class="hero-spotlight" aria-labelledby="season-update-spotlight-title">
+          <div class="hero-spotlight-heading">
+            <p class="hero-spotlight-kicker">{{ spotlight.eyebrow }}</p>
+            <p class="hero-spotlight-date">{{ spotlight.date }}</p>
+          </div>
+
+          <h2 id="season-update-spotlight-title">{{ spotlight.title }}</h2>
+          <p class="hero-spotlight-description">{{ spotlight.description }}</p>
+
+          <div class="hero-spotlight-actions">
+            @if (spotlight.hasVideo) {
+              <button type="button" (click)="onBackgroundVideoSurfaceClick(backgroundVideo)">
+                Watch update video
+              </button>
+            }
+
+            <a [href]="spotlight.sourceUrl" target="_blank" rel="noopener noreferrer">
+              Read season update
+            </a>
+          </div>
+        </section>
+      }
+    </div>
+  </header>
+  <app-featured-content />
+  <app-season-dashboard />
+</section>
