@@ -9,14 +9,7 @@ import { createTursoClient } from './turso-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const transcriptPath = join(
-  projectRoot,
-  'src',
-  'ai-context',
-  'docs',
-  'guides',
-  'winrates-s9.txt',
-);
+const transcriptPath = join(projectRoot, 'docs', 'guides', 'winrates-s9.txt');
 const sourceKey = 'nerfpool-s9-week1';
 const sourceName = "Nerfpool: Every Hero's Win Rate (Season 9, Week 1)";
 const sourceUrl = 'https://www.youtube.com/watch?v=VB6OIA-ChmA';

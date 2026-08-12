@@ -1,5 +1,5 @@
 {
-  "name": "rivals-pulse",
+  "name": "rivals-pulse-coach",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -28,7 +28,7 @@
     "refresh:playstyles": "node scripts/refresh-playstyles.mjs",
     "refresh:build-profiles": "node scripts/refresh-build-profiles.mjs",
     "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes && npm run refresh:counters",
-    "serve:ssr:rivals-pulse": "node dist/rivals-pulse/server/server.mjs"
+    "serve:ssr:rivals-pulse-coach": "node dist/rivals-pulse-coach/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,

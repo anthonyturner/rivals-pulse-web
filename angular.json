@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "rivals-pulse": {
+    "rivals-pulse-coach": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -68,10 +68,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "rivals-pulse:build:production"
+              "buildTarget": "rivals-pulse-coach:build:production"
             },
             "development": {
-              "buildTarget": "rivals-pulse:build:development"
+              "buildTarget": "rivals-pulse-coach:build:development"
             }
           },
           "defaultConfiguration": "development"

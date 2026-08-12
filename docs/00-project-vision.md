@@ -1,4 +1,4 @@
-# Rivals Pulse
+# Rivals Pulse Coach
 
 ## Mission
 

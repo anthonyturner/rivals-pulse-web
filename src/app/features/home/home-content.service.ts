@@ -15,7 +15,7 @@ export class HomeContentService {
     latestNews: [],
     featuredGuides: [],
     quickLinks: [],
-    currentFocusTitle: 'Rivals Pulse',
+    currentFocusTitle: 'Rivals Pulse Coach',
     currentFocusDescription:
       'Connect the Turso content database to load the latest site content.',
     lastChecked: 'Not loaded',
