@@ -68,13 +68,14 @@ h2 {
 
 .guide-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 14px;
 }
 
 .guide-card {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -95,7 +96,8 @@ h2 {
 }
 
 .guide-card img {
-  width: 100%;
+  flex: 0 0 auto;
+  width: 72px;
   aspect-ratio: 1;
   border-radius: 7px;
   object-fit: cover;
@@ -105,6 +107,7 @@ h2 {
 
 .guide-card span {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
