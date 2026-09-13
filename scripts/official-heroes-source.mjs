@@ -1,13 +1,22 @@
 const officialHeroesUrl = 'https://www.marvelrivals.com/heroes/index.html';
+const officialHomeUrl = 'https://www.marvelrivals.com/index.html';
 
 export async function scrapeOfficialHeroes() {
   const indexHtml = await fetchText(officialHeroesUrl);
   const heroCards = parseHeroCards(indexHtml);
+  // The hero index no longer ships portraits, so they are read from the hero
+  // list on the official home page, which still carries one per hero.
+  const portraits = heroCards.some((card) => !card.imageUrl)
+    ? parseHeroPortraits(await fetchText(officialHomeUrl))
+    : new Map();
   const heroes = [];
 
   for (const card of heroCards) {
     const articleHtml = await fetchText(card.url);
-    heroes.push(parseOfficialHeroArticle(card, articleHtml));
+    heroes.push(parseOfficialHeroArticle(
+      { ...card, imageUrl: card.imageUrl || portraits.get(card.slug) || '' },
+      articleHtml,
+    ));
   }
 
   return {
@@ -42,6 +51,24 @@ export function parseHeroCards(html) {
   }
 
   return uniqueBy(cards, (card) => card.id || card.slug);
+}
+
+export function parseHeroPortraits(html) {
+  const portraits = new Map();
+  const anchorPattern = /<a\b([^>]*\bdata-name="[^"]+"[^>]*)>([\s\S]*?)<\/a>/gi;
+  let match;
+
+  while ((match = anchorPattern.exec(html))) {
+    const attrs = parseAttributes(match[1]);
+    const slug = slugify(attrs['data-name'] ?? '');
+    const imageUrl = firstImage(match[2]);
+
+    if (slug && imageUrl && !portraits.has(slug)) {
+      portraits.set(slug, imageUrl);
+    }
+  }
+
+  return portraits;
 }
 
 export function parseOfficialHeroArticle(card, html) {

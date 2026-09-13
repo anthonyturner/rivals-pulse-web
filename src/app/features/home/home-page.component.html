@@ -62,13 +62,9 @@
     <div class="hero-copy">
       <p class="eyebrow">{{ seasonHeroCopy().eyebrow }}</p>
       <h1>{{ seasonHeroCopy().title }}</h1>
-      <p class="lede">
-        Jubilee has arrived, the Team-Up system has been rebuilt, and a murder mystery now surrounds
-        the fall of Apocalypse. Track the live season, its patches, and the heroes shaping the early
-        meta.
-      </p>
+      <p class="lede">{{ seasonHeroCopy().lede }}</p>
 
-      <div class="hero-actions" aria-label="Season 9 actions">
+      <div class="hero-actions" aria-label="Season actions">
         <a
           [href]="latestPatchUrl()"
           target="_blank"
