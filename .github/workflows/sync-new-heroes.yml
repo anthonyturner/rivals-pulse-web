@@ -115,7 +115,20 @@ jobs:
           - [ ] \`src/app/features/learning/guides/hero-guides/hero-guide-data.ts\` - hero guide entry
           BODY
 
-          gh pr create --draft --base "$BASE_BRANCH" --head "$branch" --title "$PR_TITLE" --body-file pr-body.md
+          if gh pr create --draft --base "$BASE_BRANCH" --head "$branch" --title "$PR_TITLE" --body-file pr-body.md; then
+            exit 0
+          fi
+
+          # The branch and its portraits are pushed by this point, so the run has
+          # already done the part that matters. Opening the pull request can still
+          # be refused - it needs "Allow GitHub Actions to create and approve pull
+          # requests" on the repository - so that is reported as a link to click
+          # rather than as a failed run.
+          {
+            echo '### Portraits pushed, pull request not opened'
+            echo
+            echo "Open it here: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${BASE_BRANCH}...${branch}?expand=1"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Report roster changes
         if: always() && steps.roster.outputs.summary != ''
