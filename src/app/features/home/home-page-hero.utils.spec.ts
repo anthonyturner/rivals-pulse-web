@@ -75,6 +75,34 @@ describe('homePageHeroUtils', () => {
     expect(buildSeasonHeroCopy(baseContent)).toEqual({
       eyebrow: 'Marvel Rivals · Season 9.5',
       title: 'Welcome to The Mystery of Thebes.',
+      lede: 'Track the live season, its patches, and the heroes shaping the early meta.',
+    });
+  });
+
+  it('names the newest hero in the lede so a season rollover replaces it', () => {
+    expect(
+      buildSeasonHeroCopy({
+        ...baseContent,
+        quickLinks: [
+          { label: 'Current Season', value: 'Season 10' },
+          { label: 'Season Story', value: "Butcher's Blasphemy" },
+          { label: 'Latest Hero', value: 'Gorr The God Butcher' },
+        ],
+      }),
+    ).toEqual({
+      eyebrow: 'Marvel Rivals · Season 10',
+      title: "Welcome to Butcher's Blasphemy.",
+      lede:
+        'Gorr The God Butcher has arrived. Track the live season, its patches, '
+        + 'and the heroes shaping the early meta.',
+    });
+  });
+
+  it('falls back to season-agnostic copy when the sync has no season yet', () => {
+    expect(buildSeasonHeroCopy({ ...baseContent, quickLinks: [] })).toEqual({
+      eyebrow: 'Marvel Rivals',
+      title: 'Welcome to the latest season.',
+      lede: 'Track the live season, its patches, and the heroes shaping the early meta.',
     });
   });
 

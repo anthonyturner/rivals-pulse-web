@@ -1,6 +1,7 @@
 import { createClient } from '@tursodatabase/serverless/compat';
 
 import { StringUtility } from './app/shared/utilities/string-utility.js';
+import { parseCurrentSeason } from './official-season.js';
 
 export type NewsItem = {
   label: string;
@@ -371,10 +372,9 @@ async function buildQuickLinks(
 
 function parseOfficialHomeSnapshot(html: string): { news: NewsItem[]; battlePass: BattlePassSnapshot } {
   const news = parseOfficialNewsCards(html);
-  const seasonNews = news.find((item) => /Season\s+\d+/i.test(item.title));
-  const seasonTitle = seasonNews?.title.match(/(Season\s+\d+(?:\.\d+)?)(?::\s*([^/]+?))?(?:\s*\/\/|$)/i);
-  const currentSeason = seasonTitle?.[1]?.trim() ?? fallbackBattlePassSnapshot.currentSeason;
-  const seasonStory = seasonTitle?.[2]?.trim() ?? fallbackBattlePassSnapshot.seasonStory;
+  const season = parseCurrentSeason(news.map((item) => item.title));
+  const currentSeason = season?.currentSeason ?? fallbackBattlePassSnapshot.currentSeason;
+  const seasonStory = season?.seasonStory ?? fallbackBattlePassSnapshot.seasonStory;
   const latestHero = parseLatestOfficialHero(html);
 
   return {
@@ -423,13 +423,15 @@ export function parseOfficialNewsCards(html: string): NewsItem[] {
     });
   }
 
+  // Naming a season here would strand the home page on it whenever the official
+  // markup changes, so the placeholder card stays season-agnostic.
   return cards.length > 0 ? cards : [{
     label: 'Season Update',
-    title: 'Season 9: The Mystery of Thebes',
-    description: 'Official Marvel Rivals Season 9 coverage is available on the Marvel Rivals site.',
+    title: 'Latest Marvel Rivals season',
+    description: 'Official Marvel Rivals season coverage is available on the Marvel Rivals site.',
     sourceUrl: officialHomeSource.url,
     thumbnailUrl: fallbackThumbnail,
-    thumbnailAlt: 'Marvel Rivals Season 9 thumbnail',
+    thumbnailAlt: 'Marvel Rivals season update thumbnail',
   }];
 }
 

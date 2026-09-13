@@ -109,7 +109,7 @@ async function saveOfficialHero(db, officialHero) {
     weaknesses: existingHero?.weaknesses ?? fallbackWeaknesses(officialHero.role),
     counters: existingHero?.counters ?? [],
     synergies: officialTeamUpNames(officialAbilities, existingHero?.synergies ?? []),
-    imageUrl: getImageUrl(officialHero.id, existingHero?.imageUrl),
+    imageUrl: getImageUrl(officialHero.id, existingHero?.imageUrl, officialHero.listImageUrl),
   };
   const heroWithComputedFields = withBuildProfile({
     ...mergedHero,
@@ -125,14 +125,18 @@ async function saveOfficialHero(db, officialHero) {
   }
 }
 
-function getImageUrl(heroId, existingImageUrl) {
+function getImageUrl(heroId, existingImageUrl, officialImageUrl) {
   if (existingImageUrl && !existingImageUrl.includes('default-hero')) {
     return existingImageUrl;
   }
 
-  return existsSync(join(heroImagesPath, `${heroId}.png`))
-    ? `/images/heroes/${heroId}.png`
-    : '/images/heroes/default-hero.png';
+  if (existsSync(join(heroImagesPath, `${heroId}.png`))) {
+    return `/images/heroes/${heroId}.png`;
+  }
+
+  // A hero added mid-season has no committed portrait yet, so the official
+  // image keeps the card correct until `sync:official-hero-images` runs.
+  return officialImageUrl || '/images/heroes/default-hero.png';
 }
 
 function withBuildProfile(hero) {

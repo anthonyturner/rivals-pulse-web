@@ -1,0 +1,124 @@
+name: Sync new heroes
+
+# A new hero ships with roughly every season. The hero roster lives in Turso and
+# is served by /api/heroes, so syncing it here puts a new hero on the hero page
+# without a deploy. Portraits are repository files, so those arrive as a pull
+# request instead.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: 'Report roster changes without writing to the database'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-new-heroes
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync official hero roster
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync hero roster into Turso
+        id: roster
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          CHECK_ONLY: ${{ inputs.check_only }}
+        run: |
+          set -o pipefail
+          if [ "${CHECK_ONLY}" = "true" ]; then
+            npm run check:official-heroes | tee roster.log
+          else
+            npm run sync:official-heroes | tee roster.log
+          fi
+          {
+            echo "added=$(sed -n 's/^Added: //p' roster.log | head -1)"
+            echo "summary<<SUMMARY"
+            grep -E '^(Official heroes:|Added:|Changed:|Removed:)' roster.log || true
+            echo "SUMMARY"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download portraits for new heroes
+        if: inputs.check_only != true
+        run: npm run sync:official-hero-images
+
+      - name: Detect new portrait files
+        id: portraits
+        run: |
+          if [ -n "$(git status --porcelain -- public/images/heroes src/public/images/heroes)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open a pull request with the new portraits
+        if: steps.portraits.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ADDED: ${{ steps.roster.outputs.added }}
+          SUMMARY: ${{ steps.roster.outputs.summary }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          PR_TITLE: 'chore(heroes): portraits for newly released heroes'
+        run: |
+          # A daily schedule would re-open this pull request every morning until
+          # it is merged, so an existing open one is left alone.
+          if [ -n "$(gh pr list --state open --search "$PR_TITLE in:title" --json number --jq '.[0].number')" ]; then
+            echo 'An open portrait pull request already exists; skipping.'
+            exit 0
+          fi
+
+          branch="chore/new-hero-portraits-${GITHUB_RUN_ID}"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "$branch"
+          git add public/images/heroes src/public/images/heroes
+          git commit -m 'chore(heroes): add portraits for newly released heroes'
+          git push --set-upstream origin "$branch"
+
+          cat > pr-body.md <<BODY
+          Automated by \`.github/workflows/sync-new-heroes.yml\`.
+
+          The hero roster in Turso is already updated, so the new hero is live on
+          the hero page. This pull request only carries the portrait files, which
+          are repository assets.
+
+          \`\`\`
+          ${SUMMARY}
+          \`\`\`
+
+          Still curated by hand for **${ADDED:-the new hero}**:
+
+          - [ ] \`src/app/features/heroes/hero-gameplay-archetypes.ts\` - archetype label and notes
+          - [ ] \`src/app/features/tools/counters/counter-engine.service.ts\` - counter matchups
+          - [ ] \`src/app/features/learning/guides/hero-guides/hero-guide-data.ts\` - hero guide entry
+          BODY
+
+          gh pr create --draft --base "$BASE_BRANCH" --head "$branch" --title "$PR_TITLE" --body-file pr-body.md
+
+      - name: Report roster changes
+        if: always() && steps.roster.outputs.summary != ''
+        env:
+          SUMMARY: ${{ steps.roster.outputs.summary }}
+        run: echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
