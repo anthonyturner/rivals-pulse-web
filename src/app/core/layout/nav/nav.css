@@ -150,3 +150,35 @@ nav .disabled {
     padding: 0 10px;
   }
 }
+
+/* The breathing Jarvis core, shrunk to a nav affordance. */
+.core-orb {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, var(--ally) 0 50%, var(--enemy) 50% 100%);
+  box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 14px rgba(255, 201, 77, 0.7);
+  animation: core-orb-breathe 3.2s ease-in-out infinite;
+}
+
+.core-orb-glow {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 201, 77, 0.75), rgba(12, 34, 51, 0.9) 62%);
+}
+
+@keyframes core-orb-breathe {
+  50% {
+    box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 24px rgba(255, 201, 77, 0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .core-orb {
+    animation: none;
+  }
+}

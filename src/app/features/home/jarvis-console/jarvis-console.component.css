@@ -1,0 +1,255 @@
+:host {
+  display: block;
+  /* Overlaps the hero's bottom edge, so the console reads as part of it. */
+  margin-top: -48px;
+  position: relative;
+  z-index: 2;
+}
+
+.jarvis-console {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(16px, 3vw, 40px);
+  align-items: center;
+  padding: clamp(20px, 3.5vw, 40px);
+  border-radius: 18px;
+  color: #fff;
+  background:
+    radial-gradient(ellipse 50% 90% at 22% 50%, rgba(92, 60, 190, 0.35), transparent 70%),
+    linear-gradient(135deg, #102c42, #0c2233 60%, #081826);
+  box-shadow: 0 30px 70px -30px rgba(12, 34, 51, 0.7);
+}
+
+.core-button {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+  justify-self: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.core-button:disabled {
+  cursor: default;
+}
+
+.core-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.core-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9fb0c4;
+  pointer-events: none;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5fe0d6;
+}
+
+h2 {
+  margin: 0.75rem 0;
+  font-size: clamp(1.875rem, 3.8vw, 3rem);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+h2 .ally {
+  color: var(--ally);
+}
+
+h2 .enemy {
+  color: var(--enemy);
+}
+
+.lead {
+  margin: 0 0 1rem;
+  max-width: 34em;
+  color: #c3cfdc;
+}
+
+kbd {
+  font-family: Consolas, ui-monospace, monospace;
+  font-size: 0.6875rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  padding: 0.125rem 0.3125rem;
+}
+
+.states,
+.prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.5625rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7f93a8;
+}
+
+.state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.state-chip.is-active {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.state-chip.is-active[data-state='listening'] .state-dot {
+  background: var(--ally);
+}
+
+.state-chip.is-active[data-state='thinking'] .state-dot {
+  background: var(--gold);
+}
+
+.state-chip.is-active[data-state='speaking'] .state-dot {
+  background: var(--enemy);
+}
+
+.caption {
+  margin-bottom: 0.875rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(4, 12, 20, 0.7);
+}
+
+.caption-who {
+  margin: 0 0 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.caption-text {
+  margin: 0;
+  min-height: 2.8em;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.caption-you {
+  color: #8ea2b8;
+  font-weight: 500;
+}
+
+.caption-current {
+  color: var(--gold);
+}
+
+.prompts {
+  margin-bottom: 1.125rem;
+}
+
+.prompt {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d9e3ee;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.prompt:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.prompt:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.console-actions {
+  margin: 0;
+}
+
+.get-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ffd24d;
+  border-radius: 6px;
+  background: #ffd24d;
+  color: var(--accent-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* No listing yet, so this reads as a status rather than a button. */
+.get-app.is-pending {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  color: #c3cfdc;
+  cursor: default;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  .jarvis-console {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  :host {
+    margin-top: -24px;
+  }
+
+  .jarvis-console {
+    border-radius: 12px;
+  }
+}
