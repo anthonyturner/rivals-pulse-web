@@ -1,0 +1,83 @@
+<section class="guides-page">
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Strategist Field Manual</p>
+      <h1>Turn support decisions into repeatable wins.</h1>
+      <p class="lede">
+        Ten transcript-built guides covering positioning, healing priorities, damage windows,
+        ultimate economy, anti-dive survival, and Rocket Raccoon mastery.
+      </p>
+
+      <div class="hero-actions">
+        <a class="primary-action" [href]="playlistUrl" target="_blank" rel="noopener">
+          Watch the full playlist
+        </a>
+        <a class="secondary-action" routerLink="/techniques">Review all techniques</a>
+      </div>
+    </div>
+
+    <div class="hero-stat" aria-label="Playlist summary">
+      <strong>10</strong>
+      <span>caption-reviewed guides</span>
+      <small>About 4½ hours distilled into drills and decision rules.</small>
+    </div>
+  </header>
+
+  <section class="toolbar" aria-label="Strategist guide filters">
+    <label class="search-field">
+      <span>Search guides</span>
+      <input
+        type="search"
+        placeholder="Rocket, positioning, ultimates..."
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </label>
+
+    <div class="filter-list" aria-label="Guide category">
+      @for (filter of filters; track filter) {
+        <button
+          type="button"
+          [class.active]="selectedFilter() === filter"
+          (click)="selectFilter(filter)"
+        >
+          {{ filter }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <main class="guide-grid" aria-label="Strategist guides">
+    @for (guide of filteredGuides(); track guide.id; let index = $index) {
+      <article class="guide-card">
+        <div class="card-image">
+          <img [src]="guide.heroImage" [alt]="guide.heroFocus" loading="lazy" />
+          <span>{{ index + 1 < 10 ? '0' + (index + 1) : index + 1 }}</span>
+        </div>
+
+        <div class="card-body">
+          <div class="card-meta">
+            <span>{{ guide.category }}</span>
+            <span>{{ guide.duration }}</span>
+          </div>
+          <h2>{{ guide.shortTitle }}</h2>
+          <p>{{ guide.summary }}</p>
+          <div class="focus-row">
+            <span>Focus</span>
+            <strong>{{ guide.heroFocus }}</strong>
+          </div>
+        </div>
+
+        <a class="card-link" [routerLink]="['/strategist-guides', guide.id]">
+          Open field guide
+          <span aria-hidden="true">→</span>
+        </a>
+      </article>
+    } @empty {
+      <div class="empty-state">
+        <strong>No guides match this search.</strong>
+        <span>Try another hero, topic, or category.</span>
+      </div>
+    }
+  </main>
+</section>

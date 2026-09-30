@@ -1,0 +1,69 @@
+.updates-list {
+  display: grid;
+}
+
+.updates-list a {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: start;
+  padding: 24px 6px;
+  border-top: 1px solid #dfe7f1;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    padding 180ms ease,
+    background 180ms ease;
+}
+.updates-list a:last-child {
+  border-bottom: 1px solid #dfe7f1;
+}
+.updates-list a:hover {
+  padding-inline: 16px;
+  background: rgba(237, 244, 255, 0.78);
+}
+.update-index {
+  color: #264bce;
+  font-size: 1.4rem;
+  font-weight: 850;
+}
+.updates-list p {
+  margin: 0;
+  color: #039f9f;
+  font-size: 0.75rem;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+.updates-list h3 {
+  margin: 6px 0 0;
+  color: #111827;
+  font-size: 1.3rem;
+  font-weight: 840;
+  line-height: 1.22;
+}
+.updates-list div > span {
+  display: block;
+  max-width: 850px;
+  margin-top: 9px;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+.updates-list a > strong {
+  color: #264bce;
+  font-size: 1.4rem;
+}
+
+@media (max-width: 720px) {
+  .updates-list a {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  .updates-list a > strong {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .updates-list a {
+    transition: none;
+  }
+}

@@ -1,0 +1,46 @@
+<section class="season-section" [attr.aria-labelledby]="headingId()">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h2 [id]="headingId()">{{ title() }}</h2>
+      <p class="description">{{ description() }}</p>
+    </div>
+    <div class="section-meta">
+      <span>{{ metaLabel() }}</span>
+      <a [href]="sourceUrl()" target="_blank" rel="noopener noreferrer">{{ sourceLabel() }}</a>
+    </div>
+  </div>
+
+  <div class="hero-usage-grid">
+    @for (hero of heroes(); track hero.heroId; let rank = $index) {
+      <article class="usage-card">
+        <span class="usage-rank">0{{ rank + 1 }}</span>
+        <img
+          [src]="hero.imageUrl"
+          [alt]="hero.name"
+          width="62"
+          height="62"
+          (error)="onImageError($event)"
+        />
+        <div class="usage-copy">
+          <span>{{ hero.role }}</span>
+          <h3>{{ hero.name }}</h3>
+          <dl>
+            <div>
+              <dt>Pick rate</dt>
+              <dd>{{ formatRate(hero.pickRate) }}</dd>
+            </div>
+            <div>
+              <dt>Win rate</dt>
+              <dd>{{ formatRate(hero.winRate) }}</dd>
+            </div>
+            <div>
+              <dt>Matches</dt>
+              <dd>{{ formatMatches(hero.matches) }}</dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+    }
+  </div>
+</section>

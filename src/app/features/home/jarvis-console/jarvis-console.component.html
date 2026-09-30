@@ -1,0 +1,77 @@
+<section class="jarvis-console" id="jarvis-console" aria-labelledby="jarvis-console-title">
+  <button
+    class="core-button"
+    type="button"
+    [disabled]="busy()"
+    aria-label="Ask Jarvis a sample question. Scripted demonstration."
+    (click)="onCoreClick()"
+  >
+    <canvas #coreCanvas class="core-canvas" aria-hidden="true"></canvas>
+    <span class="core-hint" aria-hidden="true">{{ coreHint() }}</span>
+  </button>
+
+  <div class="console-copy">
+    <p class="eyebrow">RivalsPulse overlay · Jarvis</p>
+    <h2 id="jarvis-console-title">
+      Ask your match <span class="ally">how it's</span> <span class="enemy">going.</span>
+    </h2>
+    <p class="lead">
+      The overlay shows all twelve players' ranks in game and answers out loud when you hold
+      <kbd>Alt</kbd> + <kbd>V</kbd>. Try a question below — these answers are a scripted
+      demonstration.
+    </p>
+
+    <ul class="states" aria-label="Core state">
+      @for (state of states; track state) {
+        <li class="state-chip" [class.is-active]="isActiveState(state)" [attr.data-state]="state">
+          <span class="state-dot" aria-hidden="true"></span>
+          <span class="state-name">{{ state }}</span>
+          @if (isActiveState(state)) {
+            <span class="visually-hidden">(current)</span>
+          }
+        </li>
+      }
+    </ul>
+
+    <div class="caption">
+      <p class="caption-who">Jarvis · demo</p>
+      <p class="caption-text">
+        @if (hasTranscript()) {
+          @if (askedQuestion()) {
+            <span class="caption-you">{{ askedQuestion() }}</span>
+          } @else {
+            <span class="caption-said">{{ spokenWords().join(' ') }}</span>
+            @if (currentWord()) {
+              <span class="caption-current">{{ currentWord() }}</span>
+            }
+          }
+        } @else {
+          Tap the core, or pick a question.
+        }
+      </p>
+      <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+    </div>
+
+    <ul class="prompts">
+      @for (exchange of exchanges; track exchange.question; let index = $index) {
+        <li>
+          <button class="prompt" type="button" [disabled]="busy()" (click)="onPromptClick(index)">
+            {{ exchange.question }}
+          </button>
+        </li>
+      }
+    </ul>
+
+    @if (hasAppUrl) {
+      <p class="console-actions">
+        <a class="get-app" [href]="appUrl" target="_blank" rel="noopener noreferrer">
+          Get the Overwolf app
+        </a>
+      </p>
+    } @else {
+      <p class="console-actions">
+        <span class="get-app is-pending">Coming soon to the Overwolf store</span>
+      </p>
+    }
+  </div>
+</section>

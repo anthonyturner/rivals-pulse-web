@@ -1,0 +1,29 @@
+@if (state().content; as content) {
+  <main class="season-dashboard">
+    <app-hero-usage-section
+      [eyebrow]="content.heroUsage.eyebrow"
+      [title]="content.heroUsage.title"
+      [description]="content.heroUsage.description"
+      [heroes]="state().mostPickedHeroes"
+      [metaLabel]="state().metaUpdatedLabel"
+      [sourceLabel]="state().heroSourceLabel"
+      [sourceUrl]="state().heroSourceUrl"
+    />
+
+    <app-season-updates-section
+      [eyebrow]="content.officialUpdates.eyebrow"
+      [title]="content.officialUpdates.title"
+      [description]="content.officialUpdates.description"
+      [updates]="state().seasonUpdates"
+    />
+
+    <app-highlight-cards-section
+      [eyebrow]="content.events.eyebrow"
+      [title]="content.events.title"
+      [description]="content.events.description"
+      [sourceLabel]="content.events.sourceLabel"
+      [sourceUrl]="content.events.sourceUrl"
+      [highlights]="state().seasonEvents"
+    />
+  </main>
+}

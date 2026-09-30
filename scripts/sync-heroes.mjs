@@ -317,7 +317,7 @@ async function fetchJson(url) {
   const response = await fetch(url, {
     headers: {
       accept: 'application/json',
-      'user-agent': 'marvel-rivals-coach-hero-sync/1.0',
+      'user-agent': 'rivals-pulse-hero-sync/1.0',
     },
   });
 

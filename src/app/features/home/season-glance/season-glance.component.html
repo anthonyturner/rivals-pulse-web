@@ -1,0 +1,32 @@
+@if (state().content; as content) {
+  <aside class="season-glance" [attr.aria-label]="content.ariaLabel">
+    <article>
+      <span>{{ content.status.label }}</span>
+      <strong>{{ content.status.value }}</strong>
+      <small>{{ state().seasonDateRange }}</small>
+    </article>
+    <article class="newest-hero-card">
+      <img
+        [src]="content.latestHero.imageUrl"
+        [alt]="content.latestHero.name"
+        width="72"
+        height="72"
+      />
+      <div>
+        <span>{{ content.latestHero.label }}</span>
+        <strong>{{ content.latestHero.name }}</strong>
+        <small>{{ content.latestHero.detail }}</small>
+      </div>
+    </article>
+    @if (state().latestTuning; as tuning) {
+      <article>
+        <span>{{ content.tuning.label }}</span>
+        <strong>{{ tuning.title }}</strong>
+        <small>{{ tuning.date }} · {{ tuning.category }}</small>
+        <a [href]="tuning.sourceUrl" target="_blank" rel="noopener noreferrer">
+          {{ content.tuning.sourceLabel }}
+        </a>
+      </article>
+    }
+  </aside>
+}

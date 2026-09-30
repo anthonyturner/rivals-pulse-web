@@ -1,0 +1,24 @@
+<section class="season-section" [attr.aria-labelledby]="headingId()">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h2 [id]="headingId()">{{ title() }}</h2>
+      <p class="description">{{ description() }}</p>
+    </div>
+    @if (sourceUrl() && sourceLabel()) {
+      <a class="text-link" [href]="sourceUrl()" target="_blank" rel="noopener noreferrer">
+        {{ sourceLabel() }}
+      </a>
+    }
+  </div>
+
+  <div class="highlight-grid" [class.four-columns]="columns() === 4">
+    @for (highlight of highlights(); track highlight.title) {
+      <article>
+        <span>{{ highlight.label }}</span>
+        <h3>{{ highlight.title }}</h3>
+        <p>{{ highlight.description }}</p>
+      </article>
+    }
+  </div>
+</section>

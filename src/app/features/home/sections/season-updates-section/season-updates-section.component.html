@@ -1,0 +1,23 @@
+<section class="season-section" [attr.aria-labelledby]="headingId()">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h2 [id]="headingId()">{{ title() }}</h2>
+      <p class="description">{{ description() }}</p>
+    </div>
+  </div>
+
+  <div class="updates-list">
+    @for (update of updates(); track update.sourceUrl; let index = $index) {
+      <a [href]="update.sourceUrl" target="_blank" rel="noopener noreferrer">
+        <span class="update-index">0{{ index + 1 }}</span>
+        <div>
+          <p>{{ update.category }} · {{ update.date }}</p>
+          <h3>{{ update.title }}</h3>
+          <span>{{ update.description }}</span>
+        </div>
+        <strong aria-hidden="true">↗</strong>
+      </a>
+    }
+  </div>
+</section>

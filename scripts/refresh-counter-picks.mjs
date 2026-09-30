@@ -5,59 +5,68 @@ import { fileURLToPath } from 'node:url';
 import { createTursoClient } from './turso-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const heroesPath = join(__dirname, '..', 'src', 'app', 'data', 'heroes.mock.json');
+const heroesPath = join(__dirname, '..', 'data', 'seeds', 'heroes.mock.json');
 
+// Counter picks derived from rivalsmeta.com Season 9 matchup win rates
+// (Diamond+ ranks, fetched 2026-08-03; see data/verification/counter-verification-2026-08-03.md).
+// Each losing matchup is scored as (win-rate deficit) - (opponent overall WR - 50)/2 so
+// genuinely lopsided matchups rank above heroes that are merely strong overall, then the
+// top five are kept. Lists are shorter where a hero has fewer losing matchups: Mantis only
+// loses to Peni Parker, and Peni Parker loses to no one at high ranks (her list holds the
+// least-unfavorable picks against her).
 const counterPicksByHero = {
-  'Adam Warlock': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  Angela: ['Hela', 'Hawkeye', 'The Punisher', 'Black Widow', 'Namor'],
-  'Black Cat': ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'The Thing'],
-  'Black Panther': ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'The Thing'],
-  'Black Widow': ['Spider-Man', 'Black Panther', 'Psylocke', 'Venom', 'Magik'],
-  Blade: ['Peni Parker', 'The Thing', 'Luna Snow', 'Mantis', 'Scarlet Witch'],
-  Hulk: ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Mantis'],
-  'Captain America': ['Wolverine', 'Hela', 'Hawkeye', 'Namor', 'Mantis'],
-  'Cloak & Dagger': ['Spider-Man', 'Black Panther', 'Psylocke', 'Hela', 'Magik'],
-  Daredevil: ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'The Thing'],
-  Deadpool: ['Namor', 'Scarlet Witch', 'Peni Parker', 'Mantis', 'The Thing'],
-  'Devil Dinosaur': ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Doctor Strange'],
-  'Doctor Strange': ['Wolverine', 'Hela', 'Hawkeye', 'Magneto', 'Moon Knight'],
-  'Elsa Bloodstone': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Venom'],
-  'Emma Frost': ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Doctor Strange'],
-  Gambit: ['Spider-Man', 'Black Panther', 'Psylocke', 'Hela', 'Moon Knight'],
-  Groot: ['Wolverine', 'Human Torch', 'The Punisher', 'Hela', 'Doctor Strange'],
-  Hawkeye: ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Venom'],
-  Hela: ['Spider-Man', 'Black Panther', 'Psylocke', 'Captain America', 'Doctor Strange'],
-  'Human Torch': ['Hela', 'Hawkeye', 'The Punisher', 'Black Widow', 'Namor'],
-  'Invisible Woman': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  'Iron Fist': ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'Mantis'],
-  'Iron Man': ['Namor', 'Hela', 'Hawkeye', 'The Punisher', 'Black Widow'],
-  'Jeff the Land Shark': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  Loki: ['Spider-Man', 'Black Panther', 'Psylocke', 'Moon Knight', 'Scarlet Witch'],
-  'Luna Snow': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  Magik: ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'The Thing'],
-  Magneto: ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Doctor Strange'],
-  Mantis: ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  'Mister Fantastic': ['Peni Parker', 'The Thing', 'Wolverine', 'Luna Snow', 'Mantis'],
-  'Moon Knight': ['Spider-Man', 'Black Panther', 'Psylocke', 'Hela', 'Hawkeye'],
-  Namor: ['Hela', 'Hawkeye', 'The Punisher', 'Black Widow', 'Doctor Strange'],
-  'Peni Parker': ['Hela', 'Hawkeye', 'The Punisher', 'Human Torch', 'Doctor Strange'],
-  Phoenix: ['Spider-Man', 'Black Panther', 'Psylocke', 'Hela', 'Hawkeye'],
-  Psylocke: ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'Mantis'],
-  'Rocket Raccoon': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Venom'],
-  Rogue: ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Mantis'],
-  'Scarlet Witch': ['Hela', 'Hawkeye', 'The Punisher', 'Black Widow', 'Doctor Strange'],
-  'Spider-Man': ['Namor', 'Scarlet Witch', 'Peni Parker', 'Luna Snow', 'Mantis'],
-  'Squirrel Girl': ['Spider-Man', 'Black Panther', 'Psylocke', 'Hela', 'Hawkeye'],
-  'Star-Lord': ['Hela', 'Hawkeye', 'The Punisher', 'Black Widow', 'Namor'],
-  Storm: ['Hela', 'Hawkeye', 'The Punisher', 'Black Widow', 'Namor'],
-  'The Punisher': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Venom'],
-  'The Thing': ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Mantis'],
-  Thor: ['Wolverine', 'Hela', 'Hawkeye', 'The Punisher', 'Mantis'],
-  Ultron: ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  Venom: ['Wolverine', 'Namor', 'Peni Parker', 'Scarlet Witch', 'Mantis'],
-  'White Fox': ['Spider-Man', 'Black Panther', 'Psylocke', 'Magik', 'Hela'],
-  'Winter Soldier': ['Namor', 'Scarlet Witch', 'Peni Parker', 'Doctor Strange', 'Mantis'],
-  Wolverine: ['Peni Parker', 'The Thing', 'Luna Snow', 'Mantis', 'Scarlet Witch'],
+  'Adam Warlock': ['Peni Parker', 'Black Cat', 'Daredevil', 'Magik', 'Human Torch'],
+  Angela: ['Peni Parker', 'Human Torch', 'Iron Man', 'Groot', 'Storm'],
+  'Black Cat': ['Peni Parker', 'Human Torch', 'Mantis', 'Groot', 'Magik'],
+  'Black Panther': ['Mantis', 'Peni Parker', 'Groot', 'Black Cat', 'Daredevil'],
+  'Black Widow': ['Peni Parker', 'Storm', 'Iron Man', 'Human Torch', 'Mantis'],
+  Blade: ['Peni Parker', 'Magik', 'Daredevil', 'Mantis', 'Hulk'],
+  Hulk: ['Peni Parker', 'Mantis', 'Daredevil', 'Groot', 'Human Torch'],
+  'Captain America': ['Peni Parker', 'Groot', 'Hawkeye', 'Mantis', 'Storm'],
+  'Cloak & Dagger': ['Peni Parker', 'Mantis', 'Black Cat', 'Storm', 'Magik'],
+  Cyclops: ['Peni Parker', 'Storm', 'Human Torch', 'Iron Man', 'The Thing'],
+  Daredevil: ['Peni Parker', 'Mantis', 'Black Cat', 'Magik'],
+  Deadpool: ['Peni Parker', 'Black Cat', 'Daredevil', 'Magik', 'Storm'],
+  'Devil Dinosaur': ['Peni Parker', 'Magik', 'Daredevil', 'Black Cat', 'Mantis'],
+  'Doctor Strange': ['Peni Parker', 'Storm', 'Human Torch', 'Mantis', 'Black Cat'],
+  'Elsa Bloodstone': ['Peni Parker', 'Black Cat', 'Daredevil', 'Mantis', 'Storm'],
+  'Emma Frost': ['Peni Parker', 'Daredevil', 'Black Cat', 'Magik', 'Human Torch'],
+  Gambit: ['Peni Parker', 'Mantis', 'Storm', 'Iron Man', 'Magik'],
+  Groot: ['Peni Parker', 'Magik', 'The Thing', 'Daredevil', 'Storm'],
+  Hawkeye: ['Peni Parker', 'Storm', 'Mantis', 'Ultron', 'Mister Fantastic'],
+  Hela: ['Peni Parker', 'Human Torch', 'Iron Man', 'Storm', 'Mantis'],
+  'Human Torch': ['Peni Parker', 'Black Panther', 'Daredevil', 'Magik', 'Mantis'],
+  'Invisible Woman': ['Peni Parker', 'Black Cat', 'Mantis', 'Storm', 'Daredevil'],
+  'Iron Fist': ['Peni Parker', 'Daredevil', 'Angela', 'Iron Man', 'Storm'],
+  'Iron Man': ['Peni Parker', 'Daredevil', 'Black Cat', 'Black Panther', 'Mantis'],
+  'Jeff the Land Shark': ['Peni Parker', 'Daredevil', 'Mantis', 'Storm', 'Groot'],
+  Jubilee: ['Peni Parker', 'Mantis', 'Storm', 'Human Torch', 'Magik'],
+  Loki: ['Peni Parker', 'Storm', 'Black Cat', 'Magik', 'Human Torch'],
+  'Luna Snow': ['Peni Parker', 'Storm', 'Mantis', 'Groot', 'Iron Man'],
+  Magik: ['Peni Parker', 'Mantis', 'Daredevil'],
+  Magneto: ['Peni Parker', 'Mantis', 'Storm', 'Iron Man', 'Groot'],
+  Mantis: ['Peni Parker'],
+  'Mister Fantastic': ['Black Cat', 'Peni Parker', 'Daredevil', 'Black Panther', 'Magik'],
+  'Moon Knight': ['Peni Parker', 'Loki', 'Mantis', 'Mister Fantastic', 'Groot'],
+  Namor: ['Daredevil', 'Peni Parker', 'Black Cat', 'Magik', 'Black Panther'],
+  'Peni Parker': ['Daredevil', 'Black Panther', 'Black Cat'],
+  Phoenix: ['Peni Parker', 'Storm', 'Iron Man', 'Human Torch', 'Mantis'],
+  Psylocke: ['Peni Parker', 'Black Cat', 'Mantis', 'Magik', 'Groot'],
+  'Rocket Raccoon': ['Peni Parker', 'Daredevil', 'Mantis', 'Magik', 'Storm'],
+  Rogue: ['Peni Parker', 'Storm', 'Mantis', 'Black Cat', 'Magik'],
+  'Scarlet Witch': ['Black Panther', 'Storm', 'Daredevil', 'Peni Parker', 'Human Torch'],
+  'Spider-Man': ['Peni Parker', 'Iron Man', 'Storm', 'Human Torch', 'Mantis'],
+  'Squirrel Girl': ['Peni Parker', 'Groot', 'Mantis', 'Hawkeye', 'Daredevil'],
+  'Star-Lord': ['Peni Parker', 'Iron Man', 'Storm', 'Daredevil', 'The Thing'],
+  Storm: ['Peni Parker', 'Black Cat', 'Daredevil', 'Magik', 'Mantis'],
+  'The Punisher': ['Peni Parker', 'Groot', 'Devil Dinosaur', 'Iron Man', 'Human Torch'],
+  'The Thing': ['Black Cat', 'Black Panther', 'Peni Parker', 'Daredevil', 'Magik'],
+  Thor: ['Peni Parker', 'Black Cat', 'Daredevil', 'Magik', 'Mantis'],
+  Ultron: ['Peni Parker', 'Black Panther', 'Daredevil', 'Storm', 'Human Torch'],
+  Venom: ['Peni Parker', 'Groot', 'Mantis', 'Daredevil', 'Black Cat'],
+  'White Fox': ['Peni Parker', 'Mantis', 'Black Cat', 'Daredevil', 'Magik'],
+  'Winter Soldier': ['Peni Parker', 'Daredevil', 'Black Cat', 'Mantis', 'Magik'],
+  Wolverine: ['Peni Parker', 'Venom', 'Groot', 'Hulk', 'Loki'],
 };
 
 const heroes = JSON.parse(readFileSync(heroesPath, 'utf8'));
@@ -112,3 +121,49 @@ for (const hero of updatedHeroes) {
 db.close();
 
 console.log(`Updated counter picks for ${updatedHeroes.length} heroes.`);
+
+// Heroes that exist in the live database but not yet in the mock seed
+// (e.g. roster additions from sync-official-heroes) still get counter data.
+const dbOnlyHeroNames = Object.keys(counterPicksByHero).filter((name) => !heroNames.has(name));
+
+if (dbOnlyHeroNames.length > 0) {
+  const dbExtra = createTursoClient();
+
+  for (const name of dbOnlyHeroNames) {
+    const result = await dbExtra.execute(
+      "SELECT id, raw_json FROM heroes WHERE json_extract(raw_json, '$.name') = ?",
+      [name],
+    );
+    const row = result.rows[0];
+
+    if (!row) {
+      console.warn(`Skipped ${name}: not present in the database.`);
+      continue;
+    }
+
+    const rawHero = JSON.parse(row.raw_json);
+    rawHero.counters = counterPicksByHero[name];
+
+    await dbExtra.execute('UPDATE heroes SET raw_json = ?, updated_at = ? WHERE id = ?', [
+      JSON.stringify(rawHero),
+      updatedAt,
+      row.id,
+    ]);
+    await dbExtra.execute('DELETE FROM hero_list_items WHERE hero_id = ? AND item_type = ?', [
+      row.id,
+      'counter',
+    ]);
+
+    for (const [index, counter] of counterPicksByHero[name].entries()) {
+      await dbExtra.execute(
+        `INSERT INTO hero_list_items (hero_id, item_type, value, sort_order)
+        VALUES (?, ?, ?, ?)`,
+        [row.id, 'counter', counter, index],
+      );
+    }
+
+    console.log(`Updated counter picks for database-only hero ${name}.`);
+  }
+
+  dbExtra.close();
+}

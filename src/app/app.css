@@ -24,9 +24,10 @@
   gap: 24px;
   padding: 14px 32px;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.92);
+  background: #ffffff73;
   box-shadow: 0 10px 28px rgba(17, 35, 57, 0.08);
   backdrop-filter: blur(14px);
+  
 }
 
 .brand {

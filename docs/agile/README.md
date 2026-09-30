@@ -1,6 +1,6 @@
 # Agile Workspace
 
-This folder is the lightweight agile operating system for Marvel Rivals Coach. Use it to keep feature work small, visible, and shippable.
+This folder is the lightweight agile operating system for Rivals Pulse Coach. Use it to keep feature work small, visible, and shippable.
 
 ## Workflow
 

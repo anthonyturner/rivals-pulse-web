@@ -1,0 +1,55 @@
+<section
+  class="featured-content"
+  aria-labelledby="featured-content-title"
+  aria-roledescription="carousel"
+>
+  <div class="featured-heading">
+    <div>
+      <p class="eyebrow">Featured content</p>
+      <h2 id="featured-content-title">Start with what matters now.</h2>
+    </div>
+    <p class="slide-status" aria-live="polite" aria-atomic="true">
+      Feature {{ activeIndex() + 1 }} of {{ slides.length }}:
+      {{ activeSlide().title }}
+    </p>
+  </div>
+
+  <div class="featured-slide">
+    <app-report-hero
+      variant="card"
+      [headingLevel]="3"
+      [eyebrow]="activeSlide().eyebrow"
+      [title]="activeSlide().title"
+      [description]="activeSlide().description"
+      [actions]="activeSlide().actions"
+      [media]="activeSlide().media"
+      [sourceNote]="activeSlide().sourceNote"
+    />
+  </div>
+
+  <nav class="slideshow-controls" aria-label="Featured content slides">
+    <button type="button" (click)="showPrevious()" aria-label="Show previous featured item">
+      <span aria-hidden="true">←</span>
+      Previous
+    </button>
+
+    <div class="slide-indicators" role="group" aria-label="Choose a featured item">
+      @for (slide of slides; track slide.id; let index = $index) {
+        <button
+          type="button"
+          [class.active]="index === activeIndex()"
+          [attr.aria-current]="index === activeIndex() ? 'true' : null"
+          [attr.aria-label]="'Show feature ' + (index + 1) + ': ' + slide.title"
+          (click)="showSlide(index)"
+        >
+          <span aria-hidden="true">{{ index + 1 }}</span>
+        </button>
+      }
+    </div>
+
+    <button type="button" (click)="showNext()" aria-label="Show next featured item">
+      Next
+      <span aria-hidden="true">→</span>
+    </button>
+  </nav>
+</section>

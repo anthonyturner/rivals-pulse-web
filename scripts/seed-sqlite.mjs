@@ -9,11 +9,11 @@ import { columnExists, createTursoClient, executeSchema } from './turso-client.m
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
 const schemaPath = join(__dirname, 'sqlite-schema.sql');
-const heroesPath = join(projectRoot, 'src', 'app', 'data', 'heroes.mock.json');
-const glossaryPath = join(projectRoot, 'src', 'app', 'data', 'glossary.mock.json');
-const heroVideosPath = join(projectRoot, 'src', 'app', 'data', 'hero-videos.mock.json');
-const homePortalsPath = join(projectRoot, 'src', 'app', 'data', 'home-portals.mock.json');
-const homeContentPath = join(projectRoot, 'src', 'app', 'data', 'home-content.mock.json');
+const heroesPath = join(projectRoot, 'data', 'seeds', 'heroes.mock.json');
+const glossaryPath = join(projectRoot, 'data', 'seeds', 'glossary.mock.json');
+const heroVideosPath = join(projectRoot, 'data', 'seeds', 'hero-videos.mock.json');
+const homePortalsPath = join(projectRoot, 'data', 'seeds', 'home-portals.mock.json');
+const homeContentPath = join(projectRoot, 'data', 'seeds', 'home-content.mock.json');
 
 const db = createTursoClient();
 const schema = readFileSync(schemaPath, 'utf8');

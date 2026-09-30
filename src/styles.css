@@ -25,6 +25,10 @@
   --blue: #147fb5;
   --teal: #039f9f;
   --purple: #7257c8;
+  /* Jarvis core: the overlay's team colours, shared by the console and the nav orb. */
+  --ally: #3cf2a6;
+  --enemy: #ff5d73;
+  --gold: #ffc94d;
   --focus-ring: rgba(3, 159, 159, 0.2);
   --shadow-soft: 0 18px 45px rgba(17, 35, 57, 0.12);
   --mobile-page-gutter: 8px;

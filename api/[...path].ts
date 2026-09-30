@@ -26,6 +26,10 @@ const jsonHeaders = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 's-maxage=300, stale-while-revalidate=3600',
 };
+const noStoreJsonHeaders = {
+  'content-type': 'application/json; charset=utf-8',
+  'cache-control': 'private, no-store, max-age=0',
+};
 
 export default async function handler(req: VercelRequest, res: ServerResponse) {
   if (req.method && req.method !== 'GET') {
@@ -94,7 +98,7 @@ export default async function handler(req: VercelRequest, res: ServerResponse) {
     }
 
     if (route === 'home/content') {
-      sendJson(res, 200, await getHomeContentBlocksFromDatabase());
+      sendJson(res, 200, await getHomeContentBlocksFromDatabase(), noStoreJsonHeaders);
       return;
     }
 
@@ -139,7 +143,12 @@ function normalizePath(path: string | string[] | undefined): string {
   return Array.isArray(path) ? path.join('/') : path;
 }
 
-function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
-  res.writeHead(statusCode, jsonHeaders);
+function sendJson(
+  res: ServerResponse,
+  statusCode: number,
+  body: unknown,
+  headers = jsonHeaders,
+): void {
+  res.writeHead(statusCode, headers);
   res.end(JSON.stringify(body));
 }

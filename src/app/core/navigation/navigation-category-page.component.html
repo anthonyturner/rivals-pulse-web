@@ -1,0 +1,32 @@
+<section class="category-page">
+  <app-page-header
+    class="category-hero"
+    [eyebrow]="category.eyebrow"
+    [title]="category.title"
+    [description]="category.description"
+  />
+
+  <main class="category-grid" [attr.aria-label]="category.label + ' pages'">
+    @for (item of category.items; track item.label) {
+      @if (item.enabled) {
+        <a class="category-card" [routerLink]="item.path">
+          <span class="card-index">{{ $index + 1 }}</span>
+          <span>
+            <strong>{{ item.label }}</strong>
+            <small>{{ item.description }}</small>
+          </span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      } @else {
+        <div class="category-card is-disabled" aria-disabled="true">
+          <span class="card-index">{{ $index + 1 }}</span>
+          <span>
+            <strong>{{ item.label }}</strong>
+            <small>{{ item.description }}</small>
+          </span>
+          <span class="coming-soon">Coming soon</span>
+        </div>
+      }
+    }
+  </main>
+</section>
