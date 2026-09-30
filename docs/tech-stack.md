@@ -1,8 +1,15 @@
 # Tech Stack
 
+What Rivals Pulse Coach is built on. Agents read this to avoid proposing a tool
+the project does not use, so keep it current.
+
+Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
+[stack/angular.md](stack/angular.md) and
+[stack/ui-components.md](stack/ui-components.md) for Angular.
+
 ## Frontend
 
-- Angular 20
+- Angular 20 (SSR via `@angular/ssr`)
 - TypeScript
 - Angular Signals
 - RxJS
@@ -35,4 +42,10 @@
 
 ## CI/CD
 
-- GitHub Actions (`.github/workflows/ci.yml`)
+- GitHub Actions (`.github/workflows/ci.yml`): `npm ci` and `npm run build` on
+  pull requests
+
+## Testing
+
+- Karma and Jasmine (`npm test`)
+- No lint command yet

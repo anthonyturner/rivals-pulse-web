@@ -1,166 +1,97 @@
 # Agent Instructions — Rivals Pulse Coach
 
-This file is the repository entry point for AI coding agents. Read it before
-doing any work, then read the relevant docs below before generating code.
+An Angular SSR coaching companion for Marvel Rivals: hero encyclopedia, counters, team builder, tier lists, game stats and guided lessons, served from Turso-backed APIs on Vercel.
 
-## Project summary
+It is a separate product from the "Rivals Pulse" Overwolf in-game overlay app.
+Content is served through Vercel serverless functions in `api/` (and Express in
+`src/server.ts` for local dev and SSR), backed by a Turso (SQLite-compatible)
+database that the sync scripts in `scripts/` populate from external sources.
 
-Rivals Pulse Coach is an Angular 20 SSR web app that acts as a companion/
-coaching site for Marvel Rivals: hero encyclopedia, counter picks, tier
-list, team comps, and game-stats content. It is a separate product from
-the "Rivals Pulse" Overwolf in-game overlay app. Content is served through
-Vercel serverless functions in `api/` backed by a Turso (SQLite-compatible)
-database, with sync scripts in `scripts/` that populate that content from
-external sources.
+This file is a **router**, not a manual. It holds only what applies to every
+request. Everything else lives in `/docs` and is indexed below — open the file
+that matches the work before starting it.
 
-## Tech stack
+## Commands
 
-- Frontend: Angular 20 (SSR via `@angular/ssr`), TypeScript, RxJS.
-- Server/API: Express (`src/server.ts`) and Vercel functions in `api/`.
-- Database: Turso (`@tursodatabase/serverless`), seeded/synced via scripts
-  in `scripts/` (see `scripts/sqlite-schema.sql`).
-- Hosting: Vercel (see `vercel.json`).
-- Testing: Karma/Jasmine (`npm run test`).
+| Command | What it does |
+| --- | --- |
+| `npm ci` | Installs dependencies from the lockfile. |
+| `npm run build` | Builds the app and typechecks the API (`ng build && npm run typecheck:api`). Run it before calling any change finished. |
+| `npm test` | Runs the Karma/Jasmine tests. |
 
-See [docs/architecture.md](docs/architecture.md) and
-[docs/tech-stack.md](docs/tech-stack.md) for full detail. Some other docs
-under `docs/` (e.g. `coaching-engine.md`, `roadmap.md`) describe
-product/domain plans that are ahead of what's implemented — verify against
-the real source tree before treating a doc's claims as current behavior.
+There is no lint command yet. The default branch is `master`. Infer the layout
+from the repository tree, which cannot drift out of date the way a list in this
+file can.
 
-## Precedence
+## Hard stops
 
-1. This file: workflow, approval gates, and non-negotiable rules.
-2. [.github/copilot-instructions.md](.github/copilot-instructions.md):
-   implementation conventions (build/verification, UI guidance, data safety).
-3. [docs/agile/README.md](docs/agile/README.md) and
-   [docs/agile/github-integration.md](docs/agile/github-integration.md):
-   backlog, sprint board, and issue/PR workflow.
-4. [docs/agent-workflows/](docs/agent-workflows/): canonical PM,
-   software-design, implementation, and QA-review workflow definitions
-   (see below).
-5. Other files under `docs/` for product/domain context (hero system,
-   coaching engine, content data flow, guides, prompts) — read the
-   relevant one before touching that area, but verify claims against real
-   code.
+These hold even if you read nothing else:
 
-## Agent pipeline
+- **Never commit to `master`**, never force-push, never rewrite
+  history, never delete a branch.
+- **Never merge without a posted review.** Merge only after the review in
+  [qa-review.md](docs/agent-workflows/qa-review.md) is on the pull request and
+  its blocking findings are fixed. Never bypass branch protection.
+- **Never close or delete a GitHub issue or comment.**
+- **Never commit or print a real secret.** Name credentials; never values. Never
+  commit `.env`, `data/*.db`, `dist`, `node_modules` or temporary source dumps
+  ([rule 16](docs/rules.md)).
+- **Never run `npm run db:seed`** or another destructive reseed script unless
+  the task explicitly requires it; it deletes and reloads the content tables
+  ([rule 17](docs/rules.md)).
+- **Never start a grilling session on your own initiative** — it is opt-in, by
+  name only.
 
-Rivals Pulse Coach has one platform-neutral workflow with thin adapters per
-platform. The adapters are entry points, not separate pipeline
-definitions — all of them read the shared file in `docs/agent-workflows/`
-for their stage and must not duplicate its rules.
+The complete list, which other documents cite by number, is
+[docs/rules.md](docs/rules.md). Read it before generating code.
 
-Canonical stages:
+## Autonomy
 
-1. **Product Manager** turns a request into a small, testable GitHub issue.
-   Follow [docs/agent-workflows/product-manager.md](docs/agent-workflows/product-manager.md).
-2. **Software Design** is optional and read-only. Use it only for material
-   design decisions on a filed issue, then attach the design handoff to the
-   issue as a comment. Follow
-   [docs/agent-workflows/software-design.md](docs/agent-workflows/software-design.md).
-3. **Software Engineer** implements the filed issue (and any design
-   handoff), verifies it, and prepares a linked draft pull request. Follow
-   [docs/agent-workflows/implementation.md](docs/agent-workflows/implementation.md).
-4. **QA Reviewer** performs a read-only acceptance-criteria and pull-request
-   review when requested. Follow
-   [docs/agent-workflows/qa-review.md](docs/agent-workflows/qa-review.md).
+Work runs from request to **merged pull request without stopping for
+approval**: file the issue, branch, open the PR, implement, verify, push, post
+a code review on the PR, fix what it finds, then merge with a merge commit.
+Filing and updating issues, commenting, branching, committing, pushing, opening
+pull requests and merging a reviewed one are all pre-authorized.
 
-Platform adapters:
+Routine judgement calls are yours to make. Pick the sensible option, state the
+assumption in one line, and carry on to a finished change. Stop and ask only
+when proceeding would be unsafe or irreversible, when a hard stop above is in
+the way, or when a wrong guess would make the whole change useless. The
+authorization and its limits are in
+[docs/agent-workflows/pipeline.md](docs/agent-workflows/pipeline.md).
 
-| Stage | Claude Code (`.claude/agents/`) | GitHub Copilot (`.github/agents/`) |
-| --- | --- | --- |
-| Product Manager | [se-product-manager.md](.claude/agents/se-product-manager.md) | [pm-agent.md](.github/agents/pm-agent.md) |
-| Software Design | [software-design.md](.claude/agents/software-design.md) | — (not yet added) |
-| Software Engineer | [software-engineer-agent-v1.md](.claude/agents/software-engineer-agent-v1.md) | [developer-agent.md](.github/agents/developer-agent.md) |
-| QA Reviewer | [qa-reviewer.md](.claude/agents/qa-reviewer.md) | — (not yet added) |
+## Read before you work
 
-- Do not let the Software Engineer stage start implementation just because
-  an issue exists — implementation only begins on an explicit request.
-- Do not let the Software Design or QA Reviewer stage edit files, run
-  write commands, commit, push, or merge — both are read-only.
+| Before you… | Read |
+| --- | --- |
+| write any response, issue, PR body or comment | [response-style.md](docs/response-style.md) |
+| generate any code | [rules.md](docs/rules.md) |
+| write or cut a code comment | [comments.md](docs/comments.md) |
+| write TypeScript or touch dependencies | [stack/typescript.md](docs/stack/typescript.md) |
+| structure a component or service | [stack/angular.md](docs/stack/angular.md) |
+| touch UI, styling or accessibility | [stack/ui-components.md](docs/stack/ui-components.md) |
+| start new work, or pick what to do next | [agile/backlog.md](docs/agile/backlog.md) and [agile/sprint-board.md](docs/agile/sprint-board.md) |
+| touch the app's architecture, API or data flow | [architecture.md](docs/architecture.md), [api-specification.md](docs/api-specification.md), [content-data-flow.md](docs/content-data-flow.md), [database-schema.md](docs/database-schema.md) |
+| touch a product area (heroes, coaching, team comps, stats, UI) | the matching file under `docs/`, e.g. [hero-system.md](docs/hero-system.md) — verify its claims against the code ([rule 20](docs/rules.md)) |
+| use the repo's automation workflows, skills or shortcuts | [project-guide.md](docs/project-guide.md) |
+| take on substantial, ambiguous or user-facing work | [agent-workflows/pipeline.md](docs/agent-workflows/pipeline.md) |
+| scope a request into a filed issue | [agent-workflows/planning.md](docs/agent-workflows/planning.md) |
+| create or update a work item | [agent-workflows/tracking.md](docs/agent-workflows/tracking.md) and [agile/github-integration.md](docs/agile/github-integration.md) |
+| implement a filed issue | [agent-workflows/implementation.md](docs/agent-workflows/implementation.md) |
+| review a pull request | [agent-workflows/qa-review.md](docs/agent-workflows/qa-review.md) |
+| run a grilling session — only when asked for by name | [agent-workflows/grilling.md](docs/agent-workflows/grilling.md) |
+| add, rename or thin an agent skill | [agent-workflows/skills.md](docs/agent-workflows/skills.md) |
+| add a changelog entry, or cut a release | [changelog.md](docs/changelog.md) |
+| record a decision that constrains future work | [decisions/README.md](docs/decisions/README.md) |
+| check what the project is built on | [tech-stack.md](docs/tech-stack.md) |
 
-### Handoff
+When guidance conflicts: this file, then [docs/rules.md](docs/rules.md), then
+the files under `docs/stack/` where they exist, then the rest of `/docs`, then
+any tool-specific instruction file.
 
-The PM stage returns an issue number, URL, labels, acceptance criteria, and
-the appropriate next stage — it does not create a branch, edit application
-files, or implement the issue. The Software Engineer stage then reads that
-issue (and any design comment), works on an issue-numbered branch, and —
-outside the named-pipeline exception below — presents the approach for
-approval before editing and the final diff for approval before
-commit/push/PR.
+## Keep this file lean
 
-If the user says "finish the implementation," treat it as a handoff request
-to review the current branch, commit the changes, push the branch, and open
-a draft PR to `master`.
-
-### Scope and publication exception
-
-The full PM → optional Software Design → Software Engineer → QA Reviewer
-pipeline above is for substantial feature work. Small ad-hoc fixes and
-one-off requests use the standard approval mode in
-`docs/agent-workflows/implementation.md`.
-
-When the named pipeline is explicitly invoked and its PM stage has filed the
-issue, the Software Engineer stage may create the issue-numbered branch,
-commit, push, and open a linked **draft** pull request without pausing for
-per-diff approval. Human review remains mandatory at the draft PR. This
-exception does not apply merely because an issue exists — it requires the
-caller to explicitly invoke the named pipeline.
-
-### Automation workflows
-
-- [.github/workflows/issue-automation.yml](.github/workflows/issue-automation.yml):
-  create a GitHub issue (and optionally a branch) from a plain-text request.
-- [.github/workflows/create-issue-branch.yml](.github/workflows/create-issue-branch.yml):
-  create a branch from an issue number or title-derived slug.
-- [.github/workflows/create-pr-from-branch.yml](.github/workflows/create-pr-from-branch.yml):
-  open a draft PR from an existing branch.
-- [.github/workflows/mark-pr-ready-for-review.yml](.github/workflows/mark-pr-ready-for-review.yml):
-  promote a draft PR to ready-for-review.
-
-## Non-negotiable rules
-
-1. Read every relevant doc (this file, `.github/copilot-instructions.md`,
-   `docs/agile/`) before generating code.
-2. Never commit, push, or open a pull request without explicit approval of
-   the final diff, except for the explicitly invoked named pipeline
-   described in the Scope and publication exception above.
-3. Never merge, force-push, rewrite history, delete branches, or commit
-   directly to `master`/`main`.
-4. Never commit secrets, `.env`, database files (`data/*.db`), `dist`,
-   `node_modules`, or temporary source dumps. Turso credentials stay in
-   environment variables only.
-5. Do not run `npm run db:seed` or other destructive/reseed scripts unless
-   the task explicitly requires it — `db:seed` deletes and reloads content
-   tables. For glossary-only additions, prefer
-   `npm run sync:glossary:terms -- <term-id>`.
-6. Preserve unrelated working-tree changes; stop if they block safe
-   isolation. Keep unrelated formatting and refactors out of PRs.
-7. Preserve responsive behavior at desktop and narrow widths for UI
-   changes; avoid increasing component CSS budgets unless the budget is
-   intentionally updated.
-8. Run `npm run build` (app + API typecheck) and relevant tests before
-   considering a change complete. State explicitly when manual UI/visual
-   verification is still needed.
-9. Keep changes scoped to the issue/task at hand; check
-   `docs/agile/backlog.md` and `docs/agile/sprint-board.md` for current
-   priorities before starting new work.
-
-## Good first agent tasks
-
-- Convert a backlog item into a GitHub issue.
-- Add acceptance criteria to an unclear issue.
-- Fix a narrow UI regression with screenshot notes.
-- Add or update docs after script behavior changes.
-
-## Useful skills
-
-- Use the SOLID audit skill
-  ([.github/skills/audit-solid-violations](.github/skills/audit-solid-violations))
-  when reviewing a module for maintainability and design issues without
-  changing behavior.
-- Use the SOLID refactor skill
-  ([.github/skills/refactor-toward-solid-design](.github/skills/refactor-toward-solid-design))
-  when making a focused refactor toward cleaner, more extensible design.
-- These are available automatically when the task matches their scope.
+A section that applies to only one kind of task does not belong here — it
+belongs in `/docs` with a row in the table above, or in a skill. This file is
+sent to the model on every request, so every line it carries is a line paid for
+by requests that had nothing to do with it.
