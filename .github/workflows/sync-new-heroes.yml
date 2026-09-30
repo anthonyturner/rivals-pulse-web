@@ -81,21 +81,30 @@ jobs:
           SUMMARY: ${{ steps.roster.outputs.summary }}
           BASE_BRANCH: ${{ github.event.repository.default_branch }}
           PR_TITLE: 'chore(heroes): portraits for newly released heroes'
+          BRANCH: chore/new-hero-portraits
         run: |
-          # A daily schedule would re-open this pull request every morning until
-          # it is merged, so an existing open one is left alone.
-          if [ -n "$(gh pr list --state open --search "$PR_TITLE in:title" --json number --jq '.[0].number')" ]; then
+          # A daily schedule would re-open this pull request every morning until it
+          # is merged, so an existing open one is left alone. Matched on the head
+          # branch rather than by title search: search indexing lags, and the
+          # parentheses and colon in the title break the search query outright,
+          # which silently opened a fresh pull request every single day.
+          # Prefix, not exact: earlier runs opened one branch per run, and those
+          # must still count as an open pull request until they are cleared.
+          if gh pr list --state open --json headRefName --jq '.[].headRefName'               | grep -q "^${BRANCH}"; then
             echo 'An open portrait pull request already exists; skipping.'
             exit 0
           fi
 
-          branch="chore/new-hero-portraits-${GITHUB_RUN_ID}"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git checkout -b "$branch"
+          git checkout -B "$BRANCH"
           git add public/images/heroes src/public/images/heroes
           git commit -m 'chore(heroes): add portraits for newly released heroes'
-          git push --set-upstream origin "$branch"
+          # One stable branch, so a later run replaces its commit instead of
+          # leaving another branch behind. Fetched first so the lease is real.
+          git fetch origin "$BRANCH" || true
+          git push --force-with-lease origin "$BRANCH"
+          branch="$BRANCH"
 
           cat > pr-body.md <<BODY
           Automated by \`.github/workflows/sync-new-heroes.yml\`.
