@@ -16,6 +16,7 @@ import { RouterLink } from '@angular/router';
 import { FeaturedContentComponent } from './featured-content/featured-content.component';
 import { HeroSearchComponent } from './hero-search/hero-search.component';
 import { HomeContentService } from './home-content.service';
+import { JarvisConsoleComponent } from './jarvis-console/jarvis-console.component';
 import {
   buildHomeHeroMedia,
   buildSeasonHeroCopy,
@@ -35,6 +36,7 @@ const BACKGROUND_VIDEO_START_DELAY_MS = 1200;
   imports: [
     FeaturedContentComponent,
     HeroSearchComponent,
+    JarvisConsoleComponent,
     RouterLink,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
