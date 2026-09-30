@@ -19,13 +19,12 @@
     <video
       #backgroundVideo
       class="home-page-background-video"
-      autoplay
       [controls]="backgroundVideoForeground"
       [muted]="backgroundVideoMuted"
       [src]="heroMedia().videoUrl"
       loop
       playsinline
-      preload="metadata"
+      preload="none"
       [poster]="heroMedia().posterUrl"
       tabindex="-1"
       (canplay)="startBackgroundVideo(backgroundVideo)"
@@ -63,6 +62,8 @@
       <p class="eyebrow">{{ seasonHeroCopy().eyebrow }}</p>
       <h1>{{ seasonHeroCopy().title }}</h1>
       <p class="lede">{{ seasonHeroCopy().lede }}</p>
+
+      <app-hero-search />
 
       <div class="hero-actions" aria-label="Season actions">
         <a

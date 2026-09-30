@@ -14,6 +14,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
 import { FeaturedContentComponent } from './featured-content/featured-content.component';
+import { HeroSearchComponent } from './hero-search/hero-search.component';
 import { HomeContentService } from './home-content.service';
 import {
   buildHomeHeroMedia,
@@ -24,11 +25,16 @@ import { SeasonDashboardComponent } from './season-dashboard/season-dashboard.co
 import { SeasonGlanceComponent } from './season-glance/season-glance.component';
 
 const seasonLaunchPatchUrl = 'https://www.marvelrivals.com/20260708/41525_1306959.html';
+/** Longest the hero video waits for an idle moment before starting anyway. */
+const BACKGROUND_VIDEO_START_TIMEOUT_MS = 3000;
+/** Fallback delay where requestIdleCallback is unavailable, such as Safari. */
+const BACKGROUND_VIDEO_START_DELAY_MS = 1200;
 
 @Component({
   selector: 'app-home-page',
   imports: [
     FeaturedContentComponent,
+    HeroSearchComponent,
     RouterLink,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
@@ -39,6 +45,7 @@ const seasonLaunchPatchUrl = 'https://www.marvelrivals.com/20260708/41525_130695
 })
 export class HomePageComponent implements AfterViewInit {
   @ViewChild('heroBanner') private heroBanner?: ElementRef<HTMLElement>;
+  @ViewChild('backgroundVideo') private backgroundVideo?: ElementRef<HTMLVideoElement>;
 
   backgroundVideoMuted = true;
   backgroundVideoForeground = false;
@@ -60,7 +67,33 @@ export class HomePageComponent implements AfterViewInit {
   ngAfterViewInit(): void {
     if (this.isBrowser) {
       this.updateBackgroundVideoPopout();
+      this.scheduleBackgroundVideoStart();
     }
+  }
+
+  /**
+   * The hero video used to autoplay with preload="metadata", so it competed with
+   * first paint for a decoration. The poster now carries the hero on its own and
+   * the video is fetched once the browser is idle.
+   */
+  private scheduleBackgroundVideoStart(): void {
+    const start = () => {
+      const video = this.backgroundVideo?.nativeElement;
+
+      if (!video) {
+        return;
+      }
+
+      video.load();
+      this.startBackgroundVideo(video);
+    };
+
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(start, { timeout: BACKGROUND_VIDEO_START_TIMEOUT_MS });
+      return;
+    }
+
+    setTimeout(start, BACKGROUND_VIDEO_START_DELAY_MS);
   }
 
   @HostListener('window:scroll')

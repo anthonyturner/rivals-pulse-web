@@ -450,12 +450,16 @@ export class HeroesPageComponent implements OnInit {
         ...hero,
         buildProfile: hero.buildProfile ?? computeHeroBuildProfile(hero),
       }));
-      const requestedHeroId = this.route.snapshot.queryParamMap.get('hero') ?? '';
+      const params = this.route.snapshot.queryParamMap;
+      const requestedHeroId = params.get('hero') ?? '';
       const initialHero =
         hydratedHeroes.find((hero) => hero.id === requestedHeroId) ?? hydratedHeroes[0];
+      // The home page search hands its term over as ?q=, rather than filtering itself.
+      const requestedSearch = params.get('q')?.trim() ?? '';
 
       this.heroes.set(hydratedHeroes);
       this.heroVideos.set(heroVideos);
+      this.searchTerm.set(requestedSearch);
       this.selectedHeroId.set(initialHero?.id ?? '');
     });
   }

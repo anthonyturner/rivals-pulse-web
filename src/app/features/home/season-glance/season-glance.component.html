@@ -18,14 +18,14 @@
         <small>{{ content.latestHero.detail }}</small>
       </div>
     </article>
-    @if (state().latestTuning; as tuning) {
-      <article>
-        <span>{{ content.tuning.label }}</span>
-        <strong>{{ tuning.title }}</strong>
-        <small>{{ tuning.date }} · {{ tuning.category }}</small>
-        <a [href]="tuning.sourceUrl" target="_blank" rel="noopener noreferrer">
-          {{ content.tuning.sourceLabel }}
-        </a>
+    @if (state().topPick; as topPick) {
+      <article class="top-pick-card">
+        <img [src]="topPick.imageUrl" [alt]="topPick.name" width="72" height="72" />
+        <div>
+          <span>Top pick this week</span>
+          <strong>{{ topPick.name }} · {{ formatPickRate(topPick.pickRate) }} pick rate</strong>
+          <small>{{ topPick.role }} · all ranks</small>
+        </div>
       </article>
     }
   </aside>

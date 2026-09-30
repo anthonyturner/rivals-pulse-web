@@ -16,6 +16,10 @@ export class SeasonGlanceComponent {
 
   readonly state = signal<SeasonGlanceState>(this.service.initialState);
 
+  formatPickRate(value: number): string {
+    return `${value.toFixed(2)}%`;
+  }
+
   constructor() {
     if (this.isBrowser) {
       this.service.getSeasonGlance()
