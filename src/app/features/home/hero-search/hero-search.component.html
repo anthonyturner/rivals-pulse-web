@@ -1,0 +1,38 @@
+<form class="hero-search" role="search" (submit)="onSubmit($event)">
+  <label class="hero-search-label" for="home-hero-search">
+    Search heroes, counters, guides or players
+  </label>
+  <div class="hero-search-field">
+    <svg
+      class="hero-search-icon"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.4"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+    <input
+      id="home-hero-search"
+      type="search"
+      name="q"
+      autocomplete="off"
+      placeholder="Search a hero, counter, guide or player"
+      [value]="term()"
+      (input)="onTermInput($event)"
+    />
+    <button type="submit">Search</button>
+  </div>
+</form>
+
+<ul class="popular-searches" aria-label="Popular searches">
+  @for (term of popularSearches; track term) {
+    <li>
+      <button type="button" (click)="onPopularSearch(term)">{{ term }}</button>
+    </li>
+  }
+</ul>

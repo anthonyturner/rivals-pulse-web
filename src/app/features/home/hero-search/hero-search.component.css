@@ -1,0 +1,91 @@
+:host {
+  display: block;
+}
+
+.hero-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hero-search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 560px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  box-shadow: 0 16px 40px -18px rgba(0, 0, 0, 0.8);
+}
+
+.hero-search-icon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.hero-search-field input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.hero-search-field button {
+  flex: none;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--text);
+  color: var(--bg-elevated);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hero-search-field input:focus-visible,
+.hero-search-field button:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.popular-searches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.popular-searches button {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: #b8c4d4;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.popular-searches button:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--bg-elevated);
+}
+
+@media (max-width: 520px) {
+  .popular-searches {
+    /* The chips are a convenience, and the box itself matters more when narrow. */
+    display: none;
+  }
+}
