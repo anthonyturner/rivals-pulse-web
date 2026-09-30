@@ -15,6 +15,7 @@ import { RouterLink } from '@angular/router';
 
 import { FeaturedContentComponent } from './featured-content/featured-content.component';
 import { HomeContentService } from './home-content.service';
+import { JarvisConsoleComponent } from './jarvis-console/jarvis-console.component';
 import {
   buildHomeHeroMedia,
   buildSeasonHeroCopy,
@@ -29,6 +30,7 @@ const seasonLaunchPatchUrl = 'https://www.marvelrivals.com/20260708/41525_130695
   selector: 'app-home-page',
   imports: [
     FeaturedContentComponent,
+    JarvisConsoleComponent,
     RouterLink,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
