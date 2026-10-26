@@ -38,6 +38,8 @@ repo's build. This is a move, not a redesign.
 | `20260731000000_match_history.sql` | Provider match history tables |
 | `20260731010000_hero_stats.sql` | Provider hero stats tables |
 | `20260815000000_tracked_match_history.sql` | `tracked_matches` (a recorder's own matches) |
+| `20260819001043_hero_videos.sql` | `heroes` and `hero_videos`, readable by anyone; recovered from the live project's migration history |
+| `20260819002052_add_gefest_role_guides.sql` | Allows the `gefest-role-guide` video type; recovered the same way |
 | `20260924000000_jarvis_token_rate_limit.sql` | `jarvis_token_requests` |
 | `20261009000000_participants.sql` | `participants`, `do_not_store`, `half_seasons`, `participant_upload_log` and the functions that write to them |
 | `20261010000000_participants_fill_late_result.sql` | `record_match_participants` fills a blank `is_win` on a repeat upload |
