@@ -1,1 +1,4 @@
 public/videos/home/*.mp4 -filter -diff -merge -text
+
+# Hashed in the sample manifest, so line endings must never be rewritten.
+docs/pulse-atlas/samples/** text eol=lf

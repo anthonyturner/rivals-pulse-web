@@ -24,6 +24,7 @@
     "watch:official-heroes": "node scripts/sync-official-heroes.mjs --watch --interval-days 3",
     "sync:tier-list": "node --experimental-strip-types scripts/sync-tier-list.mjs",
     "sync:game-stats": "node --experimental-strip-types scripts/sync-game-stats.mjs",
+    "build:pulse-atlas": "node --experimental-strip-types scripts/build-pulse-atlas.mjs",
     "refresh:counters": "node scripts/refresh-counter-picks.mjs",
     "refresh:playstyles": "node scripts/refresh-playstyles.mjs",
     "refresh:build-profiles": "node scripts/refresh-build-profiles.mjs",

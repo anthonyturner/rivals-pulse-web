@@ -1,0 +1,68 @@
+name: Publish Pulse Atlas
+
+# Pulse Atlas is the public, read-only reference-data feed (heroes, tier list,
+# glossary, maps) served from GitHub Pages. The contract is in
+# docs/pulse-atlas.md. Reference data changes slowly and the tier list itself
+# syncs every six hours, so a six-hourly publish keeps the feed current.
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - .github/workflows/pulse-atlas.yml
+      - scripts/build-pulse-atlas.mjs
+      - package.json
+      - src/pulse-atlas.ts
+      - data/pulse-atlas/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pulse-atlas
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Generate the feed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Fails the run, and so skips the deploy job, if any dataset is empty,
+      # malformed or unsafe to publish. The last good site stays live.
+      - name: Generate the files
+        run: npm run build:pulse-atlas -- --out dist/pulse-atlas-site
+
+      - name: Upload the Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist/pulse-atlas-site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
