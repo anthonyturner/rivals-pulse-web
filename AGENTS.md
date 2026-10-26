@@ -71,7 +71,7 @@ authorization and its limits are in
 | structure a component or service | [stack/angular.md](docs/stack/angular.md) |
 | touch UI, styling or accessibility | [stack/ui-components.md](docs/stack/ui-components.md) |
 | start new work, or pick what to do next | [agile/backlog.md](docs/agile/backlog.md) and [agile/sprint-board.md](docs/agile/sprint-board.md) |
-| touch the app's architecture, API or data flow | [architecture.md](docs/architecture.md), [api-specification.md](docs/api-specification.md), [content-data-flow.md](docs/content-data-flow.md), [database-schema.md](docs/database-schema.md) |
+| touch the app's architecture, API or data flow | [architecture.md](docs/architecture.md), [api-specification.md](docs/api-specification.md), [content-data-flow.md](docs/content-data-flow.md), [database-schema.md](docs/database-schema.md), [pulse-atlas.md](docs/pulse-atlas.md) |
 | touch a product area (heroes, coaching, team comps, stats, UI) | the matching file under `docs/`, e.g. [hero-system.md](docs/hero-system.md) — verify its claims against the code ([rule 20](docs/rules.md)) |
 | use the repo's automation workflows, skills or shortcuts | [project-guide.md](docs/project-guide.md) |
 | take on substantial, ambiguous or user-facing work | [agent-workflows/pipeline.md](docs/agent-workflows/pipeline.md) |
