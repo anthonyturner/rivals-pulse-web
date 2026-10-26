@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-26T22:31:21.244Z",
+  "files": [
+    {
+      "dataset": "heroes",
+      "path": "pulse-atlas/v1/heroes.json",
+      "sha256": "1798f27049528289cbdb465d409860d70ee77ecd65043e6e54fad74ca76e24f0",
+      "bytes": 21351
+    },
+    {
+      "dataset": "tier-list",
+      "path": "pulse-atlas/v1/tier-list.json",
+      "sha256": "a170004eb842be844c21558eca01f7ed9b5152bceba1735bcb1e5f54cf8fdf54",
+      "bytes": 9160
+    },
+    {
+      "dataset": "glossary",
+      "path": "pulse-atlas/v1/glossary.json",
+      "sha256": "06c8708445de6cd8022d49d192f0a51010fcf4cd25861ef9b71ad33022a3e3f5",
+      "bytes": 1661
+    },
+    {
+      "dataset": "maps",
+      "path": "pulse-atlas/v1/maps.json",
+      "sha256": "69106d067703461910d4e2f6918f9a9ac4a72840af30bd82030aa4dbd899aa11",
+      "bytes": 2156
+    }
+  ]
+}

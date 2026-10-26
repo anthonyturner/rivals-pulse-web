@@ -10,7 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
-- A public Pulse Atlas feed of heroes, the tier list, the glossary and maps as JSON on GitHub Pages, refreshed every six hours, so the overlay and other tools can read reference data without the API ([#111](https://github.com/anthonyturner/rivals-pulse-web/pull/111)).
+- A public Pulse Atlas feed of heroes, the tier list (every season and rank), the glossary and maps as JSON on GitHub Pages, refreshed every six hours, so the overlay and other tools can read reference data without the API ([#111](https://github.com/anthonyturner/rivals-pulse-web/pull/111)).
 - A Jarvis voice-assistant console on the home page, opened from a new orb in the header, answering sample questions in a scripted demo ([#68](https://github.com/anthonyturner/rivals-pulse-web/pull/68)).
 - New heroes reach the hero page within a day of release, through a daily roster sync ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - The home banner plays the latest official season update video, with a spotlight card for that update ([#35](https://github.com/anthonyturner/rivals-pulse-web/pull/35)).
