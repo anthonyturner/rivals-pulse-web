@@ -35,6 +35,12 @@ hitting `api/sync/home-news.ts`, `api/sync/tier-list.ts`, and
   `data/seeds/*.mock.json`, seeded with `npm run db:seed`
   (`scripts/seed-sqlite.mjs`).
 
+## Supabase
+
+- The overlay upload backend (migrations, Edge Functions) lives in `supabase/`
+  and is deployed by hand with the Supabase CLI. The web app does not read from
+  it yet. See [supabase.md](supabase.md).
+
 ## Authentication
 
 None. There is no login, JWT, or OAuth in this codebase.
