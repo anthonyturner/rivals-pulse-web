@@ -2149,5 +2149,79 @@
     ],
     "sourceName": "Marvel Rivals Wiki - Competitive",
     "sourceUrl": "https://marvelrivals.fandom.com/wiki/Competitive"
+  },
+  {
+    "id": "los",
+    "term": "LOS",
+    "category": "Competitive Gaming",
+    "definition": "Line of sight: whether you can see a target to shoot or heal it.",
+    "coachNote": "Breaking line of sight behind cover is the cheapest way to stop incoming damage, and the cheapest way to lose your healer's heals.",
+    "example": "Break their LOS behind the pillar.",
+    "relatedTerms": [
+      "Sightline",
+      "Cover",
+      "Positioning"
+    ],
+    "sourceName": "Overlay glossary seed (MetaBot.gg and Dot Esports terminology)",
+    "sourceUrl": "/glossary"
+  },
+  {
+    "id": "anti-heal",
+    "term": "Anti-heal",
+    "category": "Competitive Gaming",
+    "definition": "Reducing or blocking the healing a target can receive.",
+    "coachNote": "When a target is anti-healed, commit damage now: their healers cannot save them until it wears off.",
+    "example": "He's anti'd, he can't get healed, finish him.",
+    "relatedTerms": [
+      "Healing Reduction",
+      "Strategist",
+      "Burst"
+    ],
+    "sourceName": "Overlay glossary seed (MetaBot.gg and Dot Esports terminology)",
+    "sourceUrl": "/glossary"
+  },
+  {
+    "id": "squishies",
+    "term": "Squishies",
+    "category": "Competitive Gaming",
+    "definition": "Characters with small health pools, typically Duelists and Strategists.",
+    "coachNote": "Squishies win fights from safe angles and lose them when caught alone. Protect yours and punish theirs.",
+    "example": "Protect the squishies, don't overextend.",
+    "relatedTerms": [
+      "Duelist",
+      "Strategist",
+      "Peel"
+    ],
+    "sourceName": "Overlay glossary seed (MetaBot.gg and Dot Esports terminology)",
+    "sourceUrl": "/glossary"
+  },
+  {
+    "id": "mvp-svp",
+    "term": "MVP/SVP",
+    "category": "Competitive Gaming",
+    "definition": "Most Valuable Player and Second Valuable Player, awarded to the top two players in a match: MVP on the winning team, SVP on the losing team.",
+    "coachNote": "MVP and SVP reward match-end stats, not always the plays that won the fight. Use them as a signal, not a verdict.",
+    "example": "She went MVP that game, 30 elims.",
+    "relatedTerms": [
+      "Competitive",
+      "Ranked"
+    ],
+    "sourceName": "Overlay glossary seed (MetaBot.gg and Dot Esports terminology)",
+    "sourceUrl": "/glossary"
+  },
+  {
+    "id": "healer",
+    "term": "Healer",
+    "category": "Role",
+    "definition": "In Marvel Rivals the healers are the Strategists. The game names the role Strategist rather than Healer or Support, but any hero whose role is Strategist is a healer.",
+    "coachNote": "\"How many healers do we have\" means \"how many Strategists\", and the answer you usually want is two.",
+    "example": "Luna Snow is a Strategist, so yes, she is a healer.",
+    "relatedTerms": [
+      "Strategist",
+      "Primary Healer",
+      "Off-Healer"
+    ],
+    "sourceName": "Marvel Rivals Wiki - Gameplay Terms",
+    "sourceUrl": "https://marvelrivals.fandom.com/wiki/Gameplay_Terms"
   }
 ]
