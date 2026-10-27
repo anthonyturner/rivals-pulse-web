@@ -8,9 +8,12 @@ import {
   buildPulseAtlas,
   PULSE_ATLAS_BASE_PATH,
   PULSE_ATLAS_DATASETS,
+  PULSE_ATLAS_MANIFEST_PATH,
+  parseManifest,
   tierListRequests,
   verifyPulseAtlas,
 } from '../src/pulse-atlas.ts';
+import { renderPulseAtlasPage } from '../src/pulse-atlas-page.ts';
 
 // The public API is the source because it needs no credentials and is the same
 // contract the web app reads. Moving content to another database changes this
@@ -66,6 +69,19 @@ const written = await Promise.all(
   files.map(async (file) => ({ path: file.path, content: await readFile(targetOf(file), 'utf8') })),
 );
 verifyPulseAtlas(written, sha256);
+
+// The home pages are rendered from the verified manifest as written; they add
+// files next to the feed and never change the dataset files or the manifest.
+if (!samplesDir) {
+  const manifest = parseManifest(written.find((file) => file.path === PULSE_ATLAS_MANIFEST_PATH).content);
+
+  for (const pagePath of ['index.html', `${PULSE_ATLAS_BASE_PATH}/index.html`]) {
+    const html = renderPulseAtlasPage(manifest, { pagePath, manifestPath: PULSE_ATLAS_MANIFEST_PATH });
+    await mkdir(dirname(join(outDir, pagePath)), { recursive: true });
+    await writeFile(join(outDir, pagePath), html, 'utf8');
+    console.log(`${pagePath}  ${Buffer.byteLength(html)} bytes`);
+  }
+}
 
 for (const file of written) {
   console.log(`${file.path}  ${Buffer.byteLength(file.content)} bytes`);
