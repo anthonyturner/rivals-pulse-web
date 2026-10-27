@@ -22,3 +22,6 @@ verify_jwt = false
 
 [functions.elevenlabs-agent-token]
 verify_jwt = false
+
+[functions.marvel-rivals-proxy]
+verify_jwt = false
