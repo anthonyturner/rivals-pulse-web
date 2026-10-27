@@ -30,3 +30,18 @@ jobs:
       - name: Build
         run: npm run build
 
+  supabase-functions:
+    name: Supabase function tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Test Edge Function modules
+        run: npm run test:functions

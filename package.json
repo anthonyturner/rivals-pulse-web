@@ -10,6 +10,7 @@
     "typecheck:api": "tsc -p tsconfig.api.json --noEmit",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:functions": "node --no-warnings --test \"supabase/functions/**/*.test.ts\"",
     "db:seed": "node scripts/seed-sqlite.mjs",
     "db:sync": "node scripts/sync-external-sources.mjs",
     "sync:home-news": "node --experimental-strip-types scripts/sync-home-news.mjs",
@@ -74,6 +75,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "supabase": "^2.122.0",
     "typescript": "~5.9.2"
   }
 }

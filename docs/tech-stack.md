@@ -22,7 +22,9 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 ## Database
 
-- Turso (`@tursodatabase/serverless`), SQLite-compatible
+- Turso (`@tursodatabase/serverless`), SQLite-compatible: web content
+- Supabase (Postgres and Edge Functions): the overlay upload backend, owned by
+  this repo under `supabase/`; see [supabase.md](supabase.md)
 
 ## Authentication
 
@@ -43,7 +45,8 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 ## CI/CD
 
 - GitHub Actions (`.github/workflows/ci.yml`): `npm ci` and `npm run build` on
-  pull requests
+  pull requests, plus a job running the Supabase function tests
+  (`npm run test:functions`)
 
 ## Testing
 
