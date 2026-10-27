@@ -33,8 +33,8 @@ describe('parseParticipants', () => {
     const rows = parseParticipants(match([player(), player({ player_uid: '200', nick_name: 'Beta', camp: 1 })]));
 
     assert.deepEqual(rows, [
-      { uid: '100', name: 'Alpha', team: 0, hero_id: 1011, kills: 5, deaths: 2, assists: 7, is_win: true },
-      { uid: '200', name: 'Beta', team: 1, hero_id: 1011, kills: 5, deaths: 2, assists: 7, is_win: false },
+      { uid: '100', name: 'Alpha', team: 0, hero_id: 1011, kills: 5, deaths: 2, assists: 7, final_hits: null, is_win: true },
+      { uid: '200', name: 'Beta', team: 1, hero_id: 1011, kills: 5, deaths: 2, assists: 7, final_hits: null, is_win: false },
     ]);
   });
 
@@ -107,6 +107,30 @@ describe('parseParticipants', () => {
     assert.deepEqual([row.kills, row.deaths, row.assists, row.team], [null, null, null, null]);
     assert.equal(parseParticipants(match([player({ cur_hero_id: 2_147_483_648 })]))[0].hero_id, null);
   });
+
+  it('keeps Final Hits for every player, on both teams', () => {
+    const rows = parseParticipants(match([
+      player({ final_hits: 3 }),
+      player({ player_uid: '200', nick_name: 'Beta', camp: 1, final_hits: 0 }),
+    ]));
+
+    assert.deepEqual(rows.map(row => row.final_hits), [3, 0]);
+  });
+
+  it('stores absent or null Final Hits as null, never 0', () => {
+    const [absent] = parseParticipants(match([player()]));
+    const [explicitNull] = parseParticipants(match([player({ final_hits: null })]));
+
+    assert.equal(absent.final_hits, null);
+    assert.equal(explicitNull.final_hits, null);
+  });
+
+  it('refuses invalid Final Hits the same way as the other figures', () => {
+    for (const final_hits of [-1, 1.5, 1e9, 'three', '', true, {}, [2]]) {
+      const [row] = parseParticipants(match([player({ final_hits })]));
+      assert.equal(row.final_hits, null, `final_hits ${JSON.stringify(final_hits)} was stored`);
+    }
+  });
 });
 
 describe('rosterFingerprint', () => {
@@ -168,6 +192,14 @@ describe('storableMatch', () => {
       camp: 0,
       player_hero: { hero_name: 'Hulk' },
     });
+  });
+
+  it("keeps the recorder's Final Hits, and leaves them out when not counted", () => {
+    const counted = storableMatch(match([player()], { match_player: { player_uid: '100', final_hits: 0 } }));
+    const notCounted = storableMatch(match([player()], { match_player: { player_uid: '100', final_hits: 'x' } }));
+
+    assert.equal(counted.performance?.['final_hits'], 0);
+    assert.equal(notCounted.performance !== null && 'final_hits' in notCounted.performance, false);
   });
 
   it('drops nested values smuggled into the match facts', () => {

@@ -43,6 +43,7 @@ repo's build. This is a move, not a redesign.
 | `20260924000000_jarvis_token_rate_limit.sql` | `jarvis_token_requests` |
 | `20261009000000_participants.sql` | `participants`, `do_not_store`, `half_seasons`, `participant_upload_log` and the functions that write to them |
 | `20261010000000_participants_fill_late_result.sql` | `record_match_participants` fills a blank `is_win` on a repeat upload |
+| `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
 
 Link once per machine, check history, then apply:
 
