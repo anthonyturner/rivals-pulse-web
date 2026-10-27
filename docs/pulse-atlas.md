@@ -136,6 +136,13 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    JSON, so key order does not matter). It writes them, reads them back and
    checks every hash and size against the manifest.
 
+5. Renders a home page from the verified manifest to `index.html` at the site
+   root and to `pulse-atlas/v1/index.html`, so opening the site in a browser
+   shows what Pulse Atlas is and a table of every file with its size and
+   sha256. It is static HTML with inline CSS and no scripts, built by
+   [src/pulse-atlas-page.ts](../src/pulse-atlas-page.ts). It is not part of
+   the feed: the manifest does not list it, and clients never need it.
+
 Any failed fetch (three attempts each), an empty or malformed dataset, or an
 unsafe value fails the generate job. The deploy job needs it, so it never runs
 and the last good publish stays live.

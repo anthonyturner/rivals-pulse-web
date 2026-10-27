@@ -16,6 +16,7 @@ on:
       - scripts/build-pulse-atlas.mjs
       - package.json
       - src/pulse-atlas.ts
+      - src/pulse-atlas-page.ts
       - data/pulse-atlas/**
 
 permissions:

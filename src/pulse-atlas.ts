@@ -41,7 +41,7 @@ export interface PulseAtlasFile {
   content: string;
 }
 
-const MANIFEST_PATH = `${PULSE_ATLAS_BASE_PATH}/manifest.json`;
+export const PULSE_ATLAS_MANIFEST_PATH = `${PULSE_ATLAS_BASE_PATH}/manifest.json`;
 
 // Reference data never needs these words in a key, so a hit is treated as a
 // leak of something private rather than as a false alarm. `counters` are
@@ -102,7 +102,7 @@ export function buildPulseAtlas(
 
   return [
     ...built.map(({ file }) => file),
-    { path: MANIFEST_PATH, content: `${JSON.stringify(manifest, null, 2)}\n` },
+    { path: PULSE_ATLAS_MANIFEST_PATH, content: `${JSON.stringify(manifest, null, 2)}\n` },
   ];
 }
 
@@ -112,10 +112,10 @@ export function buildPulseAtlas(
  * Throws on any mismatch or on a manifest that is not shaped as documented.
  */
 export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha256Hex): void {
-  const manifestFile = files.find((file) => file.path === MANIFEST_PATH);
+  const manifestFile = files.find((file) => file.path === PULSE_ATLAS_MANIFEST_PATH);
 
   if (!manifestFile) {
-    throw new Error(`Pulse Atlas has no ${MANIFEST_PATH}.`);
+    throw new Error(`Pulse Atlas has no ${PULSE_ATLAS_MANIFEST_PATH}.`);
   }
 
   const manifest = parseManifest(manifestFile.content);
@@ -318,7 +318,7 @@ function parseEnvelope(content: string): PulseAtlasEnvelope | undefined {
   };
 }
 
-function parseManifest(content: string): PulseAtlasManifest {
+export function parseManifest(content: string): PulseAtlasManifest {
   const parsed = tryParseJson(content);
   const files = isRecord(parsed) ? parsed['files'] : undefined;
 
