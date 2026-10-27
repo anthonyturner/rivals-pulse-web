@@ -44,4 +44,4 @@ jobs:
           node-version: 24
 
       - name: Test Edge Function modules
-        run: node --no-warnings --test "supabase/functions/**/*.test.ts"
+        run: npm run test:functions

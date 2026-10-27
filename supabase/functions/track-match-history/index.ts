@@ -15,6 +15,8 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-overwolf-session',
+  // Without this the app cannot read Retry-After from a 429 (a browser hides response headers from other origins).
+  'Access-Control-Expose-Headers': 'Retry-After',
 };
 
 const MAX_TRACKED_MATCHES_PER_PLAYER = 500;
@@ -61,7 +63,7 @@ Deno.serve(async request => {
     if (slotError) throw slotError;
     if (retryAfter > 0) {
       return json(
-        { error: 'Too many matches uploaded; try again later' },
+        { error: 'Too many matches uploaded; try again later', retryAfter },
         429,
         { 'Retry-After': String(retryAfter) },
       );
