@@ -27,6 +27,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- A new hero without a playstyle rating no longer stops the Pulse Atlas feed: the tier list and hero data keep refreshing and the hero is simply left out of `hero-styles.json`, with a warning on the run ([#129](https://github.com/anthonyturner/rivals-pulse-web/pull/129)).
 - The app is now branded Rivals Pulse ([#31](https://github.com/anthonyturner/rivals-pulse-web/pull/31)).
 - Hero guidance reads as one Playstyle article instead of three overlapping sections ([#20](https://github.com/anthonyturner/rivals-pulse-web/pull/20)).
 - Home page news, patch notes, events and rewards now update from official sources instead of fixed text, and the most-used hero cards are sharper and more compact ([#16](https://github.com/anthonyturner/rivals-pulse-web/pull/16)).

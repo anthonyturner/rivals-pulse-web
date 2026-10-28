@@ -96,13 +96,19 @@ One entry per hero in `heroes.json`, keyed by the hero's `id` slug:
   [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json) in a
   pull request; a merge that changes it publishes through the workflow below.
   Add an entry in the same pull request that adds a hero.
-- The generator refuses to build, and so nothing is published, if a hero in
-  `heroes.json` has no entry, an entry names a hero that is not in
-  `heroes.json`, a hero is listed twice, or a weight is negative, not a whole
-  number, or the three do not sum to 100 (`findHeroStyleProblems` in
-  [src/pulse-atlas.ts](../src/pulse-atlas.ts)). A unit test runs the same check
-  on the committed file, so a malformed weight fails in a pull request before
-  it can fail a publish.
+- A hero with no entry does not hold up the feed. A new hero is released before
+  anyone has rated its playstyle, so when a hero in `heroes.json` has no entry,
+  or an entry names a hero that is not in `heroes.json`, the generator logs a
+  warning (an annotation on the workflow run) and still publishes every
+  dataset. `hero-styles.json` then holds only the entries that match a hero.
+  The overlay leaves such a hero out of its style meter.
+- The generator refuses to build, and so nothing is published, if a hero is
+  listed twice, a weight is negative, not a whole number, or the three do not
+  sum to 100, the list is empty, or no entry names any hero in `heroes.json`
+  (`findHeroStyleProblems` in [src/pulse-atlas.ts](../src/pulse-atlas.ts),
+  which returns these as `errors` and the two cases above as `warnings`). A
+  unit test runs the same check on the committed file, so a malformed weight
+  fails in a pull request before it can fail a publish.
 
 `manifest.json`:
 

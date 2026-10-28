@@ -68,6 +68,10 @@ interface BuiltDataset {
  * or malformed, or if it carries anything that must not be public. Nothing is
  * returned in that case, so a bad run publishes nothing.
  *
+ * A hero without a hero-styles entry, or an entry for a hero that is not in
+ * the hero list, does not stop the run: hero-styles is published with only the
+ * entries that match a hero, and each omission is reported through `warn`.
+ *
  * `previous` is what is published right now. A dataset whose data (and source)
  * has not changed keeps that file's bytes verbatim, so its `generatedAt` and
  * hash stay put and a client holding that hash can skip the download.
@@ -77,6 +81,7 @@ export function buildPulseAtlas(
   generatedAt: string,
   sha256: Sha256Hex,
   previous: readonly PulseAtlasFile[] = [],
+  warn: (warning: string) => void = () => undefined,
 ): PulseAtlasFile[] {
   const prepared = inputs.map(toPublicInput);
   const problems = findProblems(prepared);
@@ -85,8 +90,11 @@ export function buildPulseAtlas(
     throw new Error(`Pulse Atlas refused to build:\n- ${problems.join('\n- ')}`);
   }
 
+  const { inputs: publishable, warnings } = withPublishableHeroStyles(prepared);
+  warnings.forEach((warning) => warn(`hero-styles: ${warning}`));
+
   const built = PULSE_ATLAS_DATASETS.flatMap((dataset): BuiltDataset[] => {
-    const input = prepared.find((candidate) => candidate.dataset === dataset);
+    const input = publishable.find((candidate) => candidate.dataset === dataset);
 
     return input ? [buildDataset(input, generatedAt, previous)] : [];
   });
@@ -462,60 +470,103 @@ function publishedHeroIds(inputs: readonly PulseAtlasInput[]): string[] | undefi
     : undefined;
 }
 
+export interface HeroStyleFindings {
+  /** Faults in the data itself; a build must not publish while any remain. */
+  errors: string[];
+  /** Mismatches with the hero list; publishing goes ahead without the affected hero. */
+  warnings: string[];
+}
+
 /**
- * Every problem with a hero-styles list, or an empty list when it is sound:
- * each hero in `heroIds` has exactly one entry, no entry names a hero outside
- * `heroIds`, and each entry's poke, dive and brawl are whole, non-negative
- * percentages that sum to exactly 100. Without `heroIds` only the entries
- * themselves are checked.
+ * Everything wrong with a hero-styles list, split by how serious it is.
+ *
+ * Errors: the list is empty, an entry has no hero, a hero is listed twice, a
+ * weight is not a whole, non-negative number, poke, dive and brawl do not sum
+ * to exactly 100, or (given `heroIds`) no entry names a hero in `heroIds`.
+ *
+ * Warnings (only given `heroIds`): a hero in `heroIds` has no entry, or an
+ * entry names a hero outside `heroIds`. A new hero is released before anyone
+ * has rated its playstyle, and that must not freeze the whole feed.
  */
-export function findHeroStyleProblems(styles: unknown, heroIds?: readonly string[]): string[] {
+export function findHeroStyleProblems(styles: unknown, heroIds?: readonly string[]): HeroStyleFindings {
   if (!Array.isArray(styles) || styles.length === 0) {
-    return ['expected a non-empty list'];
+    return { errors: ['expected a non-empty list'], warnings: [] };
   }
 
-  const problems: string[] = [];
+  const errors: string[] = [];
+  const warnings: string[] = [];
   const seen = new Set<string>();
 
   styles.forEach((entry, index) => {
     if (!isRecord(entry) || !isNonEmptyString(entry['heroId'])) {
-      problems.push(`entry ${index} needs a non-empty string heroId`);
+      errors.push(`entry ${index} needs a non-empty string heroId`);
       return;
     }
 
     const heroId = entry['heroId'];
 
     if (seen.has(heroId)) {
-      problems.push(`${heroId}: listed more than once`);
+      errors.push(`${heroId}: listed more than once`);
     }
     seen.add(heroId);
 
     if (heroIds && !heroIds.includes(heroId)) {
-      problems.push(`${heroId}: not a hero in heroes.json`);
+      warnings.push(`${heroId}: not a hero in heroes.json, so it is left out of hero-styles.json`);
     }
 
     const weights = HERO_STYLE_WEIGHTS.map((weight) => entry[weight]);
 
     if (!weights.every((weight) => Number.isInteger(weight) && Number(weight) >= 0)) {
-      problems.push(`${heroId}: ${HERO_STYLE_WEIGHTS.join(', ')} must each be a whole number of 0 or more`);
+      errors.push(`${heroId}: ${HERO_STYLE_WEIGHTS.join(', ')} must each be a whole number of 0 or more`);
     } else if (weights.reduce((total: number, weight) => total + Number(weight), 0) !== 100) {
-      problems.push(`${heroId}: ${HERO_STYLE_WEIGHTS.join(' + ')} must add up to exactly 100`);
+      errors.push(`${heroId}: ${HERO_STYLE_WEIGHTS.join(' + ')} must add up to exactly 100`);
     }
   });
 
   for (const heroId of heroIds ?? []) {
     if (!seen.has(heroId)) {
-      problems.push(`${heroId}: no entry for this hero in heroes.json`);
+      warnings.push(`${heroId}: no entry in hero-styles.json, so the hero has no playstyle weights yet`);
     }
   }
 
-  return problems;
+  // Every entry being unmatched means the file is for something else, not that
+  // heroes are new; publishing it would silently empty the file.
+  if (heroIds && !heroIds.some((heroId) => seen.has(heroId))) {
+    errors.push('no entry names a hero in heroes.json');
+  }
+
+  return { errors, warnings };
 }
 
 function describeHeroStylesProblem(data: unknown, heroIds: readonly string[] | undefined): string | undefined {
-  const problems = findHeroStyleProblems(data, heroIds);
+  const { errors } = findHeroStyleProblems(data, heroIds);
 
-  return problems.length > 0 ? problems.join('; ') : undefined;
+  return errors.length > 0 ? errors.join('; ') : undefined;
+}
+
+/**
+ * The inputs with hero-styles cut down to the entries that name a hero in the
+ * hero list, plus a warning for each hero or entry that did not match. Expects
+ * inputs that already passed `findProblems`.
+ */
+function withPublishableHeroStyles(inputs: readonly PulseAtlasInput[]): {
+  inputs: PulseAtlasInput[];
+  warnings: string[];
+} {
+  const heroIds = publishedHeroIds(inputs);
+  const styles = inputs.find((input) => input.dataset === 'hero-styles');
+
+  if (!heroIds || !styles || !Array.isArray(styles.data)) {
+    return { inputs: [...inputs], warnings: [] };
+  }
+
+  const { warnings } = findHeroStyleProblems(styles.data, heroIds);
+  const matching = styles.data.filter((entry) => isRecord(entry) && heroIds.includes(String(entry['heroId'])));
+
+  return {
+    inputs: inputs.map((input) => (input === styles ? { ...input, data: matching } : input)),
+    warnings,
+  };
 }
 
 function describeListProblem(data: unknown, stringFields: readonly string[]): string | undefined {
