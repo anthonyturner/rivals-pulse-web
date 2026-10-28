@@ -20,7 +20,8 @@ the app. Renaming or altering any of them breaks players without failing this
 repo's build. This is a move, not a redesign.
 
 - Edge Functions: `track-match-history`, `elevenlabs-agent-token`,
-  `sync-match-history`, `sync-hero-stats`. All keep `verify_jwt = false`
+  `sync-match-history`, `sync-hero-stats`, `marvel-rivals-proxy`. All keep
+  `verify_jwt = false`
   (the publishable key is not a JWT, so the platform check would reject every
   call; each function authorises callers itself).
 - Tables: `players`, `player_matches`, `matches`, `tracked_matches`,
@@ -60,21 +61,39 @@ reseed against the live project. Use `migration repair --status applied
 
 ## Edge Functions
 
-| Function | Deployed |
-| --- | --- |
-| `track-match-history` | yes |
-| `elevenlabs-agent-token` | yes |
-| `sync-match-history` | yes, but not used by the release overlay |
-| `sync-hero-stats` | yes, but not used by the release overlay |
-| `marvel-rivals-proxy` | yes, but its source is not in this repo yet (it lives on the overlay branch `fix/381-api-key-server-side`) |
+| Function | Deployed from this repo | Live version |
+| --- | --- | --- |
+| `track-match-history` | yes, 2026-10-27 | 16 |
+| `elevenlabs-agent-token` | yes, 2026-10-27 | 8 |
+| `sync-match-history` | yes, 2026-10-27; not used by the release overlay | 26 |
+| `sync-hero-stats` | yes, 2026-10-27; not used by the release overlay | 23 |
+| `marvel-rivals-proxy` | yes, 2026-10-27; adopted from the overlay branch `fix/381-api-key-server-side`, source unchanged | 9 |
 
-The live deployments can be older than the source here. Check
-`npx supabase functions list` before assuming they match.
+The version number goes up by two on each deploy, so compare the number with
+`npx supabase functions list` only to see whether a deploy happened, not to
+count deploys. Anything deployed after the date above may have changed the
+live function without changing this table.
+
+`marvel-rivals-proxy` forwards a fixed list of read-only calls to the Marvel
+Rivals provider and adds the provider key (`MARVEL_RIVALS_API_KEY`) on the
+server, so the key no longer ships inside the overlay bundle. It was adopted
+into this repo rather than removed because the overlay depends on it. It has no
+caller check of its own: it spends the provider quota for anyone who finds its
+URL, limited only by the allow-list in `routes.ts`.
+
+Without Docker the CLI cannot bundle a function itself, so deploy through the
+API:
 
 ```sh
-npx supabase functions deploy track-match-history
-npx supabase functions deploy elevenlabs-agent-token
+npx supabase functions deploy track-match-history --use-api
+npx supabase functions deploy elevenlabs-agent-token --use-api
+npx supabase functions deploy sync-match-history --use-api
+npx supabase functions deploy sync-hero-stats --use-api
+npx supabase functions deploy marvel-rivals-proxy --use-api
 ```
+
+`supabase/config.toml` carries `verify_jwt = false` for each function; if a
+deploy ever reports a different setting, pass `--no-verify-jwt`.
 
 ## Secrets
 
@@ -83,15 +102,53 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | Secret | Used by | Note |
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | all | Supplied by Supabase itself |
-| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
+| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. It is passed to Overwolf's verify endpoint as given, so any id Overwolf accepts works. Set on 2026-10-27 to the id of the maintainer's unpacked developer build, the only client today. **When the overlay is published, set it to the store build's id first**, or every upload from the store build is refused. |
 | `RECORDER_ID_SECRET` | `track-match-history` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. Changing it resets everyone's rate-limit history and nothing else. |
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
+| `MARVEL_RIVALS_API_KEY`, `MARVEL_RIVALS_API_BASE_URL` | `marvel-rivals-proxy` | The provider key, which the proxy adds to each forwarded call. The base URL is optional (the proxy defaults to the provider's own and trims a trailing `/v1`). The sync functions call rivalstracker with no key and read neither. |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
 | `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
 Deploy order for `track-match-history`: migration, then secrets, then
 function. A function deployed first fails closed (every upload is refused).
+
+## Rollout order and rollback
+
+The first deploy from this repo was done on 2026-10-27 in this order, which is
+also the order to repeat for any change that adds a secret:
+
+1. Migrations (already all applied; `migration list --linked` showed no gap).
+2. Secrets: `OVERWOLF_EXTENSION_ID` and `RECORDER_ID_SECRET`. The second is a
+   fresh random 32-byte hex value generated for the purpose and never written
+   down. `TEBEX_STORE_PUBLIC_TOKEN` stays unset, so premium is dormant.
+3. Functions: `track-match-history`, `elevenlabs-agent-token`,
+   `sync-match-history`, `sync-hero-stats`, `marvel-rivals-proxy`.
+
+Which overlay build expects it: `track-match-history` now refuses an upload
+that has no verified Overwolf session in the `x-overwolf-session` header. The
+overlay has sent that header since 2026-10-10 (overlay issue 760), so any build
+from that date on works; an older build is refused with a 401.
+
+To roll back:
+
+- A function: check out the earlier commit of this repo and deploy that
+  function again. The version from before this repo owned the source (for
+  `track-match-history`, the build with no Overwolf check) is in the overlay
+  repo's history, and the live source can be read with `npx supabase functions
+  download <name> --use-api` into a folder outside the repo.
+- A secret: removing `OVERWOLF_EXTENSION_ID` or `RECORDER_ID_SECRET` makes
+  `track-match-history` refuse every upload, which is a stop switch, not a
+  rollback. Replacing `RECORDER_ID_SECRET` costs only the rate-limit history.
+
+## Is the live project in step with the repo
+
+`supabase db diff --linked` is the strict check and needs Docker, which the
+maintainer's machine lacks, so it has not been run. What stands in for it:
+`migration list --linked` (all eight local migrations are also remote, same
+versions), the read-only queries in the migration notes above, and
+`functions download --use-api`, which for `marvel-rivals-proxy` returned source
+identical to the repo copy apart from line endings.
 
 ## Premium launch order
 
@@ -138,6 +195,18 @@ curl -i -X POST "$SUPABASE_URL/functions/v1/track-match-history" \
   -H "Content-Type: application/json" -H "x-overwolf-session: not.a.jwt" --data '{}'
 # expect 401 "The Overwolf session token is invalid or expired"
 ```
+
+  Run against the live project on 2026-10-27 after the deploy: both returned
+  the documented 401. A well-formed, unexpired but unsigned token also returned
+  401 "Overwolf rejected the session token", which shows the secrets are read
+  and Overwolf is reached. A preflight (OPTIONS) request returned 200 and
+  allowed the `x-overwolf-session` header. `elevenlabs-agent-token` answered
+  405 to a GET, `sync-hero-stats` and `sync-match-history` answered 400
+  "query is required" to an empty body, and `marvel-rivals-proxy` answered 405
+  to a POST and 404 to an unlisted path. Not run: an upload with a real token
+  (it writes rows), and a Jarvis token request (it mints a real token).
+  A forwarded read through `marvel-rivals-proxy` also could not be confirmed,
+  because the provider's own site was returning a Cloudflare 502 at the time.
 
 - With a real token (from a signed-in overlay, valid 15 minutes), one upload
   returns `{"status":"ok","recorded":1,"participants":N}` and a repeat of the
