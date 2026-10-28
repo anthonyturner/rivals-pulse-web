@@ -51,7 +51,7 @@ ${STYLES}
 <body>
   <main>
     <h1>Pulse Atlas</h1>
-    <p>Pulse Atlas is RivalsPulse's public reference data for Marvel Rivals: heroes, the tier list, the glossary and maps. It is published as plain JSON files that anyone can read, with no key and no sign-in.</p>
+    <p>Pulse Atlas is RivalsPulse's public reference data for Marvel Rivals: heroes, the tier list, the glossary, maps and each hero's playstyle mix. It is published as plain JSON files that anyone can read, with no key and no sign-in.</p>
 
     <dl>
       <dt>Schema version</dt>

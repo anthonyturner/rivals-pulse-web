@@ -15,6 +15,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | `tier-list.json` | The tier list for **every season and every rank**, so season and rank pickers work offline. Shape below. |
 | `glossary.json` | The glossary terms, exactly as `GET /api/glossary` returns them. |
 | `maps.json` | Map ids to names: a list of `{ "id": number, "name": string }`. Source: [data/pulse-atlas/seed-maps.json](../data/pulse-atlas/seed-maps.json), copied unchanged from the overlay repo's `src/app/data/seed-maps.json`. |
+| `hero-styles.json` | Each hero's playstyle mix: whole-number percentages of Poke, Dive and Brawl. Shape below. Source: [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json), hand-maintained in this repository. |
 | `manifest.json` | Every file above with its hash. |
 
 Every dataset file has this shape:
@@ -76,6 +77,33 @@ Keyed by season, then by rank:
   GitHub Pages serves it compressed, and the manifest hash lets a client skip
   it when nothing changed.
 
+### The `hero-styles` data
+
+One entry per hero in `heroes.json`, keyed by the hero's `id` slug:
+
+```json
+[{ "heroId": "magik", "poke": 0, "dive": 80, "brawl": 20 }]
+```
+
+- Poke is long-range damage, Dive is getting onto the backline, Brawl is
+  close-range group fighting (the glossary terms of the same names). A hero's
+  three weights are whole-number percentages that sum to exactly 100; a weight
+  may be 0. Deadpool has one blended entry.
+- It is a separate file rather than a field of `heroes.json` because that file
+  is large and every window parses all of it; this one has its own
+  `generatedAt` and validation.
+- The numbers are editorial. Edit
+  [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json) in a
+  pull request; a merge that changes it publishes through the workflow below.
+  Add an entry in the same pull request that adds a hero.
+- The generator refuses to build, and so nothing is published, if a hero in
+  `heroes.json` has no entry, an entry names a hero that is not in
+  `heroes.json`, a hero is listed twice, or a weight is negative, not a whole
+  number, or the three do not sum to 100 (`findHeroStyleProblems` in
+  [src/pulse-atlas.ts](../src/pulse-atlas.ts)). A unit test runs the same check
+  on the committed file, so a malformed weight fails in a pull request before
+  it can fail a publish.
+
 `manifest.json`:
 
 ```json
@@ -97,7 +125,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes, a
-tier list trimmed to 2 seasons by 2 ranks with 2 heroes per tier, three glossary terms, the full maps list, and a manifest
+tier list trimmed to 2 seasons by 2 ranks with 2 heroes per tier, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -126,7 +154,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    to learn the seasons and ranks and then once per season and rank
    (`?season=<id>&rank=<rank>`). That needs no secret, and it is the only
    reader to change when content moves to Supabase.
-2. Reads the maps source file from the repository.
+2. Reads the maps and hero-styles source files from the repository.
 3. Fetches the currently published files from the Pages site
    (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL). If this fails, for
    example with a 404 on the first run, everything is built fresh.

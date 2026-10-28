@@ -22,6 +22,7 @@ const DEFAULT_API_BASE = 'https://marvel-rivals-coach-six.vercel.app/api';
 const DEFAULT_PUBLISHED_BASE = 'https://anthonyturner.github.io/rivals-pulse-web';
 const API_SOURCE_LABEL = 'rivals-pulse-web:content-api';
 const MAPS_SOURCE_LABEL = 'rivals-pulse-web:seed-maps';
+const HERO_STYLES_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-styles';
 const SAMPLE_SOURCE_LABEL = 'SAMPLE: trimmed, not live data';
 const FETCH_ATTEMPTS = 3;
 const FETCH_TIMEOUT_MS = 60_000;
@@ -45,11 +46,16 @@ const live = [
     source: MAPS_SOURCE_LABEL,
     data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'seed-maps.json'), 'utf8')),
   },
+  {
+    dataset: 'hero-styles',
+    source: HERO_STYLES_SOURCE_LABEL,
+    data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-styles.json'), 'utf8')),
+  },
 ];
 
 const now = new Date().toISOString();
 const files = samplesDir
-  ? buildPulseAtlas(live.map(toSample), now, sha256)
+  ? buildPulseAtlas(live.map(sampler(live)), now, sha256)
   : buildPulseAtlas(live, now, sha256, await fetchPublished());
 
 // Samples sit flat in one folder; the live feed keeps its versioned folders.
@@ -163,11 +169,23 @@ async function fetchPublished() {
   return results.filter((file) => file !== undefined);
 }
 
-function toSample(input) {
+// The sample keeps two heroes, so hero-styles keeps those two heroes' entries to stay complete.
+function sampler(live) {
+  const sampleHeroIds = live
+    .find((input) => input.dataset === 'heroes')
+    .data.slice(0, 2)
+    .map((hero) => hero.id);
+
+  return (input) => toSample(input, sampleHeroIds);
+}
+
+function toSample(input, sampleHeroIds) {
   const sampleOf = (data) => {
     switch (input.dataset) {
       case 'heroes':
         return data.slice(0, 2);
+      case 'hero-styles':
+        return data.filter((entry) => sampleHeroIds.includes(entry.heroId));
       case 'glossary':
         return data.slice(0, 3);
       case 'tier-list': {

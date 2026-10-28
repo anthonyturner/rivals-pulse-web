@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- Pulse Atlas now publishes `hero-styles.json`, a Poke / Dive / Brawl percentage mix for every hero, so the overlay can weight hero pick rates by playstyle; the first 54 weights are drafts for review ([#127](https://github.com/anthonyturner/rivals-pulse-web/pull/127)).
 - The Pulse Atlas site has a home page at its root and at `/pulse-atlas/v1/` that says what it is and lists each file with its size and hash, instead of GitHub's 404 ([#118](https://github.com/anthonyturner/rivals-pulse-web/pull/118)).
 - A public Pulse Atlas feed of heroes, the tier list (every season and rank), the glossary and maps as JSON on GitHub Pages, refreshed every six hours, so the overlay and other tools can read reference data without the API ([#111](https://github.com/anthonyturner/rivals-pulse-web/pull/111)).
 - A Jarvis voice-assistant console on the home page, opened from a new orb in the header, answering sample questions in a scripted demo ([#68](https://github.com/anthonyturner/rivals-pulse-web/pull/68)).

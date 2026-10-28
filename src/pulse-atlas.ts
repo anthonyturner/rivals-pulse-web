@@ -1,6 +1,8 @@
 export const PULSE_ATLAS_SCHEMA_VERSION = 1;
 export const PULSE_ATLAS_BASE_PATH = 'pulse-atlas/v1';
-export const PULSE_ATLAS_DATASETS = ['heroes', 'tier-list', 'glossary', 'maps'] as const;
+export const PULSE_ATLAS_DATASETS = ['heroes', 'tier-list', 'glossary', 'maps', 'hero-styles'] as const;
+
+const HERO_STYLE_WEIGHTS = ['poke', 'dive', 'brawl'] as const;
 
 export type PulseAtlasDataset = (typeof PULSE_ATLAS_DATASETS)[number];
 
@@ -416,7 +418,7 @@ function findProblems(inputs: readonly PulseAtlasInput[]): string[] {
     }
 
     const [input] = matches;
-    const shapeProblem = describeShapeProblem(dataset, input.data);
+    const shapeProblem = describeShapeProblem(dataset, input.data, inputs);
 
     if (!input.source.trim()) {
       problems.push(`${dataset}: source label is empty`);
@@ -432,7 +434,11 @@ function findProblems(inputs: readonly PulseAtlasInput[]): string[] {
   return problems;
 }
 
-function describeShapeProblem(dataset: PulseAtlasDataset, data: unknown): string | undefined {
+function describeShapeProblem(
+  dataset: PulseAtlasDataset,
+  data: unknown,
+  inputs: readonly PulseAtlasInput[],
+): string | undefined {
   switch (dataset) {
     case 'heroes':
       return describeListProblem(data, ['id', 'name']);
@@ -442,7 +448,74 @@ function describeShapeProblem(dataset: PulseAtlasDataset, data: unknown): string
       return describeMapListProblem(data);
     case 'tier-list':
       return describeTierListProblem(data);
+    case 'hero-styles':
+      return describeHeroStylesProblem(data, publishedHeroIds(inputs));
   }
+}
+
+function publishedHeroIds(inputs: readonly PulseAtlasInput[]): string[] | undefined {
+  const heroes = inputs.find((input) => input.dataset === 'heroes')?.data;
+
+  // A malformed hero list is reported on its own; there is nothing to check styles against.
+  return Array.isArray(heroes) && heroes.length > 0 && heroes.every((hero) => isRecord(hero) && isNonEmptyString(hero['id']))
+    ? heroes.map((hero) => String(hero['id']))
+    : undefined;
+}
+
+/**
+ * Every problem with a hero-styles list, or an empty list when it is sound:
+ * each hero in `heroIds` has exactly one entry, no entry names a hero outside
+ * `heroIds`, and each entry's poke, dive and brawl are whole, non-negative
+ * percentages that sum to exactly 100. Without `heroIds` only the entries
+ * themselves are checked.
+ */
+export function findHeroStyleProblems(styles: unknown, heroIds?: readonly string[]): string[] {
+  if (!Array.isArray(styles) || styles.length === 0) {
+    return ['expected a non-empty list'];
+  }
+
+  const problems: string[] = [];
+  const seen = new Set<string>();
+
+  styles.forEach((entry, index) => {
+    if (!isRecord(entry) || !isNonEmptyString(entry['heroId'])) {
+      problems.push(`entry ${index} needs a non-empty string heroId`);
+      return;
+    }
+
+    const heroId = entry['heroId'];
+
+    if (seen.has(heroId)) {
+      problems.push(`${heroId}: listed more than once`);
+    }
+    seen.add(heroId);
+
+    if (heroIds && !heroIds.includes(heroId)) {
+      problems.push(`${heroId}: not a hero in heroes.json`);
+    }
+
+    const weights = HERO_STYLE_WEIGHTS.map((weight) => entry[weight]);
+
+    if (!weights.every((weight) => Number.isInteger(weight) && Number(weight) >= 0)) {
+      problems.push(`${heroId}: ${HERO_STYLE_WEIGHTS.join(', ')} must each be a whole number of 0 or more`);
+    } else if (weights.reduce((total: number, weight) => total + Number(weight), 0) !== 100) {
+      problems.push(`${heroId}: ${HERO_STYLE_WEIGHTS.join(' + ')} must add up to exactly 100`);
+    }
+  });
+
+  for (const heroId of heroIds ?? []) {
+    if (!seen.has(heroId)) {
+      problems.push(`${heroId}: no entry for this hero in heroes.json`);
+    }
+  }
+
+  return problems;
+}
+
+function describeHeroStylesProblem(data: unknown, heroIds: readonly string[] | undefined): string | undefined {
+  const problems = findHeroStyleProblems(data, heroIds);
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
 }
 
 function describeListProblem(data: unknown, stringFields: readonly string[]): string | undefined {
