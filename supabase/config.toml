@@ -8,8 +8,8 @@ project_id = "rivals-pulse"
 # the platform check off and authorize inside each function instead.
 #
 # "Off" therefore means each function has to decide for itself who may call it. For
-# elevenlabs-agent-token that is a per-address rate limit (issue 569). Whether the other three
-# need more than they have is tracked on the same issue.
+# elevenlabs-agent-token that is a per-address rate limit (issue 569). marvel-rivals-proxy has no
+# caller check yet (issue 124); whether the sync functions need more is tracked on issue 569.
 
 [functions.sync-match-history]
 verify_jwt = false

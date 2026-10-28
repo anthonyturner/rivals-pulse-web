@@ -87,6 +87,9 @@ API:
 ```sh
 npx supabase functions deploy track-match-history --use-api
 npx supabase functions deploy elevenlabs-agent-token --use-api
+npx supabase functions deploy sync-match-history --use-api
+npx supabase functions deploy sync-hero-stats --use-api
+npx supabase functions deploy marvel-rivals-proxy --use-api
 ```
 
 `supabase/config.toml` carries `verify_jwt = false` for each function; if a
@@ -103,7 +106,7 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | `RECORDER_ID_SECRET` | `track-match-history` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. Changing it resets everyone's rate-limit history and nothing else. |
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
-| `MARVEL_RIVALS_API_KEY`, `MARVEL_RIVALS_API_BASE_URL` | `marvel-rivals-proxy`, `sync-hero-stats`, `sync-match-history` | The provider key, which the proxy adds to each forwarded call. The base URL is optional (the proxy defaults to the provider's own and trims a trailing `/v1`). |
+| `MARVEL_RIVALS_API_KEY`, `MARVEL_RIVALS_API_BASE_URL` | `marvel-rivals-proxy` | The provider key, which the proxy adds to each forwarded call. The base URL is optional (the proxy defaults to the provider's own and trims a trailing `/v1`). The sync functions call rivalstracker with no key and read neither. |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
 | `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
