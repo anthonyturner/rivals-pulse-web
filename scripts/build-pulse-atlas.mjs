@@ -37,6 +37,10 @@ const publishedBase = trimSlashes(process.env.PULSE_ATLAS_PUBLISHED_BASE ?? DEFA
 
 const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex');
 
+// On GitHub Actions a `::warning::` line becomes an annotation on the run, so a hero
+// left out of the feed is visible without opening the log.
+const warn = (message) => console.warn(process.env.GITHUB_ACTIONS ? `::warning::${message}` : `Warning: ${message}`);
+
 const live = [
   { dataset: 'heroes', source: API_SOURCE_LABEL, data: await fetchJson(`${apiBase}/heroes`) },
   { dataset: 'tier-list', source: API_SOURCE_LABEL, data: await fetchTierList() },
@@ -55,8 +59,8 @@ const live = [
 
 const now = new Date().toISOString();
 const files = samplesDir
-  ? buildPulseAtlas(live.map(sampler(live)), now, sha256)
-  : buildPulseAtlas(live, now, sha256, await fetchPublished());
+  ? buildPulseAtlas(live.map(sampler(live)), now, sha256, [], warn)
+  : buildPulseAtlas(live, now, sha256, await fetchPublished(), warn);
 
 // Samples sit flat in one folder; the live feed keeps its versioned folders.
 const targetOf = (file) =>

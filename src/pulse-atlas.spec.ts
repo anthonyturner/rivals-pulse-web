@@ -280,7 +280,7 @@ describe('hero-styles validation', () => {
   });
   const complete = (): object[] => [entry('thor', 10, 20, 70), entry('loki', 40, 10, 50)];
 
-  function build(data: unknown): PulseAtlasFile[] {
+  function build(data: unknown, warnings: string[] = []): PulseAtlasFile[] {
     return buildPulseAtlas(
       withData('heroes', [
         { id: 'thor', name: 'Thor' },
@@ -288,43 +288,76 @@ describe('hero-styles validation', () => {
       ]).map((input) => (input.dataset === 'hero-styles' ? { ...input, data } : input)),
       GENERATED_AT,
       fakeSha256,
+      [],
+      (warning) => warnings.push(warning),
     );
   }
 
-  it('publishes a list that covers every hero exactly once', () => {
-    const published = build(complete()).find((file) => file.path.endsWith('/hero-styles.json'));
+  function publishedStyles(files: PulseAtlasFile[]): unknown {
+    return JSON.parse(files.find((file) => file.path.endsWith('/hero-styles.json'))?.content ?? 'null').data;
+  }
 
-    expect(JSON.parse(published?.content ?? 'null').data).toEqual(complete());
-    expect(findHeroStyleProblems(complete(), HERO_IDS)).toEqual([]);
+  it('publishes a list that covers every hero exactly once, with no warning', () => {
+    const warnings: string[] = [];
+
+    expect(publishedStyles(build(complete(), warnings))).toEqual(complete());
+    expect(warnings).toEqual([]);
+    expect(findHeroStyleProblems(complete(), HERO_IDS)).toEqual({ errors: [], warnings: [] });
   });
 
-  it('refuses a hero in heroes.json that has no entry', () => {
-    expect(() => build([entry('thor', 10, 20, 70)])).toThrowError(
-      /hero-styles: loki: no entry for this hero in heroes\.json/,
-    );
+  it('publishes every dataset, with a warning, when a hero in heroes.json has no entry', () => {
+    const warnings: string[] = [];
+    const files = build([entry('thor', 10, 20, 70)], warnings);
+
+    expect(publishedStyles(files)).toEqual([entry('thor', 10, 20, 70)]);
+    expect(files.length).toBe(PULSE_ATLAS_DATASETS.length + 1);
+    expect(warnings).toEqual([
+      'hero-styles: loki: no entry in hero-styles.json, so the hero has no playstyle weights yet',
+    ]);
   });
 
-  it('refuses an entry for a hero that is not in heroes.json', () => {
-    expect(() => build([...complete(), entry('hulk', 5, 25, 70)])).toThrowError(
-      /hero-styles: hulk: not a hero in heroes\.json/,
+  it('leaves out, with a warning, an entry for a hero that is not in heroes.json', () => {
+    const warnings: string[] = [];
+
+    expect(publishedStyles(build([...complete(), entry('hulk', 5, 25, 70)], warnings))).toEqual(complete());
+    expect(warnings).toEqual([
+      'hero-styles: hulk: not a hero in heroes.json, so it is left out of hero-styles.json',
+    ]);
+  });
+
+  it('warns about a missing hero and an unknown entry in the same run', () => {
+    const warnings: string[] = [];
+
+    expect(publishedStyles(build([entry('hulk', 5, 25, 70), entry('thor', 10, 20, 70)], warnings))).toEqual([
+      entry('thor', 10, 20, 70),
+    ]);
+    expect(warnings.length).toBe(2);
+  });
+
+  it('still refuses when no entry names any hero, rather than publishing an empty file', () => {
+    expect(() => build([entry('hulk', 5, 25, 70)])).toThrowError(
+      /hero-styles: no entry names a hero in heroes\.json/,
     );
   });
 
   it('refuses a hero listed twice', () => {
-    expect(findHeroStyleProblems([...complete(), entry('thor', 0, 0, 100)], HERO_IDS)).toEqual([
+    expect(findHeroStyleProblems([...complete(), entry('thor', 0, 0, 100)], HERO_IDS).errors).toEqual([
       'thor: listed more than once',
     ]);
+    expect(() => build([...complete(), entry('thor', 0, 0, 100)])).toThrowError(
+      /hero-styles: thor: listed more than once/,
+    );
   });
 
   it('refuses negative, fractional or non-numeric weights', () => {
     for (const bad of [entry('thor', -10, 40, 70), entry('thor', 10.5, 19.5, 70), entry('thor', 10, 20, NaN)]) {
-      expect(findHeroStyleProblems([bad, entry('loki', 40, 10, 50)], HERO_IDS))
+      expect(findHeroStyleProblems([bad, entry('loki', 40, 10, 50)], HERO_IDS).errors)
         .withContext(JSON.stringify(bad))
         .toEqual(['thor: poke, dive, brawl must each be a whole number of 0 or more']);
     }
 
     expect(
-      findHeroStyleProblems([{ heroId: 'thor', poke: '10', dive: 20, brawl: 70 }, entry('loki', 40, 10, 50)], HERO_IDS),
+      findHeroStyleProblems([{ heroId: 'thor', poke: '10', dive: 20, brawl: 70 }, entry('loki', 40, 10, 50)], HERO_IDS).errors,
     ).toEqual(['thor: poke, dive, brawl must each be a whole number of 0 or more']);
     expect(() => build([entry('thor', -10, 40, 70), entry('loki', 40, 10, 50)])).toThrowError(
       /hero-styles: thor: poke, dive, brawl must each be a whole number/,
@@ -333,19 +366,22 @@ describe('hero-styles validation', () => {
 
   it('refuses weights that do not add up to exactly 100', () => {
     for (const bad of [entry('thor', 10, 20, 69), entry('thor', 10, 20, 71), entry('thor', 0, 0, 0)]) {
-      expect(findHeroStyleProblems([bad, entry('loki', 40, 10, 50)], HERO_IDS))
+      expect(findHeroStyleProblems([bad, entry('loki', 40, 10, 50)], HERO_IDS).errors)
         .withContext(JSON.stringify(bad))
         .toEqual(['thor: poke + dive + brawl must add up to exactly 100']);
     }
   });
 
   it('accepts a weight of zero', () => {
-    expect(findHeroStyleProblems([entry('thor', 0, 80, 20), entry('loki', 40, 10, 50)], HERO_IDS)).toEqual([]);
+    expect(findHeroStyleProblems([entry('thor', 0, 80, 20), entry('loki', 40, 10, 50)], HERO_IDS)).toEqual({
+      errors: [],
+      warnings: [],
+    });
   });
 
   it('refuses an empty list and an entry without a hero', () => {
-    expect(findHeroStyleProblems([], HERO_IDS)).toEqual(['expected a non-empty list']);
-    expect(findHeroStyleProblems([{ poke: 100, dive: 0, brawl: 0 }], HERO_IDS)).toContain(
+    expect(findHeroStyleProblems([], HERO_IDS).errors).toEqual(['expected a non-empty list']);
+    expect(findHeroStyleProblems([{ poke: 100, dive: 0, brawl: 0 }], HERO_IDS).errors).toContain(
       'entry 0 needs a non-empty string heroId',
     );
   });
@@ -366,7 +402,7 @@ describe('hero-styles validation', () => {
     const heroIds = curatedHeroStyles.map((style) => style.heroId);
 
     expect(curatedHeroStyles.length).toBe(54);
-    expect(findHeroStyleProblems(curatedHeroStyles, heroIds)).toEqual([]);
+    expect(findHeroStyleProblems(curatedHeroStyles, heroIds)).toEqual({ errors: [], warnings: [] });
   });
 });
 
