@@ -22,6 +22,8 @@ export interface ParticipantRow {
   kills: number | null;
   deaths: number | null;
   assists: number | null;
+  /** Null when the recorder could not count it (an older app, a masked player); never 0 in its place. */
+  final_hits: number | null;
   is_win: boolean | null;
 }
 
@@ -71,6 +73,7 @@ export function parseParticipants(match: JsonRecord): ParticipantRow[] {
       kills: readCount(player['kills'], MAX_STAT),
       deaths: readCount(player['deaths'], MAX_STAT),
       assists: readCount(player['assists'], MAX_STAT),
+      final_hits: readCount(player['final_hits'], MAX_STAT),
       is_win: outcomeFor(team, localTeam, localWon),
     };
     const key = playerKey(row);
@@ -114,6 +117,7 @@ export function storableMatch(match: JsonRecord): { rawPayload: JsonRecord; perf
     kills: readCount(local['kills'], MAX_STAT),
     deaths: readCount(local['deaths'], MAX_STAT),
     assists: readCount(local['assists'], MAX_STAT),
+    final_hits: readCount(local['final_hits'], MAX_STAT),
     is_win: typeof local['is_win'] === 'boolean' ? local['is_win'] : null,
     camp: readTeam(local['camp']),
     player_hero: heroName ? { hero_name: heroName } : null,
