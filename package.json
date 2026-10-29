@@ -46,6 +46,9 @@
     ]
   },
   "private": true,
+  "engines": {
+    "node": ">=22.18"
+  },
   "dependencies": {
     "@angular/animations": "^20.3.24",
     "@angular/common": "^20.3.0",
