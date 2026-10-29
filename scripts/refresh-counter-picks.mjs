@@ -2,7 +2,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createTursoClient } from './turso-client.mjs';
+import { listHeroes, saveHero } from '../src/hero-store.ts';
+import { getSupabaseClient } from './supabase-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const heroesPath = join(__dirname, '..', 'data', 'seeds', 'heroes.mock.json');
@@ -95,30 +96,15 @@ const updatedHeroes = heroes.map((hero) => ({
 
 writeFileSync(heroesPath, `${JSON.stringify(updatedHeroes, null, 2)}\n`);
 
-const db = createTursoClient();
-const updatedAt = new Date().toISOString();
+const db = getSupabaseClient();
+const databaseHeroes = await listHeroes(db);
 
-for (const hero of updatedHeroes) {
-  await db.execute('UPDATE heroes SET raw_json = ?, updated_at = ? WHERE id = ?', [
-    JSON.stringify(hero),
-    updatedAt,
-    hero.id,
-  ]);
-  await db.execute('DELETE FROM hero_list_items WHERE hero_id = ? AND item_type = ?', [
-    hero.id,
-    'counter',
-  ]);
+// saveHero would also create a hero the database lacks, which the seed file must not do.
+const databaseHeroIds = new Set(databaseHeroes.map((hero) => hero.id));
 
-  for (const [index, counter] of hero.counters.entries()) {
-    await db.execute(
-      `INSERT INTO hero_list_items (hero_id, item_type, value, sort_order)
-      VALUES (?, ?, ?, ?)`,
-      [hero.id, 'counter', counter, index],
-    );
-  }
+for (const hero of updatedHeroes.filter((candidate) => databaseHeroIds.has(candidate.id))) {
+  await saveHero(db, hero);
 }
-
-db.close();
 
 console.log(`Updated counter picks for ${updatedHeroes.length} heroes.`);
 
@@ -126,44 +112,14 @@ console.log(`Updated counter picks for ${updatedHeroes.length} heroes.`);
 // (e.g. roster additions from sync-official-heroes) still get counter data.
 const dbOnlyHeroNames = Object.keys(counterPicksByHero).filter((name) => !heroNames.has(name));
 
-if (dbOnlyHeroNames.length > 0) {
-  const dbExtra = createTursoClient();
+for (const name of dbOnlyHeroNames) {
+  const rawHero = databaseHeroes.find((hero) => hero.name === name);
 
-  for (const name of dbOnlyHeroNames) {
-    const result = await dbExtra.execute(
-      "SELECT id, raw_json FROM heroes WHERE json_extract(raw_json, '$.name') = ?",
-      [name],
-    );
-    const row = result.rows[0];
-
-    if (!row) {
-      console.warn(`Skipped ${name}: not present in the database.`);
-      continue;
-    }
-
-    const rawHero = JSON.parse(row.raw_json);
-    rawHero.counters = counterPicksByHero[name];
-
-    await dbExtra.execute('UPDATE heroes SET raw_json = ?, updated_at = ? WHERE id = ?', [
-      JSON.stringify(rawHero),
-      updatedAt,
-      row.id,
-    ]);
-    await dbExtra.execute('DELETE FROM hero_list_items WHERE hero_id = ? AND item_type = ?', [
-      row.id,
-      'counter',
-    ]);
-
-    for (const [index, counter] of counterPicksByHero[name].entries()) {
-      await dbExtra.execute(
-        `INSERT INTO hero_list_items (hero_id, item_type, value, sort_order)
-        VALUES (?, ?, ?, ?)`,
-        [row.id, 'counter', counter, index],
-      );
-    }
-
-    console.log(`Updated counter picks for database-only hero ${name}.`);
+  if (!rawHero) {
+    console.warn(`Skipped ${name}: not present in the database.`);
+    continue;
   }
 
-  dbExtra.close();
+  await saveHero(db, { ...rawHero, counters: counterPicksByHero[name] });
+  console.log(`Updated counter picks for database-only hero ${name}.`);
 }

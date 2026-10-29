@@ -1,6 +1,6 @@
 name: Sync new heroes
 
-# A new hero ships with roughly every season. The hero roster lives in Turso and
+# A new hero ships with roughly every season. The hero roster lives in Supabase and
 # is served by /api/heroes, so syncing it here puts a new hero on the hero page
 # without a deploy. Portraits are repository files, so those arrive as a pull
 # request instead.
@@ -40,11 +40,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Sync hero roster into Turso
+      - name: Sync hero roster into Supabase
         id: roster
         env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CHECK_ONLY: ${{ inputs.check_only }}
         run: |
           set -o pipefail
@@ -100,7 +100,7 @@ jobs:
           cat > pr-body.md <<BODY
           Automated by \`.github/workflows/sync-new-heroes.yml\`.
 
-          The hero roster in Turso is already updated, so the new hero is live on
+          The hero roster in Supabase is already updated, so the new hero is live on
           the hero page. This pull request only carries the portrait files, which
           are repository assets.
 
