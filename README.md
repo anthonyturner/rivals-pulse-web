@@ -26,7 +26,7 @@ Angular 20 | TypeScript | Signals | RxJS | Angular SSR | Express | Turso/libSQL 
 
 ## Local Development
 
-Requirements: Node.js 22.18+, npm, and a Turso database.
+Requirements: Node.js 24, npm, and a Turso database.
 
 ```powershell
 npm.cmd install

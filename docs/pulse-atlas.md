@@ -223,5 +223,5 @@ Any failed fetch (three attempts each), an empty or malformed dataset, or an
 unsafe value fails the generate job. The deploy job needs it, so it never runs
 and the last good publish stays live.
 
-To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 22.18
-or newer, which strips TypeScript types itself).
+To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 24,
+which strips TypeScript types itself).

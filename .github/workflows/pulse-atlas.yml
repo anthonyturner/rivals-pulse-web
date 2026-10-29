@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       # Fails the run, and so skips the deploy job, if any dataset is empty,
       # malformed or unsafe to publish. The last good site stays live.

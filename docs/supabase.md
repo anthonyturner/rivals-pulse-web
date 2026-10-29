@@ -172,5 +172,5 @@ called through `.rpc()` when several writes must succeed or fail together.
 ## Tests
 
 `npm run test:functions` runs the function tests with Node's built-in test
-runner (Node 22.18 or newer, which strips TypeScript types itself). The `ci.yml`
+runner (Node 24, which strips TypeScript types itself). The `ci.yml`
 job `Supabase function tests` runs it on every pull request.
