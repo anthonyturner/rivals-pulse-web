@@ -147,6 +147,28 @@ curl -i -X POST "$SUPABASE_URL/functions/v1/track-match-history" \
   name>');` deletes their rows and stops any later upload from storing them
   again. Either argument may be null.
 
+## Server-side client (web app)
+
+Server code reaches Supabase through one shared client in
+[`src/supabase-client.ts`](../src/supabase-client.ts). Reuse it; do not create
+another. `getSupabaseClient()` builds it from the environment on first use, and
+`createSupabaseClient(env)` takes an env record, for tests and scripts.
+
+| Variable | Note |
+| --- | --- |
+| `SUPABASE_URL` | The project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | A secret key (`sb_secret_...`), not the publishable key. It bypasses RLS, so it stays server-only. |
+
+A missing variable throws an error that names it (never its value).
+`GET /api/content/status` reports `supabase: { configured, reachable }` from a
+head-only count of `players`. `npm run check:browser-bundle`, run in CI after
+the build, fails if `SUPABASE_SERVICE_ROLE_KEY`, `sb_secret_` or
+`@supabase/supabase-js` reaches the browser build.
+
+PostgREST (the REST layer the client calls) returns at most 1000 rows per
+request, so bulk reads must page with `.range()`. Use a Postgres function
+called through `.rpc()` when several writes must succeed or fail together.
+
 ## Tests
 
 `npm run test:functions` runs the function tests with Node's built-in test
