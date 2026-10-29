@@ -342,6 +342,18 @@ describe('the tier list split by season', () => {
       expect(() => buildPulseAtlas(withData('heroes', named), GENERATED_AT, fakeSha256)).toThrowError(/heroes\[0\]/);
     });
 
+    it('is caught by its proper name in another dataset', () => {
+      const named = [{ id: 'thor', name: 'Thor', note: 'ranked S by Rivals Meta' }];
+
+      expect(() => buildPulseAtlas(withData('heroes', named), GENERATED_AT, fakeSha256)).toThrowError(/heroes\[0\]/);
+    });
+
+    it('lets the everyday phrase "Marvel Rivals meta" through', () => {
+      const everyday = [{ id: 'thor', name: 'Thor', note: 'a staple of the current Marvel Rivals meta' }];
+
+      expect(() => buildPulseAtlas(withData('heroes', everyday), GENERATED_AT, fakeSha256)).not.toThrow();
+    });
+
     it('rewrites the index but keeps the season files when the published index still names it', () => {
       const before = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
       const oldIndex = {

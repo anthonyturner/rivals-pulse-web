@@ -63,7 +63,12 @@ const UNSAFE_KEY =
 // link: the scraped counter source, and Rivals Meta (the overlay ships these
 // files inside its package).
 const UNSAFE_VALUE =
-  /sb_secret_|libsql:\/\/|Bearer\s+\S|-----BEGIN|eyJ[\w-]{10,}\.[\w-]{10,}\.|counter\s*-?\s*watch|rivals\s*-?\s*meta|rivalsmeta/i;
+  /sb_secret_|libsql:\/\/|Bearer\s+\S|-----BEGIN|eyJ[\w-]{10,}\.[\w-]{10,}\.|counter\s*-?\s*watch|rivalsmeta/i;
+
+// Case-sensitive on purpose: the site's name is a proper noun, while "Marvel
+// Rivals meta" (the game's metagame) is ordinary glossary text that must not
+// stop the whole feed.
+const RIVALS_META_NAME = /Rivals\s*-?\s*Meta/;
 
 interface BuiltFile {
   generatedAt: string;
@@ -973,7 +978,7 @@ function findUnsafeContent(value: unknown, path: string): string[] {
 
       found.push(...findUnsafeContent(child, `${path}.${key}`));
     }
-  } else if (typeof value === 'string' && UNSAFE_VALUE.test(value)) {
+  } else if (typeof value === 'string' && (UNSAFE_VALUE.test(value) || RIVALS_META_NAME.test(value))) {
     found.push(`${path}: value looks like a credential or names a source that must stay private`);
   }
 
