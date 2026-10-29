@@ -454,6 +454,59 @@ describe('verifyPulseAtlas on the season files', () => {
       /tier-list: season 1 path is not pulse-atlas\/v1\/tier-list\/seasons\/1\.json/,
     );
   });
+
+  // Rewrites the tier-list index in place; the manifest is left alone, so its own hash check also fires.
+  function withIndex(
+    files: PulseAtlasFile[],
+    change: (index: { seasons?: { ranks?: unknown; sha256?: string }[] }) => void,
+  ): PulseAtlasFile[] {
+    const envelope = JSON.parse(contentOf(files, TIER_LIST_PATH));
+    change(envelope.data);
+
+    return replacing(files, TIER_LIST_PATH, `${JSON.stringify(envelope)}\n`);
+  }
+
+  it('rejects ranks on a season that is not the current one', () => {
+    const files = withIndex(built(), (index) => {
+      index.seasons![0].ranks = {};
+    });
+
+    expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(
+      /tier-list: season 1 must have ranks in the index if and only if it is the current season/,
+    );
+  });
+
+  it('rejects a current season whose index entry has no ranks', () => {
+    const files = withIndex(built(), (index) => {
+      delete index.seasons![1].ranks;
+    });
+
+    expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(
+      /tier-list: season 2 must have ranks in the index if and only if it is the current season/,
+    );
+  });
+
+  it("rejects a season file that does not hold that season's ranks", () => {
+    const files = built();
+    const envelope = JSON.parse(contentOf(files, seasonPath(1)));
+    delete envelope.data.ranks;
+    const content = `${JSON.stringify(envelope)}\n`;
+    const indexed = withIndex(replacing(files, seasonPath(1), content), (index) => {
+      index.seasons![0].sha256 = fakeSha256(content);
+    });
+
+    expect(() => verifyPulseAtlas(indexed, fakeSha256)).toThrowError(
+      /tier-list: season 1 file does not hold that season's ranks/,
+    );
+  });
+
+  it('rejects an index that lists no seasons', () => {
+    const files = withIndex(built(), (index) => {
+      delete index.seasons;
+    });
+
+    expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(/tier-list: has no seasons index/);
+  });
 });
 
 describe('tierListRequests and assembleTierList', () => {
