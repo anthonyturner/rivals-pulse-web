@@ -780,6 +780,13 @@ describe('hero game ids', () => {
     ).toEqual(['deadpool: gameId 1057 is already used twice by this hero']);
   });
 
+  it('refuses a key the feed does not publish, instead of passing it onto the hero', () => {
+    expect(findHeroGameIdProblems([{ ...thorEntry, name: 'Thor' }, DEADPOOL], HERO_IDS).errors).toEqual([
+      'thor: unknown key name; an entry holds only id, gameId, gameIdVariants',
+    ]);
+    expect(() => build([{ ...thorEntry, counters: ['hulk'] }, DEADPOOL])).toThrowError(/hero-game-ids: thor: unknown key counters/);
+  });
+
   it('refuses malformed variants', () => {
     const variants = (gameIdVariants: unknown): object[] => [
       thorEntry,
@@ -805,6 +812,15 @@ describe('hero game ids', () => {
     expect(findHeroGameIdProblems(curatedHeroGameIds, slugs)).toEqual({ errors: [], warnings: [] });
     expect(curatedHeroGameIds.find((entry) => entry.id === 'peni-parker')?.gameId).toBe(1042);
     expect(curatedHeroGameIds.find((entry) => entry.id === 'deadpool')).toEqual(DEADPOOL);
+  });
+
+  // The live hero list is only known at publish time (where a dangling slug warns), so this is the
+  // build-time gate: both files are hand-maintained and list every hero the overlay knows.
+  it('fails on a slug that is not in the committed playstyle mix, so a typo cannot ship', () => {
+    const styled = curatedHeroStyles.map((style) => style.heroId);
+    const dangling = curatedHeroGameIds.map((entry) => entry.id).filter((slug) => !styled.includes(slug));
+
+    expect(dangling).toEqual([]);
   });
 });
 

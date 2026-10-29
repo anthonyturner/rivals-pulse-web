@@ -10,6 +10,7 @@ export const PULSE_ATLAS_HERO_GAME_IDS = 'hero-game-ids';
 
 const HERO_STYLE_WEIGHTS = ['poke', 'dive', 'brawl'] as const;
 const HERO_ROLES = ['Vanguard', 'Duelist', 'Strategist'] as const;
+const GAME_ID_ENTRY_KEYS: readonly string[] = ['id', 'gameId', 'gameIdVariants'];
 
 export type PulseAtlasDataset = (typeof PULSE_ATLAS_DATASETS)[number];
 
@@ -641,7 +642,8 @@ export interface HeroGameIdFindings {
  * Errors: the list is empty, an entry has no slug or no positive whole
  * `gameId`, a slug is listed twice, one numeric id belongs to two heroes (or to
  * a hero and its own variant), `gameIdVariants` is not a non-empty list of
- * `{ gameId, role }` with a real role, or (given `heroIds`) no entry names a
+ * `{ gameId, role }` with a real role, an entry has a key other than
+ * `id`, `gameId` and `gameIdVariants`, or (given `heroIds`) no entry names a
  * hero in `heroIds`.
  *
  * Warnings (only given `heroIds`): a hero in `heroIds` has no entry, or an
@@ -682,6 +684,13 @@ export function findHeroGameIdProblems(entries: unknown, heroIds?: readonly stri
 
     if (heroIds && !heroIds.includes(slug)) {
       warnings.push(`${slug}: not a hero in heroes.json, so its gameId is left out of the feed`);
+    }
+
+    // Only these keys are published onto the hero; a stray one is a typo, not data to pass along.
+    const stray = Object.keys(entry).filter((key) => !GAME_ID_ENTRY_KEYS.includes(key));
+
+    if (stray.length > 0) {
+      errors.push(`${slug}: unknown key ${stray.join(', ')}; an entry holds only ${GAME_ID_ENTRY_KEYS.join(', ')}`);
     }
 
     if (!isPositiveInteger(entry['gameId'])) {
@@ -751,8 +760,8 @@ function withHeroGameIds(inputs: readonly PulseAtlasInput[]): { inputs: PulseAtl
       return hero;
     }
 
-    const { id: _id, ...ids } = entry;
-    return { ...hero, ...ids };
+    const { gameId, gameIdVariants } = entry;
+    return { ...hero, gameId, ...(gameIdVariants === undefined ? {} : { gameIdVariants }) };
   });
 
   return {
