@@ -11,8 +11,8 @@
     {
       "dataset": "tier-list",
       "path": "pulse-atlas/v1/tier-list.json",
-      "sha256": "4e1885723dfef5b6b6c9e8138e1c45ef781711a226611635ac51830df295e902",
-      "bytes": 3023
+      "sha256": "a978be204471d9a128446bd8bb691ee89859449b0681633874827f527b75ed2c",
+      "bytes": 2949
     },
     {
       "dataset": "glossary",

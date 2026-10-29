@@ -27,6 +27,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Pulse Atlas tier list no longer names or links Rivals Meta, so the overlay can bundle the file without naming that site ([#138](https://github.com/anthonyturner/rivals-pulse-web/pull/138)).
 - The Pulse Atlas tier list is now about 90 KB instead of 3 MB: hero rows keep only the hero id and the numbers, and `tier-list.json` holds the current season and an index, and every season has its own file under `tier-list/seasons/`, so the overlay downloads a past season only when a player picks it ([#133](https://github.com/anthonyturner/rivals-pulse-web/pull/133)).
 - A new hero without a playstyle rating no longer stops the Pulse Atlas feed: the tier list and hero data keep refreshing and the hero is simply left out of `hero-styles.json`, with a warning on the run ([#129](https://github.com/anthonyturner/rivals-pulse-web/pull/129)).
 - The app is now branded Rivals Pulse ([#31](https://github.com/anthonyturner/rivals-pulse-web/pull/31)).
