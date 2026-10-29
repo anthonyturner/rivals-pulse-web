@@ -72,6 +72,7 @@ ${rows}
       </table>
     </div>
     <p>This list is read from <a href="${hrefTo(manifestPath)}">${fileName(manifestPath)}</a>. Download a file again only when its SHA-256 has changed.</p>
+    <p>The tier list is split by season: <code>tier-list.json</code> holds the current season and an index of every season, and there is one file per season at <code>tier-list/seasons/&lt;id&gt;.json</code>. The season files are not listed above; the index gives each one's path and SHA-256.</p>
 
     <p>How the files are shaped, and what they never contain, is in the <a href="${PULSE_ATLAS_CONTRACT_URL}">Pulse Atlas contract</a> on GitHub.</p>
   </main>

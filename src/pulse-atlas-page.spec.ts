@@ -35,6 +35,14 @@ describe('renderPulseAtlasPage', () => {
     expect(html).toContain(`<code>${'b'.repeat(64)}</code>`);
   });
 
+  it('says the tier list is split by season and that the season files are not listed', () => {
+    const html = renderPulseAtlasPage(manifest, rootPage);
+
+    expect(html).toContain('tier-list.json');
+    expect(html).toContain('one file per season');
+    expect(html).toContain('tier-list/seasons/&lt;id&gt;.json');
+  });
+
   it('links the manifest and the contract document', () => {
     const html = renderPulseAtlasPage(manifest, rootPage);
 
