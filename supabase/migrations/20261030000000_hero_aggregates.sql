@@ -9,7 +9,7 @@
 -- again, so its counts keep the contribution of anyone forgotten after the freeze (no uid is left
 -- in them to find it by).
 --
--- Additive. Nothing reads these tables yet (shadow mode): the read path is issue 144.
+-- Additive: no existing table is touched and no function changes its signature.
 
 -- One row per half-season that has been aggregated.
 create table if not exists public.hero_aggregate_half_seasons (
@@ -61,8 +61,10 @@ create table if not exists public.hero_aggregate_totals (
 
 -- Hero against enemy hero, per half-season and mode: hero_id on one team, enemy_hero_id on the other,
 -- results from hero_id's side. One encounter is one hero_id line facing one hero on the other team,
--- so a hero fighting itself adds 2 decided lines (one win, one loss) and 1 match. Only matchups with
--- at least `hero_matchup_min_matches()` decided matches are stored: thinner ones are never published.
+-- so a hero fighting itself adds 2 decided lines (one win, one loss) and 1 match. A matchup is stored
+-- (in every mode it was seen in) only when its decided matches, summed over all modes of the
+-- half-season, reach `hero_matchup_min_matches()`: thinner ones are never published, and a split
+-- across modes cannot hide a matchup that is large enough overall.
 create table if not exists public.hero_matchups (
   half_season numeric(4,1) not null,
   play_mode_id smallint not null,
@@ -96,8 +98,9 @@ immutable
 set search_path = ''
 as $$ select 10 $$;
 
--- Retention (privacy policy section 7), moved out of `purge_expired_participants` unchanged so the
--- purge and the freeze that precedes it cannot disagree about which rows are going.
+-- Retention (privacy policy section 7), in one place so the purge and the freeze ahead of it cannot
+-- disagree about which rows are going. A row is past retention when it is over six months old or the
+-- half-season after its own has ended.
 create or replace function public.participants_past_retention(
   p_half_season numeric,
   p_played_at timestamptz
@@ -113,32 +116,78 @@ as $$
       )
 $$;
 
--- The scoreboard lines of one half-season, with each match numbered and its mode settled. A match is
--- its roster fingerprint plus its start time (the same roster can play again later), and mode belongs
--- to the match, so it is read once per match rather than trusted line by line.
-create or replace function public.hero_aggregate_lines(p_half_season numeric)
-returns table (
-  line_id bigint,
-  match_no bigint,
-  play_mode_id smallint,
-  team smallint,
-  hero_id integer,
-  kills integer,
-  deaths integer,
-  assists integer,
-  final_hits integer,
-  is_win boolean
-)
+-- Writes all three count tables for one half-season from a single read of its raw rows, in one
+-- statement, so hero rows, totals and matchups always describe the same set of lines. The caller has
+-- emptied the half-season's rows first.
+create or replace function public.fill_hero_aggregates(p_half_season numeric) returns void
 language sql
-stable
 set search_path = ''
 as $$
-  select p.id,
-         dense_rank() over (order by p.fingerprint, p.played_at),
-         coalesce(min(p.play_mode_id) over (partition by p.fingerprint, p.played_at), -1)::smallint,
-         p.team, p.hero_id, p.kills, p.deaths, p.assists, p.final_hits, p.is_win
-  from public.participants p
-  where p.half_season = p_half_season
+  with l as materialized (
+    -- A match is its roster fingerprint plus its start time (the same roster can play again later).
+    -- Mode belongs to the match, so it is read once per match rather than trusted line by line.
+    select p.id as line_id,
+           dense_rank() over (order by p.fingerprint, p.played_at) as match_no,
+           coalesce(min(p.play_mode_id) over (partition by p.fingerprint, p.played_at), -1)::smallint as play_mode_id,
+           p.team, p.hero_id, p.kills, p.deaths, p.assists, p.final_hits, p.is_win
+    from public.participants p
+    where p.half_season = p_half_season
+  ),
+  heroes as (
+    insert into public.hero_aggregates
+      (half_season, play_mode_id, hero_id, lines, decided_lines, wins, matches, decided_matches,
+       kills_sum, kills_n, deaths_sum, deaths_n, assists_sum, assists_n, final_hits_sum, final_hits_n)
+    select p_half_season, l.play_mode_id, l.hero_id,
+           count(*),
+           count(l.is_win),
+           count(*) filter (where l.is_win),
+           count(distinct l.match_no),
+           count(distinct l.match_no) filter (where l.is_win is not null),
+           coalesce(sum(l.kills), 0), count(l.kills),
+           coalesce(sum(l.deaths), 0), count(l.deaths),
+           coalesce(sum(l.assists), 0), count(l.assists),
+           coalesce(sum(l.final_hits), 0), count(l.final_hits)
+    from l
+    where l.hero_id is not null
+    group by l.play_mode_id, l.hero_id
+    returning 1
+  ),
+  totals as (
+    insert into public.hero_aggregate_totals (half_season, play_mode_id, matches, decided_matches)
+    select p_half_season, l.play_mode_id,
+           count(distinct l.match_no),
+           count(distinct l.match_no) filter (where l.is_win is not null)
+    from l
+    group by l.play_mode_id
+    returning 1
+  ),
+  matchups as (
+    insert into public.hero_matchups
+      (half_season, play_mode_id, hero_id, enemy_hero_id, matches, decided_matches, decided_lines, wins)
+    select p_half_season, m.play_mode_id, m.hero_id, m.enemy_hero_id,
+           m.matches, m.decided_matches, m.decided_lines, m.wins
+    from (
+      select e.play_mode_id, e.hero_id, e.enemy_hero_id,
+             count(distinct e.match_no) as matches,
+             count(distinct e.match_no) filter (where e.is_win is not null) as decided_matches,
+             count(*) filter (where e.is_win is not null) as decided_lines,
+             count(*) filter (where e.is_win) as wins,
+             -- A match has one mode, so summing over modes counts each decided match once.
+             sum(count(distinct e.match_no) filter (where e.is_win is not null))
+               over (partition by e.hero_id, e.enemy_hero_id) as half_season_decided_matches
+      from (
+        -- Each line once per enemy hero it faced, however many players on the other team picked it.
+        select distinct a.line_id, a.match_no, a.play_mode_id, a.hero_id, b.hero_id as enemy_hero_id, a.is_win
+        from l a
+        join l b on b.match_no = a.match_no and b.team <> a.team
+        where a.hero_id is not null and b.hero_id is not null
+      ) e
+      group by e.play_mode_id, e.hero_id, e.enemy_hero_id
+    ) m
+    where m.half_season_decided_matches >= public.hero_matchup_min_matches()
+    returning 1
+  )
+  select 1
 $$;
 
 -- Rebuilds one half-season's counts from its raw rows and optionally freezes it. Returns false, and
@@ -167,46 +216,7 @@ begin
   delete from public.hero_aggregate_totals where half_season = p_half_season;
   delete from public.hero_matchups where half_season = p_half_season;
 
-  insert into public.hero_aggregates
-    (half_season, play_mode_id, hero_id, lines, decided_lines, wins, matches, decided_matches,
-     kills_sum, kills_n, deaths_sum, deaths_n, assists_sum, assists_n, final_hits_sum, final_hits_n)
-  select p_half_season, l.play_mode_id, l.hero_id,
-         count(*),
-         count(l.is_win),
-         count(*) filter (where l.is_win),
-         count(distinct l.match_no),
-         count(distinct l.match_no) filter (where l.is_win is not null),
-         coalesce(sum(l.kills), 0), count(l.kills),
-         coalesce(sum(l.deaths), 0), count(l.deaths),
-         coalesce(sum(l.assists), 0), count(l.assists),
-         coalesce(sum(l.final_hits), 0), count(l.final_hits)
-  from public.hero_aggregate_lines(p_half_season) l
-  where l.hero_id is not null
-  group by l.play_mode_id, l.hero_id;
-
-  insert into public.hero_aggregate_totals (half_season, play_mode_id, matches, decided_matches)
-  select p_half_season, l.play_mode_id,
-         count(distinct l.match_no),
-         count(distinct l.match_no) filter (where l.is_win is not null)
-  from public.hero_aggregate_lines(p_half_season) l
-  group by l.play_mode_id;
-
-  insert into public.hero_matchups
-    (half_season, play_mode_id, hero_id, enemy_hero_id, matches, decided_matches, decided_lines, wins)
-  select p_half_season, e.play_mode_id, e.hero_id, e.enemy_hero_id,
-         count(distinct e.match_no),
-         count(distinct e.match_no) filter (where e.is_win is not null),
-         count(*) filter (where e.is_win is not null),
-         count(*) filter (where e.is_win)
-  from (
-    -- Each line once per enemy hero it faced, however many players on the other team picked it.
-    select distinct a.line_id, a.match_no, a.play_mode_id, a.hero_id, b.hero_id as enemy_hero_id, a.is_win
-    from public.hero_aggregate_lines(p_half_season) a
-    join public.hero_aggregate_lines(p_half_season) b on b.match_no = a.match_no and b.team <> a.team
-    where a.hero_id is not null and b.hero_id is not null
-  ) e
-  group by e.play_mode_id, e.hero_id, e.enemy_hero_id
-  having count(distinct e.match_no) filter (where e.is_win is not null) >= public.hero_matchup_min_matches();
+  perform public.fill_hero_aggregates(p_half_season);
 
   insert into public.hero_aggregate_half_seasons (half_season, computed_at, frozen_at)
   values (p_half_season, now(), case when p_freeze then now() end)
@@ -239,10 +249,10 @@ $$;
 -- Retention (privacy policy section 7): a row goes when the half-season after its own has ended,
 -- and in any case six months after the match. Returns the rows deleted.
 --
--- The only change from the version in 20261009000000_participants.sql: before deleting, every
--- half-season that has rows to delete is rebuilt and frozen while its rows still exist (nothing runs
--- when nothing is due), and the retention rule itself now lives in `participants_past_retention`.
--- The signature, the return value and the rule are unchanged.
+-- Every half-season with a row to delete is rebuilt and frozen first, while its rows still exist.
+-- The rule holds for a half-season when it holds for its oldest row, so it is asked once per
+-- half-season rather than once per row. A row that arrives in a half-season after it was frozen is
+-- never counted.
 create or replace function public.purge_expired_participants() returns integer
 language plpgsql
 set search_path = ''
@@ -252,8 +262,9 @@ declare
 begin
   perform public.rebuild_hero_aggregates(due.half_season, true)
   from (
-    select distinct p.half_season from public.participants p
-    where public.participants_past_retention(p.half_season, p.played_at)
+    select p.half_season from public.participants p
+    group by p.half_season
+    having public.participants_past_retention(p.half_season, min(p.played_at))
   ) due;
 
   delete from public.participants p
@@ -264,17 +275,19 @@ end
 $$;
 
 -- Postgres grants EXECUTE to everyone on a new function; these are for the service role and the
--- scheduler only. `create or replace` of the purge keeps its grants, so they are only stated for the new ones.
+-- scheduler only. The purge is restated too, as the earlier migrations restate theirs.
 revoke execute on function public.hero_matchup_min_matches() from public, anon, authenticated;
 revoke execute on function public.participants_past_retention(numeric, timestamptz) from public, anon, authenticated;
-revoke execute on function public.hero_aggregate_lines(numeric) from public, anon, authenticated;
+revoke execute on function public.fill_hero_aggregates(numeric) from public, anon, authenticated;
 revoke execute on function public.rebuild_hero_aggregates(numeric, boolean) from public, anon, authenticated;
 revoke execute on function public.recompute_hero_aggregates() from public, anon, authenticated;
+revoke execute on function public.purge_expired_participants() from public, anon, authenticated;
 grant execute on function public.hero_matchup_min_matches() to service_role;
 grant execute on function public.participants_past_retention(numeric, timestamptz) to service_role;
-grant execute on function public.hero_aggregate_lines(numeric) to service_role;
+grant execute on function public.fill_hero_aggregates(numeric) to service_role;
 grant execute on function public.rebuild_hero_aggregates(numeric, boolean) to service_role;
 grant execute on function public.recompute_hero_aggregates() to service_role;
+grant execute on function public.purge_expired_participants() to service_role;
 
 -- Fill the tables now, so the first comparison with a direct count needs no waiting.
 select public.recompute_hero_aggregates();

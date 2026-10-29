@@ -132,8 +132,8 @@ Premium is dormant until configured, on both sides. The order matters:
 `participants` rows are deleted once the half-season after their own has ended, so the counts the
 site needs are kept separately, as anonymous numbers with no uid, name or fingerprint
 (`hero_aggregates` per half-season, mode and hero; `hero_aggregate_totals` per half-season and mode;
-`hero_matchups` per hero against an enemy hero). All four tables have RLS on and no policy; nothing
-reads them yet, and the read path is issue 144.
+`hero_matchups` per hero against an enemy hero). All four tables have RLS on and no policy, so only
+the service role reaches them.
 
 - `recompute_hero_aggregates()` rebuilds every half-season that still has raw rows and is not
   frozen, from scratch, so running it twice changes nothing and a late result or a `forget_player`
@@ -142,8 +142,11 @@ reads them yet, and the read path is issue 144.
   before deleting. A frozen half-season is never rebuilt, so its counts keep the contribution of
   anyone forgotten after the freeze. Frozen means `frozen_at` is set in `hero_aggregate_half_seasons`.
 - A match is its roster fingerprint plus its start time. `play_mode_id` -1 means the game did not say.
-- A matchup is stored only from `hero_matchup_min_matches()` decided matches up. The per-hero
-  minimum (10, the tier rule) belongs to the code that derives tiers.
+- A matchup is stored, in each mode it was seen in, only when its decided matches summed over all
+  modes of the half-season reach `hero_matchup_min_matches()`. The per-hero minimum (10, the tier
+  rule) belongs to the code that derives tiers.
+- A row that arrives in a half-season after the purge froze it is never counted, so a backfill must
+  finish before the half-season it fills comes due.
 - A rebuild failing inside the purge would stop deletion, which is why the hourly job exercises the
   same code long before any half-season is due.
 
@@ -165,9 +168,10 @@ policy's hard limit), but later than promised.
 ## After setup
 
 - **Required:** `select jobname from cron.job where jobname in
-  ('purge-expired-participants', 'recompute-hero-aggregates');` must show both jobs (the daily purge and the hourly aggregate rebuild). If it does not (the
-  migration warns when `pg_cron` is unavailable), enable `pg_cron` and schedule
-  `select public.purge_expired_participants();` daily by hand.
+  ('purge-expired-participants', 'recompute-hero-aggregates');` must show both jobs (the daily
+  purge and the hourly aggregate rebuild). If one is missing (the migrations warn when `pg_cron` is
+  unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();` daily and
+  `select public.recompute_hero_aggregates();` hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
