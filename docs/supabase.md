@@ -91,6 +91,11 @@ npx supabase functions deploy track-match-history
 npx supabase functions deploy elevenlabs-agent-token
 ```
 
+`track-match-history` keeps each recorder's newest 5,000 `tracked_matches` rows
+(`MAX_TRACKED_MATCHES_PER_PLAYER` in `tracked-match-retention.ts`). The
+participants backfill replays those rows, so lower the cap only after it has
+run.
+
 ## Secrets
 
 Set with `npx supabase secrets set NAME=value`. Names only here.
@@ -104,12 +109,6 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
 | `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
-
-`track-match-history` keeps each recorder's newest 5,000 `tracked_matches` rows
-(`MAX_TRACKED_MATCHES_PER_PLAYER` in `tracked-match-retention.ts`). It was 500,
-which the most active player had reached, so every upload deleted their oldest
-match before the participants backfill could replay it. Lower it only after the
-backfill has run.
 
 Deploy order for `track-match-history`: migration, then secrets, then
 function. A function deployed first fails closed (every upload is refused).
