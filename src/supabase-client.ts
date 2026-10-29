@@ -61,9 +61,12 @@ export async function getSupabaseStatus(
     return { configured: false, reachable: false };
   }
 
+  // No retries: postgrest-js otherwise backs off for about 7 seconds on a
+  // network failure, and the status endpoint should answer at once.
   const { error } = await createSupabaseClient(env, options)
     .from(PROBE_TABLE)
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .retry(false);
 
   return { configured: true, reachable: !error };
 }
