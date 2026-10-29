@@ -47,8 +47,6 @@ only when a player picks it.
 
 ```json
 {
-  "sourceName": "Rivals Meta",
-  "sourceUrl": "https://rivalsmeta.com/tier-list",
   "currentSeasonId": 21,
   "rankFilters": [{ "value": "99", "label": "All Ranks" }, { "value": "5+", "label": "Diamond+" }],
   "seasons": [
@@ -95,6 +93,11 @@ season has a file too, so a client can treat every season the same way.
   needs its own hero id list to show a name or portrait; a hero in the tier
   list that `heroes.json` has no hero of the same name or portrait for is
   published all the same, with a warning on the workflow run.
+- **The files do not say where the numbers come from.** The tier-list API
+  reports a `sourceName` and `sourceUrl`; the generator drops both, and refuses
+  to build if any published value names Rivals Meta or its site, because the
+  overlay ships these files inside its package. The envelope's `source` is the
+  neutral `rivals-pulse-web:content-api`.
 - `seasons` and `rankFilters` are the lists the tier-list API itself reports,
   so a new season or rank appears without a code change. Every season has a
   `ranks` entry for **every** `rankFilters[].value` (the rank value is the key,

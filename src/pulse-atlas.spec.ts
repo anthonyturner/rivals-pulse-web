@@ -300,6 +300,65 @@ describe('the tier list split by season', () => {
     });
   });
 
+  describe('the tier-list source', () => {
+    const TIER_LIST_PATHS = ['pulse-atlas/v1/tier-list.json', seasonPath(1), seasonPath(2)];
+    const upstream = {
+      ...(tierList() as object),
+      sourceName: 'Rivals Meta',
+      sourceUrl: 'https://rivalsmeta.com/tier-list',
+    };
+
+    it('is neither named nor linked in the index or any season file', () => {
+      const files = buildPulseAtlas(withData('tier-list', upstream), GENERATED_AT, fakeSha256);
+
+      for (const path of TIER_LIST_PATHS) {
+        const content = fileAt(files, path)?.content ?? '';
+
+        expect(content).withContext(path).not.toMatch(/rivals\s*-?meta|rivalsmeta|sourceName|sourceUrl/i);
+      }
+    });
+
+    it('leaves the rest of the index as it was', () => {
+      const files = buildPulseAtlas(withData('tier-list', upstream), GENERATED_AT, fakeSha256);
+      const index = envelopeOf<Record<string, unknown>>(files, 'pulse-atlas/v1/tier-list.json').data;
+
+      expect(Object.keys(index)).toEqual(['currentSeasonId', 'rankFilters', 'seasons']);
+    });
+
+    it('is refused if a season detail ever names it', () => {
+      const named = {
+        ...(tierList() as { seasons: object[] }),
+        seasons: (tierList() as { seasons: object[] }).seasons.map((season) => ({ ...season, name: 'Rivals Meta S1' })),
+      };
+
+      expect(() => buildPulseAtlas(withData('tier-list', named), GENERATED_AT, fakeSha256)).toThrowError(
+        /tier-list\.seasons\[0\]\.name/,
+      );
+    });
+
+    it('is not named by another dataset either', () => {
+      const named = [{ id: 'thor', name: 'Thor', note: 'see https://rivalsmeta.com/characters' }];
+
+      expect(() => buildPulseAtlas(withData('heroes', named), GENERATED_AT, fakeSha256)).toThrowError(/heroes\[0\]/);
+    });
+
+    it('rewrites the index but keeps the season files when the published index still names it', () => {
+      const before = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+      const oldIndex = {
+        ...envelopeOf<object>(before, 'pulse-atlas/v1/tier-list.json'),
+        data: { sourceName: 'Rivals Meta', sourceUrl: 'https://rivalsmeta.com/tier-list', ...indexOf(before) },
+      };
+      const published = before.map((file) =>
+        file.path === 'pulse-atlas/v1/tier-list.json' ? { ...file, content: `${JSON.stringify(oldIndex)}\n` } : file,
+      );
+      const after = buildPulseAtlas(withData('tier-list', upstream), '2026-10-27T12:00:00.000Z', fakeSha256, published);
+
+      expect(fileAt(after, seasonPath(1))).toEqual(fileAt(before, seasonPath(1)));
+      expect(fileAt(after, seasonPath(2))).toEqual(fileAt(before, seasonPath(2)));
+      expect(fileAt(after, 'pulse-atlas/v1/tier-list.json')?.content).not.toMatch(/rivals\s*meta|rivalsmeta/i);
+    });
+  });
+
   it('does not list the season files in the manifest', () => {
     const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
     const manifest = JSON.parse(files[files.length - 1].content);
@@ -560,6 +619,12 @@ describe('tierListRequests and assembleTierList', () => {
     });
     expect(data.seasons[0].fetchedAt).toBeUndefined();
     expect(data.seasons[0].sourceTimestamp).toBeUndefined();
+  });
+
+  it('does not carry the source name or link of the tier-list API', () => {
+    const data = assembleTierList(index, snapshotsFor()) as Record<string, unknown>;
+
+    expect(Object.keys(data)).toEqual(['currentSeasonId', 'rankFilters', 'seasons']);
   });
 
   it('fails when a season and rank has no snapshot', () => {

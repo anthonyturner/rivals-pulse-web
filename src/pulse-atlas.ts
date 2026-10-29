@@ -59,10 +59,11 @@ export function tierListSeasonPath(seasonId: number): string {
 const UNSAFE_KEY =
   /secret|password|passwd|token|api[-_]?key|authorization|credential|email|puuid|player|steam|account|session|^counters?$/i;
 
-// Credential shapes, plus the name of the scraped counter source the feed must
-// never carry.
+// Credential shapes, plus the third-party sources the feed must never name or
+// link: the scraped counter source, and Rivals Meta (the overlay ships these
+// files inside its package).
 const UNSAFE_VALUE =
-  /sb_secret_|libsql:\/\/|Bearer\s+\S|-----BEGIN|eyJ[\w-]{10,}\.[\w-]{10,}\.|counter\s*-?\s*watch/i;
+  /sb_secret_|libsql:\/\/|Bearer\s+\S|-----BEGIN|eyJ[\w-]{10,}\.[\w-]{10,}\.|counter\s*-?\s*watch|rivals\s*-?\s*meta|rivalsmeta/i;
 
 interface BuiltFile {
   generatedAt: string;
@@ -191,8 +192,6 @@ export interface TierListSnapshot extends TierListRequest {
 }
 
 interface TierListIndex {
-  sourceName: unknown;
-  sourceUrl: unknown;
   currentSeasonId: unknown;
   rankFilters: unknown[];
   seasons: Record<string, unknown>[];
@@ -253,8 +252,6 @@ export function assembleTierList(index: unknown, snapshots: readonly TierListSna
   }
 
   return {
-    sourceName: parsed.sourceName,
-    sourceUrl: parsed.sourceUrl,
     currentSeasonId: parsed.currentSeasonId,
     rankFilters: parsed.rankFilters,
     seasons,
@@ -282,8 +279,6 @@ function parseTierListIndex(index: unknown): TierListIndex {
   }
 
   return {
-    sourceName: index['sourceName'],
-    sourceUrl: index['sourceUrl'],
     currentSeasonId: index['currentSeasonId'],
     rankFilters,
     seasons: seasons.filter(isRecord),
@@ -402,6 +397,12 @@ function tryParseJson(content: string): unknown {
 }
 
 function toPublicInput(input: PulseAtlasInput): PulseAtlasInput {
+  if (input.dataset === 'tier-list' && isRecord(input.data)) {
+    // The API names where its numbers come from; the published files never do.
+    const { sourceName: _sourceName, sourceUrl: _sourceUrl, ...publicTierList } = input.data;
+    return { ...input, data: publicTierList };
+  }
+
   if (input.dataset !== 'heroes' || !Array.isArray(input.data)) {
     return input;
   }
@@ -661,8 +662,6 @@ interface ReadTierList {
   /** Faults in the data; empty when `tierList` is set. */
   problems: string[];
   tierList?: {
-    sourceName: unknown;
-    sourceUrl: unknown;
     currentSeasonId: number;
     rankFilters: unknown[];
     seasons: TierListSeason[];
@@ -748,8 +747,6 @@ function readTierList(data: unknown): ReadTierList {
   return {
     problems,
     tierList: {
-      sourceName: data['sourceName'],
-      sourceUrl: data['sourceUrl'],
       currentSeasonId,
       rankFilters,
       seasons,
@@ -866,8 +863,6 @@ function withTierListSplitBySeason(
   }));
 
   const index = {
-    sourceName: tierList.sourceName,
-    sourceUrl: tierList.sourceUrl,
     currentSeasonId: tierList.currentSeasonId,
     rankFilters: tierList.rankFilters,
     seasons: seasonFiles.map(({ season, file }) => ({
@@ -979,7 +974,7 @@ function findUnsafeContent(value: unknown, path: string): string[] {
       found.push(...findUnsafeContent(child, `${path}.${key}`));
     }
   } else if (typeof value === 'string' && UNSAFE_VALUE.test(value)) {
-    found.push(`${path}: value looks like a credential or counter-source data`);
+    found.push(`${path}: value looks like a credential or names a source that must stay private`);
   }
 
   return found;
