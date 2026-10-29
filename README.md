@@ -126,11 +126,14 @@ Configure these project environment variables:
 ```text
 TURSO_DATABASE_URL
 TURSO_AUTH_TOKEN
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
 CRON_SECRET
 SYNC_SECRET
 ```
 
-`CRON_SECRET` authenticates scheduled Vercel cron requests. `SYNC_SECRET` protects manual
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (a secret `sb_secret_...` key) let server code reach
+Supabase; see [docs/supabase.md](docs/supabase.md). `CRON_SECRET` authenticates scheduled Vercel cron requests. `SYNC_SECRET` protects manual
 production sync requests. Scheduled jobs refresh home news and game statistics; deployments do
 not run the full database seed.
 

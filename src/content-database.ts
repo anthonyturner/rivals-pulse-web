@@ -4,6 +4,7 @@ import { GlossaryTerm } from './app/features/reference/glossary/glossary.model.j
 import { HomeContent, PortalCard } from './app/features/home/home-content.model.js';
 import { Hero, HeroVideo } from './app/features/heroes/hero.model.js';
 import { TierListResponse } from './contracts/tier-list.model.js';
+import { getSupabaseStatus, type SupabaseStatus } from './supabase-client.js';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;
@@ -29,6 +30,7 @@ type ContentStatus = {
   tierListItems: number;
   gameStatSnapshots: number;
   gameStatSnapshotGames: number;
+  supabase: SupabaseStatus;
 };
 
 let client: Client | undefined;
@@ -150,6 +152,7 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     tierListItems: await getOptionalCount('tier_list_items'),
     gameStatSnapshots: await getOptionalCount('game_stat_snapshots'),
     gameStatSnapshotGames: await getOptionalCount('game_stat_snapshot_games'),
+    supabase: await getSupabaseStatus(),
   };
 }
 
