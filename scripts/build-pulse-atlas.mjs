@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -11,6 +11,7 @@ import {
   PULSE_ATLAS_MANIFEST_PATH,
   parseManifest,
   tierListRequests,
+  tierListSeasonPath,
   verifyPulseAtlas,
 } from '../src/pulse-atlas.ts';
 import { renderPulseAtlasPage } from '../src/pulse-atlas-page.ts';
@@ -58,13 +59,17 @@ const live = [
 ];
 
 const now = new Date().toISOString();
+// A sample keeps two heroes, so most of its tier-list heroes would warn; its warnings are dropped.
 const files = samplesDir
-  ? buildPulseAtlas(live.map(sampler(live)), now, sha256, [], warn)
+  ? buildPulseAtlas(live.map(sampler(live)), now, sha256, [], () => undefined)
   : buildPulseAtlas(live, now, sha256, await fetchPublished(), warn);
 
-// Samples sit flat in one folder; the live feed keeps its versioned folders.
+// Samples sit in one folder without the version prefix (`tier-list/seasons/21.json`
+// stays under its own folder); the live feed keeps its versioned folders.
 const targetOf = (file) =>
-  samplesDir ? join(resolve(samplesDir), basename(file.path)) : join(outDir, file.path);
+  samplesDir
+    ? join(resolve(samplesDir), file.path.slice(PULSE_ATLAS_BASE_PATH.length + 1))
+    : join(outDir, file.path);
 
 if (!samplesDir) {
   // Only the versioned feed folder is ours to clear, wherever --out points.
@@ -146,13 +151,17 @@ async function fetchTierList() {
   return assembleTierList(index, snapshots);
 }
 
-// What is published right now, so unchanged datasets keep their exact bytes.
-// A failure here (the first run gets a 404) only costs a fresh build.
+// What is published right now, so unchanged datasets and tier-list seasons keep
+// their exact bytes. A failure here (the first run gets a 404) only costs a
+// fresh build of that file.
 async function fetchPublished() {
+  const seasonIds = live.find((input) => input.dataset === 'tier-list').data.seasons.map((season) => season.id);
+  const paths = [
+    ...PULSE_ATLAS_DATASETS.map((name) => `${PULSE_ATLAS_BASE_PATH}/${name}.json`),
+    ...seasonIds.map(tierListSeasonPath),
+  ];
   const results = await Promise.all(
-    PULSE_ATLAS_DATASETS.map(async (name) => {
-      const path = `${PULSE_ATLAS_BASE_PATH}/${name}.json`;
-
+    paths.map(async (path) => {
       try {
         const response = await fetch(`${publishedBase}/${path}`, {
           signal: AbortSignal.timeout(PUBLISHED_TIMEOUT_MS),
@@ -164,7 +173,7 @@ async function fetchPublished() {
 
         return { path, content: await response.text() };
       } catch (error) {
-        console.warn(`No published ${name} to compare with (${error}); building it fresh.`);
+        console.warn(`No published ${path} to compare with (${error}); building it fresh.`);
         return undefined;
       }
     }),
@@ -194,13 +203,16 @@ function toSample(input, sampleHeroIds) {
         return data.slice(0, 3);
       case 'tier-list': {
         const ranks = data.rankFilters.slice(0, 2).map((filter) => filter.value);
+        // The current season and the one before it, so the sample shows the index
+        // entry with ranks next to one without.
+        const current = data.seasons.findIndex((season) => season.id === data.currentSeasonId);
         const trimTiers = (tiers) =>
           tiers.filter((tier) => tier.heroes.length > 0).map((tier) => ({ ...tier, heroes: tier.heroes.slice(0, 2) }));
 
         return {
           ...data,
           rankFilters: data.rankFilters.slice(0, 2),
-          seasons: data.seasons.slice(-2).map((season) => ({
+          seasons: data.seasons.slice(Math.max(0, current - 1), current + 1).map((season) => ({
             ...season,
             ranks: Object.fromEntries(
               ranks.map((rank) => [rank, { tiers: trimTiers(season.ranks[rank].tiers) }]),
