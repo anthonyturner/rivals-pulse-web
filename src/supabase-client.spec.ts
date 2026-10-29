@@ -71,6 +71,18 @@ describe('getSupabaseStatus', () => {
     });
   });
 
+  it('reports unreachable, without throwing, when SUPABASE_URL is malformed', async () => {
+    const fetchSpy = jasmine.createSpy('fetch');
+
+    expect(
+      await getSupabaseStatus(
+        { ...configuredEnv, SUPABASE_URL: 'example.supabase.co' },
+        { fetch: fetchSpy },
+      ),
+    ).toEqual({ configured: true, reachable: false });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('reports unreachable when the request fails', async () => {
     const failingFetch: typeof fetch = async () => {
       throw new TypeError('fetch failed');

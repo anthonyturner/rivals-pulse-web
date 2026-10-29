@@ -18,6 +18,7 @@ export interface SupabaseStatus {
 // table guaranteed to exist on every project this repo owns. The probe only
 // counts it (head-only), so no row ever leaves the database.
 const PROBE_TABLE = 'players';
+const PROBE_TIMEOUT_MS = 3000;
 
 let sharedClient: SupabaseClient | undefined;
 
@@ -53,20 +54,34 @@ export function getSupabaseClient(): SupabaseClient {
   return sharedClient;
 }
 
+/**
+ * Never throws: a misconfigured or unreachable project is reported, not raised.
+ * Without `env` it probes through the shared client.
+ */
 export async function getSupabaseStatus(
-  env: SupabaseEnv = process.env,
+  env?: SupabaseEnv,
   options: SupabaseClientOptions = {},
 ): Promise<SupabaseStatus> {
-  if (!isSupabaseConfigured(env)) {
+  if (!isSupabaseConfigured(env ?? process.env)) {
     return { configured: false, reachable: false };
   }
 
-  // No retries: postgrest-js otherwise backs off for about 7 seconds on a
-  // network failure, and the status endpoint should answer at once.
-  const { error } = await createSupabaseClient(env, options)
-    .from(PROBE_TABLE)
-    .select('*', { count: 'exact', head: true })
-    .retry(false);
+  try {
+    const client = env ? createSupabaseClient(env, options) : getSupabaseClient();
+    // No retries and a short timeout: postgrest-js otherwise backs off for
+    // about 7 seconds on a network failure, and a status check should answer
+    // at once.
+    const { error } = await client
+      .from(PROBE_TABLE)
+      .select('*', { count: 'exact', head: true })
+      .retry(false)
+      .abortSignal(AbortSignal.timeout(PROBE_TIMEOUT_MS));
 
-  return { configured: true, reachable: !error };
+    return { configured: true, reachable: !error };
+  } catch (error) {
+    // createClient throws on a malformed SUPABASE_URL; the message never holds a key.
+    console.warn('Supabase status probe failed', error instanceof Error ? error.message : error);
+
+    return { configured: true, reachable: false };
+  }
 }
