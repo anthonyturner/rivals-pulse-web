@@ -27,6 +27,13 @@ export interface ParticipantRow {
   is_win: boolean | null;
 }
 
+/** The facts about the match itself, shared by every player's line in it. */
+export interface MatchContext {
+  /** 0 Quick Match, 1 Competitive, 2 Arcade/Custom, 3 Practice; null when the game did not say. */
+  play_mode_id: number | null;
+  map_name: string | null;
+}
+
 /** A 6v6 match plus slack for a spectator-free custom lobby; more than this is not a real scoreboard. */
 const MAX_PARTICIPANTS = 14;
 const MAX_NAME_LENGTH = 64;
@@ -35,6 +42,7 @@ const MAX_STAT = 999;
 const MAX_MATCH_UID_LENGTH = 64;
 const MAX_DURATION_SECONDS = 86_400;
 const MAX_TIMESTAMP = 10_000_000_000_000;
+const MAX_PLAY_MODE_ID = 99;
 const MAX_INT4 = 2_147_483_647;
 
 /** Matches older than this are not live uploads, so they are not stored for others (7 days). */
@@ -84,6 +92,14 @@ export function parseParticipants(match: JsonRecord): ParticipantRow[] {
   return [...rows.values()];
 }
 
+/** The mode and map of the match; an unknown or malformed one is null, never a guess. */
+export function readMatchContext(match: JsonRecord): MatchContext {
+  return {
+    play_mode_id: readCount(match['play_mode_id'], MAX_PLAY_MODE_ID),
+    map_name: readName(match['match_map_name']),
+  };
+}
+
 /**
  * The same value whoever recorded the match: a hash of who was in it, with no time in it, so two
  * clocks a few seconds apart cannot split one match in two.
@@ -99,12 +115,13 @@ export async function rosterFingerprint(rows: readonly ParticipantRow[]): Promis
  * figures or other players' lines (those live in `participants`, where retention and deletion reach them).
  */
 export function storableMatch(match: JsonRecord): { rawPayload: JsonRecord; performance: JsonRecord | null } {
+  const { play_mode_id, map_name } = readMatchContext(match);
   const rawPayload = compact({
     match_uid: readMatchUid(match),
-    match_map_name: readName(match['match_map_name']),
+    match_map_name: map_name,
     match_play_duration: readCount(match['match_play_duration'], MAX_DURATION_SECONDS),
     match_time_stamp: readCount(match['match_time_stamp'], MAX_TIMESTAMP),
-    play_mode_id: readCount(match['play_mode_id'], 99),
+    play_mode_id,
     match_season: readHalfSeason(match),
   });
 

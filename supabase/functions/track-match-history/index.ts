@@ -5,11 +5,13 @@ import {
   parseParticipants,
   PayloadError,
   readHalfSeason,
+  readMatchContext,
   readMatchUid,
   readPlayedAt,
   rosterFingerprint,
   storableMatch,
 } from './match-payload.ts';
+import { MAX_TRACKED_MATCHES_PER_PLAYER, TRACKED_MATCH_TRIM_BATCH } from './tracked-match-retention.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +21,6 @@ const corsHeaders = {
   'Access-Control-Expose-Headers': 'Retry-After',
 };
 
-const MAX_TRACKED_MATCHES_PER_PLAYER = 500;
 const PROVIDER = 'gep';
 
 /**
@@ -80,6 +81,7 @@ Deno.serve(async request => {
     const playedAt = readPlayedAt(match, Date.now());
     const halfSeason = readHalfSeason(match);
     const participants = parseParticipants(match);
+    const { play_mode_id, map_name } = readMatchContext(match);
     const fingerprint = await rosterFingerprint(participants);
     const { rawPayload, performance } = storableMatch(match);
 
@@ -120,6 +122,8 @@ Deno.serve(async request => {
       p_played_at: playedAt,
       p_recorded_by: recordedBy,
       p_players: participants,
+      p_play_mode_id: play_mode_id,
+      p_map_name: map_name,
     });
     if (participantsError) throw participantsError;
 
@@ -137,22 +141,24 @@ async function pruneTrackedMatches(
   supabase: ReturnType<typeof createClient>,
   playerId: number,
 ): Promise<void> {
-  const { data: keepRows, error: keepError } = await supabase
+  // Reads only the rows past the cap, so the delete names a handful of ids however large the cap is.
+  const { data: surplusRows, error: surplusError } = await supabase
     .from('tracked_matches')
     .select('id')
     .eq('player_id', playerId)
     .order('played_at', { ascending: false })
-    .limit(MAX_TRACKED_MATCHES_PER_PLAYER);
-  if (keepError) throw keepError;
+    .order('id', { ascending: false })
+    .range(MAX_TRACKED_MATCHES_PER_PLAYER, MAX_TRACKED_MATCHES_PER_PLAYER + TRACKED_MATCH_TRIM_BATCH - 1);
+  if (surplusError) throw surplusError;
 
-  const keepIds = (keepRows ?? []).map(row => row.id);
-  if (keepIds.length < MAX_TRACKED_MATCHES_PER_PLAYER) return;
+  const surplusIds = (surplusRows ?? []).map(row => row.id);
+  if (surplusIds.length === 0) return;
 
   const { error: pruneError } = await supabase
     .from('tracked_matches')
     .delete()
     .eq('player_id', playerId)
-    .not('id', 'in', `(${keepIds.join(',')})`);
+    .in('id', surplusIds);
   if (pruneError) throw pruneError;
 }
 

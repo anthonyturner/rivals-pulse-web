@@ -44,6 +44,7 @@ repo's build. This is a move, not a redesign.
 | `20261009000000_participants.sql` | `participants`, `do_not_store`, `half_seasons`, `participant_upload_log` and the functions that write to them |
 | `20261010000000_participants_fill_late_result.sql` | `record_match_participants` fills a blank `is_win` on a repeat upload |
 | `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
+| `20261029000000_participants_mode_map.sql` | `participants.play_mode_id` and `participants.map_name` (null when the game did not say); `record_match_participants` takes them as two trailing arguments and fills a blank one on a repeat upload |
 
 Link once per machine, check history, then apply:
 
@@ -58,6 +59,19 @@ reseed against the live project. Use `migration repair --status applied
 <version>` only for a version whose objects verifiably already exist.
 `supabase db diff --linked` needs Docker; where Docker is missing, compare with
 `migration list` and read-only `npx supabase db query --linked "<sql>"` checks.
+
+## Changing a database function's signature
+
+`record_match_participants` grew two trailing arguments (`p_play_mode_id`,
+`p_map_name`, both defaulting to null) while the deployed call, which passes
+five named arguments, stayed compatible. A signature change is always `drop
+function` plus `create function` in one migration, followed by a restated
+`revoke` and `grant execute ... to service_role`, because Postgres grants
+EXECUTE to everyone on a new function. Never `create or replace` with extra
+arguments: it adds a second overload beside the old one, PostgREST cannot
+choose between them (PGRST203), and every upload fails. After the push,
+`select count(*) from pg_proc where proname = 'record_match_participants'` must
+return 1.
 
 ## Edge Functions
 
@@ -76,6 +90,11 @@ The live deployments can be older than the source here. Check
 npx supabase functions deploy track-match-history
 npx supabase functions deploy elevenlabs-agent-token
 ```
+
+`track-match-history` keeps each recorder's newest 5,000 `tracked_matches` rows
+(`MAX_TRACKED_MATCHES_PER_PLAYER` in `tracked-match-retention.ts`). The
+participants backfill replays those rows, so lower the cap only after it has
+run.
 
 ## Secrets
 

@@ -4,6 +4,7 @@ import {
   parseParticipants,
   PayloadError,
   readHalfSeason,
+  readMatchContext,
   readMatchUid,
   readPlayedAt,
   rosterFingerprint,
@@ -130,6 +131,50 @@ describe('parseParticipants', () => {
       const [row] = parseParticipants(match([player({ final_hits })]));
       assert.equal(row.final_hits, null, `final_hits ${JSON.stringify(final_hits)} was stored`);
     }
+  });
+});
+
+describe('readMatchContext', () => {
+  it('reads the mode and the map of the match', () => {
+    assert.deepEqual(readMatchContext(match([player()], { play_mode_id: 1, match_map_name: ' Tokyo 2099 ' })), {
+      play_mode_id: 1,
+      map_name: 'Tokyo 2099',
+    });
+  });
+
+  it('keeps Quick Match (0) as a mode rather than reading it as missing', () => {
+    assert.equal(readMatchContext(match([player()], { play_mode_id: 0 })).play_mode_id, 0);
+    assert.equal(readMatchContext(match([player()], { play_mode_id: '0' })).play_mode_id, 0);
+  });
+
+  it('is null for an absent, unknown or malformed mode and map, never 0 or an empty string', () => {
+    assert.deepEqual(readMatchContext(match([player()])), { play_mode_id: null, map_name: null });
+    assert.deepEqual(
+      readMatchContext(match([player()], { play_mode_id: null, match_map_name: '  ' })),
+      { play_mode_id: null, map_name: null },
+    );
+    assert.deepEqual(
+      readMatchContext(match([player()], { play_mode_id: -1, match_map_name: { a: 1 } })),
+      { play_mode_id: null, map_name: null },
+    );
+    assert.equal(readMatchContext(match([player()], { play_mode_id: 100 })).play_mode_id, null);
+    assert.equal(readMatchContext(match([player()], { play_mode_id: 1.5 })).play_mode_id, null);
+  });
+
+  it('caps the map name length and strips control characters like a player name', () => {
+    const { map_name } = readMatchContext(match([player()], { match_map_name: `Tok\u0000yo${'x'.repeat(100)}` }));
+
+    assert.equal(map_name?.length, 64);
+    assert.equal(map_name?.startsWith('Tokyo'), true);
+  });
+
+  it('agrees with what the recorder history stores', () => {
+    const upload = match([player()], { play_mode_id: 1, match_map_name: 'Tokyo 2099' });
+    const { rawPayload } = storableMatch(upload);
+    const { play_mode_id, map_name } = readMatchContext(upload);
+
+    assert.equal(rawPayload['play_mode_id'], play_mode_id);
+    assert.equal(rawPayload['match_map_name'], map_name);
   });
 });
 
