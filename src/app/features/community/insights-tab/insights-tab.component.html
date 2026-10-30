@@ -26,7 +26,7 @@
             <thead>
               <tr>
                 <th scope="col">When</th>
-                <th scope="col">Matches</th>
+                <th scope="col">Share of matches</th>
                 <th scope="col">Win rate</th>
               </tr>
             </thead>
@@ -39,7 +39,7 @@
                       <span class="insights__bar" aria-hidden="true">
                         <span class="insights__bar-fill" [style.width.%]="row.barPercent"></span>
                       </span>
-                      {{ row.matches }}
+                      {{ row.share }}
                     </td>
                     <td>{{ row.winRate }}</td>
                   } @else {

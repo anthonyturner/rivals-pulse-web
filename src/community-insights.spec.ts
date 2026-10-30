@@ -1,19 +1,8 @@
 import type { CommunityInsights } from './contracts/community-insights.model.js';
-import {
-  deriveCommunityInsights,
-  INSIGHTS_MIN_SHOWN_BUCKETS,
-  type InsightsBucketRow,
-} from './community-insights.js';
+import { deriveCommunityInsights, type InsightsBucketRow } from './community-insights.js';
 
 function row(overrides: Partial<InsightsBucketRow>): InsightsBucketRow {
-  return { dimension: 'weekday', bucket: 1, matches: 40, decidedMatches: 40, wins: 20, ...overrides };
-}
-
-/** Enough shown weekday buckets for the dimension to appear, with `first` replacing the Monday one. */
-function weekdays(first: Partial<InsightsBucketRow> = {}, count = INSIGHTS_MIN_SHOWN_BUCKETS): InsightsBucketRow[] {
-  return Array.from({ length: count }, (_, index) =>
-    row({ bucket: index + 1, ...(index === 0 ? first : {}) }),
-  );
+  return { dimension: 'weekday', bucket: 1, sharePercent: 33, winRatePercent: 50, ...overrides };
 }
 
 function derive(buckets: InsightsBucketRow[]): CommunityInsights {
@@ -36,7 +25,7 @@ function dimension(insights: CommunityInsights, id: string) {
   return found;
 }
 
-const NOT_ENOUGH = { status: 'not-enough-data', matches: null, share: null, winRate: null } as const;
+const NOT_ENOUGH = { status: 'not-enough-data', share: null, winRate: null } as const;
 
 describe('deriveCommunityInsights', () => {
   it('names every bucket of every dimension, all not enough data, when nothing is shown', () => {
@@ -93,80 +82,33 @@ describe('deriveCommunityInsights', () => {
     ]);
   });
 
-  it('shows the buckets of a dimension that has enough of them, with volume and win rate', () => {
-    const insights = derive(weekdays({ matches: 40, decidedMatches: 40, wins: 24 }));
+  it('shows exactly the buckets the database sent, with their share and win rate, and no others', () => {
+    const insights = derive([
+      row({ bucket: 1, sharePercent: 50, winRatePercent: 60 }),
+      row({ bucket: 2, sharePercent: 30, winRatePercent: null }),
+      row({ bucket: 4, sharePercent: 20, winRatePercent: 45 }),
+    ]);
 
     expect(insights.status).toBe('ready');
-    expect(dimension(insights, 'weekday').buckets.slice(0, 4)).toEqual([
-      { label: 'Monday', status: 'ready', matches: 40, share: 33.3, winRate: 60 },
-      { label: 'Tuesday', status: 'ready', matches: 40, share: 33.3, winRate: 50 },
-      { label: 'Wednesday', status: 'ready', matches: 40, share: 33.3, winRate: 50 },
-      { label: 'Thursday', ...NOT_ENOUGH },
+    expect(dimension(insights, 'weekday').buckets.slice(0, 5)).toEqual([
+      { label: 'Monday', status: 'ready', share: 50, winRate: 60 },
+      { label: 'Tuesday', status: 'ready', share: 30, winRate: null },
+      { label: 'Wednesday', ...NOT_ENOUGH },
+      { label: 'Thursday', status: 'ready', share: 20, winRate: 45 },
+      { label: 'Friday', ...NOT_ENOUGH },
     ]);
-  });
-
-  it('shows nothing of a dimension with too few shown buckets, however large they are', () => {
-    const insights = derive(weekdays({ matches: 900, decidedMatches: 900 }, INSIGHTS_MIN_SHOWN_BUCKETS - 1));
-
-    expect(insights.status).toBe('not-enough-data');
-    expect(dimension(insights, 'weekday').buckets.every((b) => b.status === 'not-enough-data')).toBeTrue();
-  });
-
-  it('is the empty state when no dimension has enough shown buckets, even if some buckets came through', () => {
-    const insights = derive([
-      ...weekdays({}, 2),
-      row({ dimension: 'session_position', bucket: 1 }),
-      row({ dimension: 'time_of_day', bucket: 0 }),
-    ]);
-
-    expect(insights.status).toBe('not-enough-data');
-  });
-
-  it('takes shares over the shown buckets only, so no figure adds up to a hidden bucket', () => {
-    const insights = derive([
-      row({ bucket: 1, matches: 60 }),
-      row({ bucket: 2, matches: 30 }),
-      row({ bucket: 3, matches: 10 }),
-    ]);
-    const shares = dimension(insights, 'weekday').buckets.map((b) => b.share);
-
-    expect(shares.slice(0, 3)).toEqual([60, 30, 10]);
-    expect(shares.slice(3).every((share) => share === null)).toBeTrue();
-    expect(shares.reduce<number>((sum, share) => sum + (share ?? 0), 0)).toBe(100);
-  });
-
-  it('shows the volume but no win rate when too few matches have a win or a loss', () => {
-    const insights = derive(weekdays({ matches: 60, decidedMatches: 29, wins: 10 }));
-
-    expect(dimension(insights, 'weekday').buckets[0]).toEqual({
-      label: 'Monday',
-      status: 'ready',
-      matches: 60,
-      share: 42.9,
-      winRate: null,
-    });
-  });
-
-  it('rounds a win rate to one decimal', () => {
-    const insights = derive(weekdays({ matches: 33, decidedMatches: 33, wins: 20 }));
-
-    expect(dimension(insights, 'weekday').buckets[0].winRate).toBe(60.6);
   });
 
   it('places time-of-day blocks and session positions by their bucket number', () => {
     const insights = derive([
-      row({ dimension: 'session_position', bucket: 2 }),
-      row({ dimension: 'session_position', bucket: 3 }),
       row({ dimension: 'session_position', bucket: 4 }),
-      row({ dimension: 'time_of_day', bucket: 3 }),
-      row({ dimension: 'time_of_day', bucket: 4 }),
       row({ dimension: 'time_of_day', bucket: 5 }),
     ]);
 
     expect(dimension(insights, 'session').buckets.map((b) => b.status)).toEqual([
       'not-enough-data',
-      'ready',
-      'ready',
+      'not-enough-data',
+      'not-enough-data',
       'ready',
     ]);
     expect(dimension(insights, 'time-of-day').buckets[5]).toEqual(
@@ -186,12 +128,11 @@ describe('deriveCommunityInsights', () => {
     expect(insights.status).toBe('not-enough-data');
   });
 
-  it('publishes only labels, a status, matches, a share and a win rate per bucket', () => {
-    const insights = derive(weekdays());
-    const bucketKeys = ['label', 'matches', 'share', 'status', 'winRate'];
+  it('publishes only labels, a status, a share and a win rate per bucket, and never a count', () => {
+    const insights = derive([row({ bucket: 1 }), row({ bucket: 2 }), row({ bucket: 3 })]);
 
     for (const bucket of insights.dimensions.flatMap((d) => d.buckets)) {
-      expect(Object.keys(bucket).sort()).toEqual(bucketKeys);
+      expect(Object.keys(bucket).sort()).toEqual(['label', 'share', 'status', 'winRate']);
     }
     for (const group of insights.dimensions) {
       expect(Object.keys(group).sort()).toEqual(['buckets', 'id', 'title']);

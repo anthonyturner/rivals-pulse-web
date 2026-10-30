@@ -14,9 +14,9 @@ function insights(overrides: Partial<CommunityInsights> = {}): CommunityInsights
         id: 'weekday',
         title: 'Day of the week',
         buckets: [
-          { label: 'Monday', status: 'ready', matches: 1200, share: 60, winRate: 52.34 },
-          { label: 'Tuesday', status: 'ready', matches: 600, share: 30, winRate: null },
-          { label: 'Wednesday', status: 'not-enough-data', matches: null, share: null, winRate: null },
+          { label: 'Monday', status: 'ready', share: 60, winRate: 52 },
+          { label: 'Tuesday', status: 'ready', share: 30, winRate: null },
+          { label: 'Wednesday', status: 'not-enough-data', share: null, winRate: null },
         ],
       },
     ],
@@ -37,14 +37,14 @@ describe('buildInsightsTabView', () => {
     expect(buildInsightsTabView(insights({ status: 'not-enough-data' }))).toEqual({ kind: 'not-enough-data' });
   });
 
-  it('writes the volume with thousands separators and the win rate to one decimal', () => {
+  it('writes the share and the win rate as whole percentages', () => {
     const view = buildInsightsTabView(insights());
 
     if (view.kind !== 'ready') {
       throw new Error('expected a ready view');
     }
     const [monday] = view.dimensions[0].rows;
-    expect(monday).toEqual(jasmine.objectContaining({ label: 'Monday', ready: true, matches: '1,200', winRate: '52.3%' }));
+    expect(monday).toEqual(jasmine.objectContaining({ label: 'Monday', ready: true, share: '60%', winRate: '52%' }));
   });
 
   it('sizes the bars against the largest shown bucket of the dimension', () => {
@@ -64,7 +64,7 @@ describe('buildInsightsTabView', () => {
     }
     const [, tuesday, wednesday] = view.dimensions[0].rows;
     expect(tuesday.winRate).toBe('Not enough results');
-    expect(wednesday).toEqual(jasmine.objectContaining({ ready: false, matches: '', winRate: '' }));
+    expect(wednesday).toEqual(jasmine.objectContaining({ ready: false, share: '', winRate: '' }));
   });
 
   it('states the time zone, the session gap and the minimums', () => {

@@ -19,8 +19,8 @@ const ready: CommunityInsights = {
       id: 'weekday',
       title: 'Day of the week',
       buckets: [
-        { label: 'Monday', status: 'ready', matches: 120, share: 100, winRate: 55 },
-        { label: 'Tuesday', status: 'not-enough-data', matches: null, share: null, winRate: null },
+        { label: 'Monday', status: 'ready', share: 100, winRate: 55 },
+        { label: 'Tuesday', status: 'not-enough-data', share: null, winRate: null },
       ],
     },
   ],
@@ -80,7 +80,7 @@ describe('InsightsTabComponent', () => {
     expect(host.textContent).not.toContain('Not enough data yet');
   });
 
-  it('shows shown rows with their volume and win rate, and hidden rows as not enough data', async () => {
+  it('shows shown rows with their share and win rate, and hidden rows as not enough data', async () => {
     const { fixture, host } = render();
 
     http.expectOne('/api/community/insights').flush(ready);
@@ -92,7 +92,7 @@ describe('InsightsTabComponent', () => {
         .map((cell) => cell.textContent?.trim())
         .join(' | '),
     );
-    expect(rows).toEqual(['Monday | 120 | 55.0%', 'Tuesday | Not enough data yet']);
+    expect(rows).toEqual(['Monday | 100% | 55%', 'Tuesday | Not enough data yet']);
     expect(host.textContent).toContain('All days and times are UTC.');
     expect(host.textContent).toContain('30 minutes without a match');
     expect(host.textContent).not.toContain('NaN');

@@ -66,6 +66,14 @@ immutable
 set search_path = ''
 as $$ select 50 $$;
 
+-- A dimension is published only with this many buckets that passed, so a lone survivor is never a
+-- 100% share and the page never has one or two bars to read a hidden one from.
+create or replace function public.insights_min_shown_buckets() returns integer
+language sql
+immutable
+set search_path = ''
+as $$ select 3 $$;
+
 -- Upload accepts a match up to 7 days old, so a half-season is frozen only this long after it ended.
 create or replace function public.play_time_freeze_grace() returns interval
 language sql
@@ -285,12 +293,16 @@ begin
 end
 $$;
 
--- The one way the website reads the buckets. It runs as its owner, reads only the aggregate table, and
--- returns counts only. A bucket leaves the database only if its own half-season row passes all three
--- gates; the rows that pass are added together over half-seasons here, so the site never sees a
--- recorder count, a half-season or a bucket that failed. One jsonb value instead of a set of rows, so
--- PostgREST's 1000-row page limit never cuts the answer short. The gates and the session gap travel
--- with it so the page can state them.
+-- The one way the website reads the buckets. It runs as its owner and reads only the aggregate table.
+-- A bucket leaves the database only if its own half-season row passes all three gates; the rows that
+-- pass are added together over half-seasons here. What comes out is a whole-number share and win rate,
+-- never a count: every dimension adds up to the same matches, so an exact count in one dimension would
+-- let a bucket hidden in another be found by subtraction. A share is a bucket's matches over the
+-- matches of the shown buckets of its dimension only, so it adds up to nothing hidden, and a
+-- dimension with fewer than `insights_min_shown_buckets()` shown buckets is left out whole. A win rate
+-- is null when fewer than `insights_min_matches()` of the shown matches have a result. One jsonb
+-- value, so PostgREST's 1000-row page limit never cuts the answer short; the gates and the session gap
+-- travel with it so the page can state them.
 create or replace function public.read_community_insights() returns jsonb
 language sql
 stable
@@ -304,23 +316,29 @@ as $$
     'max_recorder_share_percent', public.insights_max_recorder_share_percent(),
     'buckets', coalesce((
       select jsonb_agg(jsonb_build_object(
-               'dimension', b.dimension,
-               'bucket', b.bucket,
-               'matches', b.matches,
-               'decided_matches', b.decided_matches,
-               'wins', b.wins)
-             order by b.dimension, b.bucket)
+               'dimension', s.dimension,
+               'bucket', s.bucket,
+               'share_percent', round(100.0 * s.matches / s.dimension_matches)::integer,
+               'win_rate_percent', case when s.decided_matches >= public.insights_min_matches()
+                                        then round(100.0 * s.wins / s.decided_matches)::integer end)
+             order by s.dimension, s.bucket)
       from (
-        select a.dimension, a.bucket,
-               sum(a.matches)::integer as matches,
-               sum(a.decided_matches)::integer as decided_matches,
-               sum(a.wins)::integer as wins
-        from public.play_time_aggregates a
-        where a.matches >= public.insights_min_matches()
-          and a.recorders >= public.insights_min_recorders()
-          and a.top_recorder_matches * 100 <= a.matches * public.insights_max_recorder_share_percent()
-        group by a.dimension, a.bucket
-      ) b
+        select b.*,
+               sum(b.matches) over (partition by b.dimension) as dimension_matches,
+               count(*) over (partition by b.dimension) as dimension_buckets
+        from (
+          select a.dimension, a.bucket,
+                 sum(a.matches) as matches,
+                 sum(a.decided_matches) as decided_matches,
+                 sum(a.wins) as wins
+          from public.play_time_aggregates a
+          where a.matches >= public.insights_min_matches()
+            and a.recorders >= public.insights_min_recorders()
+            and a.top_recorder_matches * 100 <= a.matches * public.insights_max_recorder_share_percent()
+          group by a.dimension, a.bucket
+        ) b
+      ) s
+      where s.dimension_buckets >= public.insights_min_shown_buckets()
     ), '[]'::jsonb)
   )
 $$;
@@ -334,6 +352,7 @@ revoke execute on function public.play_time_freeze_grace() from public, anon, au
 revoke execute on function public.insights_min_matches() from public, anon, authenticated;
 revoke execute on function public.insights_min_recorders() from public, anon, authenticated;
 revoke execute on function public.insights_max_recorder_share_percent() from public, anon, authenticated;
+revoke execute on function public.insights_min_shown_buckets() from public, anon, authenticated;
 revoke execute on function public.play_time_matches() from public, anon, authenticated;
 revoke execute on function public.fill_play_time_aggregates(numeric) from public, anon, authenticated;
 revoke execute on function public.play_time_half_season_settled(numeric) from public, anon, authenticated;
@@ -347,6 +366,7 @@ grant execute on function public.play_time_freeze_grace() to service_role;
 grant execute on function public.insights_min_matches() to service_role;
 grant execute on function public.insights_min_recorders() to service_role;
 grant execute on function public.insights_max_recorder_share_percent() to service_role;
+grant execute on function public.insights_min_shown_buckets() to service_role;
 grant execute on function public.play_time_matches() to service_role;
 grant execute on function public.fill_play_time_aggregates(numeric) to service_role;
 grant execute on function public.play_time_half_season_settled(numeric) to service_role;

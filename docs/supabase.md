@@ -319,18 +319,20 @@ reaches it.
   hourly `recompute-play-time-aggregates` job, and freezes a half-season once the next one began and
   `play_time_freeze_grace()` (8 days, past the 7-day upload window) has passed. It does not touch
   `purge_expired_participants`.
-- `read_community_insights()` (granted to `service_role` only) returns the buckets, the session gap and
-  the gates as one jsonb value. A bucket leaves the database only if its own half-season row has at
-  least `insights_min_matches()` (30) matches, at least `insights_min_recorders()` (3) different
-  players, and no one player over `insights_max_recorder_share_percent()` (50) of its matches; the
-  rows that pass are added together over half-seasons inside the function, so the site never sees a
-  recorder count or a bucket that failed. With one main uploader nothing passes, and "not enough data
-  yet" is the expected state.
-- The server calls it with the shared client and derives the tab in
+- `read_community_insights()` (granted to `service_role` only) returns the session gap, the gates and,
+  per shown bucket, a whole-number `share_percent` and `win_rate_percent`. It returns no counts: every
+  dimension adds up to the same matches, so an exact count would let a bucket hidden in another
+  dimension be found by subtraction. A bucket is shown only if its own half-season row has at least
+  `insights_min_matches()` (30) matches, at least `insights_min_recorders()` (3) different players, and
+  no one player over `insights_max_recorder_share_percent()` (50) of its matches; the rows that pass
+  are added over half-seasons inside the function. A share is over the shown buckets of its dimension
+  only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
+  win rate is null with fewer than 30 results. With one main uploader nothing passes, and "not enough
+  data yet" is the expected state.
+- The server calls it with the shared client and labels the answer in
   [`src/community-insights.ts`](../src/community-insights.ts), served by `GET /api/community/insights`.
-  The page shows a dimension only with at least 3 shown buckets, and takes shares over the shown
-  buckets only. A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty
-  state with HTTP 200; any other failure keeps its error status (epic 170 error policy).
+  A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP
+  200; any other failure keeps its error status (epic 170 error policy).
 
 ## Each half-season
 

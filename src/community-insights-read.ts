@@ -60,9 +60,8 @@ export function parseInsightsSource(body: unknown): InsightsSource {
       (row): InsightsBucketRow => ({
         dimension: stringOf(row, 'dimension'),
         bucket: numberOf(row, 'bucket'),
-        matches: numberOf(row, 'matches'),
-        decidedMatches: numberOf(row, 'decided_matches'),
-        wins: numberOf(row, 'wins'),
+        sharePercent: numberOf(row, 'share_percent'),
+        winRatePercent: row['win_rate_percent'] === null ? null : numberOf(row, 'win_rate_percent'),
       }),
     ),
   };

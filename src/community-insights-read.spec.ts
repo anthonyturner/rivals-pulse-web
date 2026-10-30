@@ -8,9 +8,12 @@ function functionAnswer(): Record<string, unknown> {
   const bucket = (n: number) => ({
     dimension: 'weekday',
     bucket: n,
-    matches: 40,
-    decided_matches: 36,
-    wins: 18,
+    share_percent: 34 - n,
+    win_rate_percent: 50,
+    // The real answer has none of the fields below; they stand for what no allow-list should let through.
+    matches: 1234,
+    decided_matches: 1111,
+    wins: 555,
     recorders: 4,
     uid: 'secret-uid',
     name: 'a player',
@@ -49,10 +52,29 @@ describe('getCommunityInsights', () => {
     expect(insights.dimensions[0].buckets[0]).toEqual({
       label: 'Monday',
       status: 'ready',
-      matches: 40,
-      share: 33.3,
+      share: 33,
       winRate: 50,
     });
+  });
+
+  it('returns no exact match count anywhere: only whole-number shares and win rates', async () => {
+    const { client } = clientAnswering(functionAnswer());
+
+    const insights = await getCommunityInsights({ getClient: () => client });
+    const text = JSON.stringify(insights);
+
+    expect(Object.keys(JSON.parse(text)).filter((key) => /matches|wins|count|decided/i.test(key))).toEqual([
+      'minimumMatches',
+    ]);
+    for (const exact of ['1234', '1111', '555']) {
+      expect(text).not.toContain(exact);
+    }
+    for (const bucket of insights.dimensions.flatMap((d) => d.buckets)) {
+      expect(Object.keys(bucket).sort()).toEqual(['label', 'share', 'status', 'winRate']);
+      for (const figure of [bucket.share, bucket.winRate]) {
+        expect(figure === null || (Number.isInteger(figure) && figure >= 0 && figure <= 100)).toBeTrue();
+      }
+    }
   });
 
   it('lets no field the function happens to return reach the public answer', async () => {
@@ -116,11 +138,11 @@ describe('getCommunityInsights', () => {
 });
 
 describe('parseInsightsSource', () => {
-  it('rejects a bucket whose count is not a number', () => {
+  it('rejects a bucket whose share is not a number', () => {
     const answer = functionAnswer();
-    (answer['buckets'] as Record<string, unknown>[])[0]['matches'] = '40';
+    (answer['buckets'] as Record<string, unknown>[])[0]['share_percent'] = '40';
 
-    expect(() => parseInsightsSource(answer)).toThrowError(/matches is not a number/);
+    expect(() => parseInsightsSource(answer)).toThrowError(/share_percent is not a number/);
   });
 
   it('rejects an answer with no session gap', () => {

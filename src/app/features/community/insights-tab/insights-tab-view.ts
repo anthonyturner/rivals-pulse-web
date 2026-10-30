@@ -4,9 +4,9 @@ export interface InsightsRowView {
   label: string;
   ready: boolean;
   /** Empty when the row is not ready. */
-  matches: string;
+  share: string;
   winRate: string;
-  /** The row's volume as a percentage of the dimension's largest shown row. */
+  /** The row's share as a percentage of the dimension's largest shown row, for the bar. */
   barPercent: number;
 }
 
@@ -57,16 +57,16 @@ export function buildInsightsTabView(insights: CommunityInsights | null | undefi
         id: dimension.id,
         title: dimension.title,
         rows: dimension.buckets.map((bucket): InsightsRowView => {
-          if (bucket.status !== 'ready' || bucket.matches === null) {
-            return { label: bucket.label, ready: false, matches: '', winRate: '', barPercent: 0 };
+          if (bucket.status !== 'ready' || bucket.share === null) {
+            return { label: bucket.label, ready: false, share: '', winRate: '', barPercent: 0 };
           }
 
           return {
             label: bucket.label,
             ready: true,
-            matches: bucket.matches.toLocaleString('en-US'),
-            winRate: bucket.winRate === null ? 'Not enough results' : `${bucket.winRate.toFixed(1)}%`,
-            barPercent: largest > 0 ? Math.round(((bucket.share ?? 0) / largest) * 100) : 0,
+            share: `${bucket.share}%`,
+            winRate: bucket.winRate === null ? 'Not enough results' : `${bucket.winRate}%`,
+            barPercent: largest > 0 ? Math.round((bucket.share / largest) * 100) : 0,
           };
         }),
       };
@@ -82,6 +82,6 @@ function gateNotes(insights: CommunityInsights): string[] {
   }
 
   return [
-    `A row appears once at least ${minimumMatches} matches from at least ${minimumRecorders} players are behind it in a half-season, and no one player recorded more than ${maxRecorderSharePercent}% of them. Percentages are shares of the rows shown.`,
+    `A row appears once at least ${minimumMatches} matches from at least ${minimumRecorders} players are behind it in a half-season, and no one player recorded more than ${maxRecorderSharePercent}% of them. Shares are of the rows shown.`,
   ];
 }
