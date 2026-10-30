@@ -81,6 +81,11 @@ export interface HeroStatsSource {
 
 export interface DeriveHeroStatsOptions {
   now: Date;
+  /**
+   * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has
+   * not started, or that nothing knows, gives the empty state.
+   */
+  halfSeason?: number;
   /** Game hero id to the hero's id in `heroes.json`. A game id missing here is left out of the numbers. */
   heroSlugByGameId: ReadonlyMap<number, string>;
 }
@@ -147,6 +152,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
 
     return result;
   };
+  const started = current === undefined ? [] : known.filter((id) => id <= current);
   const toStats = (
     shown: number | undefined,
     inPlaceOf: number | undefined,
@@ -154,6 +160,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
   ): HeroStats => ({
     status: result !== undefined && result.tiers.length > 0 ? 'ready' : 'not-enough-data',
     minimumMatches: HERO_STATS_MIN_MATCHES,
+    halfSeasons: started.map(describe),
     halfSeason: shown === undefined ? null : describe(shown),
     inPlaceOf: inPlaceOf === undefined ? null : describe(inPlaceOf),
     matchesCounted: result?.matchesCounted ?? 0,
@@ -168,6 +175,14 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
 
   if (current === undefined) {
     return finish(toStats(undefined, undefined, undefined));
+  }
+
+  if (options.halfSeason !== undefined) {
+    const asked = options.halfSeason;
+
+    return finish(
+      started.includes(asked) ? toStats(asked, undefined, snapshot(asked)) : toStats(undefined, undefined, undefined),
+    );
   }
 
   const now = snapshot(current);

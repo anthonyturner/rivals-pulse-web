@@ -15,6 +15,8 @@ export interface HeroStatsReadOptions {
   env?: HeroStatsEnv;
   fetch?: typeof fetch;
   now?: () => Date;
+  /** One exact half-season instead of the current one; see `DeriveHeroStatsOptions`. */
+  halfSeason?: number;
 }
 
 const READ_FUNCTION = 'read_hero_stats';
@@ -88,6 +90,14 @@ export function parseHeroStatsSource(body: unknown): HeroStatsSource {
 }
 
 /**
+ * The `halfSeason` query value as a half-season number. A value that is not a number comes back as
+ * NaN, which matches no half-season and so gets the empty state rather than the current one.
+ */
+export function halfSeasonFromQuery(value: string | undefined): number | undefined {
+  return value === undefined || value.trim() === '' ? undefined : Number(value);
+}
+
+/**
  * The site's hero stats. A game hero id with no mapping is left out of the numbers and logged
  * (hero id 0 is "no hero recorded" and always lands here); it never fails the request.
  */
@@ -95,6 +105,7 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
   const source = await fetchHeroStatsSource(options.env ?? process.env, options.fetch);
   const { stats, excludedGameIds } = deriveHeroStats(source, {
     now: (options.now ?? (() => new Date()))(),
+    halfSeason: options.halfSeason,
     heroSlugByGameId,
   });
 
