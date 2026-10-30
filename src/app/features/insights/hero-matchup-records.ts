@@ -24,6 +24,24 @@ export function winningRecordsOf(matchups: HeroMatchups, heroId: string): HeroMa
   return matchups.matchups.filter((matchup) => matchup.hero === heroId && hasWinningRecord(matchup));
 }
 
+/**
+ * The `limit` winning records with the clearest edge: highest shrunk win rate first, then the larger
+ * sample, then hero ids so the order never changes between reads. A short run cannot lead the list,
+ * because the shrunk rate pulls it toward even.
+ */
+export function strongestRecords(matchups: HeroMatchups, limit: number): HeroMatchup[] {
+  return matchups.matchups
+    .filter(hasWinningRecord)
+    .sort(
+      (a, b) =>
+        b.shrunkWinRate - a.shrunkWinRate ||
+        b.matches - a.matches ||
+        a.hero.localeCompare(b.hero) ||
+        a.enemy.localeCompare(b.enemy),
+    )
+    .slice(0, Math.max(0, limit));
+}
+
 /** How many enemy heroes `heroId` has a record against that is large enough to show. */
 export function matchupCountOf(matchups: HeroMatchups, heroId: string): number {
   return matchups.matchups.filter((matchup) => matchup.hero === heroId).length;

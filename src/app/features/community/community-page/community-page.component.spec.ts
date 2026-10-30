@@ -164,12 +164,9 @@ describe('CommunityPageComponent', () => {
     expect(router.url).toBe('/heroes');
   });
 
+  // The Heroes, Counters, Tier list and Stats tabs load their numbers; their own specs cover their empty states.
   for (const [id, label] of [
-    ['heroes', 'Heroes'],
     ['matches', 'Matches'],
-    ['counters', 'Counters'],
-    ['tier-list', 'Tier list'],
-    ['stats', 'Stats'],
     ['insights', 'Insights'],
   ]) {
     it(`shows the designed empty state on the ${label} tab`, async () => {
@@ -189,20 +186,7 @@ describe('CommunityPageComponent', () => {
     });
   }
 
-  for (const [id, href] of [
-    ['heroes', '/heroes'],
-    ['tier-list', '/tier-list'],
-    ['counters', '/counters'],
-  ]) {
-    it(`links the ${id} tab to the existing ${href} page`, async () => {
-      await open(`/${id}`);
-
-      const link = panel().querySelector<HTMLAnchorElement>('a[href]');
-      expect(link?.getAttribute('href')).toBe(href);
-    });
-  }
-
-  for (const id of ['matches', 'stats', 'insights']) {
+  for (const id of ['matches', 'insights']) {
     it(`has no link out of the ${id} tab, because no page exists for it`, async () => {
       await open(`/${id}`);
 

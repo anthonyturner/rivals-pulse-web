@@ -1,0 +1,31 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Community counter matchups"
+  subject="Community counter matchups"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+  [link]="link"
+>
+  @if (current.kind === 'ready') {
+    <ol class="counters-tab__records">
+      @for (record of current.records; track record.key) {
+        <li class="counters-tab__record" [attr.title]="record.description">
+          <span class="counters-tab__hero">
+            <img class="counters-tab__image" [src]="record.winner.imageUrl" alt="" width="40" height="40" loading="lazy" (error)="onImageError($event)" />
+            <span class="counters-tab__name">{{ record.winner.name }}</span>
+          </span>&ngsp;<span class="counters-tab__verb">wins against</span>&ngsp;<span class="counters-tab__hero">
+            <img class="counters-tab__image" [src]="record.loser.imageUrl" alt="" width="40" height="40" loading="lazy" (error)="onImageError($event)" />
+            <span class="counters-tab__name">{{ record.loser.name }}</span>
+          </span>&ngsp;<span class="counters-tab__figure">{{ record.winRate }}</span>&ngsp;<span class="counters-tab__sample">{{ record.sample }}</span>
+        </li>
+      }
+    </ol>
+    <p class="counters-tab__note">
+      These are records from matches Rivals Pulse players recorded, ordered by how clear the edge is.
+      They describe what happened; they do not say whom to pick or ban.
+    </p>
+  }
+</app-community-summary>

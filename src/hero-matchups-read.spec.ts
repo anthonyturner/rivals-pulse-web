@@ -116,6 +116,29 @@ describe('getHeroMatchups', () => {
   });
 });
 
+describe('getHeroMatchups while a read function is not in the database', () => {
+  const options = { env: ENV, now: NOW };
+
+  beforeEach(() => spyOn(console, 'warn'));
+
+  it('is the empty state, not an error, when read_hero_matchups is missing', async () => {
+    const matchups = await getHeroMatchups({
+      ...options,
+      fetch: answering({ ...bothFunctions, read_hero_matchups: { body: { code: 'PGRST202' }, status: 404 } }),
+    });
+
+    expect(matchups.status).toBe('not-enough-data');
+    expect(matchups.matchups).toEqual([]);
+    expect(console.warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_matchups is not in the database/));
+  });
+
+  it('still fails on a refused call', async () => {
+    await expectAsync(
+      getHeroMatchups({ ...options, fetch: answering({ ...bothFunctions, read_hero_stats: { body: { code: '42501' }, status: 401 } }) }),
+    ).toBeRejectedWithError('read_hero_stats answered 401');
+  });
+});
+
 describe('fetchHeroMatchupRows', () => {
   it('posts the modes to the read function with the publishable key', async () => {
     const seen: { url: string; init?: RequestInit }[] = [];
