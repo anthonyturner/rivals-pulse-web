@@ -16,6 +16,7 @@ export class Nav {
     { label: 'Guides', path: '/hero-guides', enabled: true },
     { label: 'Tools', path: '/tools', enabled: true },
     { label: 'Resources', path: '/resources', enabled: true },
+    { label: 'Community', path: '/community', enabled: true },
   ];
 
   toggleMenu(): void {
