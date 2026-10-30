@@ -51,6 +51,7 @@ repo's build. This is a move, not a redesign.
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
 | `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content, moved from Turso) |
 | `20261030060507_home_content_data.sql` | The one-off copy of the Turso home rows, and the home news sync's `external_sources` snapshot, into those tables |
+| `20261030140000_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 
 Link once per machine, check history, then apply:
 
@@ -264,6 +265,32 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.
 
+## Play-time aggregates (Community Insights tab)
+
+`play_time_aggregates` keeps, per half-season, the matches and decided wins of the recorders' own
+matches by weekday (`weekday`, ISO 1 Monday to 7 Sunday), by four-hour block of the day
+(`time_of_day`, 0 is 00:00 to 03:59) and by place in a play session (`session_position`, 1 to 3 and
+4 for the fourth and later), with `recorders`, the number of different players behind the bucket. It
+holds no player id, uid, name or per-match row. RLS is on with no policy, and only the service role
+reaches it.
+
+- Source: `tracked_matches` (a recorder's own matches, with their own result), not `participants`,
+  which does not say which scoreboard line is the recorder's. A match two recorders both played
+  counts once for each. A player in `do_not_store` is left out.
+- Every day and hour is UTC: the upload carries no offset. A match is placed by its start (end time
+  minus duration). Only Quick Match and Competitive count.
+- A session ends after `play_session_gap()` (30 minutes) idle between one of a recorder's matches and
+  the next. The recorder's id is used inside the aggregation only and never stored.
+- `recompute_play_time_aggregates()` rebuilds every half-season that is not frozen, from scratch, on the
+  hourly `recompute-play-time-aggregates` job, and freezes a half-season once the next one began and
+  `play_time_freeze_grace()` (8 days, past the 7-day upload window) has passed. It does not touch
+  `purge_expired_participants`.
+- `read_community_insights()` (granted to `service_role` only) returns the buckets and the session gap
+  as one jsonb value. The server calls it with the shared client and derives the tab in
+  [`src/community-insights.ts`](../src/community-insights.ts), served by `GET /api/community/insights`.
+  A bucket is shown from 30 matches and 3 recorders; the site answers "not enough data yet", never an
+  error, while the function or tables are missing.
+
 ## Each half-season
 
 Retention deletes a scoreboard row once the half-season after its own has
@@ -282,10 +309,12 @@ policy's hard limit), but later than promised.
 ## After setup
 
 - **Required:** `select jobname from cron.job where jobname in
-  ('purge-expired-participants', 'recompute-hero-aggregates');` must show both jobs (the daily
-  purge and the hourly aggregate rebuild). If one is missing (the migrations warn when `pg_cron` is
+  ('purge-expired-participants', 'recompute-hero-aggregates',
+  'recompute-play-time-aggregates');` must show all three jobs (the daily purge and the two hourly
+  aggregate rebuilds). If one is missing (the migrations warn when `pg_cron` is
   unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();` daily and
-  `select public.recompute_hero_aggregates();` hourly by hand.
+  `select public.recompute_hero_aggregates();` and `select public.recompute_play_time_aggregates();`
+  hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -22,6 +24,22 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
   }
 
+  /** The Insights tab reads its numbers from the site's API; the API's own answer for "nothing yet". */
+  async function answerInsightsWithNoData(): Promise<void> {
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/community/insights')
+      .flush({
+        status: 'not-enough-data',
+        timeZone: 'UTC',
+        sessionGapMinutes: null,
+        minimumMatches: 30,
+        minimumRecorders: 3,
+        dimensions: [],
+      });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
   async function pressOnSelectedTab(key: string, modifiers: KeyboardEventInit = {}): Promise<void> {
     selectedTab()?.dispatchEvent(
       new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...modifiers }),
@@ -32,7 +50,12 @@ describe('CommunityPageComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter(communityRoutes)],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter(communityRoutes),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
     harness = await RouterTestingHarness.create();
     router = TestBed.inject(Router);
@@ -150,6 +173,9 @@ describe('CommunityPageComponent', () => {
   ]) {
     it(`shows the designed empty state on the ${label} tab`, async () => {
       await open(`/${id}`);
+      if (id === 'insights') {
+        await answerInsightsWithNoData();
+      }
 
       const text = panel().textContent ?? '';
       expect(text).toContain('Not enough data yet');

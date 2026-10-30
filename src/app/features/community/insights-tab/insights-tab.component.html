@@ -1,0 +1,52 @@
+@let current = view();
+
+@if (current.kind === 'loading') {
+  <p class="insights__message" role="status">Loading when the community plays...</p>
+} @else if (current.kind === 'not-enough-data') {
+  <app-community-empty-state
+    heading="When the community plays and wins"
+    preview="Win rate by day of the week and time of day, and how long play sessions last."
+  />
+} @else {
+  <section class="insights" aria-labelledby="insights-title">
+    <h2 id="insights-title" class="insights__title">When the community plays and wins</h2>
+    @for (note of current.notes; track note) {
+      <p class="insights__note">{{ note }}</p>
+    }
+
+    <div class="insights__groups">
+      @for (dimension of current.dimensions; track dimension.id) {
+        <section class="insights__group" [attr.aria-labelledby]="'insights-' + dimension.id">
+          <h3 [id]="'insights-' + dimension.id" class="insights__group-title">{{ dimension.title }}</h3>
+          <table class="insights__table">
+            <thead>
+              <tr>
+                <th scope="col">When</th>
+                <th scope="col">Matches</th>
+                <th scope="col">Win rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of dimension.rows; track row.label) {
+                <tr>
+                  <th scope="row">{{ row.label }}</th>
+                  @if (row.ready) {
+                    <td>
+                      <span class="insights__bar" aria-hidden="true">
+                        <span class="insights__bar-fill" [style.width.%]="row.barPercent"></span>
+                      </span>
+                      {{ row.matches }}
+                    </td>
+                    <td>{{ row.winRate }}</td>
+                  } @else {
+                    <td class="insights__missing" colspan="2">Not enough data yet</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+    </div>
+  </section>
+}
