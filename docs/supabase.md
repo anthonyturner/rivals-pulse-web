@@ -253,6 +253,10 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 - Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
   are left out.
 - KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
+- `GET /api/hero-stats?halfSeason=<number>` answers for exactly that half-season (10 or 10.5), with no
+  fall back to the previous one; a half-season that has not started, or a value that is not a number,
+  gets the empty state. Every answer lists the started half-seasons in `halfSeasons`. Pulse Atlas
+  reads these to build its community tier list.
 - While the current half-season has no hero at the minimum, the previous half-season is returned
   with `inPlaceOf` naming the current one.
 - The site picks the current half-season from `half_seasons`, so a new half-season must have its row (see "Each half-season" below) before its first match; without it the site keeps showing the previous half-season.

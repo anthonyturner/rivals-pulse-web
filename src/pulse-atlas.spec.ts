@@ -7,9 +7,8 @@ import {
   PULSE_ATLAS_DATASETS,
   PulseAtlasFile,
   PulseAtlasInput,
-  TierListSnapshot,
-  assembleTierList,
-  tierListRequests,
+  assembleCommunityTierList,
+  communityHalfSeasonRequests,
   verifyPulseAtlas,
 } from './pulse-atlas';
 
@@ -39,35 +38,29 @@ const DEADPOOL = {
 function heroRow(heroId = THOR_GAME_ID, extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     heroId,
-    name: 'Thor',
-    role: 'Vanguard',
-    imageUrl: '/images/heroes/thor.png',
-    tier: 'S',
     winRate: 55.12345678,
     pickRate: 7.777777,
-    banRate: 0,
     matches: 1000,
     wins: 551,
-    score: 52,
     ...extra,
   };
 }
 
-function tierList(
-  heroesFor: (seasonId: number, rank: string) => unknown[] = () => [heroRow()],
-): unknown {
+const PROVENANCE = 'rivals-pulse-community';
+const ALL_RANKS = { value: '99', label: 'All Ranks' };
+
+function tierList(heroesFor: (seasonId: number) => unknown[] = () => [heroRow()]): Record<string, unknown> {
   return {
-    sourceName: 'Test',
-    sourceUrl: 'https://example.test',
+    provenance: PROVENANCE,
     currentSeasonId: 2,
-    rankFilters: [{ value: '99', label: 'All Ranks' }, { value: '5+', label: 'Diamond+' }],
+    rankFilters: [ALL_RANKS],
     seasons: [1, 2].map((id) => ({
       id,
       label: `Season ${id}`,
       startTime: `2026-0${id}-01T00:00:00+00:00`,
-      ranks: Object.fromEntries(
-        ['99', '5+'].map((rank) => [rank, { tiers: [{ name: 'S', heroes: heroesFor(id, rank) }] }]),
-      ),
+      ranks: {
+        '99': { tiers: heroesFor(id).length === 0 ? [] : [{ name: 'S', heroes: heroesFor(id) }], matchesCounted: 1500 },
+      },
     })),
   };
 }
@@ -197,13 +190,10 @@ describe('buildPulseAtlas', () => {
     ).toThrowError(/maps: source label is empty/);
   });
 
-  it('refuses malformed entries and tier lists with no heroes', () => {
+  it('refuses malformed entries', () => {
     expect(() =>
       buildPulseAtlas(withData('maps', [{ id: 'x', name: 'Y' }]), GENERATED_AT, fakeSha256),
     ).toThrowError(/maps: item 0 needs an integer id/);
-    expect(() =>
-      buildPulseAtlas(withData('tier-list', tierList(() => [])), GENERATED_AT, fakeSha256),
-    ).toThrowError(/tier-list: season 1 lists no hero at any rank; season 2 lists no hero at any rank/);
   });
 
   it('refuses data that looks like player data, a secret or counter-source data', () => {
@@ -223,18 +213,51 @@ describe('buildPulseAtlas', () => {
 });
 
 describe('tier-list coverage', () => {
-  it('accepts a rank with no heroes while the season has some elsewhere', () => {
-    const sparse = tierList((_season, rank) => (rank === '99' ? [heroRow()] : []));
+  it('accepts a season that lists no hero, and says so', () => {
+    const warnings: string[] = [];
+    const files = buildPulseAtlas(
+      withData('tier-list', tierList((seasonId) => (seasonId === 2 ? [] : [heroRow()]))),
+      GENERATED_AT,
+      fakeSha256,
+      [],
+      (warning) => warnings.push(warning),
+    );
 
-    expect(() => buildPulseAtlas(withData('tier-list', sparse), GENERATED_AT, fakeSha256)).not.toThrow();
+    expect(warnings).toEqual(['tier-list: season 2 lists no hero yet, so it is published with empty tiers']);
+    expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
+  });
+
+  it('accepts a feed in which no season lists a hero yet', () => {
+    expect(() => buildPulseAtlas(withData('tier-list', tierList(() => [])), GENERATED_AT, fakeSha256)).not.toThrow();
   });
 
   it('refuses a season that lacks one of the listed ranks', () => {
     const data = tierList() as { seasons: { ranks: Record<string, unknown> }[] };
-    delete data.seasons[1].ranks['5+'];
+    delete data.seasons[1].ranks['99'];
 
     expect(() => buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256)).toThrowError(
-      /tier-list: season 2 has no tiers for rank 5+/,
+      /tier-list: season 2 has no tiers for rank 99/,
+    );
+  });
+});
+
+describe('the tier-list provenance', () => {
+  it('is refused when the list does not carry the community provenance', () => {
+    const { provenance: _provenance, ...bare } = tierList();
+    const elsewhere = { ...bare, provenance: 'rivals-meta' };
+
+    for (const data of [bare, elsewhere]) {
+      expect(() => buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256)).toThrowError(
+        /tier-list: provenance must be "rivals-pulse-community"/,
+      );
+    }
+  });
+
+  it('is refused for a list that still names Rivals Meta as its source', () => {
+    const upstream = { ...tierList(), sourceName: 'Rivals Meta', sourceUrl: 'https://rivalsmeta.com/tier-list' };
+
+    expect(() => buildPulseAtlas(withData('tier-list', upstream), GENERATED_AT, fakeSha256)).toThrowError(
+      /tier-list\.sourceName/,
     );
   });
 });
@@ -244,17 +267,20 @@ describe('the tier list split by season', () => {
     heroId: THOR_GAME_ID,
     winRate: 55.12,
     pickRate: 7.78,
-    banRate: 0,
     matches: 1000,
     wins: 551,
-    score: 52,
   };
+  const SNAPSHOT = { tiers: [{ name: 'S', heroes: [SLIM_ROW] }], matchesCounted: 1500 };
 
   interface Snapshot {
     tiers: { name: string; heroes: Record<string, unknown>[] }[];
+    matchesCounted?: number;
+    belowMinimum?: { heroId: number; matches: number }[];
+    fallbackFromSeasonId?: number;
   }
 
   interface Season {
+    provenance?: string;
     id: number;
     label?: string;
     startTime?: string;
@@ -271,8 +297,11 @@ describe('the tier list split by season', () => {
     return JSON.parse(fileAt(files, path)?.content ?? 'null');
   }
 
-  function indexOf(files: PulseAtlasFile[]): { currentSeasonId: number; seasons: Season[] } {
-    return envelopeOf<{ currentSeasonId: number; seasons: Season[] }>(files, 'pulse-atlas/v1/tier-list.json').data;
+  function indexOf(files: PulseAtlasFile[]): { provenance?: string; currentSeasonId: number; seasons: Season[] } {
+    return envelopeOf<{ provenance?: string; currentSeasonId: number; seasons: Season[] }>(
+      files,
+      'pulse-atlas/v1/tier-list.json',
+    ).data;
   }
 
   const seasonPath = (id: number): string => `pulse-atlas/v1/tier-list/seasons/${id}.json`;
@@ -289,10 +318,7 @@ describe('the tier list split by season', () => {
       path: seasonPath(1),
       sha256: fakeSha256(fileAt(files, seasonPath(1))?.content ?? ''),
     });
-    expect(index.seasons[1].ranks).toEqual({
-      '99': { tiers: [{ name: 'S', heroes: [SLIM_ROW] }] },
-      '5+': { tiers: [{ name: 'S', heroes: [SLIM_ROW] }] },
-    });
+    expect(index.seasons[1].ranks).toEqual({ '99': SNAPSHOT });
     expect(index.seasons[1].path).toBe(seasonPath(2));
     expect(index.seasons[1].sha256).toBe(fakeSha256(fileAt(files, seasonPath(2))?.content ?? ''));
   });
@@ -305,27 +331,28 @@ describe('the tier list split by season', () => {
       generatedAt: GENERATED_AT,
       source: 'test',
       data: {
+        provenance: PROVENANCE,
         id: 1,
         label: 'Season 1',
         startTime: '2026-01-01T00:00:00+00:00',
-        ranks: {
-          '99': { tiers: [{ name: 'S', heroes: [SLIM_ROW] }] },
-          '5+': { tiers: [{ name: 'S', heroes: [SLIM_ROW] }] },
-        },
+        ranks: { '99': SNAPSHOT },
       },
     });
   });
 
+  it('carries the community provenance at the top of the index and of every season file', () => {
+    const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+
+    expect(indexOf(files).provenance).toBe(PROVENANCE);
+    expect(envelopeOf<Season>(files, seasonPath(1)).data.provenance).toBe(PROVENANCE);
+    expect(envelopeOf<Season>(files, seasonPath(2)).data.provenance).toBe(PROVENANCE);
+  });
+
   describe('the tier-list source', () => {
     const TIER_LIST_PATHS = ['pulse-atlas/v1/tier-list.json', seasonPath(1), seasonPath(2)];
-    const upstream = {
-      ...(tierList() as object),
-      sourceName: 'Rivals Meta',
-      sourceUrl: 'https://rivalsmeta.com/tier-list',
-    };
 
     it('is neither named nor linked in the index or any season file', () => {
-      const files = buildPulseAtlas(withData('tier-list', upstream), GENERATED_AT, fakeSha256);
+      const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
 
       for (const path of TIER_LIST_PATHS) {
         const content = fileAt(files, path)?.content ?? '';
@@ -334,11 +361,10 @@ describe('the tier list split by season', () => {
       }
     });
 
-    it('leaves the rest of the index as it was', () => {
-      const files = buildPulseAtlas(withData('tier-list', upstream), GENERATED_AT, fakeSha256);
-      const index = envelopeOf<Record<string, unknown>>(files, 'pulse-atlas/v1/tier-list.json').data;
+    it('publishes only the provenance, current season, rank filters and seasons in the index', () => {
+      const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
 
-      expect(Object.keys(index)).toEqual(['currentSeasonId', 'rankFilters', 'seasons']);
+      expect(Object.keys(indexOf(files))).toEqual(['provenance', 'currentSeasonId', 'rankFilters', 'seasons']);
     });
 
     it('is refused if a season detail ever names it', () => {
@@ -370,20 +396,18 @@ describe('the tier list split by season', () => {
       expect(() => buildPulseAtlas(withData('heroes', everyday), GENERATED_AT, fakeSha256)).not.toThrow();
     });
 
-    it('rewrites the index but keeps the season files when the published index still names it', () => {
+    it('rewrites a published index that lacks the provenance and keeps the season files that are unchanged', () => {
       const before = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
-      const oldIndex = {
-        ...envelopeOf<object>(before, 'pulse-atlas/v1/tier-list.json'),
-        data: { sourceName: 'Rivals Meta', sourceUrl: 'https://rivalsmeta.com/tier-list', ...indexOf(before) },
-      };
+      const { provenance: _provenance, ...oldIndex } = indexOf(before);
       const published = before.map((file) =>
-        file.path === 'pulse-atlas/v1/tier-list.json' ? { ...file, content: `${JSON.stringify(oldIndex)}\n` } : file,
+        file.path === 'pulse-atlas/v1/tier-list.json'
+          ? { ...file, content: `${JSON.stringify({ ...envelopeOf<object>(before, file.path), data: oldIndex })}\n` }
+          : file,
       );
-      const after = buildPulseAtlas(withData('tier-list', upstream), '2026-10-27T12:00:00.000Z', fakeSha256, published);
+      const after = buildPulseAtlas(validInputs(), '2026-10-27T12:00:00.000Z', fakeSha256, published);
 
       expect(fileAt(after, seasonPath(1))).toEqual(fileAt(before, seasonPath(1)));
-      expect(fileAt(after, seasonPath(2))).toEqual(fileAt(before, seasonPath(2)));
-      expect(fileAt(after, 'pulse-atlas/v1/tier-list.json')?.content).not.toMatch(/rivals\s*meta|rivalsmeta/i);
+      expect(indexOf(after).provenance).toBe(PROVENANCE);
     });
   });
 
@@ -395,19 +419,56 @@ describe('the tier list split by season', () => {
     expect(manifest.files.length).toBe(PULSE_ATLAS_DATASETS.length);
   });
 
-  it('leaves no hero row with a name, role, image or tier, and keeps rates to two decimals', () => {
-    const rows = tierList(() => [heroRow(THOR_GAME_ID, { winRate: 59.999, pickRate: 0.005, banRate: 12.3456 })]);
+  it('publishes a hero row as the id and its four numbers, and keeps rates to two decimals', () => {
+    const rows = tierList(() => [
+      heroRow(THOR_GAME_ID, { winRate: 59.999, pickRate: 0.005, name: 'Thor', role: 'Vanguard', banRate: 3, score: 9 }),
+    ]);
     const files = buildPulseAtlas(withData('tier-list', rows), GENERATED_AT, fakeSha256);
 
     for (const path of ['pulse-atlas/v1/tier-list.json', seasonPath(1), seasonPath(2)]) {
-      expect(fileAt(files, path)?.content).withContext(path).not.toMatch(/"(?:role|imageUrl|tier)"|Thor/);
+      expect(fileAt(files, path)?.content).withContext(path).not.toMatch(/"(?:role|imageUrl|banRate|score)":|Thor/);
     }
     expect(envelopeOf<Season>(files, seasonPath(1)).data.ranks?.['99'].tiers[0].heroes[0]).toEqual({
       ...SLIM_ROW,
       winRate: 60,
       pickRate: 0.01,
-      banRate: 12.35,
     });
+  });
+
+  it('keeps the matches counted, the heroes below the minimum and the season a snapshot stands in for', () => {
+    const data = tierList() as { seasons: { ranks: Record<string, Snapshot> }[] };
+    data.seasons[1].ranks['99'] = {
+      tiers: [],
+      matchesCounted: 12,
+      belowMinimum: [{ heroId: THOR_GAME_ID, matches: 3 }],
+      fallbackFromSeasonId: 1,
+    };
+    const files = buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256);
+
+    expect(indexOf(files).seasons[1].ranks?.['99']).toEqual({
+      tiers: [],
+      matchesCounted: 12,
+      belowMinimum: [{ heroId: THOR_GAME_ID, matches: 3 }],
+      fallbackFromSeasonId: 1,
+    });
+  });
+
+  it('refuses a snapshot whose extra fields are not numbers', () => {
+    const bad: Record<string, unknown>[] = [
+      { matchesCounted: -1 },
+      { fallbackFromSeasonId: 1.5 },
+      { belowMinimum: 'thor' },
+      { belowMinimum: [{ heroId: 'thor', matches: 3 }] },
+    ];
+
+    for (const extra of bad) {
+      const data = tierList() as { seasons: { ranks: Record<string, Snapshot> }[] };
+      data.seasons[0].ranks['99'] = { tiers: [], ...extra };
+
+      expect(() => buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256))
+        .withContext(JSON.stringify(extra))
+        .toThrowError(/tier-list: season 1 rank 99 (needs|belowMinimum)/);
+    }
   });
 
   describe('hero rows that heroes.json does not know', () => {
@@ -440,31 +501,24 @@ describe('the tier list split by season', () => {
     }
 
     it('warns once per hero, and still publishes the row', () => {
-      const newcomer = heroRow(1099, { name: 'Newcomer', imageUrl: '/images/heroes/newcomer.png' });
+      const newcomer = heroRow(1099);
       const warnings = tierListWarnings([heroRow(), newcomer]);
 
       expect(warnings.length).toBe(1);
       expect(warnings[0]).toContain('heroId 1099');
-      expect(warnings[0]).toContain('Newcomer');
       expect(envelopeOf<Season>(build([newcomer]), seasonPath(1)).data.ranks?.['99'].tiers[0].heroes[0]['heroId']).toBe(
         1099,
       );
     });
 
-    it('matches a row to a hero by its gameId, whatever the row calls the hero', () => {
-      expect(tierListWarnings([heroRow(THOR_GAME_ID, { name: 'THOR (new name)', imageUrl: '/images/heroes/x.png' })])).toEqual(
-        [],
-      );
-    });
-
     it('matches a row to Deadpool through his base id or any of his role ids', () => {
       expect(tierListWarnings([heroRow(1057), heroRow(10571), heroRow(10572), heroRow(10573)])).toEqual([]);
-      expect(tierListWarnings([heroRow(10574, { name: 'Deadpool' })]).length).toBe(1);
+      expect(tierListWarnings([heroRow(10574)]).length).toBe(1);
     });
   });
 
   it('refuses a current season that the list does not contain', () => {
-    const data = { ...(tierList() as object), currentSeasonId: 9 };
+    const data = { ...tierList(), currentSeasonId: 9 };
 
     expect(() => buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256)).toThrowError(
       /tier-list: currentSeasonId 9 is not one of the listed seasons/,
@@ -480,6 +534,15 @@ describe('the tier list split by season', () => {
         /tier-list: season 1 rank 99 tier S hero 0 needs an integer heroId and numbers for winRate/,
       );
     }
+  });
+
+  it('still refuses player-level keys, even in a season with no hero', () => {
+    const data = tierList(() => []) as { seasons: { ranks: Record<string, Record<string, unknown>> }[] };
+    data.seasons[0].ranks['99']['playerCount'] = 7;
+
+    expect(() => buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256)).toThrowError(
+      /tier-list\.seasons\[0\]\.ranks\.99\.playerCount/,
+    );
   });
 
   describe('against the published files', () => {
@@ -592,6 +655,29 @@ describe('verifyPulseAtlas on the season files', () => {
     );
   });
 
+  it('rejects an index without the community provenance', () => {
+    const files = withIndex(built(), (index) => {
+      delete (index as { provenance?: string }).provenance;
+    });
+
+    expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(/tier-list: the index does not carry provenance/);
+  });
+
+  it('rejects a season file without the community provenance', () => {
+    const files = built();
+    const envelope = JSON.parse(contentOf(files, seasonPath(1)));
+    delete envelope.data.provenance;
+    const content = `${JSON.stringify(envelope)}
+`;
+    const indexed = withIndex(replacing(files, seasonPath(1), content), (index) => {
+      index.seasons![0].sha256 = fakeSha256(content);
+    });
+
+    expect(() => verifyPulseAtlas(indexed, fakeSha256)).toThrowError(
+      /tier-list: season 1 file does not carry provenance/,
+    );
+  });
+
   it('rejects an index that lists no seasons', () => {
     const files = withIndex(built(), (index) => {
       delete index.seasons;
@@ -601,84 +687,169 @@ describe('verifyPulseAtlas on the season files', () => {
   });
 });
 
-describe('tierListRequests and assembleTierList', () => {
-  const index = {
-    sourceName: 'Test',
-    sourceUrl: 'https://example.test',
-    currentSeasonId: 2,
-    rankFilters: [{ value: '99', label: 'All Ranks' }, { value: '5+', label: 'Diamond+' }],
-    seasons: [
-      { id: 1, label: 'Season 1', sourceTimestamp: 1, fetchedAt: '2026-01-01T00:00:00.000Z' },
-      { id: 2, label: 'Season 2', sourceTimestamp: 1, fetchedAt: '2026-01-01T00:00:00.000Z' },
-    ],
-  };
-
-  function snapshotsFor(
-    pick: (seasonId: number, rank: string) => Record<string, unknown> = () => ({}),
-  ): TierListSnapshot[] {
-    return tierListRequests(index).map(({ seasonId, rank }) => ({
-      seasonId,
-      rank,
-      response: {
-        selectedSeasonId: seasonId,
-        selectedRankFilter: rank,
-        updatedAt: 'ignored',
-        tiers: [{ name: 'S', heroes: [{ heroId: 1, name: 'Thor' }] }],
-        ...pick(seasonId, rank),
-      },
-    }));
+describe('communityHalfSeasonRequests and assembleCommunityTierList', () => {
+  interface StatsSeason {
+    id: number;
+    label: string;
+    startsAt: string;
+    endsAt: string | null;
   }
 
-  it('asks for every season and rank the API lists', () => {
-    expect(tierListRequests(index)).toEqual([
-      { seasonId: 1, rank: '99' },
-      { seasonId: 1, rank: '5+' },
-      { seasonId: 2, rank: '99' },
-      { seasonId: 2, rank: '5+' },
-    ]);
+  const OLD: StatsSeason = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
+  const NEW: StatsSeason = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
+  const GAME_IDS = [thorEntry, DEADPOOL, { id: 'loki', gameId: 1016 }];
+
+  const line = (hero: string, appearances: number, wins: number) => ({
+    hero,
+    tier: 'S',
+    appearances,
+    wins,
+    winRate: (wins / appearances) * 100,
+    pickRate: 50.5,
+    shrunkWinRate: 60,
+    kda: 3,
+    finalHitsAverage: null,
   });
 
-  it('keys snapshots by season, then rank, and drops sync bookkeeping that changes with every sync', () => {
-    const data = assembleTierList(index, snapshotsFor()) as {
-      seasons: { id: number; fetchedAt?: string; sourceTimestamp?: number; ranks: Record<string, unknown> }[];
-      currentSeasonId: number;
+  /** A `/api/hero-stats` answer: `shown` is the half-season the numbers are from. */
+  function answer(shown: StatsSeason | null, extra: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      status: shown ? 'ready' : 'not-enough-data',
+      minimumMatches: 10,
+      halfSeasons: [OLD, NEW],
+      halfSeason: shown,
+      inPlaceOf: null,
+      matchesCounted: 40,
+      tiers: shown ? [{ name: 'S', heroes: [line('thor', 30, 20), line('deadpool', 12, 6)] }] : [],
+      belowMinimum: [{ hero: 'loki', appearances: 4 }],
+      ...extra,
     };
+  }
 
-    expect(data.currentSeasonId).toBe(2);
-    expect(data.seasons.map((season) => season.id)).toEqual([1, 2]);
-    expect(Object.keys(data.seasons[0].ranks)).toEqual(['99', '5+']);
-    expect(data.seasons[0].ranks['5+']).toEqual({
-      tiers: [{ name: 'S', heroes: [{ heroId: 1, name: 'Thor' }] }],
-    });
-    expect(data.seasons[0].fetchedAt).toBeUndefined();
-    expect(data.seasons[0].sourceTimestamp).toBeUndefined();
+  const others = [{ halfSeason: 10, response: answer(OLD) }];
+
+  interface Assembled {
+    provenance: string;
+    currentSeasonId: number;
+    rankFilters: unknown[];
+    seasons: { id: number; label: string; startTime?: string; endTime?: string; ranks: Record<string, Record<string, unknown>> }[];
+  }
+
+  const assemble = (current = answer(NEW), rest = others, warn?: (warning: string) => void): Assembled =>
+    assembleCommunityTierList(current, rest, GAME_IDS, warn) as Assembled;
+
+  it('asks for every started half-season but the current one', () => {
+    expect(communityHalfSeasonRequests(answer(NEW))).toEqual([10]);
   });
 
-  it('does not carry the source name or link of the tier-list API', () => {
-    const data = assembleTierList(index, snapshotsFor()) as Record<string, unknown>;
+  it('counts the half-season the default answer stands in for as the current one', () => {
+    const standingIn = answer(OLD, { inPlaceOf: NEW });
 
-    expect(Object.keys(data)).toEqual(['currentSeasonId', 'rankFilters', 'seasons']);
+    expect(communityHalfSeasonRequests(standingIn)).toEqual([10]);
+    expect(assemble(standingIn).currentSeasonId).toBe(21);
   });
 
-  it('fails when a season and rank has no snapshot', () => {
-    expect(() => assembleTierList(index, snapshotsFor().slice(1))).toThrowError(
-      /season 1 rank 99: no snapshot returned/,
+  it('makes a season of each half-season, with the id twice the half-season number', () => {
+    const data = assemble();
+
+    expect(data.seasons.map(({ id, label }) => ({ id, label }))).toEqual([
+      { id: 20, label: 'Season 10' },
+      { id: 21, label: 'Season 10.5' },
+    ]);
+    expect(data.currentSeasonId).toBe(21);
+    expect(data.seasons[1].startTime).toBe('2026-10-09T09:00:00Z');
+    expect(data.seasons[1].endTime).toBeUndefined();
+    expect(data.seasons[0].endTime).toBe('2026-10-09T09:00:00Z');
+  });
+
+  it('carries the community provenance and offers only All Ranks', () => {
+    const data = assemble();
+
+    expect(data.provenance).toBe('rivals-pulse-community');
+    expect(data.rankFilters).toEqual([{ value: '99', label: 'All Ranks' }]);
+    expect(Object.keys(data.seasons[0].ranks)).toEqual(['99']);
+  });
+
+  it('turns each hero into the game id and the numbers, with appearances as matches', () => {
+    const snapshot = assemble().seasons[1].ranks['99'];
+
+    expect(snapshot['tiers']).toEqual([
+      {
+        name: 'S',
+        heroes: [
+          { heroId: THOR_GAME_ID, winRate: (20 / 30) * 100, pickRate: 50.5, matches: 30, wins: 20 },
+          { heroId: 1057, winRate: 50, pickRate: 50.5, matches: 12, wins: 6 },
+        ],
+      },
+    ]);
+    expect(snapshot['matchesCounted']).toBe(40);
+    expect(snapshot['belowMinimum']).toEqual([{ heroId: 1016, matches: 4 }]);
+    expect(snapshot['fallbackFromSeasonId']).toBeUndefined();
+  });
+
+  it('publishes no ban rate, score or hero name', () => {
+    expect(JSON.stringify(assemble())).not.toMatch(/banRate|score|"hero"|"tier"|kda/i);
+  });
+
+  it('names the season a snapshot stands in from when the current half-season has no placed hero', () => {
+    const data = assemble(answer(OLD, { inPlaceOf: NEW }));
+
+    expect(data.seasons[1].ranks['99']['fallbackFromSeasonId']).toBe(20);
+    expect(data.seasons[0].ranks['99']['fallbackFromSeasonId']).toBeUndefined();
+  });
+
+  it('keeps a half-season with no hero as an empty season rather than leaving it out', () => {
+    const empty = answer(NEW, { status: 'not-enough-data', tiers: [], matchesCounted: 3, belowMinimum: [] });
+    const data = assemble(empty);
+
+    expect(data.seasons[1].ranks['99']).toEqual({ tiers: [], matchesCounted: 3, belowMinimum: [] });
+    expect(() =>
+      buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256),
+    ).not.toThrow();
+  });
+
+  it('leaves out a hero with no game id, and says which', () => {
+    const warnings: string[] = [];
+    const data = assembleCommunityTierList(
+      answer(NEW, { tiers: [{ name: 'S', heroes: [line('thor', 30, 20), line('newcomer', 12, 6)] }] }),
+      others,
+      GAME_IDS,
+      (warning) => warnings.push(warning),
+    ) as Assembled;
+
+    expect(JSON.stringify(data.seasons[1].ranks['99']['tiers'])).not.toContain('newcomer');
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toContain('newcomer');
+  });
+
+  it('fails when the API answers with the old shape, as before the web app was deployed', () => {
+    const old = { status: 'ready', minimumMatches: 10, halfSeason: NEW, tiers: [] };
+
+    expect(() => communityHalfSeasonRequests(old)).toThrowError(/not the hero-stats shape.*deployed/);
+    expect(() => assembleCommunityTierList(old, [], GAME_IDS)).toThrowError(/not the hero-stats shape/);
+    expect(() => communityHalfSeasonRequests(null)).toThrowError(/not the hero-stats shape/);
+  });
+
+  it('fails when the API lists no half-season yet', () => {
+    expect(() => communityHalfSeasonRequests(answer(null, { halfSeasons: [] }))).toThrowError(/no half-season yet/);
+  });
+
+  it('fails when the answer for another half-season is missing or is for a different one', () => {
+    expect(() => assemble(answer(NEW), [])).toThrowError(/hero-stats\?halfSeason=10 is not the hero-stats shape/);
+    expect(() => assemble(answer(NEW), [{ halfSeason: 10, response: answer(NEW) }])).toThrowError(
+      /answered for half-season 10\.5, not 10/,
+    );
+    expect(() => assemble(answer(NEW), [{ halfSeason: 10, response: answer(OLD, { inPlaceOf: NEW }) }])).toThrowError(
+      /answered for half-season 10 in place of 10\.5, not 10/,
     );
   });
 
-  it('fails when the API fell back to another rank', () => {
-    const fellBack = snapshotsFor((seasonId, rank) =>
-      seasonId === 2 && rank === '5+' ? { selectedRankFilter: '99' } : {},
-    );
+  it('fails for a half-season that is not a whole or a half number', () => {
+    const odd: StatsSeason = { id: 10.25, label: 'Season 10.25', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
 
-    expect(() => assembleTierList(index, fellBack)).toThrowError(
-      /season 2 rank 5\+: the API answered with season 2 rank 99/,
+    expect(() => assembleCommunityTierList(answer(odd, { halfSeasons: [odd] }), [], GAME_IDS)).toThrowError(
+      /no season id/,
     );
-  });
-
-  it('fails when the API does not list its seasons and ranks', () => {
-    expect(() => tierListRequests({ seasons: [], rankFilters: [] })).toThrowError(/did not list/);
-    expect(() => tierListRequests(null)).toThrowError(/did not list/);
   });
 });
 

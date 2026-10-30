@@ -203,110 +203,247 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
   }
 }
 
-export interface TierListRequest {
-  seasonId: number;
-  rank: string;
+/** The top-level `provenance` of the tier-list index and of every season file. The overlay refuses a tier-list file without it. */
+export const COMMUNITY_PROVENANCE = 'rivals-pulse-community';
+
+/** The one rank the community list covers: the uploader's own rank is not stored with the matches. */
+const ALL_RANKS = { value: '99', label: 'All Ranks' } as const;
+
+/** One `/api/hero-stats` answer, read for what the tier list needs. */
+interface StatsHalfSeason {
+  id: number;
+  label: string;
+  startsAt: string | null;
+  endsAt: string | null;
 }
 
-export interface TierListSnapshot extends TierListRequest {
-  /** The `/api/tier-list?season=<seasonId>&rank=<rank>` response body. */
+interface StatsHero {
+  hero: string;
+  appearances: number;
+  wins: number;
+  winRate: number;
+  pickRate: number;
+}
+
+interface HeroStatsView {
+  /** Every half-season that has started, oldest first. */
+  halfSeasons: StatsHalfSeason[];
+  /** The half-season the numbers come from; null before any half-season exists. */
+  shown: StatsHalfSeason | null;
+  /** Set when `shown` is the previous half-season, standing in for the one it names. */
+  inPlaceOf: StatsHalfSeason | null;
+  matchesCounted: number;
+  tiers: { name: string; heroes: StatsHero[] }[];
+  belowMinimum: { hero: string; appearances: number }[];
+}
+
+export interface HalfSeasonStats {
+  /** The half-season asked for, such as 10 or 10.5. */
+  halfSeason: number;
+  /** The `/api/hero-stats?halfSeason=<halfSeason>` response body. */
   response: unknown;
 }
 
-interface TierListIndex {
-  currentSeasonId: unknown;
-  rankFilters: unknown[];
-  seasons: Record<string, unknown>[];
-  seasonIds: number[];
-  ranks: string[];
-}
+/** The tier-list season id of a half-season: twice its number, so 10.5 is 21 and 10 is 20. */
+function seasonIdOf(halfSeason: number): number {
+  const id = halfSeason * 2;
 
-/**
- * Every season and rank the tier-list API says it has, read from its default
- * response. One snapshot has to be fetched for each pair, so the published
- * file never depends on a hard-coded list.
- */
-export function tierListRequests(index: unknown): TierListRequest[] {
-  const { seasonIds, ranks } = parseTierListIndex(index);
-
-  return seasonIds.flatMap((seasonId) => ranks.map((rank) => ({ seasonId, rank })));
-}
-
-/**
- * Folds the per-season, per-rank API responses into the one published
- * tier-list shape: season details with a `ranks` map of snapshots. Throws if a
- * pair has no snapshot, or if the API answered with a different season or rank
- * than was asked for (it silently falls back to another rank when one is
- * missing). `fetchedAt` and `sourceTimestamp` are dropped because they only
- * record when a sync ran, the same for every season and new on every run, so
- * they would change every season's file without any tier list changing.
- */
-export function assembleTierList(index: unknown, snapshots: readonly TierListSnapshot[]): unknown {
-  const parsed = parseTierListIndex(index);
-  const problems: string[] = [];
-
-  const seasons = parsed.seasons.map((season, position) => {
-    const seasonId = parsed.seasonIds[position];
-    const ranks: Record<string, { tiers: unknown }> = {};
-
-    for (const rank of parsed.ranks) {
-      const found = snapshots.find((item) => item.seasonId === seasonId && item.rank === rank);
-      const response = found?.response;
-
-      if (!isRecord(response) || !Array.isArray(response['tiers'])) {
-        problems.push(`season ${seasonId} rank ${rank}: no snapshot returned`);
-      } else if (response['selectedSeasonId'] !== seasonId || response['selectedRankFilter'] !== rank) {
-        problems.push(
-          `season ${seasonId} rank ${rank}: the API answered with season ${response['selectedSeasonId']} rank ${response['selectedRankFilter']}`,
-        );
-      } else {
-        ranks[rank] = { tiers: response['tiers'] };
-      }
-    }
-
-    const { fetchedAt: _fetchedAt, sourceTimestamp: _sourceTimestamp, ...details } = season;
-
-    return { ...details, ranks };
-  });
-
-  if (problems.length > 0) {
-    throw new Error(`Pulse Atlas could not assemble the tier list:\n- ${problems.join('\n- ')}`);
+  if (!Number.isInteger(id)) {
+    throw new Error(`Half-season ${halfSeason} is not a whole or a half number, so it has no season id.`);
   }
 
+  return id;
+}
+
+/**
+ * The half-seasons to fetch besides the default `/api/hero-stats` answer, which already carries the
+ * current one. Throws when that answer lists no half-season (or is an older API that does not list
+ * them at all), so a feed is never built from a web app that has not been deployed yet.
+ */
+export function communityHalfSeasonRequests(current: unknown): number[] {
+  const view = readHeroStats(current, '/api/hero-stats');
+  const currentId = currentHalfSeasonOf(view);
+
+  return view.halfSeasons.map((season) => season.id).filter((id) => id !== currentId);
+}
+
+/**
+ * Folds the hero-stats answers into the one tier-list shape the gate checks: every started
+ * half-season as a season (id = half-season x 2), each with one `99` (All Ranks) snapshot. `current`
+ * is the default answer, which also says which half-season is current and whether it stands in for
+ * the previous one; `others` are the exact answers for the rest. Hero ids become the game's numeric
+ * ids through `heroGameIds` (a hero without an entry is left out, with a warning). Throws if an
+ * answer is missing, or is for another half-season than was asked for.
+ */
+export function assembleCommunityTierList(
+  current: unknown,
+  others: readonly HalfSeasonStats[],
+  heroGameIds: unknown,
+  warn: (warning: string) => void = () => undefined,
+): unknown {
+  const currentView = readHeroStats(current, '/api/hero-stats');
+  const currentId = currentHalfSeasonOf(currentView);
+  const gameIdBySlug = new Map(
+    (Array.isArray(heroGameIds) ? heroGameIds : []).flatMap((entry) =>
+      isRecord(entry) && isNonEmptyString(entry['id']) && isInteger(entry['gameId'])
+        ? [[entry['id'], entry['gameId']] as const]
+        : [],
+    ),
+  );
+  const unmapped = new Set<string>();
+  const gameIdOf = (hero: string): number | undefined => {
+    const gameId = gameIdBySlug.get(hero);
+
+    if (gameId === undefined) {
+      unmapped.add(hero);
+    }
+
+    return gameId;
+  };
+
+  const seasons = currentView.halfSeasons.map((season) => {
+    const view =
+      season.id === currentId
+        ? currentView
+        : readHeroStats(
+            others.find((item) => item.halfSeason === season.id)?.response,
+            `/api/hero-stats?halfSeason=${season.id}`,
+          );
+
+    // The current half-season's own answer may show the previous one; every other answer must be its own.
+    if (season.id !== currentId && (view.shown?.id !== season.id || view.inPlaceOf !== null)) {
+      const standingIn = view.inPlaceOf ? ` in place of ${view.inPlaceOf.id}` : '';
+
+      throw new Error(`The hero-stats API answered for half-season ${view.shown?.id ?? 'none'}${standingIn}, not ${season.id}.`);
+    }
+
+    return {
+      id: seasonIdOf(season.id),
+      label: season.label,
+      ...(season.startsAt === null ? {} : { startTime: season.startsAt }),
+      ...(season.endsAt === null ? {} : { endTime: season.endsAt }),
+      ranks: { [ALL_RANKS.value]: snapshotOf(view, gameIdOf) },
+    };
+  });
+
+  unmapped.forEach((hero) => warn(`${hero}: no gameId in hero-game-ids.json, so the hero is left out of the tier list`));
+
   return {
-    currentSeasonId: parsed.currentSeasonId,
-    rankFilters: parsed.rankFilters,
+    provenance: COMMUNITY_PROVENANCE,
+    currentSeasonId: seasonIdOf(currentId),
+    rankFilters: [ALL_RANKS],
     seasons,
   };
 }
 
-function parseTierListIndex(index: unknown): TierListIndex {
-  if (
-    !isRecord(index) ||
-    !Array.isArray(index['seasons']) ||
-    index['seasons'].length === 0 ||
-    !Array.isArray(index['rankFilters']) ||
-    index['rankFilters'].length === 0
-  ) {
-    throw new Error('The tier-list API did not list its seasons and rank filters.');
+// The default answer shows the previous half-season while the current one has no placed hero, so
+// the current half-season is the one it stands in for.
+function currentHalfSeasonOf(view: HeroStatsView): number {
+  const current = view.inPlaceOf ?? view.shown;
+
+  if (!current) {
+    throw new Error('The hero-stats API has no half-season yet, so there is no tier list to publish.');
   }
 
-  const seasons = index['seasons'];
-  const rankFilters = index['rankFilters'];
-  const seasonIds = seasons.map((season) => (isRecord(season) ? season['id'] : undefined));
-  const ranks = rankFilters.map((filter) => (isRecord(filter) ? filter['value'] : undefined));
+  return current.id;
+}
 
-  if (!seasonIds.every((id): id is number => Number.isInteger(id)) || !ranks.every(isNonEmptyString)) {
-    throw new Error('The tier-list API lists a season without an integer id or a rank without a value.');
+function snapshotOf(view: HeroStatsView, gameIdOf: (hero: string) => number | undefined): unknown {
+  return {
+    tiers: view.tiers.map((tier) => ({
+      name: tier.name,
+      heroes: tier.heroes.flatMap((hero) => {
+        const heroId = gameIdOf(hero.hero);
+
+        return heroId === undefined
+          ? []
+          : [{ heroId, winRate: hero.winRate, pickRate: hero.pickRate, matches: hero.appearances, wins: hero.wins }];
+      }),
+    })),
+    matchesCounted: view.matchesCounted,
+    belowMinimum: view.belowMinimum.flatMap((hero) => {
+      const heroId = gameIdOf(hero.hero);
+
+      return heroId === undefined ? [] : [{ heroId, matches: hero.appearances }];
+    }),
+    ...(view.inPlaceOf && view.shown ? { fallbackFromSeasonId: seasonIdOf(view.shown.id) } : {}),
+  };
+}
+
+function readHeroStats(response: unknown, what: string): HeroStatsView {
+  const problem = (detail: string): Error =>
+    new Error(`${what} is not the hero-stats shape (${detail}). Has the web app been deployed with it?`);
+
+  if (!isRecord(response) || !Array.isArray(response['halfSeasons']) || !Array.isArray(response['tiers'])) {
+    throw problem('no halfSeasons and tiers lists');
   }
+
+  const numberOf = (record: Record<string, unknown>, key: string): number => {
+    const value = record[key];
+
+    if (!isFiniteNumber(value)) {
+      throw problem(`${key} is not a number`);
+    }
+
+    return value;
+  };
+  const halfSeasonOf = (value: unknown): StatsHalfSeason => {
+    if (
+      !isRecord(value) ||
+      !isNonEmptyString(value['label']) ||
+      !isNullableString(value['startsAt']) ||
+      !isNullableString(value['endsAt'])
+    ) {
+      throw problem('a half-season needs an id, a label and startsAt and endsAt');
+    }
+
+    return {
+      id: numberOf(value, 'id'),
+      label: value['label'],
+      startsAt: value['startsAt'],
+      endsAt: value['endsAt'],
+    };
+  };
+  const optionalHalfSeason = (value: unknown): StatsHalfSeason | null => (value === null ? null : halfSeasonOf(value));
+  const heroOf = (value: unknown): StatsHero => {
+    if (!isRecord(value) || !isNonEmptyString(value['hero'])) {
+      throw problem('a hero needs an id');
+    }
+
+    return {
+      hero: value['hero'],
+      appearances: numberOf(value, 'appearances'),
+      wins: numberOf(value, 'wins'),
+      winRate: numberOf(value, 'winRate'),
+      pickRate: numberOf(value, 'pickRate'),
+    };
+  };
+  const belowMinimum: unknown[] = Array.isArray(response['belowMinimum']) ? response['belowMinimum'] : [];
 
   return {
-    currentSeasonId: index['currentSeasonId'],
-    rankFilters,
-    seasons: seasons.filter(isRecord),
-    seasonIds,
-    ranks,
+    halfSeasons: response['halfSeasons'].map(halfSeasonOf),
+    shown: optionalHalfSeason(response['halfSeason']),
+    inPlaceOf: optionalHalfSeason(response['inPlaceOf']),
+    matchesCounted: numberOf(response, 'matchesCounted'),
+    tiers: response['tiers'].map((tier) => {
+      if (!isRecord(tier) || !isNonEmptyString(tier['name']) || !Array.isArray(tier['heroes'])) {
+        throw problem('a tier needs a name and a heroes list');
+      }
+
+      return { name: tier['name'], heroes: tier['heroes'].map(heroOf) };
+    }),
+    belowMinimum: belowMinimum.map((hero) => {
+      if (!isRecord(hero) || !isNonEmptyString(hero['hero'])) {
+        throw problem('a below-minimum hero needs an id');
+      }
+
+      return { hero: hero['hero'], appearances: numberOf(hero, 'appearances') };
+    }),
   };
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || isNonEmptyString(value);
 }
 
 // Wraps `data` in the envelope, unless the file published at `path` already holds
@@ -419,12 +556,6 @@ function tryParseJson(content: string): unknown {
 }
 
 function toPublicInput(input: PulseAtlasInput): PulseAtlasInput {
-  if (input.dataset === 'tier-list' && isRecord(input.data)) {
-    // The API names where its numbers come from; the published files never do.
-    const { sourceName: _sourceName, sourceUrl: _sourceUrl, ...publicTierList } = input.data;
-    return { ...input, data: publicTierList };
-  }
-
   if (input.dataset !== 'heroes' || !Array.isArray(input.data)) {
     return input;
   }
@@ -807,14 +938,22 @@ interface SlimHeroRow {
   heroId: number;
   winRate: number;
   pickRate: number;
-  banRate: number;
   matches: number;
   wins: number;
-  score: number;
+}
+
+/** A hero with too few matches to be placed in a tier. */
+interface BelowMinimumRow {
+  heroId: number;
+  matches: number;
 }
 
 interface SlimSnapshot {
   tiers: (Record<string, unknown> & { heroes: SlimHeroRow[] })[];
+  matchesCounted?: number;
+  belowMinimum?: BelowMinimumRow[];
+  /** Set when the numbers are the previous season's, standing in for a season with no placed hero yet. */
+  fallbackFromSeasonId?: number;
 }
 
 interface TierListSeason {
@@ -822,11 +961,6 @@ interface TierListSeason {
   /** Everything about the season except its ranks. */
   details: Record<string, unknown>;
   ranks: Record<string, SlimSnapshot>;
-}
-
-/** Who a hero row names, kept so a warning can say which hero it is before the name is dropped. */
-interface HeroIdentity {
-  name: unknown;
 }
 
 interface ReadTierList {
@@ -837,16 +971,23 @@ interface ReadTierList {
     rankFilters: unknown[];
     seasons: TierListSeason[];
     /** Every hero that has a row anywhere, once per game hero id. */
-    heroes: Map<number, HeroIdentity>;
+    heroes: Set<number>;
+    /** Seasons that list no hero at any rank: published as they are, and reported. */
+    emptySeasonIds: number[];
   };
 }
 
 /**
- * Checks the full tier list (every season and rank, as `assembleTierList`
+ * Checks the full tier list (every season and rank, as `assembleCommunityTierList`
  * returns it) and, when it is sound, cuts every hero row down to what is
- * published. Faults are reported together so one run names them all.
+ * published. Faults are reported together so one run names them all. A list
+ * that is not the community's is refused, so no other source can reach the feed.
  */
 function readTierList(data: unknown): ReadTierList {
+  if (isRecord(data) && data['provenance'] !== COMMUNITY_PROVENANCE) {
+    return { problems: [`provenance must be "${COMMUNITY_PROVENANCE}"`] };
+  }
+
   if (
     !isRecord(data) ||
     !Array.isArray(data['seasons']) ||
@@ -866,7 +1007,8 @@ function readTierList(data: unknown): ReadTierList {
 
   const problems: string[] = [];
   const seasons: TierListSeason[] = [];
-  const heroes = new Map<number, HeroIdentity>();
+  const emptySeasonIds: number[] = [];
+  const heroes = new Set<number>();
 
   data['seasons'].forEach((season: unknown, index: number) => {
     if (!isRecord(season) || !isInteger(season['id']) || !isRecord(season['ranks'])) {
@@ -884,8 +1026,7 @@ function readTierList(data: unknown): ReadTierList {
     }
 
     if (!ranks.some((rank) => listsAnyHero(snapshots[rank]))) {
-      problems.push(`season ${id} lists no hero at any rank`);
-      return;
+      emptySeasonIds.push(id);
     }
 
     const slimRanks: Record<string, SlimSnapshot> = {};
@@ -922,12 +1063,13 @@ function readTierList(data: unknown): ReadTierList {
       rankFilters,
       seasons,
       heroes,
+      emptySeasonIds,
     },
   };
 }
 
 // Reports the first row that cannot be published, as text, instead of a snapshot.
-function slimSnapshot(snapshot: unknown, heroes: Map<number, HeroIdentity>): SlimSnapshot | string {
+function slimSnapshot(snapshot: unknown, heroes: Set<number>): SlimSnapshot | string {
   if (!hasTiers(snapshot)) {
     return 'has no tiers';
   }
@@ -944,21 +1086,64 @@ function slimSnapshot(snapshot: unknown, heroes: Map<number, HeroIdentity>): Sli
     for (const row of tier['heroes']) {
       const slim = toSlimHeroRow(row);
 
-      if (!slim || !isRecord(row)) {
-        return `tier ${tier['name']} hero ${rows.length} needs an integer heroId and numbers for winRate, pickRate, banRate, matches, wins and score`;
+      if (!slim) {
+        return `tier ${tier['name']} hero ${rows.length} needs an integer heroId and numbers for winRate, pickRate, matches and wins`;
       }
 
-      if (!heroes.has(slim.heroId)) {
-        heroes.set(slim.heroId, { name: row['name'] });
-      }
-
+      heroes.add(slim.heroId);
       rows.push(slim);
     }
 
     tiers.push({ ...tier, heroes: rows });
   }
 
-  return { tiers };
+  const { matchesCounted, belowMinimum, fallbackFromSeasonId } = snapshot;
+
+  if (matchesCounted !== undefined && !(isFiniteNumber(matchesCounted) && matchesCounted >= 0)) {
+    return 'needs matchesCounted to be a non-negative number';
+  }
+
+  if (fallbackFromSeasonId !== undefined && !isInteger(fallbackFromSeasonId)) {
+    return 'needs fallbackFromSeasonId to be an integer';
+  }
+
+  const below = toBelowMinimum(belowMinimum, heroes);
+
+  if (typeof below === 'string') {
+    return below;
+  }
+
+  return {
+    tiers,
+    ...(matchesCounted === undefined ? {} : { matchesCounted }),
+    ...(below === undefined ? {} : { belowMinimum: below }),
+    ...(fallbackFromSeasonId === undefined ? {} : { fallbackFromSeasonId }),
+  };
+}
+
+// The heroes with data but too few matches to be placed. Reports the first bad row, as text.
+function toBelowMinimum(list: unknown, heroes: Set<number>): BelowMinimumRow[] | string | undefined {
+  if (list === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(list)) {
+    return 'needs belowMinimum to be a list';
+  }
+
+  const rows: BelowMinimumRow[] = [];
+
+  for (const row of list) {
+    if (!isRecord(row) || !isInteger(row['heroId']) || !isFiniteNumber(row['matches'])) {
+      return `belowMinimum item ${rows.length} needs an integer heroId and a number of matches`;
+    }
+
+    heroes.add(row['heroId']);
+
+    rows.push({ heroId: row['heroId'], matches: row['matches'] });
+  }
+
+  return rows;
 }
 
 // Rates are published to two decimals: more is noise that makes every file differ between syncs.
@@ -967,16 +1152,14 @@ function toSlimHeroRow(row: unknown): SlimHeroRow | undefined {
     return undefined;
   }
 
-  const { heroId, winRate, pickRate, banRate, matches, wins, score } = row;
+  const { heroId, winRate, pickRate, matches, wins } = row;
 
   if (
     !isInteger(heroId) ||
     !isFiniteNumber(winRate) ||
     !isFiniteNumber(pickRate) ||
-    !isFiniteNumber(banRate) ||
     !isFiniteNumber(matches) ||
-    !isFiniteNumber(wins) ||
-    !isFiniteNumber(score)
+    !isFiniteNumber(wins)
   ) {
     return undefined;
   }
@@ -985,10 +1168,8 @@ function toSlimHeroRow(row: unknown): SlimHeroRow | undefined {
     heroId,
     winRate: roundToHundredths(winRate),
     pickRate: roundToHundredths(pickRate),
-    banRate: roundToHundredths(banRate),
     matches,
     wins,
-    score,
   };
 }
 
@@ -1027,13 +1208,14 @@ function withTierListSplitBySeason(
     season,
     ...buildEnvelopeFile(
       tierListSeasonPath(season.id),
-      { source: input.source, data: { ...season.details, ranks: season.ranks } },
+      { source: input.source, data: { provenance: COMMUNITY_PROVENANCE, ...season.details, ranks: season.ranks } },
       generatedAt,
       previous,
     ),
   }));
 
   const index = {
+    provenance: COMMUNITY_PROVENANCE,
     currentSeasonId: tierList.currentSeasonId,
     rankFilters: tierList.rankFilters,
     seasons: seasonFiles.map(({ season, file }) => ({
@@ -1047,14 +1229,17 @@ function withTierListSplitBySeason(
   return {
     inputs: inputs.map((candidate) => (candidate === input ? { ...candidate, data: index } : candidate)),
     seasonFiles: seasonFiles.map(({ file }) => file),
-    warnings: describeUnknownHeroes(tierList.heroes, inputs.find((candidate) => candidate.dataset === 'heroes')?.data),
+    warnings: [
+      ...tierList.emptySeasonIds.map((id) => `season ${id} lists no hero yet, so it is published with empty tiers`),
+      ...describeUnknownHeroes(tierList.heroes, inputs.find((candidate) => candidate.dataset === 'heroes')?.data),
+    ],
   };
 }
 
 // A tier-list heroId joins to heroes.json through a hero's gameId, or the gameId of one of its role
 // variants. A hero that does not join is published all the same: a new hero reaches the tier list
 // before anyone has added its id to hero-game-ids.json, and that must not freeze the feed.
-function describeUnknownHeroes(listed: ReadonlyMap<number, HeroIdentity>, heroes: unknown): string[] {
+function describeUnknownHeroes(listed: ReadonlySet<number>, heroes: unknown): string[] {
   const known = new Set(
     (Array.isArray(heroes) ? heroes : []).flatMap((hero) => {
       if (!isRecord(hero)) {
@@ -1067,11 +1252,8 @@ function describeUnknownHeroes(listed: ReadonlyMap<number, HeroIdentity>, heroes
   );
 
   return [...listed]
-    .filter(([heroId]) => !known.has(heroId))
-    .map(
-      ([heroId, { name }]) =>
-        `heroId ${heroId} (${isNonEmptyString(name) ? name : 'unnamed'}) is the gameId of no hero in heroes.json, so it is published without one to join to`,
-    );
+    .filter((heroId) => !known.has(heroId))
+    .map((heroId) => `heroId ${heroId} is the gameId of no hero in heroes.json, so it is published without one to join to`);
 }
 
 function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256Hex): string[] {
@@ -1089,6 +1271,10 @@ function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256
   }
 
   const problems: string[] = [];
+
+  if (index['provenance'] !== COMMUNITY_PROVENANCE) {
+    problems.push(`tier-list: the index does not carry provenance "${COMMUNITY_PROVENANCE}"`);
+  }
 
   for (const season of seasons) {
     if (!isRecord(season) || !isInteger(season['id'])) {
@@ -1109,6 +1295,8 @@ function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256
       problems.push(`tier-list: season ${id} file does not match its hash in tier-list.json`);
     } else if (!isRecord(seasonData) || seasonData['id'] !== id || !isRecord(seasonData['ranks'])) {
       problems.push(`tier-list: season ${id} file does not hold that season's ranks`);
+    } else if (seasonData['provenance'] !== COMMUNITY_PROVENANCE) {
+      problems.push(`tier-list: season ${id} file does not carry provenance "${COMMUNITY_PROVENANCE}"`);
     }
 
     if (('ranks' in season) !== (id === index['currentSeasonId'])) {
