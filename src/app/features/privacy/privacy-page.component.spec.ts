@@ -43,7 +43,7 @@ describe('PrivacyPageComponent', () => {
         .toBeTrue();
     }
     expect(TODAY_UPLOAD_FIELDS.map((field) => field.label)).toEqual(
-      jasmine.arrayContaining(['In-game name', 'Player id']),
+      jasmine.arrayContaining(['In-game name', 'Player id', 'Match length', 'Match id']),
     );
   });
 
@@ -81,5 +81,14 @@ describe('PrivacyPageComponent', () => {
 
     expect(text).toContain('six months');
     expect(text).toContain('half-season');
+    expect(text).toContain('no time limit');
+    expect(text).toContain('5,000');
+  });
+
+  it('says uploads are automatic rather than chosen', () => {
+    const text = page.textContent ?? '';
+
+    expect(text).toContain('uploaded automatically');
+    expect(text).not.toContain('choose to upload');
   });
 });

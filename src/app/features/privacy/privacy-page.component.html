@@ -2,7 +2,7 @@
   <app-page-header
     eyebrow="Privacy notes"
     title="Privacy notes: where the community numbers come from"
-    description="Rivals Pulse Coach shows totals built from matches that players of the Rivals Pulse desktop app choose to upload. This page says what is uploaded, what the site publishes, and how long it is kept."
+    description="Rivals Pulse Coach shows totals built from matches the Rivals Pulse desktop app uploads automatically. This page says what is uploaded, what the site publishes, and how long it is kept."
   />
 
   <section class="privacy-section" id="summary" aria-labelledby="summary-title">
@@ -30,9 +30,10 @@
   <section class="privacy-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
     <h2 id="uploaded-today-title">What the app uploads today</h2>
     <p>
-      When a player of the desktop app finishes a match, the app uploads the scoreboard line of
-      every human player in it, on both teams, and a few facts about the match. This is what the
-      game itself shows on its scoreboard.
+      Every match the desktop app records is uploaded automatically: the app has no setting to
+      turn it off, and the other players in the match are not asked. The app uploads the
+      scoreboard line of every human player in it, on both teams, and a few facts about the
+      match. The scoreboard figures are what the game itself shows.
     </p>
     <ul>
       @for (field of todayFields; track field.label) {
@@ -44,10 +45,14 @@
     <p>
       The upload also carries a short-lived Overwolf sign-in token, which our server checks with
       Overwolf and does not store. We keep a one-way code made from the uploading player's
-      Overwolf username, never the username itself, only to limit how many matches one player can
-      send. For the uploading player we also keep a record of their own match history: the match
-      facts and their own result, under the name they play with. That record is capped per
-      player (currently the most recent 5,000 matches).
+      Overwolf username, never the username itself, to limit how many matches one player can
+      send. The same code is stored on every scoreboard line that player records.
+    </p>
+    <p>
+      For the uploading player we also keep a record of their own match history: the match facts
+      and their own whole scoreboard line (player id, hero, team, kills, deaths, assists, final
+      hits and result), under the name they play with. That history has no time limit; it is
+      capped per player (currently the most recent 5,000 matches).
     </p>
     <p>
       Names and player ids are stored so that players can be looked up inside the desktop app.
@@ -110,9 +115,14 @@
     <h2 id="retention-title">How long it is kept</h2>
     <ul>
       <li>
-        Scoreboard lines, with names and ids, are deleted once the half-season after the one the
+        Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
         The figures being added above are kept for the same time.
+      </li>
+      <li>
+        The uploading player's own match history (their name, whole scoreboard line and the match
+        facts) is <strong>not</strong> deleted on that schedule. It has no time limit and is
+        removed only when a player passes the cap of 5,000 matches and the oldest are pushed out.
       </li>
       <li>
         Before a half-season's lines are deleted, its totals are saved as anonymous counts that
@@ -121,6 +131,8 @@
       <li>
         A player who does not use the app can ask for their scoreboard lines to be deleted and
         for their id not to be stored again. How to ask is in the desktop app's privacy policy.
+        That deletion covers the scoreboard lines, not the uploading players' own match history
+        above.
       </li>
     </ul>
   </section>
@@ -128,9 +140,10 @@
   <section class="privacy-section" id="more" aria-labelledby="more-title">
     <h2 id="more-title">More</h2>
     <p>
-      The desktop app's privacy policy covers collection, retention and deletion in full,
-      including advertising, the optional voice assistant and Premium. Where it and this page
-      differ, the desktop app's policy is the one to follow, and this page is updated to match.
+      The desktop app's privacy policy also covers advertising, the optional voice assistant and
+      Premium, which this website does not. This page describes the upload and the site as the
+      server handles them today; if you find a difference between this page and the app's
+      policy, this page is the more current account of the server.
     </p>
     <p>
       Rivals Pulse Coach is an independent project and is not affiliated with NetEase, Marvel or

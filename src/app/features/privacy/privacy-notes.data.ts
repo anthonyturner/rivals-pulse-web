@@ -10,7 +10,7 @@ export interface UploadField {
 export type ExtendedUploadStatus = 'being-added' | 'uploaded';
 export const EXTENDED_UPLOAD_STATUS: ExtendedUploadStatus = 'being-added';
 
-/** What the desktop app uploads for every human player on the scoreboard of a match it records. */
+/** What the desktop app uploads for a match it records: each human player's line plus the match facts. */
 export const TODAY_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'In-game name', detail: 'As the game shows it on the scoreboard.' },
   { label: 'Player id', detail: 'The number the game uses to identify a player.' },
@@ -28,6 +28,8 @@ export const TODAY_UPLOAD_FIELDS: readonly UploadField[] = [
   },
   { label: 'Map', detail: 'The map name. Shared by every line in the match.' },
   { label: 'When it was played', detail: 'The match time and the half-season it belongs to.' },
+  { label: 'Match length', detail: 'How long the match lasted.' },
+  { label: 'Match id', detail: 'The identifier the game gives the match.' },
 ];
 
 /** Figures the desktop app is adding to its upload, in the payload shape of issue 176. */
