@@ -81,6 +81,12 @@
   color: var(--text);
 }
 
+.community-page__note-link {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.community-page__note-link:focus-visible,
 .community-page__tab:focus-visible,
 .community-page__panel:focus-visible {
   outline: 3px solid var(--blue);

@@ -165,19 +165,21 @@ export const routes: Routes = [
   },
   {
     path: 'season-9-win-rates',
-    redirectTo: 'win-rates/9',
+    redirectTo: 'win-rates',
     pathMatch: 'full',
   },
   {
     path: 'win-rates',
-    redirectTo: 'win-rates/9',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/insights/win-rates/win-rates-page.component').then(
+        (module) => module.WinRatesPageComponent,
+      ),
   },
   {
     path: 'win-rates/:season',
     loadComponent: () =>
-      import('./features/insights/win-rate-reports/season-win-rates-page.component').then(
-        (module) => module.SeasonWinRatesPageComponent,
+      import('./features/insights/win-rates/win-rates-page.component').then(
+        (module) => module.WinRatesPageComponent,
       ),
   },
   {
@@ -199,6 +201,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/tools/team-builder/team-builder-page.component').then(
         (module) => module.TeamBuilderPageComponent,
+      ),
+  },
+  {
+    path: 'privacy',
+    title: 'Privacy notes',
+    loadComponent: () =>
+      import('./features/privacy/privacy-page.component').then(
+        (module) => module.PrivacyPageComponent,
       ),
   },
   {

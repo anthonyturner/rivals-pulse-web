@@ -1,35 +1,35 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-29T10:01:08.647Z",
+  "generatedAt": "2026-10-30T06:10:31.574Z",
   "files": [
     {
       "dataset": "heroes",
       "path": "pulse-atlas/v1/heroes.json",
-      "sha256": "8b9c676af4a701eda6a057d11c86e489596c8be425b9a43f3d120882e74745b2",
+      "sha256": "29c51e6ea77c053c9b9f020133c05a402ce2ea3bb189909f12c77bfc83a4005e",
       "bytes": 21379
     },
     {
       "dataset": "tier-list",
       "path": "pulse-atlas/v1/tier-list.json",
-      "sha256": "5e99f9fd2f4df92091f43c55cd456375f44e4cbff7d344998affff490e5b33c1",
-      "bytes": 2945
+      "sha256": "926f3ce634d5df256bb3b3936a40f353fe167363363e79fda9467a784f7f1a85",
+      "bytes": 1023
     },
     {
       "dataset": "glossary",
       "path": "pulse-atlas/v1/glossary.json",
-      "sha256": "0255db654e2460d0d6e3435addc111c40933d375dc610897fb114b16e929c0eb",
+      "sha256": "3f4fcddce79a30aebe70fcbd091b786cb43c6b1c6660438904bd1430ff5a22e9",
       "bytes": 1661
     },
     {
       "dataset": "maps",
       "path": "pulse-atlas/v1/maps.json",
-      "sha256": "2f01566c6aee8cc63a3e75f20486bc7ba1f4242b3cb9eba5f80e3f47cdbd76de",
+      "sha256": "d98f1a4ed0c5e23f48624cb3c78b85598b21a2084039f7a948c45c13fbd41be7",
       "bytes": 2156
     },
     {
       "dataset": "hero-styles",
       "path": "pulse-atlas/v1/hero-styles.json",
-      "sha256": "f02c91b1a43de00ebeec034a21859626026d236e8df07415296a9f718346cc66",
+      "sha256": "420686a7368431c16d0d1574f11905086cf63c399a04f1073730607ab6146886",
       "bytes": 220
     }
   ]

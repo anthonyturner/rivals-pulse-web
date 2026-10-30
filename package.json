@@ -13,7 +13,7 @@
     "test": "ng test",
     "test:functions": "node --no-warnings --test \"supabase/functions/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "backfill:participants": "node --experimental-strip-types scripts/backfill-participants.mjs",
-    "db:seed": "node scripts/seed-sqlite.mjs",
+    "db:seed": "node scripts/seed-sqlite.mjs && node scripts/seed-home-content.mjs",
     "db:sync": "node scripts/sync-external-sources.mjs",
     "sync:home-news": "node --experimental-strip-types scripts/sync-home-news.mjs",
     "sync:glossary": "node scripts/sync-glossary.mjs",

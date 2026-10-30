@@ -50,6 +50,7 @@
     </div>
   </div>
 
+  <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
 
   @if (hero.gameplayArchetypes?.length) {
   <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
@@ -58,7 +59,7 @@
         <p class="eyebrow">Fight jobs</p>
         <h3 id="gameplay-archetypes-title">Gameplay Archetype</h3>
       </div>
-      <a routerLink="/win-rates/9">Full report</a>
+      <a routerLink="/win-rates">Hero win rates</a>
     </div>
 
     <div class="archetype-grid">

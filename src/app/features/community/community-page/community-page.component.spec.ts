@@ -183,6 +183,13 @@ describe('CommunityPageComponent', () => {
     });
   }
 
+  it('links the anonymity note to the privacy notes', async () => {
+    await open('/heroes');
+
+    const link = host().querySelector<HTMLAnchorElement>('.community-page__note a');
+    expect(link?.getAttribute('href')).toBe('/privacy');
+  });
+
   it('says the numbers are anonymous community totals', async () => {
     await open('/heroes');
 

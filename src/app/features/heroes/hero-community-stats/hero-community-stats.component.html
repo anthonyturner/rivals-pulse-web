@@ -1,0 +1,42 @@
+<section class="community-stats" [attr.aria-labelledby]="'community-stats-title-' + heroId()">
+  <div class="community-stats__heading">
+    <p class="community-stats__eyebrow">Rivals Pulse players</p>
+    <h3 [id]="'community-stats-title-' + heroId()">{{ heroName() }} in recorded matches</h3>
+  </div>
+
+  @let current = view();
+
+  @if (current.kind === 'loading') {
+  <p class="community-stats__message" role="status">Loading Rivals Pulse player stats...</p>
+  } @else if (current.kind === 'unavailable') {
+  <p class="community-stats__message">
+    Rivals Pulse player stats cannot be loaded right now. The rest of this page is not affected.
+  </p>
+  } @else {
+  @if (current.halfSeasonLabel) {
+  <p class="community-stats__scope">
+    Half-season: {{ current.halfSeasonLabel }}@if (current.kind === 'not-enough-data' && current.fallbackFor) { (standing in for {{ current.fallbackFor }}) }
+  </p>
+  }
+
+  @if (current.kind === 'ready') {
+  @if (current.notice) {
+  <p class="community-stats__notice"><strong>Previous half-season.</strong> {{ current.notice }}</p>
+  }
+  <dl class="community-stats__figures">
+    @for (figure of current.figures; track figure.label) {
+    <div>
+      <dt>{{ figure.label }}</dt>
+      <dd>{{ figure.value }}</dd>
+    </div>
+    }
+  </dl>
+  <p class="community-stats__sample">{{ current.sample }}</p>
+  } @else {
+  <div class="community-stats__empty">
+    <p class="community-stats__status">Not enough data yet</p>
+    <p class="community-stats__message">{{ current.summary }}</p>
+  </div>
+  }
+  }
+</section>
