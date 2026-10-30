@@ -17,9 +17,10 @@
     "db:sync": "node scripts/sync-external-sources.mjs",
     "sync:home-news": "node --experimental-strip-types scripts/sync-home-news.mjs",
     "sync:glossary": "node scripts/sync-glossary.mjs",
-    "sync:glossary:missing": "node scripts/sync-glossary-missing.mjs",
-    "sync:glossary:terms": "node scripts/sync-glossary-terms.mjs",
+    "sync:glossary:missing": "node scripts/sync-glossary.mjs --missing",
+    "sync:glossary:terms": "node scripts/sync-glossary.mjs --terms",
     "sync:heroes": "node scripts/sync-heroes.mjs",
+    "sync:hero-videos": "node scripts/sync-hero-videos.mjs",
     "sync:hero-archetypes": "node --experimental-strip-types scripts/sync-hero-archetypes.mjs",
     "sync:official-heroes": "node scripts/sync-official-heroes.mjs",
     "sync:official-hero-images": "node scripts/sync-official-hero-images.mjs",
@@ -31,7 +32,7 @@
     "refresh:counters": "node scripts/refresh-counter-picks.mjs",
     "refresh:playstyles": "node scripts/refresh-playstyles.mjs",
     "refresh:build-profiles": "node scripts/refresh-build-profiles.mjs",
-    "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes && npm run refresh:counters",
+    "content:update": "npm run db:seed && npm run sync:glossary && npm run sync:hero-videos && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes && npm run refresh:counters",
     "serve:ssr:rivals-pulse-coach": "node dist/rivals-pulse-coach/server/server.mjs"
   },
   "prettier": {

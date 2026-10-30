@@ -4,8 +4,11 @@ import { GlossaryTerm } from './app/features/reference/glossary/glossary.model.j
 import { HomeContent, PortalCard } from './app/features/home/home-content.model.js';
 import { Hero, HeroVideo } from './app/features/heroes/hero.model.js';
 import { TierListResponse } from './contracts/tier-list.model.js';
+import { countGlossaryTerms, listGlossaryTerms } from './glossary-store.js';
 import { countHeroes, getHero, listHeroes } from './hero-store.js';
+import { countHeroVideos, listHeroVideos } from './hero-video-store.js';
 import { getSupabaseClient, getSupabaseStatus, type SupabaseStatus } from './supabase-client.js';
+import { countExternalSources, getStoredExternalSourcePayload } from './sync-log.js';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;
@@ -44,26 +47,8 @@ export function getHeroFromDatabase(id: string): Promise<Hero | undefined> {
   return getHero(getSupabaseClient(), id);
 }
 
-export async function getHeroVideosFromDatabase(): Promise<HeroVideo[]> {
-  const rows = await queryRows<{
-    hero_id: string | null;
-    role: HeroVideo['role'];
-    video_type: HeroVideo['videoType'];
-    youtube_id: string;
-    title: string;
-  }>(
-    `SELECT hero_id, role, video_type, youtube_id, title
-    FROM hero_videos
-    ORDER BY sort_order, title COLLATE NOCASE`,
-  );
-
-  return rows.map((row) => ({
-    heroId: row.hero_id,
-    role: row.role,
-    videoType: row.video_type,
-    youtubeId: row.youtube_id,
-    title: row.title,
-  }));
+export function getHeroVideosFromDatabase(): Promise<HeroVideo[]> {
+  return listHeroVideos(getSupabaseClient());
 }
 
 export async function getHomePortalsFromDatabase(): Promise<PortalCard[]> {
@@ -83,19 +68,12 @@ export async function getHomeContentBlocksFromDatabase(): Promise<Partial<HomeCo
   }), {});
 }
 
-export async function getGlossaryTermsFromDatabase(): Promise<GlossaryTerm[]> {
-  return queryRows<{ raw_json: string }>(
-    'SELECT raw_json FROM glossary_terms ORDER BY term COLLATE NOCASE',
-  ).then((rows) => rows.map((row) => JSON.parse(row.raw_json) as GlossaryTerm));
+export function getGlossaryTermsFromDatabase(): Promise<GlossaryTerm[]> {
+  return listGlossaryTerms(getSupabaseClient());
 }
 
-export async function getExternalSourceFromDatabase(sourceKey: string): Promise<unknown | undefined> {
-  const row = await queryOne<{ payload_json: string }>(
-    'SELECT payload_json FROM external_sources WHERE source_key = ?',
-    sourceKey,
-  );
-
-  return row ? JSON.parse(row.payload_json) : undefined;
+export function getExternalSourceFromDatabase(sourceKey: string): Promise<unknown | undefined> {
+  return getStoredExternalSourcePayload(getSupabaseClient(), sourceKey);
 }
 
 export async function getTierListFromDatabase(
@@ -137,9 +115,9 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     databaseUrl: getSafeDatabaseUrl(),
     configured: Boolean(process.env['TURSO_DATABASE_URL'] && process.env['TURSO_AUTH_TOKEN']),
     heroes: await countHeroes(getSupabaseClient()),
-    glossaryTerms: await getCount('glossary_terms'),
-    externalSources: await getCount('external_sources'),
-    heroVideos: await getCount('hero_videos'),
+    glossaryTerms: await countGlossaryTerms(getSupabaseClient()),
+    externalSources: await countExternalSources(getSupabaseClient()),
+    heroVideos: await countHeroVideos(getSupabaseClient()),
     homePortals: await getCount('home_portals'),
     homeContentBlocks: await getCount('home_content_blocks'),
     tierListSeasons: await getOptionalCount('tier_list_seasons'),
