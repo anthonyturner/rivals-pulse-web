@@ -5,7 +5,8 @@
 > [supabase.md](supabase.md#website-hero-data). The home tables (`home_portals`,
 > `home_content_blocks`) and the home news sync followed in issue 107; see
 > [supabase.md](supabase.md#website-home-content). The Turso copies are frozen and are dropped
-> with Turso (issue 110).
+> with Turso (issue 110). `hero_videos`, `glossary_terms` and `external_sources` followed in issue
+> 106 ([supabase.md](supabase.md#website-reference-content)).
 
 The app uses one shared Turso/libSQL database for curated content and cached external API payloads.
 The mock JSON files under `data/seeds` are seed inputs only; runtime pages read from the Express API backed by Turso.
@@ -16,7 +17,7 @@ The mock JSON files under `data/seeds` are seed inputs only; runtime pages read 
 - Database token: `TURSO_AUTH_TOKEN`
 - Schema: `scripts/sqlite-schema.sql`
 - Seed script: `scripts/seed-sqlite.mjs`
-- External sync script: `scripts/sync-external-sources.mjs`
+- External sync script: `scripts/sync-external-sources.mjs` (writes Supabase)
 - Hero wiki sync script: `scripts/sync-heroes.mjs` (writes Supabase)
 
 Credentials are stored in `.env` locally and in Vercel environment variables for production.
@@ -58,7 +59,7 @@ Stores repeated hero values:
 
 Stores hero abilities. Default abilities use empty `kit_role` and `kit_label`; role-specific kits, such as Deadpool's Vanguard/Duelist/Strategist pools, set those fields.
 
-### `hero_videos`
+### `hero_videos` (now in Supabase)
 
 Stores hero-specific and role-fallback YouTube video mappings used by the Heroes page.
 PAZ gameplay and counters/combos videos are seeded here so the page does not carry those mappings in component code.
@@ -71,11 +72,11 @@ Stores the home page portal cards.
 
 Stores the remaining home page content blocks by key, including stats, news cards, featured guides, quick links, and current focus copy. In Supabase the `payload_json` text column is `payload jsonb`.
 
-### `glossary_terms`
+### `glossary_terms` (now in Supabase)
 
 Stores the glossary content and keeps the full source object in `raw_json`.
 
-### `external_sources`
+### `external_sources` (now in Supabase)
 
 Stores cached payloads from external APIs such as Fandom. This lets the app read stable database-backed data while still giving us a refresh path.
 
@@ -109,7 +110,8 @@ The Express SSR server exposes read-only routes:
 ## Update Flow
 
 1. Update curated JSON files or generator scripts.
-2. Run `npm run db:seed` to rebuild the seeded content (Turso tables, plus the home page tables in Supabase; heroes are not seeded).
+2. Run `npm run db:seed` to load the seeded content into Supabase (home page tables, glossary terms
+   and hero videos; heroes are not seeded) and apply the Turso schema.
 3. Run `npm run db:sync` to refresh external source payloads.
 4. Run `npm run sync:heroes` to discover and upsert current Fandom heroes.
 5. Run `npm run build` to verify the app still compiles.
@@ -127,6 +129,6 @@ The hero sync script:
 - Inserts new heroes into Supabase.
 - Updates existing heroes in Supabase.
 - Preserves curated fields that are hard to reconstruct automatically, such as Deadpool's role-specific ability kits and existing local image paths.
-- Preserves existing counter arrays. If a brand-new hero has no curated counters yet, it receives broad role-based fallback counters until better matchup data is added.
+- Preserves existing counter arrays and gives a brand-new hero broad role-based fallback counters. The website no longer shows either: counters come from recorded matchups (`/api/hero-matchups`), so these arrays are unused data awaiting removal.
 
 New heroes without a local portrait use `/images/heroes/default-hero.png` until an image is added.

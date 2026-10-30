@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 20px 32px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--text-soft);
+  font-weight: 650;
+}
+
+a:hover {
+  color: var(--accent-strong);
+}
+
+a:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .site-footer {
+    padding: 16px 14px;
+  }
+}

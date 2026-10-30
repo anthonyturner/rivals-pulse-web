@@ -9,6 +9,7 @@ import { HeroStatsService, isHeroStats } from './hero-stats.service';
 const notEnoughData: HeroStats = {
   status: 'not-enough-data',
   minimumMatches: 10,
+  halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,
   matchesCounted: 0,

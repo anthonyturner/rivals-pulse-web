@@ -10,6 +10,14 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- The Community Heroes, Tier list and Counters tabs now show a summary from Rivals Pulse uploads: the most-picked and highest-winning heroes, the S and A tiers, and the winning matchups with the clearest edge, each linking to its full page, with "not enough data yet" until enough matches are uploaded ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
+- `/api/hero-stats` and `/api/hero-matchups` answer "not enough data yet" instead of an error while the database read function is not deployed yet; any other failure still returns an error ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
+- The Community Stats tab shows what a normal game looks like for each role (Vanguard, Duelist, Strategist): average kills, deaths, assists, KDA, final hits and win rate, for Quick Match and Competitive together or each alone, once a role has 50 lines in a mode, and "not enough data yet" until then ([#192](https://github.com/anthonyturner/rivals-pulse-web/pull/192)).
+- `GET /api/hero-matchups` answers how each hero fares against each enemy hero in matches Rivals Pulse players record, for Competitive and Quick Match, from 10 matches per pairing ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
+- Pulse Atlas now publishes `hero-stats.json`: each hero's win rate, pick rate, KDA and final hits in every half-season, with the matches behind them and an "enough data" flag, built only from Rivals Pulse community matches, so the overlay can read the figures without calling the site ([#145](https://github.com/anthonyturner/rivals-pulse-web/pull/188)).
+- A Community page at `/community`, linked from the main menu, with a tab for each Rivals Pulse app screen (Heroes, Matches, Counters, Tier list, Stats and Insights); each tab explains what it will show and says "not enough data yet" until matches are uploaded ([#181](https://github.com/anthonyturner/rivals-pulse-web/pull/181)).
+- A privacy notes page at `/privacy`, linked from a new site footer, says which match fields the desktop app uploads (including the damage, healing, damage blocked, time per hero and kill-feed fields being added), that the site publishes only anonymous totals, and how long uploads are kept ([#182](https://github.com/anthonyturner/rivals-pulse-web/pull/182)).
+- Each hero page shows its win rate, pick rate, KDA and final hits from matches recorded by Rivals Pulse players, with the number of matches behind them; a hero without enough matches says "Not enough data yet" with its matches so far, and a new half-season shows the previous one, labelled, until it has enough ([#180](https://github.com/anthonyturner/rivals-pulse-web/pull/180)).
 - The Pulse Atlas tier list is now the community list, built from the matches Rivals Pulse players upload with one season per half-season, and carries a `rivals-pulse-community` marker so the overlay only shows files made this way; it no longer comes from Rivals Meta ([#166](https://github.com/anthonyturner/rivals-pulse-web/pull/166)).
 - Every hero in the Pulse Atlas `heroes.json` now carries the game's numeric hero id as `gameId` (Deadpool also lists his three role ids), so anyone reading the feed can turn a tier-list `heroId` into a hero ([#159](https://github.com/anthonyturner/rivals-pulse-web/pull/159)).
 - Pulse Atlas now publishes `hero-styles.json`, a Poke / Dive / Brawl percentage mix for every hero, so the overlay can weight hero pick rates by playstyle; the first 54 weights are drafts for review ([#127](https://github.com/anthonyturner/rivals-pulse-web/pull/127)).
@@ -29,6 +37,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Hero Counters page and the Dive Response Planner now come from matches that Rivals Pulse players record: each card shows how often a hero won against another, with the matches behind it, and says "Not enough data yet" until a pairing has 10 matches. A hero page shows the same records in place of its old counters list, below its community stats ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
 - The win-rate page at `/win-rates` now shows each hero's win rate and appearances from matches that Rivals Pulse players record, for one half-season, with "not enough data yet" until a hero has 10 appearances and a plain empty state while no matches are counted. It drops the rank breakdowns, because Rivals Pulse has no rank data, and old season addresses such as `/win-rates/9` now say the page shows only the current half-season instead of showing a Season 9 report ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).
 - The Pulse Atlas tier list no longer names or links Rivals Meta, so the overlay can bundle the file without naming that site ([#138](https://github.com/anthonyturner/rivals-pulse-web/pull/138)).
 - The Pulse Atlas tier list is now about 90 KB instead of 3 MB: hero rows keep only the hero id and the numbers, and `tier-list.json` holds the current season and an index, and every season has its own file under `tier-list/seasons/`, so the overlay downloads a past season only when a player picks it ([#133](https://github.com/anthonyturner/rivals-pulse-web/pull/133)).
@@ -43,6 +52,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Removed
 
+- The counter picks copied from Rivals Meta, with the script that refreshed them (`npm run refresh:counters`) and the hand-written reasons that went with them ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
 - The Season 9 Week 1 and Week 2 win-rate reports, which were built from YouTube video transcripts, and the win-rate summaries they added to each hero record; the featured slide on the home page now points to the new win-rate page ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).
 
 ### Fixed

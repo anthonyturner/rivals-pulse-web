@@ -4,8 +4,8 @@
       <span class="kicker">Matchup Lab</span>
       <h1>Hero Counters</h1>
       <p>
-        Pick a hero to see who can counter, stop, or slow their main win condition, then pivot through the roster to
-        compare matchup answers.
+        Pick a hero to see how it fares against every other hero in matches recorded by Rivals Pulse players, then
+        pivot through the roster to compare records.
       </p>
     </div>
 
@@ -16,14 +16,32 @@
     </div>
   </header>
 
+  <section class="data-status" aria-label="Where these records come from">
+    <p>
+      <strong>Rivals Pulse players’ matches</strong>
+      @if (scope(); as current) {
+        · Half-season: {{ current.label }}
+      }
+    </p>
+    @if (scope()?.notice; as notice) {
+      <p class="data-status-notice"><strong>Previous half-season.</strong> {{ notice }}</p>
+    }
+    @if (matchupNotice(); as notice) {
+      <p class="data-status-empty" role="status">
+        <strong>{{ notice.heading }}</strong>
+        <span>{{ notice.message }}</span>
+      </p>
+    }
+  </section>
+
   <section class="dive-lab" aria-labelledby="dive-lab-title">
     <div class="dive-lab-heading">
       <div>
         <span class="kicker">Composition Tool</span>
         <h2 id="dive-lab-title">Dive Response Planner</h2>
         <p>
-          Select the enemy engage core. The planner finds picks that cover multiple threats and gives the team a
-          shared response order instead of six separate duels.
+          Select the enemy engage core. The planner lists heroes with a winning record against several of those
+          threats in recorded matches, and gives the team a shared response order instead of six separate duels.
         </p>
       </div>
       <span class="scenario-badge">Jubilee case study</span>
@@ -60,7 +78,7 @@
               [attr.aria-pressed]="isDiveThreatSelected(hero.id)"
               (click)="toggleDiveThreat(hero.id)"
             >
-              <img [src]="hero.imageUrl" [alt]="hero.name" />
+              <img [src]="hero.imageUrl" alt="" />
               <span>{{ hero.name }}</span>
             </button>
           }
@@ -69,7 +87,7 @@
         <div class="threat-reads">
           @for (hero of selectedDiveThreats(); track hero.id) {
             <article>
-              <img [src]="hero.imageUrl" [alt]="hero.name" />
+              <img [src]="hero.imageUrl" alt="" />
               <div>
                 <strong>{{ hero.name }}</strong>
                 <p>{{ threatInstruction(hero.name) }}</p>
@@ -86,16 +104,15 @@
           <span>Step 2</span>
           <h3>Choose overlap, then assign jobs</h3>
           <p>
-            The best swap is usually the hero who disrupts more than one member of the enemy dive. Results combine
-            current-season checks with the app’s coaching mappings.
+            The best swap is usually the hero who disrupts more than one member of the enemy dive. Results are heroes
+            that win more than they lose against those threats in matches recorded by Rivals Pulse players.
           </p>
         </div>
 
         <div class="overlap-grid">
-          @for (answer of multiThreatAnswers(); track answer.hero.id; let index = $index) {
+          @for (answer of multiThreatAnswers(); track answer.hero.id) {
             <button type="button" (click)="selectHero(answer.hero.id)">
-              <span class="answer-rank">{{ index + 1 }}</span>
-              <img [src]="answer.hero.imageUrl" [alt]="answer.hero.name" />
+              <img [src]="answer.hero.imageUrl" alt="" />
               <span class="answer-copy">
                 <strong>{{ answer.hero.name }}</strong>
                 <small>{{ coverageLabel(answer) }}</small>
@@ -103,7 +120,20 @@
               <em>{{ answer.coveredThreats.length }}/{{ selectedDiveThreats().length }}</em>
             </button>
           } @empty {
-            <p class="muted">No shared direct counter is mapped yet. Use the response order below.</p>
+            @if (matchupNotice(); as notice) {
+              <article class="empty-state">
+                <strong>{{ notice.heading }}</strong>
+                <span>{{ notice.message }} Use the response order below.</span>
+              </article>
+            } @else if (selectedDiveThreats().length > 0) {
+              <article class="empty-state">
+                <strong>No winning record yet</strong>
+                <span>
+                  No hero has a winning record against these threats in enough recorded matches yet. Use the response
+                  order below.
+                </span>
+              </article>
+            }
           }
         </div>
 
@@ -157,7 +187,7 @@
       <span>Search</span>
       <input
         type="search"
-        placeholder="Hero or counter"
+        placeholder="Hero name"
         [value]="searchTerm()"
         (input)="updateSearch($event)"
       />
@@ -181,10 +211,10 @@
           [class.selected]="selectedHero().id === hero.id"
           (click)="selectHero(hero.id)"
         >
-          <img [src]="hero.imageUrl" [alt]="hero.name" />
+          <img [src]="hero.imageUrl" alt="" />
           <span>
             <strong>{{ hero.name }}</strong>
-            <small>{{ counterCountLabel(hero) }}</small>
+            <small>{{ matchupCountLabel(hero) }}</small>
           </span>
           <em [class]="roleClass(hero.role)">{{ hero.role }}</em>
         </button>
@@ -199,11 +229,11 @@
     @if (selectedHero(); as hero) {
       <section class="counter-board">
         <article class="selected-profile" [ngClass]="roleClass(hero.role)">
-          <img [src]="hero.imageUrl" [alt]="hero.name" />
+          <img [src]="hero.imageUrl" alt="" />
           <div>
             <span>{{ hero.role }}</span>
             <h2>{{ hero.name }}</h2>
-            <p>{{ counterSummary(hero) }}</p>
+            <p>{{ matchupCountLabel(hero) }}</p>
           </div>
           <a routerLink="/heroes" [queryParams]="{ hero: hero.id }">Open Heroes Page</a>
         </article>
@@ -211,74 +241,65 @@
         <section class="panel">
           <div class="section-heading">
             <div>
-              <span>Counter Picks</span>
-              <h3>Who Stops {{ hero.name }}</h3>
+              <span>Winning records against</span>
+              <h3>Heroes that beat {{ hero.name }}</h3>
             </div>
-            <strong>{{ matchedCounterHeroes().length }}</strong>
+            <strong>{{ winningAgainstSelected().length }}</strong>
           </div>
 
           <div class="counter-grid">
-            @for (counter of matchedCounterHeroes(); track counter.id) {
+            @for (card of winningAgainstSelected(); track card.hero.id) {
               <button
                 type="button"
                 class="counter-card has-tooltip"
-                [attr.data-tooltip]="counterReason(hero, counter.name)"
-                (click)="selectHero(counter.id)"
+                [attr.data-tooltip]="card.description"
+                (click)="selectHero(card.hero.id)"
               >
-                <img [src]="counter.imageUrl" [alt]="counter.name" />
+                <img [src]="card.hero.imageUrl" alt="" />
                 <span>
-                  <strong>{{ counter.name }}</strong>
-                  <small>{{ counter.role }}</small>
+                  <strong>{{ card.hero.name }}</strong>
+                  <small>{{ card.winRate }} · {{ card.sample }}</small>
                 </span>
               </button>
             } @empty {
-              <p class="muted">Counter picks are still being curated for this hero.</p>
+              @if (matchupNotice(); as notice) {
+                <p class="muted"><strong>{{ notice.heading }}.</strong> {{ notice.message }}</p>
+              } @else {
+                <p class="muted">No hero has a winning record against {{ hero.name }} in enough recorded matches yet.</p>
+              }
             }
           </div>
         </section>
 
-        @if (unmatchedCounters().length > 0) {
-          <section class="panel">
-            <div class="section-heading">
-              <div>
-                <span>Matchup Notes</span>
-                <h3>Concept Counters</h3>
-              </div>
-            </div>
-
-            <div class="note-list">
-              @for (counter of unmatchedCounters(); track counter) {
-                <span class="has-tooltip" [attr.data-tooltip]="counterReason(hero, counter)">{{ counter }}</span>
-              }
-            </div>
-          </section>
-        }
-
         <section class="panel">
           <div class="section-heading">
             <div>
-              <span>Reverse Lookup</span>
-              <h3>{{ hero.name }} Counters</h3>
+              <span>Winning records for</span>
+              <h3>Heroes {{ hero.name }} beats</h3>
             </div>
-            <strong>{{ heroesCounteredBySelected().length }}</strong>
+            <strong>{{ winningForSelected().length }}</strong>
           </div>
 
           <div class="counter-grid reverse">
-            @for (target of heroesCounteredBySelected(); track target.id) {
+            @for (card of winningForSelected(); track card.hero.id) {
               <button
                 type="button"
                 class="counter-card has-tooltip"
-                [attr.data-tooltip]="counterReason(target, hero.name)"
-                (click)="selectHero(target.id)"
+                [attr.data-tooltip]="card.description"
+                (click)="selectHero(card.hero.id)"
               >
-                <img [src]="target.imageUrl" [alt]="target.name" />
+                <img [src]="card.hero.imageUrl" alt="" />
                 <span>
-                  <strong>{{ target.name }}</strong>
-                  <small>{{ target.role }}</small>
+                  <strong>{{ card.hero.name }}</strong>
+                  <small>{{ card.winRate }} · {{ card.sample }}</small>
                 </span>
               </button>
             } @empty {
-              <p class="muted">This hero is not currently listed as a direct counter for another hero.</p>
+              @if (matchupNotice(); as notice) {
+                <p class="muted"><strong>{{ notice.heading }}.</strong> {{ notice.message }}</p>
+              } @else {
+                <p class="muted">{{ hero.name }} has no winning record against another hero in enough recorded matches yet.</p>
+              }
             }
           </div>
         </section>
@@ -287,23 +308,11 @@
 
     <aside class="counter-sidebar" aria-label="Counter overview">
       <section>
-        <h3>Most Counter-Mapped</h3>
-        <div class="rank-list">
-          @for (hero of topCounteredHeroes(); track hero.id; let index = $index) {
-            <button type="button" (click)="selectHero(hero.id)">
-              <span>{{ index + 1 }}</span>
-              <strong>{{ hero.name }}</strong>
-              <small>{{ hero.counters.length }}</small>
-            </button>
-          }
-        </div>
-      </section>
-
-      <section>
         <h3>How To Read This</h3>
         <p>
-          These are coaching counter picks: heroes selected because their range, crowd control, sustain, anti-dive,
-          zoning, or tank pressure can interrupt the selected hero's normal fight plan.
+          Each card is a record from matches Rivals Pulse players recorded: how often that hero won when the two
+          faced each other. A short run is pulled toward even, and a pairing appears only once it has 10 recorded
+          matches. The records describe how a hero fares against another hero.
         </p>
       </section>
     </aside>

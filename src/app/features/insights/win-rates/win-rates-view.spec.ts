@@ -3,7 +3,8 @@ import type {
   HeroStatsHalfSeason,
   HeroStatsHero,
 } from '../../../../contracts/hero-stats.model';
-import { buildWinRatesView, type HeroIdentities } from './win-rates-view';
+import type { HeroIdentities } from '../hero-identity';
+import { buildWinRatesView } from './win-rates-view';
 
 const season = (id: number, startsAt: string | null, endsAt: string | null): HeroStatsHalfSeason => ({
   id,
@@ -32,6 +33,7 @@ function statsOf(overrides: Partial<HeroStats> = {}): HeroStats {
   return {
     status: 'ready',
     minimumMatches: 10,
+    halfSeasons: [current],
     halfSeason: current,
     inPlaceOf: null,
     matchesCounted: 149,
