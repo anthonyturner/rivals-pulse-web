@@ -6,9 +6,9 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 
 - **Hero encyclopedia** - searchable role-based roster with full ability kits, technical stats, matchup notes, synergies, videos, playstyles, and multi-role hero support.
 - **Draft and matchup tools** - a six-player team builder with composition scoring, a two-way hero counter explorer, and coach-authored build profiles.
-- **Current meta views** - synced ranked tier lists, hourly Steam population snapshots with trends, and hero win rates counted from matches that Rivals Pulse players record.
+- **Current meta views** - a community tier list built from matches that Rivals Pulse players record, hourly Steam population snapshots with trends, and hero win rates counted from matches that Rivals Pulse players record.
 - **Structured coaching** - hero guides, beginner lessons, learning paths, positioning and cover guides, build theory, glossary terms, media tutorials, and a "watch next" quiz.
-- **Refreshable content** - Turso-backed hero, home, news, glossary, tier-list, video, and game-stat data populated from official and community sources.
+- **Refreshable content** - Turso-backed hero, home, news, glossary, video, and game-stat data populated from official and community sources.
 
 ## Explore the App
 
@@ -65,7 +65,6 @@ Open `http://localhost:4200/`.
 | `npm.cmd run sync:home-news` | Refresh official news and events |
 | `npm.cmd run sync:heroes` | Refresh hero and ability data |
 | `npm.cmd run sync:official-heroes` | Refresh official descriptions, kits, and team-ups |
-| `npm.cmd run sync:tier-list` | Store the latest ranked tier-list snapshot |
 | `npm.cmd run sync:game-stats` | Capture the current hourly game-stat snapshot |
 | `npm.cmd run refresh:build-profiles` | Regenerate coach-rated hero build profiles |
 | `npm.cmd run content:update` | Run the complete seed and content refresh pipeline |
@@ -112,7 +111,7 @@ Local development and production use the same `TURSO_DATABASE_URL` and `TURSO_AU
 - `src/server.ts` - Express API and SSR server
 - `api/` - Vercel serverless endpoints
 
-Key endpoints include `/api/heroes`, `/api/glossary`, `/api/tier-list`, `/api/game-stats`, `/api/home/content`, and `/api/content/status`.
+Key endpoints include `/api/heroes`, `/api/glossary`, `/api/hero-stats`, `/api/game-stats`, `/api/home/content`, and `/api/content/status`.
 
 ## Deployment
 

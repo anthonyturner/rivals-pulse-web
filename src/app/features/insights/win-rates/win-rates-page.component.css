@@ -264,8 +264,7 @@ tbody th {
   font-weight: 850;
 }
 
-.bar,
-.progress {
+.bar {
   position: relative;
   display: block;
   height: 6px;
@@ -274,8 +273,7 @@ tbody th {
   background: var(--surface-2);
 }
 
-.bar-fill,
-.progress-fill {
+.bar-fill {
   display: block;
   height: 100%;
   border-radius: 3px;
@@ -298,55 +296,6 @@ tbody th {
 .sample strong {
   color: var(--text);
   font-weight: 850;
-}
-
-.building-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-  margin: 0;
-  padding: 0 16px 16px;
-  list-style: none;
-}
-
-.building-list li {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
-  gap: 4px 10px;
-  align-items: center;
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.building-list img {
-  grid-row: span 2;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: var(--surface-2);
-  object-fit: cover;
-}
-
-.building-name {
-  overflow: hidden;
-  color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.building-count {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.building-list .progress {
-  grid-column: 2 / -1;
 }
 
 .method-note {
@@ -394,8 +343,7 @@ tbody th {
   }
 
   .hero-cell strong,
-  .hero-cell small,
-  .building-name {
+  .hero-cell small {
     overflow-wrap: anywhere;
     text-overflow: clip;
     white-space: normal;
@@ -403,10 +351,5 @@ tbody th {
 
   .rate {
     min-width: 72px;
-  }
-
-  .building-list {
-    grid-template-columns: 1fr;
-    padding: 0 var(--mobile-panel-padding) var(--mobile-panel-padding);
   }
 }

@@ -16,15 +16,14 @@ There is no separate backend service. Content is served two ways from the
 same data-access code (`src/content-database.ts`):
 
 - **Vercel serverless functions** in `api/` (e.g. `api/heroes.ts`,
-  `api/tier-list.ts`, `api/glossary.ts`) — the production path, each a thin
+  `api/hero-stats.ts`, `api/glossary.ts`) — the production path, each a thin
   handler around `src/vercel-api.ts` + `content-database.ts`.
 - **Express**, in `src/server.ts` — serves the same `/api/*` routes for
   local dev / SSR (`npm start`, `npm run serve:ssr:rivals-pulse-coach`), backed
   by `@angular/ssr/node`.
 
 Scheduled content refresh runs via Vercel cron (`vercel.json` `crons`)
-hitting `api/sync/home-news.ts`, `api/sync/tier-list.ts`, and
-`api/sync/game-stats.ts`. Content is also refreshed manually through the
+hitting `api/sync/home-news.ts` and `api/sync/game-stats.ts`. Content is also refreshed manually through the
 `scripts/*.mjs` sync scripts (see `package.json` `sync:*` / `refresh:*`).
 
 ## Database

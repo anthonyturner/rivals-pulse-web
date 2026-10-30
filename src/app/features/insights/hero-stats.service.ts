@@ -9,9 +9,14 @@ import type { HeroStats } from '../../../contracts/hero-stats.model';
 export class HeroStatsService {
   private readonly http = inject(HttpClient);
 
-  /** The hero stats, or null when the request fails or the answer is not hero stats. */
-  getHeroStats(): Observable<HeroStats | null> {
-    return this.http.get<unknown>('/api/hero-stats').pipe(
+  /**
+   * The hero stats of the current half-season (or the previous one standing in for it), or of
+   * exactly `halfSeason`. Null when the request fails or the answer is not hero stats.
+   */
+  getHeroStats(halfSeason?: number): Observable<HeroStats | null> {
+    const params = halfSeason === undefined ? undefined : { halfSeason };
+
+    return this.http.get<unknown>('/api/hero-stats', { params }).pipe(
       map((body) => (isHeroStats(body) ? body : null)),
       catchError((error: unknown) => {
         console.error('Failed to load hero stats from /api/hero-stats', error);
@@ -35,6 +40,7 @@ export function isHeroStats(body: unknown): body is HeroStats {
     typeof stats.minimumMatches === 'number' &&
     typeof stats.matchesCounted === 'number' &&
     Number.isFinite(stats.matchesCounted) &&
+    Array.isArray(stats.halfSeasons) &&
     Array.isArray(stats.tiers) &&
     stats.tiers.every((tier) => Array.isArray((tier as { heroes?: unknown } | null)?.heroes)) &&
     Array.isArray(stats.belowMinimum) &&

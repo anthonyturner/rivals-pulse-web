@@ -3,44 +3,61 @@
     <div>
       <p class="eyebrow">{{ eyebrow() }}</p>
       <h2 [id]="headingId()">{{ title() }}</h2>
-      <p class="description">{{ description() }}</p>
+      <p class="description">
+        All-ranks pick rate, from matches that Rivals Pulse players recorded.
+      </p>
     </div>
     <div class="section-meta">
-      <span>{{ metaLabel() }}</span>
-      <a [href]="sourceUrl()" target="_blank" rel="noopener noreferrer">{{ sourceLabel() }}</a>
+      <span>{{ view().sourceLabel }}</span>
+      <a routerLink="/tier-list">Full tier list</a>
     </div>
   </div>
 
-  <div class="hero-usage-grid">
-    @for (hero of heroes(); track hero.heroId; let rank = $index) {
-      <article class="usage-card">
-        <span class="usage-rank">0{{ rank + 1 }}</span>
-        <img
-          [src]="hero.imageUrl"
-          [alt]="hero.name"
-          width="62"
-          height="62"
-          (error)="onImageError($event)"
-        />
-        <div class="usage-copy">
-          <span>{{ hero.role }}</span>
-          <h3>{{ hero.name }}</h3>
-          <dl>
-            <div>
-              <dt>Pick rate</dt>
-              <dd>{{ formatRate(hero.pickRate) }}</dd>
-            </div>
-            <div>
-              <dt>Win rate</dt>
-              <dd>{{ formatRate(hero.winRate) }}</dd>
-            </div>
-            <div>
-              <dt>Matches</dt>
-              <dd>{{ formatMatches(hero.matches) }}</dd>
-            </div>
-          </dl>
-        </div>
-      </article>
-    }
-  </div>
+  @if (view().fallbackNotice; as notice) {
+    <p class="usage-notice" role="note">{{ notice }}</p>
+  }
+
+  @if (view().state === 'ready') {
+    <div class="hero-usage-grid">
+      @for (hero of view().cards; track hero.hero; let rank = $index) {
+        <article class="usage-card">
+          <span class="usage-rank">0{{ rank + 1 }}</span>
+          <img
+            [src]="hero.imageUrl"
+            [alt]="hero.name"
+            width="62"
+            height="62"
+            (error)="onImageError($event)"
+          />
+          <div class="usage-copy">
+            @if (hero.role) {
+              <span>{{ hero.role }}</span>
+            }
+            <h3>{{ hero.name }}</h3>
+            <dl>
+              <div>
+                <dt>Pick rate</dt>
+                <dd>{{ hero.pickRateLabel }}</dd>
+              </div>
+              <div>
+                <dt>Win rate</dt>
+                <dd>{{ hero.winRateLabel }}</dd>
+              </div>
+              <div>
+                <dt>Appearances</dt>
+                <dd>{{ hero.appearancesLabel }}</dd>
+              </div>
+            </dl>
+          </div>
+        </article>
+      }
+      @for (slot of placeholders(view().placeholderSlots); track slot) {
+        <article class="usage-card usage-card--empty">
+          <p>Not enough data yet</p>
+        </article>
+      }
+    </div>
+  } @else {
+    <p class="usage-empty">{{ view().emptyMessage }}</p>
+  }
 </section>
