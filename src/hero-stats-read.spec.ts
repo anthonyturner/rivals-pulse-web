@@ -1,5 +1,12 @@
 import type { HeroStats } from './contracts/hero-stats.model.js';
-import { fetchHeroStatsSource, getHeroStats, halfSeasonFromQuery, parseHeroStatsSource } from './hero-stats-read';
+import type { RoleStats } from './contracts/role-stats.model';
+import {
+  fetchHeroStatsSource,
+  getHeroStats,
+  getRoleStats,
+  halfSeasonFromQuery,
+  parseHeroStatsSource,
+} from './hero-stats-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };
 
@@ -175,5 +182,94 @@ describe('parseHeroStatsSource', () => {
     ]);
     expect(Object.keys(source.totals[0]).sort()).toEqual(['decidedMatches', 'halfSeason', 'playModeId']);
     expect(Object.keys(source.halfSeasons[0]).sort()).toEqual(['halfSeason', 'startsAt']);
+  });
+});
+
+describe('getRoleStats', () => {
+  const ROLE_BY_SLUG = new Map([
+    ['hulk', 'Vanguard'],
+    ['captain-america', 'Vanguard'],
+  ]);
+  const options = {
+    env: ENV,
+    now: () => new Date('2026-10-30T12:00:00Z'),
+    loadHeroRoles: async () => ROLE_BY_SLUG,
+  };
+  const ALLOWED_ROLE_KEYS = new Set([
+    'status',
+    'minimumLines',
+    'halfSeasons',
+    'halfSeason',
+    'inPlaceOf',
+    'modes',
+    'id',
+    'label',
+    'startsAt',
+    'endsAt',
+    'roles',
+    'role',
+    'appearances',
+    'winRate',
+    'killsAverage',
+    'deathsAverage',
+    'assistsAverage',
+    'kda',
+    'finalHitsAverage',
+  ]);
+
+  beforeEach(() => spyOn(console, 'warn'));
+
+  it('returns only allow-listed keys, whatever else the database function sends', async () => {
+    const stats = await getRoleStats({ ...options, fetch: answering(functionAnswer()) });
+
+    expect([...new Set(keysOf(stats))].filter((key) => !ALLOWED_ROLE_KEYS.has(key))).toEqual([]);
+    expect(JSON.stringify(stats)).not.toMatch(/secret|uid|fingerprint|a player|hulk|captain/);
+  });
+
+  it('pools the heroes of a role from the aggregates and leaves out the unmapped hero id 0 with a warning', async () => {
+    const warn = console.warn as jasmine.Spy;
+
+    const stats: RoleStats = await getRoleStats({ ...options, fetch: answering(functionAnswer()) });
+    const vanguard = stats.modes[0].roles[0];
+
+    expect(vanguard.role).toBe('Vanguard');
+    expect(vanguard.appearances).toBe(24);
+    expect(vanguard.status).toBe('not-enough-data');
+    expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/ids with no role: 0$/));
+  });
+
+  it('answers for exactly the half-season asked for', async () => {
+    const stats = await getRoleStats({ ...options, halfSeason: 10.5, fetch: answering(functionAnswer()) });
+
+    expect(stats.halfSeason?.id).toBe(10.5);
+  });
+
+  it('does not read the hero roles when there are no counts to split', async () => {
+    const loadHeroRoles = jasmine.createSpy('loadHeroRoles').and.resolveTo(ROLE_BY_SLUG);
+
+    const stats = await getRoleStats({
+      ...options,
+      loadHeroRoles,
+      fetch: answering({ half_seasons: [], totals: [], heroes: [] }),
+    });
+
+    expect(stats.status).toBe('not-enough-data');
+    expect(loadHeroRoles).not.toHaveBeenCalled();
+  });
+
+  it('is the empty state, not an error, while the aggregates are not in the database yet', async () => {
+    const warn = console.warn as jasmine.Spy;
+
+    const stats = await getRoleStats({ ...options, fetch: answering({ code: 'PGRST202' }, 404) });
+
+    expect(stats.status).toBe('not-enough-data');
+    expect(stats.halfSeason).toBeNull();
+    expect(stats.modes.length).toBe(3);
+    expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
+  });
+
+  it('still fails on a refused call or a missing configuration', async () => {
+    await expectAsync(getRoleStats({ ...options, fetch: answering({}, 401) })).toBeRejectedWithError('read_hero_stats answered 401');
+    await expectAsync(getRoleStats({ ...options, env: {}, fetch: answering({}) })).toBeRejected();
   });
 });

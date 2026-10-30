@@ -1,11 +1,13 @@
 import type {
   HeroStats,
   HeroStatsBelowMinimum,
-  HeroStatsHalfSeason,
   HeroStatsHero,
   HeroStatsTier,
 } from './contracts/hero-stats.model.js';
 import type { TierName } from './contracts/tier-list.model.js';
+import { buildHalfSeasonTimeline, chooseHalfSeason, type HalfSeasonStart } from './half-season.js';
+
+export type { HalfSeasonStart } from './half-season.js';
 
 /**
  * Every hero number on the site is derived here and nowhere else, from the counts in
@@ -68,11 +70,6 @@ export interface MatchTotalsRow {
   decidedMatches: number;
 }
 
-export interface HalfSeasonStart {
-  halfSeason: number;
-  startsAt: string;
-}
-
 export interface HeroStatsSource {
   halfSeasons: readonly HalfSeasonStart[];
   totals: readonly MatchTotalsRow[];
@@ -131,83 +128,45 @@ interface HalfSeasonSnapshot {
 }
 
 export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStatsOptions): HeroStatsDerivation {
-  const starts = new Map(source.halfSeasons.map((season) => [season.halfSeason, season.startsAt]));
-  const known = [...new Set([...starts.keys(), ...source.heroes.map((row) => row.halfSeason)])].sort((a, b) => a - b);
-  const current = currentHalfSeason(starts, known, options.now);
+  const timeline = buildHalfSeasonTimeline(
+    source.halfSeasons,
+    source.heroes.map((row) => row.halfSeason),
+    options.now,
+  );
   const excludedGameIds = new Set<number>();
-
-  const describe = (id: number): HeroStatsHalfSeason => {
-    const next = known.find((other) => other > id && starts.has(other));
-
-    return {
-      id,
-      label: `Season ${id}`,
-      startsAt: starts.get(id) ?? null,
-      endsAt: next === undefined ? null : (starts.get(next) ?? null),
-    };
-  };
+  const snapshots = new Map<number, HalfSeasonSnapshot>();
   const snapshot = (id: number): HalfSeasonSnapshot => {
-    const result = snapshotOf(source, id, options.heroSlugByGameId);
-    result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
+    let result = snapshots.get(id);
+
+    if (result === undefined) {
+      result = snapshotOf(source, id, options.heroSlugByGameId);
+      result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
+      snapshots.set(id, result);
+    }
 
     return result;
   };
-  const started = current === undefined ? [] : known.filter((id) => id <= current);
-  const toStats = (
-    shown: number | undefined,
-    inPlaceOf: number | undefined,
-    result: HalfSeasonSnapshot | undefined,
-  ): HeroStats => ({
-    status: result !== undefined && result.tiers.length > 0 ? 'ready' : 'not-enough-data',
-    minimumMatches: HERO_STATS_MIN_MATCHES,
-    halfSeasons: started.map(describe),
-    halfSeason: shown === undefined ? null : describe(shown),
-    inPlaceOf: inPlaceOf === undefined ? null : describe(inPlaceOf),
-    matchesCounted: result?.matchesCounted ?? 0,
-    tiers: result?.tiers ?? [],
-    belowMinimum: result?.belowMinimum ?? [],
-  });
 
-  const finish = (stats: HeroStats): HeroStatsDerivation => ({
-    stats,
+  const { shown, inPlaceOf } = chooseHalfSeason(
+    timeline,
+    options.halfSeason,
+    (id) => snapshot(id).tiers.length > 0,
+  );
+  const result = shown === undefined ? undefined : snapshot(shown);
+
+  return {
+    stats: {
+      status: result !== undefined && result.tiers.length > 0 ? 'ready' : 'not-enough-data',
+      minimumMatches: HERO_STATS_MIN_MATCHES,
+      halfSeasons: timeline.started.map(timeline.describe),
+      halfSeason: shown === undefined ? null : timeline.describe(shown),
+      inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
+      matchesCounted: result?.matchesCounted ?? 0,
+      tiers: result?.tiers ?? [],
+      belowMinimum: result?.belowMinimum ?? [],
+    },
     excludedGameIds: [...excludedGameIds].sort((a, b) => a - b),
-  });
-
-  if (current === undefined) {
-    return finish(toStats(undefined, undefined, undefined));
-  }
-
-  if (options.halfSeason !== undefined) {
-    const asked = options.halfSeason;
-
-    return finish(
-      started.includes(asked) ? toStats(asked, undefined, snapshot(asked)) : toStats(undefined, undefined, undefined),
-    );
-  }
-
-  const now = snapshot(current);
-  const previous = [...known].reverse().find((id) => id < current);
-
-  if (now.tiers.length === 0 && previous !== undefined) {
-    const before = snapshot(previous);
-
-    if (before.tiers.length > 0) {
-      return finish(toStats(previous, current, before));
-    }
-  }
-
-  return finish(toStats(current, undefined, now));
-}
-
-/** The latest half-season that has started, or the latest with any counts when no start date says. */
-function currentHalfSeason(starts: ReadonlyMap<number, string>, known: readonly number[], now: Date): number | undefined {
-  const started = known.filter((id) => {
-    const start = Date.parse(starts.get(id) ?? '');
-
-    return !Number.isNaN(start) && start <= now.getTime();
-  });
-
-  return started.at(-1) ?? known.at(-1);
+  };
 }
 
 function snapshotOf(

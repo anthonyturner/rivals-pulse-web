@@ -264,6 +264,26 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.
 
+### Role benchmarks (Community Stats tab)
+
+`GET /api/community/stats` (and the Community Stats tab) pools the same per-hero counts by role. It
+adds no table, migration or function: `hero_aggregates` already holds, per half-season, mode and
+hero, the decided lines, wins, and the sums of kills, deaths, assists and final hits with their own
+non-null counts, and it is rebuilt hourly and frozen by the purge before the rows go. The server
+reads `read_hero_stats()` (so the same environment as above) and a role per hero from
+`hero_content`, through the shared Supabase client, which needs `SUPABASE_SERVICE_ROLE_KEY`.
+[`src/role-stats.ts`](../src/role-stats.ts) derives everything:
+
+- A role is the sum of its heroes, so each figure is an average over scoreboard lines pooled across
+  everyone, never an average of per-player averages. KDA uses the hero definition above.
+- A hero's role is the one it has now. Deadpool counts toward the role of the id the match
+  reported (his role variants in `hero-game-ids.json`). A game id with no role is left out and logged.
+- Modes: Quick Match and Competitive blended, and each alone. Unknown, Arcade and Practice are left out.
+- A role in a mode shows figures at `ROLE_STATS_MIN_LINES` (50) decided lines; each average also needs
+  that many lines carrying the figure, so older apps' missing final hits are never read as zero.
+- If `read_hero_stats()` is not in the database yet (PostgREST answers 404) the answer is the empty
+  state, not an error.
+
 ## Each half-season
 
 Retention deletes a scoreboard row once the half-season after its own has

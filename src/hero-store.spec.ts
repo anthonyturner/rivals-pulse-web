@@ -5,6 +5,7 @@ import {
   countHeroes,
   deleteHero,
   getHero,
+  listHeroRoles,
   listHeroes,
   saveHero,
 } from './hero-store';
@@ -155,5 +156,41 @@ describe('deleteHero', () => {
     await expectAsync(deleteHero(client, 'jubilee')).toBeRejectedWithError(
       'Deleting hero jubilee failed: boom',
     );
+  });
+});
+
+describe('listHeroRoles', () => {
+  it('maps each hero id to its role, reading only the id and role columns', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({
+      data: [
+        { id: 'angela', role: 'Vanguard' },
+        { id: 'hela', role: 'Duelist' },
+      ],
+    }));
+
+    const roles = await listHeroRoles(client);
+
+    expect(roles.get('angela')).toBe('Vanguard');
+    expect(roles.get('hela')).toBe('Duelist');
+    expect(calls[0].table).toBe('hero_content');
+    expect(calls[0].steps[0]).toEqual(['select', ['id, role']]);
+  });
+
+  it('reads every page', async () => {
+    const stored = Array.from({ length: 700 }, (_, index) => ({ id: `hero-${index}`, role: 'Vanguard' }));
+    const { client, calls } = fakeSupabaseClient((call) => {
+      const [from, to] = call.steps.find(([method]) => method === 'range')![1] as [number, number];
+
+      return { data: stored.slice(from, to + 1) };
+    });
+
+    expect((await listHeroRoles(client)).size).toBe(700);
+    expect(calls.length).toBe(2);
+  });
+
+  it('names the failure when the read fails', async () => {
+    const { client } = fakeSupabaseClient(() => ({ error: { message: 'boom' } }));
+
+    await expectAsync(listHeroRoles(client)).toBeRejectedWithError('Reading hero roles failed: boom');
   });
 });

@@ -1,11 +1,15 @@
 import type { HeroStats } from './contracts/hero-stats.model.js';
-import { heroSlugByGameId } from './hero-game-ids.js';
+import type { RoleStats } from './contracts/role-stats.model.js';
+import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId } from './hero-game-ids.js';
+import { listHeroRoles } from './hero-store.js';
 import {
   deriveHeroStats,
   type HeroAggregateRow,
   type HeroStatsSource,
   type MatchTotalsRow,
 } from './hero-stats.js';
+import { deriveRoleStats } from './role-stats.js';
+import { getSupabaseClient } from './supabase-client.js';
 
 export const HERO_STATS_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'] as const;
 
@@ -19,8 +23,21 @@ export interface HeroStatsReadOptions {
   halfSeason?: number;
 }
 
+export interface RoleStatsReadOptions extends HeroStatsReadOptions {
+  /** Hero id to role. By default read from `hero_content` through the shared Supabase client. */
+  loadHeroRoles?: () => Promise<ReadonlyMap<string, string>>;
+}
+
 const READ_FUNCTION = 'read_hero_stats';
 const READ_TIMEOUT_MS = 5000;
+
+/** The read function answered with an error status. */
+export class HeroStatsReadError extends Error {
+  constructor(readonly status: number) {
+    super(`${READ_FUNCTION} answered ${status}`);
+    this.name = 'HeroStatsReadError';
+  }
+}
 
 /**
  * Reads the aggregates through `public.read_hero_stats()` over PostgREST (Supabase's REST layer)
@@ -47,7 +64,7 @@ export async function fetchHeroStatsSource(
   });
 
   if (!response.ok) {
-    throw new Error(`${READ_FUNCTION} answered ${response.status}`);
+    throw new HeroStatsReadError(response.status);
   }
 
   return parseHeroStatsSource(await response.json());
@@ -111,6 +128,43 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
 
   if (excludedGameIds.length > 0) {
     console.warn(`Hero stats left out game hero ids with no hero mapping: ${excludedGameIds.join(', ')}`);
+  }
+
+  return stats;
+}
+
+/**
+ * The site's role benchmarks, pooled from the same per-hero counts as the hero stats. The role of a
+ * hero is the one it has now (`hero_content`), except that a hero the game splits by role counts
+ * toward the role that was played. A game hero id with no role is left out and logged.
+ *
+ * PostgREST answers 404 when the read function is not in the database yet (the migration has not
+ * been applied), which is the designed empty state here and not a failure.
+ */
+export async function getRoleStats(options: RoleStatsReadOptions = {}): Promise<RoleStats> {
+  const source = await fetchHeroStatsSource(options.env ?? process.env, options.fetch).catch(
+    (error: unknown): HeroStatsSource => {
+      if (error instanceof HeroStatsReadError && error.status === 404) {
+        console.warn(`${READ_FUNCTION} is not in the database yet; role stats show the empty state`);
+
+        return { halfSeasons: [], totals: [], heroes: [] };
+      }
+
+      throw error;
+    },
+  );
+  const roleBySlug =
+    source.heroes.length === 0
+      ? new Map<string, string>()
+      : await (options.loadHeroRoles ?? (() => listHeroRoles(getSupabaseClient())))();
+  const { stats, excludedGameIds } = deriveRoleStats(source, {
+    now: (options.now ?? (() => new Date()))(),
+    halfSeason: options.halfSeason,
+    roleByGameId: buildHeroRoleByGameId(heroGameIdEntries, roleBySlug),
+  });
+
+  if (excludedGameIds.length > 0) {
+    console.warn(`Role stats left out game hero ids with no role: ${excludedGameIds.join(', ')}`);
   }
 
   return stats;
