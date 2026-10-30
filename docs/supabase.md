@@ -162,11 +162,16 @@ lines already stored. `-- --apply` replays for real, one transaction per half-se
 - A stored row keeps its roster only when an older app uploaded it. A newer row (the upload
   boundary of ADR-0011) keeps just the recorder's own line, so it is matched to the stored match
   that player was in, and replayed under that fingerprint as a repeat: it fills the blank mode, map
-  and result and inserts nothing.
+  and result and inserts nothing. When the player has two stored matches inside the window it takes
+  the nearest in time, and skips the row if two different matches are equally near. The roster
+  lookup takes the nearest stored match too.
 - The recorder's team and win or loss are rebuilt from `performance`; the time is
   `match_time_stamp`, not the upload-age rule of the live path.
 - A row with no season takes the latest `half_seasons` row that had started by its time. For a match
-  older than every row, pass `--before-first-half-season=<n>`.
+  older than every row, pass `--before-first-half-season=<n>`; `--apply` refuses a match with that
+  label that was played before 2026-07-10, when Season 9 began.
+- An error is reported by exit status, error code and SQLSTATE only, never the text, because it can
+  quote the statement and so a player's name or uid.
 - Rows of an already frozen half-season are skipped, so a second run inserts nothing. A replayed row
   of an ended half-season is counted by the aggregates, then frozen and deleted by the next purge.
 - Replayed rows carry the recorder marker `backfill-143`; the original hash is not stored.

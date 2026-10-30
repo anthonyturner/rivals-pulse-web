@@ -18,7 +18,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { EARLIEST_BEFORE_FIRST_PLAY, labelledBeforeSeason9, planReplay, prepareRecorderLine, prepareReplay, replayStatement } from './participants-replay.ts';
+import { EARLIEST_BEFORE_FIRST_PLAY, labelledBeforeSeason9, planReplay, prepareRecorderLine, prepareReplay, readQueryOutput, replayStatement } from './participants-replay.ts';
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PAGE_SIZE = 150;
@@ -192,11 +192,9 @@ function query(sql) {
       encoding: 'utf8',
       maxBuffer: 256 * 1024 * 1024,
     });
-    const start = result.stdout.indexOf('{');
-    if (result.status !== 0 || start < 0) fail(`the Supabase CLI query failed:\n${result.stderr || result.stdout}`.slice(0, 2000));
-    const parsed = JSON.parse(result.stdout.slice(start));
-    if (parsed.error) fail(`the query failed: ${JSON.stringify(parsed.error).slice(0, 500)}`);
-    return parsed.rows ?? [];
+    const output = readQueryOutput(result);
+    if ('failure' in output) fail(output.failure);
+    return output.rows;
   } finally {
     rmSync(folder, { recursive: true, force: true });
   }

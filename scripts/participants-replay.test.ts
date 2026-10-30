@@ -9,6 +9,7 @@ import {
   placeInHalfSeason,
   prepareRecorderLine,
   prepareReplay,
+  readQueryOutput,
   rebuildUploadedMatch,
   replayStatement,
   type ExistingLine,
@@ -372,6 +373,52 @@ describe('labelledBeforeSeason9', () => {
     assert.deepEqual(labelledBeforeSeason9(planned, 9.5).map(item => item.match.rowId), [early.rowId]);
     assert.deepEqual(labelledBeforeSeason9(planned, null), []);
     assert.deepEqual(labelledBeforeSeason9(planned, 10), []);
+  });
+});
+
+describe('readQueryOutput', () => {
+  const FAKE_NAME = 'Zorblax The Synthetic';
+  const quoted = `ERROR: invalid input syntax for type smallint: "${FAKE_NAME}" (SQLSTATE 22P02)\nLINE 3: ...'[{"uid":"u1","name":"${FAKE_NAME}"}]'::jsonb...`;
+
+  it('returns the rows of a good result, ignoring anything printed before the JSON', () => {
+    const stdout = 'Initialising login role...\n{"boundary":"b","rows":[{"n":1}],"warning":"w"}';
+
+    assert.deepEqual(readQueryOutput({ status: 0, stdout, stderr: '' }), { rows: [{ n: 1 }] });
+  });
+
+  it('reports a failed query without quoting any of its text', () => {
+    const stdout = JSON.stringify({ _tag: 'Error', error: { code: 'DbQueryExecError', message: quoted } });
+
+    const output = readQueryOutput({ status: 1, stdout, stderr: quoted });
+
+    assert.ok('failure' in output);
+    assert.equal(output.failure, 'the query failed (exit 1, code DbQueryExecError, SQLSTATE 22P02)');
+    assert.ok(!output.failure.includes(FAKE_NAME));
+  });
+
+  it('reports a failure that is not JSON, or has no output, without echoing stderr or stdout', () => {
+    const notJson = readQueryOutput({ status: 1, stdout: `{ ${quoted}`, stderr: quoted });
+    const nothing = readQueryOutput({ status: 1, stdout: '', stderr: quoted });
+
+    for (const output of [notJson, nothing]) {
+      assert.ok('failure' in output);
+      assert.ok(!output.failure.includes(FAKE_NAME));
+      assert.ok(!output.failure.includes('LINE'));
+    }
+  });
+
+  it('reads the state from the CLI wording "ERROR:  42703:" and still drops the text', () => {
+    const message = `unexpected status 400: Failed to run sql query: ERROR:  42703: column "${FAKE_NAME}" does not exist`;
+
+    const output = readQueryOutput({ status: 0, stdout: JSON.stringify({ error: { code: 'DbQueryUnexpectedStatusError', message } }), stderr: '' });
+
+    assert.deepEqual(output, { failure: 'the query failed (exit 0, code DbQueryUnexpectedStatusError, SQLSTATE 42703)' });
+  });
+
+  it('drops an error code that is not a plain token', () => {
+    const stdout = JSON.stringify({ error: { code: `bad ${FAKE_NAME}`, message: 'no state here' } });
+
+    assert.deepEqual(readQueryOutput({ status: 1, stdout, stderr: '' }), { failure: 'the query failed (exit 1)' });
   });
 });
 

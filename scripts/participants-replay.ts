@@ -323,6 +323,43 @@ export function labelledBeforeSeason9(planned: readonly PlannedMatch[], label: n
     && Date.parse(item.match.playedAt) < Date.parse(EARLIEST_BEFORE_FIRST_PLAY));
 }
 
+export interface QueryResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+}
+
+/**
+ * The rows of a `supabase db query` result, or a description of why there are none. The description
+ * is built only from fixed words, the exit status, the error's code and a five-character SQLSTATE:
+ * an error body can quote the statement (`LINE 1: ...`), and the statement holds players' names and
+ * uids, so none of its text is ever passed on.
+ */
+export function readQueryOutput(result: QueryResult): { rows: JsonRecord[] } | { failure: string } {
+  const start = result.stdout.indexOf('{');
+  if (start < 0) return { failure: `the Supabase CLI query failed (exit ${result.status ?? 'none'}, no result)` };
+
+  let parsed: JsonRecord | null;
+  try {
+    parsed = asRecord(JSON.parse(result.stdout.slice(start)));
+  } catch {
+    return { failure: `the Supabase CLI query failed (exit ${result.status ?? 'none'}, unreadable result)` };
+  }
+
+  const error = asRecord(parsed?.['error']);
+  if (error || result.status !== 0 || !parsed) {
+    const code = safeToken(error?.['code'], /^[A-Za-z0-9_]{1,40}$/);
+    const sqlState = /(?:SQLSTATE[ :]+|ERROR:\s+)([0-9A-Z]{5})\b/.exec(String(error?.['message'] ?? ''))?.[1];
+    const detail = [code && `code ${code}`, sqlState && `SQLSTATE ${sqlState}`].filter(Boolean).join(', ');
+    return { failure: `the query failed (exit ${result.status ?? 'none'}${detail ? `, ${detail}` : ''})` };
+  }
+  return { rows: Array.isArray(parsed['rows']) ? (parsed['rows'] as JsonRecord[]) : [] };
+}
+
+function safeToken(value: unknown, pattern: RegExp): string | null {
+  return typeof value === 'string' && pattern.test(value) ? value : null;
+}
+
 /** The recorder written on a replayed row: a marker, since the original recorder's hash is not stored. */
 export const BACKFILL_RECORDER = 'backfill-143';
 
