@@ -13,7 +13,6 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
-import { FeaturedContentComponent } from './featured-content/featured-content.component';
 import { HomeContentService } from './home-content.service';
 import { JarvisConsoleComponent } from './jarvis-console/jarvis-console.component';
 import {
@@ -23,17 +22,18 @@ import {
 } from './home-page-hero.utils';
 import { SeasonDashboardComponent } from './season-dashboard/season-dashboard.component';
 import { SeasonGlanceComponent } from './season-glance/season-glance.component';
+import { ToolsRowComponent } from './tools-row/tools-row.component';
 
 const seasonLaunchPatchUrl = 'https://www.marvelrivals.com/20260708/41525_1306959.html';
 
 @Component({
   selector: 'app-home-page',
   imports: [
-    FeaturedContentComponent,
     JarvisConsoleComponent,
     RouterLink,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
+    ToolsRowComponent,
   ],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css',
