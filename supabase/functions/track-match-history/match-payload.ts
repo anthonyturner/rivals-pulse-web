@@ -1,6 +1,7 @@
 /**
  * The field-by-field boundary for an uploaded match (ADR-0011): only the scoreboard line of each
- * player is read, and damage, healing, accuracy, damage blocked and ult charge never are.
+ * player is read, and damage, healing, accuracy, damage blocked and ult charge never are. The one
+ * exception is the recorder's own per-hero figures, which `extended-payload.ts` reads.
  * No Deno or Supabase imports, so `node --test` runs its specs.
  */
 
@@ -187,7 +188,7 @@ function outcomeFor(team: number | null, localTeam: number | null, localWon: boo
   return team === localTeam ? localWon : !localWon;
 }
 
-function readUid(value: unknown): string | null {
+export function readUid(value: unknown): string | null {
   if (typeof value !== 'string' && typeof value !== 'number') return null;
   const uid = String(value).trim();
   return uid && uid.length <= MAX_UID_LENGTH ? uid : null;
