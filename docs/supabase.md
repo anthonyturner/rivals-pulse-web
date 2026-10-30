@@ -46,6 +46,9 @@ repo's build. This is a move, not a redesign.
 | `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
 | `20261029000000_participants_mode_map.sql` | `participants.play_mode_id` and `participants.map_name` (null when the game did not say); `record_match_participants` takes them as two trailing arguments and fills a blank one on a repeat upload |
 | `20261030000000_hero_aggregates.sql` | Anonymous hero counts that outlive the purge: `hero_aggregates`, `hero_aggregate_totals`, `hero_matchups`, `hero_aggregate_half_seasons` and the functions that rebuild them; `purge_expired_participants` freezes a half-season before it deletes from it; an hourly `recompute-hero-aggregates` job |
+| `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
+| `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
+| `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
 
 Link once per machine, check history, then apply:
 
@@ -73,6 +76,30 @@ arguments: it adds a second overload beside the old one, PostgREST cannot
 choose between them (PGRST203), and every upload fails. After the push,
 `select count(*) from pg_proc where proname = 'record_match_participants'` must
 return 1.
+
+## Website hero data
+
+The website's heroes live in `hero_content` (one row per hero; `raw_json` is the record
+`/api/heroes` returns), `hero_list_items` and `hero_abilities`. They sit beside `heroes`,
+which only feeds `hero_videos` and is left alone: its two rows for Deadpool and Jeff the Land
+Shark differ from the website's. Row-level security is on with no policy, so only the server's
+secret key can read or write them.
+
+- Every writer calls the `save_hero(p_hero jsonb)` function through `saveHero` in
+  [`src/hero-store.ts`](../src/hero-store.ts). It stores the hero and rebuilds its list items
+  and abilities from the same JSON in one transaction. Do not write the tables directly.
+- Syncs record each run in `sync_runs` (a `details` column holds what changed) and keep their
+  last fetched payload in `external_sources`; see [`src/sync-log.ts`](../src/sync-log.ts).
+  Both tables are shared by the other web content domains as they move.
+- The scripts and the `Sync new heroes` workflow need `SUPABASE_URL` and
+  `SUPABASE_SERVICE_ROLE_KEY` (repository secrets for the workflow).
+- `20261030042500_hero_content_data.sql` was generated from Turso by
+  `scripts/export-turso-heroes.mjs`. It skips rows that already exist, so running it twice never
+  overwrites newer data. Before pushing it, `node scripts/export-turso-heroes.mjs --check
+  <file>` must say Turso still matches it; if not, regenerate it with `--out`. Issue 110 deletes
+  the script with Turso.
+- `jsonb` does not keep the order of an object's keys, so `/api/heroes` returns the same data
+  with keys in a different order.
 
 ## Edge Functions
 
@@ -175,6 +202,37 @@ lines already stored. `-- --apply` replays for real, one transaction per half-se
 - Rows of an already frozen half-season are skipped, so a second run inserts nothing. A replayed row
   of an ended half-season is counted by the aggregates, then frozen and deleted by the next purge.
 - Replayed rows carry the recorder marker `backfill-143`; the original hash is not stored.
+
+## Reading the hero aggregates (web app)
+
+The website reads the aggregates through two functions, granted to `anon` and `service_role` and
+to nobody else. Both run as their owner and return one jsonb value (so PostgREST's 1000-row page
+limit never applies), made only of counts and `half_seasons` start dates:
+
+- `read_hero_stats()` returns `half_seasons`, `totals` and `heroes`. The server calls it over
+  PostgREST with plain `fetch` and the publishable key ([`src/hero-stats-read.ts`](../src/hero-stats-read.ts)).
+  Vercel needs `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; the service-role key is not used for this.
+- `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
+  (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
+  matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
+  again to the chosen modes' own sum. Nothing calls it yet; the counter picks work will.
+
+Every rate, tier and KDA is derived in one pure module, [`src/hero-stats.ts`](../src/hero-stats.ts),
+and served by `GET /api/hero-stats`. The rules, which are the overlay's personal tier list:
+
+- A hero is placed once it has 10 appearances in matches with a win or a loss. Its tier comes from
+  the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
+- A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
+  as in the overlay); the pick rate is those lines over the matches counted.
+- Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
+  are left out.
+- KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
+- While the current half-season has no hero at the minimum, the previous half-season is returned
+  with `inPlaceOf` naming the current one.
+- The site picks the current half-season from `half_seasons`, so a new half-season must have its row (see "Each half-season" below) before its first match; without it the site keeps showing the previous half-season.
+- A game hero id with no mapping in `data/pulse-atlas/hero-game-ids.json` (hero id 0 is "no hero
+  recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
+  one hero.
 
 ## Each half-season
 

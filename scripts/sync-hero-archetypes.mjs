@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 import { HERO_GAMEPLAY_ARCHETYPES } from '../src/app/features/heroes/hero-gameplay-archetypes.ts';
-import { createTursoClient } from './turso-client.mjs';
+import { listHeroes, saveHero } from '../src/hero-store.ts';
+import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/sync-log.ts';
+import { getSupabaseClient } from './supabase-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
@@ -13,26 +15,24 @@ const transcriptPath = join(projectRoot, 'docs', 'guides', 'winrates-s9.txt');
 const sourceKey = 'nerfpool-s9-week1';
 const sourceName = "Nerfpool: Every Hero's Win Rate (Season 9, Week 1)";
 const sourceUrl = 'https://www.youtube.com/watch?v=VB6OIA-ChmA';
-const startedAt = new Date().toISOString();
 const transcript = readFileSync(transcriptPath, 'utf8');
 const reportData = await loadSeasonReportData();
-const db = createTursoClient();
-const runId = await insertSyncRun('hero-gameplay-archetypes', startedAt);
+const db = getSupabaseClient();
+const runId = await startSyncRun(db, 'hero-gameplay-archetypes', 'Syncing Season 9 gameplay archetypes into hero records.');
 
 try {
-  const result = await db.execute('SELECT id, raw_json FROM heroes ORDER BY id');
+  const heroes = await listHeroes(db);
   const updatedHeroIds = [];
   const missingDatabaseHeroIds = [];
 
   for (const [heroId, gameplayArchetypes] of Object.entries(HERO_GAMEPLAY_ARCHETYPES)) {
-    const row = result.rows.find((candidate) => candidate.id === heroId);
+    const hero = heroes.find((candidate) => candidate.id === heroId);
 
-    if (!row) {
+    if (!hero) {
       missingDatabaseHeroIds.push(heroId);
       continue;
     }
 
-    const hero = JSON.parse(String(row.raw_json));
     const updatedHero = {
       ...hero,
       gameplayArchetypes,
@@ -41,17 +41,13 @@ try {
       ),
     };
 
-    await db.execute(
-      'UPDATE heroes SET raw_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [JSON.stringify(updatedHero), heroId],
-    );
+    await saveHero(db, updatedHero);
     updatedHeroIds.push(heroId);
   }
 
-  const unmatchedDatabaseHeroIds = result.rows
-    .map((row) => String(row.id))
+  const unmatchedDatabaseHeroIds = heroes
+    .map((hero) => hero.id)
     .filter((heroId) => !HERO_GAMEPLAY_ARCHETYPES[heroId]);
-  const finishedAt = new Date().toISOString();
   const sourcePayload = {
     videoId: 'VB6OIA-ChmA',
     title: sourceName,
@@ -78,55 +74,32 @@ try {
       : 'All database heroes have archetypes.',
   ].join(' ');
 
-  await upsertExternalSource(JSON.stringify(sourcePayload), finishedAt, 'success', null);
-  await finishSyncRun(runId, 'success', message, finishedAt);
+  await upsertExternalSource(sourcePayload, 'success', null);
+  await finishSyncRun(db, runId, {
+    status: 'success',
+    message,
+    details: { updatedHeroIds, missingDatabaseHeroIds, unmatchedDatabaseHeroIds },
+  });
 
   console.log(message);
 } catch (error) {
-  const finishedAt = new Date().toISOString();
   const message = error instanceof Error ? error.message : String(error);
 
-  await upsertExternalSource('{}', finishedAt, 'error', message);
-  await finishSyncRun(runId, 'error', message, finishedAt);
+  await upsertExternalSource({}, 'error', message);
+  await finishSyncRun(db, runId, { status: 'error', message });
   throw error;
-} finally {
-  db.close();
 }
 
-async function insertSyncRun(syncSourceKey, syncStartedAt) {
-  const result = await db.execute(
-    `INSERT INTO sync_runs (source_key, status, message, started_at)
-    VALUES (?, 'running', ?, ?)`,
-    [syncSourceKey, 'Syncing Season 9 gameplay archetypes into hero records.', syncStartedAt],
-  );
-
-  return Number(result.lastInsertRowid);
-}
-
-async function finishSyncRun(id, status, message, finishedAt) {
-  await db.execute(
-    `UPDATE sync_runs
-    SET status = ?, message = ?, finished_at = ?
-    WHERE id = ?`,
-    [status, message, finishedAt, id],
-  );
-}
-
-async function upsertExternalSource(payloadJson, fetchedAt, status, error) {
-  await db.execute(
-    `INSERT INTO external_sources (
-      source_key, source_name, url, payload_json, fetched_at, status, error
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(source_key) DO UPDATE SET
-      source_name = excluded.source_name,
-      url = excluded.url,
-      payload_json = excluded.payload_json,
-      fetched_at = excluded.fetched_at,
-      status = excluded.status,
-      error = excluded.error`,
-    [sourceKey, sourceName, sourceUrl, payloadJson, fetchedAt, status, error],
-  );
+function upsertExternalSource(payload, status, error) {
+  return saveExternalSource(db, {
+    sourceKey,
+    sourceName,
+    url: sourceUrl,
+    payload,
+    fetchedAt: new Date().toISOString(),
+    status,
+    error,
+  });
 }
 
 async function loadSeasonReportData() {

@@ -139,7 +139,7 @@ export function parseOfficialHeroArticle(card, html) {
 }
 
 export function stableOfficialPayload(payload) {
-  return JSON.stringify({
+  return {
     sourceUrl: payload.sourceUrl,
     heroes: payload.heroes.map((hero) => ({
       id: hero.id,
@@ -157,7 +157,7 @@ export function stableOfficialPayload(payload) {
         technicalDetails: ability.technicalDetails,
       })),
     })).sort((a, b) => a.id.localeCompare(b.id)),
-  }, null, 2);
+  };
 }
 
 export function diffOfficialPayloads(previousPayload, nextPayload) {
@@ -469,8 +469,10 @@ function uniqueBy(items, getKey) {
   return unique;
 }
 
+// Stored payloads come back from a jsonb column, which does not keep key order, so the
+// comparison must not depend on it.
 function stableHero(hero) {
-  return JSON.stringify({
+  return canonicalJson({
     name: hero.name,
     role: hero.role,
     summary: hero.summary,
@@ -484,6 +486,14 @@ function stableHero(hero) {
       technicalDetails: ability.technicalDetails,
     })),
   });
+}
+
+function canonicalJson(value) {
+  return JSON.stringify(value, (_key, item) =>
+    item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0)))
+      : item,
+  );
 }
 
 function escapeRegExp(value) {

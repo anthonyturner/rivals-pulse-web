@@ -1,14 +1,15 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { columnExists, createTursoClient, executeSchema } from './turso-client.mjs';
+import { getHero, saveHero } from '../src/hero-store.ts';
+import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/sync-log.ts';
+import { getSupabaseClient } from './supabase-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const schemaPath = join(__dirname, 'sqlite-schema.sql');
 const heroImagesPath = join(projectRoot, 'src', 'public', 'images', 'heroes');
 const fandomApi = 'https://marvelrivals.fandom.com/api.php';
 
@@ -18,12 +19,8 @@ const excludedTitles = new Set([
   'Ultron Drone',
 ]);
 
-const db = createTursoClient();
-await executeSchema(db, readFileSync(schemaPath, 'utf8'));
-await migrateAbilityTechnicalDetails();
-
-const startedAt = new Date().toISOString();
-const runId = await insertSyncRun('fandom-heroes', 'running', 'Syncing Fandom hero pages', startedAt);
+const db = getSupabaseClient();
+const runId = await startSyncRun(db, 'fandom-heroes', 'Syncing Fandom hero pages');
 
 try {
   const heroPages = await getHeroPages();
@@ -39,7 +36,7 @@ try {
         continue;
       }
 
-      await saveHero(hero);
+      await saveHero(db, withBuildProfile(hero));
       synced.push(hero.name);
       console.log(`Synced hero: ${hero.name}`);
     } catch (error) {
@@ -47,39 +44,42 @@ try {
     }
   }
 
-  const finishedAt = new Date().toISOString();
   const payload = {
     synced,
     skipped,
     heroPages,
   };
 
-  await upsertSource(
-    'fandom-heroes',
-    'Marvel Rivals Fandom Heroes',
-    `${fandomApi}?action=query&list=categorymembers&cmtitle=Category:Heroes`,
-    JSON.stringify(payload),
-    finishedAt,
-    'success',
-    null,
-  );
-  await finishSyncRun(
-    runId,
-    'success',
-    `Synced ${synced.length} heroes. Skipped ${skipped.length}.`,
-    finishedAt,
-  );
+  await saveExternalSource(db, {
+    sourceKey: 'fandom-heroes',
+    sourceName: 'Marvel Rivals Fandom Heroes',
+    url: `${fandomApi}?action=query&list=categorymembers&cmtitle=Category:Heroes`,
+    payload,
+    fetchedAt: new Date().toISOString(),
+    status: 'success',
+    error: null,
+  });
+  await finishSyncRun(db, runId, {
+    status: 'success',
+    message: `Synced ${synced.length} heroes. Skipped ${skipped.length}.`,
+    details: { synced: synced.length, skipped },
+  });
 
   console.log(`Hero sync complete. Synced ${synced.length}; skipped ${skipped.length}.`);
 } catch (error) {
-  const finishedAt = new Date().toISOString();
   const message = error instanceof Error ? error.message : String(error);
 
-  await upsertSource('fandom-heroes', 'Marvel Rivals Fandom Heroes', fandomApi, '{}', finishedAt, 'error', message);
-  await finishSyncRun(runId, 'error', message, finishedAt);
+  await saveExternalSource(db, {
+    sourceKey: 'fandom-heroes',
+    sourceName: 'Marvel Rivals Fandom Heroes',
+    url: fandomApi,
+    payload: {},
+    fetchedAt: new Date().toISOString(),
+    status: 'error',
+    error: message,
+  });
+  await finishSyncRun(db, runId, { status: 'error', message });
   throw error;
-} finally {
-  db.close();
 }
 
 async function getHeroPages() {
@@ -121,8 +121,7 @@ async function buildHero(pageTitle) {
   }
 
   const id = slugify(pageTitle);
-  const existing = await getExistingHero(id);
-  const existingHero = existing ? JSON.parse(existing.raw_json) : undefined;
+  const existingHero = await getHero(db, id);
   const difficulty = parseDifficulty(getField(text, 'difficulty'));
   const strengths = getSectionBullets(text, 'Strengths');
   const weaknesses = getSectionBullets(text, 'Weaknesses');
@@ -172,23 +171,6 @@ function mergeHero(existingHero, syncedHero) {
   };
 }
 
-async function saveHero(hero) {
-  const heroWithBuildProfile = withBuildProfile(hero);
-
-  await upsertHero(heroWithBuildProfile);
-  await db.execute('DELETE FROM hero_list_items WHERE hero_id = ?', [hero.id]);
-  await db.execute('DELETE FROM hero_abilities WHERE hero_id = ?', [hero.id]);
-  await insertListItems(heroWithBuildProfile.id, 'strength', heroWithBuildProfile.strengths);
-  await insertListItems(heroWithBuildProfile.id, 'weakness', heroWithBuildProfile.weaknesses);
-  await insertListItems(heroWithBuildProfile.id, 'counter', heroWithBuildProfile.counters);
-  await insertListItems(heroWithBuildProfile.id, 'synergy', heroWithBuildProfile.synergies);
-  await insertAbilities(heroWithBuildProfile.id, null, null, heroWithBuildProfile.abilities);
-
-  for (const kit of heroWithBuildProfile.roleAbilityKits ?? []) {
-    await insertAbilities(heroWithBuildProfile.id, kit.role, kit.label, kit.abilities);
-  }
-}
-
 function withBuildProfile(hero) {
   const buildProfile = buildHeroBuildProfile(hero);
 
@@ -197,107 +179,6 @@ function withBuildProfile(hero) {
     buildProfile,
     buildProfileRationale: buildProfileRationale(hero, buildProfile),
   };
-}
-
-async function getExistingHero(heroId) {
-  const result = await db.execute('SELECT raw_json FROM heroes WHERE id = ?', [heroId]);
-
-  return result.rows[0];
-}
-
-async function upsertHero(hero) {
-  await db.execute(
-    `INSERT INTO heroes (
-      id, name, role, difficulty, summary, playstyle, image_url, raw_json, updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET
-      name = excluded.name,
-      role = excluded.role,
-      difficulty = excluded.difficulty,
-      summary = excluded.summary,
-      playstyle = excluded.playstyle,
-      image_url = excluded.image_url,
-      raw_json = excluded.raw_json,
-      updated_at = CURRENT_TIMESTAMP`,
-    [
-      hero.id,
-      hero.name,
-      hero.role,
-      hero.difficulty,
-      hero.summary,
-      hero.playstyle,
-      hero.imageUrl,
-      JSON.stringify(hero),
-    ],
-  );
-}
-
-async function insertSyncRun(sourceKey, status, message, startedAt) {
-  const result = await db.execute(
-    `INSERT INTO sync_runs (source_key, status, message, started_at)
-    VALUES (?, ?, ?, ?)`,
-    [sourceKey, status, message, startedAt],
-  );
-
-  return Number(result.lastInsertRowid);
-}
-
-async function finishSyncRun(runId, status, message, finishedAt) {
-  await db.execute(
-    `UPDATE sync_runs
-    SET status = ?, message = ?, finished_at = ?
-    WHERE id = ?`,
-    [status, message, finishedAt, runId],
-  );
-}
-
-async function upsertSource(sourceKey, sourceName, url, payloadJson, fetchedAt, status, error) {
-  await db.execute(
-    `INSERT INTO external_sources (
-      source_key, source_name, url, payload_json, fetched_at, status, error
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(source_key) DO UPDATE SET
-      source_name = excluded.source_name,
-      url = excluded.url,
-      payload_json = excluded.payload_json,
-      fetched_at = excluded.fetched_at,
-      status = excluded.status,
-      error = excluded.error`,
-    [sourceKey, sourceName, url, payloadJson, fetchedAt, status, error],
-  );
-}
-
-async function insertListItems(heroId, itemType, values = []) {
-  for (const [index, value] of values.entries()) {
-    await db.execute(
-      `INSERT INTO hero_list_items (hero_id, item_type, value, sort_order)
-      VALUES (?, ?, ?, ?)`,
-      [heroId, itemType, value, index],
-    );
-  }
-}
-
-async function insertAbilities(heroId, kitRole, kitLabel, abilities = []) {
-  for (const [index, ability] of abilities.entries()) {
-    await db.execute(
-      `INSERT INTO hero_abilities (
-        hero_id, kit_role, kit_label, name, ability_type, description, technical_details_json, sort_order
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        heroId,
-        kitRole,
-        kitLabel,
-        ability.name,
-        ability.type,
-        ability.description,
-        JSON.stringify(ability.technicalDetails ?? []),
-        index,
-      ],
-    );
-  }
 }
 
 async function getWikiText(pageTitle) {
@@ -881,12 +762,6 @@ function toTitleCase(value) {
   return value
     .toLowerCase()
     .replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
-}
-
-async function migrateAbilityTechnicalDetails() {
-  if (!(await columnExists(db, 'hero_abilities', 'technical_details_json'))) {
-    await db.execute("ALTER TABLE hero_abilities ADD COLUMN technical_details_json TEXT NOT NULL DEFAULT '[]'");
-  }
 }
 
 function normalizeAbilitySection(value) {
