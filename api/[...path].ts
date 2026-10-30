@@ -11,6 +11,7 @@ import {
   getHomePortalsFromDatabase,
   getTierListFromDatabase,
 } from '../src/content-database.js';
+import { getCommunityMatches } from '../src/community-matches-read.js';
 import { getHeroStats, halfSeasonFromQuery } from '../src/hero-stats-read.js';
 import gameStatsHandler from './game-stats.js';
 import gameStatsSyncHandler from './sync/game-stats.js';
@@ -81,6 +82,14 @@ export default async function handler(req: VercelRequest, res: ServerResponse) {
       const halfSeason = halfSeasonFromQuery(url.searchParams.get('halfSeason') ?? undefined);
 
       sendJson(res, 200, await getHeroStats({ halfSeason }));
+      return;
+    }
+
+    if (route === 'community/matches') {
+      const url = new URL(req.url ?? '/', 'https://local.invalid');
+      const halfSeason = halfSeasonFromQuery(url.searchParams.get('halfSeason') ?? undefined);
+
+      sendJson(res, 200, await getCommunityMatches({ halfSeason }));
       return;
     }
 

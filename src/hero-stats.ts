@@ -136,16 +136,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
   const current = currentHalfSeason(starts, known, options.now);
   const excludedGameIds = new Set<number>();
 
-  const describe = (id: number): HeroStatsHalfSeason => {
-    const next = known.find((other) => other > id && starts.has(other));
-
-    return {
-      id,
-      label: `Season ${id}`,
-      startsAt: starts.get(id) ?? null,
-      endsAt: next === undefined ? null : (starts.get(next) ?? null),
-    };
-  };
+  const describe = (id: number): HeroStatsHalfSeason => describeHalfSeason(id, starts, known);
   const snapshot = (id: number): HalfSeasonSnapshot => {
     const result = snapshotOf(source, id, options.heroSlugByGameId);
     result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
@@ -199,8 +190,24 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
   return finish(toStats(current, undefined, now));
 }
 
+/** One half-season as the site names it; its end is the next known start, or null while it is the latest. */
+export function describeHalfSeason(
+  id: number,
+  starts: ReadonlyMap<number, string>,
+  known: readonly number[],
+): HeroStatsHalfSeason {
+  const next = known.find((other) => other > id && starts.has(other));
+
+  return {
+    id,
+    label: `Season ${id}`,
+    startsAt: starts.get(id) ?? null,
+    endsAt: next === undefined ? null : (starts.get(next) ?? null),
+  };
+}
+
 /** The latest half-season that has started, or the latest with any counts when no start date says. */
-function currentHalfSeason(starts: ReadonlyMap<number, string>, known: readonly number[], now: Date): number | undefined {
+export function currentHalfSeason(starts: ReadonlyMap<number, string>, known: readonly number[], now: Date): number | undefined {
   const started = known.filter((id) => {
     const start = Date.parse(starts.get(id) ?? '');
 
