@@ -144,6 +144,10 @@ The glossary, the hero videos and the cached outside sources moved from Turso in
   types: the table's Gefest role guides are still hard-coded on the heroes page.
   `npm run sync:hero-videos` makes the table match `data/seeds/hero-videos.mock.json`. A video's
   hero must exist in `public.heroes` (the foreign key), not only in `hero_content`.
+  Unlike `glossary_terms`, `hero_videos` is still readable with the publishable key: the August
+  migration gave `anon` and `authenticated` a select grant and a read policy, and they also hold
+  usage and select on `hero_videos_id_seq`. Removing them means altering an existing table, which
+  the create-only migration rule rules out for this slice, so the lockdown is part of issue 157.
 - `/api/external-sources/:key` reads `external_sources` through
   [`src/sync-log.ts`](../src/sync-log.ts); `npm run db:sync` refreshes the Fandom sources.
 - Each of these syncs records a `sync_runs` row (`glossary`, `hero-videos`, one per Fandom source).
@@ -151,8 +155,10 @@ The glossary, the hero videos and the cached outside sources moved from Turso in
   `scripts/export-turso-reference.mjs`, the same way as the hero data. Before pushing it,
   `node scripts/export-turso-reference.mjs --check <file>` must pass; after the push,
   `node scripts/verify-reference-content.mjs` compares Supabase with Turso and with the endpoint
-  JSON captured before the cutover (`data/turso-cutover/106`). Issue 110 deletes both scripts and
-  the captures with Turso.
+  JSON captured before the cutover (`data/turso-cutover/106`), and checks that `anon` and
+  `authenticated` hold no privilege on `glossary_terms`. Once each writer has run,
+  `node scripts/verify-reference-content.mjs sync-run` checks that its latest `sync_runs` row
+  succeeded. Issue 110 deletes both scripts and the captures with Turso.
 
 ## Edge Functions
 

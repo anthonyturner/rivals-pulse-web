@@ -3,11 +3,16 @@
 //
 //   node scripts/verify-reference-content.mjs
 //     After `npx supabase db push`: row counts and every row against Turso (five named rows per
-//     table are printed), RLS on the new table, and the endpoint JSON the new readers will serve,
-//     rebuilt from Supabase, against the captures taken before the cutover.
+//     table are printed), RLS on, no policy and no grant to `anon` or `authenticated` on the new
+//     table, and the endpoint JSON the new readers will serve, rebuilt from Supabase, against the
+//     captures taken before the cutover.
 //
 //   node scripts/verify-reference-content.mjs --endpoints https://marvel-rivals-coach-six.vercel.app
 //     After the merge deploys: the live endpoints against the same captures.
+//
+//   node scripts/verify-reference-content.mjs sync-run
+//     After each writer has run once: the latest `sync_runs` row of every writer in this slice
+//     (the glossary sync, the hero video sync and each `db:sync` source) is a success.
 //
 // Reads Supabase through the linked CLI (`npx supabase link` once per machine), so it needs no
 // service key; reads Turso through TURSO_* in .env. Exits 1 on any difference.
@@ -41,6 +46,20 @@ const OTHER_SLICE_SOURCE_KEYS = [
   'nerfpool-s9-week1',
   'official-marvel-rivals-home',
 ];
+// The `sync_runs.source_key` each writer of this slice records.
+const SYNC_RUN_KEYS = [
+  'glossary',
+  'hero-videos',
+  'fandom-battlepasses',
+  'fandom-deadpool',
+  'fandom-deadpool-abilities-template',
+];
+// Every table privilege Postgres has. The project's default privileges grant all of them to `anon`
+// and `authenticated` on any new table in `public`, so the migration's `revoke all` is the only
+// thing keeping the publishable key out.
+const TABLE_PRIVILEGES = ['select', 'insert', 'update', 'delete', 'truncate', 'references', 'trigger'];
+const SEQUENCE_PRIVILEGES = ['usage', 'select', 'update'];
+const PUBLIC_ROLES = ['anon', 'authenticated'];
 const NAMED = {
   glossary_terms: ['afk', 'anchor-hero', 'choke-point', 'mvp-svp', 'team-up'],
   hero_videos: [
@@ -63,10 +82,15 @@ const failures = [];
 const notes = [];
 const endpointsIndex = process.argv.indexOf('--endpoints');
 
-if (endpointsIndex === -1) {
+if (process.argv[2] === 'sync-run') {
+  verifySyncRuns();
+} else if (endpointsIndex !== -1) {
+  await verifyEndpoints(process.argv[endpointsIndex + 1]?.replace(/\/$/, ''));
+} else if (process.argv[2] === undefined) {
   await verifyDatabase();
 } else {
-  await verifyEndpoints(process.argv[endpointsIndex + 1]?.replace(/\/$/, ''));
+  console.error(`Unknown argument "${process.argv[2]}". Pass nothing, sync-run or --endpoints <url>.`);
+  process.exit(2);
 }
 
 for (const note of notes) {
@@ -92,6 +116,7 @@ async function verifyDatabase() {
 
   check('glossary_terms has RLS on', supabase.rls.relrowsecurity === true, JSON.stringify(supabase.rls));
   check('glossary_terms has no policy', Number(supabase.rls.policies) === 0, JSON.stringify(supabase.rls));
+  verifyNoPublicGrants('glossary_terms');
 
   // What the new readers will return, rebuilt with the same filters and order.
   compareCapture('/api/glossary', supabase.glossary.map((row) => row.raw_json), 'glossary.json');
@@ -108,6 +133,58 @@ async function verifyDatabase() {
     externalSources: supabase.sources.length,
     heroVideos: supabase.videos.length,
   });
+}
+
+// Fails on any privilege `anon` or `authenticated` holds on the table or on a sequence it owns.
+function verifyNoPublicGrants(table) {
+  const quote = (values) => values.map((value) => `'${value}'`).join(', ');
+  const rows = querySupabase(`
+    with target as (select 'public.${table}'::regclass as oid),
+    sequences as (
+      select d.objid as oid
+      from pg_depend d join pg_class s on s.oid = d.objid, target
+      where d.classid = 'pg_class'::regclass and d.refobjid = target.oid
+        and d.deptype in ('a', 'i') and s.relkind = 'S'
+    )
+    select 'table' as kind, target.oid::regclass::text as name, r.role, p.privilege,
+      has_table_privilege(r.role, target.oid, p.privilege) as granted
+    from target, unnest(array[${quote(PUBLIC_ROLES)}]) as r(role),
+      unnest(array[${quote(TABLE_PRIVILEGES)}]) as p(privilege)
+    union all
+    select 'sequence', s.oid::regclass::text, r.role, p.privilege,
+      has_sequence_privilege(r.role, s.oid, p.privilege)
+    from sequences s, unnest(array[${quote(PUBLIC_ROLES)}]) as r(role),
+      unnest(array[${quote(SEQUENCE_PRIVILEGES)}]) as p(privilege)`);
+  const expected = PUBLIC_ROLES.length * TABLE_PRIVILEGES.length;
+  const checked = rows.filter((row) => row.kind === 'table').length;
+  const sequences = [...new Set(rows.filter((row) => row.kind === 'sequence').map((row) => row.name))];
+  const granted = rows.filter((row) => row.granted !== false);
+
+  check(`${table} privileges checked`, checked === expected, `${checked} of ${expected} came back`);
+  check(
+    `${table} grants nothing to ${PUBLIC_ROLES.join(' or ')} ` +
+      `(${TABLE_PRIVILEGES.join(', ')}; owned sequences: ${sequences.join(', ') || 'none'})`,
+    granted.length === 0,
+    granted.map((row) => `${row.role} has ${row.privilege} on ${row.kind} ${row.name}`).join('; '),
+  );
+}
+
+function verifySyncRuns() {
+  const rows = querySupabase(`
+    select distinct on (source_key) source_key, id, status, message, started_at, finished_at
+    from public.sync_runs
+    where source_key in (${SYNC_RUN_KEYS.map((key) => `'${key}'`).join(', ')})
+    order by source_key, started_at desc`);
+
+  for (const key of SYNC_RUN_KEYS) {
+    const run = rows.find((row) => row.source_key === key);
+
+    check(`latest ${key} run is a success`, run?.status === 'success', `latest: ${JSON.stringify(run ?? null)}`);
+
+    if (run?.status === 'success') {
+      console.log(`  run ${run.id}: "${run.message}", started ${run.started_at}`);
+    }
+  }
 }
 
 async function verifyEndpoints(baseUrl) {
