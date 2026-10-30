@@ -1,6 +1,6 @@
 export const PULSE_ATLAS_SCHEMA_VERSION = 1;
 export const PULSE_ATLAS_BASE_PATH = 'pulse-atlas/v1';
-export const PULSE_ATLAS_DATASETS = ['heroes', 'tier-list', 'glossary', 'maps', 'hero-styles'] as const;
+export const PULSE_ATLAS_DATASETS = ['heroes', 'tier-list', 'glossary', 'maps', 'hero-styles', 'hero-stats'] as const;
 
 /**
  * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
@@ -106,6 +106,13 @@ interface BuiltDataset extends BuiltFile {
  * Likewise a tier-list hero that heroes.json does not know is published and
  * reported, not refused.
  *
+ * The hero-stats input is the full per-half-season table (see
+ * `assembleCommunityHeroStats`). It is checked against an allow-list of keys and
+ * published whole, rounded, in one file: it is small, and a client that syncs
+ * what the manifest lists then gets it with the rest. A season with no matches
+ * is valid; only a malformed table or a source other than the community's
+ * refuses the build.
+ *
  * The `hero-game-ids` input is the map from each hero's slug to the game's
  * numeric hero id. It is merged into `heroes.json` (as `gameId`, plus
  * `gameIdVariants` for a hero the game splits by role) and is not a published
@@ -139,8 +146,11 @@ export function buildPulseAtlas(
   const split = withTierListSplitBySeason(styled.inputs, generatedAt, sha256, previous);
   split.warnings.forEach((warning) => warn(`tier-list: ${warning}`));
 
+  const counted = withPublishableHeroStats(split.inputs);
+  counted.warnings.forEach((warning) => warn(`hero-stats: ${warning}`));
+
   const built = PULSE_ATLAS_DATASETS.flatMap((dataset): BuiltDataset[] => {
-    const input = split.inputs.find((candidate) => candidate.dataset === dataset);
+    const input = counted.inputs.find((candidate) => candidate.dataset === dataset);
 
     return input ? [{ dataset, ...buildEnvelopeFile(datasetPath(dataset), input, generatedAt, previous) }] : [];
   });
@@ -197,6 +207,7 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
   }
 
   problems.push(...findSeasonFileProblems(files, sha256));
+  problems.push(...findHeroStatsFileProblems(files));
 
   if (problems.length > 0) {
     throw new Error(`Pulse Atlas failed verification:\n- ${problems.join('\n- ')}`);
@@ -223,9 +234,13 @@ interface StatsHero {
   wins: number;
   winRate: number;
   pickRate: number;
+  kda: number | null;
+  finalHitsAverage: number | null;
 }
 
 interface HeroStatsView {
+  /** Appearances a hero needs before it is placed. */
+  minimumMatches: number;
   /** Every half-season that has started, oldest first. */
   halfSeasons: StatsHalfSeason[];
   /** The half-season the numbers come from; null before any half-season exists. */
@@ -256,22 +271,10 @@ function seasonIdOf(halfSeason: number): number {
 }
 
 /**
- * The half-seasons to fetch besides the default `/api/hero-stats` answer, which already carries the
- * current one. Throws when that answer lists no half-season (or is an older API that does not list
- * them at all), so a feed is never built from a web app that has not been deployed yet.
- */
-export function communityHalfSeasonRequests(current: unknown): number[] {
-  const view = readHeroStats(current, '/api/hero-stats');
-  const currentId = currentHalfSeasonOf(view);
-
-  return view.halfSeasons.map((season) => season.id).filter((id) => id !== currentId);
-}
-
-/**
  * Folds the hero-stats answers into the one tier-list shape the gate checks: every started
  * half-season as a season (id = half-season x 2), each with one `99` (All Ranks) snapshot. `current`
  * is the default answer, which also says which half-season is current and whether it stands in for
- * the previous one; `others` are the exact answers for the rest. Hero ids become the game's numeric
+ * the previous one; `others` are the exact answers (the current half-season's is not read). Hero ids become the game's numeric
  * ids through `heroGameIds` (a hero without an entry is left out, with a warning). Throws if an
  * answer is missing, or is for another half-season than was asked for.
  */
@@ -283,39 +286,11 @@ export function assembleCommunityTierList(
 ): unknown {
   const currentView = readHeroStats(current, '/api/hero-stats');
   const currentId = currentHalfSeasonOf(currentView);
-  const gameIdBySlug = new Map(
-    (Array.isArray(heroGameIds) ? heroGameIds : []).flatMap((entry) =>
-      isRecord(entry) && isNonEmptyString(entry['id']) && isInteger(entry['gameId'])
-        ? [[entry['id'], entry['gameId']] as const]
-        : [],
-    ),
-  );
-  const unmapped = new Set<string>();
-  const gameIdOf = (hero: string): number | undefined => {
-    const gameId = gameIdBySlug.get(hero);
-
-    if (gameId === undefined) {
-      unmapped.add(hero);
-    }
-
-    return gameId;
-  };
+  const { gameIdOf, unmapped } = heroGameIdLookup(heroGameIds);
 
   const seasons = currentView.halfSeasons.map((season) => {
-    const view =
-      season.id === currentId
-        ? currentView
-        : readHeroStats(
-            others.find((item) => item.halfSeason === season.id)?.response,
-            `/api/hero-stats?halfSeason=${season.id}`,
-          );
-
-    // The current half-season's own answer may show the previous one; every other answer must be its own.
-    if (season.id !== currentId && (view.shown?.id !== season.id || view.inPlaceOf !== null)) {
-      const standingIn = view.inPlaceOf ? ` in place of ${view.inPlaceOf.id}` : '';
-
-      throw new Error(`The hero-stats API answered for half-season ${view.shown?.id ?? 'none'}${standingIn}, not ${season.id}.`);
-    }
+    // The current half-season's own answer may show the previous one, which is what the tier list keeps.
+    const view = season.id === currentId ? currentView : readExactHalfSeason(season.id, others);
 
     return {
       id: seasonIdOf(season.id),
@@ -336,13 +311,54 @@ export function assembleCommunityTierList(
   };
 }
 
+// The answer for exactly one half-season: not another one, and not one standing in for it.
+function readExactHalfSeason(halfSeason: number, answers: readonly HalfSeasonStats[]): HeroStatsView {
+  const view = readHeroStats(
+    answers.find((item) => item.halfSeason === halfSeason)?.response,
+    `/api/hero-stats?halfSeason=${halfSeason}`,
+  );
+
+  if (view.shown?.id !== halfSeason || view.inPlaceOf !== null) {
+    const standingIn = view.inPlaceOf ? ` in place of ${view.inPlaceOf.id}` : '';
+
+    throw new Error(`The hero-stats API answered for half-season ${view.shown?.id ?? 'none'}${standingIn}, not ${halfSeason}.`);
+  }
+
+  return view;
+}
+
+// Hero slug to the game's numeric hero id, noting each slug that has none.
+function heroGameIdLookup(heroGameIds: unknown): { gameIdOf: (hero: string) => number | undefined; unmapped: Set<string> } {
+  const gameIdBySlug = new Map(
+    (Array.isArray(heroGameIds) ? heroGameIds : []).flatMap((entry) =>
+      isRecord(entry) && isNonEmptyString(entry['id']) && isInteger(entry['gameId'])
+        ? [[entry['id'], entry['gameId']] as const]
+        : [],
+    ),
+  );
+  const unmapped = new Set<string>();
+
+  return {
+    unmapped,
+    gameIdOf: (hero) => {
+      const gameId = gameIdBySlug.get(hero);
+
+      if (gameId === undefined) {
+        unmapped.add(hero);
+      }
+
+      return gameId;
+    },
+  };
+}
+
 // The default answer shows the previous half-season while the current one has no placed hero, so
 // the current half-season is the one it stands in for.
 function currentHalfSeasonOf(view: HeroStatsView): number {
   const current = view.inPlaceOf ?? view.shown;
 
   if (!current) {
-    throw new Error('The hero-stats API has no half-season yet, so there is no tier list to publish.');
+    throw new Error('The hero-stats API has no half-season yet, so there is nothing to publish.');
   }
 
   return current.id;
@@ -370,6 +386,89 @@ function snapshotOf(view: HeroStatsView, gameIdOf: (hero: string) => number | un
   };
 }
 
+/**
+ * Every started half-season, to be asked for exactly (`/api/hero-stats?halfSeason=<id>`), the
+ * current one included: the default answer may be the previous half-season standing in for it, and
+ * the hero-stats file never shows one half-season's numbers as another's. Throws when the default
+ * answer lists no half-season (or is an older API that does not list them at all), so a feed is
+ * never built from a web app that has not been deployed yet.
+ */
+export function communityHalfSeasonRequests(current: unknown): number[] {
+  const view = readHeroStats(current, '/api/hero-stats');
+  currentHalfSeasonOf(view);
+
+  return view.halfSeasons.map((season) => season.id);
+}
+
+/**
+ * Folds the hero-stats answers into the `hero-stats` dataset the gate checks: every started
+ * half-season as a season (id = half-season x 2, as in the tier list), each with one cell per hero
+ * that has any match. `current` is the default answer, which lists the half-seasons and says which
+ * is current; `exact` holds the answer asked for each of them, which is the only place a season's
+ * numbers come from. A hero at or above the minimum carries its win rate, pick rate, KDA and final
+ * hits; one below it carries only its appearances, because that is all the API reports for it, and
+ * is flagged `enoughData: false`. Hero ids become the game's numeric ids through `heroGameIds`
+ * (a hero without an entry is left out, with a warning). Throws if an answer is missing, is for
+ * another half-season, or stands in for one.
+ */
+export function assembleCommunityHeroStats(
+  current: unknown,
+  exact: readonly HalfSeasonStats[],
+  heroGameIds: unknown,
+  warn: (warning: string) => void = () => undefined,
+): unknown {
+  const currentView = readHeroStats(current, '/api/hero-stats');
+  const currentId = currentHalfSeasonOf(currentView);
+  const { gameIdOf, unmapped } = heroGameIdLookup(heroGameIds);
+
+  const seasons = currentView.halfSeasons.map((season) => {
+    const view = readExactHalfSeason(season.id, exact);
+    const placed = view.tiers.flatMap((tier) => tier.heroes).map((hero) => ({ ...hero, enoughData: true }));
+    const unplaced = view.belowMinimum.map((hero) => ({
+      ...hero,
+      enoughData: false,
+      winRate: null,
+      pickRate: null,
+      kda: null,
+      finalHitsAverage: null,
+    }));
+
+    return {
+      id: seasonIdOf(season.id),
+      label: season.label,
+      ...(season.startsAt === null ? {} : { startTime: season.startsAt }),
+      ...(season.endsAt === null ? {} : { endTime: season.endsAt }),
+      decidedMatches: view.matchesCounted,
+      heroes: [...placed, ...unplaced].flatMap((hero) => {
+        const heroId = gameIdOf(hero.hero);
+
+        return heroId === undefined
+          ? []
+          : [
+              {
+                heroId,
+                appearances: hero.appearances,
+                enoughData: hero.enoughData,
+                winRate: hero.winRate,
+                pickRate: hero.pickRate,
+                kda: hero.kda,
+                finalHitsAverage: hero.finalHitsAverage,
+              },
+            ];
+      }),
+    };
+  });
+
+  unmapped.forEach((hero) => warn(`${hero}: no gameId in hero-game-ids.json, so the hero is left out of hero-stats`));
+
+  return {
+    provenance: COMMUNITY_PROVENANCE,
+    minimumMatches: currentView.minimumMatches,
+    currentSeasonId: seasonIdOf(currentId),
+    seasons,
+  };
+}
+
 function readHeroStats(response: unknown, what: string): HeroStatsView {
   const problem = (detail: string): Error =>
     new Error(`${what} is not the hero-stats shape (${detail}). Has the web app been deployed with it?`);
@@ -387,6 +486,8 @@ function readHeroStats(response: unknown, what: string): HeroStatsView {
 
     return value;
   };
+  const nullableNumberOf = (record: Record<string, unknown>, key: string): number | null =>
+    record[key] === null ? null : numberOf(record, key);
   const halfSeasonOf = (value: unknown): StatsHalfSeason => {
     if (
       !isRecord(value) ||
@@ -416,11 +517,14 @@ function readHeroStats(response: unknown, what: string): HeroStatsView {
       wins: numberOf(value, 'wins'),
       winRate: numberOf(value, 'winRate'),
       pickRate: numberOf(value, 'pickRate'),
+      kda: nullableNumberOf(value, 'kda'),
+      finalHitsAverage: nullableNumberOf(value, 'finalHitsAverage'),
     };
   };
   const belowMinimum: unknown[] = Array.isArray(response['belowMinimum']) ? response['belowMinimum'] : [];
 
   return {
+    minimumMatches: numberOf(response, 'minimumMatches'),
     halfSeasons: response['halfSeasons'].map(halfSeasonOf),
     shown: optionalHalfSeason(response['halfSeason']),
     inPlaceOf: optionalHalfSeason(response['inPlaceOf']),
@@ -649,6 +753,8 @@ function describeShapeProblem(
       return describeTierListProblem(data);
     case 'hero-styles':
       return describeHeroStylesProblem(data, publishedHeroIds(inputs));
+    case 'hero-stats':
+      return describeHeroStatsProblem(data);
   }
 }
 
@@ -1254,6 +1360,243 @@ function describeUnknownHeroes(listed: ReadonlySet<number>, heroes: unknown): st
   return [...listed]
     .filter((heroId) => !known.has(heroId))
     .map((heroId) => `heroId ${heroId} is the gameId of no hero in heroes.json, so it is published without one to join to`);
+}
+
+/** The keys a hero-stats file, season and cell may carry: the allow-list. Anything else refuses the build. */
+const HERO_STATS_KEYS: readonly string[] = ['provenance', 'minimumMatches', 'currentSeasonId', 'seasons'];
+const HERO_STATS_SEASON_KEYS: readonly string[] = ['id', 'label', 'startTime', 'endTime', 'decidedMatches', 'heroes'];
+const HERO_STATS_CELL_KEYS: readonly string[] = [
+  'heroId',
+  'appearances',
+  'enoughData',
+  'winRate',
+  'pickRate',
+  'kda',
+  'finalHitsAverage',
+];
+const HERO_STATS_RATE_KEYS = ['winRate', 'pickRate', 'kda', 'finalHitsAverage'] as const;
+
+/** The published `hero-stats` dataset: every half-season with a cell per hero, in one file. */
+interface HeroStatsTable {
+  provenance: typeof COMMUNITY_PROVENANCE;
+  minimumMatches: number;
+  currentSeasonId: number;
+  seasons: Record<string, unknown>[];
+}
+
+interface ReadHeroStats {
+  /** Faults in the data; empty when `table` is set. */
+  problems: string[];
+  /** The data as it is published: only allow-listed keys, rates to two decimals, cells by hero id. */
+  table?: HeroStatsTable;
+  /** Every hero id that has a cell anywhere. */
+  heroes?: Set<number>;
+}
+
+/**
+ * Checks the hero-stats dataset and, when it is sound, returns it cut down to what is published.
+ * Faults are reported together so one run names them all. It refuses a table that is not the
+ * community's, a key outside the allow-list (so nothing can reach a cell by accident), a cell whose
+ * `enoughData` disagrees with `minimumMatches`, and a cell flagged as having enough data without a
+ * win rate and pick rate. A season with no hero, or no match at all, is valid.
+ */
+function readHeroStatsTable(data: unknown): ReadHeroStats {
+  if (isRecord(data) && data['provenance'] !== COMMUNITY_PROVENANCE) {
+    return { problems: [`provenance must be "${COMMUNITY_PROVENANCE}"`] };
+  }
+
+  if (!isRecord(data) || !Array.isArray(data['seasons']) || data['seasons'].length === 0) {
+    return { problems: ['expected an object with a non-empty seasons list'] };
+  }
+
+  const problems: string[] = [];
+  const checkKeys = (record: Record<string, unknown>, allowed: readonly string[], where: string): void => {
+    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
+
+    if (stray.length > 0) {
+      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
+    }
+  };
+
+  checkKeys(data, HERO_STATS_KEYS, 'the file');
+
+  const minimumMatches = data['minimumMatches'];
+  const currentSeasonId = data['currentSeasonId'];
+
+  if (!isPositiveInteger(minimumMatches)) {
+    problems.push('minimumMatches must be a whole number above 0');
+  }
+
+  const heroes = new Set<number>();
+  const seasonIds = new Set<number>();
+  const seasons: Record<string, unknown>[] = [];
+
+  data['seasons'].forEach((season: unknown, index: number) => {
+    if (!isRecord(season) || !isInteger(season['id']) || !isNonEmptyString(season['label'])) {
+      problems.push(`season ${index} needs an integer id and a label`);
+      return;
+    }
+
+    const id = season['id'];
+    const where = `season ${id}`;
+    const cells = season['heroes'];
+
+    checkKeys(season, HERO_STATS_SEASON_KEYS, where);
+
+    if (seasonIds.has(id)) {
+      problems.push(`${where} is listed more than once`);
+    }
+    seasonIds.add(id);
+
+    if (!isInteger(season['decidedMatches']) || Number(season['decidedMatches']) < 0) {
+      problems.push(`${where} needs decidedMatches to be a non-negative whole number`);
+    }
+
+    for (const key of ['startTime', 'endTime']) {
+      if (season[key] !== undefined && !isNonEmptyString(season[key])) {
+        problems.push(`${where} needs ${key} to be a string when present`);
+      }
+    }
+
+    if (!Array.isArray(cells)) {
+      problems.push(`${where} needs a heroes list`);
+      return;
+    }
+
+    const seen = new Set<number>();
+    const rows = cells.flatMap((cell: unknown, position: number) => {
+      const row = readHeroStatsCell(cell, minimumMatches, `${where} hero ${position}`, checkKeys, problems);
+
+      if (!row) {
+        return [];
+      }
+
+      if (seen.has(row.heroId)) {
+        problems.push(`${where} lists heroId ${row.heroId} more than once`);
+      }
+      seen.add(row.heroId);
+      heroes.add(row.heroId);
+
+      return [row];
+    });
+
+    seasons.push({
+      id,
+      label: season['label'],
+      ...(season['startTime'] === undefined ? {} : { startTime: season['startTime'] }),
+      ...(season['endTime'] === undefined ? {} : { endTime: season['endTime'] }),
+      decidedMatches: season['decidedMatches'],
+      heroes: rows.sort((a, b) => a.heroId - b.heroId),
+    });
+  });
+
+  if (!isInteger(currentSeasonId) || !seasonIds.has(currentSeasonId)) {
+    problems.push(`currentSeasonId ${String(currentSeasonId)} is not one of the listed seasons`);
+  }
+
+  if (problems.length > 0 || !isPositiveInteger(minimumMatches) || !isInteger(currentSeasonId)) {
+    return { problems };
+  }
+
+  return {
+    problems,
+    heroes,
+    table: { provenance: COMMUNITY_PROVENANCE, minimumMatches, currentSeasonId, seasons },
+  };
+}
+
+// One cell, cut to the allow-listed keys with rates to two decimals; a fault goes to `problems`.
+function readHeroStatsCell(
+  cell: unknown,
+  minimumMatches: unknown,
+  where: string,
+  checkKeys: (record: Record<string, unknown>, allowed: readonly string[], where: string) => void,
+  problems: string[],
+): ({ heroId: number } & Record<string, unknown>) | undefined {
+  if (!isRecord(cell) || !isInteger(cell['heroId'])) {
+    problems.push(`${where} needs an integer heroId`);
+    return undefined;
+  }
+
+  checkKeys(cell, HERO_STATS_CELL_KEYS, where);
+
+  const { heroId, appearances, enoughData } = cell;
+
+  if (!isInteger(appearances) || Number(appearances) < 0 || typeof enoughData !== 'boolean') {
+    problems.push(`${where} needs appearances as a non-negative whole number and enoughData as true or false`);
+    return undefined;
+  }
+
+  const rates: Record<string, number | null> = {};
+  const unreadable: string[] = [];
+
+  for (const key of HERO_STATS_RATE_KEYS) {
+    const value = cell[key];
+
+    if (value === null) {
+      rates[key] = null;
+    } else if (isFiniteNumber(value) && value >= 0) {
+      rates[key] = roundToHundredths(value);
+    } else {
+      unreadable.push(key);
+    }
+  }
+
+  if (unreadable.length > 0) {
+    problems.push(`${where} needs ${unreadable.join(', ')} to be a number of 0 or more, or null`);
+    return undefined;
+  }
+
+  if (isPositiveInteger(minimumMatches) && enoughData !== Number(appearances) >= minimumMatches) {
+    problems.push(`${where} says enoughData ${enoughData} with ${appearances} appearances and a minimum of ${minimumMatches}`);
+  }
+
+  if (enoughData && (rates['winRate'] === null || rates['pickRate'] === null)) {
+    problems.push(`${where} has enough data but no winRate and pickRate`);
+  }
+
+  return { heroId, appearances, enoughData, ...rates };
+}
+
+function describeHeroStatsProblem(data: unknown): string | undefined {
+  const { problems } = readHeroStatsTable(data);
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
+}
+
+/**
+ * The inputs with hero-stats replaced by its published form (allow-listed keys, rounded, cells by
+ * hero id), plus a warning for each hero id that no hero in heroes.json has as its `gameId`: it is
+ * published all the same, because a new hero reaches the stats before its id reaches the map.
+ * Expects inputs that already passed `findProblems`.
+ */
+function withPublishableHeroStats(inputs: readonly PulseAtlasInput[]): { inputs: PulseAtlasInput[]; warnings: string[] } {
+  const input = inputs.find((candidate) => candidate.dataset === 'hero-stats');
+  const { table, heroes } = input ? readHeroStatsTable(input.data) : { table: undefined, heroes: undefined };
+
+  if (!input || !table || !heroes) {
+    return { inputs: [...inputs], warnings: [] };
+  }
+
+  return {
+    inputs: inputs.map((candidate) => (candidate === input ? { ...candidate, data: table } : candidate)),
+    warnings: describeUnknownHeroes(heroes, inputs.find((candidate) => candidate.dataset === 'heroes')?.data),
+  };
+}
+
+// Read-back check of the written file: it keeps the marker the overlay needs.
+function findHeroStatsFileProblems(files: readonly PulseAtlasFile[]): string[] {
+  const file = files.find((candidate) => candidate.path === datasetPath('hero-stats'));
+
+  if (!file) {
+    return [];
+  }
+
+  const data = parseEnvelope(file.content)?.data;
+
+  return isRecord(data) && data['provenance'] === COMMUNITY_PROVENANCE
+    ? []
+    : [`hero-stats: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
 }
 
 function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256Hex): string[] {
