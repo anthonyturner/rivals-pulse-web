@@ -50,6 +50,8 @@ export interface HeroStatsBelowMinimum {
 export interface HeroStats {
   status: 'ready' | 'not-enough-data';
   minimumMatches: number;
+  /** Every half-season that has started, oldest first: the seasons a client can ask for. */
+  halfSeasons: HeroStatsHalfSeason[];
   /** The half-season the numbers come from, or null before any half-season exists. */
   halfSeason: HeroStatsHalfSeason | null;
   /**
