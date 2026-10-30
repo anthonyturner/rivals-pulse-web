@@ -8,6 +8,7 @@ import {
   buildPulseAtlas,
   PULSE_ATLAS_BASE_PATH,
   PULSE_ATLAS_DATASETS,
+  PULSE_ATLAS_HERO_GAME_IDS,
   PULSE_ATLAS_MANIFEST_PATH,
   parseManifest,
   tierListRequests,
@@ -24,6 +25,7 @@ const DEFAULT_PUBLISHED_BASE = 'https://anthonyturner.github.io/rivals-pulse-web
 const API_SOURCE_LABEL = 'rivals-pulse-web:content-api';
 const MAPS_SOURCE_LABEL = 'rivals-pulse-web:seed-maps';
 const HERO_STYLES_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-styles';
+const HERO_GAME_IDS_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-game-ids';
 const SAMPLE_SOURCE_LABEL = 'SAMPLE: trimmed, not live data';
 const FETCH_ATTEMPTS = 3;
 const FETCH_TIMEOUT_MS = 60_000;
@@ -55,6 +57,12 @@ const live = [
     dataset: 'hero-styles',
     source: HERO_STYLES_SOURCE_LABEL,
     data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-styles.json'), 'utf8')),
+  },
+  {
+    // Merged into heroes.json as each hero's gameId; not a published file of its own.
+    dataset: PULSE_ATLAS_HERO_GAME_IDS,
+    source: HERO_GAME_IDS_SOURCE_LABEL,
+    data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-game-ids.json'), 'utf8')),
   },
 ];
 

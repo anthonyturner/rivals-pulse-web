@@ -1,6 +1,8 @@
+import curatedHeroGameIds from '../data/pulse-atlas/hero-game-ids.json';
 import curatedHeroStyles from '../data/pulse-atlas/hero-styles.json';
 import {
   buildPulseAtlas,
+  findHeroGameIdProblems,
   findHeroStyleProblems,
   PULSE_ATLAS_DATASETS,
   PulseAtlasFile,
@@ -21,7 +23,20 @@ const fakeSha256 = (text: string): string => {
   return `sha:${text.length}:${hash.toString(16)}`;
 };
 
-function heroRow(heroId = 1, extra: Record<string, unknown> = {}): Record<string, unknown> {
+const THOR_GAME_ID = 1039;
+const thorEntry = { id: 'thor', gameId: THOR_GAME_ID };
+// The game splits Deadpool into a base id and one id per role.
+const DEADPOOL = {
+  id: 'deadpool',
+  gameId: 1057,
+  gameIdVariants: [
+    { gameId: 10571, role: 'Vanguard' },
+    { gameId: 10572, role: 'Duelist' },
+    { gameId: 10573, role: 'Strategist' },
+  ],
+};
+
+function heroRow(heroId = THOR_GAME_ID, extra: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     heroId,
     name: 'Thor',
@@ -68,6 +83,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'glossary', source: 'test', data: [{ id: 'dive', term: 'Dive' }] },
     { dataset: 'maps', source: 'test', data: [{ id: 1032, name: 'Yggdrasill Path' }] },
     { dataset: 'hero-styles', source: 'test', data: [{ heroId: 'thor', poke: 10, dive: 20, brawl: 70 }] },
+    { dataset: 'hero-game-ids', source: 'test', data: [thorEntry] },
   ];
 }
 
@@ -84,7 +100,7 @@ describe('buildPulseAtlas', () => {
       schemaVersion: 1,
       generatedAt: GENERATED_AT,
       source: 'test',
-      data: [{ id: 'thor', name: 'Thor' }],
+      data: [{ id: 'thor', name: 'Thor', gameId: THOR_GAME_ID }],
     });
     expect(files.map((file) => file.path)).toEqual([
       'pulse-atlas/v1/heroes.json',
@@ -154,14 +170,14 @@ describe('buildPulseAtlas', () => {
     const published = JSON.parse(files[0].content).data;
 
     expect(published).toEqual([
-      { id: 'thor', name: 'Thor' },
+      { id: 'thor', name: 'Thor', gameId: THOR_GAME_ID },
       { id: 'loki', name: 'Loki' },
     ]);
     expect(files[0].content).not.toContain('counters');
   });
 
   it('refuses a counters key anywhere else in the data', () => {
-    const leaky = tierList(() => [heroRow(1, { counters: ['hulk'] })]);
+    const leaky = tierList(() => [heroRow(THOR_GAME_ID, { counters: ['hulk'] })]);
 
     expect(() =>
       buildPulseAtlas(withData('tier-list', leaky), GENERATED_AT, fakeSha256),
@@ -225,7 +241,7 @@ describe('tier-list coverage', () => {
 
 describe('the tier list split by season', () => {
   const SLIM_ROW = {
-    heroId: 1,
+    heroId: THOR_GAME_ID,
     winRate: 55.12,
     pickRate: 7.78,
     banRate: 0,
@@ -380,7 +396,7 @@ describe('the tier list split by season', () => {
   });
 
   it('leaves no hero row with a name, role, image or tier, and keeps rates to two decimals', () => {
-    const rows = tierList(() => [heroRow(1, { winRate: 59.999, pickRate: 0.005, banRate: 12.3456 })]);
+    const rows = tierList(() => [heroRow(THOR_GAME_ID, { winRate: 59.999, pickRate: 0.005, banRate: 12.3456 })]);
     const files = buildPulseAtlas(withData('tier-list', rows), GENERATED_AT, fakeSha256);
 
     for (const path of ['pulse-atlas/v1/tier-list.json', seasonPath(1), seasonPath(2)]) {
@@ -402,9 +418,13 @@ describe('the tier list split by season', () => {
 
     function build(rows: unknown[], warn: (warning: string) => void = () => undefined): PulseAtlasFile[] {
       return buildPulseAtlas(
-        withData('heroes', heroes).map((input) =>
-          input.dataset === 'tier-list' ? { ...input, data: tierList(() => rows) } : input,
-        ),
+        withData('heroes', heroes).map((input) => {
+          if (input.dataset === 'tier-list') {
+            return { ...input, data: tierList(() => rows) };
+          }
+
+          return input.dataset === 'hero-game-ids' ? { ...input, data: [thorEntry, DEADPOOL] } : input;
+        }),
         GENERATED_AT,
         fakeSha256,
         [],
@@ -431,14 +451,15 @@ describe('the tier list split by season', () => {
       );
     });
 
-    it('matches a row to a hero by name or portrait, ignoring case, punctuation and a role in brackets', () => {
-      expect(
-        tierListWarnings([
-          heroRow(1, { name: 'THOR' }),
-          heroRow(2, { name: 'Deadpool (Duelist)', imageUrl: '/images/heroes/deadpool-duelist.png' }),
-          heroRow(3, { name: 'The Odd Name', imageUrl: '/images/heroes/thor.png' }),
-        ]),
-      ).toEqual([]);
+    it('matches a row to a hero by its gameId, whatever the row calls the hero', () => {
+      expect(tierListWarnings([heroRow(THOR_GAME_ID, { name: 'THOR (new name)', imageUrl: '/images/heroes/x.png' })])).toEqual(
+        [],
+      );
+    });
+
+    it('matches a row to Deadpool through his base id or any of his role ids', () => {
+      expect(tierListWarnings([heroRow(1057), heroRow(10571), heroRow(10572), heroRow(10573)])).toEqual([]);
+      expect(tierListWarnings([heroRow(10574, { name: 'Deadpool' })]).length).toBe(1);
     });
   });
 
@@ -451,8 +472,8 @@ describe('the tier list split by season', () => {
   });
 
   it('refuses a hero row without a heroId or with a rate that is not a number', () => {
-    const noId = tierList(() => [heroRow(1, { heroId: undefined })]);
-    const noRate = tierList(() => [heroRow(1, { winRate: '55%' })]);
+    const noId = tierList(() => [heroRow(THOR_GAME_ID, { heroId: undefined })]);
+    const noRate = tierList(() => [heroRow(THOR_GAME_ID, { winRate: '55%' })]);
 
     for (const data of [noId, noRate]) {
       expect(() => buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256)).toThrowError(
@@ -472,7 +493,7 @@ describe('the tier list split by season', () => {
 
     it('rewrites only the season that changed, plus the index that holds its hash', () => {
       const before = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
-      const changed = tierList((seasonId) => [heroRow(1, seasonId === 1 ? { wins: 1 } : {})]);
+      const changed = tierList((seasonId) => [heroRow(THOR_GAME_ID, seasonId === 1 ? { wins: 1 } : {})]);
       const after = buildPulseAtlas(withData('tier-list', changed), LATER_RUN, fakeSha256, before);
 
       expect(fileAt(after, seasonPath(2))).toEqual(fileAt(before, seasonPath(2)));
@@ -661,6 +682,148 @@ describe('tierListRequests and assembleTierList', () => {
   });
 });
 
+describe('hero game ids', () => {
+  const HERO_IDS = ['thor', 'deadpool'];
+  const complete = (): object[] => [thorEntry, DEADPOOL];
+
+  function build(map: unknown, warnings: string[] = []): PulseAtlasFile[] {
+    return buildPulseAtlas(
+      withData('heroes', [
+        { id: 'thor', name: 'Thor' },
+        { id: 'deadpool', name: 'Deadpool' },
+      ]).map((input) => (input.dataset === 'hero-game-ids' ? { ...input, data: map } : input)),
+      GENERATED_AT,
+      fakeSha256,
+      [],
+      (warning) => warning.startsWith('hero-game-ids:') && warnings.push(warning),
+    );
+  }
+
+  function publishedHeroes(files: PulseAtlasFile[]): unknown {
+    return JSON.parse(files.find((file) => file.path.endsWith('/heroes.json'))?.content ?? 'null').data;
+  }
+
+  it('gives each hero its gameId, and Deadpool his role variants, in heroes.json', () => {
+    const warnings: string[] = [];
+
+    expect(publishedHeroes(build(complete(), warnings))).toEqual([
+      { id: 'thor', name: 'Thor', gameId: THOR_GAME_ID },
+      { ...DEADPOOL, name: 'Deadpool' },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(findHeroGameIdProblems(complete(), HERO_IDS)).toEqual({ errors: [], warnings: [] });
+  });
+
+  it('does not publish the map as a file of its own', () => {
+    const files = build(complete());
+
+    expect(files.some((file) => file.path.includes('hero-game-ids'))).toBeFalse();
+    expect(files.filter((file) => !file.path.includes('/seasons/')).length).toBe(PULSE_ATLAS_DATASETS.length + 1);
+  });
+
+  it('publishes every dataset, with a warning, when a hero has no gameId', () => {
+    const warnings: string[] = [];
+
+    expect(publishedHeroes(build([thorEntry], warnings))).toEqual([
+      { id: 'thor', name: 'Thor', gameId: THOR_GAME_ID },
+      { id: 'deadpool', name: 'Deadpool' },
+    ]);
+    expect(warnings).toContain(
+      'hero-game-ids: deadpool: no entry in hero-game-ids.json, so the hero is published without a gameId',
+    );
+  });
+
+  it('leaves out, with a warning, an entry for a hero that is not in heroes.json', () => {
+    const warnings: string[] = [];
+
+    expect(publishedHeroes(build([...complete(), { id: 'hulk', gameId: 1011 }], warnings))).toEqual(
+      publishedHeroes(build(complete())),
+    );
+    expect(warnings).toEqual(['hero-game-ids: hulk: not a hero in heroes.json, so its gameId is left out of the feed']);
+  });
+
+  it('still refuses when no entry names any hero, rather than stripping every id', () => {
+    expect(() => build([{ id: 'hulk', gameId: 1011 }])).toThrowError(
+      /hero-game-ids: no entry names a hero in heroes\.json/,
+    );
+  });
+
+  it('refuses an input that is missing or empty', () => {
+    expect(() => buildPulseAtlas(validInputs().slice(0, 5), GENERATED_AT, fakeSha256)).toThrowError(
+      /hero-game-ids: expected exactly one input, got 0/,
+    );
+    expect(() => build([])).toThrowError(/hero-game-ids: expected a non-empty list/);
+  });
+
+  it('refuses a hero listed twice, or a gameId that is not a whole number above 0', () => {
+    expect(findHeroGameIdProblems([...complete(), { id: 'thor', gameId: 1 }], HERO_IDS).errors).toEqual([
+      'thor: listed more than once',
+    ]);
+
+    for (const gameId of [0, -1039, 1039.5, '1039', null, undefined]) {
+      expect(findHeroGameIdProblems([{ id: 'thor', gameId }, DEADPOOL], HERO_IDS).errors)
+        .withContext(String(gameId))
+        .toEqual(['thor: gameId must be a whole number above 0']);
+    }
+    expect(() => build([{ id: 'thor', gameId: 0 }, DEADPOOL])).toThrowError(/hero-game-ids: thor: gameId must be/);
+  });
+
+  it('refuses one numeric id for two heroes, or for a hero and its own variant', () => {
+    expect(findHeroGameIdProblems([thorEntry, { id: 'deadpool', gameId: THOR_GAME_ID }], HERO_IDS).errors).toEqual([
+      "deadpool: gameId 1039 is already thor's",
+    ]);
+    expect(
+      findHeroGameIdProblems(
+        [thorEntry, { id: 'deadpool', gameId: 1057, gameIdVariants: [{ gameId: 1057, role: 'Duelist' }] }],
+        HERO_IDS,
+      ).errors,
+    ).toEqual(['deadpool: gameId 1057 is already used twice by this hero']);
+  });
+
+  it('refuses a key the feed does not publish, instead of passing it onto the hero', () => {
+    expect(findHeroGameIdProblems([{ ...thorEntry, name: 'Thor' }, DEADPOOL], HERO_IDS).errors).toEqual([
+      'thor: unknown key name; an entry holds only id, gameId, gameIdVariants',
+    ]);
+    expect(() => build([{ ...thorEntry, counters: ['hulk'] }, DEADPOOL])).toThrowError(/hero-game-ids: thor: unknown key counters/);
+  });
+
+  it('refuses malformed variants', () => {
+    const variants = (gameIdVariants: unknown): object[] => [
+      thorEntry,
+      { id: 'deadpool', gameId: 1057, gameIdVariants },
+    ];
+
+    expect(findHeroGameIdProblems(variants([]), HERO_IDS).errors).toEqual([
+      'deadpool: gameIdVariants must be a non-empty list when present',
+    ]);
+
+    for (const bad of [{ gameId: 10571, role: 'Tank' }, { gameId: 10571 }, { gameId: 'x', role: 'Duelist' }, null]) {
+      expect(findHeroGameIdProblems(variants([bad]), HERO_IDS).errors)
+        .withContext(JSON.stringify(bad))
+        .toEqual([
+          'deadpool: every gameIdVariants entry needs a whole gameId above 0 and a role of Vanguard, Duelist, Strategist',
+        ]);
+    }
+  });
+
+  it('keeps the committed map sound: every hero once, each numeric id once, Deadpool covered', () => {
+    const slugs = curatedHeroGameIds.map((entry) => entry.id);
+
+    expect(findHeroGameIdProblems(curatedHeroGameIds, slugs)).toEqual({ errors: [], warnings: [] });
+    expect(curatedHeroGameIds.find((entry) => entry.id === 'peni-parker')?.gameId).toBe(1042);
+    expect(curatedHeroGameIds.find((entry) => entry.id === 'deadpool')).toEqual(DEADPOOL);
+  });
+
+  // The live hero list is only known at publish time (where a dangling slug warns), so this is the
+  // build-time gate: both files are hand-maintained and list every hero the overlay knows.
+  it('fails on a slug that is not in the committed playstyle mix, so a typo cannot ship', () => {
+    const styled = curatedHeroStyles.map((style) => style.heroId);
+    const dangling = curatedHeroGameIds.map((entry) => entry.id).filter((slug) => !styled.includes(slug));
+
+    expect(dangling).toEqual([]);
+  });
+});
+
 describe('hero-styles validation', () => {
   const HERO_IDS = ['thor', 'loki'];
   const entry = (heroId: string, poke: number, dive: number, brawl: number): object => ({
@@ -676,7 +839,15 @@ describe('hero-styles validation', () => {
       withData('heroes', [
         { id: 'thor', name: 'Thor' },
         { id: 'loki', name: 'Loki' },
-      ]).map((input) => (input.dataset === 'hero-styles' ? { ...input, data } : input)),
+      ]).map((input) => {
+        if (input.dataset === 'hero-styles') {
+          return { ...input, data };
+        }
+
+        return input.dataset === 'hero-game-ids'
+          ? { ...input, data: [{ id: 'thor', gameId: THOR_GAME_ID }, { id: 'loki', gameId: 1016 }] }
+          : input;
+      }),
       GENERATED_AT,
       fakeSha256,
       [],
