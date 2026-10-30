@@ -78,7 +78,7 @@
               [attr.aria-pressed]="isDiveThreatSelected(hero.id)"
               (click)="toggleDiveThreat(hero.id)"
             >
-              <img [src]="hero.imageUrl" [alt]="hero.name" />
+              <img [src]="hero.imageUrl" alt="" />
               <span>{{ hero.name }}</span>
             </button>
           }
@@ -87,7 +87,7 @@
         <div class="threat-reads">
           @for (hero of selectedDiveThreats(); track hero.id) {
             <article>
-              <img [src]="hero.imageUrl" [alt]="hero.name" />
+              <img [src]="hero.imageUrl" alt="" />
               <div>
                 <strong>{{ hero.name }}</strong>
                 <p>{{ threatInstruction(hero.name) }}</p>
@@ -110,10 +110,9 @@
         </div>
 
         <div class="overlap-grid">
-          @for (answer of multiThreatAnswers(); track answer.hero.id; let index = $index) {
+          @for (answer of multiThreatAnswers(); track answer.hero.id) {
             <button type="button" (click)="selectHero(answer.hero.id)">
-              <span class="answer-rank">{{ index + 1 }}</span>
-              <img [src]="answer.hero.imageUrl" [alt]="answer.hero.name" />
+              <img [src]="answer.hero.imageUrl" alt="" />
               <span class="answer-copy">
                 <strong>{{ answer.hero.name }}</strong>
                 <small>{{ coverageLabel(answer) }}</small>
@@ -188,7 +187,7 @@
       <span>Search</span>
       <input
         type="search"
-        placeholder="Hero or counter"
+        placeholder="Hero name"
         [value]="searchTerm()"
         (input)="updateSearch($event)"
       />
@@ -212,7 +211,7 @@
           [class.selected]="selectedHero().id === hero.id"
           (click)="selectHero(hero.id)"
         >
-          <img [src]="hero.imageUrl" [alt]="hero.name" />
+          <img [src]="hero.imageUrl" alt="" />
           <span>
             <strong>{{ hero.name }}</strong>
             <small>{{ matchupCountLabel(hero) }}</small>
@@ -230,11 +229,11 @@
     @if (selectedHero(); as hero) {
       <section class="counter-board">
         <article class="selected-profile" [ngClass]="roleClass(hero.role)">
-          <img [src]="hero.imageUrl" [alt]="hero.name" />
+          <img [src]="hero.imageUrl" alt="" />
           <div>
             <span>{{ hero.role }}</span>
             <h2>{{ hero.name }}</h2>
-            <p>{{ matchupCountLabel(hero) }} with enough recorded matches</p>
+            <p>{{ matchupCountLabel(hero) }}</p>
           </div>
           <a routerLink="/heroes" [queryParams]="{ hero: hero.id }">Open Heroes Page</a>
         </article>
@@ -256,7 +255,7 @@
                 [attr.data-tooltip]="card.description"
                 (click)="selectHero(card.hero.id)"
               >
-                <img [src]="card.hero.imageUrl" [alt]="card.hero.name" />
+                <img [src]="card.hero.imageUrl" alt="" />
                 <span>
                   <strong>{{ card.hero.name }}</strong>
                   <small>{{ card.winRate }} · {{ card.sample }}</small>
@@ -289,7 +288,7 @@
                 [attr.data-tooltip]="card.description"
                 (click)="selectHero(card.hero.id)"
               >
-                <img [src]="card.hero.imageUrl" [alt]="card.hero.name" />
+                <img [src]="card.hero.imageUrl" alt="" />
                 <span>
                   <strong>{{ card.hero.name }}</strong>
                   <small>{{ card.winRate }} · {{ card.sample }}</small>

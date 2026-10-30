@@ -33,9 +33,9 @@ describe('CounterEngineService', () => {
       matchup('angela', 'peni-parker', 2, 12),
     ]);
 
-    expect(engine.winningAgainst(angela, heroes, matchups).map((card) => card.hero.name)).toEqual(['Peni Parker', 'Mantis']);
+    expect(engine.winningAgainst(angela, heroes, matchups).map((card) => card.hero.name)).toEqual(['Mantis', 'Peni Parker']);
     expect(engine.winningFor(angela, heroes, matchups).map((card) => card.hero.name)).toEqual(['Hulk']);
-    expect(engine.winningAgainst(angela, heroes, matchups)[0].winRate).toBe('83.3%');
+    expect(engine.winningAgainst(angela, heroes, matchups)[1].winRate).toBe('83.3%');
   });
 
   it('counts matchups for the picker, with a plain line when there are none', () => {
@@ -44,8 +44,11 @@ describe('CounterEngineService', () => {
     expect(engine.matchupCountLabel(angela, matchups)).toBe('2 matchups');
     expect(engine.matchupCountLabel(hulk, matchups)).toBe('No matchup yet');
     expect(engine.matchupCountLabel(angela, matchupsOf([matchup('angela', 'hulk', 9, 12)]))).toBe('1 matchup');
-    expect(engine.matchupCountLabel(angela, null)).toBe('No matchup yet');
-    expect(engine.matchupCountLabel(angela, undefined)).toBe('No matchup yet');
+  });
+
+  it('says Loading or Unavailable on a tile, not "No matchup yet", while matchups load or fail', () => {
+    expect(engine.matchupCountLabel(angela, undefined)).toBe('Loading');
+    expect(engine.matchupCountLabel(angela, null)).toBe('Unavailable');
   });
 
   describe('answersTo', () => {
@@ -76,15 +79,15 @@ describe('CounterEngineService', () => {
       expect(engine.answersTo([angela], heroes, matchupsOf([]))).toEqual([]);
     });
 
-    it('breaks a tie by role, then name, and keeps only the limit', () => {
+    it('breaks a tie by hero name only, and keeps only the limit', () => {
       const tied = matchupsOf([
         matchup('mantis', 'angela', 9, 12),
         matchup('hulk', 'angela', 9, 12),
         matchup('black-cat', 'angela', 9, 12),
       ]);
 
-      expect(engine.answersTo([angela], heroes, tied).map((answer) => answer.hero.name)).toEqual(['Hulk', 'Black Cat', 'Mantis']);
-      expect(engine.answersTo([angela], heroes, tied, 2).map((answer) => answer.hero.name)).toEqual(['Hulk', 'Black Cat']);
+      expect(engine.answersTo([angela], heroes, tied).map((answer) => answer.hero.name)).toEqual(['Black Cat', 'Hulk', 'Mantis']);
+      expect(engine.answersTo([angela], heroes, tied, 2).map((answer) => answer.hero.name)).toEqual(['Black Cat', 'Hulk']);
     });
   });
 });

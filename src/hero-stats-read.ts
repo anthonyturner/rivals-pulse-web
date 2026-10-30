@@ -19,7 +19,7 @@ export interface HeroStatsReadOptions {
 }
 
 const READ_FUNCTION = 'read_hero_stats';
-const { recordOf, recordsOf, numberOf, stringOf } = answerReader(READ_FUNCTION);
+const { answerOf, recordsOf, numberOf, stringOf } = answerReader(READ_FUNCTION);
 
 /** Reads the aggregates through `public.read_hero_stats()`; see `callSupabaseFunction`. */
 export async function fetchHeroStatsSource(
@@ -31,7 +31,7 @@ export async function fetchHeroStatsSource(
 
 /** Picks the known fields out of the function's answer and rejects anything that is not a number. */
 export function parseHeroStatsSource(body: unknown): HeroStatsSource {
-  const payload = recordOf(body, 'the answer');
+  const payload = answerOf(body);
 
   return {
     halfSeasons: recordsOf(payload['half_seasons'], 'half_seasons').map((row) => ({

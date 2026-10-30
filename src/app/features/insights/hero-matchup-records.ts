@@ -14,14 +14,14 @@ export function hasWinningRecord(matchup: HeroMatchup): boolean {
   return matchup.shrunkWinRate > WINNING_RECORD_CUT_OFF;
 }
 
-/** The matchups of a hero that has a winning record against `enemyId`, best record first. */
+/** The matchups of a hero that has a winning record against `enemyId`. */
 export function winningRecordsAgainst(matchups: HeroMatchups, enemyId: string): HeroMatchup[] {
-  return byRecord(matchups.matchups.filter((matchup) => matchup.enemy === enemyId && hasWinningRecord(matchup)));
+  return matchups.matchups.filter((matchup) => matchup.enemy === enemyId && hasWinningRecord(matchup));
 }
 
-/** `heroId`'s own matchups where it has a winning record, best record first. */
+/** `heroId`'s own matchups where it has a winning record. */
 export function winningRecordsOf(matchups: HeroMatchups, heroId: string): HeroMatchup[] {
-  return byRecord(matchups.matchups.filter((matchup) => matchup.hero === heroId && hasWinningRecord(matchup)));
+  return matchups.matchups.filter((matchup) => matchup.hero === heroId && hasWinningRecord(matchup));
 }
 
 /** How many enemy heroes `heroId` has a record against that is large enough to show. */
@@ -59,6 +59,8 @@ export interface RosterHero {
 /** One hero on a record, with the figures and sentence its card shows. */
 export interface RecordCard<H extends RosterHero> {
   hero: H;
+  /** Matches behind the record: what cards are ordered by. */
+  matches: number;
   winRate: string;
   sample: string;
   /** The record in words, for the card's tooltip. */
@@ -66,7 +68,8 @@ export interface RecordCard<H extends RosterHero> {
 }
 
 /**
- * Turns records into cards, keeping their order. `shown` picks which hero of the record the card
+ * Turns records into cards, largest sample first and then by hero name, so the order says how much
+ * a card rests on and never which record is strongest. `shown` picks which hero of the record the card
  * pictures; the sentence always reads winner against loser. A record naming a hero the roster does
  * not know is left out rather than shown half-blank.
  */
@@ -77,7 +80,7 @@ export function recordCards<H extends RosterHero>(
 ): RecordCard<H>[] {
   const byId = new Map(roster.map((hero) => [hero.id, hero]));
 
-  return rows.flatMap((matchup) => {
+  const cards = rows.flatMap((matchup) => {
     const portrait = byId.get(matchup[shown]);
     const winner = byId.get(matchup.hero);
     const loser = byId.get(matchup.enemy);
@@ -87,17 +90,13 @@ export function recordCards<H extends RosterHero>(
       : [
           {
             hero: portrait,
+            matches: matchup.matches,
             winRate: recordWinRateLabel(matchup),
             sample: recordSampleLabel(matchup),
             description: recordSentence(matchup, winner.name, loser.name),
           },
         ];
   });
-}
 
-// Best shrunk record first; ties fall to the larger sample and then the hero id so the order is stable.
-function byRecord(matchups: HeroMatchup[]): HeroMatchup[] {
-  return [...matchups].sort(
-    (a, b) => b.shrunkWinRate - a.shrunkWinRate || b.matches - a.matches || a.hero.localeCompare(b.hero) || a.enemy.localeCompare(b.enemy),
-  );
+  return cards.sort((a, b) => b.matches - a.matches || a.hero.name.localeCompare(b.hero.name));
 }

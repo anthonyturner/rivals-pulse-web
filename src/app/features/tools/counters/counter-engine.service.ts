@@ -47,9 +47,20 @@ export class CounterEngineService {
     return recordCards(winningRecordsOf(matchups, target.id), 'enemy', heroes);
   }
 
-  /** "3 matchups", or "No matchup yet" when no record of the hero is large enough to show. */
+  /**
+   * "3 matchups", or "No matchup yet" when no record of the hero is large enough to show. While the
+   * matchups load, or when they could not be read, it says so instead: that is not "no matchup".
+   */
   matchupCountLabel(hero: Hero, matchups: HeroMatchups | null | undefined): string {
-    const count = matchups ? matchupCountOf(matchups, hero.id) : 0;
+    if (matchups === undefined) {
+      return 'Loading';
+    }
+
+    if (matchups === null) {
+      return 'Unavailable';
+    }
+
+    const count = matchupCountOf(matchups, hero.id);
 
     return count === 0 ? 'No matchup yet' : `${count} matchup${count === 1 ? '' : 's'}`;
   }
@@ -76,15 +87,9 @@ export class CounterEngineService {
       .filter((answer) => answer.coveredThreats.length > 0)
       .sort(
         (a, b) =>
-          b.coveredThreats.length - a.coveredThreats.length ||
-          this.rolePriority(a.hero.role) - this.rolePriority(b.hero.role) ||
-          a.hero.name.localeCompare(b.hero.name),
+          b.coveredThreats.length - a.coveredThreats.length || a.hero.name.localeCompare(b.hero.name),
       )
       .slice(0, limit);
-  }
-
-  private rolePriority(role: HeroRole): number {
-    return role === 'Vanguard' ? 0 : role === 'Duelist' ? 1 : 2;
   }
 
   private heroHasRoleKit(hero: Hero, role: RoleFilter): boolean {

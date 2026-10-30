@@ -34,12 +34,12 @@ describe('hero matchup records', () => {
     expect(hasWinningRecord(matchup('hulk', 'thor', 3, 12))).toBeFalse();
   });
 
-  it('lists who has a winning record against a hero, best record first', () => {
-    expect(winningRecordsAgainst(matchups, 'thor').map((record) => record.hero)).toEqual(['storm', 'hulk']);
+  it('lists who has a winning record against a hero', () => {
+    expect(winningRecordsAgainst(matchups, 'thor').map((record) => record.hero)).toEqual(['hulk', 'storm']);
     expect(winningRecordsAgainst(matchups, 'storm')).toEqual([]);
   });
 
-  it('lists who a hero has a winning record against, best record first', () => {
+  it('lists who a hero has a winning record against', () => {
     expect(winningRecordsOf(matchups, 'hulk').map((record) => record.enemy)).toEqual(['thor']);
     expect(winningRecordsOf(matchups, 'thor')).toEqual([]);
   });
@@ -63,10 +63,21 @@ describe('hero matchup records', () => {
     const records = winningRecordsAgainst(matchups, 'thor');
     const cards = recordCards(records, 'hero', roster);
 
-    expect(cards.map((card) => card.hero.name)).toEqual(['Storm', 'Hulk']);
-    expect(cards[0].description).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
+    expect(cards.map((card) => card.hero.name)).toEqual(['Hulk', 'Storm']);
+    expect(cards[1].description).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
     expect(recordCards(records, 'enemy', roster).map((card) => card.hero.name)).toEqual(['Thor', 'Thor']);
     expect(recordCards(records, 'hero', roster.slice(1)).map((card) => card.hero.name)).toEqual(['Storm']);
+  });
+
+  it('orders cards by sample size, then name, and never by how strong the record is', () => {
+    const records = [
+      matchup('storm', 'thor', 11, 12),
+      matchup('hulk', 'thor', 14, 20),
+      matchup('mantis', 'thor', 9, 12),
+    ];
+    const withMantis = [...roster, { id: 'mantis', name: 'Mantis', imageUrl: '/mantis.png' }];
+
+    expect(recordCards(records, 'hero', withMantis).map((card) => card.hero.name)).toEqual(['Hulk', 'Mantis', 'Storm']);
   });
 
   it('never prints NaN, whatever the records hold', () => {

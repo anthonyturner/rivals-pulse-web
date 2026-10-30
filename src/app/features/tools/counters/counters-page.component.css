@@ -301,7 +301,7 @@ h1 {
 
 .overlap-grid button {
   display: grid;
-  grid-template-columns: auto 52px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   gap: 9px;
   align-items: center;
   padding: 9px;
@@ -323,12 +323,6 @@ h1 {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 6px;
-}
-
-.answer-rank {
-  color: #087e7e;
-  font-size: 0.72rem;
-  font-weight: 900;
 }
 
 .answer-copy {

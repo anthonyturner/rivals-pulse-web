@@ -274,6 +274,10 @@ Hero against hero is derived in [`src/hero-matchups.ts`](../src/hero-matchups.ts
 - A pair's win rate is the hero's wins over its scoreboard lines against that enemy; `shrunkWinRate`
   uses the same `(wins + 5) / (lines + 10)` as the tier rule. The list is sorted by hero then enemy,
   not by strength. A hero against itself (including two Deadpool forms) is dropped.
+- Deadpool's role forms are merged only after the per-row minimum. The database keeps a pair of game
+  hero ids only when that pair alone reaches the minimum, so a form with fewer than 10 matches
+  against an enemy never reaches the merge, and Deadpool's merged figure can understate his real
+  total. The minimum is applied to the merged sum as well, so it can only remove more pairs.
 - Competitive and Quick Match are blended, the half-season is chosen as for hero stats (the current
   one, or the previous one labelled with `inPlaceOf` while the current has no pair at the minimum),
   and a game hero id with no mapping is left out and logged.

@@ -59,6 +59,14 @@ export function answerReader(functionName: string) {
   };
 
   return {
+    /** The top-level answer, which must be an object. */
+    answerOf(value: unknown): Record<string, unknown> {
+      if (!isRecord(value)) {
+        throw new Error(`${functionName} did not return an object`);
+      }
+
+      return value;
+    },
     recordOf,
     recordsOf(value: unknown, what: string): Record<string, unknown>[] {
       if (!Array.isArray(value)) {

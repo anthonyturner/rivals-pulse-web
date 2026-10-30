@@ -85,6 +85,9 @@ describe('CountersPageComponent', () => {
       expect(text(root, '.data-status')).toContain('cannot be loaded right now');
       expect(text(root, '.overlap-grid')).toContain('Matchups unavailable');
       expect(root.querySelectorAll('.hero-tile').length).toBe(roster.length);
+      expect([...root.querySelectorAll('.hero-tile small')].map((label) => label.textContent?.trim())).toEqual(
+        roster.map(() => 'Unavailable'),
+      );
       expect(root.textContent).not.toMatch(/NaN|Infinity/);
     });
   });
@@ -95,6 +98,9 @@ describe('CountersPageComponent', () => {
 
       expect(root.querySelector('.data-status [role="status"]')?.textContent).toContain('Loading');
       expect(root.querySelectorAll('.counter-card').length).toBe(0);
+      expect([...root.querySelectorAll('.hero-tile small')].map((label) => label.textContent?.trim())).toEqual(
+        roster.map(() => 'Loading'),
+      );
     });
   });
 
@@ -114,7 +120,7 @@ describe('CountersPageComponent', () => {
       const beats = board[1].textContent ?? '';
 
       expect(text(root, '.selected-profile')).toContain('Angela');
-      expect(text(root, '.selected-profile')).toContain('2 matchups with enough recorded matches');
+      expect(text(root, '.selected-profile')).toContain('2 matchups');
       expect(against).toContain('Heroes that beat Angela');
       expect(against).toContain('Peni Parker');
       expect(against).toContain('83.3% · 12 matches');
@@ -140,6 +146,28 @@ describe('CountersPageComponent', () => {
       expect(answerNames(root)).toEqual([]);
       expect(text(root, '.overlap-grid')).toContain('No winning record yet');
       expect(text(root, '.overlap-grid')).not.toContain('Not enough data yet');
+    });
+
+    it('has no numbered badges on the planner and a hero-name-only search', async () => {
+      const root = await open(partial);
+
+      expect(root.querySelector('.answer-rank')).toBeNull();
+      expect(root.querySelector('input[type="search"]')?.getAttribute('placeholder')).toBe('Hero name');
+    });
+
+    it('lists cards by matches, then name', async () => {
+      const root = await open(
+        matchupsOf([
+          matchup('peni-parker', 'angela', 10, 12),
+          matchup('mantis', 'angela', 14, 20),
+          matchup('black-cat', 'angela', 9, 12),
+        ]),
+      );
+      const names = [...root.querySelectorAll('.counter-board .panel')[0].querySelectorAll('.counter-card strong')].map(
+        (name) => name.textContent?.trim(),
+      );
+
+      expect(names).toEqual(['Mantis', 'Black Cat', 'Peni Parker']);
     });
 
     it('lets a card pivot to that hero', async () => {

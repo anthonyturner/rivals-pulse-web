@@ -15,8 +15,10 @@ import {
 
 /**
  * Matches with a win or a loss in which two heroes faced each other before the pair is shown.
- * Keep it equal to `public.hero_matchup_min_matches()`, which the database applies first; applying
- * it again here keeps a thinner pair out if that function ever changes.
+ * Keep it equal to `public.hero_matchup_min_matches()`, which the database applies first, per pair
+ * of game hero ids. Applying it again here, after Deadpool's role forms are merged, keeps a thinner
+ * pair out if that function ever changes. A form below the minimum on its own never reaches the
+ * merge, so Deadpool's merged figure can understate his total.
  */
 export const HERO_MATCHUP_MIN_MATCHES = 10;
 

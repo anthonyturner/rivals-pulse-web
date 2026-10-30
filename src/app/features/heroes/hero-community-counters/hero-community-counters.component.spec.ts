@@ -52,7 +52,7 @@ describe('HeroCommunityCountersComponent', () => {
 
     expect(text).toContain('Rivals Pulse players');
     expect(text).toContain('Half-season: Season 10.5');
-    expect(names(root, 0)).toEqual(['Storm', 'Hulk']);
+    expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
     expect(names(root, 1)).toEqual([]);
     expect(text).toContain('Thor has no winning record against another hero yet.');
     expect(text).toContain('91.7%');
@@ -64,7 +64,7 @@ describe('HeroCommunityCountersComponent', () => {
     const root = await show('thor', 'Thor', readyMatchups);
     const titles = [...root.querySelectorAll('li[title]')].map((card) => card.getAttribute('title'));
 
-    expect(titles[0]).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
+    expect(titles[1]).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
   });
 
   it('says no hero has a winning record when the hero has matchups but none are winning', async () => {
@@ -109,7 +109,7 @@ describe('HeroCommunityCountersComponent', () => {
 
     expect(text).toContain('Previous half-season.');
     expect(text).toContain("Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.");
-    expect(names(root, 0)).toEqual(['Storm', 'Hulk']);
+    expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
   });
 
   it('keeps the empty state labelled when a stand-in half-season has nothing for the hero', async () => {
@@ -140,6 +140,26 @@ describe('HeroCommunityCountersComponent', () => {
     const root = await show('thor', 'Thor', undefined);
 
     expect(root.querySelector('[role="status"]')?.textContent).toContain('Loading');
+  });
+
+  it('keeps one live region mounted while the result changes from loading to an answer', async () => {
+    const root = await show('thor', 'Thor', undefined);
+    const region = root.querySelector('[role="status"]');
+
+    expect(region?.textContent).toContain('Loading');
+
+    fixture.componentRef.setInput('matchups', readyMatchups);
+    await fixture.whenStable();
+
+    expect(root.querySelector('[role="status"]')).toBe(region);
+    expect(region?.textContent).toContain('Half-season: Season 10.5');
+    expect(root.querySelectorAll('[role="status"]').length).toBe(1);
+  });
+
+  it('gives portraits empty alt text, since the hero name is written beside each one', async () => {
+    const root = await show('thor', 'Thor', readyMatchups);
+
+    expect([...root.querySelectorAll('img')].map((image) => image.getAttribute('alt'))).toEqual(['', '']);
   });
 
   it('describes records only: it never orders heroes to ban', async () => {
