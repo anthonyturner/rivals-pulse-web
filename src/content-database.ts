@@ -4,7 +4,8 @@ import { GlossaryTerm } from './app/features/reference/glossary/glossary.model.j
 import { HomeContent, PortalCard } from './app/features/home/home-content.model.js';
 import { Hero, HeroVideo } from './app/features/heroes/hero.model.js';
 import { TierListResponse } from './contracts/tier-list.model.js';
-import { getSupabaseStatus, type SupabaseStatus } from './supabase-client.js';
+import { countHeroes, getHero, listHeroes } from './hero-store.js';
+import { getSupabaseClient, getSupabaseStatus, type SupabaseStatus } from './supabase-client.js';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;
@@ -35,19 +36,12 @@ type ContentStatus = {
 
 let client: Client | undefined;
 
-export async function getHeroesFromDatabase(): Promise<Hero[]> {
-  return queryRows<{ raw_json: string }>(
-    'SELECT raw_json FROM heroes ORDER BY name COLLATE NOCASE',
-  ).then((rows) => rows.map((row) => JSON.parse(row.raw_json) as Hero));
+export function getHeroesFromDatabase(): Promise<Hero[]> {
+  return listHeroes(getSupabaseClient());
 }
 
-export async function getHeroFromDatabase(id: string): Promise<Hero | undefined> {
-  const row = await queryOne<{ raw_json: string }>(
-    'SELECT raw_json FROM heroes WHERE id = ?',
-    id,
-  );
-
-  return row ? JSON.parse(row.raw_json) as Hero : undefined;
+export function getHeroFromDatabase(id: string): Promise<Hero | undefined> {
+  return getHero(getSupabaseClient(), id);
 }
 
 export async function getHeroVideosFromDatabase(): Promise<HeroVideo[]> {
@@ -142,7 +136,7 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     databaseProvider: 'turso',
     databaseUrl: getSafeDatabaseUrl(),
     configured: Boolean(process.env['TURSO_DATABASE_URL'] && process.env['TURSO_AUTH_TOKEN']),
-    heroes: await getCount('heroes'),
+    heroes: await countHeroes(getSupabaseClient()),
     glossaryTerms: await getCount('glossary_terms'),
     externalSources: await getCount('external_sources'),
     heroVideos: await getCount('hero_videos'),
