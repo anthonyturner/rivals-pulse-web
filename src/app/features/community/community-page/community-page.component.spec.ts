@@ -22,8 +22,10 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
   }
 
-  async function pressOnSelectedTab(key: string): Promise<void> {
-    selectedTab()?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  async function pressOnSelectedTab(key: string, modifiers: KeyboardEventInit = {}): Promise<void> {
+    selectedTab()?.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...modifiers }),
+    );
     await harness.fixture.whenStable();
     harness.detectChanges();
   }
@@ -120,6 +122,16 @@ describe('CommunityPageComponent', () => {
     expect(document.activeElement).toBe(tabs()[1]);
   });
 
+  it('leaves browser shortcuts such as Alt+Left alone', async () => {
+    await open('/matches');
+
+    await pressOnSelectedTab('ArrowLeft', { altKey: true });
+    await pressOnSelectedTab('ArrowRight', { ctrlKey: true });
+    await pressOnSelectedTab('ArrowRight', { metaKey: true });
+
+    expect(router.url).toBe('/matches');
+  });
+
   it('ignores other keys', async () => {
     await open('/heroes');
 
@@ -144,7 +156,9 @@ describe('CommunityPageComponent', () => {
       expect(text).toContain('Rivals Pulse app uploads');
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
-      expect(panel().querySelector('[role="status"], .empty-state')).toBeTruthy();
+      expect(panel().querySelector('.empty-state')).toBeTruthy();
+      expect(panel().querySelector('h2')).toBeTruthy();
+      expect(panel().querySelector('h3')).toBeNull();
     });
   }
 

@@ -47,6 +47,6 @@
 }
 
 .empty-state__link:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--blue);
   outline-offset: 3px;
 }

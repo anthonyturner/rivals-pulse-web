@@ -36,6 +36,9 @@ export class CommunityPageComponent {
   );
 
   protected onTabKeydown(event: KeyboardEvent, index: number): void {
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
     const target = this.targetIndex(event.key, index);
     if (target === null) {
       return;

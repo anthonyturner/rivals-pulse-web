@@ -21,7 +21,7 @@
         [id]="tab.tabId"
         [routerLink]="['..', tab.id]"
         [attr.aria-selected]="tab.selected"
-        [attr.aria-controls]="'community-panel'"
+        aria-controls="community-panel"
         [attr.tabindex]="tab.selected ? 0 : -1"
         (keydown)="onTabKeydown($event, index)"
       >

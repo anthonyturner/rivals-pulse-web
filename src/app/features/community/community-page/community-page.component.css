@@ -83,7 +83,7 @@
 
 .community-page__tab:focus-visible,
 .community-page__panel:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--blue);
   outline-offset: -3px;
 }
 
@@ -94,6 +94,11 @@
 @media (max-width: 640px) {
   .community-page {
     padding: var(--mobile-page-gutter);
+  }
+
+  .community-page__tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .community-page__tab {
