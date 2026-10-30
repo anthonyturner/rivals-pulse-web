@@ -9,8 +9,7 @@ import type {
 import {
   BLENDED_PLAY_MODE_IDS,
   PLAY_MODE_IDS,
-  currentHalfSeason,
-  describeHalfSeason,
+  halfSeasonTimeline,
   type HalfSeasonStart,
 } from './hero-stats.js';
 
@@ -28,6 +27,10 @@ export const COMMUNITY_MATCHES_MINIMUMS: CommunityMatchesMinimums = {
   overviewMatches: 20,
   mapMatches: 10,
   lengthMatches: 10,
+  // Mirrors `community_bucket_shown` in the database, which is where the privacy rule is applied:
+  // a map, mode or day that fewer players recorded (or that one player mostly recorded) never
+  // reaches this code, so every count here is already a count of shown buckets.
+  recorders: 3,
 };
 
 /** One game mode in one half-season, as `read_community_matches()` returns it. */
@@ -99,12 +102,11 @@ export function deriveCommunityMatches(
   source: CommunityMatchesSource,
   options: DeriveCommunityMatchesOptions,
 ): CommunityMatches {
-  const starts = new Map(source.halfSeasons.map((season) => [season.halfSeason, season.startsAt]));
-  const known = [
-    ...new Set([...starts.keys(), ...source.modes.map((row) => row.halfSeason)]),
-  ].sort((a, b) => a - b);
-  const current = currentHalfSeason(starts, known, options.now);
-  const started = current === undefined ? [] : known.filter((id) => id <= current);
+  const { current, started, describe, previousOf } = halfSeasonTimeline(
+    source.halfSeasons,
+    source.modes.map((row) => row.halfSeason),
+    options.now,
+  );
 
   const toResult = (shown: number | undefined, inPlaceOf: number | undefined): CommunityMatches => {
     const snapshot = shown === undefined ? emptySnapshot() : snapshotOf(source, shown);
@@ -112,9 +114,9 @@ export function deriveCommunityMatches(
     return {
       status: hasFigures(snapshot) ? 'ready' : 'not-enough-data',
       minimums: { ...COMMUNITY_MATCHES_MINIMUMS },
-      halfSeasons: started.map((id) => describeHalfSeason(id, starts, known)),
-      halfSeason: shown === undefined ? null : describeHalfSeason(shown, starts, known),
-      inPlaceOf: inPlaceOf === undefined ? null : describeHalfSeason(inPlaceOf, starts, known),
+      halfSeasons: started.map(describe),
+      halfSeason: shown === undefined ? null : describe(shown),
+      inPlaceOf: inPlaceOf === undefined ? null : describe(inPlaceOf),
       ...snapshot,
     };
   };
@@ -127,7 +129,7 @@ export function deriveCommunityMatches(
     return toResult(started.includes(options.halfSeason) ? options.halfSeason : undefined, undefined);
   }
 
-  const previous = [...known].reverse().find((id) => id < current);
+  const previous = previousOf(current);
 
   if (previous !== undefined && !hasEnoughMatches(source, current) && hasEnoughMatches(source, previous)) {
     return toResult(previous, current);
@@ -150,14 +152,19 @@ function snapshotOf(source: CommunityMatchesSource, halfSeason: number): Snapsho
       sum(modes.map((row) => row.durationSumSeconds)),
       sum(modes.map((row) => row.durationN)),
     ),
-    perDay:
-      matchesCounted >= COMMUNITY_MATCHES_MINIMUMS.overviewMatches
-        ? source.days
-            .filter((row) => row.halfSeason === halfSeason)
-            .map((row): CommunityDayCount => ({ day: row.day, matches: row.matches }))
-            .sort((a, b) => a.day.localeCompare(b.day))
-        : null,
+    perDay: perDay(source.days.filter((row) => row.halfSeason === halfSeason)),
   };
+}
+
+/** The days the database let through, once they add up to a sample worth showing. */
+function perDay(days: readonly CommunityDayRow[]): CommunityDayCount[] | null {
+  if (sum(days.map((row) => row.matches)) < COMMUNITY_MATCHES_MINIMUMS.overviewMatches) {
+    return null;
+  }
+
+  return days
+    .map((row): CommunityDayCount => ({ day: row.day, matches: row.matches }))
+    .sort((a, b) => a.day.localeCompare(b.day));
 }
 
 /** The mean over the matches that carried a length; a match without one is not a zero-second match. */

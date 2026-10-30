@@ -249,6 +249,19 @@ describe('deriveCommunityMatches', () => {
       ]);
     });
 
+    it('sizes the sample by the days the database let through, not by the mode totals', () => {
+      const result = deriveCommunityMatches(
+        source({
+          modes: [modeRow(PLAY_MODE_IDS.quickMatch, 60)],
+          days: [dayRow('2026-10-10', overviewMatches - 1)],
+        }),
+        { now: NOW },
+      );
+
+      expect(result.modeMix).not.toBeNull();
+      expect(result.perDay).toBeNull();
+    });
+
     it('shows no days below the sample a half-season needs', () => {
       const result = deriveCommunityMatches(
         source({
@@ -360,7 +373,7 @@ describe('deriveCommunityMatches', () => {
       'perDay',
       'status',
     ]);
-    expect(Object.keys(result.minimums).sort()).toEqual(['lengthMatches', 'mapMatches', 'overviewMatches']);
+    expect(Object.keys(result.minimums).sort()).toEqual(['lengthMatches', 'mapMatches', 'overviewMatches', 'recorders']);
     expect(Object.keys(result.halfSeason!).sort()).toEqual(['endsAt', 'id', 'label', 'startsAt']);
     expect(Object.keys(result.maps[0]).sort()).toEqual(['map', 'matches', 'winRate', 'wins']);
     expect(Object.keys(result.mapsBelowMinimum[0]).sort()).toEqual(['map', 'matches']);

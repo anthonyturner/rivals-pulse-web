@@ -9,7 +9,7 @@ import { CommunityMatchesService, isCommunityMatches } from './community-matches
 const season = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
 const notEnoughData: CommunityMatches = {
   status: 'not-enough-data',
-  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10 },
+  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
   halfSeasons: [season],
   halfSeason: season,
   inPlaceOf: null,

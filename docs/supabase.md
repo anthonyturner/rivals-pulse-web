@@ -275,7 +275,8 @@ limit never applies), made only of counts and `half_seasons` start dates:
 - `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
   (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
   matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
-  again to the chosen modes' own sum. Nothing calls it yet; the counter picks work will.
+  again to the chosen modes' own sum. The website reads it through `GET /api/hero-matchups`
+  ([`src/hero-matchups-read.ts`](../src/hero-matchups-read.ts)), always for Competitive and Quick Match.
 
 Every rate, tier and KDA is derived in one pure module, [`src/hero-stats.ts`](../src/hero-stats.ts),
 and served by `GET /api/hero-stats`. The rules, which are the overlay's personal tier list:
@@ -298,6 +299,25 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.
 
+Hero against hero is derived in [`src/hero-matchups.ts`](../src/hero-matchups.ts) and served by
+`GET /api/hero-matchups`. It describes a record and nothing else: no tier, no rank, no ban score.
+
+- A pair is listed once the two heroes have faced each other in 10 matches with a win or a loss
+  (`HERO_MATCHUP_MIN_MATCHES`, equal to `hero_matchup_min_matches()`). Below that the pair is absent,
+  and the pages say "Not enough data yet".
+- A pair's win rate is the hero's wins over its scoreboard lines against that enemy; `shrunkWinRate`
+  uses the same `(wins + 5) / (lines + 10)` as the tier rule. The list is sorted by hero then enemy,
+  not by strength. A hero against itself (including two Deadpool forms) is dropped.
+- Deadpool's role forms are merged only after the per-row minimum. The database keeps a pair of game
+  hero ids only when that pair alone reaches the minimum, so a form with fewer than 10 matches
+  against an enemy never reaches the merge, and Deadpool's merged figure can understate his real
+  total. The minimum is applied to the merged sum as well, so it can only remove more pairs.
+- Competitive and Quick Match are blended, the half-season is chosen as for hero stats (the current
+  one, or the previous one labelled with `inPlaceOf` while the current has no pair at the minimum),
+  and a game hero id with no mapping is left out and logged.
+- A page calls a hero's record a winning one when its shrunk win rate is above 50%
+  (`WINNING_RECORD_CUT_OFF`).
+
 ## Community match aggregates
 
 The Community Matches tab (issue 172) reads its own anonymous counts, kept apart from the hero
@@ -306,16 +326,26 @@ nothing for `anon` or `authenticated`, and hold counts only: no uid, name, finge
 row.
 
 - `community_map_aggregates` per half-season, mode and map: matches, matches with a known result, wins.
+  Every bucket row in the three tables also stores `recorders` (how many distinct recorders
+  contributed) and `top_recorder_matches` (how many matches the busiest one contributed): counts only,
+  never who.
 - `community_mode_aggregates` per half-season and mode: matches, and the summed match length with the
   count of matches it was summed over (a match with no length is never averaged in as zero).
 - `community_day_aggregates` per half-season and UTC day: matches.
 - A match is its roster fingerprint plus its start time, so a match recorded by two players counts once.
-- The result of a match is read from the recorder's side. The recorder's line in `participants` is
-  found by their in-game uid (inside the function only, never stored) and their own win or loss and
-  the match length come from the matching `tracked_matches` row, within the four minutes that count as
-  one match. When recorders on both teams uploaded the match, the earliest upload is the one that
+- The result of a match is read from the recorder's side. A recorder's line in `participants` is
+  found by their in-game uid (inside the function only, never stored). Their own win or loss and the
+  match length come from their `tracked_matches` row for this match: the row nearest in time within
+  the four minutes that count as one match, preferring the row whose map is the match's map when two
+  are equally near. A recorder whose rows cannot be told apart gives none, because either could be
+  another match. When recorders on both teams uploaded the match, the earliest upload is the one that
   counts, so a match is never both a win and a loss. A match with no such row still counts as a match
   but is left out of win rates and averages.
+- **Privacy gate (epic 170).** `community_bucket_shown` lets a bucket (a map in a mode, a mode, a day)
+  through only with at least 3 distinct recorders and no recorder above 50% of its matches.
+  `read_community_matches()` applies it, so a hidden bucket never leaves the database, and every total
+  the site shows is computed over the shown buckets only. The migration asserts the gate's own cases
+  when it runs. With one or two uploaders nothing passes, and the tab shows "not enough data yet".
 - `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
   frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
   half-season a week after the next one began (uploads are refused once a match is a week old), or
@@ -329,7 +359,7 @@ row.
   applied the call fails with a "function not found" error, which the server turns into the empty
   state.
 - `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
-  `COMMUNITY_MATCHES_MINIMUMS`): 20 matches in the half-season for the mode mix and matches per day,
+  `COMMUNITY_MATCHES_MINIMUMS`): 20 shown matches for the mode mix and matches per day,
   10 matches with a result for a map's win rate, 10 matches with a length for an average. While the
   current half-season is below 20 matches and the previous one is not, the previous one is returned
   with `inPlaceOf` naming the current one.
@@ -351,6 +381,14 @@ select md5(string_agg(r, '|' order by r)) as checksum from (
   union all select 'o' || to_jsonb(a)::text from public.community_mode_aggregates a
   union all select 'd' || to_jsonb(a)::text from public.community_day_aggregates a
 ) t;
+```
+
+## Each half-season
+
+Retention deletes a scoreboard row once the half-season after its own has
+ended. It needs to know when each half-season started. Add a row on the day a
+new one begins, from the tier-list site:
+
 ```sql
 insert into public.half_seasons (half_season, starts_at)
 values (11.0, '2026-11-13T09:00:00Z')

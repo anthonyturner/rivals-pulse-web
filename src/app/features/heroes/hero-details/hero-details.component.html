@@ -52,6 +52,13 @@
 
   <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
 
+  <app-hero-community-counters
+    [heroId]="hero.id"
+    [heroName]="hero.name"
+    [matchups]="controller.heroMatchups()"
+    [roster]="controller.heroRoster()"
+  />
+
   @if (hero.gameplayArchetypes?.length) {
   <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
     <div class="section-heading">
@@ -133,24 +140,6 @@
   </div>
 
   <div class="matchup-row">
-    <section>
-      <div class="section-heading">
-        <h3>Counters</h3>
-        <a routerLink="/counters" [queryParams]="{ hero: hero.id }">Counter lab</a>
-      </div>
-      <div class="tag-list">
-        @for (counter of hero.counters; track counter) {
-        @if (controller.heroByName(counter); as counterHero) {
-        <span class="hero-matchup-chip" [title]="counterHero.name">
-          <img [src]="counterHero.imageUrl" [alt]="counterHero.name" />
-        </span>
-        } @else {
-        <span>{{ counter }}</span>
-        }
-        }
-      </div>
-    </section>
-
     <section>
       <h3>Synergies</h3>
       <div class="tag-list">

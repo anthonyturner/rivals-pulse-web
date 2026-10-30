@@ -41,6 +41,11 @@ export interface CommunityMatchesMinimums {
   mapMatches: number;
   /** Matches with a known length before an average length shows. */
   lengthMatches: number;
+  /**
+   * Distinct players who must have recorded the matches of a map, mode or day before it shows. The
+   * database applies this (with a cap of half a bucket for any one player); it is here so the tab can say so.
+   */
+  recorders: number;
 }
 
 /**

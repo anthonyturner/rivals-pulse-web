@@ -15,7 +15,7 @@ const QUICK_MATCH_ONLY: CommunityModeShare[] = [
 function matches(parts: Partial<CommunityMatches> = {}): CommunityMatches {
   return {
     status: 'ready',
-    minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10 },
+    minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
     halfSeasons: [SEASON_10, SEASON_10_5],
     halfSeason: SEASON_10_5,
     inPlaceOf: null,
@@ -49,15 +49,17 @@ describe('buildCommunityMatchesView', () => {
     expect(view.kind).toBe('not-enough-data');
     if (view.kind === 'not-enough-data') {
       expect(view.halfSeasonLabel).toBe('Season 10.5');
-      expect(view.summary).toBe('Season 10.5 has 4 matches counted so far. The first figures appear at 20 matches.');
+      expect(view.summary).toBe(
+        'Season 10.5 has 4 matches counted so far. The first figures appear at 20 matches from at least 3 players.',
+      );
     }
   });
 
-  it('names no zero when nothing is counted in the half-season yet', () => {
+  it('names no zero, and no hidden count, when nothing is shown for the half-season yet', () => {
     const view = buildCommunityMatchesView(matches({ status: 'not-enough-data', matchesCounted: 0 }));
 
     expect(view.kind === 'not-enough-data' && view.summary).toBe(
-      'No matches are counted in Season 10.5 yet. The first figures appear at 20 matches.',
+      'Season 10.5 does not have enough data yet. The first figures appear at 20 matches from at least 3 players.',
     );
   });
 
@@ -67,7 +69,7 @@ describe('buildCommunityMatchesView', () => {
     );
 
     expect(view.kind === 'not-enough-data' && view.summary).toBe(
-      'No matches are counted yet. The first figures appear at 20 matches.',
+      'No matches are counted yet. The first figures appear at 20 matches from at least 3 players.',
     );
   });
 
@@ -114,7 +116,7 @@ describe('buildCommunityMatchesView', () => {
 
     expect(view.maps.rows).toEqual([]);
     expect(view.maps.pending).toEqual([]);
-    expect(view.maps.note).toBe('Not enough data yet. A map needs 10 matches with a result before its win rate shows.');
+    expect(view.maps.note).toBe('Not enough data yet. A map needs 10 matches with a result from at least 3 players before its win rate shows.');
   });
 
   it('shows the mode mix with shares and per-mode lengths', () => {
@@ -142,11 +144,11 @@ describe('buildCommunityMatchesView', () => {
     );
 
     expect(view.modeMix.rows).toEqual([]);
-    expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 20 matches.');
+    expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 20 matches from at least 3 players.');
     expect(view.averageLength.label).toBeNull();
-    expect(view.averageLength.note).toBe('Not enough data yet. An average needs 10 matches with a known length.');
+    expect(view.averageLength.note).toBe('Not enough data yet. An average needs 10 matches with a known length from at least 3 players.');
     expect(view.perDay.rows).toEqual([]);
-    expect(view.perDay.note).toBe('Not enough data yet. Days appear at 20 matches.');
+    expect(view.perDay.note).toBe('Not enough data yet. Days appear at 20 matches from at least 3 players.');
   });
 
   it('shows the average length and the days with bars scaled to the busiest day', () => {

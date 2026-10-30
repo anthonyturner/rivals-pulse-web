@@ -35,7 +35,7 @@ export function isCommunityMatches(body: unknown): body is CommunityMatches {
     (data.status === 'ready' || data.status === 'not-enough-data') &&
     typeof minimums === 'object' &&
     minimums !== null &&
-    ['overviewMatches', 'mapMatches', 'lengthMatches'].every((key) => isCount(minimums[key])) &&
+    ['overviewMatches', 'mapMatches', 'lengthMatches', 'recorders'].every((key) => isCount(minimums[key])) &&
     isCount(data.matchesCounted) &&
     (data.halfSeason === null || isHalfSeason(data.halfSeason)) &&
     (data.inPlaceOf === null || isHalfSeason(data.inPlaceOf)) &&

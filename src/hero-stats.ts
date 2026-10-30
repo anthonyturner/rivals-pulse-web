@@ -130,20 +130,60 @@ interface HalfSeasonSnapshot {
   excludedGameIds: Set<number>;
 }
 
+/**
+ * Which half-seasons exist and which is current, from the start dates in `half_seasons` plus the
+ * half-seasons that have counts but no start date. Shared by everything that picks a half-season.
+ */
+export interface HalfSeasonTimeline {
+  /** The latest half-season that has started, or undefined before any exists. */
+  current: number | undefined;
+  /** Every half-season up to and including the current one, oldest first. */
+  started: number[];
+  describe(id: number): HeroStatsHalfSeason;
+  /** The latest known half-season before `id`. */
+  previousOf(id: number): number | undefined;
+}
+
+export function halfSeasonTimeline(
+  halfSeasons: readonly HalfSeasonStart[],
+  countedIds: Iterable<number>,
+  now: Date,
+): HalfSeasonTimeline {
+  const starts = new Map(halfSeasons.map((season) => [season.halfSeason, season.startsAt]));
+  const known = [...new Set([...starts.keys(), ...countedIds])].sort((a, b) => a - b);
+  const current = currentHalfSeason(starts, known, now);
+
+  return {
+    current,
+    started: current === undefined ? [] : known.filter((id) => id <= current),
+    describe: (id) => {
+      const next = known.find((other) => other > id && starts.has(other));
+
+      return {
+        id,
+        label: `Season ${id}`,
+        startsAt: starts.get(id) ?? null,
+        endsAt: next === undefined ? null : (starts.get(next) ?? null),
+      };
+    },
+    previousOf: (id) => [...known].reverse().find((other) => other < id),
+  };
+}
+
 export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStatsOptions): HeroStatsDerivation {
-  const starts = new Map(source.halfSeasons.map((season) => [season.halfSeason, season.startsAt]));
-  const known = [...new Set([...starts.keys(), ...source.heroes.map((row) => row.halfSeason)])].sort((a, b) => a - b);
-  const current = currentHalfSeason(starts, known, options.now);
+  const { current, started, describe, previousOf } = halfSeasonTimeline(
+    source.halfSeasons,
+    source.heroes.map((row) => row.halfSeason),
+    options.now,
+  );
   const excludedGameIds = new Set<number>();
 
-  const describe = (id: number): HeroStatsHalfSeason => describeHalfSeason(id, starts, known);
   const snapshot = (id: number): HalfSeasonSnapshot => {
     const result = snapshotOf(source, id, options.heroSlugByGameId);
     result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
 
     return result;
   };
-  const started = current === undefined ? [] : known.filter((id) => id <= current);
   const toStats = (
     shown: number | undefined,
     inPlaceOf: number | undefined,
@@ -177,7 +217,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
   }
 
   const now = snapshot(current);
-  const previous = [...known].reverse().find((id) => id < current);
+  const previous = previousOf(current);
 
   if (now.tiers.length === 0 && previous !== undefined) {
     const before = snapshot(previous);
@@ -190,24 +230,8 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
   return finish(toStats(current, undefined, now));
 }
 
-/** One half-season as the site names it; its end is the next known start, or null while it is the latest. */
-export function describeHalfSeason(
-  id: number,
-  starts: ReadonlyMap<number, string>,
-  known: readonly number[],
-): HeroStatsHalfSeason {
-  const next = known.find((other) => other > id && starts.has(other));
-
-  return {
-    id,
-    label: `Season ${id}`,
-    startsAt: starts.get(id) ?? null,
-    endsAt: next === undefined ? null : (starts.get(next) ?? null),
-  };
-}
-
 /** The latest half-season that has started, or the latest with any counts when no start date says. */
-export function currentHalfSeason(starts: ReadonlyMap<number, string>, known: readonly number[], now: Date): number | undefined {
+function currentHalfSeason(starts: ReadonlyMap<number, string>, known: readonly number[], now: Date): number | undefined {
   const started = known.filter((id) => {
     const start = Date.parse(starts.get(id) ?? '');
 

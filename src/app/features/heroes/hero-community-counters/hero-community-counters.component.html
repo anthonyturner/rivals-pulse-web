@@ -1,0 +1,76 @@
+<section class="community-counters" [attr.aria-labelledby]="'community-counters-title-' + heroId()">
+  <div class="community-counters__heading">
+    <div>
+      <p class="community-counters__eyebrow">Rivals Pulse players</p>
+      <h3 [id]="'community-counters-title-' + heroId()">{{ heroName() }} against other heroes</h3>
+    </div>
+    <a routerLink="/counters" [queryParams]="{ hero: heroId() }">Counter lab</a>
+  </div>
+
+  <div class="community-counters__result" role="status" aria-live="polite">
+    @let current = view();
+
+    @if (current.kind === 'loading') {
+    <p class="community-counters__message">Loading Rivals Pulse player matchups...</p>
+    } @else if (current.kind === 'unavailable') {
+    <p class="community-counters__message">
+      Rivals Pulse player matchups cannot be loaded right now. The rest of this page is not affected.
+    </p>
+    } @else {
+    @if (current.halfSeasonLabel) {
+    <p class="community-counters__scope">
+      Half-season: {{ current.halfSeasonLabel }}@if (current.kind === 'not-enough-data' && current.fallbackFor) { (standing in for {{ current.fallbackFor }}) }
+    </p>
+    }
+
+    @if (current.kind === 'ready') {
+    @if (current.notice) {
+    <p class="community-counters__notice"><strong>Previous half-season.</strong> {{ current.notice }}</p>
+    }
+
+    <div class="community-counters__groups">
+      <section [attr.aria-labelledby]="'community-counters-against-' + heroId()">
+        <h4 [id]="'community-counters-against-' + heroId()">Heroes with a winning record against {{ heroName() }}</h4>
+        <ul class="community-counters__cards">
+          @for (card of current.winningAgainst; track card.hero.id) {
+          <li [title]="card.description">
+            <img [src]="card.hero.imageUrl" alt="" />
+            <span class="community-counters__name">{{ card.hero.name }}</span>
+            <strong>{{ card.winRate }}</strong>
+            <small>{{ card.sample }}</small>
+          </li>
+          } @empty {
+          <li class="community-counters__none">No hero has a winning record against {{ heroName() }} yet.</li>
+          }
+        </ul>
+      </section>
+
+      <section [attr.aria-labelledby]="'community-counters-for-' + heroId()">
+        <h4 [id]="'community-counters-for-' + heroId()">Heroes {{ heroName() }} has a winning record against</h4>
+        <ul class="community-counters__cards">
+          @for (card of current.winningFor; track card.hero.id) {
+          <li [title]="card.description">
+            <img [src]="card.hero.imageUrl" alt="" />
+            <span class="community-counters__name">{{ card.hero.name }}</span>
+            <strong>{{ card.winRate }}</strong>
+            <small>{{ card.sample }}</small>
+          </li>
+          } @empty {
+          <li class="community-counters__none">{{ heroName() }} has no winning record against another hero yet.</li>
+          }
+        </ul>
+      </section>
+    </div>
+    <p class="community-counters__sample">
+      Win rates come from matches recorded by Rivals Pulse players, with a short run pulled toward even. They describe
+      how a hero fares against another hero.
+    </p>
+    } @else {
+    <div class="community-counters__empty">
+      <p class="community-counters__status">Not enough data yet</p>
+      <p class="community-counters__message">{{ current.summary }}</p>
+    </div>
+    }
+    }
+  </div>
+</section>

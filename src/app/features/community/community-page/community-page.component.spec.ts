@@ -12,7 +12,7 @@ const TAB_LABELS = ['Heroes', 'Matches', 'Counters', 'Tier list', 'Stats', 'Insi
 // What /api/community/matches answers while no half-season has enough matches yet.
 const MATCHES_NOT_ENOUGH_DATA = {
   status: 'not-enough-data',
-  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10 },
+  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
   halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,

@@ -111,7 +111,6 @@ jobs:
           Still curated by hand for **${ADDED:-the new hero}**:
 
           - [ ] \`src/app/features/heroes/hero-gameplay-archetypes.ts\` - archetype label and notes
-          - [ ] \`src/app/features/tools/counters/counter-engine.service.ts\` - counter matchups
           - [ ] \`src/app/features/learning/guides/hero-guides/hero-guide-data.ts\` - hero guide entry
           BODY
 
