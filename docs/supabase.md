@@ -46,7 +46,7 @@ repo's build. This is a move, not a redesign.
 | `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
 | `20261029000000_participants_mode_map.sql` | `participants.play_mode_id` and `participants.map_name` (null when the game did not say); `record_match_participants` takes them as two trailing arguments and fills a blank one on a repeat upload |
 | `20261030000000_hero_aggregates.sql` | Anonymous hero counts that outlive the purge: `hero_aggregates`, `hero_aggregate_totals`, `hero_matchups`, `hero_aggregate_half_seasons` and the functions that rebuild them; `purge_expired_participants` freezes a half-season before it deletes from it; an hourly `recompute-hero-aggregates` job |
-| `20261030020000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
+| `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
 
 Link once per machine, check history, then apply:
 
@@ -170,13 +170,14 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 
 - A hero is placed once it has 10 appearances in matches with a win or a loss. Its tier comes from
   the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
-- "Matches" for a hero is its scoreboard lines (a hero on both teams of one match counts twice,
+- A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
   as in the overlay); the pick rate is those lines over the matches counted.
 - Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
   are left out.
 - KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
 - While the current half-season has no hero at the minimum, the previous half-season is returned
   with `inPlaceOf` naming the current one.
+- The site picks the current half-season from `half_seasons`, so a new half-season must have its row (see "Each half-season" below) before its first match; without it the site keeps showing the previous half-season.
 - A game hero id with no mapping in `data/pulse-atlas/hero-game-ids.json` (hero id 0 is "no hero
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.

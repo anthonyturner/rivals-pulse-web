@@ -60,7 +60,7 @@ const ALLOWED_KEYS = new Set([
   'name',
   'heroes',
   'hero',
-  'matches',
+  'appearances',
   'wins',
   'winRate',
   'pickRate',

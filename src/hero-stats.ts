@@ -92,8 +92,8 @@ export interface HeroStatsDerivation {
 }
 
 /** A hero's record pulled toward 50% by the prior, as a fraction from 0 to 1. */
-export function shrunkWinRate(wins: number, matches: number): number {
-  return (wins + WIN_RATE_PRIOR_MATCHES / 2) / (matches + WIN_RATE_PRIOR_MATCHES);
+export function shrunkWinRate(wins: number, appearances: number): number {
+  return (wins + WIN_RATE_PRIOR_MATCHES / 2) / (appearances + WIN_RATE_PRIOR_MATCHES);
 }
 
 export function tierForShrunkWinRate(rate: number): TierName {
@@ -106,7 +106,7 @@ export function killDeathAssistRatio(kills: number, deaths: number, assists: num
 }
 
 interface Tally {
-  matches: number;
+  appearances: number;
   wins: number;
   killsSum: number;
   killsN: number;
@@ -216,7 +216,7 @@ function snapshotOf(
     }
 
     const tally = tallies.get(slug) ?? emptyTally();
-    tally.matches += row.decidedLines;
+    tally.appearances += row.decidedLines;
     tally.wins += row.wins;
     tally.killsSum += row.killsSum;
     tally.killsN += row.killsN;
@@ -230,13 +230,13 @@ function snapshotOf(
   }
 
   const lines = [...tallies]
-    .filter(([, tally]) => tally.matches > 0)
-    .map(([hero, tally]) => ({ hero, tally, shrunk: shrunkWinRate(tally.wins, tally.matches) }));
+    .filter(([, tally]) => tally.appearances > 0)
+    .map(([hero, tally]) => ({ hero, tally, shrunk: shrunkWinRate(tally.wins, tally.appearances) }));
 
   const byTier = new Map<TierName, HeroStatsHero[]>();
   lines
-    .filter(({ tally }) => tally.matches >= HERO_STATS_MIN_MATCHES)
-    .sort((a, b) => b.shrunk - a.shrunk || b.tally.matches - a.tally.matches || a.hero.localeCompare(b.hero))
+    .filter(({ tally }) => tally.appearances >= HERO_STATS_MIN_MATCHES)
+    .sort((a, b) => b.shrunk - a.shrunk || b.tally.appearances - a.tally.appearances || a.hero.localeCompare(b.hero))
     .forEach(({ hero, tally, shrunk }) => {
       const tier = tierForShrunkWinRate(shrunk);
       byTier.set(tier, [...(byTier.get(tier) ?? []), heroLine(hero, tally, shrunk, tier, matchesCounted)]);
@@ -246,9 +246,9 @@ function snapshotOf(
     matchesCounted,
     tiers: TIER_ORDER.filter((name) => byTier.has(name)).map((name) => ({ name, heroes: byTier.get(name) ?? [] })),
     belowMinimum: lines
-      .filter(({ tally }) => tally.matches < HERO_STATS_MIN_MATCHES)
-      .map(({ hero, tally }) => ({ hero, matches: tally.matches }))
-      .sort((a, b) => b.matches - a.matches || a.hero.localeCompare(b.hero)),
+      .filter(({ tally }) => tally.appearances < HERO_STATS_MIN_MATCHES)
+      .map(({ hero, tally }) => ({ hero, appearances: tally.appearances }))
+      .sort((a, b) => b.appearances - a.appearances || a.hero.localeCompare(b.hero)),
     excludedGameIds,
   };
 }
@@ -258,10 +258,10 @@ function snapshotOf(
 function heroLine(hero: string, tally: Tally, shrunk: number, tier: TierName, matchesCounted: number): HeroStatsHero {
   return {
     hero,
-    matches: tally.matches,
+    appearances: tally.appearances,
     wins: tally.wins,
-    winRate: (tally.wins / tally.matches) * 100,
-    pickRate: matchesCounted > 0 ? (tally.matches / matchesCounted) * 100 : 0,
+    winRate: (tally.wins / tally.appearances) * 100,
+    pickRate: matchesCounted > 0 ? (tally.appearances / matchesCounted) * 100 : 0,
     shrunkWinRate: shrunk * 100,
     tier,
     kda:
@@ -274,7 +274,7 @@ function heroLine(hero: string, tally: Tally, shrunk: number, tier: TierName, ma
 
 function emptyTally(): Tally {
   return {
-    matches: 0,
+    appearances: 0,
     wins: 0,
     killsSum: 0,
     killsN: 0,

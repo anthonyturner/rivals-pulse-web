@@ -13,8 +13,11 @@ export interface HeroStatsHalfSeason {
 export interface HeroStatsHero {
   /** The hero's id in `heroes.json`, such as `captain-america`. */
   hero: string;
-  /** Scoreboard lines of this hero in matches with a win or a loss. */
-  matches: number;
+  /**
+   * Scoreboard lines of this hero in matches with a win or a loss. A hero on both teams of one match
+   * appears twice, so this can exceed the matches counted and `pickRate` can exceed 100.
+   */
+  appearances: number;
   wins: number;
   winRate: number;
   /** Lines of this hero as a share of the matches counted. */
@@ -35,7 +38,7 @@ export interface HeroStatsTier {
 
 export interface HeroStatsBelowMinimum {
   hero: string;
-  matches: number;
+  appearances: number;
 }
 
 /**

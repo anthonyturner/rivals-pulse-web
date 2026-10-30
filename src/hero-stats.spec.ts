@@ -100,8 +100,8 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
   it('counts both teams, each line winning or losing with its own team', () => {
     const source = sourceOf([record(HERO_A, HERO_B, MIN, MIN)]);
 
-    expect(heroOf(source, 'hulk')).toEqual(jasmine.objectContaining({ matches: MIN, wins: MIN, winRate: 100 }));
-    expect(heroOf(source, 'captain-america')).toEqual(jasmine.objectContaining({ matches: MIN, wins: 0, winRate: 0 }));
+    expect(heroOf(source, 'hulk')).toEqual(jasmine.objectContaining({ appearances: MIN, wins: MIN, winRate: 100 }));
+    expect(heroOf(source, 'captain-america')).toEqual(jasmine.objectContaining({ appearances: MIN, wins: 0, winRate: 0 }));
   });
 
   it('credits a lost match to the other team', () => {
@@ -116,7 +116,7 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
 
     expect(stats.tiers).toEqual([]);
     expect(stats.belowMinimum.map((hero) => hero.hero).sort()).toEqual(['captain-america', 'hulk']);
-    expect(stats.belowMinimum[0].matches).toBe(MIN - 1);
+    expect(stats.belowMinimum[0].appearances).toBe(MIN - 1);
     expect(stats.status).toBe('not-enough-data');
   });
 
@@ -215,7 +215,7 @@ describe('deriveHeroStats modes and heroes', () => {
 
     expect(stats.matchesCounted).toBe(10);
     expect(stats.tiers[0].heroes[0]).toEqual(
-      jasmine.objectContaining({ hero: 'hulk', matches: 10, wins: 10, pickRate: 100 }),
+      jasmine.objectContaining({ hero: 'hulk', appearances: 10, wins: 10, pickRate: 100 }),
     );
   });
 
@@ -234,7 +234,7 @@ describe('deriveHeroStats modes and heroes', () => {
       { heroes: [heroRow(10571, 4, 4), heroRow(10572, 4, 4), heroRow(1057, 2, 2)], matches: 10 },
     ]);
 
-    expect(heroOf(source, 'deadpool')).toEqual(jasmine.objectContaining({ matches: 10, wins: 10 }));
+    expect(heroOf(source, 'deadpool')).toEqual(jasmine.objectContaining({ appearances: 10, wins: 10 }));
     expect(derive(source).excludedGameIds).toEqual([]);
   });
 });
