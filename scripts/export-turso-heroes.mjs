@@ -6,42 +6,30 @@
 //   node scripts/export-turso-heroes.mjs --check supabase/migrations/<version>_hero_content_data.sql
 //
 // `--check` exits 1 when Turso has changed since the file was written; run it just before the push.
-import { readFileSync, writeFileSync } from 'node:fs';
-
 import { createTursoClient } from './turso-client.mjs';
+import {
+  insertStatements,
+  integer,
+  json,
+  selectRows,
+  text,
+  utcTimestamp,
+  writeOrCheckDataMigration,
+} from './turso-data-migration.mjs';
 
 // The hero syncs' snapshots in `external_sources`; the other sources belong to later slices.
 const HERO_SOURCE_KEYS = ['official-heroes', 'fandom-heroes', 'nerfpool-s9-week1'];
-const ROWS_PER_STATEMENT = 25;
 
-const outPath = getPathArg('--out');
-const checkPath = getPathArg('--check');
-
-if (Boolean(outPath) === Boolean(checkPath)) {
-  console.error('Pass exactly one of --out <file> or --check <file>.');
-  process.exit(2);
-}
-
-const sql = await buildSql();
-
-if (outPath) {
-  writeFileSync(outPath, sql);
-  console.log(`Wrote ${outPath}.`);
-} else if (readFileSync(checkPath, 'utf8') === sql) {
-  console.log('Turso matches the data migration.');
-} else {
-  console.error('Turso has changed since the data migration was written. Regenerate it with --out.');
-  process.exit(1);
-}
+await writeOrCheckDataMigration(buildSql);
 
 async function buildSql() {
   const db = createTursoClient();
 
   try {
-    const heroes = await select(db, 'SELECT * FROM heroes ORDER BY id');
-    const listItems = await select(db, 'SELECT * FROM hero_list_items ORDER BY id');
-    const abilities = await select(db, 'SELECT * FROM hero_abilities ORDER BY id');
-    const sources = await select(
+    const heroes = await selectRows(db, 'SELECT * FROM heroes ORDER BY id');
+    const listItems = await selectRows(db, 'SELECT * FROM hero_list_items ORDER BY id');
+    const abilities = await selectRows(db, 'SELECT * FROM hero_abilities ORDER BY id');
+    const sources = await selectRows(
       db,
       `SELECT * FROM external_sources WHERE source_key IN (${HERO_SOURCE_KEYS.map(() => '?').join(', ')}) ORDER BY source_key`,
       HERO_SOURCE_KEYS,
@@ -100,56 +88,4 @@ async function buildSql() {
   } finally {
     db.close();
   }
-}
-
-async function select(db, sql, args = []) {
-  const result = await db.execute(sql, args);
-
-  return result.rows.map((row) => Object.fromEntries(result.columns.map((column) => [column, row[column]])));
-}
-
-function insertStatements(table, columns, rows) {
-  const statements = [];
-
-  for (let start = 0; start < rows.length; start += ROWS_PER_STATEMENT) {
-    const values = rows
-      .slice(start, start + ROWS_PER_STATEMENT)
-      .map((row) => `  (${columns.map(([, literal]) => literal(row)).join(', ')})`);
-
-    statements.push(
-      `insert into ${table} (${columns.map(([name]) => name).join(', ')}) values\n${values.join(',\n')}\non conflict do nothing;\n`,
-    );
-  }
-
-  return statements;
-}
-
-function text(value) {
-  return value === null || value === undefined ? 'null' : `'${String(value).replaceAll("'", "''")}'`;
-}
-
-function integer(value) {
-  if (!Number.isInteger(Number(value))) {
-    throw new Error(`Expected an integer but found ${JSON.stringify(value)}.`);
-  }
-
-  return String(Number(value));
-}
-
-// Throws on malformed JSON here instead of during the push.
-function json(value) {
-  JSON.parse(value);
-
-  return `${text(value)}::jsonb`;
-}
-
-// SQLite's CURRENT_TIMESTAMP is UTC but carries no zone.
-function utcTimestamp(value) {
-  return `'${String(value).replaceAll("'", "''")}+00'::timestamptz`;
-}
-
-function getPathArg(name) {
-  const index = process.argv.indexOf(name);
-
-  return index === -1 ? undefined : process.argv[index + 1];
 }
