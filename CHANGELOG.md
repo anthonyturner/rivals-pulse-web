@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- A Community page at `/community`, linked from the main menu, with a tab for each Rivals Pulse app screen (Heroes, Matches, Counters, Tier list, Stats and Insights); each tab explains what it will show and says "not enough data yet" until matches are uploaded ([#181](https://github.com/anthonyturner/rivals-pulse-web/pull/181)).
 - Every hero in the Pulse Atlas `heroes.json` now carries the game's numeric hero id as `gameId` (Deadpool also lists his three role ids), so anyone reading the feed can turn a tier-list `heroId` into a hero ([#159](https://github.com/anthonyturner/rivals-pulse-web/pull/159)).
 - Pulse Atlas now publishes `hero-styles.json`, a Poke / Dive / Brawl percentage mix for every hero, so the overlay can weight hero pick rates by playstyle; the first 54 weights are drafts for review ([#127](https://github.com/anthonyturner/rivals-pulse-web/pull/127)).
 - The Pulse Atlas site has a home page at its root and at `/pulse-atlas/v1/` that says what it is and lists each file with its size and hash, instead of GitHub's 404 ([#118](https://github.com/anthonyturner/rivals-pulse-web/pull/118)).

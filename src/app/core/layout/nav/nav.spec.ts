@@ -24,6 +24,14 @@ describe('Nav', () => {
     expect(component).toBeTruthy();
   });
 
+  it('offers a top-level Community link to the hub', () => {
+    const link = Array.from(
+      fixture.nativeElement.querySelectorAll('#primary-navigation .nav-link') as NodeListOf<HTMLAnchorElement>,
+    ).find((anchor) => anchor.textContent?.trim() === 'Community');
+
+    expect(link?.getAttribute('href')).toBe('/community');
+  });
+
   it('offers the core orb as a labelled link to the console', () => {
     const orb = fixture.nativeElement.querySelector('.core-orb') as HTMLAnchorElement | null;
 
