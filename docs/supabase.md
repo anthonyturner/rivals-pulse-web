@@ -45,6 +45,7 @@ repo's build. This is a move, not a redesign.
 | `20261010000000_participants_fill_late_result.sql` | `record_match_participants` fills a blank `is_win` on a repeat upload |
 | `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
 | `20261029000000_participants_mode_map.sql` | `participants.play_mode_id` and `participants.map_name` (null when the game did not say); `record_match_participants` takes them as two trailing arguments and fills a blank one on a repeat upload |
+| `20261030000000_hero_aggregates.sql` | Anonymous hero counts that outlive the purge: `hero_aggregates`, `hero_aggregate_totals`, `hero_matchups`, `hero_aggregate_half_seasons` and the functions that rebuild them; `purge_expired_participants` freezes a half-season before it deletes from it; an hourly `recompute-hero-aggregates` job |
 
 Link once per machine, check history, then apply:
 
@@ -126,6 +127,29 @@ Premium is dormant until configured, on both sides. The order matters:
    for every player. Set `PREMIUM_JARVIS_PACKAGE_IDS` with it if only some
    packages should count.
 
+## Hero aggregates
+
+`participants` rows are deleted once the half-season after their own has ended, so the counts the
+site needs are kept separately, as anonymous numbers with no uid, name or fingerprint
+(`hero_aggregates` per half-season, mode and hero; `hero_aggregate_totals` per half-season and mode;
+`hero_matchups` per hero against an enemy hero). All four tables have RLS on and no policy, so only
+the service role reaches them.
+
+- `recompute_hero_aggregates()` rebuilds every half-season that still has raw rows and is not
+  frozen, from scratch, so running it twice changes nothing and a late result or a `forget_player`
+  shows up on the next run. The hourly `recompute-hero-aggregates` pg_cron job runs it.
+- `purge_expired_participants()` rebuilds and freezes each half-season it is about to delete from,
+  before deleting. A frozen half-season is never rebuilt, so its counts keep the contribution of
+  anyone forgotten after the freeze. Frozen means `frozen_at` is set in `hero_aggregate_half_seasons`.
+- A match is its roster fingerprint plus its start time. `play_mode_id` -1 means the game did not say.
+- A matchup is stored, in each mode it was seen in, only when its decided matches summed over all
+  modes of the half-season reach `hero_matchup_min_matches()`. The per-hero minimum (10, the tier
+  rule) belongs to the code that derives tiers.
+- A row that arrives in a half-season after the purge froze it is never counted, so a backfill must
+  finish before the half-season it fills comes due.
+- A rebuild failing inside the purge would stop deletion, which is why the hourly job exercises the
+  same code long before any half-season is due.
+
 ## Each half-season
 
 Retention deletes a scoreboard row once the half-season after its own has
@@ -143,10 +167,11 @@ policy's hard limit), but later than promised.
 
 ## After setup
 
-- **Required:** `select jobname from cron.job where jobname =
-  'purge-expired-participants';` must show the daily job. If it does not (the
-  migration warns when `pg_cron` is unavailable), enable `pg_cron` and schedule
-  `select public.purge_expired_participants();` daily by hand.
+- **Required:** `select jobname from cron.job where jobname in
+  ('purge-expired-participants', 'recompute-hero-aggregates');` must show both jobs (the daily
+  purge and the hourly aggregate rebuild). If one is missing (the migrations warn when `pg_cron` is
+  unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();` daily and
+  `select public.recompute_hero_aggregates();` hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
