@@ -50,6 +50,7 @@
     </div>
   </div>
 
+  <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
 
   @if (hero.gameplayArchetypes?.length) {
   <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
