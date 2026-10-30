@@ -7,6 +7,12 @@ import { TierListResponse } from './contracts/tier-list.model.js';
 import { countGlossaryTerms, listGlossaryTerms } from './glossary-store.js';
 import { countHeroes, getHero, listHeroes } from './hero-store.js';
 import { countHeroVideos, listHeroVideos } from './hero-video-store.js';
+import {
+  countHomeContentBlocks,
+  countHomePortals,
+  getHomeContentBlocks,
+  listHomePortals,
+} from './home-content-store.js';
 import { getSupabaseClient, getSupabaseStatus, type SupabaseStatus } from './supabase-client.js';
 import { countExternalSources, getStoredExternalSourcePayload } from './sync-log.js';
 
@@ -51,21 +57,12 @@ export function getHeroVideosFromDatabase(): Promise<HeroVideo[]> {
   return listHeroVideos(getSupabaseClient());
 }
 
-export async function getHomePortalsFromDatabase(): Promise<PortalCard[]> {
-  return queryRows<{ raw_json: string }>(
-    'SELECT raw_json FROM home_portals ORDER BY sort_order, title COLLATE NOCASE',
-  ).then((rows) => rows.map((row) => JSON.parse(row.raw_json) as PortalCard));
+export function getHomePortalsFromDatabase(): Promise<PortalCard[]> {
+  return listHomePortals(getSupabaseClient());
 }
 
 export async function getHomeContentBlocksFromDatabase(): Promise<Partial<HomeContent>> {
-  const rows = await queryRows<{ content_key: keyof HomeContent; payload_json: string }>(
-    'SELECT content_key, payload_json FROM home_content_blocks',
-  );
-
-  return rows.reduce<Partial<HomeContent>>((content, row) => ({
-    ...content,
-    [row.content_key]: JSON.parse(row.payload_json),
-  }), {});
+  return (await getHomeContentBlocks(getSupabaseClient())) as Partial<HomeContent>;
 }
 
 export function getGlossaryTermsFromDatabase(): Promise<GlossaryTerm[]> {
@@ -118,8 +115,8 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     glossaryTerms: await countGlossaryTerms(getSupabaseClient()),
     externalSources: await countExternalSources(getSupabaseClient()),
     heroVideos: await countHeroVideos(getSupabaseClient()),
-    homePortals: await getCount('home_portals'),
-    homeContentBlocks: await getCount('home_content_blocks'),
+    homePortals: await countHomePortals(getSupabaseClient()),
+    homeContentBlocks: await countHomeContentBlocks(getSupabaseClient()),
     tierListSeasons: await getOptionalCount('tier_list_seasons'),
     tierListItems: await getOptionalCount('tier_list_items'),
     gameStatSnapshots: await getOptionalCount('game_stat_snapshots'),

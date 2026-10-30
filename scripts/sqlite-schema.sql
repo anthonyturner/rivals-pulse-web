@@ -1,32 +1,5 @@
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS home_portals (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  path TEXT NOT NULL,
-  image TEXT NOT NULL,
-  sort_order INTEGER NOT NULL,
-  raw_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS home_content_blocks (
-  content_key TEXT PRIMARY KEY,
-  payload_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS external_sources (
-  source_key TEXT PRIMARY KEY,
-  source_name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  payload_json TEXT NOT NULL,
-  fetched_at TEXT NOT NULL,
-  status TEXT NOT NULL,
-  error TEXT
-);
-
 CREATE TABLE IF NOT EXISTS sync_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   source_key TEXT NOT NULL,
@@ -109,7 +82,6 @@ CREATE TABLE IF NOT EXISTS game_stat_snapshot_games (
   UNIQUE (snapshot_id, app_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_home_portals_sort_order ON home_portals(sort_order);
 CREATE INDEX IF NOT EXISTS idx_sync_runs_source_key ON sync_runs(source_key);
 CREATE INDEX IF NOT EXISTS idx_tier_list_rank_snapshots_season ON tier_list_rank_snapshots(season_id);
 CREATE INDEX IF NOT EXISTS idx_tier_list_items_lookup ON tier_list_items(season_id, rank_filter, tier, sort_order);

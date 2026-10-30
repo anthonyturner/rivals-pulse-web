@@ -2,10 +2,11 @@
 
 > The hero tables (`heroes`, `hero_list_items`, `hero_abilities`) moved to Supabase in issue 105 and
 > the hero syncs now write `sync_runs` and `external_sources` there. See
-> [supabase.md](supabase.md#website-hero-data). `hero_videos`, `glossary_terms` and
-> `external_sources` followed in issue 106 ([supabase.md](supabase.md#website-reference-content)).
-> The Turso copies are frozen and are dropped with Turso (issue 110); until issue 107 moves it, the
-> home news sync still writes its `official-marvel-rivals-home` snapshot to Turso.
+> [supabase.md](supabase.md#website-hero-data). The home tables (`home_portals`,
+> `home_content_blocks`) and the home news sync followed in issue 107; see
+> [supabase.md](supabase.md#website-home-content). The Turso copies are frozen and are dropped
+> with Turso (issue 110). `hero_videos`, `glossary_terms` and `external_sources` followed in issue
+> 106 ([supabase.md](supabase.md#website-reference-content)).
 
 The app uses one shared Turso/libSQL database for curated content and cached external API payloads.
 The mock JSON files under `data/seeds` are seed inputs only; runtime pages read from the Express API backed by Turso.
@@ -63,13 +64,13 @@ Stores hero abilities. Default abilities use empty `kit_role` and `kit_label`; r
 Stores hero-specific and role-fallback YouTube video mappings used by the Heroes page.
 PAZ gameplay and counters/combos videos are seeded here so the page does not carry those mappings in component code.
 
-### `home_portals`
+### `home_portals` (now in Supabase)
 
 Stores the home page portal cards.
 
-### `home_content_blocks`
+### `home_content_blocks` (now in Supabase)
 
-Stores the remaining home page content blocks by key, including stats, news cards, featured guides, quick links, and current focus copy.
+Stores the remaining home page content blocks by key, including stats, news cards, featured guides, quick links, and current focus copy. In Supabase the `payload_json` text column is `payload jsonb`.
 
 ### `glossary_terms` (now in Supabase)
 
@@ -109,8 +110,8 @@ The Express SSR server exposes read-only routes:
 ## Update Flow
 
 1. Update curated JSON files or generator scripts.
-2. Run `npm run db:seed` to rebuild Turso content tables (it no longer seeds heroes, hero videos or
-   glossary terms; `npm run sync:hero-videos` and `npm run sync:glossary` write those to Supabase).
+2. Run `npm run db:seed` to load the seeded content into Supabase (home page tables, glossary terms
+   and hero videos; heroes are not seeded) and apply the Turso schema.
 3. Run `npm run db:sync` to refresh external source payloads.
 4. Run `npm run sync:heroes` to discover and upsert current Fandom heroes.
 5. Run `npm run build` to verify the app still compiles.

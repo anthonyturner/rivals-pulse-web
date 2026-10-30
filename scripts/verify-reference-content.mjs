@@ -19,7 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createTursoClient } from './turso-client.mjs';
-import { select } from './turso-export.mjs';
+import { selectRows } from './turso-data-migration.mjs';
 
 const capturesDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'turso-cutover', '106');
 const SERVED_VIDEO_TYPES = ['paz-gameplay', 'paz-counters-combos'];
@@ -33,9 +33,14 @@ const SOURCE_KEYS = [
   'official-marvel-rivals-home',
   'steam-marvel-rivals-news',
 ];
-// Since issue 105 the hero syncs write these to Supabase while production still reads Turso, so a
-// difference here means the hero syncs have run since. It is listed, not failed.
-const HERO_SOURCE_KEYS = ['official-heroes', 'fandom-heroes', 'nerfpool-s9-week1'];
+// Sources the hero slice (issue 105) and the home slice (issue 107) copied. Their syncs already
+// write them to Supabase, so a difference means a sync has run since: it is listed, not failed.
+const OTHER_SLICE_SOURCE_KEYS = [
+  'official-heroes',
+  'fandom-heroes',
+  'nerfpool-s9-week1',
+  'official-marvel-rivals-home',
+];
 const NAMED = {
   glossary_terms: ['afk', 'anchor-hero', 'choke-point', 'mvp-svp', 'team-up'],
   hero_videos: [
@@ -49,8 +54,8 @@ const NAMED = {
     'fandom-battlepasses',
     'fandom-deadpool',
     'fandom-deadpool-abilities-template',
-    'official-marvel-rivals-home',
     'steam-marvel-rivals-news',
+    'fandom-heroes',
   ],
 };
 
@@ -83,18 +88,7 @@ async function verifyDatabase() {
 
   compareTable('glossary_terms', turso.glossary, supabase.glossary, (row) => row.id, normalizeGlossaryRow);
   compareTable('hero_videos', turso.videos, supabase.videos, videoKey, normalizeVideoRow);
-  compareTable(
-    'external_sources',
-    turso.sources.filter((row) => !HERO_SOURCE_KEYS.includes(row.source_key)),
-    supabase.sources.filter((row) => !HERO_SOURCE_KEYS.includes(row.source_key)),
-    (row) => row.source_key,
-    normalizeSourceRow,
-  );
-  check(
-    'external_sources row count',
-    supabase.sources.length === turso.sources.length,
-    `Turso ${turso.sources.length}, Supabase ${supabase.sources.length}`,
-  );
+  compareTable('external_sources', turso.sources, supabase.sources, (row) => row.source_key, normalizeSourceRow);
 
   check('glossary_terms has RLS on', supabase.rls.relrowsecurity === true, JSON.stringify(supabase.rls));
   check('glossary_terms has no policy', Number(supabase.rls.policies) === 0, JSON.stringify(supabase.rls));
@@ -145,9 +139,9 @@ async function readTurso() {
 
   try {
     return {
-      glossary: await select(db, 'SELECT * FROM glossary_terms'),
-      videos: await select(db, 'SELECT * FROM hero_videos'),
-      sources: await select(db, 'SELECT * FROM external_sources'),
+      glossary: await selectRows(db, 'SELECT * FROM glossary_terms'),
+      videos: await selectRows(db, 'SELECT * FROM hero_videos'),
+      sources: await selectRows(db, 'SELECT * FROM external_sources'),
     };
   } finally {
     db.close();
@@ -216,6 +210,8 @@ function compareTable(table, tursoRows, supabaseRows, keyOf, normalize) {
 
     if (differences.length === 0) {
       equal += 1;
+    } else if (table === 'external_sources' && OTHER_SLICE_SOURCE_KEYS.includes(key)) {
+      notes.push(`${table} ${key} differs from Turso (its sync has run since): ${differences.join('; ')}`);
     } else {
       failures.push(`${table} ${key}: ${differences.join('; ')}`);
     }
@@ -234,12 +230,12 @@ function compareTable(table, tursoRows, supabaseRows, keyOf, normalize) {
 function compareCapture(label, actual, captureFile) {
   const expected = JSON.parse(readFileSync(join(capturesDir, captureFile), 'utf8'));
   const differences = diff(expected, actual);
-  const heroSource = HERO_SOURCE_KEYS.some((key) => label.endsWith(`/${key}`));
+  const otherSlice = OTHER_SLICE_SOURCE_KEYS.some((key) => label.endsWith(`/${key}`));
 
   if (differences.length === 0) {
     console.log(`${label}: equal to the capture.`);
-  } else if (heroSource) {
-    notes.push(`${label} differs from the capture (the hero syncs have run since): ${differences.join('; ')}`);
+  } else if (otherSlice) {
+    notes.push(`${label} differs from the capture (its sync has run since): ${differences.join('; ')}`);
   } else {
     failures.push(`${label}: ${differences.join('; ')}`);
   }

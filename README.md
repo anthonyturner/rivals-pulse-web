@@ -58,7 +58,7 @@ Open `http://localhost:4200/`.
 | `npm.cmd start` | Run the development server |
 | `npm.cmd run build` | Build Angular and type-check the API |
 | `npm.cmd test` | Run unit tests |
-| `npm.cmd run db:seed` | Rebuild Turso content from local seed JSON (heroes, hero videos and glossary terms now live in Supabase and are not seeded) |
+| `npm.cmd run db:seed` | Load the local seed JSON into Supabase: home page portals and blocks, glossary terms and hero videos (heroes are not seeded); also applies the Turso schema |
 | `npm.cmd run sync:hero-videos` | Copy the hero videos seed file into Supabase |
 | `npm.cmd run sync:glossary` | Copy every glossary term from the seed file into Supabase |
 | `npm.cmd run db:sync` | Cache configured external sources |
