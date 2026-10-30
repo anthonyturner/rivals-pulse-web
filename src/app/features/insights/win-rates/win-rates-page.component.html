@@ -155,25 +155,7 @@
             </p>
           </div>
 
-          <ul class="building-list">
-            @for (row of v.building; track row.hero) {
-              <li>
-                <img
-                  [src]="row.imageUrl"
-                  alt=""
-                  width="32"
-                  height="32"
-                  loading="lazy"
-                  (error)="onImageError($event)"
-                />
-                <span class="building-name">{{ row.name }}</span>
-                <span class="building-count">{{ row.progressLabel }}</span>
-                <span class="progress" aria-hidden="true">
-                  <span class="progress-fill" [style.width.%]="row.progressPercent"></span>
-                </span>
-              </li>
-            }
-          </ul>
+          <app-hero-progress-list [rows]="v.building" />
         </section>
       }
     }

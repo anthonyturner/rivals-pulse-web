@@ -3,8 +3,9 @@ import { forkJoin, map, Observable } from 'rxjs';
 
 import type { SeasonGlanceContent } from '../home-content.model';
 import { HomeContentService } from '../home-content.service';
+import { HomeHeroStatsService } from '../home-hero-stats.service';
 import type { SeasonUpdate } from '../home-season.model';
-import { HomeTierListService } from '../home-tier-list.service';
+import { seasonDateRange } from './season-date-range';
 
 export interface SeasonGlanceState {
   content: SeasonGlanceContent | null;
@@ -21,44 +22,21 @@ const emptyState: SeasonGlanceState = {
 @Injectable({ providedIn: 'root' })
 export class SeasonGlanceService {
   private readonly homeContent = inject(HomeContentService);
-  private readonly tierLists = inject(HomeTierListService);
+  private readonly heroStats = inject(HomeHeroStatsService);
 
   readonly initialState = emptyState;
 
   getSeasonGlance(): Observable<SeasonGlanceState> {
     return forkJoin({
       content: this.homeContent.getHomeContent(),
-      tierList: this.tierLists.getLatestAllRanks(),
+      stats: this.heroStats.getHeroStats(),
     }).pipe(
-      map(({ content, tierList }) => {
-        const selectedSeason = tierList?.seasons.find(
-          (season) => season.id === tierList.selectedSeasonId,
-        );
-
-        return {
-          content: content.seasonGlance,
-          latestTuning: content.latestTuning,
-          seasonDateRange: selectedSeason
-            ? formatDateRange(selectedSeason.startTime, selectedSeason.endTime)
-            : '',
-        };
-      }),
+      map(({ content, stats }) => ({
+        content: content.seasonGlance,
+        latestTuning: content.latestTuning,
+        // The last half-season is the current one, even while an earlier one stands in for it in the numbers.
+        seasonDateRange: seasonDateRange(stats?.halfSeasons.at(-1)),
+      })),
     );
   }
-}
-
-function formatDateRange(startValue: string, endValue: string): string {
-  const start = new Date(startValue);
-  const end = new Date(endValue);
-  const startText = new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-  }).format(start);
-  const endText = new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(end);
-
-  return `${startText} – ${endText}`;
 }

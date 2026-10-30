@@ -11,9 +11,12 @@
 
 .tier-hero,
 .toolbar,
+.state-panel,
+.notice,
 .meta-strip,
 .tiers,
-.empty-state {
+.building,
+.method-note {
   width: min(1220px, 100%);
   margin-inline: auto;
 }
@@ -61,9 +64,10 @@ h1 {
 
 .season-card,
 .toolbar,
+.state-panel,
 .meta-strip,
 .tier-row,
-.empty-state {
+.building {
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -129,24 +133,6 @@ select:focus {
   outline: 3px solid var(--focus-ring);
 }
 
-.source-link {
-  margin-left: auto;
-  padding: 10px 12px;
-  border: 1px solid rgba(3, 159, 159, 0.25);
-  border-radius: 7px;
-  background: rgba(232, 247, 251, 0.82);
-  color: #087b7b;
-  font-size: 0.86rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.source-link:hover {
-  border-color: rgba(224, 169, 0, 0.48);
-  background: #fff9df;
-  color: var(--accent-strong);
-}
-
 .meta-strip {
   display: flex;
   flex-wrap: wrap;
@@ -168,10 +154,6 @@ select:focus {
   display: grid;
   gap: 12px;
   margin-top: 12px;
-}
-
-.tiers.is-loading {
-  opacity: 0.68;
 }
 
 .tier-row {
@@ -298,21 +280,72 @@ select:focus {
   font-weight: 700;
 }
 
-.empty-state {
+.state-panel {
   display: grid;
   gap: 10px;
+  justify-items: start;
   margin-top: 12px;
   padding: 22px;
 }
 
-.empty-state h2 {
+.state-panel h2 {
   color: var(--text);
   font-size: 1.35rem;
 }
 
-.empty-state p:last-child {
+.state-panel p {
+  max-width: 62ch;
   color: var(--text-soft);
   line-height: 1.55;
+}
+
+.state-panel .state-count {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.notice {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(224, 169, 0, 0.34);
+  border-radius: 8px;
+  background: #fff9df;
+  color: var(--accent-ink);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.building {
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.section-heading {
+  display: grid;
+  gap: 4px;
+  padding: 16px 16px 12px;
+}
+
+.section-heading h2 {
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.section-heading p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.method-note {
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+abbr {
+  text-decoration: none;
 }
 
 @media (max-width: 760px) {
@@ -331,14 +364,13 @@ select:focus {
   }
 
   .toolbar label,
-  select,
-  .source-link {
+  select {
     width: 100%;
   }
 
-  .source-link {
-    margin-left: 0;
-    text-align: center;
+  .state-panel,
+  .section-heading {
+    padding: var(--mobile-panel-padding);
   }
 
   .tier-row {

@@ -1,87 +1,63 @@
-import { CommonModule } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { catchError, of } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, switchMap, tap } from 'rxjs';
 
-import { TierListResponse } from '../../../../contracts/tier-list.model';
+import type { HeroStats } from '../../../../contracts/hero-stats.model';
+import { HeroDataService } from '../../heroes/hero-data.service';
+import { identitiesOf } from '../hero-identity';
+import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
+import { HeroStatsService } from '../hero-stats.service';
+import { buildTierListView, seasonOptions, type SeasonOption } from './tier-list-view';
 
+/** The community tier list: Rivals Pulse players' matches only, all ranks together. */
 @Component({
   selector: 'app-tier-list-page',
-  imports: [CommonModule, FormsModule],
+  imports: [HeroProgressListComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './tier-list-page.component.html',
   styleUrl: './tier-list-page.component.css',
 })
-export class TierListPageComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+export class TierListPageComponent {
+  private readonly heroStats = inject(HeroStatsService);
+  private readonly chosenSeason = signal<number | undefined>(undefined);
+  /** Kept from the last answer, so the picker stays when a request for one half-season fails. */
+  readonly seasons = signal<SeasonOption[]>([]);
+  private readonly requested = new BehaviorSubject<number | undefined>(undefined);
+  // undefined while the first request runs, null once a request has failed.
+  private readonly stats = toSignal(
+    this.requested.pipe(
+      switchMap((halfSeason) =>
+        this.heroStats.getHeroStats(halfSeason).pipe(tap((stats) => this.rememberSeasons(stats))),
+      ),
+    ),
+  );
+  private readonly heroes = toSignal(inject(HeroDataService).getHeroes());
+  private readonly identities = computed(() => identitiesOf(this.heroes() ?? []));
 
-  readonly tierList = signal<TierListResponse | undefined>(undefined);
-  readonly isLoading = signal(true);
-  readonly selectedSeasonId = signal<number | undefined>(undefined);
-  readonly selectedRankFilter = signal('5+');
+  /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
+  readonly loading = computed(() => this.stats() === undefined || this.heroes() === undefined);
+  readonly failed = computed(() => this.stats() === null);
+  readonly view = computed(() => {
+    const stats = this.stats();
 
-  readonly selectedSeason = computed(() => {
-    const tierList = this.tierList();
-
-    return tierList?.seasons.find((season) => season.id === tierList.selectedSeasonId);
+    return stats && !this.loading() ? buildTierListView(stats, this.identities()) : null;
   });
+  readonly selectedSeason = computed(() => this.chosenSeason() ?? this.view()?.season?.id);
 
-  ngOnInit(): void {
-    this.loadTierList();
+  chooseSeason(event: Event): void {
+    const halfSeason = Number((event.target as HTMLSelectElement).value);
+
+    this.chosenSeason.set(halfSeason);
+    this.requested.next(halfSeason);
   }
 
-  loadTierList(): void {
-    this.isLoading.set(true);
+  onImageError(event: Event): void {
+    (event.target as HTMLImageElement).src = '/images/heroes/default-hero.png';
+  }
 
-    let params = new HttpParams()
-      .set('rank', this.selectedRankFilter())
-      .set('dataVersion', 'season-9');
-    const seasonId = this.selectedSeasonId();
-
-    if (seasonId) {
-      params = params.set('season', String(seasonId));
+  private rememberSeasons(stats: HeroStats | null): void {
+    if (stats !== null && stats.halfSeasons.length > 0) {
+      this.seasons.set(seasonOptions(stats.halfSeasons));
     }
-
-    this.http.get<TierListResponse | null>('/api/tier-list', { params }).pipe(
-      catchError((error) => {
-        console.error('Failed to load tier list', error);
-
-        return of(undefined);
-      }),
-    ).subscribe((tierList) => {
-      this.tierList.set(tierList ?? undefined);
-      this.selectedSeasonId.set(tierList?.selectedSeasonId);
-      this.selectedRankFilter.set(tierList?.selectedRankFilter ?? '5+');
-      this.isLoading.set(false);
-    });
-  }
-
-  updateSeason(value: string): void {
-    this.selectedSeasonId.set(Number(value));
-    this.loadTierList();
-  }
-
-  updateRank(value: string): void {
-    this.selectedRankFilter.set(value);
-    this.loadTierList();
-  }
-
-  formatRate(value: number): string {
-    return `${value.toFixed(2)}%`;
-  }
-
-  formatDate(value: string | undefined): string {
-    if (!value) {
-      return 'Unknown';
-    }
-
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'medium',
-    }).format(new Date(value));
-  }
-
-  handleImageError(event: Event): void {
-    const image = event.target as HTMLImageElement;
-    image.src = '/images/heroes/default-hero.png';
   }
 }

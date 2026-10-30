@@ -321,7 +321,7 @@ Hero against hero is derived in [`src/hero-matchups.ts`](../src/hero-matchups.ts
 
 Retention deletes a scoreboard row once the half-season after its own has
 ended. It needs to know when each half-season started. Add a row on the day a
-new one begins, from the tier-list site:
+new one begins, from the game's season announcement:
 
 ```sql
 insert into public.half_seasons (half_season, starts_at)

@@ -4,12 +4,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 
 import { HeroDataService } from '../../heroes/hero-data.service';
+import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
-import { buildWinRatesView, type HeroIdentities } from './win-rates-view';
+import { identitiesOf } from '../hero-identity';
+import { buildWinRatesView } from './win-rates-view';
 
 @Component({
   selector: 'app-win-rates-page',
-  imports: [RouterLink],
+  imports: [RouterLink, HeroProgressListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './win-rates-page.component.html',
   styleUrl: './win-rates-page.component.css',
@@ -24,15 +26,7 @@ export class WinRatesPageComponent {
   // undefined while the request runs, null once it has failed.
   private readonly stats = toSignal(inject(HeroStatsService).getHeroStats());
   private readonly heroes = toSignal(inject(HeroDataService).getHeroes());
-  private readonly identities = computed<HeroIdentities>(
-    () =>
-      new Map(
-        (this.heroes() ?? []).map((hero) => [
-          hero.id,
-          { name: hero.name, role: hero.role, imageUrl: hero.imageUrl },
-        ]),
-      ),
-  );
+  private readonly identities = computed(() => identitiesOf(this.heroes() ?? []));
 
   /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
   readonly loading = computed(() => this.stats() === undefined || this.heroes() === undefined);

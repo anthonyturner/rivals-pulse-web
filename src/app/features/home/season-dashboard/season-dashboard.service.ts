@@ -1,69 +1,48 @@
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, map, Observable } from 'rxjs';
 
-import type { TierListHero } from '../../../../contracts/tier-list.model';
+import { HeroDataService } from '../../heroes/hero-data.service';
+import { identitiesOf } from '../../insights/hero-identity';
 import type { SeasonDashboardContent } from '../home-content.model';
 import { HomeContentService } from '../home-content.service';
+import { HomeHeroStatsService } from '../home-hero-stats.service';
 import type { SeasonHighlight, SeasonUpdate } from '../home-season.model';
-import { HomeTierListService } from '../home-tier-list.service';
+import { buildHeroUsageView, type HeroUsageView } from '../sections/hero-usage-section/hero-usage-view';
 
 export interface SeasonDashboardState {
   content: SeasonDashboardContent | null;
   seasonUpdates: readonly SeasonUpdate[];
   seasonEvents: readonly SeasonHighlight[];
-  mostPickedHeroes: readonly TierListHero[];
-  metaUpdatedLabel: string;
-  heroSourceLabel: string;
-  heroSourceUrl: string;
+  heroUsage: HeroUsageView;
 }
 
 const emptyState: SeasonDashboardState = {
   content: null,
   seasonUpdates: [],
   seasonEvents: [],
-  mostPickedHeroes: [],
-  metaUpdatedLabel: '',
-  heroSourceLabel: '',
-  heroSourceUrl: '',
+  heroUsage: buildHeroUsageView(null, new Map()),
 };
 
 @Injectable({ providedIn: 'root' })
 export class SeasonDashboardService {
   private readonly homeContent = inject(HomeContentService);
-  private readonly tierLists = inject(HomeTierListService);
+  private readonly heroStats = inject(HomeHeroStatsService);
+  private readonly heroData = inject(HeroDataService);
 
   readonly initialState = emptyState;
 
   getSeasonDashboard(): Observable<SeasonDashboardState> {
     return forkJoin({
       content: this.homeContent.getHomeContent(),
-      tierList: this.tierLists.getLatestAllRanks(),
+      stats: this.heroStats.getHeroStats(),
+      heroes: this.heroData.getHeroes(),
     }).pipe(
-      map(({ content, tierList }) => {
-        const selectedSeason = tierList?.seasons.find(
-          (season) => season.id === tierList.selectedSeasonId,
-        );
-        const mostPickedHeroes = tierList && selectedSeason
-          ? tierList.tiers
-              .flatMap((tier) => tier.heroes)
-              .sort((first, second) => second.pickRate - first.pickRate)
-              .slice(0, 5)
-          : [];
-
-        return {
-          content: content.seasonDashboard,
-          seasonUpdates: content.seasonUpdates,
-          seasonEvents: content.seasonEvents,
-          mostPickedHeroes,
-          metaUpdatedLabel: tierList?.updatedAt ? formatDate(tierList.updatedAt) : '',
-          heroSourceLabel: tierList?.sourceName ?? '',
-          heroSourceUrl: tierList?.sourceUrl ?? '',
-        };
-      }),
+      map(({ content, stats, heroes }) => ({
+        content: content.seasonDashboard,
+        seasonUpdates: content.seasonUpdates,
+        seasonEvents: content.seasonEvents,
+        heroUsage: buildHeroUsageView(stats, identitiesOf(heroes)),
+      })),
     );
   }
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(value));
 }

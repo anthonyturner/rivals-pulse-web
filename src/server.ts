@@ -16,13 +16,11 @@ import {
   getHeroesFromDatabase,
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
-  getTierListFromDatabase,
 } from './content-database';
 import { getHeroMatchups } from './hero-matchups-read';
 import { getHeroStats, halfSeasonFromQuery } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
 import { syncGameStats } from './game-stats-sync';
-import { syncTierList } from './tier-list-sync';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -97,24 +95,6 @@ app.get('/api/sync/game-stats', (req, res) => {
   }
 
   handleApiResponse(res, () => syncGameStats());
-});
-
-app.get('/api/tier-list', (req, res) => {
-  handleApiResponse(res, () => {
-    const season = typeof req.query['season'] === 'string' ? Number(req.query['season']) : undefined;
-    const rank = typeof req.query['rank'] === 'string' ? req.query['rank'] : '5+';
-
-    return getTierListFromDatabase(Number.isFinite(season) ? season : undefined, rank);
-  });
-});
-
-app.get('/api/sync/tier-list', (req, res) => {
-  if (!isAuthorizedSyncRequest(req)) {
-    res.status(401).json({ message: 'Missing sync authorization' });
-    return;
-  }
-
-  handleApiResponse(res, () => syncTierList());
 });
 
 app.get('/api/external-sources/:sourceKey', (req, res) => {

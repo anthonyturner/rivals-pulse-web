@@ -1,30 +1,10 @@
-import type { HeroStats, HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
+import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { seasonView, type SeasonView } from '../half-season-view';
+import { heroCell, type HeroCell, type HeroIdentities } from '../hero-identity';
+import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
-/** What the page knows about a hero besides its record. Missing for a hero the roster lacks. */
-export interface HeroIdentity {
-  name: string;
-  role: string | null;
-  imageUrl: string | null;
-}
-
-export type HeroIdentities = ReadonlyMap<string, HeroIdentity>;
-
-export interface SeasonView {
-  id: number;
-  label: string;
-  /** "Oct 22, 2026 to Nov 12, 2026", or "Started Oct 22, 2026" while it is the latest; null when no date is known. */
-  dateRange: string | null;
-}
-
-interface HeroCellView {
-  hero: string;
-  name: string;
-  role: string | null;
-  imageUrl: string;
-}
-
-export interface WinRateRowView extends HeroCellView {
+export interface WinRateRowView extends HeroCell {
   winRate: number;
   winRateLabel: string;
   /** Where the bar's fill ends, as a share of its width. */
@@ -33,12 +13,6 @@ export interface WinRateRowView extends HeroCellView {
   appearances: number;
   appearancesLabel: string;
   winsLabel: string;
-}
-
-export interface BuildingRowView extends HeroCellView {
-  appearances: number;
-  progressLabel: string;
-  progressPercent: number;
 }
 
 /**
@@ -60,7 +34,7 @@ export interface WinRatesView {
   minimumMatches: number;
   matchesCountedLabel: string;
   ranked: WinRateRowView[];
-  building: BuildingRowView[];
+  building: HeroProgressRow[];
 }
 
 /**
@@ -108,10 +82,7 @@ export function buildWinRatesView(
       (a, b) =>
         b.winRate - a.winRate || b.appearances - a.appearances || a.name.localeCompare(b.name),
     );
-  const building = stats.belowMinimum
-    .filter((hero) => hero.appearances > 0)
-    .map((hero) => buildingRow(hero.hero, hero.appearances, stats.minimumMatches, identities))
-    .sort((a, b) => b.appearances - a.appearances || a.name.localeCompare(b.name));
+  const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
   const fallbackNotice =
     stats.inPlaceOf === null
       ? null
@@ -138,59 +109,7 @@ function rankedRow(
   };
 }
 
-function buildingRow(
-  hero: string,
-  appearances: number,
-  minimum: number,
-  identities: HeroIdentities,
-): BuildingRowView {
-  return {
-    ...heroCell(hero, identities),
-    appearances,
-    progressLabel: `${appearances} of ${minimum}`,
-    progressPercent: minimum > 0 ? Math.min(100, (appearances / minimum) * 100) : 0,
-  };
-}
-
-function heroCell(hero: string, identities: HeroIdentities): HeroCellView {
-  const identity = identities.get(hero);
-
-  return {
-    hero,
-    name: identity?.name ?? titleCase(hero),
-    role: identity?.role ?? null,
-    imageUrl: identity?.imageUrl ?? `/images/heroes/${hero}.png`,
-  };
-}
-
-function seasonView(halfSeason: HeroStatsHalfSeason): SeasonView {
-  const start = dateLabel(halfSeason.startsAt);
-  const end = dateLabel(halfSeason.endsAt);
-
-  return {
-    id: halfSeason.id,
-    label: halfSeason.label,
-    dateRange: start === null ? null : end === null ? `Started ${start}` : `${start} to ${end}`,
-  };
-}
-
-function dateLabel(value: string | null): string | null {
-  const time = value === null ? Number.NaN : Date.parse(value);
-
-  return Number.isNaN(time)
-    ? null
-    : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(time);
-}
-
 /** A half-season id is a positive whole or half number such as 10 or 10.5; anything else is ignored. */
 function parseSeason(value: string | null): number | null {
   return value !== null && /^(?:[1-9]\d*(?:\.5)?|0\.5)$/.test(value) ? Number(value) : null;
-}
-
-function titleCase(slug: string): string {
-  return slug
-    .split('-')
-    .filter((word) => word !== '')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }
