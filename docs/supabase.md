@@ -48,6 +48,7 @@ repo's build. This is a move, not a redesign.
 | `20261030000000_hero_aggregates.sql` | Anonymous hero counts that outlive the purge: `hero_aggregates`, `hero_aggregate_totals`, `hero_matchups`, `hero_aggregate_half_seasons` and the functions that rebuild them; `purge_expired_participants` freezes a half-season before it deletes from it; an hourly `recompute-hero-aggregates` job |
 | `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
 | `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
+| `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
 
 Link once per machine, check history, then apply:
 
@@ -175,6 +176,37 @@ the service role reaches them.
   finish before the half-season it fills comes due.
 - A rebuild failing inside the purge would stop deletion, which is why the hourly job exercises the
   same code long before any half-season is due.
+
+## Reading the hero aggregates (web app)
+
+The website reads the aggregates through two functions, granted to `anon` and `service_role` and
+to nobody else. Both run as their owner and return one jsonb value (so PostgREST's 1000-row page
+limit never applies), made only of counts and `half_seasons` start dates:
+
+- `read_hero_stats()` returns `half_seasons`, `totals` and `heroes`. The server calls it over
+  PostgREST with plain `fetch` and the publishable key ([`src/hero-stats-read.ts`](../src/hero-stats-read.ts)).
+  Vercel needs `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`; the service-role key is not used for this.
+- `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
+  (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
+  matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
+  again to the chosen modes' own sum. Nothing calls it yet; the counter picks work will.
+
+Every rate, tier and KDA is derived in one pure module, [`src/hero-stats.ts`](../src/hero-stats.ts),
+and served by `GET /api/hero-stats`. The rules, which are the overlay's personal tier list:
+
+- A hero is placed once it has 10 appearances in matches with a win or a loss. Its tier comes from
+  the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
+- A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
+  as in the overlay); the pick rate is those lines over the matches counted.
+- Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
+  are left out.
+- KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
+- While the current half-season has no hero at the minimum, the previous half-season is returned
+  with `inPlaceOf` naming the current one.
+- The site picks the current half-season from `half_seasons`, so a new half-season must have its row (see "Each half-season" below) before its first match; without it the site keeps showing the previous half-season.
+- A game hero id with no mapping in `data/pulse-atlas/hero-game-ids.json` (hero id 0 is "no hero
+  recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
+  one hero.
 
 ## Each half-season
 
