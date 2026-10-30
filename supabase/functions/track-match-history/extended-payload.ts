@@ -64,8 +64,8 @@ function readHeroFigures(value: unknown): HeroFigure[] {
   const figures = new Map<number, HeroFigure>();
   for (const entry of value) {
     const segment = asRecord(entry);
-    const heroId = readWhole(segment?.['hero_id'], MAX_INT4);
-    if (segment === null || heroId === null || heroId === 0 || figures.has(heroId)) continue;
+    const heroId = readId(segment?.['hero_id']);
+    if (segment === null || heroId === null || figures.has(heroId)) continue;
 
     const figure: HeroFigure = {
       hero_id: heroId,
@@ -108,6 +108,12 @@ function readSlug(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const slug = value.trim().toLowerCase();
   return slug.length <= MAX_SLUG_LENGTH && HERO_SLUG.test(slug) ? slug : null;
+}
+
+/** A game hero id is a label, not a measurement: a fraction is a bad value, not a number to round. */
+function readId(value: unknown): number | null {
+  const id = typeof value === 'string' && value.trim() ? Number(value) : value;
+  return typeof id === 'number' && Number.isInteger(id) && id >= 1 && id <= MAX_INT4 ? id : null;
 }
 
 /** A kill count is counted, not measured: a fraction is a bad value, not a number to round. */

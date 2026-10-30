@@ -26,7 +26,7 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
       { label: 'User Highlights', path: '/user-highlights', description: 'Review community plays one decision at a time.', enabled: true },
       { label: 'Game Stats', path: '/game-stats', description: 'Review the numbers behind the roster.', enabled: true },
       { label: 'Tier List', path: '/tier-list', description: 'Compare synced hero tiers by season and rank.', enabled: true },
-      { label: 'Win Rate Reports', path: '/win-rates/9', description: 'Compare transcript-built hero curves by season and week.', enabled: true },
+      { label: 'Win Rates', path: '/win-rates', description: 'See hero win rates from Rivals Pulse matches.', enabled: true },
       { label: 'Glossary', path: '/glossary', description: 'Translate common hero-shooter terms quickly.', enabled: true },
     ],
   },

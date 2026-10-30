@@ -50,6 +50,7 @@ revoke all on public.participant_hero_figures from anon, authenticated;
 revoke all on public.match_hero_kills from anon, authenticated;
 grant select, insert, update, delete on public.participant_hero_figures to service_role;
 grant select, insert, update, delete on public.match_hero_kills to service_role;
+revoke all on sequence public.match_hero_kills_id_seq from anon, authenticated;
 grant usage, select on sequence public.match_hero_kills_id_seq to service_role;
 
 -- Stores one match's extra figures and returns how many rows each kind wrote, as

@@ -87,6 +87,7 @@ describe('readExtendedUpload', () => {
         segment({ hero_id: -4 }),
         segment({ hero_id: 'iron-man' }),
         segment({ hero_id: 2_147_483_648 }),
+        segment({ hero_id: 1011.5 }),
         segment({ hero_id: 1033, seconds: null, damage_dealt: null, healing: null, damage_blocked: null }),
         'not a segment',
         null,

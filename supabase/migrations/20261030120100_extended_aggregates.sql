@@ -212,10 +212,11 @@ $$;
 -- The retention rule holds for a half-season when it holds for its oldest row, so it is asked once
 -- per half-season. A half-season counts as going when either kind of raw row is past retention.
 create or replace function public.freeze_extended_aggregates() returns void
-language sql
+language plpgsql
 set search_path = ''
 as $$
-  select public.rebuild_extended_aggregates(due.half_season, true)
+begin
+  perform public.rebuild_extended_aggregates(due.half_season, true)
   from (
     select p.half_season from public.participants p
     group by p.half_season
@@ -224,7 +225,8 @@ as $$
     select k.half_season from public.match_hero_kills k
     group by k.half_season
     having public.participants_past_retention(k.half_season, min(k.played_at))
-  ) due
+  ) due;
+end
 $$;
 
 -- The purge of issue 142 with one step added: the extended aggregates are frozen too, ahead of the

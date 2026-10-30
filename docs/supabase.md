@@ -7,9 +7,12 @@ in-game app, repo `rivals_pulse`) uploads match data to. The source lives in
 byte for byte from the overlay repo; the overlay repo's own copy is removed in a
 follow-up there.
 
-There is **one** live project. Nothing in CI deploys it: every change is a
-manual `supabase` CLI run (the CLI is the `supabase` dev dependency, run with
-`npx supabase`). No project reference or secret value appears in the repo; the
+There is **one** live project. No GitHub Actions workflow deploys it, but the Supabase GitHub
+integration is set to deploy to production when a pull request merges to `master`: it applies the
+migrations and deploys the Edge Functions. So a migration that has never run must be applied by
+hand (`npx supabase db push`) from the branch and checked **before** its pull request merges. The
+rest of this file's commands are manual `supabase` CLI runs (the CLI is the `supabase` dev
+dependency, run with `npx supabase`). No project reference or secret value appears in the repo; the
 CLI keeps the link in `supabase/.temp/`, which git ignores along with
 `supabase/.branches/`.
 
@@ -27,7 +30,12 @@ repo's build. This is a move, not a redesign.
   `match_history_sync_state`, `player_hero_profiles`, `player_hero_stats`,
   `hero_stats_sync_state`, `jarvis_token_requests`, `participants`.
 - Functions in the database: `claim_upload_slot`, `record_match_participants`,
-  `purge_expired_participants`.
+  `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
+  once it carries the extended upload, so renaming it or changing its arguments silently drops
+  every newer overlay's extras; a signature change follows "Changing a database function's
+  signature" below).
+- Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
+  `record_match_extras`). The aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
   must be optional in the same way.
@@ -52,6 +60,8 @@ repo's build. This is a move, not a redesign.
 | `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
 | `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
+| `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content, moved from Turso) |
+| `20261030060507_home_content_data.sql` | The one-off copy of the Turso home rows, and the home news sync's `external_sources` snapshot, into those tables |
 | `20261030120000_extended_upload.sql` | `participant_hero_figures` (the recorder's damage, healing, blocked and seconds per hero, tied to their `participants` line), `match_hero_kills` (a match's kill feed by hero) and `record_match_extras`, the new function that writes them |
 | `20261030120100_extended_aggregates.sql` | Anonymous counts of those: `hero_figure_aggregates`, `hero_kill_aggregates`, `hero_kill_totals`, `extended_aggregate_half_seasons` and the functions that rebuild and freeze them; `purge_expired_participants` freezes them before it deletes; an hourly `recompute-extended-aggregates` job |
 
@@ -105,6 +115,30 @@ secret key can read or write them.
   the script with Turso.
 - `jsonb` does not keep the order of an object's keys, so `/api/heroes` returns the same data
   with keys in a different order.
+
+## Website home content
+
+The home page reads `home_portals` (one row per portal card; `raw_json` is the card
+`/api/home/portals` returns, and the unique `sort_order` is the display order) and
+`home_content_blocks` (one row per key of `/api/home/content`, such as `latestNews`; `payload` is
+null for an empty block). Row-level security is on with no policy, so only the server's secret key
+reads or writes them. [`src/home-content-store.ts`](../src/home-content-store.ts) is the only code
+that touches them.
+
+- The daily Vercel cron `/api/sync/home-news` (`src/home-news-sync.ts`) rewrites the blocks it owns
+  in one request, records each run in `sync_runs` under `home-news`, and keeps its official-site
+  snapshot in `external_sources` under `official-marvel-rivals-home`. Vercel needs
+  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+- `npm run db:seed` loads the portals and the blocks named in `data/seeds/home-content.mock.json`
+  through `scripts/seed-home-content.mjs`. It never removes a block the seed file does not name.
+- `20261030060507_home_content_data.sql` was generated from Turso by
+  `scripts/export-turso-home-content.mjs`. The cron rewrites Turso every day at 03:00 UTC until the
+  merge, so run `node scripts/export-turso-home-content.mjs --check <file>` right before the push and
+  regenerate with `--out` if it fails.
+- `scripts/verify-home-content-cutover.mjs` checks the move: `capture` saves the live endpoints to
+  `data/cutover/home-endpoints.json`, no argument compares Supabase with Turso and the capture, `live`
+  compares the deployed endpoints with the capture, and `sync-run` looks for a successful run. Issue
+  110 deletes it, the export script and the capture with Turso.
 
 ## Edge Functions
 
@@ -302,6 +336,10 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 - Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
   are left out.
 - KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
+- `GET /api/hero-stats?halfSeason=<number>` answers for exactly that half-season (10 or 10.5), with no
+  fall back to the previous one; a half-season that has not started, or a value that is not a number,
+  gets the empty state. Every answer lists the started half-seasons in `halfSeasons`. Pulse Atlas
+  reads these to build its community tier list.
 - While the current half-season has no hero at the minimum, the previous half-season is returned
   with `inPlaceOf` naming the current one.
 - The site picks the current half-season from `half_seasons`, so a new half-season must have its row (see "Each half-season" below) before its first match; without it the site keeps showing the previous half-season.
