@@ -28,6 +28,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The win-rate page at `/win-rates` now shows each hero's win rate and appearances from matches that Rivals Pulse players record, for one half-season, with "not enough data yet" until a hero has 10 appearances and a plain empty state while no matches are counted. It drops the rank breakdowns, because Rivals Pulse has no rank data, and old season addresses such as `/win-rates/9` now say there is no data for that season instead of showing a Season 9 report ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).
 - The Pulse Atlas tier list no longer names or links Rivals Meta, so the overlay can bundle the file without naming that site ([#138](https://github.com/anthonyturner/rivals-pulse-web/pull/138)).
 - The Pulse Atlas tier list is now about 90 KB instead of 3 MB: hero rows keep only the hero id and the numbers, and `tier-list.json` holds the current season and an index, and every season has its own file under `tier-list/seasons/`, so the overlay downloads a past season only when a player picks it ([#133](https://github.com/anthonyturner/rivals-pulse-web/pull/133)).
 - A new hero without a playstyle rating no longer stops the Pulse Atlas feed: the tier list and hero data keep refreshing and the hero is simply left out of `hero-styles.json`, with a warning on the run ([#129](https://github.com/anthonyturner/rivals-pulse-web/pull/129)).
@@ -38,6 +39,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 - Pages fit better on phones, with consistent mobile spacing ([#8](https://github.com/anthonyturner/rivals-pulse-web/pull/8)).
 - The heroes page is redesigned, with new hero icons, a hero browser with search and role filters, and a clearer hero detail view ([#6](https://github.com/anthonyturner/rivals-pulse-web/pull/6), [#7](https://github.com/anthonyturner/rivals-pulse-web/pull/7)).
 - The site header logo is easier to see ([#3](https://github.com/anthonyturner/rivals-pulse-web/pull/3)).
+
+### Removed
+
+- The Season 9 Week 1 and Week 2 win-rate reports, which were built from YouTube video transcripts, and the win-rate summaries they added to each hero record; the featured slide on the home page now points to the new win-rate page ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).
 
 ### Fixed
 

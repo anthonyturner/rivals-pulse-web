@@ -19,9 +19,9 @@ describe('FeaturedContentComponent', () => {
     fixture.detectChanges();
   });
 
-  it('starts with the Season 9 Week 2 report', () => {
-    expect(component.activeSlide().id).toBe('season-9-week-2-win-rates');
-    expect(component.activeSlide().actions[0].routerLink).toBe('/win-rates/9');
+  it('starts with the win-rates page', () => {
+    expect(component.activeSlide().id).toBe('win-rates');
+    expect(component.activeSlide().actions[0].routerLink).toBe('/win-rates');
   });
 
   it('moves forward and backward through featured content', () => {
@@ -29,7 +29,7 @@ describe('FeaturedContentComponent', () => {
     expect(component.activeSlide().id).toBe('team-builder');
 
     component.showPrevious();
-    expect(component.activeSlide().id).toBe('season-9-week-2-win-rates');
+    expect(component.activeSlide().id).toBe('win-rates');
 
     component.showPrevious();
     expect(component.activeSlide().id).toBe('strategist-guides');

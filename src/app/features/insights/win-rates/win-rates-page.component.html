@@ -1,0 +1,187 @@
+<section class="win-rates-page">
+  <header class="page-hero">
+    <div>
+      <p class="kicker">Hero win rates</p>
+      <h1>How heroes are winning in Rivals Pulse matches.</h1>
+      <p class="lede">
+        Win rates come only from matches that Rivals Pulse players recorded: every player on the
+        scoreboard, all ranks together, Competitive and Quick Match combined.
+      </p>
+    </div>
+
+    @if (view(); as v) {
+      @if (v.season; as season) {
+        <div class="season-card">
+          <span>Showing</span>
+          <strong>{{ season.label }}</strong>
+          @if (season.dateRange; as range) {
+            <small>{{ range }}</small>
+          }
+          <small>{{ v.matchesCountedLabel }}</small>
+        </div>
+      }
+    }
+  </header>
+
+  @if (failed()) {
+    <section class="state-panel" role="status">
+      <h2>Win rates could not be loaded</h2>
+      <p>The win-rate numbers are unavailable right now. Try again in a few minutes.</p>
+    </section>
+  } @else if (loading()) {
+    <section class="state-panel" role="status" aria-busy="true">
+      <h2>Loading win rates</h2>
+      <p>Fetching the latest counted matches.</p>
+    </section>
+  } @else if (view(); as v) {
+    @if (v.fallbackNotice; as notice) {
+      <p class="notice" role="note">{{ notice }}</p>
+    }
+
+    @switch (v.state) {
+      @case ('unavailable-season') {
+        <section class="state-panel" role="status">
+          <h2>No Rivals Pulse data for {{ v.requestedLabel }}</h2>
+          <p>
+            Rivals Pulse only counts matches its players record, and none are counted for
+            {{ v.requestedLabel }}.
+          </p>
+          @if (v.season; as season) {
+            <a class="action-link" routerLink="/win-rates">See {{ season.label }} win rates</a>
+          }
+        </section>
+      }
+      @case ('empty') {
+        <section class="state-panel" role="status">
+          <h2>Not enough data yet</h2>
+          <p>
+            No matches are counted
+            @if (v.season; as season) {
+              in {{ season.label }}
+            }
+            yet. Win rates appear here as Rivals Pulse players record matches, once a hero has
+            {{ v.minimumMatches }} appearances.
+          </p>
+        </section>
+      }
+      @case ('partial') {
+        <section class="state-panel" role="status">
+          <h2>Not enough data yet</h2>
+          <p>
+            {{ v.matchesCountedLabel }} counted
+            @if (v.season; as season) {
+              in {{ season.label }}
+            }
+            so far, but no hero has reached {{ v.minimumMatches }} appearances. A hero's win rate
+            appears once it has.
+          </p>
+        </section>
+      }
+      @case ('full') {
+        <section class="rates" aria-labelledby="rates-title">
+          <div class="section-heading">
+            <h2 id="rates-title">Heroes with {{ v.minimumMatches }} or more appearances</h2>
+            <p>{{ v.matchesCountedLabel }} counted. A line is one hero on the scoreboard of one match.</p>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">
+                Hero win rates and the appearances behind them, highest win rate first
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Hero</th>
+                  <th scope="col">Win rate</th>
+                  <th scope="col">Appearances</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of v.ranked; track row.hero) {
+                  <tr>
+                    <th scope="row">
+                      <a
+                        class="hero-cell"
+                        [routerLink]="['/heroes']"
+                        [queryParams]="{ hero: row.hero }"
+                      >
+                        <img
+                          [src]="row.imageUrl"
+                          alt=""
+                          width="40"
+                          height="40"
+                          loading="lazy"
+                          (error)="onImageError($event)"
+                        />
+                        <span>
+                          <strong>{{ row.name }}</strong>
+                          @if (row.role) {
+                            <small>{{ row.role }}</small>
+                          }
+                        </span>
+                      </a>
+                    </th>
+                    <td>
+                      <div class="rate" [attr.data-tone]="row.tone">
+                        <strong>{{ row.winRateLabel }}</strong>
+                        <span class="bar" aria-hidden="true">
+                          <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="sample">
+                        <strong>{{ row.appearancesLabel }}</strong>
+                        <small>{{ row.winsLabel }}</small>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    }
+
+    @if (v.state === 'full' || v.state === 'partial') {
+      @if (v.building.length > 0) {
+        <section class="building" aria-labelledby="building-title">
+          <div class="section-heading">
+            <h2 id="building-title">Not enough data yet</h2>
+            <p>
+              These heroes need {{ v.minimumMatches }} appearances before a win rate is shown.
+            </p>
+          </div>
+
+          <ul class="building-list">
+            @for (row of v.building; track row.hero) {
+              <li>
+                <img
+                  [src]="row.imageUrl"
+                  alt=""
+                  width="32"
+                  height="32"
+                  loading="lazy"
+                  (error)="onImageError($event)"
+                />
+                <span class="building-name">{{ row.name }}</span>
+                <span class="building-count">{{ row.progressLabel }}</span>
+                <span class="progress" aria-hidden="true">
+                  <span class="progress-fill" [style.width.%]="row.progressPercent"></span>
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+
+    @if (v.state !== 'unavailable-season') {
+      <p class="method-note">
+        Rivals Pulse has no rank breakdown, so every figure covers all ranks together. A hero on
+        both teams of one match is counted twice. Draws, Arcade and Practice matches are left out.
+      </p>
+    }
+  }
+</section>
