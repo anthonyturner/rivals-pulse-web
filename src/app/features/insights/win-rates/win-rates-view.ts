@@ -1,13 +1,8 @@
-import type { HeroStats, HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
+import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
-
-export interface SeasonView {
-  id: number;
-  label: string;
-  /** "Oct 22, 2026 to Nov 12, 2026", or "Started Oct 22, 2026" while it is the latest; null when no date is known. */
-  dateRange: string | null;
-}
+import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
 export interface WinRateRowView extends HeroCellView {
   winRate: number;
@@ -18,12 +13,6 @@ export interface WinRateRowView extends HeroCellView {
   appearances: number;
   appearancesLabel: string;
   winsLabel: string;
-}
-
-export interface BuildingRowView extends HeroCellView {
-  appearances: number;
-  progressLabel: string;
-  progressPercent: number;
 }
 
 /**
@@ -45,7 +34,7 @@ export interface WinRatesView {
   minimumMatches: number;
   matchesCountedLabel: string;
   ranked: WinRateRowView[];
-  building: BuildingRowView[];
+  building: HeroProgressRow[];
 }
 
 /**
@@ -93,10 +82,7 @@ export function buildWinRatesView(
       (a, b) =>
         b.winRate - a.winRate || b.appearances - a.appearances || a.name.localeCompare(b.name),
     );
-  const building = stats.belowMinimum
-    .filter((hero) => hero.appearances > 0)
-    .map((hero) => buildingRow(hero.hero, hero.appearances, stats.minimumMatches, identities))
-    .sort((a, b) => b.appearances - a.appearances || a.name.localeCompare(b.name));
+  const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
   const fallbackNotice =
     stats.inPlaceOf === null
       ? null
@@ -121,39 +107,6 @@ function rankedRow(
     appearancesLabel: String(hero.appearances),
     winsLabel: countLabel(hero.wins, 'win', 'wins'),
   };
-}
-
-function buildingRow(
-  hero: string,
-  appearances: number,
-  minimum: number,
-  identities: HeroIdentities,
-): BuildingRowView {
-  return {
-    ...heroCell(hero, identities),
-    appearances,
-    progressLabel: `${appearances} of ${minimum}`,
-    progressPercent: minimum > 0 ? Math.min(100, (appearances / minimum) * 100) : 0,
-  };
-}
-
-function seasonView(halfSeason: HeroStatsHalfSeason): SeasonView {
-  const start = dateLabel(halfSeason.startsAt);
-  const end = dateLabel(halfSeason.endsAt);
-
-  return {
-    id: halfSeason.id,
-    label: halfSeason.label,
-    dateRange: start === null ? null : end === null ? `Started ${start}` : `${start} to ${end}`,
-  };
-}
-
-function dateLabel(value: string | null): string | null {
-  const time = value === null ? Number.NaN : Date.parse(value);
-
-  return Number.isNaN(time)
-    ? null
-    : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(time);
 }
 
 /** A half-season id is a positive whole or half number such as 10 or 10.5; anything else is ignored. */

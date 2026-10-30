@@ -1,7 +1,7 @@
 .section-meta {
   display: grid;
   gap: 7px;
-  min-width: max-content;
+  max-width: 32ch;
   color: #64748b;
   font-size: 0.82rem;
   text-align: right;
@@ -128,5 +128,61 @@
   .usage-copy dl div {
     display: grid;
     justify-content: start;
+  }
+}
+
+.usage-notice {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(224, 169, 0, 0.34);
+  border-radius: 8px;
+  background: #fff9df;
+  color: var(--accent-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.usage-card--empty {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: none;
+  min-height: 140px;
+  place-items: center;
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+}
+
+.usage-card--empty p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.usage-empty {
+  display: grid;
+  min-height: 140px;
+  margin: 0;
+  padding: 16px;
+  place-items: center;
+  border: 1px dashed rgba(42, 67, 101, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #475569;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .usage-card--empty {
+    min-height: 72px;
+  }
+
+  .usage-empty {
+    min-height: 96px;
   }
 }

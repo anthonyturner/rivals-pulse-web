@@ -124,8 +124,8 @@ season has a file too, so a client can treat every season the same way.
   enough data yet". It does not hold up the feed.
 - **The files do not name or link a source.** There is no `sourceName` or
   `sourceUrl`, and the generator refuses to build if any published value names
-  Rivals Meta or its site, because the overlay ships these files inside its
-  package. The envelope's `source` is `rivals-pulse-web:hero-stats-api`.
+  the old third-party tier-list site (Rivals Meta) or links to it, because the
+  overlay ships these files inside its package. The envelope's `source` is `rivals-pulse-web:hero-stats-api`.
 - `rankFilters` is only `{ "value": "99", "label": "All Ranks" }`. A snapshot's
   `ranks` key is that value.
 - `seasons` is the list of started half-seasons the hero-stats API reports, so
@@ -356,7 +356,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    included. That needs no secret. The tier list and the hero stats are
    assembled from those same answers and the hero ids in `hero-game-ids.json`
    by `assembleCommunityTierList` and `assembleCommunityHeroStats`; nothing
-   reads the Rivals Meta tables or `/api/tier-list`.
+   else is read.
 2. Reads the maps, hero-styles and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).

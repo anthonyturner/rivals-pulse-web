@@ -30,6 +30,7 @@ describe('win-rate routes', () => {
   const partialStats = {
     status: 'not-enough-data',
     minimumMatches: 10,
+    halfSeasons: [{ id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null }],
     halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null },
     inPlaceOf: null,
     matchesCounted: 3,
