@@ -159,19 +159,21 @@ export const routes: Routes = [
   },
   {
     path: 'season-9-win-rates',
-    redirectTo: 'win-rates/9',
+    redirectTo: 'win-rates',
     pathMatch: 'full',
   },
   {
     path: 'win-rates',
-    redirectTo: 'win-rates/9',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/insights/win-rates/win-rates-page.component').then(
+        (module) => module.WinRatesPageComponent,
+      ),
   },
   {
     path: 'win-rates/:season',
     loadComponent: () =>
-      import('./features/insights/win-rate-reports/season-win-rates-page.component').then(
-        (module) => module.SeasonWinRatesPageComponent,
+      import('./features/insights/win-rates/win-rates-page.component').then(
+        (module) => module.WinRatesPageComponent,
       ),
   },
   {

@@ -9,21 +9,6 @@ export interface HeroGameplayArchetype {
   timestamp: string;
 }
 
-export interface HeroSeasonWinRateInsight {
-  heroId: string;
-  displayName: string;
-  role: Exclude<HeroRole, 'Multi-Role'>;
-  archetype: string;
-  lowRanks: string;
-  grandmaster: string;
-  celestial: string;
-  trend: 'Climbing' | 'Stable' | 'Falling' | 'Volatile';
-  takeaway: string;
-  imageUrl: string;
-  videoUrl: string;
-  timestamp: string;
-}
-
 export interface HeroAbilityTechnicalDetail {
   label: string;
   value: string;
@@ -131,7 +116,6 @@ export interface Hero {
   buildProfile?: HeroBuildProfile;
   buildProfileRationale?: HeroBuildProfileRationale;
   gameplayArchetypes?: HeroGameplayArchetype[];
-  season9WinRateInsights?: HeroSeasonWinRateInsight[];
   officialSource?: HeroOfficialSource;
   imageUrl: string;
 }

@@ -15,30 +15,27 @@ export interface FeaturedContentSlide {
 
 export const FEATURED_CONTENT_SLIDES: readonly FeaturedContentSlide[] = [
   {
-    id: 'season-9-week-2-win-rates',
-    eyebrow: 'Featured report · Season 9 Week 2',
-    title: 'What changed across the hero win-rate curves',
+    id: 'win-rates',
+    eyebrow: 'Featured data · Hero win rates',
+    title: 'See how heroes are winning in Rivals Pulse matches',
     description:
-      'Compare every hero from Bronze through Celestial, follow the biggest Week 2 movers, and see where ladder coordination changes the result.',
+      'Every hero with enough counted appearances gets a win rate, ranked from the matches that Rivals Pulse players record. Heroes still short of the minimum show how close they are.',
     sourceNote:
-      'Transcript-built from Nerfpool’s Week 2 report, with approximate spoken values and unchanged Week 1 ranks clearly identified.',
+      'Counted from the scoreboards of recorded matches, all ranks together. The page says plainly when there is not enough data yet.',
     actions: [
       {
-        label: 'Explore the full report',
-        routerLink: '/win-rates/9',
+        label: 'See the win rates',
+        routerLink: '/win-rates',
         primary: true,
-      },
-      {
-        label: 'Watch the source video',
-        href: 'https://www.youtube.com/watch?v=IcHWCu1gHmg',
       },
     ],
     media: {
-      kind: 'video',
-      videoId: 'IcHWCu1gHmg',
-      label: 'Nerfpool',
-      title: 'New Meta Report · Season 9 Week 2',
-      meta: 'Rank-by-rank hero trends and meta movement',
+      kind: 'image',
+      imageUrl: '/images/heroes/captain-america.png',
+      imageAlt: 'Captain America',
+      label: 'Rivals Pulse data',
+      title: 'Hero win rates',
+      meta: 'Counted from recorded matches',
     },
   },
   {

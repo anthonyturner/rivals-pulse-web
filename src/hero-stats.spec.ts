@@ -378,11 +378,89 @@ describe('deriveHeroStats half-seasons', () => {
     expect(stats).toEqual({
       status: 'not-enough-data',
       minimumMatches: MIN,
+      halfSeasons: [],
       halfSeason: null,
       inPlaceOf: null,
       matchesCounted: 0,
       tiers: [],
       belowMinimum: [],
     });
+  });
+});
+
+describe('deriveHeroStats for one half-season', () => {
+  const both = () => {
+    const current = record(HERO_A, HERO_B, MIN, MIN);
+    const old: Played = {
+      heroes: [
+        heroRow(HERO_A, MIN, 0, { halfSeason: 10 }),
+        heroRow(HERO_C, MIN, MIN, { halfSeason: 10 }),
+      ],
+      matches: MIN,
+    };
+
+    return sourceOf([current], {
+      totals: [
+        { halfSeason: 10.5, playModeId: PLAY_MODE_IDS.competitive, decidedMatches: MIN },
+        { halfSeason: 10, playModeId: PLAY_MODE_IDS.competitive, decidedMatches: MIN },
+      ],
+      heroes: [...current.heroes, ...old.heroes],
+    });
+  };
+
+  const deriveOne = (source: HeroStatsSource, halfSeason: number) =>
+    deriveHeroStats(source, { now: NOW, heroSlugByGameId: SLUGS, halfSeason }).stats;
+
+  it('lists every half-season that has started, oldest first, in every answer', () => {
+    const source = sourceOf([record(HERO_A, HERO_B, MIN, MIN)], {
+      halfSeasons: [
+        { halfSeason: 10, startsAt: '2026-09-11T09:00:00Z' },
+        { halfSeason: 10.5, startsAt: '2026-10-09T09:00:00Z' },
+        { halfSeason: 11, startsAt: '2026-12-01T09:00:00Z' },
+      ],
+    });
+
+    expect(derive(source).stats.halfSeasons.map((season) => season.id)).toEqual([10, 10.5]);
+    expect(deriveOne(source, 10).halfSeasons.map((season) => season.id)).toEqual([10, 10.5]);
+  });
+
+  it("shows an older half-season's own numbers, not the current one's", () => {
+    const stats = deriveOne(both(), 10);
+
+    expect(stats.halfSeason?.id).toBe(10);
+    expect(stats.inPlaceOf).toBeNull();
+    expect(stats.tiers.flatMap((tier) => tier.heroes).map((hero) => hero.hero).sort()).toEqual(['black-widow', 'hulk']);
+  });
+
+  it('does not fall back when that half-season has no placed hero', () => {
+    const all = both();
+    const source = {
+      ...all,
+      heroes: [...all.heroes.filter((row) => row.halfSeason !== 10.5), heroRow(HERO_A, 3, 3)],
+    };
+
+    const stats = deriveOne(source, 10.5);
+
+    expect(stats.status).toBe('not-enough-data');
+    expect(stats.halfSeason?.id).toBe(10.5);
+    expect(stats.inPlaceOf).toBeNull();
+    expect(stats.belowMinimum.map((hero) => hero.hero)).toEqual(['hulk']);
+  });
+
+  it('gives the empty state for a half-season that has not started or does not exist', () => {
+    const source = sourceOf([record(HERO_A, HERO_B, MIN, MIN)], {
+      halfSeasons: [
+        { halfSeason: 10.5, startsAt: '2026-10-09T09:00:00Z' },
+        { halfSeason: 11, startsAt: '2026-12-01T09:00:00Z' },
+      ],
+    });
+
+    for (const asked of [11, 3, Number.NaN]) {
+      const stats = deriveOne(source, asked);
+
+      expect(stats.halfSeason).toBeNull();
+      expect(stats.tiers).toEqual([]);
+      expect(stats.status).toBe('not-enough-data');
+    }
   });
 });

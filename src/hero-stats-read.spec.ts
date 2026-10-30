@@ -1,5 +1,5 @@
 import type { HeroStats } from './contracts/hero-stats.model.js';
-import { fetchHeroStatsSource, getHeroStats, parseHeroStatsSource } from './hero-stats-read';
+import { fetchHeroStatsSource, getHeroStats, halfSeasonFromQuery, parseHeroStatsSource } from './hero-stats-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };
 
@@ -48,6 +48,7 @@ function keysOf(value: unknown): string[] {
 const ALLOWED_KEYS = new Set([
   'status',
   'minimumMatches',
+  'halfSeasons',
   'halfSeason',
   'inPlaceOf',
   'matchesCounted',
@@ -88,6 +89,29 @@ describe('getHeroStats', () => {
     expect(stats.status).toBe('ready');
     expect(stats.tiers.flatMap((tier) => tier.heroes).map((hero) => hero.hero)).toEqual(['hulk', 'captain-america']);
     expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/ids with no hero mapping: 0$/));
+  });
+});
+
+describe('getHeroStats for one half-season', () => {
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+
+  it('answers for exactly the half-season asked for', async () => {
+    const stats = await getHeroStats({ ...options, halfSeason: 10.5, fetch: answering(functionAnswer()) });
+
+    expect(stats.halfSeason?.id).toBe(10.5);
+    expect(stats.matchesCounted).toBe(12);
+  });
+});
+
+describe('halfSeasonFromQuery', () => {
+  it('reads a half-season number, and nothing when the query has none', () => {
+    expect(halfSeasonFromQuery('10.5')).toBe(10.5);
+    expect(halfSeasonFromQuery(undefined)).toBeUndefined();
+    expect(halfSeasonFromQuery('')).toBeUndefined();
+  });
+
+  it('turns text into a half-season no one has, so a typo never reads as the current one', () => {
+    expect(halfSeasonFromQuery('latest')).toBeNaN();
   });
 });
 
