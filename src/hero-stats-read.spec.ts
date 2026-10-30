@@ -99,6 +99,33 @@ describe('getHeroStats', () => {
   });
 });
 
+describe('getHeroStats while the read function is not in the database', () => {
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+
+  beforeEach(() => spyOn(console, 'warn'));
+
+  for (const [status, code] of [
+    [404, 'PGRST202'],
+    [400, '42883'],
+    [400, '42P01'],
+  ] as const) {
+    it(`is the empty state, not an error (${status} ${code})`, async () => {
+      const stats = await getHeroStats({ ...options, fetch: answering({ code }, status) });
+
+      expect(stats.status).toBe('not-enough-data');
+      expect(stats.tiers).toEqual([]);
+      expect(stats.halfSeason).toBeNull();
+      expect(console.warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
+    });
+  }
+
+  it('still fails on a refused call', async () => {
+    await expectAsync(getHeroStats({ ...options, fetch: answering({ code: '42501' }, 401) })).toBeRejectedWithError(
+      'read_hero_stats answered 401',
+    );
+  });
+});
+
 describe('getHeroStats for one half-season', () => {
   const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
 

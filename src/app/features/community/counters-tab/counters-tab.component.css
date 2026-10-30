@@ -1,0 +1,62 @@
+:host {
+  display: block;
+}
+
+.counters-tab__records {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.counters-tab__record {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.counters-tab__hero {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counters-tab__image {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.counters-tab__name {
+  color: var(--text);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.counters-tab__verb,
+.counters-tab__sample {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.counters-tab__figure {
+  margin-left: auto;
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.counters-tab__note {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
