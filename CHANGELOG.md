@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- A privacy notes page at `/privacy`, linked from a new site footer, says which match fields the desktop app uploads (including the damage, healing, damage blocked, time per hero and kill-feed fields being added), that the site publishes only anonymous totals, and how long uploads are kept ([#182](https://github.com/anthonyturner/rivals-pulse-web/pull/182)).
 - Each hero page shows its win rate, pick rate, KDA and final hits from matches recorded by Rivals Pulse players, with the number of matches behind them; a hero without enough matches says "Not enough data yet" with its matches so far, and a new half-season shows the previous one, labelled, until it has enough ([#180](https://github.com/anthonyturner/rivals-pulse-web/pull/180)).
 - The Pulse Atlas tier list is now the community list, built from the matches Rivals Pulse players upload with one season per half-season, and carries a `rivals-pulse-community` marker so the overlay only shows files made this way; it no longer comes from Rivals Meta ([#166](https://github.com/anthonyturner/rivals-pulse-web/pull/166)).
 - Every hero in the Pulse Atlas `heroes.json` now carries the game's numeric hero id as `gameId` (Deadpool also lists his three role ids), so anyone reading the feed can turn a tier-list `heroId` into a hero ([#159](https://github.com/anthonyturner/rivals-pulse-web/pull/159)).
