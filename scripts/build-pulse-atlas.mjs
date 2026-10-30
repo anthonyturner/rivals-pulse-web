@@ -4,14 +4,14 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  assembleTierList,
+  assembleCommunityTierList,
   buildPulseAtlas,
+  communityHalfSeasonRequests,
   PULSE_ATLAS_BASE_PATH,
   PULSE_ATLAS_DATASETS,
   PULSE_ATLAS_HERO_GAME_IDS,
   PULSE_ATLAS_MANIFEST_PATH,
   parseManifest,
-  tierListRequests,
   tierListSeasonPath,
   verifyPulseAtlas,
 } from '../src/pulse-atlas.ts';
@@ -23,13 +23,13 @@ import { renderPulseAtlasPage } from '../src/pulse-atlas-page.ts';
 const DEFAULT_API_BASE = 'https://marvel-rivals-coach-six.vercel.app/api';
 const DEFAULT_PUBLISHED_BASE = 'https://anthonyturner.github.io/rivals-pulse-web';
 const API_SOURCE_LABEL = 'rivals-pulse-web:content-api';
+const HERO_STATS_SOURCE_LABEL = 'rivals-pulse-web:hero-stats-api';
 const MAPS_SOURCE_LABEL = 'rivals-pulse-web:seed-maps';
 const HERO_STYLES_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-styles';
 const HERO_GAME_IDS_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-game-ids';
 const SAMPLE_SOURCE_LABEL = 'SAMPLE: trimmed, not live data';
 const FETCH_ATTEMPTS = 3;
 const FETCH_TIMEOUT_MS = 60_000;
-const TIER_LIST_CONCURRENCY = 6;
 const PUBLISHED_TIMEOUT_MS = 15_000;
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -44,9 +44,11 @@ const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex')
 // left out of the feed is visible without opening the log.
 const warn = (message) => console.warn(process.env.GITHUB_ACTIONS ? `::warning::${message}` : `Warning: ${message}`);
 
+const heroGameIds = JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-game-ids.json'), 'utf8'));
+
 const live = [
   { dataset: 'heroes', source: API_SOURCE_LABEL, data: await fetchJson(`${apiBase}/heroes`) },
-  { dataset: 'tier-list', source: API_SOURCE_LABEL, data: await fetchTierList() },
+  { dataset: 'tier-list', source: HERO_STATS_SOURCE_LABEL, data: await fetchTierList() },
   { dataset: 'glossary', source: API_SOURCE_LABEL, data: await fetchJson(`${apiBase}/glossary`) },
   {
     dataset: 'maps',
@@ -62,7 +64,7 @@ const live = [
     // Merged into heroes.json as each hero's gameId; not a published file of its own.
     dataset: PULSE_ATLAS_HERO_GAME_IDS,
     source: HERO_GAME_IDS_SOURCE_LABEL,
-    data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-game-ids.json'), 'utf8')),
+    data: heroGameIds,
   },
 ];
 
@@ -139,24 +141,18 @@ async function fetchJson(url) {
   throw new Error(`Could not fetch ${url}: ${lastError}`);
 }
 
-// The default response lists every season and rank; one request per pair then
-// collects each snapshot, so nothing here names a season or a rank.
+// The community tier list is built from the site's own hero stats, never from another site. The
+// default answer is the current half-season and lists every half-season that has started; one more
+// request per other half-season collects its own numbers, so nothing here names a season.
 async function fetchTierList() {
-  const index = await fetchJson(`${apiBase}/tier-list`);
-  const requests = tierListRequests(index);
-  const snapshots = [];
-  let next = 0;
+  const current = await fetchJson(`${apiBase}/hero-stats`);
+  const others = [];
 
-  const worker = async () => {
-    while (next < requests.length) {
-      const { seasonId, rank } = requests[next++];
-      const query = `season=${seasonId}&rank=${encodeURIComponent(rank)}`;
-      snapshots.push({ seasonId, rank, response: await fetchJson(`${apiBase}/tier-list?${query}`) });
-    }
-  };
-  await Promise.all(Array.from({ length: TIER_LIST_CONCURRENCY }, worker));
+  for (const halfSeason of communityHalfSeasonRequests(current)) {
+    others.push({ halfSeason, response: await fetchJson(`${apiBase}/hero-stats?halfSeason=${halfSeason}`) });
+  }
 
-  return assembleTierList(index, snapshots);
+  return assembleCommunityTierList(current, others, heroGameIds, warn);
 }
 
 // What is published right now, so unchanged datasets and tier-list seasons keep
@@ -210,20 +206,23 @@ function toSample(input, sampleHeroIds) {
       case 'glossary':
         return data.slice(0, 3);
       case 'tier-list': {
-        const ranks = data.rankFilters.slice(0, 2).map((filter) => filter.value);
         // The current season and the one before it, so the sample shows the index
         // entry with ranks next to one without.
         const current = data.seasons.findIndex((season) => season.id === data.currentSeasonId);
-        const trimTiers = (tiers) =>
-          tiers.filter((tier) => tier.heroes.length > 0).map((tier) => ({ ...tier, heroes: tier.heroes.slice(0, 2) }));
+        const trimSnapshot = (snapshot) => ({
+          ...snapshot,
+          tiers: snapshot.tiers
+            .filter((tier) => tier.heroes.length > 0)
+            .map((tier) => ({ ...tier, heroes: tier.heroes.slice(0, 2) })),
+          ...(snapshot.belowMinimum ? { belowMinimum: snapshot.belowMinimum.slice(0, 2) } : {}),
+        });
 
         return {
           ...data,
-          rankFilters: data.rankFilters.slice(0, 2),
           seasons: data.seasons.slice(Math.max(0, current - 1), current + 1).map((season) => ({
             ...season,
             ranks: Object.fromEntries(
-              ranks.map((rank) => [rank, { tiers: trimTiers(season.ranks[rank].tiers) }]),
+              Object.entries(season.ranks).map(([rank, snapshot]) => [rank, trimSnapshot(snapshot)]),
             ),
           })),
         };

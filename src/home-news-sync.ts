@@ -1,7 +1,10 @@
-import { createClient } from '@tursodatabase/serverless/compat';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { StringUtility } from './app/shared/utilities/string-utility.js';
+import { getHomeContentBlock, saveHomeContentBlocks } from './home-content-store.js';
 import { parseCurrentSeason } from './official-season.js';
+import { getSupabaseClient } from './supabase-client.js';
+import { finishSyncRun, saveExternalSource, startSyncRun } from './sync-log.js';
 
 export type NewsItem = {
   label: string;
@@ -112,13 +115,10 @@ try {
   // Vercel and CI provide environment variables directly.
 }
 
-export async function syncHomeNews(): Promise<HomeNewsSyncResult> {
-  const db = createClient({
-    url: requireEnv('TURSO_DATABASE_URL'),
-    authToken: requireEnv('TURSO_AUTH_TOKEN'),
-  });
-  const startedAt = new Date().toISOString();
-  const runId = await insertSyncRun(db, 'home-news', startedAt);
+export async function syncHomeNews(
+  client: SupabaseClient = getSupabaseClient(),
+): Promise<HomeNewsSyncResult> {
+  const runId = await startSyncRun(client, 'home-news', 'Refreshing home news content');
 
   try {
     const officialHomeHtml = await fetchText(officialHomeSource.url);
@@ -158,22 +158,37 @@ export async function syncHomeNews(): Promise<HomeNewsSyncResult> {
     );
     const seasonGlance = buildSeasonGlanceContent(battlePassSnapshot);
 
+    const quickLinks = await buildQuickLinks(client, battlePassSnapshot);
+
     await Promise.all([
-      upsertExternalSource(db, officialHomeSource, officialSnapshot, fetchedAt, 'success', null),
-      upsertContentBlock(db, 'latestNews', latestNews, fetchedAt),
-      upsertContentBlock(db, 'quickLinks', await buildQuickLinks(db, battlePassSnapshot), fetchedAt),
-      upsertContentBlock(db, 'currentFocusTitle', focusTitle(latestNews), fetchedAt),
-      upsertContentBlock(db, 'currentFocusDescription', focusDescription(latestNews), fetchedAt),
-      upsertContentBlock(db, 'lastChecked', fetchedAt.slice(0, 10), fetchedAt),
-      upsertContentBlock(db, 'seasonUpdates', seasonUpdates, fetchedAt),
-      upsertContentBlock(db, 'latestTuning', latestTuning ? toSeasonUpdate(latestTuning) : null, fetchedAt),
-      upsertContentBlock(db, 'seasonEvents', seasonEvents, fetchedAt),
-      upsertContentBlock(db, 'seasonEventsSourceUrl', latestPatch?.sourceUrl ?? officialHomeSource.url, fetchedAt),
-      upsertContentBlock(db, 'seasonDashboard', seasonDashboard, fetchedAt),
-      upsertContentBlock(db, 'seasonGlance', seasonGlance, fetchedAt),
+      saveExternalSource(client, {
+        sourceKey: officialHomeSource.key,
+        sourceName: officialHomeSource.name,
+        url: officialHomeSource.url,
+        payload: officialSnapshot,
+        fetchedAt,
+        status: 'success',
+        error: null,
+      }),
+      saveHomeContentBlocks(client, {
+        latestNews,
+        quickLinks,
+        currentFocusTitle: focusTitle(latestNews),
+        currentFocusDescription: focusDescription(latestNews),
+        lastChecked: fetchedAt.slice(0, 10),
+        seasonUpdates,
+        latestTuning: latestTuning ? toSeasonUpdate(latestTuning) : null,
+        seasonEvents,
+        seasonEventsSourceUrl: latestPatch?.sourceUrl ?? officialHomeSource.url,
+        seasonDashboard,
+        seasonGlance,
+      }, fetchedAt),
     ]);
 
-    await finishSyncRun(db, runId, 'success', `Synced ${latestNews.length} home news cards`, fetchedAt);
+    await finishSyncRun(client, runId, {
+      status: 'success',
+      message: `Synced ${latestNews.length} home news cards`,
+    });
 
     return {
       updatedAt: fetchedAt,
@@ -185,13 +200,10 @@ export async function syncHomeNews(): Promise<HomeNewsSyncResult> {
       seasonEvents,
     };
   } catch (error) {
-    const finishedAt = new Date().toISOString();
     const message = error instanceof Error ? error.message : String(error);
 
-    await finishSyncRun(db, runId, 'error', message, finishedAt);
+    await finishSyncRun(client, runId, { status: 'error', message });
     throw error;
-  } finally {
-    db.close();
   }
 }
 
@@ -316,10 +328,10 @@ function buildSeasonGlanceContent(battlePass: BattlePassSnapshot): SeasonGlanceC
 }
 
 async function buildQuickLinks(
-  db: ReturnType<typeof createClient>,
+  client: SupabaseClient,
   battlePass: BattlePassSnapshot,
 ): Promise<QuickLink[]> {
-  const existing = await getContentBlock<QuickLink[]>(db, 'quickLinks');
+  const existing = await getHomeContentBlock<QuickLink[]>(client, 'quickLinks');
   const quickLinks = existing?.length
     ? existing
     : [
@@ -578,97 +590,5 @@ function focusTitle(newsItems: NewsItem[]): string {
 function focusDescription(newsItems: NewsItem[]): string {
   const lead = newsItems.find((item) => item.label !== 'Battle Pass');
 
-  return lead?.description ?? 'Latest news is refreshed from the official Marvel Rivals site and cached in Turso.';
-}
-
-async function getContentBlock<T>(
-  db: ReturnType<typeof createClient>,
-  contentKey: string,
-): Promise<T | undefined> {
-  const result = await db.execute(
-    'SELECT payload_json FROM home_content_blocks WHERE content_key = ?',
-    [contentKey],
-  );
-  const row = result.rows[0] as { payload_json?: string } | undefined;
-
-  return row?.payload_json ? JSON.parse(row.payload_json) as T : undefined;
-}
-
-async function upsertContentBlock(
-  db: ReturnType<typeof createClient>,
-  contentKey: string,
-  payload: unknown,
-  updatedAt: string,
-): Promise<void> {
-  await db.execute(
-    `INSERT INTO home_content_blocks (content_key, payload_json, updated_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(content_key) DO UPDATE SET
-      payload_json = excluded.payload_json,
-      updated_at = excluded.updated_at`,
-    [contentKey, JSON.stringify(payload), updatedAt],
-  );
-}
-
-async function upsertExternalSource(
-  db: ReturnType<typeof createClient>,
-  source: { key: string; name: string; url: string },
-  payload: unknown,
-  fetchedAt: string,
-  status: string,
-  error: string | null,
-): Promise<void> {
-  await db.execute(
-    `INSERT INTO external_sources (
-      source_key, source_name, url, payload_json, fetched_at, status, error
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(source_key) DO UPDATE SET
-      source_name = excluded.source_name,
-      url = excluded.url,
-      payload_json = excluded.payload_json,
-      fetched_at = excluded.fetched_at,
-      status = excluded.status,
-      error = excluded.error`,
-    [source.key, source.name, source.url, JSON.stringify(payload), fetchedAt, status, error],
-  );
-}
-
-async function insertSyncRun(
-  db: ReturnType<typeof createClient>,
-  sourceKey: string,
-  startedAt: string,
-): Promise<number> {
-  const result = await db.execute(
-    `INSERT INTO sync_runs (source_key, status, message, started_at)
-    VALUES (?, ?, ?, ?)`,
-    [sourceKey, 'running', 'Refreshing home news content', startedAt],
-  );
-
-  return Number(result.lastInsertRowid);
-}
-
-async function finishSyncRun(
-  db: ReturnType<typeof createClient>,
-  runId: number,
-  status: string,
-  message: string,
-  finishedAt: string,
-): Promise<void> {
-  await db.execute(
-    `UPDATE sync_runs
-    SET status = ?, message = ?, finished_at = ?
-    WHERE id = ?`,
-    [status, message, finishedAt, runId],
-  );
-}
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-
-  if (!value) {
-    throw new Error(`Set ${name} before syncing home news.`);
-  }
-
-  return value;
+  return lead?.description ?? 'Latest news is refreshed from the official Marvel Rivals site and cached by Rivals Pulse.';
 }

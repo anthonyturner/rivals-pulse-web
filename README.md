@@ -6,7 +6,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 
 - **Hero encyclopedia** - searchable role-based roster with full ability kits, technical stats, matchup notes, synergies, videos, playstyles, and multi-role hero support.
 - **Draft and matchup tools** - a six-player team builder with composition scoring, a two-way hero counter explorer, and coach-authored build profiles.
-- **Current meta views** - synced ranked tier lists, hourly Steam population snapshots with trends, and a Season 9 win-rate report by rank and hero archetype.
+- **Current meta views** - synced ranked tier lists, hourly Steam population snapshots with trends, and hero win rates counted from matches that Rivals Pulse players record.
 - **Structured coaching** - hero guides, beginner lessons, learning paths, positioning and cover guides, build theory, glossary terms, media tutorials, and a "watch next" quiz.
 - **Refreshable content** - Turso-backed hero, home, news, glossary, tier-list, video, and game-stat data populated from official and community sources.
 
@@ -15,7 +15,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 | Area | Routes |
 | --- | --- |
 | Heroes and matchups | `/heroes`, `/hero-guides`, `/counters` |
-| Draft and meta | `/team-builder`, `/tier-list`, `/win-rates/:season`, `/game-stats` |
+| Draft and meta | `/team-builder`, `/tier-list`, `/win-rates`, `/game-stats` |
 | Coaching fundamentals | `/beginner-interactive-guide`, `/techniques`, `/build-theory` |
 | Positioning and strategy | `/power-positions`, `/strategic-cover`, `/triple-support-counter` |
 | Guided learning | `/learning-paths`, `/media-tutorials`, `/watch-next`, `/glossary` |
@@ -58,7 +58,7 @@ Open `http://localhost:4200/`.
 | `npm.cmd start` | Run the development server |
 | `npm.cmd run build` | Build Angular and type-check the API |
 | `npm.cmd test` | Run unit tests |
-| `npm.cmd run db:seed` | Rebuild Turso content from local seed JSON (heroes now live in Supabase and are not seeded) |
+| `npm.cmd run db:seed` | Rebuild seeded content from local JSON: Turso, plus the home page portals and blocks in Supabase (heroes are not seeded) |
 | `npm.cmd run db:sync` | Cache configured external sources |
 | `npm.cmd run sync:home-news` | Refresh official news and events |
 | `npm.cmd run sync:heroes` | Refresh hero and ability data |

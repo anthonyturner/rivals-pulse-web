@@ -12,7 +12,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | File | Holds |
 | --- | --- |
 | `heroes.json` | The hero list as `GET /api/heroes` returns it, without each hero's `counters`, plus each hero's numeric `gameId` (see below). |
-| `tier-list.json` | The tier list's index: the current season's ranks, plus each season's details with the path and hash of its own file. Shape below. |
+| `tier-list.json` | The community tier list's index: the current season's ranks, plus each season's details with the path and hash of its own file. Shape below. |
 | `tier-list/seasons/<id>.json` | One season's ranks, one file per season, current season included. Shape below. **Not** in the manifest. |
 | `glossary.json` | The glossary terms, exactly as `GET /api/glossary` returns them. |
 | `maps.json` | Map ids to names: a list of `{ "id": number, "name": string }`. Source: [data/pulse-atlas/seed-maps.json](../data/pulse-atlas/seed-maps.json), copied unchanged from the overlay repo's `src/app/data/seed-maps.json`. |
@@ -38,32 +38,37 @@ Every dataset file has this shape:
 
 ### The `tier-list` data
 
-The full tier list is 21 seasons by 14 ranks, about 3 MB with every hero row
-repeating its name, role and image. It is published slimmed and split by season
-so a client reads the current season (about 90 KB) and downloads an older one
-only when a player picks it.
+The tier list is the **community list**: it is built from the matches Rivals
+Pulse players upload, by the hero-stats derivation behind `GET /api/hero-stats`
+([src/hero-stats.ts](../src/hero-stats.ts)). It does not use any third-party
+site. There is one **season** per half-season that has started, and each season
+has one rank snapshot, `99` (All Ranks), because a player's rank is not stored
+with their matches. The feed is split by season so a client reads the current
+season and downloads an older one only when a player picks it.
 
 `tier-list.json` is an index, with the current season's ranks on its own entry:
 
 ```json
 {
+  "provenance": "rivals-pulse-community",
   "currentSeasonId": 21,
-  "rankFilters": [{ "value": "99", "label": "All Ranks" }, { "value": "5+", "label": "Diamond+" }],
+  "rankFilters": [{ "value": "99", "label": "All Ranks" }],
   "seasons": [
     {
-      "id": 20, "seasonNumber": 10, "half": 1, "subSeason": "S10.0", "label": "Season 10",
-      "name": "BUTCHER'S BLASPHEMY", "description": "BUTCHER'S BLASPHEMY", "halfName": "S10.0",
-      "startTime": "2026-09-11T09:00:00+00:00", "endTime": "2026-10-09T09:00:00+00:00",
+      "id": 20, "label": "Season 10",
+      "startTime": "2026-09-11T09:00:00Z", "endTime": "2026-10-09T09:00:00Z",
       "path": "pulse-atlas/v1/tier-list/seasons/20.json", "sha256": "<hex>"
     },
     {
-      "id": 21, "seasonNumber": 10, "half": 2, "subSeason": "S10.5", "label": "Season 10.5",
-      "name": "BUTCHER'S BLASPHEMY", "description": "BUTCHER'S BLASPHEMY", "halfName": "S10.5",
-      "startTime": "2026-10-09T09:00:00+00:00", "endTime": "2026-11-13T08:59:59+00:00",
+      "id": 21, "label": "Season 10.5",
+      "startTime": "2026-10-09T09:00:00Z",
       "path": "pulse-atlas/v1/tier-list/seasons/21.json", "sha256": "<hex>",
       "ranks": {
-        "99": { "tiers": [{ "name": "S", "heroes": [{ "heroId": 1042, "winRate": 60.85, "pickRate": 7.14, "banRate": 19.21, "matches": 140939, "wins": 83594, "score": 55 }] }] },
-        "5+": { "tiers": [] }
+        "99": {
+          "tiers": [{ "name": "S", "heroes": [{ "heroId": 1042, "winRate": 60.85, "pickRate": 7.14, "matches": 140, "wins": 85 }] }],
+          "matchesCounted": 1500,
+          "belowMinimum": [{ "heroId": 1016, "matches": 4 }]
+        }
       }
     }
   ]
@@ -75,6 +80,14 @@ details plus its `ranks` (the same object as its index entry, without `path`
 and `sha256`), at `pulse-atlas/v1/tier-list/seasons/<id>.json`. The current
 season has a file too, so a client can treat every season the same way.
 
+- **`provenance` is `"rivals-pulse-community"`, at the top level of `data` in
+  the index and in every season file.** The overlay refuses a tier-list file
+  without it, so a file from any other source can never be shown. The generator
+  refuses to build if the tier list it was given does not carry it, and the
+  read-back check fails if a written file lacks it.
+- **A season id is the half-season number times two**: half-season 10 is 20 and
+  10.5 is 21. The current season is the latest half-season whose start has
+  passed.
 - **Only the current season has `ranks` in the index.** Every other entry has
   none. The season files are **not** listed in `manifest.json`, so a client that
   syncs everything the manifest lists never downloads them.
@@ -86,33 +99,41 @@ season has a file too, so a client can treat every season the same way.
   manifest. A client fetches a season on first use, keeps it, and fetches it
   again only when the index shows a different `sha256`. The generator reads
   every season file back and checks it against the index before publishing.
-- **A hero row is** `{ heroId, winRate, pickRate, banRate, matches, wins, score }`.
-  `heroId` is the game's numeric hero id. `name`, `role`, `imageUrl` and `tier`
-  are left out (the enclosing `tiers[].name` is the tier), and the three rates
-  are rounded to two decimals. To show a name, role or portrait, join `heroId`
-  to a hero's `gameId` in `heroes.json` (next section). A hero in the tier list
-  that no `gameId` in `heroes.json` matches is published all the same, with a
-  warning on the workflow run.
-- **The files do not say where the numbers come from.** The tier-list API
-  reports a `sourceName` and `sourceUrl`; the generator drops both, and refuses
-  to build if any published value names Rivals Meta or its site, because the
-  overlay ships these files inside its package. The envelope's `source` is the
-  neutral `rivals-pulse-web:content-api`.
-- `seasons` and `rankFilters` are the lists the tier-list API itself reports,
-  so a new season or rank appears without a code change. Every season has a
-  `ranks` entry for **every** `rankFilters[].value` (the rank value is the key,
-  for example `"5+"`).
-- A snapshot is `{ tiers }`. `fetchedAt`, `sourceTimestamp` and the per-snapshot
-  `updatedAt` are left out: they record when a sync ran (the same value for
-  every season, new on every run), not what the tier list says, and would
-  change every season's hash with no change in data.
-- A rank can legitimately have no heroes (upstream has none for some old
-  season and rank pairs, for example season 8 at rank `8`), so an empty
-  `tiers` heroes list is published as it is. The generator fails, and nothing
-  is published, if a season and rank pair cannot be fetched, if the API falls
-  back to a different season or rank than asked for, if a season lists no
-  hero at any rank, if `currentSeasonId` is not a listed season, or if a hero
-  row has no integer `heroId` or a non-numeric rate or count.
+- **A hero row is** `{ heroId, winRate, pickRate, matches, wins }`. `heroId` is
+  the game's numeric hero id (Deadpool is published under his base id, 1057,
+  which the overlay's hero catalog resolves with his three role ids). `matches`
+  is the number of scoreboard lines of the hero (`appearances` in the hero-stats
+  API), so it can exceed `matchesCounted`. There is no ban rate and no score.
+  `name`, `role`, `imageUrl` and `tier` are left out (the enclosing
+  `tiers[].name` is the tier), and the rates are rounded to two decimals. To
+  show a name, role or portrait, join `heroId` to a hero's `gameId` in
+  `heroes.json` (next section). A hero in the tier list that no `gameId` in
+  `heroes.json` matches is published all the same, with a warning on the
+  workflow run.
+- **A rank snapshot is** `{ tiers, matchesCounted?, belowMinimum?, fallbackFromSeasonId? }`.
+  `tiers` may be empty. `matchesCounted` is the number of matches the numbers
+  are pooled from. `belowMinimum` lists the heroes that have data but too few
+  matches to be placed, as `{ heroId, matches }`; such a hero has no tier, which
+  is not the same as the lowest one. `fallbackFromSeasonId` is set only when the
+  current season has no placed hero yet and the snapshot holds the previous
+  season's numbers instead; it names that previous season.
+- **A season can have no hero at all.** A new half-season starts with too few
+  matches, so its snapshot is `{ "tiers": [] }` with its counts. It is published
+  as it is, with a warning on the workflow run, and the overlay shows "not
+  enough data yet". It does not hold up the feed.
+- **The files do not name or link a source.** There is no `sourceName` or
+  `sourceUrl`, and the generator refuses to build if any published value names
+  Rivals Meta or its site, because the overlay ships these files inside its
+  package. The envelope's `source` is `rivals-pulse-web:hero-stats-api`.
+- `rankFilters` is only `{ "value": "99", "label": "All Ranks" }`. A snapshot's
+  `ranks` key is that value.
+- `seasons` is the list of started half-seasons the hero-stats API reports, so
+  a new half-season appears without a code change.
+- The generator fails, and nothing is published, if a hero-stats answer is
+  missing or is for another half-season than asked for, if `currentSeasonId` is
+  not a listed season, if a hero row has no integer `heroId` or a non-numeric
+  rate or count, or if a snapshot's `matchesCounted`, `belowMinimum` or
+  `fallbackFromSeasonId` is malformed.
 
 ### The hero `gameId`
 
@@ -220,7 +241,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
-tier list trimmed to 2 seasons (the current one and the one before) by 2 ranks
+tier list trimmed to 2 seasons (the current one and the one before)
 with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
@@ -246,10 +267,12 @@ every six hours, on a push to `master` that touches the generator, and on
 demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
 
 1. Fetches `/api/heroes` and `/api/glossary` from the public production API
-   (`PULSE_ATLAS_API_BASE` overrides the base URL), plus `/api/tier-list` once
-   to learn the seasons and ranks and then once per season and rank
-   (`?season=<id>&rank=<rank>`). That needs no secret, and it is the only
-   reader to change when content moves to Supabase.
+   (`PULSE_ATLAS_API_BASE` overrides the base URL), plus `/api/hero-stats` once
+   (the current half-season, with the list of every started half-season) and
+   then once per other half-season (`?halfSeason=<number>`). That needs no
+   secret. The tier list is assembled from those answers and the hero ids in
+   `hero-game-ids.json` by `assembleCommunityTierList`; nothing reads the
+   Rivals Meta tables or `/api/tier-list`.
 2. Reads the maps, hero-styles and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
@@ -274,6 +297,14 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
 Any failed fetch (three attempts each), an empty or malformed dataset, or an
 unsafe value fails the generate job. The deploy job needs it, so it never runs
 and the last good publish stays live.
+
+**Deploy order.** The build reads the live site API, so the web app that serves
+`halfSeasons` and `?halfSeason=` on `/api/hero-stats` has to be deployed to
+Vercel before the first publish that includes this change. If the workflow runs
+against an older deployment, the answer has no `halfSeasons` list, the
+generator stops with "is not the hero-stats shape ... Has the web app been
+deployed with it?", and the last good feed (including any older tier list)
+stays live. Re-run the workflow once the deployment is live.
 
 To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 24,
 which strips TypeScript types itself).

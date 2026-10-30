@@ -2,8 +2,9 @@ name: Publish Pulse Atlas
 
 # Pulse Atlas is the public, read-only reference-data feed (heroes, tier list,
 # glossary, maps, hero playstyle mix) served from GitHub Pages. The contract is in
-# docs/pulse-atlas.md. Reference data changes slowly and the tier list itself
-# syncs every six hours, so a six-hourly publish keeps the feed current.
+# docs/pulse-atlas.md. Reference data changes slowly and the community tier list
+# is derived from the hero stats on the live site, so a six-hourly publish keeps
+# the feed current.
 on:
   schedule:
     - cron: '17 */6 * * *'
