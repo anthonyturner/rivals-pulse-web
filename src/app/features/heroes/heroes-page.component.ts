@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, HostListener, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -8,6 +9,8 @@ import {
   HERO_GUIDES,
   HeroUltimateGuide,
 } from '../learning/guides/hero-guides/hero-guide-data';
+import type { HeroStats } from '../../../contracts/hero-stats.model';
+import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
 import { HeroDetailModalComponent } from './hero-detail-modal/hero-detail-modal.component';
@@ -87,11 +90,15 @@ interface FandomOverviewSection {
 })
 export class HeroesPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
+  private readonly heroStatsService = inject(HeroStatsService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
 
+  /** Rivals Pulse player stats for every hero: `undefined` while loading, `null` when unreadable. */
+  readonly heroStats = signal<HeroStats | null | undefined>(undefined);
   readonly roles: HeroRoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist'];
   readonly selectedRole = signal<HeroRoleFilter>('All');
   readonly heroGridMode = signal<HeroGridMode>('thumbs');
@@ -442,6 +449,11 @@ export class HeroesPageComponent implements OnInit {
     this.youtubeSearchUrl(`Marvel Rivals ${this.selectedHero()?.name ?? ''}`),
   );
   ngOnInit(): void {
+    this.heroStatsService
+      .getHeroStats()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((stats) => this.heroStats.set(stats));
+
     forkJoin({
       heroes: this.heroDataService.getHeroes(),
       heroVideos: this.heroDataService.getHeroVideos(),

@@ -32,6 +32,7 @@ function statsOf(overrides: Partial<HeroStats> = {}): HeroStats {
   return {
     status: 'ready',
     minimumMatches: 10,
+    halfSeasons: [current],
     halfSeason: current,
     inPlaceOf: null,
     matchesCounted: 149,

@@ -27,6 +27,7 @@ function hero(slug: string, appearances: number, wins: number): HeroStatsHero {
 const empty: HeroStats = {
   status: 'not-enough-data',
   minimumMatches: 10,
+  halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,
   matchesCounted: 0,
