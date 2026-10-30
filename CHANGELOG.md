@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- A tools row on the home page links straight to the tier list, the team builder and the hero guides ([#206](https://github.com/anthonyturner/rivals-pulse-web/pull/206)).
 - The Community Heroes, Tier list and Counters tabs now show a summary from Rivals Pulse uploads: the most-picked and highest-winning heroes, the S and A tiers, and the winning matchups with the clearest edge, each linking to its full page, with "not enough data yet" until enough matches are uploaded ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
 - `/api/hero-stats` and `/api/hero-matchups` answer "not enough data yet" instead of an error while the database read function is not deployed yet; any other failure still returns an error ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
 - The Community Stats tab shows what a normal game looks like for each role (Vanguard, Duelist, Strategist): average kills, deaths, assists, KDA, final hits and win rate, for Quick Match and Competitive together or each alone, once a role has 50 lines in a mode, and "not enough data yet" until then ([#192](https://github.com/anthonyturner/rivals-pulse-web/pull/192)).
