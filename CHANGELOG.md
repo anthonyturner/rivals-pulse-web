@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- A privacy notes page at `/privacy`, linked from a new site footer, says which match fields the desktop app uploads (including the damage, healing, damage blocked, time per hero and kill-feed fields being added), that the site publishes only anonymous totals, and how long uploads are kept ([#182](https://github.com/anthonyturner/rivals-pulse-web/pull/182)).
 - Every hero in the Pulse Atlas `heroes.json` now carries the game's numeric hero id as `gameId` (Deadpool also lists his three role ids), so anyone reading the feed can turn a tier-list `heroId` into a hero ([#159](https://github.com/anthonyturner/rivals-pulse-web/pull/159)).
 - Pulse Atlas now publishes `hero-styles.json`, a Poke / Dive / Brawl percentage mix for every hero, so the overlay can weight hero pick rates by playstyle; the first 54 weights are drafts for review ([#127](https://github.com/anthonyturner/rivals-pulse-web/pull/127)).
 - The Pulse Atlas site has a home page at its root and at `/pulse-atlas/v1/` that says what it is and lists each file with its size and hash, instead of GitHub's 404 ([#118](https://github.com/anthonyturner/rivals-pulse-web/pull/118)).

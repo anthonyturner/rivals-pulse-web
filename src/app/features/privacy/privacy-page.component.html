@@ -1,0 +1,140 @@
+<main class="privacy-page">
+  <app-page-header
+    eyebrow="Privacy notes"
+    title="Privacy notes: where the community numbers come from"
+    description="Rivals Pulse Coach shows totals built from matches that players of the Rivals Pulse desktop app choose to upload. This page says what is uploaded, what the site publishes, and how long it is kept."
+  />
+
+  <section class="privacy-section" id="summary" aria-labelledby="summary-title">
+    <h2 id="summary-title">The short version</h2>
+    <ul>
+      <li>
+        This website has no accounts, no login, no cookies of its own and no analytics. Like any
+        website, its host may keep short-lived technical request logs.
+      </li>
+      <li>
+        The community pages show <strong>anonymous totals</strong> only: no names, no player ids
+        and no individual matches.
+      </li>
+      <li>
+        The totals come from matches uploaded by the Rivals Pulse desktop app, a separate
+        product that runs inside the Overwolf client.
+      </li>
+      <li>
+        The desktop app's own privacy policy is the full account of what the app collects and how
+        to ask for deletion. This page describes the upload and the site, and does not replace it.
+      </li>
+    </ul>
+  </section>
+
+  <section class="privacy-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
+    <h2 id="uploaded-today-title">What the app uploads today</h2>
+    <p>
+      When a player of the desktop app finishes a match, the app uploads the scoreboard line of
+      every human player in it, on both teams, and a few facts about the match. This is what the
+      game itself shows on its scoreboard.
+    </p>
+    <ul>
+      @for (field of todayFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
+    <p>
+      The upload also carries a short-lived Overwolf sign-in token, which our server checks with
+      Overwolf and does not store. We keep a one-way code made from the uploading player's
+      Overwolf username, never the username itself, only to limit how many matches one player can
+      send. For the uploading player we also keep a record of their own match history: the match
+      facts and their own result, under the name they play with. That record is capped per
+      player (currently the most recent 5,000 matches).
+    </p>
+    <p>
+      Names and player ids are stored so that players can be looked up inside the desktop app.
+      They are never published on this website.
+    </p>
+  </section>
+
+  <section class="privacy-section" id="extended-fields" aria-labelledby="extended-fields-title">
+    <h2 id="extended-fields-title">
+      @if (extendedBeingAdded) {
+        What the app is adding (being added)
+      } @else {
+        What the app also uploads
+      }
+    </h2>
+    @if (extendedBeingAdded) {
+      <p>
+        These fields are <strong>being added</strong> to the desktop app's upload and to the
+        server that receives it. They are not uploaded yet. This page will say so when they are.
+      </p>
+    } @else {
+      <p>The app uploads these fields in addition to the ones above.</p>
+    }
+    <ul>
+      @for (field of extendedFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
+    <p>
+      Damage, healing, damage blocked and time per hero describe only the player who uploaded the
+      match, the one person the app has those figures for. The app does not upload them for other
+      players. The kill feed is reduced to hero against hero counts before it is sent, so it holds
+      no player names or ids at all. These figures are used for community benchmarks, such as
+      damage per minute, and for hero-against-hero counter numbers.
+    </p>
+  </section>
+
+  <section class="privacy-section" id="public-numbers" aria-labelledby="public-numbers-title">
+    <h2 id="public-numbers-title">What this website publishes</h2>
+    <ul>
+      <li>
+        Only <strong>anonymous aggregates</strong>: counts and sums over many matches, such as how
+        often a hero is picked or wins, or the average match length on a map.
+      </li>
+      <li>
+        <strong>Never</strong> in-game names, player ids, or the rows of any single player or
+        match.
+      </li>
+      <li>
+        A figure is shown only once it rests on a <strong>minimum number of matches</strong>.
+        Below that the page says there is not enough data yet instead of showing a number.
+      </li>
+      <li>A match recorded by two players is counted once, so one match cannot weigh twice.</li>
+    </ul>
+  </section>
+
+  <section class="privacy-section" id="retention" aria-labelledby="retention-title">
+    <h2 id="retention-title">How long it is kept</h2>
+    <ul>
+      <li>
+        Scoreboard lines, with names and ids, are deleted once the half-season after the one the
+        match was played in has ended, and in any case no later than six months after the match.
+        The figures being added above are kept for the same time.
+      </li>
+      <li>
+        Before a half-season's lines are deleted, its totals are saved as anonymous counts that
+        hold no name, id or match. Those counts are what the community pages keep showing.
+      </li>
+      <li>
+        A player who does not use the app can ask for their scoreboard lines to be deleted and
+        for their id not to be stored again. How to ask is in the desktop app's privacy policy.
+      </li>
+    </ul>
+  </section>
+
+  <section class="privacy-section" id="more" aria-labelledby="more-title">
+    <h2 id="more-title">More</h2>
+    <p>
+      The desktop app's privacy policy covers collection, retention and deletion in full,
+      including advertising, the optional voice assistant and Premium. Where it and this page
+      differ, the desktop app's policy is the one to follow, and this page is updated to match.
+    </p>
+    <p>
+      Rivals Pulse Coach is an independent project and is not affiliated with NetEase, Marvel or
+      Overwolf.
+    </p>
+  </section>
+</main>
