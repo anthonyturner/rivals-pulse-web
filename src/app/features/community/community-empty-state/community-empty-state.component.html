@@ -1,0 +1,12 @@
+<div class="empty-state">
+  <p class="empty-state__kicker">Not enough data yet</p>
+  <h2 class="empty-state__heading">{{ heading() }}</h2>
+  <p class="empty-state__preview">{{ preview() }}</p>
+  <p class="empty-state__source">
+    These numbers come from Rivals Pulse app uploads. They appear here once enough matches have been
+    uploaded.
+  </p>
+  @if (link(); as link) {
+    <a class="empty-state__link" [routerLink]="link.path">{{ link.label }}</a>
+  }
+</div>

@@ -16,6 +16,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'community',
+    title: 'Community | Rivals Pulse Coach',
+    loadChildren: () =>
+      import('./features/community/community.routes').then((module) => module.communityRoutes),
+  },
+  {
     path: 'learn',
     redirectTo: 'hero-guides',
     pathMatch: 'full',
@@ -195,6 +201,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/tools/team-builder/team-builder-page.component').then(
         (module) => module.TeamBuilderPageComponent,
+      ),
+  },
+  {
+    path: 'privacy',
+    title: 'Privacy notes',
+    loadComponent: () =>
+      import('./features/privacy/privacy-page.component').then(
+        (module) => module.PrivacyPageComponent,
       ),
   },
   {
