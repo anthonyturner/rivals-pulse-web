@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.tier-tab__tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}
+
+.tier-tab__tier {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.tier-tab__tier-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.tier-tab__sample {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}

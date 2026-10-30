@@ -1,0 +1,26 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Community tier list"
+  subject="The community tier list"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+>
+  @if (current.kind === 'ready') {
+    <div class="tier-tab__tiers">
+      @for (tier of current.tiers; track tier.name) {
+        <section class="tier-tab__tier" [attr.aria-labelledby]="'tier-tab-' + tier.name">
+          <h3 [id]="'tier-tab-' + tier.name" class="tier-tab__tier-title">{{ tier.name }} tier</h3>
+          <app-community-hero-list [heroes]="tier.heroes" figureLabel="Win rate" />
+        </section>
+      }
+    </div>
+    <p class="tier-tab__sample">
+      From {{ current.matchesLabel }} recorded by Rivals Pulse players. Each row shows the hero's win
+      rate. A hero's tier comes from its win rate pulled toward 50%, so a short run cannot place it
+      high. Only heroes with enough appearances are placed.
+    </p>
+  }
+</app-community-summary>
