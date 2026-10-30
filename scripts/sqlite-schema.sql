@@ -1,37 +1,5 @@
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS heroes (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  role TEXT NOT NULL,
-  difficulty INTEGER NOT NULL,
-  summary TEXT NOT NULL,
-  playstyle TEXT NOT NULL,
-  image_url TEXT NOT NULL,
-  raw_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS hero_list_items (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  hero_id TEXT NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
-  item_type TEXT NOT NULL CHECK (item_type IN ('strength', 'weakness', 'counter', 'synergy')),
-  value TEXT NOT NULL,
-  sort_order INTEGER NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS hero_abilities (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  hero_id TEXT NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
-  kit_role TEXT,
-  kit_label TEXT,
-  name TEXT NOT NULL,
-  ability_type TEXT NOT NULL,
-  description TEXT NOT NULL,
-  technical_details_json TEXT NOT NULL DEFAULT '[]',
-  sort_order INTEGER NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS hero_videos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   hero_id TEXT,
@@ -167,8 +135,6 @@ CREATE TABLE IF NOT EXISTS game_stat_snapshot_games (
   UNIQUE (snapshot_id, app_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_hero_list_items_hero_id ON hero_list_items(hero_id);
-CREATE INDEX IF NOT EXISTS idx_hero_abilities_hero_id ON hero_abilities(hero_id);
 CREATE INDEX IF NOT EXISTS idx_hero_videos_hero_id ON hero_videos(hero_id);
 CREATE INDEX IF NOT EXISTS idx_hero_videos_role ON hero_videos(role);
 CREATE INDEX IF NOT EXISTS idx_hero_videos_type ON hero_videos(video_type);

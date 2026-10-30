@@ -1,5 +1,10 @@
 # Turso Content Database
 
+> The hero tables (`heroes`, `hero_list_items`, `hero_abilities`) moved to Supabase in issue 105 and
+> the hero syncs now write `sync_runs` and `external_sources` there. See
+> [supabase.md](supabase.md#website-hero-data). The Turso copies are frozen and are dropped with
+> Turso (issue 110).
+
 The app uses one shared Turso/libSQL database for curated content and cached external API payloads.
 The mock JSON files under `data/seeds` are seed inputs only; runtime pages read from the Express API backed by Turso.
 
@@ -10,7 +15,7 @@ The mock JSON files under `data/seeds` are seed inputs only; runtime pages read 
 - Schema: `scripts/sqlite-schema.sql`
 - Seed script: `scripts/seed-sqlite.mjs`
 - External sync script: `scripts/sync-external-sources.mjs`
-- Hero wiki sync script: `scripts/sync-heroes.mjs`
+- Hero wiki sync script: `scripts/sync-heroes.mjs` (writes Supabase)
 
 Credentials are stored in `.env` locally and in Vercel environment variables for production.
 
@@ -34,11 +39,11 @@ npm run sync:heroes
 
 ## Tables
 
-### `heroes`
+### `heroes` (now `hero_content` in Supabase)
 
 Stores one row per hero and keeps the complete source object in `raw_json` so the current Angular data model can be served without losing nested fields.
 
-### `hero_list_items`
+### `hero_list_items` (now in Supabase)
 
 Stores repeated hero values:
 
@@ -47,7 +52,7 @@ Stores repeated hero values:
 - `counter`
 - `synergy`
 
-### `hero_abilities`
+### `hero_abilities` (now in Supabase)
 
 Stores hero abilities. Default abilities use empty `kit_role` and `kit_label`; role-specific kits, such as Deadpool's Vanguard/Duelist/Strategist pools, set those fields.
 
@@ -102,7 +107,7 @@ The Express SSR server exposes read-only routes:
 ## Update Flow
 
 1. Update curated JSON files or generator scripts.
-2. Run `npm run db:seed` to rebuild Turso content tables.
+2. Run `npm run db:seed` to rebuild Turso content tables (it no longer seeds heroes).
 3. Run `npm run db:sync` to refresh external source payloads.
 4. Run `npm run sync:heroes` to discover and upsert current Fandom heroes.
 5. Run `npm run build` to verify the app still compiles.
@@ -117,8 +122,8 @@ The hero sync script:
 - Fetches each hero page's wikitext.
 - Skips pages that do not expose a valid hero role.
 - Parses role, difficulty, official summary, strengths, weaknesses, synergies, and a compact ability list.
-- Inserts new heroes into Turso.
-- Updates existing heroes in Turso.
+- Inserts new heroes into Supabase.
+- Updates existing heroes in Supabase.
 - Preserves curated fields that are hard to reconstruct automatically, such as Deadpool's role-specific ability kits and existing local image paths.
 - Preserves existing counter arrays. If a brand-new hero has no curated counters yet, it receives broad role-based fallback counters until better matchup data is added.
 
