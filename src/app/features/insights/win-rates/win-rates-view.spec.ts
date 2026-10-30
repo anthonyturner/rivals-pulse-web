@@ -106,6 +106,22 @@ describe('buildWinRatesView', () => {
       );
     });
 
+    it('lists the heroes closest to the minimum first', () => {
+      const view = buildWinRatesView(
+        statsOf({
+          belowMinimum: [
+            { hero: 'thor', appearances: 2 },
+            { hero: 'storm', appearances: 9 },
+            { hero: 'hela', appearances: 2 },
+          ],
+        }),
+        null,
+        identities,
+      );
+
+      expect(view.building.map((row) => row.hero)).toEqual(['storm', 'hela', 'thor']);
+    });
+
     it('names the half-season, its dates and the matches counted', () => {
       const view = buildWinRatesView(statsOf(), null, identities);
 
@@ -183,15 +199,19 @@ describe('buildWinRatesView', () => {
     });
 
     it('leaves out a hero row whose figures are not finite', () => {
-      const broken = { ...hero('storm', 12, 8), winRate: Number.NaN };
-      const view = buildWinRatesView(
-        statsOf({ tiers: [{ name: 'A', heroes: [broken] }], belowMinimum: [] }),
-        null,
-        identities,
-      );
+      for (const broken of [
+        { ...hero('storm', 12, 8), winRate: Number.NaN },
+        { ...hero('storm', 12, 8), wins: Number.NaN },
+      ]) {
+        const view = buildWinRatesView(
+          statsOf({ tiers: [{ name: 'A', heroes: [broken] }], belowMinimum: [] }),
+          null,
+          identities,
+        );
 
-      expect(view.ranked).toEqual([]);
-      expect(view.state).toBe('partial');
+        expect(view.ranked).toEqual([]);
+        expect(view.state).toBe('partial');
+      }
     });
   });
 
@@ -200,6 +220,12 @@ describe('buildWinRatesView', () => {
       expect(buildWinRatesView(statsOf(), null, identities).state).toBe('full');
       expect(buildWinRatesView(statsOf(), 'week-2', identities).state).toBe('full');
       expect(buildWinRatesView(statsOf(), '', identities).state).toBe('full');
+    });
+
+    it('ignores a segment that is not a whole or half season number', () => {
+      for (const odd of ['1e1', '-3', '0', '9.25', '10.0', ' 9', '9abc']) {
+        expect(buildWinRatesView(statsOf(), odd, identities).state).withContext(odd).toBe('full');
+      }
     });
 
     it('shows the served half-season when the address names it', () => {

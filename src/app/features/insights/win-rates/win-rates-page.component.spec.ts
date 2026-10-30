@@ -125,9 +125,15 @@ describe('WinRatesPageComponent', () => {
   it('shows heroes still short of the minimum as not enough data yet, beside the full table', async () => {
     const element = await open('/win-rates', full);
 
-    expect(text(element, '.building h2')).toEqual(['Not enough data yet']);
+    expect(text(element, '.building h2')).toEqual(['Progress toward 10 appearances']);
     expect(text(element, '.building-name')).toEqual(['Storm', 'Thor']);
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
+  });
+
+  it('keeps static panels out of the live-region announcements', async () => {
+    const element = await open('/win-rates', partial);
+
+    expect(element.querySelector('[role="status"]')).toBeNull();
   });
 
   it('shows the matches counted and no table while no hero has enough data', async () => {
@@ -162,7 +168,9 @@ describe('WinRatesPageComponent', () => {
     const element = await open('/win-rates/9', full);
     const link = element.querySelector<HTMLAnchorElement>('.action-link');
 
-    expect(text(element, '.state-panel h2')).toEqual(['No Rivals Pulse data for Season 9']);
+    expect(text(element, '.state-panel h2')).toEqual(['Season 9 is not shown here']);
+    expect(text(element, '.state-panel p')[0]).toContain('shows only the current half-season');
+    expect(element.querySelector('.season-card')).toBeNull();
     expect(element.querySelector('table')).toBeNull();
     expect(link?.textContent).toContain('See Season 10.5 win rates');
     expect(link?.getAttribute('href')).toBe('/win-rates');

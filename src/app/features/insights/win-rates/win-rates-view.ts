@@ -67,8 +67,8 @@ export interface WinRatesView {
  * never formats a number and a missing figure can never reach the screen as NaN.
  *
  * `requestedSeason` is the address's season segment. The API serves one half-season, so any other
- * season gets the `unavailable-season` state, never an error; a segment that is not a number is
- * ignored and the served half-season is shown.
+ * season gets the `unavailable-season` state, never an error; a segment that is not a half-season
+ * number (such as `10` or `10.5`) is ignored and the served half-season is shown.
  */
 export function buildWinRatesView(
   stats: HeroStats,
@@ -99,7 +99,9 @@ export function buildWinRatesView(
 
   const ranked = stats.tiers
     .flatMap((tier) => tier.heroes)
-    .filter((hero) => hero.appearances > 0 && Number.isFinite(hero.winRate))
+    .filter(
+      (hero) => hero.appearances > 0 && Number.isFinite(hero.winRate) && Number.isFinite(hero.wins),
+    )
     .map((hero) => rankedRow(hero, identities))
     .sort(
       (a, b) =>
@@ -107,7 +109,8 @@ export function buildWinRatesView(
     );
   const building = stats.belowMinimum
     .filter((hero) => hero.appearances > 0)
-    .map((hero) => buildingRow(hero.hero, hero.appearances, stats.minimumMatches, identities));
+    .map((hero) => buildingRow(hero.hero, hero.appearances, stats.minimumMatches, identities))
+    .sort((a, b) => b.appearances - a.appearances || a.name.localeCompare(b.name));
   const fallbackNotice =
     stats.inPlaceOf === null
       ? null
@@ -178,10 +181,9 @@ function dateLabel(value: string | null): string | null {
     : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(time);
 }
 
+/** A half-season id is a positive whole or half number such as 10 or 10.5; anything else is ignored. */
 function parseSeason(value: string | null): number | null {
-  const season = value === null || value.trim() === '' ? Number.NaN : Number(value);
-
-  return Number.isFinite(season) ? season : null;
+  return value !== null && /^(?:[1-9]\d*(?:\.5)?|0\.5)$/.test(value) ? Number(value) : null;
 }
 
 function percentLabel(value: number): string {

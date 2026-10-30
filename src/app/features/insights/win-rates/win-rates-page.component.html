@@ -10,7 +10,7 @@
     </div>
 
     @if (view(); as v) {
-      @if (v.season; as season) {
+      @if (v.state !== 'unavailable-season' && v.season; as season) {
         <div class="season-card">
           <span>Showing</span>
           <strong>{{ season.label }}</strong>
@@ -40,11 +40,11 @@
 
     @switch (v.state) {
       @case ('unavailable-season') {
-        <section class="state-panel" role="status">
-          <h2>No Rivals Pulse data for {{ v.requestedLabel }}</h2>
+        <section class="state-panel">
+          <h2>{{ v.requestedLabel }} is not shown here</h2>
           <p>
-            Rivals Pulse only counts matches its players record, and none are counted for
-            {{ v.requestedLabel }}.
+            This page shows only the current half-season, so {{ v.requestedLabel }}'s numbers are
+            not shown here.
           </p>
           @if (v.season; as season) {
             <a class="action-link" routerLink="/win-rates">See {{ season.label }} win rates</a>
@@ -52,7 +52,7 @@
         </section>
       }
       @case ('empty') {
-        <section class="state-panel" role="status">
+        <section class="state-panel">
           <h2>Not enough data yet</h2>
           <p>
             No matches are counted
@@ -65,7 +65,7 @@
         </section>
       }
       @case ('partial') {
-        <section class="state-panel" role="status">
+        <section class="state-panel">
           <h2>Not enough data yet</h2>
           <p>
             {{ v.matchesCountedLabel }} counted
@@ -148,9 +148,10 @@
       @if (v.building.length > 0) {
         <section class="building" aria-labelledby="building-title">
           <div class="section-heading">
-            <h2 id="building-title">Not enough data yet</h2>
+            <h2 id="building-title">Progress toward {{ v.minimumMatches }} appearances</h2>
             <p>
-              These heroes need {{ v.minimumMatches }} appearances before a win rate is shown.
+              Not enough data yet: these heroes need {{ v.minimumMatches }} appearances before a
+              win rate is shown.
             </p>
           </div>
 

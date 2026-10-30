@@ -27,14 +27,14 @@ describe('win-rate routes', () => {
 
   afterEach(() => http.verify());
 
-  const emptyStats = {
+  const partialStats = {
     status: 'not-enough-data',
     minimumMatches: 10,
-    halfSeason: null,
+    halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null },
     inPlaceOf: null,
-    matchesCounted: 0,
+    matchesCounted: 3,
     tiers: [],
-    belowMinimum: [],
+    belowMinimum: [{ hero: 'storm', appearances: 3 }],
   };
 
   /** Follows an address the way a visitor's browser would and returns the page it ended on. */
@@ -43,7 +43,7 @@ describe('win-rate routes', () => {
     const component = await harness.navigateByUrl(url);
 
     http.expectOne('/api/heroes').flush([]);
-    http.expectOne('/api/hero-stats').flush(emptyStats);
+    http.expectOne('/api/hero-stats').flush(partialStats);
     harness.detectChanges();
 
     expect(component).toBeInstanceOf(WinRatesPageComponent);
@@ -64,13 +64,23 @@ describe('win-rate routes', () => {
     expect(finalUrl).toBe('/win-rates');
   });
 
-  for (const old of ['/win-rates/9', '/win-rates/8', '/win-rates/week-2', '/win-rates/10.5']) {
-    it(`shows the win-rate page, never an error or the hero list, at ${old}`, async () => {
+  for (const old of ['/win-rates/9', '/win-rates/8']) {
+    it(`shows the not-shown-here panel, never an error, at ${old}`, async () => {
       const { finalUrl, element } = await visit(old);
 
       expect(finalUrl).toBe(old);
-      expect(element.textContent).toContain('Not enough data yet');
+      expect(element.textContent).toContain('is not shown here');
       expect(element.textContent).not.toContain('could not be loaded');
+    });
+  }
+
+  for (const shown of ['/win-rates/week-2', '/win-rates/10.5']) {
+    it(`shows the current half-season at ${shown}`, async () => {
+      const { finalUrl, element } = await visit(shown);
+
+      expect(finalUrl).toBe(shown);
+      expect(element.textContent).toContain('Not enough data yet');
+      expect(element.textContent).toContain('Season 10.5');
     });
   }
 });

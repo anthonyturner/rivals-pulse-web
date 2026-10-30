@@ -113,7 +113,7 @@ h1 {
   border: 1px solid rgba(3, 159, 159, 0.25);
   border-radius: 7px;
   background: rgba(232, 247, 251, 0.82);
-  color: #087b7b;
+  color: color-mix(in srgb, var(--teal) 75%, var(--text));
   font-size: 0.9rem;
   font-weight: 800;
   text-decoration: none;
@@ -251,7 +251,7 @@ tbody th {
 }
 
 .rate[data-tone='above'] {
-  --rate-color: #16a05d;
+  --rate-color: color-mix(in srgb, var(--ally) 55%, var(--teal));
 }
 
 .rate[data-tone='below'] {
@@ -391,6 +391,14 @@ tbody th {
 
   .hero-cell {
     gap: 8px;
+  }
+
+  .hero-cell strong,
+  .hero-cell small,
+  .building-name {
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
   }
 
   .rate {
