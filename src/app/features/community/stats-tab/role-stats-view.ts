@@ -76,7 +76,7 @@ export function buildRoleStatsView(stats: RoleStats | null | undefined, selected
     modes: stats.modes.map((mode) => ({ id: mode.id, label: mode.label, selected: mode === chosen })),
     cards: chosen.roles.map((entry) => cardOf(entry, stats.minimumLines)),
     sample:
-      'A line is one player in one match. Figures are averages per line, pooled across every player on the scoreboard, in matches with a win or a loss. Practice, Arcade and matches with no recorded mode are left out.',
+      'A line is one player in one match. Figures are averages per line, pooled across every player on the scoreboard. The win rate counts only matches with a win or a loss. Practice, Arcade and matches with no recorded mode are left out.',
   };
 }
 

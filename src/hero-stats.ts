@@ -1,13 +1,11 @@
 import type {
   HeroStats,
   HeroStatsBelowMinimum,
+  HeroStatsHalfSeason,
   HeroStatsHero,
   HeroStatsTier,
 } from './contracts/hero-stats.model.js';
 import type { TierName } from './contracts/tier-list.model.js';
-import { buildHalfSeasonTimeline, chooseHalfSeason, type HalfSeasonStart } from './half-season.js';
-
-export type { HalfSeasonStart } from './half-season.js';
 
 /**
  * Every hero number on the site is derived here and nowhere else, from the counts in
@@ -70,6 +68,11 @@ export interface MatchTotalsRow {
   decidedMatches: number;
 }
 
+export interface HalfSeasonStart {
+  halfSeason: number;
+  startsAt: string;
+}
+
 export interface HeroStatsSource {
   halfSeasons: readonly HalfSeasonStart[];
   totals: readonly MatchTotalsRow[];
@@ -107,7 +110,8 @@ export function killDeathAssistRatio(kills: number, deaths: number, assists: num
   return (kills + assists) / Math.max(deaths, 1);
 }
 
-interface Tally {
+/** Counts pooled from `hero_aggregates` rows: for one hero here, for one role in the role stats. */
+export interface Tally {
   appearances: number;
   wins: number;
   killsSum: number;
@@ -127,8 +131,83 @@ interface HalfSeasonSnapshot {
   excludedGameIds: Set<number>;
 }
 
+/**
+ * Which half-seasons exist and which is current, from the start dates in `half_seasons` plus the
+ * half-seasons that have counts but no start date. Shared by everything that picks a half-season.
+ */
+export interface HalfSeasonTimeline {
+  /** The latest half-season that has started, or undefined before any exists. */
+  current: number | undefined;
+  /** Every half-season up to and including the current one, oldest first. */
+  started: number[];
+  describe(id: number): HeroStatsHalfSeason;
+  /** The latest known half-season before `id`. */
+  previousOf(id: number): number | undefined;
+}
+
+export function halfSeasonTimeline(
+  halfSeasons: readonly HalfSeasonStart[],
+  countedIds: Iterable<number>,
+  now: Date,
+): HalfSeasonTimeline {
+  const starts = new Map(halfSeasons.map((season) => [season.halfSeason, season.startsAt]));
+  const known = [...new Set([...starts.keys(), ...countedIds])].sort((a, b) => a - b);
+  const current = currentHalfSeason(starts, known, now);
+
+  return {
+    current,
+    started: current === undefined ? [] : known.filter((id) => id <= current),
+    describe: (id) => {
+      const next = known.find((other) => other > id && starts.has(other));
+
+      return {
+        id,
+        label: `Season ${id}`,
+        startsAt: starts.get(id) ?? null,
+        endsAt: next === undefined ? null : (starts.get(next) ?? null),
+      };
+    },
+    previousOf: (id) => [...known].reverse().find((other) => other < id),
+  };
+}
+
+export interface HalfSeasonChoice {
+  shown?: number;
+  /** Set only when `shown` is the previous half-season, standing in for this current one. */
+  inPlaceOf?: number;
+}
+
+/**
+ * Which half-season to show. With `requested`, exactly that one (no fall-back): a half-season that
+ * has not started, or that nothing knows, shows none. Without it, the current one, or the previous
+ * one while the current is not `isReady` and the previous is.
+ */
+export function chooseHalfSeason(
+  timeline: HalfSeasonTimeline,
+  requested: number | undefined,
+  isReady: (id: number) => boolean,
+): HalfSeasonChoice {
+  const { current, started, previousOf } = timeline;
+
+  if (current === undefined) {
+    return {};
+  }
+
+  if (requested !== undefined) {
+    return started.includes(requested) ? { shown: requested } : {};
+  }
+
+  const previous = previousOf(current);
+
+  if (previous !== undefined && !isReady(current) && isReady(previous)) {
+    return { shown: previous, inPlaceOf: current };
+  }
+
+  return { shown: current };
+}
+
 export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStatsOptions): HeroStatsDerivation {
-  const timeline = buildHalfSeasonTimeline(
+  const timeline = halfSeasonTimeline(
     source.halfSeasons,
     source.heroes.map((row) => row.halfSeason),
     options.now,
@@ -169,6 +248,31 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
   };
 }
 
+/** The latest half-season that has started, or the latest with any counts when no start date says. */
+function currentHalfSeason(starts: ReadonlyMap<number, string>, known: readonly number[], now: Date): number | undefined {
+  const started = known.filter((id) => {
+    const start = Date.parse(starts.get(id) ?? '');
+
+    return !Number.isNaN(start) && start <= now.getTime();
+  });
+
+  return started.at(-1) ?? known.at(-1);
+}
+
+/** Adds one aggregate row to a tally. The sums and their non-null counts stay separate: they are averaged only at the end. */
+export function addRow(tally: Tally, row: HeroAggregateRow): void {
+  tally.appearances += row.decidedLines;
+  tally.wins += row.wins;
+  tally.killsSum += row.killsSum;
+  tally.killsN += row.killsN;
+  tally.deathsSum += row.deathsSum;
+  tally.deathsN += row.deathsN;
+  tally.assistsSum += row.assistsSum;
+  tally.assistsN += row.assistsN;
+  tally.finalHitsSum += row.finalHitsSum;
+  tally.finalHitsN += row.finalHitsN;
+}
+
 function snapshotOf(
   source: HeroStatsSource,
   halfSeason: number,
@@ -190,16 +294,7 @@ function snapshotOf(
     }
 
     const tally = tallies.get(slug) ?? emptyTally();
-    tally.appearances += row.decidedLines;
-    tally.wins += row.wins;
-    tally.killsSum += row.killsSum;
-    tally.killsN += row.killsN;
-    tally.deathsSum += row.deathsSum;
-    tally.deathsN += row.deathsN;
-    tally.assistsSum += row.assistsSum;
-    tally.assistsN += row.assistsN;
-    tally.finalHitsSum += row.finalHitsSum;
-    tally.finalHitsN += row.finalHitsN;
+    addRow(tally, row);
     tallies.set(slug, tally);
   }
 
@@ -246,7 +341,7 @@ function heroLine(hero: string, tally: Tally, shrunk: number, tier: TierName, ma
   };
 }
 
-function emptyTally(): Tally {
+export function emptyTally(): Tally {
   return {
     appearances: 0,
     wins: 0,

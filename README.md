@@ -58,14 +58,15 @@ Open `http://localhost:4200/`.
 | `npm.cmd start` | Run the development server |
 | `npm.cmd run build` | Build Angular and type-check the API |
 | `npm.cmd test` | Run unit tests |
-| `npm.cmd run db:seed` | Rebuild seeded content from local JSON: Turso, plus the home page portals and blocks in Supabase (heroes are not seeded) |
+| `npm.cmd run db:seed` | Load the local seed JSON into Supabase: home page portals and blocks, glossary terms and hero videos (heroes are not seeded); also applies the Turso schema |
+| `npm.cmd run sync:hero-videos` | Copy the hero videos seed file into Supabase |
+| `npm.cmd run sync:glossary` | Copy every glossary term from the seed file into Supabase |
 | `npm.cmd run db:sync` | Cache configured external sources |
 | `npm.cmd run sync:home-news` | Refresh official news and events |
 | `npm.cmd run sync:heroes` | Refresh hero and ability data |
 | `npm.cmd run sync:official-heroes` | Refresh official descriptions, kits, and team-ups |
 | `npm.cmd run sync:tier-list` | Store the latest ranked tier-list snapshot |
 | `npm.cmd run sync:game-stats` | Capture the current hourly game-stat snapshot |
-| `npm.cmd run refresh:counters` | Rebuild curated hero counter mappings |
 | `npm.cmd run refresh:build-profiles` | Regenerate coach-rated hero build profiles |
 | `npm.cmd run content:update` | Run the complete seed and content refresh pipeline |
 

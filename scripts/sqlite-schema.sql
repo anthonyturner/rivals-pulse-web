@@ -1,41 +1,5 @@
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE IF NOT EXISTS hero_videos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  hero_id TEXT,
-  role TEXT,
-  video_type TEXT NOT NULL,
-  youtube_id TEXT NOT NULL,
-  title TEXT NOT NULL,
-  sort_order INTEGER NOT NULL,
-  raw_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS glossary_terms (
-  id TEXT PRIMARY KEY,
-  term TEXT NOT NULL,
-  category TEXT NOT NULL,
-  definition TEXT NOT NULL,
-  coach_note TEXT NOT NULL,
-  example TEXT NOT NULL,
-  related_terms_json TEXT NOT NULL,
-  source_name TEXT NOT NULL,
-  source_url TEXT NOT NULL,
-  raw_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS external_sources (
-  source_key TEXT PRIMARY KEY,
-  source_name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  payload_json TEXT NOT NULL,
-  fetched_at TEXT NOT NULL,
-  status TEXT NOT NULL,
-  error TEXT
-);
-
 CREATE TABLE IF NOT EXISTS sync_runs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   source_key TEXT NOT NULL,
@@ -118,10 +82,6 @@ CREATE TABLE IF NOT EXISTS game_stat_snapshot_games (
   UNIQUE (snapshot_id, app_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_hero_videos_hero_id ON hero_videos(hero_id);
-CREATE INDEX IF NOT EXISTS idx_hero_videos_role ON hero_videos(role);
-CREATE INDEX IF NOT EXISTS idx_hero_videos_type ON hero_videos(video_type);
-CREATE INDEX IF NOT EXISTS idx_glossary_terms_category ON glossary_terms(category);
 CREATE INDEX IF NOT EXISTS idx_sync_runs_source_key ON sync_runs(source_key);
 CREATE INDEX IF NOT EXISTS idx_tier_list_rank_snapshots_season ON tier_list_rank_snapshots(season_id);
 CREATE INDEX IF NOT EXISTS idx_tier_list_items_lookup ON tier_list_items(season_id, rank_filter, tier, sort_order);

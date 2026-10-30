@@ -101,6 +101,18 @@ describe('deriveRoleStats role averages', () => {
     expect(vanguard.finalHitsAverage).toBeCloseTo(15, 6);
   });
 
+  it('weights each hero by its lines, so a small hero cannot count as much as a big one', () => {
+    const source = sourceOf([
+      fullRow(HULK, MIN, MIN, [10, 1, 1, 10]),
+      fullRow(CAPTAIN_AMERICA, 3 * MIN, 0, [2, 1, 1, 2]),
+    ]);
+    const vanguard = roleOf(source, 'competitive', 'Vanguard');
+
+    expect(vanguard.winRate).toBe(25);
+    expect(vanguard.killsAverage).toBe(4);
+    expect(vanguard.finalHitsAverage).toBe(4);
+  });
+
   it('takes KDA as a ratio of the pooled totals, the same definition as the hero numbers', () => {
     const source = sourceOf([
       fullRow(HULK, MIN, 0, [10, 5, 2, 0]),

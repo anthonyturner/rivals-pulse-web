@@ -18,6 +18,7 @@ import {
   getHomePortalsFromDatabase,
   getTierListFromDatabase,
 } from './content-database';
+import { getHeroMatchups } from './hero-matchups-read';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
 import { syncGameStats } from './game-stats-sync';
@@ -36,6 +37,10 @@ app.get('/api/hero-stats', (req, res) => {
   const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
   handleApiResponse(res, () => getHeroStats({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/hero-matchups', (_req, res) => {
+  handleApiResponse(res, () => getHeroMatchups());
 });
 
 app.get('/api/community/stats', (req, res) => {

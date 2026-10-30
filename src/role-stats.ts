@@ -6,8 +6,17 @@ import {
   type RoleStatsModeId,
   type RoleStatsRole,
 } from './contracts/role-stats.model.js';
-import { buildHalfSeasonTimeline, chooseHalfSeason } from './half-season.js';
-import { PLAY_MODE_IDS, killDeathAssistRatio, type HeroAggregateRow, type HeroStatsSource } from './hero-stats.js';
+import {
+  PLAY_MODE_IDS,
+  addRow,
+  chooseHalfSeason,
+  emptyTally,
+  halfSeasonTimeline,
+  killDeathAssistRatio,
+  type HeroAggregateRow,
+  type HeroStatsSource,
+  type Tally,
+} from './hero-stats.js';
 
 /**
  * Every role number on the Community Stats tab is derived here, from the same per-hero counts the
@@ -49,31 +58,25 @@ export interface RoleStatsDerivation {
   excludedGameIds: number[];
 }
 
-interface Tally {
-  appearances: number;
-  wins: number;
-  killsSum: number;
-  killsN: number;
-  deathsSum: number;
-  deathsN: number;
-  assistsSum: number;
-  assistsN: number;
-  finalHitsSum: number;
-  finalHitsN: number;
-}
-
 export function deriveRoleStats(source: HeroStatsSource, options: DeriveRoleStatsOptions): RoleStatsDerivation {
-  const timeline = buildHalfSeasonTimeline(
+  const timeline = halfSeasonTimeline(
     source.halfSeasons,
     source.heroes.map((row) => row.halfSeason),
     options.now,
   );
   const excludedGameIds = new Set<number>();
+  const modesByHalfSeason = new Map<number, RoleStatsMode[]>();
   const modesOf = (halfSeason: number): RoleStatsMode[] => {
+    const cached = modesByHalfSeason.get(halfSeason);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const rows = source.heroes.filter((row) => row.halfSeason === halfSeason);
     rows.filter((row) => !options.roleByGameId.has(row.gameHeroId)).forEach((row) => excludedGameIds.add(row.gameHeroId));
 
-    return MODES.map((mode) => ({
+    const modes = MODES.map((mode) => ({
       id: mode.id,
       label: mode.label,
       roles: HERO_ROLES.map((role) =>
@@ -83,6 +86,9 @@ export function deriveRoleStats(source: HeroStatsSource, options: DeriveRoleStat
         ),
       ),
     }));
+    modesByHalfSeason.set(halfSeason, modes);
+
+    return modes;
   };
   // The blend holds every line any single mode holds, so it has a ready role whenever one does.
   const isReady = (halfSeason: number): boolean =>
@@ -105,31 +111,8 @@ export function deriveRoleStats(source: HeroStatsSource, options: DeriveRoleStat
 }
 
 function tallyOf(rows: readonly HeroAggregateRow[]): Tally {
-  const tally: Tally = {
-    appearances: 0,
-    wins: 0,
-    killsSum: 0,
-    killsN: 0,
-    deathsSum: 0,
-    deathsN: 0,
-    assistsSum: 0,
-    assistsN: 0,
-    finalHitsSum: 0,
-    finalHitsN: 0,
-  };
-
-  for (const row of rows) {
-    tally.appearances += row.decidedLines;
-    tally.wins += row.wins;
-    tally.killsSum += row.killsSum;
-    tally.killsN += row.killsN;
-    tally.deathsSum += row.deathsSum;
-    tally.deathsN += row.deathsN;
-    tally.assistsSum += row.assistsSum;
-    tally.assistsN += row.assistsN;
-    tally.finalHitsSum += row.finalHitsSum;
-    tally.finalHitsN += row.finalHitsN;
-  }
+  const tally = emptyTally();
+  rows.forEach((row) => addRow(tally, row));
 
   return tally;
 }

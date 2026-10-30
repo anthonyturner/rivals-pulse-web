@@ -153,6 +153,10 @@ describe('fetchHeroStatsSource', () => {
     );
   });
 
+  it('names the function when the answer is not an object', () => {
+    expect(() => parseHeroStatsSource([])).toThrowError('read_hero_stats did not return an object');
+  });
+
   it('rejects an answer that is not the expected shape', async () => {
     await expectAsync(fetchHeroStatsSource(ENV, answering([]))).toBeRejected();
     await expectAsync(
@@ -257,19 +261,37 @@ describe('getRoleStats', () => {
     expect(loadHeroRoles).not.toHaveBeenCalled();
   });
 
-  it('is the empty state, not an error, while the aggregates are not in the database yet', async () => {
-    const warn = console.warn as jasmine.Spy;
+  for (const [status, code] of [
+    [404, 'PGRST202'],
+    [404, undefined],
+    [400, '42883'],
+    [400, '42P01'],
+  ] as const) {
+    it(`is the empty state with HTTP 200, not an error, while the function is not deployed (${status} ${code ?? 'no code'})`, async () => {
+      const warn = console.warn as jasmine.Spy;
 
-    const stats = await getRoleStats({ ...options, fetch: answering({ code: 'PGRST202' }, 404) });
+      const stats = await getRoleStats({ ...options, fetch: answering(code ? { code } : {}, status) });
 
-    expect(stats.status).toBe('not-enough-data');
-    expect(stats.halfSeason).toBeNull();
-    expect(stats.modes.length).toBe(3);
-    expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
+      expect(stats.status).toBe('not-enough-data');
+      expect(stats.halfSeason).toBeNull();
+      expect(stats.modes.length).toBe(3);
+      expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
+    });
+  }
+
+  it('treats an error body that is not JSON as a status only', async () => {
+    const fetcher: typeof fetch = async () => new Response('Not Found', { status: 404 });
+
+    expect((await getRoleStats({ ...options, fetch: fetcher })).status).toBe('not-enough-data');
+    await expectAsync(
+      getRoleStats({ ...options, fetch: async () => new Response('oops', { status: 503 }) }),
+    ).toBeRejectedWithError('read_hero_stats answered 503');
   });
 
   it('still fails on a refused call or a missing configuration', async () => {
-    await expectAsync(getRoleStats({ ...options, fetch: answering({}, 401) })).toBeRejectedWithError('read_hero_stats answered 401');
+    await expectAsync(getRoleStats({ ...options, fetch: answering({ code: '42501' }, 401) })).toBeRejectedWithError(
+      'read_hero_stats answered 401',
+    );
     await expectAsync(getRoleStats({ ...options, env: {}, fetch: answering({}) })).toBeRejected();
   });
 });
