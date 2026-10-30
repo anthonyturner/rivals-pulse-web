@@ -28,10 +28,9 @@
     "sync:tier-list": "node --experimental-strip-types scripts/sync-tier-list.mjs",
     "sync:game-stats": "node --experimental-strip-types scripts/sync-game-stats.mjs",
     "build:pulse-atlas": "node --experimental-strip-types scripts/build-pulse-atlas.mjs",
-    "refresh:counters": "node scripts/refresh-counter-picks.mjs",
     "refresh:playstyles": "node scripts/refresh-playstyles.mjs",
     "refresh:build-profiles": "node scripts/refresh-build-profiles.mjs",
-    "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes && npm run refresh:counters",
+    "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes",
     "serve:ssr:rivals-pulse-coach": "node dist/rivals-pulse-coach/server/server.mjs"
   },
   "prettier": {

@@ -241,7 +241,8 @@ limit never applies), made only of counts and `half_seasons` start dates:
 - `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
   (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
   matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
-  again to the chosen modes' own sum. Nothing calls it yet; the counter picks work will.
+  again to the chosen modes' own sum. The website reads it through `GET /api/hero-matchups`
+  ([`src/hero-matchups-read.ts`](../src/hero-matchups-read.ts)), always for Competitive and Quick Match.
 
 Every rate, tier and KDA is derived in one pure module, [`src/hero-stats.ts`](../src/hero-stats.ts),
 and served by `GET /api/hero-stats`. The rules, which are the overlay's personal tier list:
@@ -263,6 +264,21 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 - A game hero id with no mapping in `data/pulse-atlas/hero-game-ids.json` (hero id 0 is "no hero
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.
+
+Hero against hero is derived in [`src/hero-matchups.ts`](../src/hero-matchups.ts) and served by
+`GET /api/hero-matchups`. It describes a record and nothing else: no tier, no rank, no ban score.
+
+- A pair is listed once the two heroes have faced each other in 10 matches with a win or a loss
+  (`HERO_MATCHUP_MIN_MATCHES`, equal to `hero_matchup_min_matches()`). Below that the pair is absent,
+  and the pages say "Not enough data yet".
+- A pair's win rate is the hero's wins over its scoreboard lines against that enemy; `shrunkWinRate`
+  uses the same `(wins + 5) / (lines + 10)` as the tier rule. The list is sorted by hero then enemy,
+  not by strength. A hero against itself (including two Deadpool forms) is dropped.
+- Competitive and Quick Match are blended, the half-season is chosen as for hero stats (the current
+  one, or the previous one labelled with `inPlaceOf` while the current has no pair at the minimum),
+  and a game hero id with no mapping is left out and logged.
+- A page calls a hero's record a winning one when its shrunk win rate is above 50%
+  (`WINNING_RECORD_CUT_OFF`).
 
 ## Each half-season
 

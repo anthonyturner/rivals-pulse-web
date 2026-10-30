@@ -127,6 +127,6 @@ The hero sync script:
 - Inserts new heroes into Supabase.
 - Updates existing heroes in Supabase.
 - Preserves curated fields that are hard to reconstruct automatically, such as Deadpool's role-specific ability kits and existing local image paths.
-- Preserves existing counter arrays. If a brand-new hero has no curated counters yet, it receives broad role-based fallback counters until better matchup data is added.
+- Preserves existing counter arrays and gives a brand-new hero broad role-based fallback counters. The website no longer shows either: counters come from recorded matchups (`/api/hero-matchups`), so these arrays are unused data awaiting removal.
 
 New heroes without a local portrait use `/images/heroes/default-hero.png` until an image is added.

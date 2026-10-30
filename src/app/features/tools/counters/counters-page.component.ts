@@ -1,17 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { CounterEngineService } from './counter-engine.service';
+import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
+import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero, HeroRole } from '../../heroes/hero.model';
+import { HeroMatchupsService } from '../../insights/hero-matchups.service';
+import { CounterEngineService, MultiThreatAnswer } from './counter-engine.service';
 
 type RoleFilter = HeroRole | 'All';
 
-interface MultiThreatAnswer {
-  hero: Hero;
-  coveredThreats: Hero[];
-}
+/** What the matchup records are doing: waiting, unreadable, readable but empty, or ready to show. */
+type MatchupState = 'loading' | 'unavailable' | 'empty' | 'ready';
 
 @Component({
   selector: 'app-counters-page',
@@ -22,8 +24,13 @@ interface MultiThreatAnswer {
 export class CountersPageComponent implements OnInit {
   private readonly counterEngine = inject(CounterEngineService);
   private readonly heroDataService = inject(HeroDataService);
+  private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly heroes = signal<Hero[]>([]);
+
+  /** Rivals Pulse player matchups: `undefined` while loading, `null` when unreadable. */
+  readonly matchups = signal<HeroMatchups | null | undefined>(undefined);
 
   readonly roles: RoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist', 'Multi-Role'];
   readonly selectedRole = signal<RoleFilter>('All');
@@ -42,6 +49,58 @@ export class CountersPageComponent implements OnInit {
   ];
   readonly selectedDiveThreatIds = signal<string[]>(['angela', 'black-cat', 'spider-man']);
 
+  readonly matchupState = computed<MatchupState>(() => {
+    const matchups = this.matchups();
+
+    if (matchups === undefined) {
+      return 'loading';
+    }
+
+    if (matchups === null) {
+      return 'unavailable';
+    }
+
+    return matchups.matchups.length === 0 ? 'empty' : 'ready';
+  });
+
+  /** The half-season the records come from, and the sentence that says so when it is the previous one. */
+  readonly scope = computed(() => {
+    const matchups = this.matchups();
+
+    if (!matchups?.halfSeason) {
+      return null;
+    }
+
+    return {
+      label: matchups.halfSeason.label,
+      notice: matchups.inPlaceOf
+        ? halfSeasonFallbackNotice(matchups.inPlaceOf.label, matchups.halfSeason.label)
+        : null,
+    };
+  });
+
+  /** What to say in place of records while there are none to show, or null once there are. */
+  readonly matchupNotice = computed<{ heading: string; message: string } | null>(() => {
+    const matchups = this.matchups();
+
+    switch (this.matchupState()) {
+      case 'loading':
+        return { heading: 'Loading', message: 'Loading Rivals Pulse player matchups...' };
+      case 'unavailable':
+        return {
+          heading: 'Matchups unavailable',
+          message: 'Rivals Pulse player matchups cannot be loaded right now. The rest of this page is not affected.',
+        };
+      case 'empty':
+        return {
+          heading: 'Not enough data yet',
+          message: `No two heroes have faced each other in ${matchups?.minimumMatches} recorded matches yet. Matchups appear here as Rivals Pulse players record more matches.`,
+        };
+      default:
+        return null;
+    }
+  });
+
   readonly diveThreatChoices = computed(() => {
     const heroById = new Map(this.heroes().map((hero) => [hero.id, hero]));
 
@@ -57,30 +116,11 @@ export class CountersPageComponent implements OnInit {
   });
 
   readonly multiThreatAnswers = computed<MultiThreatAnswer[]>(() => {
-    const threats = this.selectedDiveThreats();
+    const matchups = this.matchups();
 
-    if (!threats.length) {
-      return [];
-    }
-
-    return this.heroes()
-      .filter((candidate) => !threats.some((threat) => threat.id === candidate.id))
-      .map((candidate) => ({
-        hero: candidate,
-        coveredThreats: threats.filter((threat) =>
-          threat.counters.some(
-            (counterName) => this.normalizeName(counterName) === this.normalizeName(candidate.name),
-          ),
-        ),
-      }))
-      .filter((answer) => answer.coveredThreats.length > 0)
-      .sort(
-        (a, b) =>
-          b.coveredThreats.length - a.coveredThreats.length ||
-          this.antiDiveRolePriority(a.hero.role) - this.antiDiveRolePriority(b.hero.role) ||
-          a.hero.name.localeCompare(b.hero.name),
-      )
-      .slice(0, 6);
+    return matchups
+      ? this.counterEngine.answersTo(this.selectedDiveThreats(), this.heroes(), matchups)
+      : [];
   });
 
   readonly filteredHeroes = computed(() => {
@@ -96,41 +136,32 @@ export class CountersPageComponent implements OnInit {
     return selected ?? this.filteredHeroes()[0] ?? this.heroes()[0];
   });
 
-  readonly matchedCounterHeroes = computed(() => {
+  /** Heroes with a winning record against the selected hero. */
+  readonly winningAgainstSelected = computed(() => {
     const selectedHero = this.selectedHero();
+    const matchups = this.matchups();
 
-    if (!selectedHero) {
-      return [];
-    }
-
-    return this.counterEngine.matchedCounterHeroes(selectedHero, this.heroes());
+    return selectedHero && matchups
+      ? this.counterEngine.winningAgainst(selectedHero, this.heroes(), matchups)
+      : [];
   });
 
-  readonly unmatchedCounters = computed(() => {
+  /** Heroes the selected hero has a winning record against. */
+  readonly winningForSelected = computed(() => {
     const selectedHero = this.selectedHero();
+    const matchups = this.matchups();
 
-    if (!selectedHero) {
-      return [];
-    }
-
-    return this.counterEngine.unmatchedCounters(selectedHero, this.heroes());
+    return selectedHero && matchups
+      ? this.counterEngine.winningFor(selectedHero, this.heroes(), matchups)
+      : [];
   });
-
-  readonly heroesCounteredBySelected = computed(() => {
-    const selectedHero = this.selectedHero();
-
-    if (!selectedHero) {
-      return [];
-    }
-
-    return this.counterEngine.heroesCounteredBy(selectedHero, this.heroes());
-  });
-
-  readonly topCounteredHeroes = computed(() =>
-    this.counterEngine.topCounteredHeroes(this.heroes()),
-  );
 
   ngOnInit(): void {
+    this.heroMatchupsService
+      .getHeroMatchups()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((matchups) => this.matchups.set(matchups));
+
     this.heroDataService.getHeroes().subscribe((heroes) => {
       const requestedHeroId = this.route.snapshot.queryParamMap.get('hero') ?? '';
       const initialHero = heroes.find((hero) => hero.id === requestedHeroId) ?? heroes[0];
@@ -166,7 +197,7 @@ export class CountersPageComponent implements OnInit {
   coverageLabel(answer: MultiThreatAnswer): string {
     const names = answer.coveredThreats.map((threat) => threat.name);
 
-    return `Answers ${names.join(', ')}`;
+    return `Has a winning record against ${names.join(', ')}`;
   }
 
   threatInstruction(heroName: string): string {
@@ -203,23 +234,7 @@ export class CountersPageComponent implements OnInit {
     return role.toLowerCase().replace(/\s+/g, '-');
   }
 
-  counterCountLabel(hero: Hero): string {
-    return `${hero.counters.length} counter${hero.counters.length === 1 ? '' : 's'}`;
-  }
-
-  counterSummary(hero: Hero): string {
-    return this.counterEngine.counterSummary(hero, this.heroes());
-  }
-
-  counterReason(target: Hero, counterName: string): string {
-    return this.counterEngine.counterReason(target, counterName, this.heroes());
-  }
-
-  private antiDiveRolePriority(role: HeroRole): number {
-    return role === 'Vanguard' ? 0 : role === 'Duelist' ? 1 : 2;
-  }
-
-  private normalizeName(value: string): string {
-    return value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  matchupCountLabel(hero: Hero): string {
+    return this.counterEngine.matchupCountLabel(hero, this.matchups());
   }
 }
