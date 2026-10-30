@@ -22,7 +22,7 @@ There are three separate jobs in the content system.
 
 | Job | What It Does | Main Files |
 | --- | --- | --- |
-| Seed | Copies local JSON data into Turso | `scripts/seed-sqlite.mjs` |
+| Seed | Copies local JSON data into Turso, and the home page seeds into Supabase | `scripts/seed-sqlite.mjs`, `scripts/seed-home-content.mjs` |
 | Sync | Fetches outside data from official, stats, and Fandom/wiki sources | `scripts/sync-external-sources.mjs`, `scripts/sync-home-news.mjs`, `scripts/sync-tier-list.mjs` |
 | Hero Sync | Finds current Fandom heroes and updates the heroes in Supabase | `scripts/sync-heroes.mjs` |
 | Read | Lets Angular pages get data from Turso | `src/server.ts`, `src/content-database.ts` |
@@ -243,12 +243,14 @@ Already database-backed:
 
 ```mermaid
 flowchart LR
-  Official["Official Marvel Rivals site"] --> HomeSync["6-hour home news sync"]
+  Official["Official Marvel Rivals site"] --> HomeSync["Daily home news sync"]
   Stats["Rivals Meta"] --> TierSync["6-hour tier-list sync"]
-  HomeSync --> DB["Turso cached content"]
-  TierSync --> DB
-  DB --> Api["/api/home/content + /api/tier-list"]
-  Api --> HomePage["Home Page"]
+  HomeSync --> Supabase["Supabase home content"]
+  TierSync --> DB["Turso cached content"]
+  Supabase --> HomeApi["/api/home/content"]
+  DB --> TierApi["/api/tier-list"]
+  HomeApi --> HomePage["Home Page"]
+  TierApi --> HomePage
 ```
 
 The season dashboard and season glance render only content returned by `/api/home/content` and

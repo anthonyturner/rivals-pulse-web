@@ -839,6 +839,20 @@ describe('communityHalfSeasonRequests and assembleCommunityTierList', () => {
     expect(data.seasons[0].ranks['99']['fallbackFromSeasonId']).toBeUndefined();
   });
 
+  it('keeps the stand-in snapshot when the exact answer for the current half-season has no placed hero', () => {
+    const noHeroYet = answer(NEW, { status: 'not-enough-data', tiers: [], matchesCounted: 3, belowMinimum: [] });
+    const asRequested = [
+      { halfSeason: 10, response: answer(OLD) },
+      { halfSeason: 10.5, response: noHeroYet },
+    ];
+    const data = assemble(answer(OLD, { inPlaceOf: NEW }), asRequested);
+    const current = data.seasons[1].ranks['99'];
+
+    expect(current['fallbackFromSeasonId']).toBe(20);
+    expect(current['matchesCounted']).toBe(40);
+    expect(JSON.stringify(current['tiers'])).toContain(String(THOR_GAME_ID));
+  });
+
   it('keeps a half-season with no hero as an empty season rather than leaving it out', () => {
     const empty = answer(NEW, { status: 'not-enough-data', tiers: [], matchesCounted: 3, belowMinimum: [] });
     const data = assemble(empty);

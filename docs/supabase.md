@@ -49,6 +49,8 @@ repo's build. This is a move, not a redesign.
 | `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
 | `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
+| `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content, moved from Turso) |
+| `20261030060507_home_content_data.sql` | The one-off copy of the Turso home rows, and the home news sync's `external_sources` snapshot, into those tables |
 
 Link once per machine, check history, then apply:
 
@@ -100,6 +102,30 @@ secret key can read or write them.
   the script with Turso.
 - `jsonb` does not keep the order of an object's keys, so `/api/heroes` returns the same data
   with keys in a different order.
+
+## Website home content
+
+The home page reads `home_portals` (one row per portal card; `raw_json` is the card
+`/api/home/portals` returns, and the unique `sort_order` is the display order) and
+`home_content_blocks` (one row per key of `/api/home/content`, such as `latestNews`; `payload` is
+null for an empty block). Row-level security is on with no policy, so only the server's secret key
+reads or writes them. [`src/home-content-store.ts`](../src/home-content-store.ts) is the only code
+that touches them.
+
+- The daily Vercel cron `/api/sync/home-news` (`src/home-news-sync.ts`) rewrites the blocks it owns
+  in one request, records each run in `sync_runs` under `home-news`, and keeps its official-site
+  snapshot in `external_sources` under `official-marvel-rivals-home`. Vercel needs
+  `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+- `npm run db:seed` loads the portals and the blocks named in `data/seeds/home-content.mock.json`
+  through `scripts/seed-home-content.mjs`. It never removes a block the seed file does not name.
+- `20261030060507_home_content_data.sql` was generated from Turso by
+  `scripts/export-turso-home-content.mjs`. The cron rewrites Turso every day at 03:00 UTC until the
+  merge, so run `node scripts/export-turso-home-content.mjs --check <file>` right before the push and
+  regenerate with `--out` if it fails.
+- `scripts/verify-home-content-cutover.mjs` checks the move: `capture` saves the live endpoints to
+  `data/cutover/home-endpoints.json`, no argument compares Supabase with Turso and the capture, `live`
+  compares the deployed endpoints with the capture, and `sync-run` looks for a successful run. Issue
+  110 deletes it, the export script and the capture with Turso.
 
 ## Edge Functions
 

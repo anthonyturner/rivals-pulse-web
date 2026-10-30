@@ -198,6 +198,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'privacy',
+    title: 'Privacy notes',
+    loadComponent: () =>
+      import('./features/privacy/privacy-page.component').then(
+        (module) => module.PrivacyPageComponent,
+      ),
+  },
+  {
     path: '**',
     redirectTo: 'heroes',
   },
