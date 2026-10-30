@@ -65,7 +65,7 @@ When you run:
 npm run db:sync
 ```
 
-the sync script fetches external data and saves the raw response in Turso.
+the sync script fetches external data and saves the raw response in Supabase.
 
 ```mermaid
 flowchart LR
@@ -110,7 +110,7 @@ sequenceDiagram
   participant Page as Heroes Page
   participant Service as HeroDataService
   participant Api as /api/hero-videos
-  participant DB as Turso
+  participant DB as Supabase
 
   Page->>Service: Need hero video mappings
   Service->>Api: GET /api/hero-videos
@@ -127,7 +127,7 @@ sequenceDiagram
   participant Page as Glossary Page
   participant Service as GlossaryDataService
   participant Api as /api/glossary
-  participant DB as Turso
+  participant DB as Supabase
 
   Page->>Service: Need glossary terms
   Service->>Api: GET /api/glossary
