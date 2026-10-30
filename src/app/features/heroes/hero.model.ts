@@ -90,7 +90,8 @@ export type HeroVideoType = 'paz-gameplay' | 'paz-counters-combos';
 
 export interface HeroVideo {
   heroId: string | null;
-  role?: HeroRole;
+  /** Null for a hero's own video; set for a role's fallback video. */
+  role?: HeroRole | null;
   videoType: HeroVideoType;
   youtubeId: string;
   title: string;

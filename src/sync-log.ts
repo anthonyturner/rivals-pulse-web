@@ -88,8 +88,11 @@ export async function saveExternalSource(
   }
 }
 
-/** The payload last saved for a source, or undefined when there is none or it is empty. */
-export async function getExternalSourcePayload(
+/**
+ * The payload stored for a source, exactly as saved (a failed fetch saves `{}`), or undefined when
+ * the source was never saved.
+ */
+export async function getStoredExternalSourcePayload(
   client: SupabaseClient,
   sourceKey: string,
 ): Promise<unknown | undefined> {
@@ -103,11 +106,31 @@ export async function getExternalSourcePayload(
     throw new Error(`Reading source ${sourceKey} failed: ${error.message}`);
   }
 
-  const payload = data?.payload;
+  return data?.payload ?? undefined;
+}
+
+/** The payload last saved for a source, or undefined when there is none or it is empty. */
+export async function getExternalSourcePayload(
+  client: SupabaseClient,
+  sourceKey: string,
+): Promise<unknown | undefined> {
+  const payload = await getStoredExternalSourcePayload(client, sourceKey);
   const isEmpty =
     payload === undefined ||
     payload === null ||
     (typeof payload === 'object' && Object.keys(payload).length === 0);
 
   return isEmpty ? undefined : payload;
+}
+
+export async function countExternalSources(client: SupabaseClient): Promise<number> {
+  const { count, error } = await client
+    .from('external_sources')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) {
+    throw new Error(`Counting external sources failed: ${error.message}`);
+  }
+
+  return count ?? 0;
 }
