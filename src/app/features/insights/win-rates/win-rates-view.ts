@@ -1,27 +1,12 @@
 import type { HeroStats, HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
-
-/** What the page knows about a hero besides its record. Missing for a hero the roster lacks. */
-export interface HeroIdentity {
-  name: string;
-  role: string | null;
-  imageUrl: string | null;
-}
-
-export type HeroIdentities = ReadonlyMap<string, HeroIdentity>;
+import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 
 export interface SeasonView {
   id: number;
   label: string;
   /** "Oct 22, 2026 to Nov 12, 2026", or "Started Oct 22, 2026" while it is the latest; null when no date is known. */
   dateRange: string | null;
-}
-
-interface HeroCellView {
-  hero: string;
-  name: string;
-  role: string | null;
-  imageUrl: string;
 }
 
 export interface WinRateRowView extends HeroCellView {
@@ -152,17 +137,6 @@ function buildingRow(
   };
 }
 
-function heroCell(hero: string, identities: HeroIdentities): HeroCellView {
-  const identity = identities.get(hero);
-
-  return {
-    hero,
-    name: identity?.name ?? titleCase(hero),
-    role: identity?.role ?? null,
-    imageUrl: identity?.imageUrl ?? `/images/heroes/${hero}.png`,
-  };
-}
-
 function seasonView(halfSeason: HeroStatsHalfSeason): SeasonView {
   const start = dateLabel(halfSeason.startsAt);
   const end = dateLabel(halfSeason.endsAt);
@@ -185,12 +159,4 @@ function dateLabel(value: string | null): string | null {
 /** A half-season id is a positive whole or half number such as 10 or 10.5; anything else is ignored. */
 function parseSeason(value: string | null): number | null {
   return value !== null && /^(?:[1-9]\d*(?:\.5)?|0\.5)$/.test(value) ? Number(value) : null;
-}
-
-function titleCase(slug: string): string {
-  return slug
-    .split('-')
-    .filter((word) => word !== '')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }

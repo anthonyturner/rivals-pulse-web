@@ -5,8 +5,8 @@ import {
   HERO_MATCHUP_PLAY_MODE_IDS,
   type HeroMatchupRow,
 } from './hero-matchups.js';
-import { fetchHeroStatsSource } from './hero-stats-read.js';
-import { answerReader, callSupabaseFunction, type SupabaseReadEnv } from './supabase-rpc.js';
+import { readHeroStatsSource } from './hero-stats-read.js';
+import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from './supabase-rpc.js';
 
 export interface HeroMatchupsReadOptions {
   env?: SupabaseReadEnv;
@@ -50,13 +50,13 @@ export function parseHeroMatchupRows(body: unknown): HeroMatchupRow[] {
  * The site's hero-against-hero records. A game hero id with no mapping is left out and logged (hero
  * id 0 is "no hero recorded" and always lands here); it never fails the request. The half-season
  * start dates come from the same `read_hero_stats()` answer the hero stats use, so both read the
- * same current half-season.
+ * same current half-season. A read function that is not in the database yet is the empty state.
  */
 export async function getHeroMatchups(options: HeroMatchupsReadOptions = {}): Promise<HeroMatchups> {
   const env = options.env ?? process.env;
   const [rows, source] = await Promise.all([
-    fetchHeroMatchupRows(env, options.fetch),
-    fetchHeroStatsSource(env, options.fetch),
+    orWhenNotDeployed(fetchHeroMatchupRows(env, options.fetch), READ_FUNCTION, []),
+    readHeroStatsSource(env, options.fetch),
   ]);
   const { matchups, excludedGameIds } = deriveHeroMatchups(rows, source.halfSeasons, {
     now: (options.now ?? (() => new Date()))(),

@@ -31,6 +31,25 @@ export function isNotDeployedError(error: unknown): boolean {
 }
 
 /**
+ * The answer of a read, or `whenMissing` while the function it calls is not in the database yet (the
+ * migration is not applied), which is the designed empty state. Any other failure, such as a refused
+ * key, a timeout or a missing configuration, is thrown, so an outage is never hidden behind it.
+ */
+export async function orWhenNotDeployed<T>(read: Promise<T>, functionName: string, whenMissing: T): Promise<T> {
+  try {
+    return await read;
+  } catch (error) {
+    if (!isNotDeployedError(error)) {
+      throw error;
+    }
+
+    console.warn(`${functionName} is not in the database yet; its readers show the empty state`);
+
+    return whenMissing;
+  }
+}
+
+/**
  * Calls one Postgres function over PostgREST (Supabase's REST layer) with the publishable key and
  * returns its JSON answer. The aggregate functions are the only thing that key can reach: the
  * aggregate tables themselves have no grant, so a leaked key reads nothing it should not.

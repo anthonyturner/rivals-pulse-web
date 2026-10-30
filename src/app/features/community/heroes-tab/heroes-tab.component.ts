@@ -1,19 +1,33 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 
-import { CommunityEmptyStateComponent } from '../community-empty-state/community-empty-state.component';
+import { HeroDataService } from '../../heroes/hero-data.service';
+import { HeroStatsService } from '../../insights/hero-stats.service';
+import { heroIdentities } from '../../insights/hero-identity';
+import { CommunityHeroListComponent } from '../community-hero-list/community-hero-list.component';
+import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
+import { buildHeroesTabView } from './heroes-tab-view';
 
+/** The most-picked and best-winning heroes from Rivals Pulse uploads, or the reason there are none yet. */
 @Component({
   selector: 'app-community-heroes-tab',
-  imports: [CommunityEmptyStateComponent],
-  template: `
-    <app-community-empty-state
-      heading="Community hero pick rates and win rates"
-      preview="Which heroes the community plays most and how often each one wins, the way the Heroes screen of the app shows your own."
-      [link]="link"
-    />
-  `,
+  imports: [CommunitySummaryComponent, CommunityHeroListComponent],
+  templateUrl: './heroes-tab.component.html',
+  styleUrl: './heroes-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroesTabComponent {
+  // undefined while the request runs, null once it has failed.
+  private readonly stats = toSignal(inject(HeroStatsService).getHeroStats());
+  private readonly roster = toSignal(inject(HeroDataService).getHeroes());
+
+  /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
+  protected readonly view = computed(() => {
+    const roster = this.roster();
+
+    return buildHeroesTabView(roster === undefined ? undefined : this.stats(), heroIdentities(roster ?? []));
+  });
+
   protected readonly link = { label: 'Browse the hero encyclopedia', path: '/heroes' };
+  protected readonly secondLink = { label: 'See every hero win rate', path: '/win-rates' };
 }

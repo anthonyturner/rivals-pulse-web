@@ -10,7 +10,7 @@ import {
 } from './hero-stats.js';
 import { deriveRoleStats } from './role-stats.js';
 import { getSupabaseClient } from './supabase-client.js';
-import { answerReader, callSupabaseFunction, isNotDeployedError, type SupabaseReadEnv } from './supabase-rpc.js';
+import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from './supabase-rpc.js';
 
 export type HeroStatsEnv = SupabaseReadEnv;
 
@@ -36,6 +36,18 @@ export async function fetchHeroStatsSource(
   fetcher: typeof fetch = fetch,
 ): Promise<HeroStatsSource> {
   return parseHeroStatsSource(await callSupabaseFunction('Hero stats', READ_FUNCTION, {}, env, fetcher));
+}
+
+/** The source before any match is recorded: what the readers get while the read function is not deployed. */
+const EMPTY_SOURCE: HeroStatsSource = { halfSeasons: [], totals: [], heroes: [] };
+
+/**
+ * `fetchHeroStatsSource`, or an empty source while `read_hero_stats` is not in the database yet.
+ * Every reader of the hero aggregates goes through this, so a migration that is not applied yet is
+ * the empty state everywhere and an outage is an error everywhere.
+ */
+export function readHeroStatsSource(env: HeroStatsEnv, fetcher: typeof fetch = fetch): Promise<HeroStatsSource> {
+  return orWhenNotDeployed(fetchHeroStatsSource(env, fetcher), READ_FUNCTION, EMPTY_SOURCE);
 }
 
 /** Picks the known fields out of the function's answer and rejects anything that is not a number. */
@@ -87,7 +99,7 @@ export function halfSeasonFromQuery(value: string | undefined): number | undefin
  * (hero id 0 is "no hero recorded" and always lands here); it never fails the request.
  */
 export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<HeroStats> {
-  const source = await fetchHeroStatsSource(options.env ?? process.env, options.fetch);
+  const source = await readHeroStatsSource(options.env ?? process.env, options.fetch);
   const { stats, excludedGameIds } = deriveHeroStats(source, {
     now: (options.now ?? (() => new Date()))(),
     halfSeason: options.halfSeason,
@@ -106,21 +118,10 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
  * hero is the one it has now (`hero_content`), except that a hero the game splits by role counts
  * toward the role that was played. A game hero id with no role is left out and logged.
  *
- * A read function that is not in the database yet (the migration is not applied) is the designed
- * empty state. Any other failure is thrown, so an outage is never hidden behind "not enough data".
+ * See `readHeroStatsSource` for a read function that is not in the database yet.
  */
 export async function getRoleStats(options: RoleStatsReadOptions = {}): Promise<RoleStats> {
-  const source = await fetchHeroStatsSource(options.env ?? process.env, options.fetch).catch(
-    (error: unknown): HeroStatsSource => {
-      if (isNotDeployedError(error)) {
-        console.warn(`${READ_FUNCTION} is not in the database yet; role stats show the empty state`);
-
-        return { halfSeasons: [], totals: [], heroes: [] };
-      }
-
-      throw error;
-    },
-  );
+  const source = await readHeroStatsSource(options.env ?? process.env, options.fetch);
   const roleBySlug =
     source.heroes.length === 0
       ? new Map<string, string>()

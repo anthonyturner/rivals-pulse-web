@@ -1,0 +1,30 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Community hero pick rates and win rates"
+  subject="Community hero numbers"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+  [link]="link"
+  [secondLink]="secondLink"
+>
+  @if (current.kind === 'ready') {
+    <div class="heroes-tab__lists">
+      <section class="heroes-tab__list" aria-labelledby="heroes-tab-picked">
+        <h3 id="heroes-tab-picked" class="heroes-tab__list-title">Most picked</h3>
+        <app-community-hero-list [heroes]="current.mostPicked" figureLabel="Pick rate" />
+      </section>
+      <section class="heroes-tab__list" aria-labelledby="heroes-tab-won">
+        <h3 id="heroes-tab-won" class="heroes-tab__list-title">Highest win rate</h3>
+        <app-community-hero-list [heroes]="current.highestWinRate" figureLabel="Win rate" />
+      </section>
+    </div>
+    <p class="heroes-tab__sample">
+      From {{ current.matchesLabel }} recorded by Rivals Pulse players. Pick rate is a share of those
+      matches, so a hero on both teams of one match counts twice. Only heroes with enough appearances
+      are listed.
+    </p>
+  }
+</app-community-summary>

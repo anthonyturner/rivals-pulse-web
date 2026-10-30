@@ -1,0 +1,36 @@
+@switch (kind()) {
+  @case ('loading') {
+    <p class="summary__message" role="status" aria-busy="true">Loading {{ subject() }}...</p>
+  }
+  @case ('unavailable') {
+    <p class="summary__message" role="status">
+      {{ subject() }} cannot be loaded right now. The rest of this page is not affected.
+    </p>
+  }
+  @case ('not-enough-data') {
+    <app-community-empty-state [heading]="heading()" [preview]="summary()" [link]="link()" />
+  }
+  @case ('ready') {
+    <section class="summary" [attr.aria-label]="heading()">
+      <header class="summary__header">
+        <h2 class="summary__title">{{ heading() }}</h2>
+        @if (halfSeasonLabel(); as label) {
+          <p class="summary__scope">Half-season: {{ label }}</p>
+        }
+      </header>
+
+      @if (notice(); as text) {
+        <p class="summary__notice" role="note"><strong>Previous half-season.</strong> {{ text }}</p>
+      }
+
+      <ng-content />
+
+      <p class="summary__links">
+        <a class="summary__link" [routerLink]="link().path">{{ link().label }}</a>
+        @if (secondLink(); as second) {
+          <a class="summary__link" [routerLink]="second.path">{{ second.label }}</a>
+        }
+      </p>
+    </section>
+  }
+}
