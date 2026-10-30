@@ -1,4 +1,5 @@
 import type { HeroStats, HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
+import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 
 /** What the page knows about a hero besides its record. Missing for a hero the roster lacks. */
 export interface HeroIdentity {
@@ -114,7 +115,7 @@ export function buildWinRatesView(
   const fallbackNotice =
     stats.inPlaceOf === null
       ? null
-      : `${stats.inPlaceOf.label} does not have enough data yet, so these are ${season?.label ?? 'the previous half-season'}'s numbers until it does.`;
+      : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null);
   const state: WinRatesState =
     ranked.length > 0 ? 'full' : building.length > 0 || stats.matchesCounted > 0 ? 'partial' : 'empty';
 
@@ -184,14 +185,6 @@ function dateLabel(value: string | null): string | null {
 /** A half-season id is a positive whole or half number such as 10 or 10.5; anything else is ignored. */
 function parseSeason(value: string | null): number | null {
   return value !== null && /^(?:[1-9]\d*(?:\.5)?|0\.5)$/.test(value) ? Number(value) : null;
-}
-
-function percentLabel(value: number): string {
-  return `${value.toFixed(1)}%`;
-}
-
-function countLabel(count: number, singular: string, plural: string): string {
-  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function titleCase(slug: string): string {
