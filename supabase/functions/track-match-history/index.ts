@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { IdentityError, recorderId, verifyOverwolfSession } from '../_shared/overwolf-identity.ts';
+import { readExtendedUpload, type ExtendedUpload } from './extended-payload.ts';
 import {
   asRecord,
   parseParticipants,
@@ -82,6 +83,7 @@ Deno.serve(async request => {
     const halfSeason = readHalfSeason(match);
     const participants = parseParticipants(match);
     const { play_mode_id, map_name } = readMatchContext(match);
+    const extended = readExtendedUpload(match);
     const fingerprint = await rosterFingerprint(participants);
     const { rawPayload, performance } = storableMatch(match);
 
@@ -127,9 +129,19 @@ Deno.serve(async request => {
     });
     if (participantsError) throw participantsError;
 
+    const extendedStored = extended
+      ? await recordExtendedUpload(supabase, { fingerprint, playedAt, extended })
+      : null;
+
     await purgeExpiredParticipants(supabase);
 
-    return json({ status: 'ok', recorded: 1, participants: stored });
+    // `extended` appears only when the app sent the extra fields, so the reply to a shipped overlay is unchanged.
+    return json({
+      status: 'ok',
+      recorded: 1,
+      participants: stored,
+      ...(extendedStored ? { extended: extendedStored } : {}),
+    });
   } catch (error) {
     if (error instanceof IdentityError) return json({ error: error.message }, error.status);
     if (error instanceof PayloadError) return json({ error: error.message }, 400);
@@ -160,6 +172,29 @@ async function pruneTrackedMatches(
     .eq('player_id', playerId)
     .in('id', surplusIds);
   if (pruneError) throw pruneError;
+}
+
+/**
+ * Stores the figures and kill feed a newer app adds, through their own function so the scoreboard's
+ * stays as shipped overlays call it. The match is already stored, so a failure here is logged and
+ * the upload still succeeds without the extras.
+ */
+async function recordExtendedUpload(
+  supabase: ReturnType<typeof createClient>,
+  match: { fingerprint: string; playedAt: string; extended: ExtendedUpload },
+): Promise<{ hero_figures: number; hero_kills: number } | null> {
+  const { data, error } = await supabase.rpc('record_match_extras', {
+    p_fingerprint: match.fingerprint,
+    p_played_at: match.playedAt,
+    p_recorder_uid: match.extended.recorder_uid,
+    p_hero_figures: match.extended.hero_figures,
+    p_hero_kills: match.extended.hero_kills,
+  });
+  if (error) {
+    console.error(`Extended upload not stored: ${getErrorMessage(error)}`);
+    return null;
+  }
+  return data as { hero_figures: number; hero_kills: number };
 }
 
 /**

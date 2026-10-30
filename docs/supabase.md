@@ -28,6 +28,9 @@ repo's build. This is a move, not a redesign.
   `hero_stats_sync_state`, `jarvis_token_requests`, `participants`.
 - Functions in the database: `claim_upload_slot`, `record_match_participants`,
   `purge_expired_participants`.
+- The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
+  "Extended upload" below); a body without them is stored exactly as before, and a field added later
+  must be optional in the same way.
 - Row Level Security (RLS) stays strict on every table, because the key ships
   in the overlay.
 
@@ -49,6 +52,8 @@ repo's build. This is a move, not a redesign.
 | `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
 | `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
+| `20261030120000_extended_upload.sql` | `participant_hero_figures` (the recorder's damage, healing, blocked and seconds per hero, tied to their `participants` line), `match_hero_kills` (a match's kill feed by hero) and `record_match_extras`, the new function that writes them |
+| `20261030120100_extended_aggregates.sql` | Anonymous counts of those: `hero_figure_aggregates`, `hero_kill_aggregates`, `hero_kill_totals`, `extended_aggregate_half_seasons` and the functions that rebuild and freeze them; `purge_expired_participants` freezes them before it deletes; an hourly `recompute-extended-aggregates` job |
 
 Link once per machine, check history, then apply:
 
@@ -177,6 +182,76 @@ the service role reaches them.
 - A rebuild failing inside the purge would stop deletion, which is why the hourly job exercises the
   same code long before any half-season is due.
 
+## Extended upload (damage, healing, blocked, hero time, kill feed)
+
+Issue 176. A newer overlay may add two optional fields to the `match` it sends to
+`track-match-history`. Nothing about the existing fields changes, and an overlay that sends neither
+is stored exactly as before (`record_match_participants` is called with the same arguments and
+`tracked_matches` gets the same row; the reply has no `extended` key). The overlay issue that sends
+them is `rivals_pulse` 1157.
+
+| Field | Shape | Rules |
+| --- | --- | --- |
+| `match.match_player.hero_segments` | `[{ hero_id, seconds, damage_dealt, healing, damage_blocked }]` | The recorder's own figures, one entry per hero they played (a hero played twice is one entry, as `HeroSegment` already has it). `hero_id` is the game hero id as a number, the same id as a roster line's `cur_hero_id` (the app's `HeroSegment.heroId`, converted with `Number`). At most 20 entries; the first entry of a hero wins. Needs `match.match_player.player_uid`, which is how the figures are tied to the recorder's line in `participants`; without it they are dropped. |
+| `match.hero_kills` | `[{ killer, victim, kills }]` | The kill feed as the app's `HeroKillCount`: lower-case hero slugs (`[a-z0-9-]`, at most 40 characters, the slugs the Counters screen uses) and a whole `kills` from 1 to 999. A pair listed twice is added up. At most 150 entries; a longer list is not a real feed and is dropped whole. |
+
+How a value is read (`supabase/functions/track-match-history/extended-payload.ts`):
+
+- **Omit what the app does not have.** An absent, null or malformed figure is stored as null, never 0.
+  A real 0 (a support who dealt no damage) is kept. Send no `hero_segments` key at all for a match
+  saved before segments existed, and no `hero_kills` key when none were counted.
+- **A bad value costs only itself.** A figure outside its range (`seconds` 0 to 7200, the others 0 to
+  1,000,000), not a number, or a negative one is dropped for that field; numbers sent as strings are
+  read, fractions are rounded. A segment with no usable `hero_id` (a whole, positive game id) or no
+  usable figure is dropped; a bad kill entry is dropped; the match itself is never refused for them.
+  Nothing here can fail the upload: if the call that stores them errors, it is logged and the match,
+  already stored, still succeeds.
+- **No match totals.** The app's per-match `damageDealt`, `healing` and `damageBlocked` are not sent:
+  they are the sum of the segments, and a total alone cannot be given to a hero. Accuracy, ultimate
+  data, and the damage or healing of any roster line are never read (ADR-0011 in the overlay repo).
+- `banned_hero_ids` (overlay issue 1067) is a separate, unrelated field of `raw_payload` and is not
+  touched by this contract.
+
+Reply: `{"status":"ok","recorded":1,"participants":N}` as before, plus
+`"extended":{"hero_figures":n,"hero_kills":n}` (rows written) only when the upload carried either
+field. A repeat of the same match writes 0 for both, except that a second uploader still adds their
+own figures.
+
+Where it goes, and why it stays out of the old function:
+
+- `record_match_extras(p_fingerprint, p_played_at, p_recorder_uid, p_hero_figures, p_hero_kills)` is a
+  new function. The Edge Function calls it after `record_match_participants`, only when the upload
+  carried the fields. `record_match_participants` keeps its exact signature: a `create or replace`
+  with more arguments would add an overload and fail every upload with PGRST203. The call needs the
+  match to be in `participants` already, so a kill feed is never stored for a match nobody recorded.
+- `participant_hero_figures` rows belong to the recorder's `participants` line through a foreign key
+  with `on delete cascade`, so retention and `forget_player` remove them with the line. It holds the
+  line's id, not a uid or name.
+- `match_hero_kills` holds hero slugs only. It is stored once per match: the first uploader's feed is
+  kept and a second uploader's is ignored, so two recorders of one match are not double counted.
+- All new tables have RLS on, no policy, and grants to `service_role` only.
+
+What the numbers mean, so a reader does not over-read them:
+
+- **Figures describe uploaders, not the lobby.** The app only knows its own player's damage, healing
+  and blocked, so a `hero_figure_aggregates` row is "what recorders did on this hero". With one
+  uploader it is one player's play.
+- **The kill feed is what the recorder's client saw.** A kill it missed is not counted, and the first
+  uploader's view is the one stored. `hero_kill_aggregates` counts those seen kills; `matches` is how
+  many stored feeds had the pair and `hero_kill_totals.matches` is how many feeds there were.
+- **Per minute** is `sum * 60 / seconds` using the `*_seconds` beside each sum (the time in exactly
+  the segments that had that figure), never `seconds_sum`. Every `_n` is the count of segments with
+  that figure, so a figure absent from older apps is not averaged as zero. No minimum sample is
+  applied here; the code that shows a number applies its own.
+- `play_mode_id` is the match's mode, -1 when the game did not say, as in `hero_aggregates`.
+
+Recompute and freeze, like the hero aggregates: `recompute_extended_aggregates()` (hourly job
+`recompute-extended-aggregates`) rebuilds every half-season that still has raw rows and is not
+frozen. `purge_expired_participants()` calls `freeze_extended_aggregates()` after the hero
+aggregates' freeze and before its first delete, so the counts are kept when the raw rows go. **Any
+later migration that restates `purge_expired_participants` must keep both calls**; a test reads the
+latest definition and fails if either is gone or comes after a delete.
+
 ## Backfilling participants from stored matches
 
 `npm run backfill:participants` replays the rows of `tracked_matches` through
@@ -252,10 +327,11 @@ policy's hard limit), but later than promised.
 ## After setup
 
 - **Required:** `select jobname from cron.job where jobname in
-  ('purge-expired-participants', 'recompute-hero-aggregates');` must show both jobs (the daily
-  purge and the hourly aggregate rebuild). If one is missing (the migrations warn when `pg_cron` is
-  unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();` daily and
-  `select public.recompute_hero_aggregates();` hourly by hand.
+  ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates');` must
+  show all three jobs (the daily purge and the two hourly aggregate rebuilds). If one is missing (the
+  migrations warn when `pg_cron` is unavailable), enable `pg_cron` and schedule
+  `select public.purge_expired_participants();` daily, `select public.recompute_hero_aggregates();`
+  and `select public.recompute_extended_aggregates();` hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
