@@ -41,6 +41,15 @@ describe('HeroStatsService', () => {
     expect(result).toEqual(notEnoughData);
   });
 
+  it('asks for exactly one half-season when given one', () => {
+    let result: HeroStats | null | undefined;
+
+    service.getHeroStats(10.5).subscribe((stats) => (result = stats));
+    http.expectOne('/api/hero-stats?halfSeason=10.5').flush(notEnoughData);
+
+    expect(result).toEqual(notEnoughData);
+  });
+
   it('answers null when the request fails', () => {
     let result: HeroStats | null | undefined;
 
@@ -75,5 +84,6 @@ describe('isHeroStats', () => {
     expect(isHeroStats({ ...notEnoughData, matchesCounted: Number.NaN })).toBeFalse();
     expect(isHeroStats({ ...notEnoughData, tiers: [null] })).toBeFalse();
     expect(isHeroStats({ ...notEnoughData, belowMinimum: undefined })).toBeFalse();
+    expect(isHeroStats({ ...notEnoughData, halfSeasons: undefined })).toBeFalse();
   });
 });

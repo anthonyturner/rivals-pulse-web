@@ -50,7 +50,7 @@ export interface SeasonDashboardLinkedSection extends SeasonDashboardSection {
 }
 
 export interface SeasonDashboardContent {
-  heroUsage: SeasonDashboardSection;
+  heroUsage: Omit<SeasonDashboardSection, 'description'>;
   officialUpdates: SeasonDashboardSection;
   events: SeasonDashboardLinkedSection;
 }
