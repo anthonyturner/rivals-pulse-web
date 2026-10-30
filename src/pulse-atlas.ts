@@ -2,14 +2,22 @@ export const PULSE_ATLAS_SCHEMA_VERSION = 1;
 export const PULSE_ATLAS_BASE_PATH = 'pulse-atlas/v1';
 export const PULSE_ATLAS_DATASETS = ['heroes', 'tier-list', 'glossary', 'maps', 'hero-styles'] as const;
 
+/**
+ * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
+ * so it is not in `PULSE_ATLAS_DATASETS` and not in the manifest.
+ */
+export const PULSE_ATLAS_HERO_GAME_IDS = 'hero-game-ids';
+
 const HERO_STYLE_WEIGHTS = ['poke', 'dive', 'brawl'] as const;
+const HERO_ROLES = ['Vanguard', 'Duelist', 'Strategist'] as const;
+const GAME_ID_ENTRY_KEYS: readonly string[] = ['id', 'gameId', 'gameIdVariants'];
 
 export type PulseAtlasDataset = (typeof PULSE_ATLAS_DATASETS)[number];
 
 export type Sha256Hex = (text: string) => string;
 
 export interface PulseAtlasInput {
-  dataset: PulseAtlasDataset;
+  dataset: PulseAtlasDataset | typeof PULSE_ATLAS_HERO_GAME_IDS;
   /** Provenance label. Its value may change when the content source moves; the file shape never does. */
   source: string;
   data: unknown;
@@ -98,6 +106,12 @@ interface BuiltDataset extends BuiltFile {
  * Likewise a tier-list hero that heroes.json does not know is published and
  * reported, not refused.
  *
+ * The `hero-game-ids` input is the map from each hero's slug to the game's
+ * numeric hero id. It is merged into `heroes.json` (as `gameId`, plus
+ * `gameIdVariants` for a hero the game splits by role) and is not a published
+ * file. A hero without an entry is published without a `gameId` and reported
+ * through `warn`; a malformed map refuses the build.
+ *
  * `previous` is what is published right now. A dataset whose data (and source)
  * has not changed keeps that file's bytes verbatim, so its `generatedAt` and
  * hash stay put and a client holding that hash can skip the download.
@@ -116,7 +130,10 @@ export function buildPulseAtlas(
     throw new Error(`Pulse Atlas refused to build:\n- ${problems.join('\n- ')}`);
   }
 
-  const styled = withPublishableHeroStyles(prepared);
+  const identified = withHeroGameIds(prepared);
+  identified.warnings.forEach((warning) => warn(`hero-game-ids: ${warning}`));
+
+  const styled = withPublishableHeroStyles(identified.inputs);
   styled.warnings.forEach((warning) => warn(`hero-styles: ${warning}`));
 
   const split = withTierListSplitBySeason(styled.inputs, generatedAt, sha256, previous);
@@ -473,6 +490,15 @@ function findProblems(inputs: readonly PulseAtlasInput[]): string[] {
     }
   }
 
+  const gameIds = inputs.filter((input) => input.dataset === PULSE_ATLAS_HERO_GAME_IDS);
+
+  if (gameIds.length !== 1) {
+    problems.push(`${PULSE_ATLAS_HERO_GAME_IDS}: expected exactly one input, got ${gameIds.length}`);
+  } else {
+    const { errors } = findHeroGameIdProblems(gameIds[0].data, publishedHeroIds(inputs));
+    problems.push(...errors.map((error) => `${PULSE_ATLAS_HERO_GAME_IDS}: ${error}`));
+  }
+
   return problems;
 }
 
@@ -603,6 +629,147 @@ function withPublishableHeroStyles(inputs: readonly PulseAtlasInput[]): {
   };
 }
 
+export interface HeroGameIdFindings {
+  /** Faults in the map itself; a build must not publish while any remain. */
+  errors: string[];
+  /** Mismatches with the hero list; publishing goes ahead without the affected hero's id. */
+  warnings: string[];
+}
+
+/**
+ * Everything wrong with the hero game-id map, split by how serious it is.
+ *
+ * Errors: the list is empty, an entry has no slug or no positive whole
+ * `gameId`, a slug is listed twice, one numeric id belongs to two heroes (or to
+ * a hero and its own variant), `gameIdVariants` is not a non-empty list of
+ * `{ gameId, role }` with a real role, an entry has a key other than
+ * `id`, `gameId` and `gameIdVariants`, or (given `heroIds`) no entry names a
+ * hero in `heroIds`.
+ *
+ * Warnings (only given `heroIds`): a hero in `heroIds` has no entry, or an
+ * entry names a hero outside `heroIds`. A new hero is released before anyone
+ * has looked up its id, and that must not freeze the whole feed.
+ */
+export function findHeroGameIdProblems(entries: unknown, heroIds?: readonly string[]): HeroGameIdFindings {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return { errors: ['expected a non-empty list'], warnings: [] };
+  }
+
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const slugs = new Set<string>();
+  const owners = new Map<number, string>();
+  const claim = (gameId: number, slug: string): void => {
+    const owner = owners.get(gameId);
+
+    if (owner === undefined) {
+      owners.set(gameId, slug);
+    } else {
+      errors.push(`${slug}: gameId ${gameId} is already ${owner === slug ? 'used twice by this hero' : `${owner}'s`}`);
+    }
+  };
+
+  entries.forEach((entry, index) => {
+    if (!isRecord(entry) || !isNonEmptyString(entry['id'])) {
+      errors.push(`entry ${index} needs a non-empty string id`);
+      return;
+    }
+
+    const slug = entry['id'];
+
+    if (slugs.has(slug)) {
+      errors.push(`${slug}: listed more than once`);
+    }
+    slugs.add(slug);
+
+    if (heroIds && !heroIds.includes(slug)) {
+      warnings.push(`${slug}: not a hero in heroes.json, so its gameId is left out of the feed`);
+    }
+
+    // Only these keys are published onto the hero; a stray one is a typo, not data to pass along.
+    const stray = Object.keys(entry).filter((key) => !GAME_ID_ENTRY_KEYS.includes(key));
+
+    if (stray.length > 0) {
+      errors.push(`${slug}: unknown key ${stray.join(', ')}; an entry holds only ${GAME_ID_ENTRY_KEYS.join(', ')}`);
+    }
+
+    if (!isPositiveInteger(entry['gameId'])) {
+      errors.push(`${slug}: gameId must be a whole number above 0`);
+    } else {
+      claim(entry['gameId'], slug);
+    }
+
+    const variants = entry['gameIdVariants'];
+
+    if (variants === undefined) {
+      return;
+    }
+
+    if (!Array.isArray(variants) || variants.length === 0) {
+      errors.push(`${slug}: gameIdVariants must be a non-empty list when present`);
+      return;
+    }
+
+    for (const variant of variants) {
+      if (
+        !isRecord(variant) ||
+        !isPositiveInteger(variant['gameId']) ||
+        !HERO_ROLES.some((role) => role === variant['role'])
+      ) {
+        errors.push(`${slug}: every gameIdVariants entry needs a whole gameId above 0 and a role of ${HERO_ROLES.join(', ')}`);
+      } else {
+        claim(variant['gameId'], slug);
+      }
+    }
+  });
+
+  for (const heroId of heroIds ?? []) {
+    if (!slugs.has(heroId)) {
+      warnings.push(`${heroId}: no entry in hero-game-ids.json, so the hero is published without a gameId`);
+    }
+  }
+
+  // Every entry being unmatched means the map is for something else, not that
+  // heroes are new; publishing it would silently strip every id.
+  if (heroIds && !heroIds.some((heroId) => slugs.has(heroId))) {
+    errors.push('no entry names a hero in heroes.json');
+  }
+
+  return { errors, warnings };
+}
+
+/**
+ * The inputs with each hero in heroes.json given its numeric game id from the
+ * map, plus a warning for each hero or entry that did not match. Expects
+ * inputs that already passed `findProblems`.
+ */
+function withHeroGameIds(inputs: readonly PulseAtlasInput[]): { inputs: PulseAtlasInput[]; warnings: string[] } {
+  const heroes = inputs.find((input) => input.dataset === 'heroes');
+  const map = inputs.find((input) => input.dataset === PULSE_ATLAS_HERO_GAME_IDS);
+  const heroIds = publishedHeroIds(inputs);
+
+  if (!heroes || !map || !heroIds || !Array.isArray(heroes.data) || !Array.isArray(map.data)) {
+    return { inputs: [...inputs], warnings: [] };
+  }
+
+  const entries = new Map(map.data.flatMap((entry) => (isRecord(entry) ? [[String(entry['id']), entry] as const] : [])));
+  const identified = heroes.data.map((hero) => {
+    const entry = isRecord(hero) ? entries.get(String(hero['id'])) : undefined;
+
+    if (!isRecord(hero) || !entry) {
+      return hero;
+    }
+
+    const { gameId, gameIdVariants } = entry;
+    return { ...hero, gameId, ...(gameIdVariants === undefined ? {} : { gameIdVariants }) };
+  });
+
+  return {
+    inputs: inputs.map((input) => (input === heroes ? { ...input, data: identified } : input)),
+    warnings: findHeroGameIdProblems(map.data, heroIds).warnings,
+  };
+}
+
 function describeListProblem(data: unknown, stringFields: readonly string[]): string | undefined {
   if (!Array.isArray(data) || data.length === 0) {
     return 'expected a non-empty list';
@@ -657,10 +824,9 @@ interface TierListSeason {
   ranks: Record<string, SlimSnapshot>;
 }
 
-/** Who a hero row names, kept so heroes.json can be checked before the name is dropped. */
+/** Who a hero row names, kept so a warning can say which hero it is before the name is dropped. */
 interface HeroIdentity {
   name: unknown;
-  imageUrl: unknown;
 }
 
 interface ReadTierList {
@@ -783,7 +949,7 @@ function slimSnapshot(snapshot: unknown, heroes: Map<number, HeroIdentity>): Sli
       }
 
       if (!heroes.has(slim.heroId)) {
-        heroes.set(slim.heroId, { name: row['name'], imageUrl: row['imageUrl'] });
+        heroes.set(slim.heroId, { name: row['name'] });
       }
 
       rows.push(slim);
@@ -885,28 +1051,27 @@ function withTierListSplitBySeason(
   };
 }
 
-// heroes.json has no game hero id, so a tier-list hero is matched to it by name
-// or portrait file name. That is a best-effort check, and it is why this only warns.
+// A tier-list heroId joins to heroes.json through a hero's gameId, or the gameId of one of its role
+// variants. A hero that does not join is published all the same: a new hero reaches the tier list
+// before anyone has added its id to hero-game-ids.json, and that must not freeze the feed.
 function describeUnknownHeroes(listed: ReadonlyMap<number, HeroIdentity>, heroes: unknown): string[] {
   const known = new Set(
-    (Array.isArray(heroes) ? heroes : []).flatMap((hero) =>
-      isRecord(hero) ? [heroKey(hero['id']), heroKey(hero['name'])] : [],
-    ),
+    (Array.isArray(heroes) ? heroes : []).flatMap((hero) => {
+      if (!isRecord(hero)) {
+        return [];
+      }
+
+      const variants = Array.isArray(hero['gameIdVariants']) ? hero['gameIdVariants'] : [];
+      return [hero['gameId'], ...variants.map((variant) => (isRecord(variant) ? variant['gameId'] : undefined))];
+    }),
   );
-  const portraitKey = (imageUrl: unknown): string =>
-    heroKey(typeof imageUrl === 'string' ? imageUrl.slice(imageUrl.lastIndexOf('/') + 1).replace(/\.[^.]*$/, '') : '');
 
   return [...listed]
-    .filter(([, { name, imageUrl }]) => ![heroKey(name), portraitKey(imageUrl)].some((key) => key && known.has(key)))
+    .filter(([heroId]) => !known.has(heroId))
     .map(
       ([heroId, { name }]) =>
-        `heroId ${heroId} (${isNonEmptyString(name) ? name : 'unnamed'}) matches no hero in heroes.json by name or portrait, so it is published without one to join to`,
+        `heroId ${heroId} (${isNonEmptyString(name) ? name : 'unnamed'}) is the gameId of no hero in heroes.json, so it is published without one to join to`,
     );
-}
-
-// "Deadpool (Duelist)", "deadpool" and "DEADPOOL" are one hero.
-function heroKey(value: unknown): string {
-  return typeof value === 'string' ? value.replace(/\(.*?\)/g, '').toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 }
 
 function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256Hex): string[] {
@@ -991,6 +1156,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isInteger(value: unknown): value is number {
   return Number.isInteger(value);
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return isInteger(value) && value > 0;
 }
 
 function isFiniteNumber(value: unknown): value is number {

@@ -11,7 +11,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 
 | File | Holds |
 | --- | --- |
-| `heroes.json` | The hero list as `GET /api/heroes` returns it, without each hero's `counters` (see below). |
+| `heroes.json` | The hero list as `GET /api/heroes` returns it, without each hero's `counters`, plus each hero's numeric `gameId` (see below). |
 | `tier-list.json` | The tier list's index: the current season's ranks, plus each season's details with the path and hash of its own file. Shape below. |
 | `tier-list/seasons/<id>.json` | One season's ranks, one file per season, current season included. Shape below. **Not** in the manifest. |
 | `glossary.json` | The glossary terms, exactly as `GET /api/glossary` returns them. |
@@ -89,10 +89,10 @@ season has a file too, so a client can treat every season the same way.
 - **A hero row is** `{ heroId, winRate, pickRate, banRate, matches, wins, score }`.
   `heroId` is the game's numeric hero id. `name`, `role`, `imageUrl` and `tier`
   are left out (the enclosing `tiers[].name` is the tier), and the three rates
-  are rounded to two decimals. `heroes.json` has no numeric id, so a client
-  needs its own hero id list to show a name or portrait; a hero in the tier
-  list that `heroes.json` has no hero of the same name or portrait for is
-  published all the same, with a warning on the workflow run.
+  are rounded to two decimals. To show a name, role or portrait, join `heroId`
+  to a hero's `gameId` in `heroes.json` (next section). A hero in the tier list
+  that no `gameId` in `heroes.json` matches is published all the same, with a
+  warning on the workflow run.
 - **The files do not say where the numbers come from.** The tier-list API
   reports a `sourceName` and `sourceUrl`; the generator drops both, and refuses
   to build if any published value names Rivals Meta or its site, because the
@@ -113,6 +113,58 @@ season has a file too, so a client can treat every season the same way.
   back to a different season or rank than asked for, if a season lists no
   hero at any rank, if `currentSeasonId` is not a listed season, or if a hero
   row has no integer `heroId` or a non-numeric rate or count.
+
+### The hero `gameId`
+
+`heroes.json` carries the game's numeric hero id on each hero, so a consumer
+can turn a tier-list `heroId` (or any other game hero id, such as a match
+participant's) into a hero without a hero list of its own. It is additive: the
+rest of the hero is as `GET /api/heroes` returns it, and a client that ignores
+the new fields is unaffected.
+
+```json
+{ "id": "peni-parker", "name": "Peni Parker", "gameId": 1042 }
+{ "id": "deadpool", "name": "Deadpool", "gameId": 1057,
+  "gameIdVariants": [{ "gameId": 10571, "role": "Vanguard" }, { "gameId": 10572, "role": "Duelist" }, { "gameId": 10573, "role": "Strategist" }] }
+```
+
+- `gameId` is a whole number above 0 and is unique across all heroes and
+  variants. To look a hero up, index `gameId` **and** every
+  `gameIdVariants[].gameId` against the hero.
+- **Deadpool** is one hero in the feed but the game gives him four ids: 1057
+  (his base id, with no role) and one per role form, 10571 (Vanguard), 10572
+  (Duelist) and 10573 (Strategist). All four resolve to the single `deadpool`
+  hero, and a statistic keyed by game hero id counts as Deadpool's whichever of
+  the four it carries. `gameId` is the base id; `gameIdVariants` is present on
+  a hero only when the game splits it this way, and `role` is the role of that
+  form (the hero's own `role` stays `Multi-Role`).
+- It comes from [data/pulse-atlas/hero-game-ids.json](../data/pulse-atlas/hero-game-ids.json),
+  hand-maintained in this repository: a list of `{ "id": <slug>, "gameId": <number> }`
+  entries, with `gameIdVariants` where the game has them. The generator merges
+  it into `heroes.json` and does not publish it as a file of its own, so it is
+  not in the manifest. It does not depend on any third-party site. The
+  committed ids were copied from the overlay repo's hero catalog seed
+  (`src/app/services/hero-catalog/hero-catalog.seed.ts`, `characterIds`), at
+  overlay commit `c2d353c005b590f62175272e7540c709199d4151` (the commit that
+  last changed that file; `main` was at `97ff7eeb` when it was copied).
+- A hero with no entry does not hold up the feed. A new hero is released before
+  anyone has looked up its id, so when a hero in `heroes.json` has no entry, or
+  an entry names a hero that is not in `heroes.json`, the generator logs a
+  warning (an annotation on the workflow run) and still publishes every
+  dataset. The hero is published without a `gameId`, and a tier-list `heroId`
+  that matches no `gameId` is warned about the same way. A warning, not a
+  failure, because the alternative stops heroes, the tier list and the
+  glossary from refreshing for every reader until someone adds one number.
+  Add the entry in the same pull request that adds a hero.
+- The generator refuses to build, and so nothing is published, if the map is
+  empty, an entry has no slug, a slug is listed twice, a `gameId` is not a
+  whole number above 0 or belongs to two heroes (or to a hero and its own
+  variant), `gameIdVariants` is empty or has an entry without a `gameId` and a
+  `role` of Vanguard, Duelist or Strategist, or no entry names any hero in
+  `heroes.json` (`findHeroGameIdProblems` in [src/pulse-atlas.ts](../src/pulse-atlas.ts),
+  which returns these as `errors` and the two cases above as `warnings`). A unit
+  test runs the same check on the committed file, so a malformed id fails in a
+  pull request before it can fail a publish.
 
 ### The `hero-styles` data
 
@@ -167,7 +219,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 ## Samples
 
 Trimmed samples, produced by the real builder, are in
-[docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes, a
+[docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before) by 2 ranks
 with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
@@ -198,7 +250,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    to learn the seasons and ranks and then once per season and rank
    (`?season=<id>&rank=<rank>`). That needs no secret, and it is the only
    reader to change when content moves to Supabase.
-2. Reads the maps and hero-styles source files from the repository.
+2. Reads the maps, hero-styles and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
    If this fails, for example with a 404 on the first run, everything is built
