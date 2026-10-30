@@ -1,15 +1,10 @@
 import type { CommunityMatches, CommunityModeShare } from '../../../../contracts/community-matches.model';
-import {
-  buildCommunityMatchesView,
-  dayLabel,
-  durationLabel,
-  type CommunityMatchesView,
-} from './community-matches-view';
+import { buildCommunityMatchesView, dayLabel, minutesLabel, type CommunityMatchesView } from './community-matches-view';
 
 const SEASON_10_5 = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
 const SEASON_10 = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
 const QUICK_MATCH_ONLY: CommunityModeShare[] = [
-  { playModeId: 0, mode: 'Quick Match', matches: 40, share: 100, averageLengthSeconds: null },
+  { playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: null },
 ];
 
 function matches(parts: Partial<CommunityMatches> = {}): CommunityMatches {
@@ -19,11 +14,11 @@ function matches(parts: Partial<CommunityMatches> = {}): CommunityMatches {
     halfSeasons: [SEASON_10, SEASON_10_5],
     halfSeason: SEASON_10_5,
     inPlaceOf: null,
-    matchesCounted: 40,
+    matchesBand: 20,
     maps: [],
     mapsBelowMinimum: [],
     modeMix: null,
-    averageLengthSeconds: null,
+    averageLengthMinutes: null,
     perDay: null,
     ...parts,
   };
@@ -43,29 +38,21 @@ describe('buildCommunityMatchesView', () => {
     expect(buildCommunityMatchesView(null).kind).toBe('unavailable');
   });
 
-  it('is the designed empty state, with the sample it waits for, when nothing is ready', () => {
-    const view = buildCommunityMatchesView(matches({ status: 'not-enough-data', matchesCounted: 4 }));
+  it('is the designed empty state, with what it waits for and no count, when nothing is ready', () => {
+    const view = buildCommunityMatchesView(matches({ status: 'not-enough-data', matchesBand: null }));
 
     expect(view.kind).toBe('not-enough-data');
     if (view.kind === 'not-enough-data') {
       expect(view.halfSeasonLabel).toBe('Season 10.5');
       expect(view.summary).toBe(
-        'Season 10.5 has 4 matches counted so far. The first figures appear at 20 matches from at least 3 players.',
+        'Season 10.5 does not have enough data yet. The first figures appear at 20 matches from at least 3 players.',
       );
     }
   });
 
-  it('names no zero, and no hidden count, when nothing is shown for the half-season yet', () => {
-    const view = buildCommunityMatchesView(matches({ status: 'not-enough-data', matchesCounted: 0 }));
-
-    expect(view.kind === 'not-enough-data' && view.summary).toBe(
-      'Season 10.5 does not have enough data yet. The first figures appear at 20 matches from at least 3 players.',
-    );
-  });
-
   it('says so plainly before any half-season exists', () => {
     const view = buildCommunityMatchesView(
-      matches({ status: 'not-enough-data', halfSeason: null, halfSeasons: [], matchesCounted: 0 }),
+      matches({ status: 'not-enough-data', halfSeason: null, halfSeasons: [], matchesBand: null }),
     );
 
     expect(view.kind === 'not-enough-data' && view.summary).toBe(
@@ -84,30 +71,28 @@ describe('buildCommunityMatchesView', () => {
     );
   });
 
-  it('has no notice for the current half-season', () => {
-    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY })));
+  it('has no notice for the current half-season, and states the volume as a band', () => {
+    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesBand: 100 })));
 
     expect(view.notice).toBeNull();
-    expect(view.sample).toBe('40 matches counted in Season 10.5, each once however many players recorded it.');
+    expect(view.sample).toBe('100+ matches in Season 10.5, each counted once however many players recorded it.');
   });
 
-  it('shows each map with its rate, its record and a bar, and lists the thin ones', () => {
+  it('states no volume when the sample is below the smallest band', () => {
+    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesBand: null })));
+
+    expect(view.sample).toBe('Matches in Season 10.5, each counted once however many players recorded it.');
+  });
+
+  it('shows each map with its whole-percentage rate and a bar, and names the thin ones without a count', () => {
     const view = ready(
       buildCommunityMatchesView(
-        matches({
-          maps: [{ map: 'Tokyo 2099', matches: 12, wins: 7, winRate: (7 / 12) * 100 }],
-          mapsBelowMinimum: [
-            { map: 'Klyntar', matches: 4 },
-            { map: 'Hydra Base', matches: 1 },
-          ],
-        }),
+        matches({ maps: [{ map: 'Tokyo 2099', winRate: 58 }], mapsBelowMinimum: ['Klyntar', 'Hydra Base'] }),
       ),
     );
 
-    expect(view.maps.rows).toEqual([
-      { map: 'Tokyo 2099', winRateLabel: '58.3%', recordLabel: '7 wins in 12 matches', barPercent: (7 / 12) * 100 },
-    ]);
-    expect(view.maps.pending).toEqual(['Klyntar: 4 of 10 matches', 'Hydra Base: 1 of 10 matches']);
+    expect(view.maps.rows).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
+    expect(view.maps.pending).toEqual(['Klyntar', 'Hydra Base']);
     expect(view.maps.note).toBeNull();
   });
 
@@ -116,69 +101,71 @@ describe('buildCommunityMatchesView', () => {
 
     expect(view.maps.rows).toEqual([]);
     expect(view.maps.pending).toEqual([]);
-    expect(view.maps.note).toBe('Not enough data yet. A map needs 10 matches with a result from at least 3 players before its win rate shows.');
+    expect(view.maps.note).toBe(
+      'Not enough data yet. A map needs 10 matches with a result from at least 3 players before its win rate shows.',
+    );
   });
 
-  it('shows the mode mix with shares and per-mode lengths', () => {
+  it('shows the mode mix with shares and per-mode lengths in minutes', () => {
     const view = ready(
       buildCommunityMatchesView(
         matches({
           modeMix: [
-            { playModeId: 0, mode: 'Quick Match', matches: 30, share: 75, averageLengthSeconds: 615 },
-            { playModeId: 1, mode: 'Competitive', matches: 10, share: 25, averageLengthSeconds: null },
+            { playModeId: 0, mode: 'Quick Match', share: 75, averageLengthMinutes: 10 },
+            { playModeId: 1, mode: 'Competitive', share: 25, averageLengthMinutes: null },
           ],
         }),
       ),
     );
 
     expect(view.modeMix.rows).toEqual([
-      { mode: 'Quick Match', shareLabel: '75.0%', matchesLabel: '30 matches', lengthLabel: '10 min 15 s', barPercent: 75 },
-      { mode: 'Competitive', shareLabel: '25.0%', matchesLabel: '10 matches', lengthLabel: null, barPercent: 25 },
+      { mode: 'Quick Match', shareLabel: '75%', lengthLabel: '10 min', barPercent: 75 },
+      { mode: 'Competitive', shareLabel: '25%', lengthLabel: null, barPercent: 25 },
     ]);
     expect(view.modeMix.note).toBeNull();
   });
 
   it('has a note, not a blank panel, for every section without figures', () => {
-    const view = ready(
-      buildCommunityMatchesView(matches({ maps: [{ map: 'Tokyo 2099', matches: 12, wins: 6, winRate: 50 }] })),
-    );
+    const view = ready(buildCommunityMatchesView(matches({ maps: [{ map: 'Tokyo 2099', winRate: 50 }] })));
 
     expect(view.modeMix.rows).toEqual([]);
     expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 20 matches from at least 3 players.');
     expect(view.averageLength.label).toBeNull();
-    expect(view.averageLength.note).toBe('Not enough data yet. An average needs 10 matches with a known length from at least 3 players.');
+    expect(view.averageLength.note).toBe(
+      'Not enough data yet. An average needs 10 matches with a known length from at least 3 players.',
+    );
     expect(view.perDay.rows).toEqual([]);
     expect(view.perDay.note).toBe('Not enough data yet. Days appear at 20 matches from at least 3 players.');
   });
 
-  it('shows the average length and the days with bars scaled to the busiest day', () => {
+  it('shows the average length and the days as shares, with bars scaled to the busiest day', () => {
     const view = ready(
       buildCommunityMatchesView(
         matches({
-          averageLengthSeconds: 725,
+          averageLengthMinutes: 12,
           perDay: [
-            { day: '2026-10-28', matches: 5 },
-            { day: '2026-10-29', matches: 20 },
+            { day: '2026-10-28', share: 20 },
+            { day: '2026-10-29', share: 80 },
           ],
         }),
       ),
     );
 
-    expect(view.averageLength).toEqual({ label: '12 min 5 s', note: null });
+    expect(view.averageLength).toEqual({ label: '12 min', note: null });
     expect(view.perDay.rows).toEqual([
-      { day: 'Wed 28 Oct', matchesLabel: '5 matches', barPercent: 25 },
-      { day: 'Thu 29 Oct', matchesLabel: '20 matches', barPercent: 100 },
+      { day: 'Wed 28 Oct', shareLabel: '20%', barPercent: 25 },
+      { day: 'Thu 29 Oct', shareLabel: '80%', barPercent: 100 },
     ]);
     expect(view.perDay.note).toBeNull();
   });
 });
 
-describe('durationLabel', () => {
-  it('writes minutes and seconds, rounded to the second', () => {
-    expect(durationLabel(615)).toBe('10 min 15 s');
-    expect(durationLabel(600.4)).toBe('10 min');
-    expect(durationLabel(45)).toBe('45 s');
-    expect(durationLabel(3725)).toBe('1 h 2 min');
+describe('minutesLabel', () => {
+  it('writes whole minutes, and hours past the hour', () => {
+    expect(minutesLabel(12)).toBe('12 min');
+    expect(minutesLabel(1)).toBe('1 min');
+    expect(minutesLabel(60)).toBe('1 h');
+    expect(minutesLabel(65)).toBe('1 h 5 min');
   });
 });
 

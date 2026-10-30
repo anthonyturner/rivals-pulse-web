@@ -1,0 +1,67 @@
+@let current = view();
+
+@switch (current.kind) {
+  @case ('loading') {
+    <p class="stats-tab__message" role="status" aria-busy="true">Loading community role benchmarks...</p>
+  }
+  @case ('unavailable') {
+    <p class="stats-tab__message" role="status">
+      Community role benchmarks cannot be loaded right now. The rest of this page is not affected.
+    </p>
+  }
+  @case ('not-enough-data') {
+    <app-community-empty-state heading="Community role benchmarks" [preview]="current.summary" />
+  }
+  @case ('ready') {
+    <section class="stats-tab" aria-labelledby="stats-tab-title">
+      <header class="stats-tab__header">
+        <h2 id="stats-tab-title" class="stats-tab__title">Community role benchmarks</h2>
+        @if (current.halfSeasonLabel) {
+          <p class="stats-tab__scope">Half-season: {{ current.halfSeasonLabel }}</p>
+        }
+      </header>
+
+      @if (current.notice; as notice) {
+        <p class="stats-tab__notice" role="note"><strong>Previous half-season.</strong> {{ notice }}</p>
+      }
+
+      <div class="stats-tab__modes" role="group" aria-label="Game mode">
+        @for (mode of current.modes; track mode.id) {
+          <button
+            type="button"
+            class="stats-tab__mode"
+            [attr.aria-pressed]="mode.selected"
+            (click)="selectMode(mode.id)"
+          >
+            {{ mode.label }}
+          </button>
+        }
+      </div>
+
+      <div class="stats-tab__roles">
+        @for (card of current.cards; track card.role) {
+          <article class="stats-tab__role">
+            <header class="stats-tab__role-header">
+              <h3 class="stats-tab__role-name">{{ card.role }}</h3>
+              <p class="stats-tab__role-sample">{{ card.appearancesLabel }}</p>
+            </header>
+            @if (card.ready) {
+              <dl class="stats-tab__figures">
+                @for (figure of card.figures; track figure.label) {
+                  <div>
+                    <dt>{{ figure.label }}</dt>
+                    <dd>{{ figure.value }}</dd>
+                  </div>
+                }
+              </dl>
+            } @else {
+              <p class="stats-tab__role-empty">{{ card.message }}</p>
+            }
+          </article>
+        }
+      </div>
+
+      <p class="stats-tab__sample">{{ current.sample }}</p>
+    </section>
+  }
+}

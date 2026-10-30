@@ -14,22 +14,22 @@ const EMPTY: CommunityMatches = {
   halfSeasons: [SEASON],
   halfSeason: SEASON,
   inPlaceOf: null,
-  matchesCounted: 3,
+  matchesBand: null,
   maps: [],
   mapsBelowMinimum: [],
   modeMix: null,
-  averageLengthSeconds: null,
+  averageLengthMinutes: null,
   perDay: null,
 };
 const READY: CommunityMatches = {
   ...EMPTY,
   status: 'ready',
-  matchesCounted: 40,
-  maps: [{ map: 'Tokyo 2099', matches: 12, wins: 6, winRate: 50 }],
-  mapsBelowMinimum: [{ map: 'Klyntar', matches: 4 }],
-  modeMix: [{ playModeId: 0, mode: 'Quick Match', matches: 40, share: 100, averageLengthSeconds: 600 }],
-  averageLengthSeconds: 600,
-  perDay: [{ day: '2026-10-29', matches: 40 }],
+  matchesBand: 20,
+  maps: [{ map: 'Tokyo 2099', winRate: 50 }],
+  mapsBelowMinimum: ['Klyntar'],
+  modeMix: [{ playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: 10 }],
+  averageLengthMinutes: 10,
+  perDay: [{ day: '2026-10-29', share: 100 }],
 };
 
 describe('MatchesTabComponent', () => {
@@ -74,7 +74,7 @@ describe('MatchesTabComponent', () => {
     await answer(EMPTY);
 
     expect(text()).toContain('Not enough data yet');
-    expect(text()).toContain('Season 10.5 has 3 matches counted so far');
+    expect(text()).toContain('Season 10.5 does not have enough data yet');
     expect(headings()).toEqual(['Community matches']);
   });
 
@@ -83,9 +83,9 @@ describe('MatchesTabComponent', () => {
 
     expect(headings()).toEqual(['Win rate by map', 'Game modes played', 'Average match length', 'Matches per day']);
     expect(text()).toContain('Tokyo 2099');
-    expect(text()).toContain('50.0%');
-    expect(text()).toContain('6 wins in 12 matches');
-    expect(text()).toContain('Klyntar: 4 of 10 matches');
+    expect(text()).toContain('50%');
+    expect(text()).toContain('Klyntar');
+    expect(text()).toContain('20+ matches');
     expect(text()).toContain('Quick Match');
     expect(text()).toContain('10 min');
     expect(text()).toContain('Thu 29 Oct');
@@ -104,7 +104,7 @@ describe('MatchesTabComponent', () => {
   });
 
   it('gives each section a note instead of a blank panel when it has no figures', async () => {
-    await answer({ ...READY, modeMix: null, averageLengthSeconds: null, perDay: null, maps: [], mapsBelowMinimum: [] });
+    await answer({ ...READY, modeMix: null, averageLengthMinutes: null, perDay: null, maps: [], mapsBelowMinimum: [] });
 
     expect(text()).toContain('A map needs 10 matches with a result from at least 3 players');
     expect(text()).toContain('The mix appears at 20 matches from at least 3 players');

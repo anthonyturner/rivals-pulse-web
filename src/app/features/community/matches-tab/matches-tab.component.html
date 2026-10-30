@@ -33,7 +33,6 @@
               <tr>
                 <th scope="col">Map</th>
                 <th scope="col">Win rate</th>
-                <th scope="col">Record</th>
               </tr>
             </thead>
             <tbody>
@@ -48,7 +47,6 @@
                       </span>
                     </div>
                   </td>
-                  <td>{{ row.recordLabel }}</td>
                 </tr>
               }
             </tbody>
@@ -60,7 +58,7 @@
       }
       @if (current.maps.pending.length > 0) {
         <div class="matches-tab__pending">
-          <p class="matches-tab__pending-title">Not enough data yet</p>
+          <p class="matches-tab__pending-title">Not enough data yet for these maps</p>
           <ul>
             @for (entry of current.maps.pending; track entry) {
               <li>{{ entry }}</li>
@@ -72,7 +70,7 @@
 
     <section class="matches-tab__panel" aria-labelledby="matches-modes-title">
       <h2 id="matches-modes-title">Game modes played</h2>
-      <p class="matches-tab__hint">Matches where the game reported the mode.</p>
+      <p class="matches-tab__hint">Shares of the matches where the game reported the mode.</p>
       @if (current.modeMix.rows.length > 0) {
         <div class="matches-tab__table-wrap">
           <table>
@@ -81,7 +79,6 @@
               <tr>
                 <th scope="col">Mode</th>
                 <th scope="col">Share</th>
-                <th scope="col">Matches</th>
                 <th scope="col">Average length</th>
               </tr>
             </thead>
@@ -97,7 +94,6 @@
                       </span>
                     </div>
                   </td>
-                  <td>{{ row.matchesLabel }}</td>
                   <td>{{ row.lengthLabel ?? 'Not enough data yet' }}</td>
                 </tr>
               }
@@ -123,15 +119,18 @@
 
     <section class="matches-tab__panel" aria-labelledby="matches-days-title">
       <h2 id="matches-days-title">Matches per day</h2>
-      <p class="matches-tab__hint">Days are counted in UTC, and only days with a match are listed.</p>
+      <p class="matches-tab__hint">
+        Each day's share of the matches shown. Days are counted in UTC, and a day is listed only when enough
+        players recorded matches on it.
+      </p>
       @if (current.perDay.rows.length > 0) {
         <div class="matches-tab__table-wrap">
           <table>
-            <caption class="visually-hidden">Matches played on each day</caption>
+            <caption class="visually-hidden">Each day's share of the matches</caption>
             <thead>
               <tr>
                 <th scope="col">Day</th>
-                <th scope="col">Matches</th>
+                <th scope="col">Share of matches</th>
               </tr>
             </thead>
             <tbody>
@@ -140,7 +139,7 @@
                   <th scope="row">{{ row.day }}</th>
                   <td>
                     <div class="matches-tab__rate">
-                      <strong>{{ row.matchesLabel }}</strong>
+                      <strong>{{ row.shareLabel }}</strong>
                       <span class="matches-tab__bar" aria-hidden="true">
                         <span class="matches-tab__bar-fill" [style.width.%]="row.barPercent"></span>
                       </span>

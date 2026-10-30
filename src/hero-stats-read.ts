@@ -1,12 +1,16 @@
 import type { HeroStats } from './contracts/hero-stats.model.js';
-import { heroSlugByGameId } from './hero-game-ids.js';
+import type { RoleStats } from './contracts/role-stats.model.js';
+import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId } from './hero-game-ids.js';
+import { listHeroRoles } from './hero-store.js';
 import {
   deriveHeroStats,
   type HeroAggregateRow,
   type HeroStatsSource,
   type MatchTotalsRow,
 } from './hero-stats.js';
-import { answerReader, callSupabaseFunction, type SupabaseReadEnv } from './supabase-rpc.js';
+import { deriveRoleStats } from './role-stats.js';
+import { getSupabaseClient } from './supabase-client.js';
+import { answerReader, callSupabaseFunction, isNotDeployedError, type SupabaseReadEnv } from './supabase-rpc.js';
 
 export type HeroStatsEnv = SupabaseReadEnv;
 
@@ -16,6 +20,11 @@ export interface HeroStatsReadOptions {
   now?: () => Date;
   /** One exact half-season instead of the current one; see `DeriveHeroStatsOptions`. */
   halfSeason?: number;
+}
+
+export interface RoleStatsReadOptions extends HeroStatsReadOptions {
+  /** Hero id to role. By default read from `hero_content` through the shared Supabase client. */
+  loadHeroRoles?: () => Promise<ReadonlyMap<string, string>>;
 }
 
 const READ_FUNCTION = 'read_hero_stats';
@@ -87,6 +96,43 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
 
   if (excludedGameIds.length > 0) {
     console.warn(`Hero stats left out game hero ids with no hero mapping: ${excludedGameIds.join(', ')}`);
+  }
+
+  return stats;
+}
+
+/**
+ * The site's role benchmarks, pooled from the same per-hero counts as the hero stats. The role of a
+ * hero is the one it has now (`hero_content`), except that a hero the game splits by role counts
+ * toward the role that was played. A game hero id with no role is left out and logged.
+ *
+ * A read function that is not in the database yet (the migration is not applied) is the designed
+ * empty state. Any other failure is thrown, so an outage is never hidden behind "not enough data".
+ */
+export async function getRoleStats(options: RoleStatsReadOptions = {}): Promise<RoleStats> {
+  const source = await fetchHeroStatsSource(options.env ?? process.env, options.fetch).catch(
+    (error: unknown): HeroStatsSource => {
+      if (isNotDeployedError(error)) {
+        console.warn(`${READ_FUNCTION} is not in the database yet; role stats show the empty state`);
+
+        return { halfSeasons: [], totals: [], heroes: [] };
+      }
+
+      throw error;
+    },
+  );
+  const roleBySlug =
+    source.heroes.length === 0
+      ? new Map<string, string>()
+      : await (options.loadHeroRoles ?? (() => listHeroRoles(getSupabaseClient())))();
+  const { stats, excludedGameIds } = deriveRoleStats(source, {
+    now: (options.now ?? (() => new Date()))(),
+    halfSeason: options.halfSeason,
+    roleByGameId: buildHeroRoleByGameId(heroGameIdEntries, roleBySlug),
+  });
+
+  if (excludedGameIds.length > 0) {
+    console.warn(`Role stats left out game hero ids with no role: ${excludedGameIds.join(', ')}`);
   }
 
   return stats;

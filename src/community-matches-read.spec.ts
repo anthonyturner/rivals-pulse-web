@@ -97,8 +97,8 @@ describe('getCommunityMatches', () => {
 
     expect(result.status).toBe('ready');
     expect(result.halfSeason?.id).toBe(10.5);
-    expect(result.matchesCounted).toBe(30);
-    expect(result.maps).toEqual([{ map: 'Tokyo 2099', matches: 12, wins: 6, winRate: 50 }]);
+    expect(result.matchesBand).toBe(20);
+    expect(result.maps).toEqual([{ map: 'Tokyo 2099', winRate: 50 }]);
   });
 
   it('is the designed empty state, not an error, while the aggregates are not there yet', async () => {
@@ -109,7 +109,7 @@ describe('getCommunityMatches', () => {
 
     expect(result.status).toBe('not-enough-data');
     expect(result.halfSeason).toBeNull();
-    expect(result.matchesCounted).toBe(0);
+    expect(result.matchesBand).toBeNull();
     expect(console.warn).toHaveBeenCalled();
   });
 

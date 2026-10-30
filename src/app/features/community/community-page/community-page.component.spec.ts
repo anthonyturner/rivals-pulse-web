@@ -16,11 +16,11 @@ const MATCHES_NOT_ENOUGH_DATA = {
   halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,
-  matchesCounted: 0,
+  matchesBand: null,
   maps: [],
   mapsBelowMinimum: [],
   modeMix: null,
-  averageLengthSeconds: null,
+  averageLengthMinutes: null,
   perDay: null,
 };
 
@@ -57,9 +57,9 @@ describe('CommunityPageComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
-        provideRouter(communityRoutes),
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter(communityRoutes),
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -169,12 +169,12 @@ describe('CommunityPageComponent', () => {
     expect(router.url).toBe('/heroes');
   });
 
+  // The Stats tab loads its numbers; its own spec covers its empty state.
   for (const [id, label] of [
     ['heroes', 'Heroes'],
     ['matches', 'Matches'],
     ['counters', 'Counters'],
     ['tier-list', 'Tier list'],
-    ['stats', 'Stats'],
     ['insights', 'Insights'],
   ]) {
     it(`shows the designed empty state on the ${label} tab`, async () => {
@@ -207,7 +207,7 @@ describe('CommunityPageComponent', () => {
     });
   }
 
-  for (const id of ['matches', 'stats', 'insights']) {
+  for (const id of ['matches', 'insights']) {
     it(`has no link out of the ${id} tab, because no page exists for it`, async () => {
       await open(`/${id}`);
 

@@ -13,22 +13,22 @@ const notEnoughData: CommunityMatches = {
   halfSeasons: [season],
   halfSeason: season,
   inPlaceOf: null,
-  matchesCounted: 3,
+  matchesBand: null,
   maps: [],
   mapsBelowMinimum: [],
   modeMix: null,
-  averageLengthSeconds: null,
+  averageLengthMinutes: null,
   perDay: null,
 };
 const ready: CommunityMatches = {
   ...notEnoughData,
   status: 'ready',
-  matchesCounted: 40,
-  maps: [{ map: 'Tokyo 2099', matches: 12, wins: 6, winRate: 50 }],
-  mapsBelowMinimum: [{ map: 'Klyntar', matches: 4 }],
-  modeMix: [{ playModeId: 0, mode: 'Quick Match', matches: 40, share: 100, averageLengthSeconds: 600 }],
-  averageLengthSeconds: 600,
-  perDay: [{ day: '2026-10-29', matches: 40 }],
+  matchesBand: 20,
+  maps: [{ map: 'Tokyo 2099', winRate: 50 }],
+  mapsBelowMinimum: ['Klyntar'],
+  modeMix: [{ playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: 10 }],
+  averageLengthMinutes: 10,
+  perDay: [{ day: '2026-10-29', share: 100 }],
 };
 
 describe('CommunityMatchesService', () => {
@@ -86,11 +86,11 @@ describe('isCommunityMatches', () => {
     expect(isCommunityMatches('matches')).toBeFalse();
     expect(isCommunityMatches({ ...ready, status: 'loading' })).toBeFalse();
     expect(isCommunityMatches({ ...ready, minimums: undefined })).toBeFalse();
-    expect(isCommunityMatches({ ...ready, matchesCounted: Number.NaN })).toBeFalse();
+    expect(isCommunityMatches({ ...ready, matchesBand: Number.NaN })).toBeFalse();
     expect(isCommunityMatches({ ...ready, maps: [null] })).toBeFalse();
-    expect(isCommunityMatches({ ...ready, maps: [{ map: 'Tokyo 2099', matches: 12, wins: 6 }] })).toBeFalse();
+    expect(isCommunityMatches({ ...ready, maps: [{ map: 'Tokyo 2099' }] })).toBeFalse();
     expect(isCommunityMatches({ ...ready, modeMix: 'none' })).toBeFalse();
-    expect(isCommunityMatches({ ...ready, perDay: [{ day: 5, matches: 1 }] })).toBeFalse();
+    expect(isCommunityMatches({ ...ready, perDay: [{ day: 5, share: 1 }] })).toBeFalse();
     expect(isCommunityMatches({ ...ready, halfSeason: undefined })).toBeFalse();
   });
 });

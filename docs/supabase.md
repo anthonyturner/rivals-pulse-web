@@ -318,6 +318,28 @@ Hero against hero is derived in [`src/hero-matchups.ts`](../src/hero-matchups.ts
 - A page calls a hero's record a winning one when its shrunk win rate is above 50%
   (`WINNING_RECORD_CUT_OFF`).
 
+### Role benchmarks (Community Stats tab)
+
+`GET /api/community/stats` (and the Community Stats tab) pools the same per-hero counts by role. It
+adds no table, migration or function: `hero_aggregates` already holds, per half-season, mode and
+hero, the decided lines, wins, and the sums of kills, deaths, assists and final hits with their own
+non-null counts, and it is rebuilt hourly and frozen by the purge before the rows go. The server
+reads `read_hero_stats()` (so the same environment as above) and a role per hero from
+`hero_content`, through the shared Supabase client, which needs `SUPABASE_SERVICE_ROLE_KEY`.
+[`src/role-stats.ts`](../src/role-stats.ts) derives everything:
+
+- A role is the sum of its heroes, so each figure is an average over scoreboard lines pooled across
+  everyone, never an average of per-player averages. KDA uses the hero definition above.
+- A hero's role is the one it has now. Deadpool counts toward the role of the id the match
+  reported (his role variants in `hero-game-ids.json`). A game id with no role is left out and logged.
+- Modes: Quick Match and Competitive blended, and each alone. Unknown, Arcade and Practice are left out.
+- A role in a mode shows figures at `ROLE_STATS_MIN_LINES` (50) decided lines; each average also needs
+  that many lines carrying the figure, so older apps' missing final hits are never read as zero.
+- If `read_hero_stats()` is not in the database yet (PostgREST 404 or `PGRST202`, or Postgres
+  `42P01` / `42883`) the answer is the empty state with HTTP 200. Any other failure (a refused key, a
+  5xx, a timeout, missing environment variables) is an error status and the tab says it cannot load
+  the benchmarks: the policy on epic 170, so an outage is never hidden behind "not enough data".
+
 ## Community match aggregates
 
 The Community Matches tab (issue 172) reads its own anonymous counts, kept apart from the hero
@@ -358,6 +380,12 @@ row.
   and average in [`src/community-matches.ts`](../src/community-matches.ts); until the migration is
   applied the call fails with a "function not found" error, which the server turns into the empty
   state.
+- **No exact counts leave the server.** A hidden bucket could be recovered by subtracting the shown
+  ones from a total, so `GET /api/community/matches` returns only whole-percentage win rates and
+  shares, average lengths rounded to the minute, and one volume band (`matchesBand`, such as 100 for
+  "100+ matches"; the bands are `MATCH_VOLUME_BANDS`). Maps are ordered by win rate, never by volume,
+  and a map under its minimum is named without a count. `src/community-matches.spec.ts` proves no
+  number equal to a raw count is returned.
 - `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
   `COMMUNITY_MATCHES_MINIMUMS`): 20 shown matches for the mode mix and matches per day,
   10 matches with a result for a map's win rate, 10 matches with a length for an average. While the

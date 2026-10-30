@@ -1,6 +1,8 @@
 import {
   COMMUNITY_MATCHES_MINIMUMS,
+  MATCH_VOLUME_BANDS,
   deriveCommunityMatches,
+  matchVolumeBand,
   playModeName,
   type CommunityDayRow,
   type CommunityMapRow,
@@ -46,10 +48,10 @@ describe('deriveCommunityMatches', () => {
     expect(result.status).toBe('not-enough-data');
     expect(result.halfSeason).toBeNull();
     expect(result.halfSeasons).toEqual([]);
-    expect(result.matchesCounted).toBe(0);
+    expect(result.matchesBand).toBeNull();
     expect(result.maps).toEqual([]);
     expect(result.modeMix).toBeNull();
-    expect(result.averageLengthSeconds).toBeNull();
+    expect(result.averageLengthMinutes).toBeNull();
     expect(result.perDay).toBeNull();
   });
 
@@ -79,22 +81,22 @@ describe('deriveCommunityMatches', () => {
       );
 
       expect(result.status).toBe('ready');
-      expect(result.matchesCounted).toBe(40);
       expect(result.modeMix).toEqual([
-        { playModeId: 0, mode: 'Quick Match', matches: 30, share: 75, averageLengthSeconds: 600 },
-        { playModeId: 1, mode: 'Competitive', matches: 10, share: 25, averageLengthSeconds: 600 },
+        { playModeId: 0, mode: 'Quick Match', share: 75, averageLengthMinutes: 10 },
+        { playModeId: 1, mode: 'Competitive', share: 25, averageLengthMinutes: 10 },
       ]);
       // 15000 seconds over 25 matches with a length, not over all 40.
-      expect(result.averageLengthSeconds).toBe(600);
+      expect(result.averageLengthMinutes).toBe(10);
     });
 
-    it('never counts a missing length as zero', () => {
+    it('rounds an average to the minute', () => {
       const result = deriveCommunityMatches(
-        source({ modes: [modeRow(PLAY_MODE_IDS.quickMatch, 100, { durationSumSeconds: 7200, durationN: lengthMatches })] }),
+        source({ modes: [modeRow(PLAY_MODE_IDS.quickMatch, 100, { durationSumSeconds: 7250, durationN: lengthMatches })] }),
         { now: NOW },
       );
 
-      expect(result.averageLengthSeconds).toBe(720);
+      // 725 seconds is 12 minutes 5 seconds.
+      expect(result.averageLengthMinutes).toBe(12);
     });
 
     it('leaves an average out below its minimum, per mode and overall', () => {
@@ -108,8 +110,8 @@ describe('deriveCommunityMatches', () => {
         { now: NOW },
       );
 
-      expect(result.modeMix?.map((share) => share.averageLengthSeconds)).toEqual([null, null]);
-      expect(result.averageLengthSeconds).toBeNull();
+      expect(result.modeMix?.map((share) => share.averageLengthMinutes)).toEqual([null, null]);
+      expect(result.averageLengthMinutes).toBeNull();
     });
 
     it('averages all modes together once the overall sample is large enough', () => {
@@ -123,8 +125,9 @@ describe('deriveCommunityMatches', () => {
         { now: NOW },
       );
 
-      expect(result.modeMix?.map((share) => share.averageLengthSeconds)).toEqual([null, null]);
-      expect(result.averageLengthSeconds).toBe(500);
+      expect(result.modeMix?.map((share) => share.averageLengthMinutes)).toEqual([null, null]);
+      // 5000 seconds over 10 matches is 500 seconds, 8 minutes 20 seconds.
+      expect(result.averageLengthMinutes).toBe(8);
     });
 
     it('keeps matches with no reported mode out of the mix but counts them everywhere else', () => {
@@ -138,11 +141,9 @@ describe('deriveCommunityMatches', () => {
         { now: NOW },
       );
 
-      expect(result.matchesCounted).toBe(40);
-      expect(result.modeMix).toEqual([
-        { playModeId: 0, mode: 'Quick Match', matches: 20, share: 100, averageLengthSeconds: null },
-      ]);
-      expect(result.averageLengthSeconds).toBe(600);
+      expect(result.matchesBand).toBe(20);
+      expect(result.modeMix).toEqual([{ playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: null }]);
+      expect(result.averageLengthMinutes).toBe(10);
     });
 
     it('shows no mix below the sample a half-season needs', () => {
@@ -155,7 +156,7 @@ describe('deriveCommunityMatches', () => {
       expect(result.status).toBe('not-enough-data');
     });
 
-    it('orders the mix by matches, then mode id', () => {
+    it('orders the mix by share, then mode id', () => {
       const result = deriveCommunityMatches(
         source({
           modes: [
@@ -169,6 +170,15 @@ describe('deriveCommunityMatches', () => {
       );
 
       expect(result.modeMix?.map((share) => share.playModeId)).toEqual([0, 1, 2, 3]);
+    });
+
+    it('never shows a mode that happened as 0 percent', () => {
+      const result = deriveCommunityMatches(
+        source({ modes: [modeRow(PLAY_MODE_IDS.quickMatch, 999), modeRow(PLAY_MODE_IDS.practice, 1)] }),
+        { now: NOW },
+      );
+
+      expect(result.modeMix?.map((share) => share.share)).toEqual([100, 1]);
     });
   });
 
@@ -186,10 +196,11 @@ describe('deriveCommunityMatches', () => {
         { now: NOW },
       );
 
-      expect(result.maps).toEqual([{ map: 'Tokyo 2099', matches: 12, wins: 7, winRate: (7 / 12) * 100 }]);
+      // 7 wins in 12 is 58.3%, shown as a whole percentage.
+      expect(result.maps).toEqual([{ map: 'Tokyo 2099', winRate: 58 }]);
     });
 
-    it('lists a map under the minimum without a rate, and never one with no result', () => {
+    it('names a map under the minimum without a rate or a count, and never one with no result', () => {
       const result = deriveCommunityMatches(
         source({
           maps: [
@@ -202,26 +213,26 @@ describe('deriveCommunityMatches', () => {
       );
 
       expect(result.maps.map((record) => record.map)).toEqual(['Birnin T’Challa']);
-      expect(result.mapsBelowMinimum).toEqual([{ map: 'Klyntar', matches: mapMatches - 1 }]);
+      expect(result.mapsBelowMinimum).toEqual(['Klyntar']);
       expect(result.status).toBe('ready');
     });
 
-    it('orders maps by matches, then name', () => {
+    it('orders maps by win rate, then name, never by how many matches they have', () => {
       const result = deriveCommunityMatches(
         source({
           maps: [
             mapRow('Yggsgard', PLAY_MODE_IDS.quickMatch, 12, 6),
-            mapRow('Central Park', PLAY_MODE_IDS.quickMatch, 20, 10),
-            mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, 12, 6),
+            mapRow('Central Park', PLAY_MODE_IDS.quickMatch, 200, 100),
+            mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, 12, 9),
           ],
         }),
         { now: NOW },
       );
 
-      expect(result.maps.map((record) => record.map)).toEqual(['Central Park', 'Hydra Base', 'Yggsgard']);
+      expect(result.maps.map((record) => record.map)).toEqual(['Hydra Base', 'Central Park', 'Yggsgard']);
     });
 
-    it('has no win rate that is zero, NaN or infinite because a count is zero', () => {
+    it('has no win rate that is NaN or infinite because a count is zero', () => {
       const result = deriveCommunityMatches(
         source({ maps: [mapRow('Empire of Eternal Night', PLAY_MODE_IDS.quickMatch, 0, 0)] }),
         { now: NOW },
@@ -234,7 +245,7 @@ describe('deriveCommunityMatches', () => {
   });
 
   describe('matches per day', () => {
-    it('lists the days in order once the half-season has enough matches', () => {
+    it('lists the days in order, as shares of the days shown, once there are enough matches', () => {
       const result = deriveCommunityMatches(
         source({
           modes: [modeRow(PLAY_MODE_IDS.quickMatch, 25)],
@@ -244,8 +255,8 @@ describe('deriveCommunityMatches', () => {
       );
 
       expect(result.perDay).toEqual([
-        { day: '2026-10-10', matches: 20 },
-        { day: '2026-10-12', matches: 5 },
+        { day: '2026-10-10', share: 80 },
+        { day: '2026-10-12', share: 20 },
       ]);
     });
 
@@ -289,7 +300,7 @@ describe('deriveCommunityMatches', () => {
 
       expect(result.halfSeason?.id).toBe(10);
       expect(result.inPlaceOf?.id).toBe(10.5);
-      expect(result.matchesCounted).toBe(60);
+      expect(result.matchesBand).toBe(50);
       expect(result.maps.map((record) => record.map)).toEqual(['Tokyo 2099']);
     });
 
@@ -301,7 +312,7 @@ describe('deriveCommunityMatches', () => {
 
       expect(result.halfSeason?.id).toBe(10.5);
       expect(result.inPlaceOf).toBeNull();
-      expect(result.matchesCounted).toBe(overviewMatches);
+      expect(result.matchesBand).toBe(20);
     });
 
     it('stays on the current half-season when the previous one is no better', () => {
@@ -331,84 +342,130 @@ describe('deriveCommunityMatches', () => {
 
         expect(result.halfSeason).toBeNull();
         expect(result.status).toBe('not-enough-data');
-        expect(result.matchesCounted).toBe(0);
+        expect(result.matchesBand).toBeNull();
       }
     });
 
     it('does not mix one half-season into another', () => {
       const result = deriveCommunityMatches(
         source({
-          modes: [modeRow(PLAY_MODE_IDS.quickMatch, 30), modeRow(PLAY_MODE_IDS.quickMatch, 99, { halfSeason: 10 })],
+          modes: [modeRow(PLAY_MODE_IDS.quickMatch, 30), modeRow(PLAY_MODE_IDS.quickMatch, 990, { halfSeason: 10 })],
         }),
         { now: NOW },
       );
 
-      expect(result.matchesCounted).toBe(30);
+      expect(result.matchesBand).toBe(20);
     });
   });
 
-  it('publishes only the allow-listed keys, with no name, id or per-player field anywhere', () => {
-    const result = deriveCommunityMatches(
+  describe('no exact count', () => {
+    // Counts chosen so that none of them can be mistaken for a percentage, a minute or a band.
+    const COUNTS = { qm: 437, comp: 211, practice: 113, mapDecided: 233, mapWins: 131, dayA: 307, dayB: 149 };
+    const exactNumbers = new Set(Object.values(COUNTS).concat(437 + 211 + 113, 307 + 149));
+
+    const busy = deriveCommunityMatches(
       source({
-        modes: [modeRow(PLAY_MODE_IDS.quickMatch, 40, { durationSumSeconds: 24000, durationN: 40 })],
-        maps: [
-          mapRow('Tokyo 2099', PLAY_MODE_IDS.quickMatch, 12, 6),
-          mapRow('Klyntar', PLAY_MODE_IDS.quickMatch, 3, 1),
+        modes: [
+          modeRow(PLAY_MODE_IDS.quickMatch, COUNTS.qm, { durationSumSeconds: 437 * 600, durationN: 437 }),
+          modeRow(PLAY_MODE_IDS.competitive, COUNTS.comp, { durationSumSeconds: 211 * 900, durationN: 211 }),
+          modeRow(PLAY_MODE_IDS.practice, COUNTS.practice),
         ],
-        days: [dayRow('2026-10-10', 40)],
+        maps: [
+          mapRow('Tokyo 2099', PLAY_MODE_IDS.quickMatch, COUNTS.mapDecided, COUNTS.mapWins),
+          mapRow('Klyntar', PLAY_MODE_IDS.quickMatch, mapMatches - 1, 4, { matches: 9 }),
+        ],
+        days: [dayRow('2026-10-10', COUNTS.dayA), dayRow('2026-10-11', COUNTS.dayB)],
       }),
       { now: NOW },
     );
 
-    expect(Object.keys(result).sort()).toEqual([
-      'averageLengthSeconds',
-      'halfSeason',
-      'halfSeasons',
-      'inPlaceOf',
-      'maps',
-      'mapsBelowMinimum',
-      'matchesCounted',
-      'minimums',
-      'modeMix',
-      'perDay',
-      'status',
-    ]);
-    expect(Object.keys(result.minimums).sort()).toEqual(['lengthMatches', 'mapMatches', 'overviewMatches', 'recorders']);
-    expect(Object.keys(result.halfSeason!).sort()).toEqual(['endsAt', 'id', 'label', 'startsAt']);
-    expect(Object.keys(result.maps[0]).sort()).toEqual(['map', 'matches', 'winRate', 'wins']);
-    expect(Object.keys(result.mapsBelowMinimum[0]).sort()).toEqual(['map', 'matches']);
-    expect(Object.keys(result.modeMix![0]).sort()).toEqual([
-      'averageLengthSeconds',
-      'matches',
-      'mode',
-      'playModeId',
-      'share',
-    ]);
-    expect(Object.keys(result.perDay![0]).sort()).toEqual(['day', 'matches']);
-  });
+    function walk(value: unknown, visit: (key: string, value: unknown) => void, key = ''): void {
+      visit(key, value);
 
-  it('serialises without NaN or infinity anywhere', () => {
-    const result = deriveCommunityMatches(
-      source({
-        modes: [modeRow(PLAY_MODE_IDS.quickMatch, 40)],
-        maps: [mapRow('Tokyo 2099', PLAY_MODE_IDS.quickMatch, 12, 0)],
-        days: [dayRow('2026-10-10', 40)],
-      }),
-      { now: NOW },
-    );
-
-    const numbers: number[] = [];
-    JSON.stringify(result, (_key, value: unknown) => {
-      if (typeof value === 'number') {
-        numbers.push(value);
+      if (Array.isArray(value)) {
+        value.forEach((item) => walk(item, visit, key));
+      } else if (typeof value === 'object' && value !== null) {
+        Object.entries(value).forEach(([name, item]) => walk(item, visit, name));
       }
+    }
 
-      return value;
+    it('returns no number equal to a raw match count', () => {
+      const seen: number[] = [];
+
+      walk(busy, (_key, value) => {
+        if (typeof value === 'number') {
+          seen.push(value);
+        }
+      });
+
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen.filter((value) => exactNumbers.has(value))).toEqual([]);
     });
-    // JSON.stringify would turn NaN into null, so it is the replacer that sees the number itself.
-    expect(numbers.length).toBeGreaterThan(0);
-    expect(numbers.every(Number.isFinite)).toBeTrue();
-    expect(result.maps[0].winRate).toBe(0);
+
+    it('has no field named for a count', () => {
+      const keys: string[] = [];
+
+      walk(busy, (key) => keys.push(key));
+
+      expect(keys.filter((key) => /^(matches|wins|decided|decidedMatches|matchesCounted|appearances)$/i.test(key))).toEqual([]);
+    });
+
+    it('rounds every figure: whole percentages, whole minutes, one volume band', () => {
+      expect(busy.matchesBand).toBe(500);
+      expect(busy.maps).toEqual([{ map: 'Tokyo 2099', winRate: 56 }]);
+      expect(busy.mapsBelowMinimum).toEqual(['Klyntar']);
+      expect(busy.modeMix?.map((share) => [share.share, share.averageLengthMinutes])).toEqual([
+        [57, 10],
+        [28, 15],
+        [15, null],
+      ]);
+      expect(busy.averageLengthMinutes).toBe(12);
+      expect(busy.perDay?.map((day) => day.share)).toEqual([67, 33]);
+    });
+
+    it('publishes only the allow-listed keys, with no name, id or per-player field anywhere', () => {
+      expect(Object.keys(busy).sort()).toEqual([
+        'averageLengthMinutes',
+        'halfSeason',
+        'halfSeasons',
+        'inPlaceOf',
+        'maps',
+        'mapsBelowMinimum',
+        'matchesBand',
+        'minimums',
+        'modeMix',
+        'perDay',
+        'status',
+      ]);
+      expect(Object.keys(busy.minimums).sort()).toEqual(['lengthMatches', 'mapMatches', 'overviewMatches', 'recorders']);
+      expect(Object.keys(busy.halfSeason!).sort()).toEqual(['endsAt', 'id', 'label', 'startsAt']);
+      expect(Object.keys(busy.maps[0]).sort()).toEqual(['map', 'winRate']);
+      expect(Object.keys(busy.modeMix![0]).sort()).toEqual(['averageLengthMinutes', 'mode', 'playModeId', 'share']);
+      expect(Object.keys(busy.perDay![0]).sort()).toEqual(['day', 'share']);
+    });
+
+    it('serialises without NaN or infinity anywhere', () => {
+      const numbers: number[] = [];
+
+      walk(busy, (_key, value) => {
+        if (typeof value === 'number') {
+          numbers.push(value);
+        }
+      });
+
+      expect(numbers.every(Number.isFinite)).toBeTrue();
+    });
+  });
+});
+
+describe('matchVolumeBand', () => {
+  it('is the largest band reached, and null below the smallest', () => {
+    expect(matchVolumeBand(0)).toBeNull();
+    expect(matchVolumeBand(MATCH_VOLUME_BANDS[0] - 1)).toBeNull();
+    expect(matchVolumeBand(20)).toBe(20);
+    expect(matchVolumeBand(99)).toBe(50);
+    expect(matchVolumeBand(100)).toBe(100);
+    expect(matchVolumeBand(10_000)).toBe(5000);
   });
 });
 

@@ -15,33 +15,45 @@ const PAGE_SIZE = 500;
 interface HeroRow {
   id: string;
   name: string;
+  role: string;
   raw_json: Hero;
 }
 
-/** Every hero, ordered by name ignoring case. */
-export async function listHeroes(client: SupabaseClient): Promise<Hero[]> {
-  const rows: HeroRow[] = [];
+async function readAllRows<Row>(client: SupabaseClient, columns: string, failure: string): Promise<Row[]> {
+  const rows: Row[] = [];
 
   for (let from = 0; ; from += PAGE_SIZE) {
-    // Paging needs a stable order; the display order is applied below.
+    // Paging needs a stable order; any display order is applied by the caller.
     const { data, error } = await client
       .from(HERO_TABLE)
-      .select('id, name, raw_json')
+      .select(columns)
       .order('id')
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) {
-      throw new Error(`Reading heroes failed: ${error.message}`);
+      throw new Error(`${failure}: ${error.message}`);
     }
 
-    rows.push(...(data as HeroRow[]));
+    rows.push(...(data as Row[]));
 
     if (data.length < PAGE_SIZE) {
-      break;
+      return rows;
     }
   }
+}
+
+/** Every hero, ordered by name ignoring case. */
+export async function listHeroes(client: SupabaseClient): Promise<Hero[]> {
+  const rows = await readAllRows<HeroRow>(client, 'id, name, raw_json', 'Reading heroes failed');
 
   return rows.sort(compareHeroRows).map((row) => row.raw_json);
+}
+
+/** Each hero's role (`Vanguard`, `Duelist` or `Strategist`) by hero id, for the numbers split by role. */
+export async function listHeroRoles(client: SupabaseClient): Promise<ReadonlyMap<string, string>> {
+  const rows = await readAllRows<Pick<HeroRow, 'id' | 'role'>>(client, 'id, role', 'Reading hero roles failed');
+
+  return new Map(rows.map((row) => [row.id, row.role]));
 }
 
 export async function getHero(client: SupabaseClient, id: string): Promise<Hero | undefined> {

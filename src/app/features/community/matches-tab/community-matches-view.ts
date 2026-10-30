@@ -1,10 +1,9 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 
 export interface CommunityMapRowView {
   map: string;
   winRateLabel: string;
-  recordLabel: string;
   /** The win rate, 0 to 100, as the width of its bar. */
   barPercent: number;
 }
@@ -12,7 +11,6 @@ export interface CommunityMapRowView {
 export interface CommunityModeRowView {
   mode: string;
   shareLabel: string;
-  matchesLabel: string;
   /** Null when too few of the mode's matches carried a length. */
   lengthLabel: string | null;
   barPercent: number;
@@ -20,8 +18,8 @@ export interface CommunityModeRowView {
 
 export interface CommunityDayRowView {
   day: string;
-  matchesLabel: string;
-  /** This day's matches against the busiest day's, 0 to 100. */
+  shareLabel: string;
+  /** This day's share against the busiest day's, 0 to 100. */
   barPercent: number;
 }
 
@@ -42,7 +40,7 @@ export type CommunityMatchesView =
       notice: string | null;
       sample: string;
       maps: CommunitySectionView<CommunityMapRowView> & {
-        /** Maps with a result but under the minimum, such as "Klyntar: 4 of 10 matches". */
+        /** Maps with a result but under the minimum: only their names. */
         pending: string[];
       };
       modeMix: CommunitySectionView<CommunityModeRowView>;
@@ -55,7 +53,8 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 /**
  * What the Matches tab shows. `undefined` means the answer has not arrived and `null` that it could
- * not be read; neither is "not enough data", which is a real answer.
+ * not be read; neither is "not enough data", which is a real answer. The answer carries no exact
+ * count, so no label here can show one.
  */
 export function buildCommunityMatchesView(data: CommunityMatches | null | undefined): CommunityMatchesView {
   if (data === undefined) {
@@ -71,35 +70,28 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
   const halfSeasonLabel = data.halfSeason?.label ?? null;
 
   if (data.status === 'not-enough-data') {
-    const sofar =
-      data.matchesCounted === 0
-        ? halfSeasonLabel
-          ? `${halfSeasonLabel} does not have enough data yet.`
-          : 'No matches are counted yet.'
-        : `${halfSeasonLabel ?? 'This half-season'} has ${countLabel(data.matchesCounted, 'match', 'matches')} counted so far.`;
-
     return {
       kind: 'not-enough-data',
       halfSeasonLabel,
-      summary: `${sofar} The first figures appear at ${overviewMatches} matches ${fromPlayers}.`,
+      summary: `${halfSeasonLabel ? `${halfSeasonLabel} does not have enough data yet.` : 'No matches are counted yet.'} The first figures appear at ${overviewMatches} matches ${fromPlayers}.`,
     };
   }
 
-  const busiestDay = Math.max(1, ...(data.perDay ?? []).map((day) => day.matches));
+  const busiestDay = Math.max(1, ...(data.perDay ?? []).map((day) => day.share));
+  const season = halfSeasonLabel ?? 'this half-season';
 
   return {
     kind: 'ready',
     halfSeasonLabel,
     notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
-    sample: `${countLabel(data.matchesCounted, 'match', 'matches')} counted in ${halfSeasonLabel ?? 'this half-season'}, each once however many players recorded it.`,
+    sample: `${data.matchesBand === null ? 'Matches' : `${data.matchesBand}+ matches`} in ${season}, each counted once however many players recorded it.`,
     maps: {
       rows: data.maps.map((record) => ({
         map: record.map,
         winRateLabel: percentLabel(record.winRate),
-        recordLabel: `${countLabel(record.wins, 'win', 'wins')} in ${countLabel(record.matches, 'match', 'matches')}`,
         barPercent: record.winRate,
       })),
-      pending: data.mapsBelowMinimum.map((entry) => `${entry.map}: ${entry.matches} of ${mapMatches} matches`),
+      pending: data.mapsBelowMinimum,
       note:
         data.maps.length === 0
           ? `Not enough data yet. A map needs ${mapMatches} matches with a result ${fromPlayers} before its win rate shows.`
@@ -109,46 +101,44 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
       rows: (data.modeMix ?? []).map((share) => ({
         mode: share.mode,
         shareLabel: percentLabel(share.share),
-        matchesLabel: countLabel(share.matches, 'match', 'matches'),
-        lengthLabel: share.averageLengthSeconds === null ? null : durationLabel(share.averageLengthSeconds),
+        lengthLabel: share.averageLengthMinutes === null ? null : minutesLabel(share.averageLengthMinutes),
         barPercent: share.share,
       })),
       note: data.modeMix === null ? `Not enough data yet. The mix appears at ${overviewMatches} matches ${fromPlayers}.` : null,
     },
     averageLength:
-      data.averageLengthSeconds === null
+      data.averageLengthMinutes === null
         ? {
             label: null,
             note: `Not enough data yet. An average needs ${lengthMatches} matches with a known length ${fromPlayers}.`,
           }
-        : { label: durationLabel(data.averageLengthSeconds), note: null },
+        : { label: minutesLabel(data.averageLengthMinutes), note: null },
     perDay: {
       rows: (data.perDay ?? []).map((day) => ({
         day: dayLabel(day.day),
-        matchesLabel: countLabel(day.matches, 'match', 'matches'),
-        barPercent: (day.matches / busiestDay) * 100,
+        shareLabel: percentLabel(day.share),
+        barPercent: (day.share / busiestDay) * 100,
       })),
       note: data.perDay === null ? `Not enough data yet. Days appear at ${overviewMatches} matches ${fromPlayers}.` : null,
     },
   };
 }
 
-/** Seconds as `12 min 5 s`, `45 s` or `1 h 2 min`, rounded to the second. */
-export function durationLabel(totalSeconds: number): string {
-  const seconds = Math.round(totalSeconds);
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const rest = seconds % 60;
+/** A whole percentage, such as `58%`. */
+function percentLabel(value: number): string {
+  return `${value}%`;
+}
 
-  if (hours > 0) {
-    return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+/** Whole minutes as `12 min` or `1 h 5 min`. */
+export function minutesLabel(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+
+  if (hours === 0) {
+    return `${rest} min`;
   }
 
-  if (minutes > 0) {
-    return rest > 0 ? `${minutes} min ${rest} s` : `${minutes} min`;
-  }
-
-  return `${rest} s`;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
 
 /** A UTC calendar day such as `2026-10-29` as `Thu 29 Oct`; anything else is shown as it came. */

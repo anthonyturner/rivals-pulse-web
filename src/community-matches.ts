@@ -1,6 +1,5 @@
 import type {
   CommunityDayCount,
-  CommunityMapBelowMinimum,
   CommunityMapRecord,
   CommunityMatches,
   CommunityMatchesMinimums,
@@ -89,12 +88,24 @@ export function playModeName(playModeId: number): string {
   return MODE_NAMES.get(playModeId) ?? 'Other';
 }
 
+/**
+ * The volume bands, as the floor a "100+ matches" label states. An exact total next to shown buckets
+ * would let a reader subtract the hidden ones, so only the band leaves this module.
+ */
+export const MATCH_VOLUME_BANDS: readonly number[] = [20, 50, 100, 250, 500, 1000, 2500, 5000];
+
+/** The largest band the count reaches, or null below the smallest. */
+export function matchVolumeBand(matches: number): number | null {
+  return [...MATCH_VOLUME_BANDS].reverse().find((band) => matches >= band) ?? null;
+}
+
+/** What one half-season works out to. `matchesCounted` is internal: only its band is published. */
 interface Snapshot {
   matchesCounted: number;
   maps: CommunityMapRecord[];
-  mapsBelowMinimum: CommunityMapBelowMinimum[];
+  mapsBelowMinimum: string[];
   modeMix: CommunityModeShare[] | null;
-  averageLengthSeconds: number | null;
+  averageLengthMinutes: number | null;
   perDay: CommunityDayCount[] | null;
 }
 
@@ -108,6 +119,8 @@ export function deriveCommunityMatches(
     options.now,
   );
 
+  // Built field by field, so a field added to a snapshot can never reach the public response
+  // without being named here.
   const toResult = (shown: number | undefined, inPlaceOf: number | undefined): CommunityMatches => {
     const snapshot = shown === undefined ? emptySnapshot() : snapshotOf(source, shown);
 
@@ -117,7 +130,12 @@ export function deriveCommunityMatches(
       halfSeasons: started.map(describe),
       halfSeason: shown === undefined ? null : describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : describe(inPlaceOf),
-      ...snapshot,
+      matchesBand: matchVolumeBand(snapshot.matchesCounted),
+      maps: snapshot.maps,
+      mapsBelowMinimum: snapshot.mapsBelowMinimum,
+      modeMix: snapshot.modeMix,
+      averageLengthMinutes: snapshot.averageLengthMinutes,
+      perDay: snapshot.perDay,
     };
   };
 
@@ -140,15 +158,14 @@ export function deriveCommunityMatches(
 
 function snapshotOf(source: CommunityMatchesSource, halfSeason: number): Snapshot {
   const modes = source.modes.filter((row) => row.halfSeason === halfSeason);
-  const matchesCounted = sum(modes.map((row) => row.matches));
   const { maps, mapsBelowMinimum } = mapRecords(source.maps.filter((row) => row.halfSeason === halfSeason));
 
   return {
-    matchesCounted,
+    matchesCounted: sum(modes.map((row) => row.matches)),
     maps,
     mapsBelowMinimum,
     modeMix: modeMix(modes.filter((row) => row.playModeId !== PLAY_MODE_IDS.unknown)),
-    averageLengthSeconds: averageLength(
+    averageLengthMinutes: averageLengthMinutes(
       sum(modes.map((row) => row.durationSumSeconds)),
       sum(modes.map((row) => row.durationN)),
     ),
@@ -156,20 +173,25 @@ function snapshotOf(source: CommunityMatchesSource, halfSeason: number): Snapsho
   };
 }
 
-/** The days the database let through, once they add up to a sample worth showing. */
+/** The days the database let through, as shares of those days, once they add up to a sample worth showing. */
 function perDay(days: readonly CommunityDayRow[]): CommunityDayCount[] | null {
-  if (sum(days.map((row) => row.matches)) < COMMUNITY_MATCHES_MINIMUMS.overviewMatches) {
+  const total = sum(days.map((row) => row.matches));
+
+  if (total < COMMUNITY_MATCHES_MINIMUMS.overviewMatches) {
     return null;
   }
 
   return days
-    .map((row): CommunityDayCount => ({ day: row.day, matches: row.matches }))
+    .filter((row) => row.matches > 0)
+    .map((row): CommunityDayCount => ({ day: row.day, share: wholePercent(row.matches, total) }))
     .sort((a, b) => a.day.localeCompare(b.day));
 }
 
-/** The mean over the matches that carried a length; a match without one is not a zero-second match. */
-function averageLength(totalSeconds: number, withLength: number): number | null {
-  return withLength >= COMMUNITY_MATCHES_MINIMUMS.lengthMatches ? totalSeconds / withLength : null;
+/** The mean over the matches that carried a length, to the minute; a match without one is not a zero-second match. */
+function averageLengthMinutes(totalSeconds: number, withLength: number): number | null {
+  return withLength >= COMMUNITY_MATCHES_MINIMUMS.lengthMatches
+    ? Math.max(1, Math.round(totalSeconds / withLength / 60))
+    : null;
 }
 
 function modeMix(modes: readonly CommunityModeRow[]): CommunityModeShare[] | null {
@@ -181,22 +203,21 @@ function modeMix(modes: readonly CommunityModeRow[]): CommunityModeShare[] | nul
 
   return modes
     .filter((row) => row.matches > 0)
+    .sort((a, b) => b.matches - a.matches || a.playModeId - b.playModeId)
     .map(
       (row): CommunityModeShare => ({
         playModeId: row.playModeId,
         mode: playModeName(row.playModeId),
-        matches: row.matches,
-        share: (row.matches / total) * 100,
-        averageLengthSeconds: averageLength(row.durationSumSeconds, row.durationN),
+        share: wholePercent(row.matches, total),
+        averageLengthMinutes: averageLengthMinutes(row.durationSumSeconds, row.durationN),
       }),
-    )
-    .sort((a, b) => b.matches - a.matches || a.playModeId - b.playModeId);
+    );
 }
 
 /** Win rate per map over the blended modes, split at the sample a rate needs. */
 function mapRecords(rows: readonly CommunityMapRow[]): {
   maps: CommunityMapRecord[];
-  mapsBelowMinimum: CommunityMapBelowMinimum[];
+  mapsBelowMinimum: string[];
 } {
   const tallies = new Map<string, { matches: number; wins: number }>();
 
@@ -209,18 +230,25 @@ function mapRecords(rows: readonly CommunityMapRow[]): {
 
   const decided = [...tallies]
     .filter(([, tally]) => tally.matches > 0)
-    .map(([map, tally]) => ({ map, ...tally }))
-    .sort((a, b) => b.matches - a.matches || a.map.localeCompare(b.map));
+    .map(([map, tally]) => ({ map, ...tally }));
   const enough = ({ matches }: { matches: number }): boolean => matches >= COMMUNITY_MATCHES_MINIMUMS.mapMatches;
 
+  // Ordered by what is shown, never by how many matches a map has.
   return {
     maps: decided
       .filter(enough)
-      .map(({ map, matches, wins }): CommunityMapRecord => ({ map, matches, wins, winRate: (wins / matches) * 100 })),
+      .map(({ map, matches, wins }): CommunityMapRecord => ({ map, winRate: Math.round((wins / matches) * 100) }))
+      .sort((a, b) => b.winRate - a.winRate || a.map.localeCompare(b.map)),
     mapsBelowMinimum: decided
       .filter((tally) => !enough(tally))
-      .map(({ map, matches }): CommunityMapBelowMinimum => ({ map, matches })),
+      .map(({ map }) => map)
+      .sort((a, b) => a.localeCompare(b)),
   };
+}
+
+/** A share of a total as a whole percentage, never shown as 0 for something that happened. */
+function wholePercent(part: number, total: number): number {
+  return Math.min(100, Math.max(1, Math.round((part / total) * 100)));
 }
 
 function hasEnoughMatches(source: CommunityMatchesSource, halfSeason: number): boolean {
@@ -234,13 +262,13 @@ function hasFigures(snapshot: Snapshot): boolean {
   return (
     snapshot.maps.length > 0 ||
     snapshot.modeMix !== null ||
-    snapshot.averageLengthSeconds !== null ||
+    snapshot.averageLengthMinutes !== null ||
     snapshot.perDay !== null
   );
 }
 
 function emptySnapshot(): Snapshot {
-  return { matchesCounted: 0, maps: [], mapsBelowMinimum: [], modeMix: null, averageLengthSeconds: null, perDay: null };
+  return { matchesCounted: 0, maps: [], mapsBelowMinimum: [], modeMix: null, averageLengthMinutes: null, perDay: null };
 }
 
 function sum(values: readonly number[]): number {

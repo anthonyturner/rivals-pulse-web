@@ -36,25 +36,22 @@ export function isCommunityMatches(body: unknown): body is CommunityMatches {
     typeof minimums === 'object' &&
     minimums !== null &&
     ['overviewMatches', 'mapMatches', 'lengthMatches', 'recorders'].every((key) => isCount(minimums[key])) &&
-    isCount(data.matchesCounted) &&
+    (data.matchesBand === null || isCount(data.matchesBand)) &&
     (data.halfSeason === null || isHalfSeason(data.halfSeason)) &&
     (data.inPlaceOf === null || isHalfSeason(data.inPlaceOf)) &&
-    isListOf(
-      data.maps,
-      (row) => isString(row['map']) && isCount(row['matches']) && isCount(row['wins']) && isNumber(row['winRate']),
-    ) &&
-    isListOf(data.mapsBelowMinimum, (row) => isString(row['map']) && isCount(row['matches'])) &&
+    isListOf(data.maps, (row) => isString(row['map']) && isCount(row['winRate'])) &&
+    Array.isArray(data.mapsBelowMinimum) &&
+    data.mapsBelowMinimum.every(isString) &&
     (data.modeMix === null ||
       isListOf(
         data.modeMix,
         (row) =>
           isString(row['mode']) &&
-          isCount(row['matches']) &&
-          isNumber(row['share']) &&
-          (row['averageLengthSeconds'] === null || isNumber(row['averageLengthSeconds'])),
+          isCount(row['share']) &&
+          (row['averageLengthMinutes'] === null || isCount(row['averageLengthMinutes'])),
       )) &&
-    (data.averageLengthSeconds === null || isNumber(data.averageLengthSeconds)) &&
-    (data.perDay === null || isListOf(data.perDay, (row) => isString(row['day']) && isCount(row['matches'])))
+    (data.averageLengthMinutes === null || isCount(data.averageLengthMinutes)) &&
+    (data.perDay === null || isListOf(data.perDay, (row) => isString(row['day']) && isCount(row['share'])))
   );
 }
 
