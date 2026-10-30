@@ -16,6 +16,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'community',
+    title: 'Community | Rivals Pulse Coach',
+    loadChildren: () =>
+      import('./features/community/community.routes').then((module) => module.communityRoutes),
+  },
+  {
     path: 'learn',
     redirectTo: 'hero-guides',
     pathMatch: 'full',
