@@ -49,6 +49,12 @@ export interface ReplayMatch {
 
 export type SkipReason = 'no-roster' | 'unreadable-roster' | 'no-timestamp';
 
+/**
+ * Season 9 arrived on this day, so no match labelled by `--before-first-half-season` can be older.
+ * A guard against a wrong label, not a half-season boundary.
+ */
+export const EARLIEST_BEFORE_FIRST_PLAY = '2026-07-10T00:00:00Z';
+
 /** The `record_match_participants` rule: the same fingerprint within this long is the same match. */
 export const SAME_MATCH_WINDOW_MS = 4 * 60 * 1000;
 
@@ -145,8 +151,7 @@ export async function prepareRecorderLine(
   const playedAt = toTimestamp(row.raw_payload['match_time_stamp']);
   if (typeof uid !== 'string' || !playedAt) return null;
 
-  const playedMs = Date.parse(playedAt);
-  const home = stored.find(line => line.uid === uid && Math.abs(Date.parse(line.playedAt) - playedMs) <= SAME_MATCH_WINDOW_MS);
+  const home = closestStoredMatchOf(uid, Date.parse(playedAt), stored);
   if (!home) return null;
 
   const uploaded: JsonRecord = {
@@ -170,6 +175,24 @@ export async function prepareRecorderLine(
     if (error instanceof PayloadError) return null;
     throw error;
   }
+}
+
+/**
+ * The stored match this player was in nearest to `playedMs`, within the repeat window. A player can
+ * have two stored matches inside the window, so the first one found is not safe: a fill never
+ * overwrites, and it would put one match's result and mode on another. Two different matches at the
+ * same distance cannot be told apart, so that is no match at all.
+ */
+function closestStoredMatchOf(uid: string, playedMs: number, stored: readonly ExistingLine[]): ExistingLine | null {
+  const candidates = new Map<string, { line: ExistingLine; gap: number }>();
+  for (const line of stored) {
+    const gap = Math.abs(Date.parse(line.playedAt) - playedMs);
+    if (line.uid === uid && gap <= SAME_MATCH_WINDOW_MS) candidates.set(`${line.fingerprint}|${line.playedAt}`, { line, gap });
+  }
+
+  const nearest = Math.min(...[...candidates.values()].map(candidate => candidate.gap));
+  const best = [...candidates.values()].filter(candidate => candidate.gap === nearest);
+  return best.length === 1 ? best[0].line : null;
 }
 
 function checkRecorderTeam(lines: readonly ParticipantRow[], performance: JsonRecord | null): ReplayMatch['recorderTeam'] {
@@ -229,7 +252,7 @@ export function planReplay(
 
     const playedMs = Date.parse(match.playedAt);
     const known = groups.get(match.fingerprint) ?? [];
-    const group = known.find(candidate => Math.abs(candidate.playedMs - playedMs) <= SAME_MATCH_WINDOW_MS);
+    const group = nearestGroup(known, playedMs);
     if (!group) {
       groups.set(match.fingerprint, [...known, { playedMs, lines: null }]);
       return skipped(match, 'new');
@@ -242,6 +265,12 @@ export function planReplay(
 /** A planned match that touches no stored line, so there is nothing to compare. */
 function skipped(match: ReplayMatch, outcome: Outcome): PlannedMatch {
   return { match, outcome, agreed: 0, disagreed: 0, resultsFilled: 0, modeOrMapFilled: false };
+}
+
+/** The stored match of this roster nearest in time, within the repeat window. */
+function nearestGroup(groups: readonly MatchGroup[], playedMs: number): MatchGroup | undefined {
+  const inWindow = groups.filter(group => Math.abs(group.playedMs - playedMs) <= SAME_MATCH_WINDOW_MS);
+  return inWindow.sort((a, b) => Math.abs(a.playedMs - playedMs) - Math.abs(b.playedMs - playedMs))[0];
 }
 
 /** Stored lines grouped into matches: the lines of one upload share a fingerprint and a start time. */
@@ -285,6 +314,13 @@ function compareWithStored(
 /** The player a line belongs to, the way the SQL repeat branch pairs them: uid, else lower-cased name. */
 function lineKey(line: { uid: string | null; name: string | null }): string {
   return line.uid !== null ? `uid:${line.uid}` : `name:${(line.name ?? '').trim().toLowerCase()}`;
+}
+
+/** Matches given the `--before-first-half-season` label that were played before Season 9 began. */
+export function labelledBeforeSeason9(planned: readonly PlannedMatch[], label: number | null): PlannedMatch[] {
+  if (label === null) return [];
+  return planned.filter(item => item.match.halfSeason === label
+    && Date.parse(item.match.playedAt) < Date.parse(EARLIEST_BEFORE_FIRST_PLAY));
 }
 
 /** The recorder written on a replayed row: a marker, since the original recorder's hash is not stored. */

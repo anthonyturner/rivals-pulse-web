@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 import { parseParticipants, type JsonRecord } from '../supabase/functions/track-match-history/match-payload.ts';
 import {
   BACKFILL_RECORDER,
+  EARLIEST_BEFORE_FIRST_PLAY,
+  labelledBeforeSeason9,
   planReplay,
   placeInHalfSeason,
   prepareRecorderLine,
@@ -61,6 +63,20 @@ describe('rebuildUploadedMatch', () => {
       ['u3', 2, false],
       ['u4', 2, false],
     ]);
+  });
+
+  it('works when the roster uses camps 0 and 1 and the recorder is on camp 0', () => {
+    const zeroBased = trackedRow({
+      raw_payload: {
+        ...trackedRow().raw_payload,
+        match_players: roster().map(player => ({ ...player, camp: Number(player['camp']) - 1 })),
+      },
+      performance: { player_uid: 'u1', camp: 0, is_win: true },
+    });
+
+    const rows = parseParticipants(rebuildUploadedMatch(zeroBased));
+
+    assert.deepEqual(rows.map(row => [row.team, row.is_win]), [[0, true], [0, true], [1, false], [1, false]]);
   });
 
   it('turns a recorded loss into a win for the other team', () => {
@@ -179,6 +195,35 @@ describe('prepareRecorderLine', () => {
     );
   });
 
+  it('picks the stored match nearest in time when the recorder has two inside the window', async () => {
+    const exact = storedLine({ fingerprint: 'exact', playedAt: '2026-09-21T14:13:20.000Z' });
+    const earlier = storedLine({ fingerprint: 'earlier', playedAt: '2026-09-21T14:09:26.000Z' });
+
+    assert.equal((await prepareRecorderLine(noRoster(), [earlier, exact]))?.fingerprint, 'exact');
+    assert.equal((await prepareRecorderLine(noRoster(), [exact, earlier]))?.fingerprint, 'exact');
+  });
+
+  it('skips the row when two different stored matches are equally near', async () => {
+    const before = storedLine({ fingerprint: 'before', playedAt: '2026-09-21T14:11:20.000Z' });
+    const after = storedLine({ fingerprint: 'after', playedAt: '2026-09-21T14:15:20.000Z' });
+
+    assert.equal(await prepareRecorderLine(noRoster(), [before, after]), null);
+  });
+
+  it('counts the lines of one stored match as one candidate, not a tie', async () => {
+    const lines = [storedLine({ uid: 'u1' }), storedLine({ uid: 'u1', name: 'Alpha again' })];
+
+    assert.equal((await prepareRecorderLine(noRoster(), lines))?.fingerprint, 'stored-fingerprint');
+  });
+
+  it('reads a recorder on camp 0, which the game uses for the first team', async () => {
+    const row = noRoster({ performance: { player_uid: 'u1', camp: 0, is_win: false, kills: 1 } });
+
+    const match = await prepareRecorderLine(row, [storedLine()]);
+
+    assert.deepEqual(match?.lines.map(line => [line.team, line.is_win]), [[0, false]]);
+  });
+
   it('finds nothing when no stored match has the recorder within four minutes', async () => {
     const elsewhere = storedLine({ playedAt: '2026-09-21T14:19:00.000Z' });
     const otherPlayer = storedLine({ uid: 'u9' });
@@ -243,6 +288,16 @@ describe('planReplay', () => {
     assert.deepEqual(outcomes, ['repeat-existing', 'new']);
   });
 
+  it('compares with the nearest stored match when the same roster is stored twice inside the window', async () => {
+    const near = await matchAt(1_790_000_000);
+    const far = await matchAt(1_790_000_000 - 200);
+    const storedLines = [...stored(far, { isWin: false }), ...stored(near)];
+
+    const [planned] = planReplay([near], storedLines, new Set());
+
+    assert.deepEqual([planned.agreed, planned.disagreed], [4, 0]);
+  });
+
   it('calls a second upload of the same match within the run a repeat of the first', async () => {
     const first = await matchAt(1_790_000_000);
     const second = await matchAt(1_790_000_090);
@@ -304,6 +359,19 @@ describe('planReplay', () => {
     const outcomes = planReplay([frozen, unplaced], [], new Set([9.5])).map(planned => planned.outcome);
 
     assert.deepEqual(outcomes, ['frozen', 'unplaced']);
+  });
+});
+
+describe('labelledBeforeSeason9', () => {
+  it('finds matches given the label that were played before Season 9 began', async () => {
+    const early = { ...(await replayOf(trackedRow({ raw_payload: { ...trackedRow().raw_payload, match_time_stamp: 1_780_000_000 } }))), halfSeason: 9.5 };
+    const fine = { ...(await replayOf(trackedRow())), halfSeason: 9.5 };
+    const planned = planReplay([early, fine], [], new Set());
+
+    assert.ok(Date.parse(early.playedAt) < Date.parse(EARLIEST_BEFORE_FIRST_PLAY));
+    assert.deepEqual(labelledBeforeSeason9(planned, 9.5).map(item => item.match.rowId), [early.rowId]);
+    assert.deepEqual(labelledBeforeSeason9(planned, null), []);
+    assert.deepEqual(labelledBeforeSeason9(planned, 10), []);
   });
 });
 

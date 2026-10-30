@@ -7,8 +7,9 @@
  *   npm run backfill:participants -- --apply          replays for real
  *   --before-first-half-season=9.5                    half-season for matches older than every row of `half_seasons`
  *
- * It talks to the linked project through `npx supabase db query --linked`, the same read-only route
- * docs/supabase.md prescribes, so no service key is read or stored. The report names no player.
+ * It talks to the linked project through `npx supabase db query --linked`, the route
+ * docs/supabase.md prescribes for live checks (reads in a dry run, one write per half-season on
+ * --apply), so no service key is read or stored. The report names no player.
  * Run it after the hero aggregates (issue 142) are live: replayed rows of an ended half-season
  * are frozen into the aggregates, then deleted, by the purge.
  */
@@ -17,7 +18,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { planReplay, prepareRecorderLine, prepareReplay, replayStatement } from './participants-replay.ts';
+import { EARLIEST_BEFORE_FIRST_PLAY, labelledBeforeSeason9, planReplay, prepareRecorderLine, prepareReplay, replayStatement } from './participants-replay.ts';
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const PAGE_SIZE = 150;
@@ -100,11 +101,17 @@ Agreement with stored lines, matched by ${source}: ${repeats.length} repeat matc
   }
 
   const team = count(matches.filter(match => match.source === 'roster'), match => match.recorderTeam);
+  const tooOld = labelledBeforeSeason9(planned, options.beforeFirst).length;
+  if (tooOld > 0) console.log(`
+WARNING: ${tooOld} matches labelled ${options.beforeFirst} predate ${EARLIEST_BEFORE_FIRST_PLAY}; --apply will refuse.`);
+
   console.log(`
 Recorder line on the team the row stored (matches with a roster): ${formatCounts(team)}`);
 }
 
 function apply() {
+  const tooOld = labelledBeforeSeason9(planned, options.beforeFirst).length;
+  if (tooOld > 0) fail(`${tooOld} matches labelled ${options.beforeFirst} were played before ${EARLIEST_BEFORE_FIRST_PLAY}; the label is wrong for them`);
   const unplaced = planned.filter(item => item.outcome === 'unplaced').length;
   if (unplaced > 0) fail(`${unplaced} matches belong to no known half-season; pass --before-first-half-season (see the dry run)`);
 
