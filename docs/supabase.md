@@ -150,6 +150,27 @@ the service role reaches them.
 - A rebuild failing inside the purge would stop deletion, which is why the hourly job exercises the
   same code long before any half-season is due.
 
+## Backfilling participants from stored matches
+
+`npm run backfill:participants` replays the rows of `tracked_matches` through
+`parseParticipants`, `rosterFingerprint` and `record_match_participants` (issue 143), so the
+counting rules keep one owner. It reaches the linked project through `npx supabase db query
+--linked` and reads no service key. The default is a dry run that writes nothing and prints, per
+half-season, the matches, new against repeat, lines without a result and the agreement with the
+lines already stored. `-- --apply` replays for real, one transaction per half-season.
+
+- A stored row keeps its roster only when an older app uploaded it. A newer row (the upload
+  boundary of ADR-0011) keeps just the recorder's own line, so it is matched to the stored match
+  that player was in, and replayed under that fingerprint as a repeat: it fills the blank mode, map
+  and result and inserts nothing.
+- The recorder's team and win or loss are rebuilt from `performance`; the time is
+  `match_time_stamp`, not the upload-age rule of the live path.
+- A row with no season takes the latest `half_seasons` row that had started by its time. For a match
+  older than every row, pass `--before-first-half-season=<n>`.
+- Rows of an already frozen half-season are skipped, so a second run inserts nothing. A replayed row
+  of an ended half-season is counted by the aggregates, then frozen and deleted by the next purge.
+- Replayed rows carry the recorder marker `backfill-143`; the original hash is not stored.
+
 ## Each half-season
 
 Retention deletes a scoreboard row once the half-season after its own has
