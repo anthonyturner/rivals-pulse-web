@@ -67,7 +67,6 @@ Open `http://localhost:4200/`.
 | `npm.cmd run sync:official-heroes` | Refresh official descriptions, kits, and team-ups |
 | `npm.cmd run sync:tier-list` | Store the latest ranked tier-list snapshot |
 | `npm.cmd run sync:game-stats` | Capture the current hourly game-stat snapshot |
-| `npm.cmd run refresh:counters` | Rebuild curated hero counter mappings |
 | `npm.cmd run refresh:build-profiles` | Regenerate coach-rated hero build profiles |
 | `npm.cmd run content:update` | Run the complete seed and content refresh pipeline |
 

@@ -650,6 +650,10 @@ h3 {
   gap: 14px;
 }
 
+.matchup-row {
+  grid-template-columns: 1fr;
+}
+
 .detail-columns section,
 .matchup-row section {
   padding: 14px;
