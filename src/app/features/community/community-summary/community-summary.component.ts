@@ -27,8 +27,8 @@ export class CommunitySummaryComponent {
   readonly summary = input('');
   readonly halfSeasonLabel = input<string | null>(null);
   readonly notice = input<string | null>(null);
-  /** The full page this tab summarises. */
-  readonly link = input.required<CommunityEmptyStateLink>();
+  /** The full page this tab summarises, or null while no full page shows the same numbers. */
+  readonly link = input<CommunityEmptyStateLink | null>(null);
   /** A second page that holds the full numbers, when one page does not. */
   readonly secondLink = input<CommunityEmptyStateLink | null>(null);
 }

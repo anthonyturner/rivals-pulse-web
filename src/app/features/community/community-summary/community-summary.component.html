@@ -25,12 +25,14 @@
 
       <ng-content />
 
-      <p class="summary__links">
-        <a class="summary__link" [routerLink]="link().path">{{ link().label }}</a>
-        @if (secondLink(); as second) {
-          <a class="summary__link" [routerLink]="second.path">{{ second.label }}</a>
-        }
-      </p>
+      @if (link(); as full) {
+        <p class="summary__links">
+          <a class="summary__link" [routerLink]="full.path">{{ full.label }}</a>
+          @if (secondLink(); as second) {
+            <a class="summary__link" [routerLink]="second.path">{{ second.label }}</a>
+          }
+        </p>
+      }
     </section>
   }
 }

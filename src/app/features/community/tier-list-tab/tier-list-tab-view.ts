@@ -70,12 +70,6 @@ export function buildTierListTabView(
         .filter((tier) => tier.name === name)
         .flatMap((tier) => tier.heroes)
         .filter(isReadable)
-        .sort(
-          (a, b) =>
-            b.shrunkWinRate - a.shrunkWinRate ||
-            b.appearances - a.appearances ||
-            a.hero.localeCompare(b.hero),
-        )
         .map((line) => ({
           ...heroCell(line.hero, identities),
           figure: percentLabel(line.winRate),

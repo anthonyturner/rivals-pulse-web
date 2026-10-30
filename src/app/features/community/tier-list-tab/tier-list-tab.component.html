@@ -7,7 +7,6 @@
   [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
   [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
   [notice]="current.kind === 'ready' ? current.notice : null"
-  [link]="link"
 >
   @if (current.kind === 'ready') {
     <div class="tier-tab__tiers">

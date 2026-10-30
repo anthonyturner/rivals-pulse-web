@@ -27,6 +27,4 @@ export class TierListTabComponent {
 
     return buildTierListTabView(roster === undefined ? undefined : this.stats(), heroIdentities(roster ?? []));
   });
-
-  protected readonly link = { label: 'See the current tier list', path: '/tier-list' };
 }

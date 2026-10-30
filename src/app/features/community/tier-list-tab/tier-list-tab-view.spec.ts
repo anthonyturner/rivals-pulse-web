@@ -7,7 +7,7 @@ const identities: HeroIdentities = new Map([
 ]);
 
 const READY = statsOf([
-  { name: 'S', heroes: [statsHero('hela', 12, 11, 9, 'S'), statsHero('storm', 40, 33, 12, 'S')] },
+  { name: 'S', heroes: [statsHero('storm', 40, 33, 12, 'S'), statsHero('hela', 12, 11, 9, 'S')] },
   { name: 'A', heroes: [statsHero('hulk', 20, 13, 7, 'A')] },
   { name: 'B', heroes: [statsHero('thor', 20, 10, 7)] },
 ]);
@@ -18,7 +18,7 @@ describe('buildTierListTabView', () => {
     expect(buildTierListTabView(null, identities).kind).toBe('unavailable');
   });
 
-  it('lists the S and A tiers only, strongest shrunk win rate first, with win rate and pick rate', () => {
+  it('lists the S and A tiers only, in the order the hero stats give, with win rate and pick rate', () => {
     const view = buildTierListTabView(READY, identities);
 
     if (view.kind !== 'ready') {
