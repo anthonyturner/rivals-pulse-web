@@ -20,6 +20,8 @@ import { buildTierListView, seasonOptions, type SeasonOption } from './tier-list
 export class TierListPageComponent {
   private readonly heroStats = inject(HeroStatsService);
   private readonly chosenSeason = signal<number | undefined>(undefined);
+  /** True from choosing another half-season until its numbers arrive, so the last one's are not shown under the new label. */
+  private readonly pending = signal(false);
   /** Kept from the last answer, so the picker stays when a request for one half-season fails. */
   readonly seasons = signal<SeasonOption[]>([]);
   private readonly requested = new BehaviorSubject<number | undefined>(undefined);
@@ -27,7 +29,12 @@ export class TierListPageComponent {
   private readonly stats = toSignal(
     this.requested.pipe(
       switchMap((halfSeason) =>
-        this.heroStats.getHeroStats(halfSeason).pipe(tap((stats) => this.rememberSeasons(stats))),
+        this.heroStats.getHeroStats(halfSeason).pipe(
+          tap((stats) => {
+            this.rememberSeasons(stats);
+            this.pending.set(false);
+          }),
+        ),
       ),
     ),
   );
@@ -35,19 +42,26 @@ export class TierListPageComponent {
   private readonly identities = computed(() => heroIdentities(this.heroes() ?? []));
 
   /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
-  readonly loading = computed(() => this.stats() === undefined || this.heroes() === undefined);
-  readonly failed = computed(() => this.stats() === null);
+  readonly loading = computed(
+    () => this.stats() === undefined || this.heroes() === undefined || this.pending(),
+  );
+  readonly failed = computed(() => this.stats() === null && !this.pending());
   readonly view = computed(() => {
     const stats = this.stats();
 
     return stats && !this.loading() ? buildTierListView(stats, this.identities()) : null;
   });
+  /** Hidden until the first numbers are in, so it does not push the loading panel down when it appears. */
+  readonly showSeasonPicker = computed(
+    () => this.seasons().length > 1 && (this.view() !== null || this.failed() || this.pending()),
+  );
   readonly selectedSeason = computed(() => this.chosenSeason() ?? this.view()?.season?.id);
 
   chooseSeason(event: Event): void {
     const halfSeason = Number((event.target as HTMLSelectElement).value);
 
     this.chosenSeason.set(halfSeason);
+    this.pending.set(true);
     this.requested.next(halfSeason);
   }
 

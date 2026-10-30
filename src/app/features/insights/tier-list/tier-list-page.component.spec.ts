@@ -200,6 +200,12 @@ describe('TierListPageComponent', () => {
 
     select.value = '10';
     select.dispatchEvent(new Event('change'));
+    harness.detectChanges();
+
+    expect(page.querySelector('.tier-row')).toBeNull();
+    expect(page.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading the tier list');
+    expect(select.value).toBe('10');
+
     http.expectOne('/api/hero-stats?halfSeason=10').flush({ ...partial, halfSeason: previous });
     harness.detectChanges();
 

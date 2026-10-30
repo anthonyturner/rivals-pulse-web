@@ -145,6 +145,8 @@
 
 .usage-card--empty {
   display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: none;
   min-height: 140px;
   place-items: center;
   border-style: dashed;
@@ -173,4 +175,14 @@
   font-weight: 700;
   line-height: 1.5;
   text-align: center;
+}
+
+@media (max-width: 720px) {
+  .usage-card--empty {
+    min-height: 72px;
+  }
+
+  .usage-empty {
+    min-height: 96px;
+  }
 }

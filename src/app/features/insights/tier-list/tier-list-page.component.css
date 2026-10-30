@@ -4,8 +4,9 @@
   max-width: 100%;
 }
 
+/* Tall enough that the footer starts below the fold, so it does not jump when the numbers replace the loading panel. */
 .tier-page {
-  min-height: 100%;
+  min-height: 100vh;
   padding: 32px;
 }
 

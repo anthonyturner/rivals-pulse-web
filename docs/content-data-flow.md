@@ -177,6 +177,11 @@ They read the database through:
 src/content-database.ts
 ```
 
+`GET /api/content/status` includes `communityHeroStats: { status, halfSeason, inPlaceOf, matchesCounted, heroesPlaced }`,
+a summary of the Rivals Pulse hero numbers (`status` is `ready`, `not-enough-data` or `unavailable` when the
+aggregates cannot be read; `inPlaceOf` is set while the previous half-season stands in for the current one).
+It replaced the old tier-list counts.
+
 ### Angular Services
 
 Angular pages should not read Turso directly.
