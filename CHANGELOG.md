@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- The Community Matches tab shows win rate by map, the mix of game modes, average match length and matches per day, counted once per match and anonymous; each figure says "not enough data yet" until enough matches back it, and a new half-season shows the previous one, labelled, until it has enough ([#194](https://github.com/anthonyturner/rivals-pulse-web/pull/194)).
 - A Community page at `/community`, linked from the main menu, with a tab for each Rivals Pulse app screen (Heroes, Matches, Counters, Tier list, Stats and Insights); each tab explains what it will show and says "not enough data yet" until matches are uploaded ([#181](https://github.com/anthonyturner/rivals-pulse-web/pull/181)).
 - A privacy notes page at `/privacy`, linked from a new site footer, says which match fields the desktop app uploads (including the damage, healing, damage blocked, time per hero and kill-feed fields being added), that the site publishes only anonymous totals, and how long uploads are kept ([#182](https://github.com/anthonyturner/rivals-pulse-web/pull/182)).
 - Each hero page shows its win rate, pick rate, KDA and final hits from matches recorded by Rivals Pulse players, with the number of matches behind them; a hero without enough matches says "Not enough data yet" with its matches so far, and a new half-season shows the previous one, labelled, until it has enough ([#180](https://github.com/anthonyturner/rivals-pulse-web/pull/180)).
