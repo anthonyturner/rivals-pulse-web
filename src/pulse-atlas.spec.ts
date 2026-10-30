@@ -1,6 +1,7 @@
 import curatedHeroGameIds from '../data/pulse-atlas/hero-game-ids.json';
 import curatedHeroStyles from '../data/pulse-atlas/hero-styles.json';
 import {
+  assembleCommunityHeroStats,
   buildPulseAtlas,
   findHeroGameIdProblems,
   findHeroStyleProblems,
@@ -65,6 +66,44 @@ function tierList(heroesFor: (seasonId: number) => unknown[] = () => [heroRow()]
   };
 }
 
+/** A hero below the minimum: only its appearances, and a game id that heroes.json does not know. */
+const BELOW_MINIMUM_CELL = {
+  heroId: 1016,
+  appearances: 4,
+  enoughData: false,
+  winRate: null,
+  pickRate: null,
+  kda: null,
+  finalHitsAverage: null,
+};
+
+/** The hero-stats dataset as `assembleCommunityHeroStats` returns it, trimmed to Thor. */
+function heroStatsTable(seasonOverrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    provenance: PROVENANCE,
+    minimumMatches: 10,
+    currentSeasonId: 2,
+    seasons: [1, 2].map((id) => ({
+      id,
+      label: `Season ${id}`,
+      startTime: `2026-0${id}-01T00:00:00+00:00`,
+      decidedMatches: 40,
+      heroes: [
+        {
+          heroId: THOR_GAME_ID,
+          appearances: 30,
+          enoughData: true,
+          winRate: 66.666666,
+          pickRate: 75,
+          kda: 3.456789,
+          finalHitsAverage: 4.5,
+        },
+      ],
+      ...seasonOverrides,
+    })),
+  };
+}
+
 function validInputs(): PulseAtlasInput[] {
   return [
     { dataset: 'heroes', source: 'test', data: [{ id: 'thor', name: 'Thor' }] },
@@ -76,6 +115,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'glossary', source: 'test', data: [{ id: 'dive', term: 'Dive' }] },
     { dataset: 'maps', source: 'test', data: [{ id: 1032, name: 'Yggdrasill Path' }] },
     { dataset: 'hero-styles', source: 'test', data: [{ heroId: 'thor', poke: 10, dive: 20, brawl: 70 }] },
+    { dataset: 'hero-stats', source: 'test', data: heroStatsTable() },
     { dataset: 'hero-game-ids', source: 'test', data: [thorEntry] },
   ];
 }
@@ -101,6 +141,7 @@ describe('buildPulseAtlas', () => {
       'pulse-atlas/v1/glossary.json',
       'pulse-atlas/v1/maps.json',
       'pulse-atlas/v1/hero-styles.json',
+      'pulse-atlas/v1/hero-stats.json',
       'pulse-atlas/v1/tier-list/seasons/1.json',
       'pulse-atlas/v1/tier-list/seasons/2.json',
       'pulse-atlas/v1/manifest.json',
@@ -738,14 +779,14 @@ describe('communityHalfSeasonRequests and assembleCommunityTierList', () => {
   const assemble = (current = answer(NEW), rest = others, warn?: (warning: string) => void): Assembled =>
     assembleCommunityTierList(current, rest, GAME_IDS, warn) as Assembled;
 
-  it('asks for every started half-season but the current one', () => {
-    expect(communityHalfSeasonRequests(answer(NEW))).toEqual([10]);
+  it('asks for every started half-season, the current one included', () => {
+    expect(communityHalfSeasonRequests(answer(NEW))).toEqual([10, 10.5]);
   });
 
   it('counts the half-season the default answer stands in for as the current one', () => {
     const standingIn = answer(OLD, { inPlaceOf: NEW });
 
-    expect(communityHalfSeasonRequests(standingIn)).toEqual([10]);
+    expect(communityHalfSeasonRequests(standingIn)).toEqual([10, 10.5]);
     expect(assemble(standingIn).currentSeasonId).toBe(21);
   });
 
@@ -796,6 +837,20 @@ describe('communityHalfSeasonRequests and assembleCommunityTierList', () => {
 
     expect(data.seasons[1].ranks['99']['fallbackFromSeasonId']).toBe(20);
     expect(data.seasons[0].ranks['99']['fallbackFromSeasonId']).toBeUndefined();
+  });
+
+  it('keeps the stand-in snapshot when the exact answer for the current half-season has no placed hero', () => {
+    const noHeroYet = answer(NEW, { status: 'not-enough-data', tiers: [], matchesCounted: 3, belowMinimum: [] });
+    const asRequested = [
+      { halfSeason: 10, response: answer(OLD) },
+      { halfSeason: 10.5, response: noHeroYet },
+    ];
+    const data = assemble(answer(OLD, { inPlaceOf: NEW }), asRequested);
+    const current = data.seasons[1].ranks['99'];
+
+    expect(current['fallbackFromSeasonId']).toBe(20);
+    expect(current['matchesCounted']).toBe(40);
+    expect(JSON.stringify(current['tiers'])).toContain(String(THOR_GAME_ID));
   });
 
   it('keeps a half-season with no hero as an empty season rather than leaving it out', () => {
@@ -1256,5 +1311,351 @@ describe('verifyPulseAtlas', () => {
     );
 
     expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(/no pulse-atlas\/v1\/manifest\.json/);
+  });
+});
+
+describe('the hero-stats dataset', () => {
+  const published = (inputs = validInputs()): PulseAtlasFile[] => buildPulseAtlas(inputs, GENERATED_AT, fakeSha256);
+  const heroStatsOf = (files: PulseAtlasFile[]) =>
+    JSON.parse(files.find((file) => file.path === 'pulse-atlas/v1/hero-stats.json')?.content ?? 'null');
+  const withHeroStats = (data: unknown): PulseAtlasInput[] => withData('hero-stats', data);
+  const withCell = (cell: Record<string, unknown>): Record<string, unknown> => {
+    const table = heroStatsTable();
+    const [season] = table['seasons'] as { heroes: Record<string, unknown>[] }[];
+    season.heroes = [{ ...season.heroes[0], ...cell }];
+    return table;
+  };
+
+  it('is one file in the manifest, in the standard envelope, with the provenance at the top of data', () => {
+    const files = published();
+    const manifest = JSON.parse(files[files.length - 1].content);
+    const envelope = heroStatsOf(files);
+
+    expect(manifest.files.map((entry: { dataset: string }) => entry.dataset)).toContain('hero-stats');
+    expect(envelope.schemaVersion).toBe(1);
+    expect(envelope.source).toBe('test');
+    expect(Object.keys(envelope.data)).toEqual(['provenance', 'minimumMatches', 'currentSeasonId', 'seasons']);
+    expect(envelope.data.provenance).toBe(PROVENANCE);
+  });
+
+  it('keeps a cell to its seven allow-listed keys, rates to two decimals, cells in hero id order', () => {
+    const table = heroStatsTable();
+    const [season] = table['seasons'] as { heroes: unknown[] }[];
+    season.heroes.push(BELOW_MINIMUM_CELL);
+    season.heroes.reverse();
+
+    const [first, second] = heroStatsOf(published(withHeroStats(table))).data.seasons[0].heroes;
+
+    expect(second).toEqual({
+      heroId: THOR_GAME_ID,
+      appearances: 30,
+      enoughData: true,
+      winRate: 66.67,
+      pickRate: 75,
+      kda: 3.46,
+      finalHitsAverage: 4.5,
+    });
+    expect(Object.keys(second)).toEqual(['heroId', 'appearances', 'enoughData', 'winRate', 'pickRate', 'kda', 'finalHitsAverage']);
+    expect(first.heroId).toBe(1016);
+  });
+
+  it('flags a cell below the minimum and still carries its appearances', () => {
+    const table = heroStatsTable();
+    (table['seasons'] as { heroes: unknown[] }[])[0].heroes.push(BELOW_MINIMUM_CELL);
+
+    const [below] = heroStatsOf(published(withHeroStats(table))).data.seasons[0].heroes;
+
+    expect(below).toEqual(BELOW_MINIMUM_CELL);
+  });
+
+  it('is valid with no match at all: seasons with no hero and no decided match', () => {
+    const empty = heroStatsTable({ decidedMatches: 0, heroes: [] });
+    const files = published(withHeroStats(empty));
+
+    expect(heroStatsOf(files).data.seasons.map((season: { heroes: unknown[] }) => season.heroes)).toEqual([[], []]);
+    expect(() =>
+      verifyPulseAtlas(
+        files.map((file) => ({ path: file.path, content: file.content })),
+        fakeSha256,
+      ),
+    ).not.toThrow();
+  });
+
+  it('refuses a table without the community provenance, or with another one', () => {
+    const { provenance: _provenance, ...without } = heroStatsTable();
+
+    expect(() => published(withHeroStats(without))).toThrowError(/hero-stats: provenance must be "rivals-pulse-community"/);
+    expect(() => published(withHeroStats({ ...heroStatsTable(), provenance: 'rivalsmeta' }))).toThrowError(/provenance must be/);
+  });
+
+  describe('the allow-list and the privacy check', () => {
+    it('refuses a key the file does not publish, at the top, on a season and on a cell', () => {
+      const onSeason = heroStatsTable({ rank: 99 });
+      const onCell = withCell({ tier: 'S' });
+
+      expect(() => published(withHeroStats({ ...heroStatsTable(), source: 'x' }))).toThrowError(/the file has a key outside the allow-list: source/);
+      expect(() => published(withHeroStats(onSeason))).toThrowError(/season 1 has a key outside the allow-list: rank/);
+      expect(() => published(withHeroStats(onCell))).toThrowError(/season 1 hero 0 has a key outside the allow-list: tier/);
+    });
+
+    it('refuses player-level keys, however they are spelled', () => {
+      for (const key of ['player', 'playerName', 'account_id', 'uid_token', 'email', 'sessionId']) {
+        expect(() => published(withHeroStats(withCell({ [key]: 'x' })))).toThrowError(/hero-stats/);
+      }
+    });
+
+    it('refuses a value that looks like a credential', () => {
+      expect(() => published(withHeroStats(heroStatsTable({ label: 'sb_secret_abc' })))).toThrowError(/looks like a credential/);
+    });
+
+    it('publishes nothing but numbers, booleans and null in a cell, and only the season, count and time fields around them', () => {
+      const data = heroStatsOf(published()).data;
+      const keys = new Set<string>();
+      const walk = (value: unknown): void => {
+        if (Array.isArray(value)) {
+          value.forEach(walk);
+        } else if (value !== null && typeof value === 'object') {
+          Object.entries(value).forEach(([key, child]) => {
+            keys.add(key);
+            walk(child);
+          });
+        }
+      };
+      walk(data);
+
+      expect([...keys].sort()).toEqual(
+        [
+          'appearances', 'currentSeasonId', 'decidedMatches', 'enoughData', 'finalHitsAverage', 'heroId', 'heroes', 'id',
+          'kda', 'label', 'minimumMatches', 'pickRate', 'provenance', 'seasons', 'startTime', 'winRate',
+        ].sort(),
+      );
+      expect(JSON.stringify(data)).not.toMatch(/player|account|session|steam|email|token|secret|uid|rivalsmeta/i);
+    });
+  });
+
+  describe('a malformed table', () => {
+    it('refuses an empty season list, an unlisted current season and a season listed twice', () => {
+      expect(() => published(withHeroStats({ ...heroStatsTable(), seasons: [] }))).toThrowError(/non-empty seasons list/);
+      expect(() => published(withHeroStats({ ...heroStatsTable(), currentSeasonId: 9 }))).toThrowError(/currentSeasonId 9 is not one of the listed seasons/);
+
+      const twice = heroStatsTable();
+      (twice['seasons'] as { id: number }[])[1].id = 1;
+      expect(() => published(withHeroStats(twice))).toThrowError(/season 1 is listed more than once/);
+    });
+
+    it('refuses a minimum that is not a whole number above 0 and a decided-match count that is negative', () => {
+      expect(() => published(withHeroStats({ ...heroStatsTable(), minimumMatches: 0 }))).toThrowError(/minimumMatches must be a whole number above 0/);
+      expect(() => published(withHeroStats(heroStatsTable({ decidedMatches: -1 })))).toThrowError(/decidedMatches to be a non-negative whole number/);
+    });
+
+    it('refuses a cell whose enoughData disagrees with the minimum, in either direction', () => {
+      expect(() => published(withHeroStats(withCell({ appearances: 9 })))).toThrowError(/says enoughData true with 9 appearances and a minimum of 10/);
+      expect(() =>
+        published(withHeroStats(withCell({ appearances: 10, enoughData: false }))),
+      ).toThrowError(/says enoughData false with 10 appearances/);
+    });
+
+    it('refuses a cell with enough data but no win rate or pick rate', () => {
+      expect(() => published(withHeroStats(withCell({ winRate: null })))).toThrowError(/has enough data but no winRate and pickRate/);
+    });
+
+    it('refuses a rate that is negative, not finite or not a number, and a cell without a hero id', () => {
+      expect(() => published(withHeroStats(withCell({ kda: -1 })))).toThrowError(/kda to be a number of 0 or more, or null/);
+      expect(() => published(withHeroStats(withCell({ pickRate: Number.NaN })))).toThrowError(/pickRate to be a number/);
+      expect(() => published(withHeroStats(withCell({ winRate: '55' })))).toThrowError(/winRate to be a number/);
+      expect(() => published(withHeroStats(withCell({ heroId: 'thor' })))).toThrowError(/needs an integer heroId/);
+    });
+
+    it('refuses a hero listed twice in a season', () => {
+      const table = heroStatsTable();
+      const [season] = table['seasons'] as { heroes: Record<string, unknown>[] }[];
+      season.heroes.push({ ...season.heroes[0] });
+
+      expect(() => published(withHeroStats(table))).toThrowError(/season 1 lists heroId 1039 more than once/);
+    });
+  });
+
+  it('publishes a hero id that no hero in heroes.json has, with a warning', () => {
+    const warnings: string[] = [];
+    const table = heroStatsTable();
+    (table['seasons'] as { heroes: unknown[] }[])[0].heroes.push(BELOW_MINIMUM_CELL);
+
+    buildPulseAtlas(withHeroStats(table), GENERATED_AT, fakeSha256, [], (warning) => warnings.push(warning));
+
+    expect(warnings).toEqual([
+      'hero-stats: heroId 1016 is the gameId of no hero in heroes.json, so it is published without one to join to',
+    ]);
+  });
+
+  it('keeps the published bytes, and so the hash, when the table has not changed', () => {
+    const first = published();
+    const again = buildPulseAtlas(validInputs(), '2026-10-27T00:00:00.000Z', fakeSha256, first);
+    const path = 'pulse-atlas/v1/hero-stats.json';
+
+    expect(again.find((file) => file.path === path)).toEqual(first.find((file) => file.path === path));
+  });
+
+  it('fails verification when the written file lost its provenance', () => {
+    const files = published().map((file) =>
+      file.path === 'pulse-atlas/v1/hero-stats.json'
+        ? { ...file, content: file.content.replace('"provenance":"rivals-pulse-community",', '') }
+        : file,
+    );
+
+    expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(/hero-stats/);
+  });
+});
+
+describe('assembleCommunityHeroStats', () => {
+  interface StatsSeason {
+    id: number;
+    label: string;
+    startsAt: string;
+    endsAt: string | null;
+  }
+
+  const OLD: StatsSeason = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
+  const NEW: StatsSeason = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
+  const GAME_IDS = [thorEntry, DEADPOOL, { id: 'loki', gameId: 1016 }];
+
+  const placed = (hero: string, appearances: number, wins: number) => ({
+    hero,
+    tier: 'S',
+    appearances,
+    wins,
+    winRate: (wins / appearances) * 100,
+    pickRate: (appearances / 40) * 100,
+    shrunkWinRate: 60,
+    kda: 3.5,
+    finalHitsAverage: null,
+  });
+
+  /** A `/api/hero-stats` answer: `shown` is the half-season the numbers are from. */
+  function answer(shown: StatsSeason | null, extra: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      status: shown ? 'ready' : 'not-enough-data',
+      minimumMatches: 10,
+      halfSeasons: [OLD, NEW],
+      halfSeason: shown,
+      inPlaceOf: null,
+      matchesCounted: 40,
+      tiers: shown ? [{ name: 'S', heroes: [placed('thor', 30, 20), placed('deadpool', 12, 6)] }] : [],
+      belowMinimum: [{ hero: 'loki', appearances: 4 }],
+      ...extra,
+    };
+  }
+
+  const exact = [
+    { halfSeason: 10, response: answer(OLD) },
+    { halfSeason: 10.5, response: answer(NEW) },
+  ];
+
+  interface Assembled {
+    provenance: string;
+    minimumMatches: number;
+    currentSeasonId: number;
+    seasons: { id: number; label: string; decidedMatches: number; startTime?: string; endTime?: string; heroes: Record<string, unknown>[] }[];
+  }
+
+  const assemble = (current = answer(NEW), answers = exact, warn?: (warning: string) => void): Assembled =>
+    assembleCommunityHeroStats(current, answers, GAME_IDS, warn) as Assembled;
+
+  it('makes a season of each half-season, with the id twice the half-season number and the matches it counted', () => {
+    const data = assemble();
+
+    expect(data.provenance).toBe(PROVENANCE);
+    expect(data.minimumMatches).toBe(10);
+    expect(data.currentSeasonId).toBe(21);
+    expect(data.seasons.map(({ id, label, decidedMatches }) => ({ id, label, decidedMatches }))).toEqual([
+      { id: 20, label: 'Season 10', decidedMatches: 40 },
+      { id: 21, label: 'Season 10.5', decidedMatches: 40 },
+    ]);
+    expect(data.seasons[0].endTime).toBe('2026-10-09T09:00:00Z');
+    expect(data.seasons[1].endTime).toBeUndefined();
+  });
+
+  it('gives a hero with enough data its numbers, and one below the minimum only its appearances', () => {
+    const [thor, deadpool, loki] = assemble().seasons[1].heroes;
+
+    expect(thor).toEqual({
+      heroId: THOR_GAME_ID,
+      appearances: 30,
+      enoughData: true,
+      winRate: (20 / 30) * 100,
+      pickRate: 75,
+      kda: 3.5,
+      finalHitsAverage: null,
+    });
+    expect(deadpool['heroId']).toBe(1057);
+    expect(loki).toEqual({
+      heroId: 1016,
+      appearances: 4,
+      enoughData: false,
+      winRate: null,
+      pickRate: null,
+      kda: null,
+      finalHitsAverage: null,
+    });
+  });
+
+  it("uses the current half-season's own answer even when the default answer shows the previous one", () => {
+    const standingIn = answer(OLD, { inPlaceOf: NEW });
+    const emptyNew = answer(NEW, { tiers: [], belowMinimum: [], matchesCounted: 0 });
+    const data = assemble(standingIn, [exact[0], { halfSeason: 10.5, response: emptyNew }]);
+
+    expect(data.currentSeasonId).toBe(21);
+    expect(data.seasons[1].heroes).toEqual([]);
+    expect(data.seasons[1].decidedMatches).toBe(0);
+  });
+
+  it('is valid, and passes the gate, with zero matches in every half-season', () => {
+    const none = (shown: StatsSeason) => answer(shown, { status: 'not-enough-data', tiers: [], belowMinimum: [], matchesCounted: 0 });
+    const data = assemble(none(NEW), [
+      { halfSeason: 10, response: none(OLD) },
+      { halfSeason: 10.5, response: none(NEW) },
+    ]);
+
+    expect(data.seasons.map((season) => season.heroes)).toEqual([[], []]);
+    expect(() => buildPulseAtlas(withData('hero-stats', data), GENERATED_AT, fakeSha256)).not.toThrow();
+  });
+
+  it('builds a table the gate accepts, on the real shape', () => {
+    expect(() => buildPulseAtlas(withData('hero-stats', assemble()), GENERATED_AT, fakeSha256)).not.toThrow();
+  });
+
+  it('leaves out a hero with no game id, and says which', () => {
+    const warnings: string[] = [];
+    const data = assembleCommunityHeroStats(answer(NEW), exact, [thorEntry], (warning) => warnings.push(warning)) as Assembled;
+
+    expect(data.seasons[1].heroes.map((hero) => hero['heroId'])).toEqual([THOR_GAME_ID]);
+    expect(warnings.sort()).toEqual([
+      'deadpool: no gameId in hero-game-ids.json, so the hero is left out of hero-stats',
+      'loki: no gameId in hero-game-ids.json, so the hero is left out of hero-stats',
+    ]);
+  });
+
+  it('fails when the answer for a half-season is missing, is for another one, or stands in for it', () => {
+    expect(() => assemble(answer(NEW), [exact[0]])).toThrowError(/hero-stats\?halfSeason=10.5 is not the hero-stats shape/);
+    expect(() => assemble(answer(NEW), [exact[0], { halfSeason: 10.5, response: answer(OLD) }])).toThrowError(
+      /answered for half-season 10, not 10.5/,
+    );
+    expect(() => assemble(answer(NEW), [exact[0], { halfSeason: 10.5, response: answer(OLD, { inPlaceOf: NEW }) }])).toThrowError(
+      /answered for half-season 10 in place of 10.5, not 10.5/,
+    );
+  });
+
+  it('fails when the API answers with the shape from before a hero carried its KDA', () => {
+    const { kda: _kda, ...noKda } = placed('thor', 30, 20);
+
+    expect(() =>
+      assemble(
+        answer(NEW),
+        [exact[0], { halfSeason: 10.5, response: answer(NEW, { tiers: [{ name: 'S', heroes: [noKda] }] }) }],
+      ),
+    ).toThrowError(/kda is not a number/);
+  });
+
+  it('fails when the API lists no half-season yet', () => {
+    expect(() => assemble(answer(null, { halfSeasons: [] }), [])).toThrowError(/no half-season yet/);
   });
 });
