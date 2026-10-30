@@ -5,6 +5,32 @@ export type SupabaseReadEnv = Readonly<Record<string, string | undefined>>;
 const READ_TIMEOUT_MS = 5000;
 
 /**
+ * PostgREST answers 404 with `PGRST202` for a function that is not in the database, and a missing
+ * table or function inside a query comes back as Postgres `42P01` or `42883`.
+ */
+const NOT_DEPLOYED_CODES: readonly string[] = ['PGRST202', '42P01', '42883'];
+
+/** A refused call. It keeps the status and the error code, never the response body or the key. */
+export class SupabaseFunctionError extends Error {
+  constructor(
+    readonly functionName: string,
+    readonly status: number,
+    readonly code?: string,
+  ) {
+    super(`${functionName} answered ${status}`);
+    this.name = 'SupabaseFunctionError';
+  }
+}
+
+/** True when the function, or a table it reads, is not in the database yet: the migration is not applied. */
+export function isNotDeployedError(error: unknown): boolean {
+  return (
+    error instanceof SupabaseFunctionError &&
+    (error.status === 404 || (error.code !== undefined && NOT_DEPLOYED_CODES.includes(error.code)))
+  );
+}
+
+/**
  * Calls one Postgres function over PostgREST (Supabase's REST layer) with the publishable key and
  * returns its JSON answer. The aggregate functions are the only thing that key can reach: the
  * aggregate tables themselves have no grant, so a leaked key reads nothing it should not.
@@ -35,10 +61,22 @@ export async function callSupabaseFunction(
   });
 
   if (!response.ok) {
-    throw new Error(`${functionName} answered ${response.status}`);
+    throw new SupabaseFunctionError(functionName, response.status, await errorCodeOf(response));
   }
 
   return response.json();
+}
+
+async function errorCodeOf(response: Response): Promise<string | undefined> {
+  try {
+    const body: unknown = await response.json();
+    const code = isRecord(body) ? body['code'] : undefined;
+
+    return typeof code === 'string' ? code : undefined;
+  } catch {
+    // An error body that is not JSON has no code; the status alone is reported.
+    return undefined;
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
