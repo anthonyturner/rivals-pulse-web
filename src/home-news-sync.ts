@@ -43,7 +43,8 @@ type DashboardSection = {
 };
 
 type SeasonDashboardContent = {
-  heroUsage: DashboardSection;
+  /** Its description is written by the site, which knows what its numbers cover. */
+  heroUsage: Omit<DashboardSection, 'description'>;
   officialUpdates: DashboardSection;
   events: DashboardSection & { sourceLabel: string; sourceUrl: string };
 };
@@ -285,8 +286,6 @@ function buildSeasonDashboardContent(
     heroUsage: {
       eyebrow: `${battlePass.currentSeason} meta`,
       title: 'Most-used heroes',
-      description:
-        'All-ranks pick rate, with mirror matches excluded from win-rate calculations.',
     },
     officialUpdates: {
       eyebrow: 'Official updates',

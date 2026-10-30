@@ -9,7 +9,6 @@ import {
   getHeroesFromDatabase,
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
-  getTierListFromDatabase,
 } from '../src/content-database.js';
 import { getCommunityInsights } from '../src/community-insights-read.js';
 import { getHeroMatchups } from '../src/hero-matchups-read.js';
@@ -17,7 +16,6 @@ import { getHeroStats, halfSeasonFromQuery } from '../src/hero-stats-read.js';
 import gameStatsHandler from './game-stats.js';
 import gameStatsSyncHandler from './sync/game-stats.js';
 import homeNewsSyncHandler from './sync/home-news.js';
-import tierListSyncHandler from './sync/tier-list.js';
 
 type VercelRequest = IncomingMessage & {
   query?: {
@@ -60,21 +58,6 @@ export default async function handler(req: VercelRequest, res: ServerResponse) {
 
     if (route === 'sync/home-news') {
       await homeNewsSyncHandler(req, res);
-      return;
-    }
-
-    if (route === 'sync/tier-list') {
-      await tierListSyncHandler(req, res);
-      return;
-    }
-
-    if (route === 'tier-list') {
-      const url = new URL(req.url ?? '/', 'https://local.invalid');
-      const season = url.searchParams.get('season');
-      const rank = url.searchParams.get('rank') ?? '5+';
-      const seasonId = season ? Number(season) : undefined;
-
-      sendJson(res, 200, await getTierListFromDatabase(Number.isFinite(seasonId) ? seasonId : undefined, rank) ?? null);
       return;
     }
 

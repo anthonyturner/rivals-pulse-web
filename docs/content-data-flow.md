@@ -23,7 +23,7 @@ There are three separate jobs in the content system.
 | Job | What It Does | Main Files |
 | --- | --- | --- |
 | Seed | Copies local JSON data into Turso, and the home page seeds into Supabase | `scripts/seed-sqlite.mjs`, `scripts/seed-home-content.mjs` |
-| Sync | Fetches outside data from official, stats, and Fandom/wiki sources | `scripts/sync-external-sources.mjs`, `scripts/sync-home-news.mjs`, `scripts/sync-tier-list.mjs` |
+| Sync | Fetches outside data from official, stats, and Fandom/wiki sources | `scripts/sync-external-sources.mjs`, `scripts/sync-home-news.mjs` |
 | Hero Sync | Finds current Fandom heroes and updates the heroes in Supabase | `scripts/sync-heroes.mjs` |
 | Read | Lets Angular pages get data from Turso | `src/server.ts`, `src/content-database.ts` |
 
@@ -177,6 +177,11 @@ They read the database through:
 src/content-database.ts
 ```
 
+`GET /api/content/status` includes `communityHeroStats: { status, halfSeason, inPlaceOf, matchesCounted, heroesPlaced }`,
+a summary of the Rivals Pulse hero numbers (`status` is `ready`, `not-enough-data` or `unavailable` when the
+aggregates cannot be read; `inPlaceOf` is set while the previous half-season stands in for the current one).
+It replaced the old tier-list counts.
+
 ### Angular Services
 
 Angular pages should not read Turso directly.
@@ -239,25 +244,28 @@ Already database-backed:
 
 - Heroes page
 - Glossary page
-- Home page most-used heroes, official updates, latest tuning, and events/rewards
+- Home page official updates, latest tuning, and events/rewards
+- Tier list, home most-used heroes and the season glance dates, from Rivals Pulse players' matches
 
 ```mermaid
 flowchart LR
   Official["Official Marvel Rivals site"] --> HomeSync["Daily home news sync"]
-  Stats["Rivals Meta"] --> TierSync["6-hour tier-list sync"]
+  Matches["Matches Rivals Pulse players record"] --> Aggregates["Supabase hero aggregates"]
   HomeSync --> Supabase["Supabase home content"]
-  TierSync --> DB["Turso cached content"]
   Supabase --> HomeApi["/api/home/content"]
-  DB --> TierApi["/api/tier-list"]
+  Aggregates --> StatsApi["/api/hero-stats"]
   HomeApi --> HomePage["Home Page"]
-  TierApi --> HomePage
+  StatsApi --> HomePage
+  StatsApi --> TierPage["Tier list page"]
 ```
 
 The season dashboard and season glance render only content returned by `/api/home/content` and
-`/api/tier-list`; neither contains local content fallbacks.
-`SeasonGlanceService` composes the cached official content for the glance component, while
-`SeasonDashboardService` composes cached official content with the tier-list endpoint for the
-dashboard component. `HomePageComponent` only composes those components and owns video behavior.
+`/api/hero-stats`; neither contains local content fallbacks. Every hero number on the site is a
+Rivals Pulse number: no third-party source is read, and below the minimum sample a page shows
+"not enough data yet". `SeasonGlanceService` composes the cached official content with the
+half-season dates for the glance component (the end is the next half-season's start, otherwise
+"ongoing"), while `SeasonDashboardService` composes cached official content with the hero stats
+for the dashboard component. `HomePageComponent` only composes those components and owns video behavior.
 
 That would make the home page use the same database-backed flow as the rest of the site.
 

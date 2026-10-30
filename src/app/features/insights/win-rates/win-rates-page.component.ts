@@ -4,13 +4,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 
 import { HeroDataService } from '../../heroes/hero-data.service';
+import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
 import { heroIdentities } from '../hero-identity';
 import { buildWinRatesView } from './win-rates-view';
 
 @Component({
   selector: 'app-win-rates-page',
-  imports: [RouterLink],
+  imports: [RouterLink, HeroProgressListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './win-rates-page.component.html',
   styleUrl: './win-rates-page.component.css',

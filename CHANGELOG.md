@@ -38,6 +38,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The tier list, the home page's most-used heroes and the season dashboard now show numbers from matches that Rivals Pulse players record, each labelled "Based on Rivals Pulse players" with the matches behind it, and say "Not enough data yet" (with progress toward 10 appearances) until a hero has enough; the tier list drops the rank picker and the Ban column, and the season picker lists every half-season that has started. The season glance dates come from the half-season start dates and end with "ongoing" for the current one ([#196](https://github.com/anthonyturner/rivals-pulse-web/pull/196)).
 - The Hero Counters page and the Dive Response Planner now come from matches that Rivals Pulse players record: each card shows how often a hero won against another, with the matches behind it, and says "Not enough data yet" until a pairing has 10 matches. A hero page shows the same records in place of its old counters list, below its community stats ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
 - The win-rate page at `/win-rates` now shows each hero's win rate and appearances from matches that Rivals Pulse players record, for one half-season, with "not enough data yet" until a hero has 10 appearances and a plain empty state while no matches are counted. It drops the rank breakdowns, because Rivals Pulse has no rank data, and old season addresses such as `/win-rates/9` now say the page shows only the current half-season instead of showing a Season 9 report ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).
 - The Pulse Atlas tier list no longer names or links Rivals Meta, so the overlay can bundle the file without naming that site ([#138](https://github.com/anthonyturner/rivals-pulse-web/pull/138)).
@@ -53,6 +54,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Removed
 
+- The Rivals Meta tier-list sync (the six-hourly job, `npm run sync:tier-list`, `/api/sync/tier-list` and `/api/tier-list`) and every page, label and link that named Rivals Meta; `/api/content/status` now reports `communityHeroStats` in place of the tier-list counts ([#196](https://github.com/anthonyturner/rivals-pulse-web/pull/196)).
 - The counter picks copied from Rivals Meta, with the script that refreshed them (`npm run refresh:counters`) and the hand-written reasons that went with them ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
 - The Season 9 Week 1 and Week 2 win-rate reports, which were built from YouTube video transcripts, and the win-rate summaries they added to each hero record; the featured slide on the home page now points to the new win-rate page ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).
 
