@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+  assembleCommunityHeroStats,
   assembleCommunityTierList,
   buildPulseAtlas,
   communityHalfSeasonRequests,
@@ -46,9 +47,16 @@ const warn = (message) => console.warn(process.env.GITHUB_ACTIONS ? `::warning::
 
 const heroGameIds = JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-game-ids.json'), 'utf8'));
 
+// One /api/hero-stats read feeds both community datasets, so they describe the same moment.
+const heroStatsAnswers = await fetchHeroStatsAnswers();
+
 const live = [
   { dataset: 'heroes', source: API_SOURCE_LABEL, data: await fetchJson(`${apiBase}/heroes`) },
-  { dataset: 'tier-list', source: HERO_STATS_SOURCE_LABEL, data: await fetchTierList() },
+  {
+    dataset: 'tier-list',
+    source: HERO_STATS_SOURCE_LABEL,
+    data: assembleCommunityTierList(heroStatsAnswers.current, heroStatsAnswers.exact, heroGameIds, warn),
+  },
   { dataset: 'glossary', source: API_SOURCE_LABEL, data: await fetchJson(`${apiBase}/glossary`) },
   {
     dataset: 'maps',
@@ -59,6 +67,11 @@ const live = [
     dataset: 'hero-styles',
     source: HERO_STYLES_SOURCE_LABEL,
     data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-styles.json'), 'utf8')),
+  },
+  {
+    dataset: 'hero-stats',
+    source: HERO_STATS_SOURCE_LABEL,
+    data: assembleCommunityHeroStats(heroStatsAnswers.current, heroStatsAnswers.exact, heroGameIds, warn),
   },
   {
     // Merged into heroes.json as each hero's gameId; not a published file of its own.
@@ -141,18 +154,19 @@ async function fetchJson(url) {
   throw new Error(`Could not fetch ${url}: ${lastError}`);
 }
 
-// The community tier list is built from the site's own hero stats, never from another site. The
+// The community datasets are built from the site's own hero stats, never from another site. The
 // default answer is the current half-season and lists every half-season that has started; one more
-// request per other half-season collects its own numbers, so nothing here names a season.
-async function fetchTierList() {
+// request per half-season, the current one included, collects its own exact numbers, so nothing
+// here names a season.
+async function fetchHeroStatsAnswers() {
   const current = await fetchJson(`${apiBase}/hero-stats`);
-  const others = [];
+  const exact = [];
 
   for (const halfSeason of communityHalfSeasonRequests(current)) {
-    others.push({ halfSeason, response: await fetchJson(`${apiBase}/hero-stats?halfSeason=${halfSeason}`) });
+    exact.push({ halfSeason, response: await fetchJson(`${apiBase}/hero-stats?halfSeason=${halfSeason}`) });
   }
 
-  return assembleCommunityTierList(current, others, heroGameIds, warn);
+  return { current, exact };
 }
 
 // What is published right now, so unchanged datasets and tier-list seasons keep
@@ -205,6 +219,9 @@ function toSample(input, sampleHeroIds) {
         return data.filter((entry) => sampleHeroIds.includes(entry.heroId));
       case 'glossary':
         return data.slice(0, 3);
+      case 'hero-stats':
+        // The same two seasons as the tier list, with two heroes each.
+        return trimHeroStats(data);
       case 'tier-list': {
         // The current season and the one before it, so the sample shows the index
         // entry with ranks next to one without.
@@ -233,6 +250,25 @@ function toSample(input, sampleHeroIds) {
   };
 
   return { ...input, source: SAMPLE_SOURCE_LABEL, data: sampleOf(input.data) };
+}
+
+// One cell with enough data and one without, so the sample shows both.
+function sampleCells(cells) {
+  return [cells.find((cell) => cell.enoughData), cells.find((cell) => !cell.enoughData)]
+    .filter((cell) => cell !== undefined)
+    .sort((a, b) => a.heroId - b.heroId);
+}
+
+function trimHeroStats(data) {
+  const current = data.seasons.findIndex((season) => season.id === data.currentSeasonId);
+
+  return {
+    ...data,
+    seasons: data.seasons.slice(Math.max(0, current - 1), current + 1).map((season) => ({
+      ...season,
+      heroes: sampleCells(season.heroes),
+    })),
+  };
 }
 
 function trimSlashes(url) {
