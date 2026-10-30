@@ -47,7 +47,7 @@ describe('TierListTabComponent', () => {
     await answer(READY);
   });
 
-  it('lists the S and A tiers only and links out to no page', async () => {
+  it('lists the S and A tiers only and does not link to the tier list page, which still shows other data', async () => {
     await answer(READY);
 
     expect(Array.from(host().querySelectorAll('h3')).map((heading) => heading.textContent?.trim())).toEqual([
@@ -59,7 +59,7 @@ describe('TierListTabComponent', () => {
     expect(text()).toContain('Hela');
     expect(text()).not.toContain('Thor');
     expect(text()).not.toMatch(/NaN|undefined|null/);
-    expect(host().querySelector('a')).toBeNull();
+    expect(Array.from(host().querySelectorAll('a')).map((anchor) => anchor.getAttribute('href'))).not.toContain('/tier-list');
   });
 
   it('shows the designed empty state, with the minimum named, when no hero is placed', async () => {
