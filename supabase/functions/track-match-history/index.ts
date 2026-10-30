@@ -183,18 +183,20 @@ async function recordExtendedUpload(
   supabase: ReturnType<typeof createClient>,
   match: { fingerprint: string; playedAt: string; extended: ExtendedUpload },
 ): Promise<{ hero_figures: number; hero_kills: number } | null> {
-  const { data, error } = await supabase.rpc('record_match_extras', {
-    p_fingerprint: match.fingerprint,
-    p_played_at: match.playedAt,
-    p_recorder_uid: match.extended.recorder_uid,
-    p_hero_figures: match.extended.hero_figures,
-    p_hero_kills: match.extended.hero_kills,
-  });
-  if (error) {
+  try {
+    const { data, error } = await supabase.rpc('record_match_extras', {
+      p_fingerprint: match.fingerprint,
+      p_played_at: match.playedAt,
+      p_recorder_uid: match.extended.recorder_uid,
+      p_hero_figures: match.extended.hero_figures,
+      p_hero_kills: match.extended.hero_kills,
+    });
+    if (error) throw error;
+    return data as { hero_figures: number; hero_kills: number };
+  } catch (error) {
     console.error(`Extended upload not stored: ${getErrorMessage(error)}`);
     return null;
   }
-  return data as { hero_figures: number; hero_kills: number };
 }
 
 /**
