@@ -51,6 +51,7 @@ repo's build. This is a move, not a redesign.
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
 | `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content, moved from Turso) |
 | `20261030060507_home_content_data.sql` | The one-off copy of the Turso home rows, and the home news sync's `external_sources` snapshot, into those tables |
+| `20261030130000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 
 Link once per machine, check history, then apply:
 
@@ -264,12 +265,59 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.
 
-## Each half-season
+## Community match aggregates
 
-Retention deletes a scoreboard row once the half-season after its own has
-ended. It needs to know when each half-season started. Add a row on the day a
-new one begins, from the tier-list site:
+The Community Matches tab (issue 172) reads its own anonymous counts, kept apart from the hero
+aggregates so a change to one cannot break the other. The four tables have RLS on and no policy,
+nothing for `anon` or `authenticated`, and hold counts only: no uid, name, fingerprint or per-player
+row.
 
+- `community_map_aggregates` per half-season, mode and map: matches, matches with a known result, wins.
+- `community_mode_aggregates` per half-season and mode: matches, and the summed match length with the
+  count of matches it was summed over (a match with no length is never averaged in as zero).
+- `community_day_aggregates` per half-season and UTC day: matches.
+- A match is its roster fingerprint plus its start time, so a match recorded by two players counts once.
+- The result of a match is read from the recorder's side. The recorder's line in `participants` is
+  found by their in-game uid (inside the function only, never stored) and their own win or loss and
+  the match length come from the matching `tracked_matches` row, within the four minutes that count as
+  one match. When recorders on both teams uploaded the match, the earliest upload is the one that
+  counts, so a match is never both a win and a loss. A match with no such row still counts as a match
+  but is left out of win rates and averages.
+- `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
+  frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
+  half-season a week after the next one began (uploads are refused once a match is a week old), or
+  when its oldest raw row is five months old, ahead of the purge's six-month limit. A frozen
+  half-season is never rebuilt, and `purge_expired_participants()` is not touched: it deletes only
+  after the next half-season has ended, long after this freeze.
+- `read_community_matches()` returns one jsonb value of counts and half-season start dates and is
+  granted to `service_role` only. The server calls it through the shared client
+  ([`src/community-matches-read.ts`](../src/community-matches-read.ts)) and derives every rate, share
+  and average in [`src/community-matches.ts`](../src/community-matches.ts); until the migration is
+  applied the call fails with a "function not found" error, which the server turns into the empty
+  state.
+- `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
+  `COMMUNITY_MATCHES_MINIMUMS`): 20 matches in the half-season for the mode mix and matches per day,
+  10 matches with a result for a map's win rate, 10 matches with a length for an average. While the
+  current half-season is below 20 matches and the previous one is not, the previous one is returned
+  with `inPlaceOf` naming the current one.
+
+After applying the migration, compare the tables with a direct count (replace `10.5` as needed); the
+two matches columns must agree, and a second `select public.recompute_community_match_aggregates();`
+must leave the checksum unchanged:
+
+```sql
+select (select count(*) from (select distinct fingerprint, played_at
+          from public.participants where half_season = 10.5) x) as direct_matches,
+       (select coalesce(sum(matches), 0) from public.community_mode_aggregates
+          where half_season = 10.5) as aggregated_matches,
+       (select coalesce(sum(matches), 0) from public.community_day_aggregates
+          where half_season = 10.5) as aggregated_days;
+
+select md5(string_agg(r, '|' order by r)) as checksum from (
+  select 'm' || to_jsonb(a)::text as r from public.community_map_aggregates a
+  union all select 'o' || to_jsonb(a)::text from public.community_mode_aggregates a
+  union all select 'd' || to_jsonb(a)::text from public.community_day_aggregates a
+) t;
 ```sql
 insert into public.half_seasons (half_season, starts_at)
 values (11.0, '2026-11-13T09:00:00Z')
