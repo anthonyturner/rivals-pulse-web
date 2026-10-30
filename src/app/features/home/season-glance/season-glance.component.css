@@ -27,12 +27,14 @@
   text-transform: uppercase;
 }
 
-.season-glance .newest-hero-card {
+.season-glance .newest-hero-card,
+.season-glance .top-pick-card {
   grid-template-columns: 72px minmax(0, 1fr);
   align-items: center;
 }
 
-.newest-hero-card img {
+.newest-hero-card img,
+.top-pick-card img {
   width: 72px;
   aspect-ratio: 1;
   border-radius: 8px;
@@ -41,7 +43,8 @@
   background: #07111f;
 }
 
-.newest-hero-card div {
+.newest-hero-card div,
+.top-pick-card div {
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -77,4 +80,13 @@
   .season-glance {
     grid-template-columns: 1fr;
   }
+}
+
+/* The gold edge the design gives the top pick, to set it apart from the hero card. */
+.season-glance .top-pick-card {
+  border-color: rgba(255, 210, 77, 0.45);
+}
+
+.season-glance .top-pick-card > span {
+  color: var(--gold);
 }
