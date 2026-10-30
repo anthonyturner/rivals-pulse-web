@@ -16,5 +16,5 @@ export class HeroCommunityStatsComponent {
   /** `undefined` while loading, `null` when the stats could not be read. */
   readonly stats = input<HeroStats | null | undefined>(undefined);
 
-  protected readonly view = computed(() => buildHeroCommunityStatsView(this.stats(), this.heroId()));
+  protected readonly view = computed(() => buildHeroCommunityStatsView(this.stats(), this.heroId(), this.heroName()));
 }

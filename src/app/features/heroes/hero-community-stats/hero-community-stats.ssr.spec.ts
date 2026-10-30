@@ -10,6 +10,7 @@ import { HeroCommunityStatsComponent } from './hero-community-stats.component';
 const emptyDataset: HeroStats = {
   status: 'not-enough-data',
   minimumMatches: 10,
+  halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,
   matchesCounted: 0,
@@ -61,7 +62,7 @@ describe('HeroCommunityStatsComponent server render', () => {
     );
 
     expect(html).toContain('Not enough data yet');
-    expect(html).toContain('No match recorded by Rivals Pulse players has Storm yet');
+    expect(html).toContain('No match recorded by Rivals Pulse players has Storm yet.');
     expect(html).toContain('Rivals Pulse players');
     expect(html).not.toMatch(/NaN|Infinity|<dl/);
   });
@@ -73,8 +74,12 @@ function restoreGlobals(before: ReadonlyMap<PropertyKey, PropertyDescriptor>): v
 
     if (original === undefined) {
       Reflect.deleteProperty(globalThis, key);
-    } else if (Object.getOwnPropertyDescriptor(globalThis, key)?.value !== original.value) {
+    } else if (!sameDescriptor(Object.getOwnPropertyDescriptor(globalThis, key), original)) {
       Object.defineProperty(globalThis, key, original);
     }
   }
+}
+
+function sameDescriptor(a: PropertyDescriptor | undefined, b: PropertyDescriptor): boolean {
+  return a !== undefined && a.value === b.value && a.get === b.get && a.set === b.set && a.writable === b.writable;
 }

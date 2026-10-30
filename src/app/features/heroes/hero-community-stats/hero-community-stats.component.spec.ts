@@ -9,6 +9,7 @@ const season = (id: number) => ({ id, label: `Season ${id}`, startsAt: null, end
 const readyStats: HeroStats = {
   status: 'ready',
   minimumMatches: 10,
+  halfSeasons: [season(10), season(10.5)],
   halfSeason: season(10.5),
   inPlaceOf: null,
   matchesCounted: 150,
@@ -63,7 +64,7 @@ describe('HeroCommunityStatsComponent', () => {
     expect(text).toContain('Rivals Pulse players');
     expect(terms).toEqual(['Win rate', 'Pick rate', 'KDA', 'Final hits per match']);
     expect(values).toEqual(['54.2%', '16.0%', '3.46', '9.0']);
-    expect(text).toContain('From 24 appearances in 150 matches');
+    expect(text).toContain('From 24 appearances in 150 matches recorded by Rivals Pulse players');
     expect(text).toContain('Half-season: Season 10.5');
     expect(text).not.toContain('Not enough data yet');
   });
@@ -74,7 +75,7 @@ describe('HeroCommunityStatsComponent', () => {
 
     expect(text).toContain('Not enough data yet');
     expect(text).toContain('Rocket Raccoon has 4 appearances so far');
-    expect(text).toContain('The numbers appear at 10');
+    expect(text).toContain('The numbers appear at 10 appearances.');
     expect(root.querySelector('dl')).toBeNull();
     expect(text).not.toMatch(/NaN|\b0\.0%|Infinity/);
   });
@@ -100,8 +101,22 @@ describe('HeroCommunityStatsComponent', () => {
     const text = root.textContent ?? '';
 
     expect(text).toContain('Previous half-season.');
-    expect(text).toContain('Season 10.5 does not have enough matches yet, so these numbers are from Season 10.');
+    expect(text).toContain("Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.");
     expect(root.querySelectorAll('dd').length).toBe(4);
+  });
+
+  it('shows the appearances so far, without a fallback notice, for a hero below the minimum in a stand-in half-season', async () => {
+    const root = await show('rocket-raccoon', 'Rocket Raccoon', {
+      ...readyStats,
+      halfSeason: season(10),
+      inPlaceOf: season(10.5),
+    });
+    const text = root.textContent ?? '';
+
+    expect(text).toContain('Not enough data yet');
+    expect(text).toContain('Rocket Raccoon has 4 appearances so far in Season 10');
+    expect(text).toContain('(standing in for Season 10.5)');
+    expect(text).not.toContain('Previous half-season.');
   });
 
   it('says so when the stats could not be read, rather than showing an empty panel', async () => {
@@ -114,7 +129,7 @@ describe('HeroCommunityStatsComponent', () => {
   it('shows a loading line before the stats answer', async () => {
     const root = await show('storm', 'Storm', undefined);
 
-    expect(root.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('Loading');
   });
 
   it('names the section by its heading, so assistive technology announces the hero', async () => {
