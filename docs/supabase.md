@@ -45,8 +45,8 @@ repo's build. This is a move, not a redesign.
 | `20261010000000_participants_fill_late_result.sql` | `record_match_participants` fills a blank `is_win` on a repeat upload |
 | `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
 | `20261029000000_participants_mode_map.sql` | `participants.play_mode_id` and `participants.map_name` (null when the game did not say); `record_match_participants` takes them as two trailing arguments and fills a blank one on a repeat upload |
-| `20261029094718_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
-| `20261029094900_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
+| `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
+| `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
 
 Link once per machine, check history, then apply:
 
@@ -91,7 +91,7 @@ secret key can read or write them.
   Both tables are shared by the other web content domains as they move.
 - The scripts and the `Sync new heroes` workflow need `SUPABASE_URL` and
   `SUPABASE_SERVICE_ROLE_KEY` (repository secrets for the workflow).
-- `20261029094900_hero_content_data.sql` was generated from Turso by
+- `20261030042500_hero_content_data.sql` was generated from Turso by
   `scripts/export-turso-heroes.mjs`. It skips rows that already exist, so running it twice never
   overwrites newer data. Before pushing it, `node scripts/export-turso-heroes.mjs --check
   <file>` must say Turso still matches it; if not, regenerate it with `--out`. Issue 110 deletes
