@@ -1,5 +1,3 @@
-import type { Hero } from '../heroes/hero.model';
-
 /** What a page knows about a hero besides its record. Missing for a hero the roster lacks. */
 export interface HeroIdentity {
   name: string;
@@ -9,19 +7,25 @@ export interface HeroIdentity {
 
 export type HeroIdentities = ReadonlyMap<string, HeroIdentity>;
 
-/** A hero as a page draws it: always a name and a portrait, whether or not the roster knows the hero. */
-export interface HeroCell {
+/** A hero as a stats row draws it. */
+export interface HeroCellView {
   hero: string;
   name: string;
   role: string | null;
   imageUrl: string;
 }
 
-export function identitiesOf(heroes: readonly Pick<Hero, 'id' | 'name' | 'role' | 'imageUrl'>[]): HeroIdentities {
-  return new Map(heroes.map((hero) => [hero.id, { name: hero.name, role: hero.role, imageUrl: hero.imageUrl }]));
+/** The identities of a roster, by hero id. */
+export function heroIdentities(
+  roster: readonly { id: string; name: string; role: string | null; imageUrl: string | null }[],
+): HeroIdentities {
+  return new Map(
+    roster.map((hero) => [hero.id, { name: hero.name, role: hero.role, imageUrl: hero.imageUrl }]),
+  );
 }
 
-export function heroCell(hero: string, identities: HeroIdentities): HeroCell {
+/** A hero the roster does not know is still drawn, under its id spelled out, so a row is never dropped or blank. */
+export function heroCell(hero: string, identities: HeroIdentities): HeroCellView {
   const identity = identities.get(hero);
 
   return {

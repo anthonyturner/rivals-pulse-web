@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { forkJoin, map, Observable } from 'rxjs';
 
 import { HeroDataService } from '../../heroes/hero-data.service';
-import { identitiesOf } from '../../insights/hero-identity';
+import { heroIdentities } from '../../insights/hero-identity';
 import type { SeasonDashboardContent } from '../home-content.model';
 import { HomeContentService } from '../home-content.service';
 import { HomeHeroStatsService } from '../home-hero-stats.service';
@@ -41,7 +41,7 @@ export class SeasonDashboardService {
         content: content.seasonDashboard,
         seasonUpdates: content.seasonUpdates,
         seasonEvents: content.seasonEvents,
-        heroUsage: buildHeroUsageView(stats, identitiesOf(heroes)),
+        heroUsage: buildHeroUsageView(stats, heroIdentities(heroes)),
       })),
     );
   }

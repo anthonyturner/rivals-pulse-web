@@ -1,11 +1,11 @@
 import type { HeroStats } from '../../../../../contracts/hero-stats.model';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../../shared/utilities/stat-labels';
-import { heroCell, type HeroCell, type HeroIdentities } from '../../../insights/hero-identity';
+import { heroCell, type HeroCellView, type HeroIdentities } from '../../../insights/hero-identity';
 
 /** How many heroes the section shows. A hero short of the minimum does not take one of these. */
 export const HERO_USAGE_SLOTS = 5;
 
-export interface HeroUsageCardView extends HeroCell {
+export interface HeroUsageCardView extends HeroCellView {
   pickRateLabel: string;
   winRateLabel: string;
   /** Scoreboard lines of this hero, written compactly: 1,800 is "1.8K". */

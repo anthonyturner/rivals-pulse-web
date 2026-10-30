@@ -6,7 +6,7 @@ import { map } from 'rxjs';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
-import { identitiesOf } from '../hero-identity';
+import { heroIdentities } from '../hero-identity';
 import { buildWinRatesView } from './win-rates-view';
 
 @Component({
@@ -26,7 +26,7 @@ export class WinRatesPageComponent {
   // undefined while the request runs, null once it has failed.
   private readonly stats = toSignal(inject(HeroStatsService).getHeroStats());
   private readonly heroes = toSignal(inject(HeroDataService).getHeroes());
-  private readonly identities = computed(() => identitiesOf(this.heroes() ?? []));
+  private readonly identities = computed(() => heroIdentities(this.heroes() ?? []));
 
   /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
   readonly loading = computed(() => this.stats() === undefined || this.heroes() === undefined);

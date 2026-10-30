@@ -2,13 +2,13 @@ import type { HeroStats, HeroStatsHalfSeason, HeroStatsHero } from '../../../../
 import type { TierName } from '../../../../contracts/tier-list.model';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
-import { heroCell, type HeroCell, type HeroIdentities } from '../hero-identity';
+import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
 /** Best first. The page always draws all six, so a tier with no hero is an empty row, not a missing one. */
 export const TIER_NAMES: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
 
-export interface TierHeroView extends HeroCell {
+export interface TierHeroView extends HeroCellView {
   winRateLabel: string;
   pickRateLabel: string;
   appearancesLabel: string;

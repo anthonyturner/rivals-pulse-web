@@ -1,7 +1,7 @@
-import { heroCell, type HeroCell, type HeroIdentities } from '../hero-identity';
+import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 
 /** A hero that has appearances but not yet the minimum for a number to be shown. */
-export interface HeroProgressRow extends HeroCell {
+export interface HeroProgressRow extends HeroCellView {
   appearances: number;
   progressLabel: string;
   progressPercent: number;

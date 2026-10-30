@@ -1,10 +1,10 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
-import { heroCell, type HeroCell, type HeroIdentities } from '../hero-identity';
+import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
-export interface WinRateRowView extends HeroCell {
+export interface WinRateRowView extends HeroCellView {
   winRate: number;
   winRateLabel: string;
   /** Where the bar's fill ends, as a share of its width. */

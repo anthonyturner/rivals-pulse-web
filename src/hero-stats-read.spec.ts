@@ -1,5 +1,12 @@
 import type { HeroStats } from './contracts/hero-stats.model.js';
-import { fetchHeroStatsSource, getHeroStats, halfSeasonFromQuery, parseHeroStatsSource } from './hero-stats-read';
+import type { RoleStats } from './contracts/role-stats.model';
+import {
+  fetchHeroStatsSource,
+  getHeroStats,
+  getRoleStats,
+  halfSeasonFromQuery,
+  parseHeroStatsSource,
+} from './hero-stats-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };
 
@@ -92,6 +99,33 @@ describe('getHeroStats', () => {
   });
 });
 
+describe('getHeroStats while the read function is not in the database', () => {
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+
+  beforeEach(() => spyOn(console, 'warn'));
+
+  for (const [status, code] of [
+    [404, 'PGRST202'],
+    [400, '42883'],
+    [400, '42P01'],
+  ] as const) {
+    it(`is the empty state, not an error (${status} ${code})`, async () => {
+      const stats = await getHeroStats({ ...options, fetch: answering({ code }, status) });
+
+      expect(stats.status).toBe('not-enough-data');
+      expect(stats.tiers).toEqual([]);
+      expect(stats.halfSeason).toBeNull();
+      expect(console.warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
+    });
+  }
+
+  it('still fails on a refused call', async () => {
+    await expectAsync(getHeroStats({ ...options, fetch: answering({ code: '42501' }, 401) })).toBeRejectedWithError(
+      'read_hero_stats answered 401',
+    );
+  });
+});
+
 describe('getHeroStats for one half-season', () => {
   const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
 
@@ -179,5 +213,112 @@ describe('parseHeroStatsSource', () => {
     ]);
     expect(Object.keys(source.totals[0]).sort()).toEqual(['decidedMatches', 'halfSeason', 'playModeId']);
     expect(Object.keys(source.halfSeasons[0]).sort()).toEqual(['halfSeason', 'startsAt']);
+  });
+});
+
+describe('getRoleStats', () => {
+  const ROLE_BY_SLUG = new Map([
+    ['hulk', 'Vanguard'],
+    ['captain-america', 'Vanguard'],
+  ]);
+  const options = {
+    env: ENV,
+    now: () => new Date('2026-10-30T12:00:00Z'),
+    loadHeroRoles: async () => ROLE_BY_SLUG,
+  };
+  const ALLOWED_ROLE_KEYS = new Set([
+    'status',
+    'minimumLines',
+    'halfSeasons',
+    'halfSeason',
+    'inPlaceOf',
+    'modes',
+    'id',
+    'label',
+    'startsAt',
+    'endsAt',
+    'roles',
+    'role',
+    'appearances',
+    'winRate',
+    'killsAverage',
+    'deathsAverage',
+    'assistsAverage',
+    'kda',
+    'finalHitsAverage',
+  ]);
+
+  beforeEach(() => spyOn(console, 'warn'));
+
+  it('returns only allow-listed keys, whatever else the database function sends', async () => {
+    const stats = await getRoleStats({ ...options, fetch: answering(functionAnswer()) });
+
+    expect([...new Set(keysOf(stats))].filter((key) => !ALLOWED_ROLE_KEYS.has(key))).toEqual([]);
+    expect(JSON.stringify(stats)).not.toMatch(/secret|uid|fingerprint|a player|hulk|captain/);
+  });
+
+  it('pools the heroes of a role from the aggregates and leaves out the unmapped hero id 0 with a warning', async () => {
+    const warn = console.warn as jasmine.Spy;
+
+    const stats: RoleStats = await getRoleStats({ ...options, fetch: answering(functionAnswer()) });
+    const vanguard = stats.modes[0].roles[0];
+
+    expect(vanguard.role).toBe('Vanguard');
+    expect(vanguard.appearances).toBe(24);
+    expect(vanguard.status).toBe('not-enough-data');
+    expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/ids with no role: 0$/));
+  });
+
+  it('answers for exactly the half-season asked for', async () => {
+    const stats = await getRoleStats({ ...options, halfSeason: 10.5, fetch: answering(functionAnswer()) });
+
+    expect(stats.halfSeason?.id).toBe(10.5);
+  });
+
+  it('does not read the hero roles when there are no counts to split', async () => {
+    const loadHeroRoles = jasmine.createSpy('loadHeroRoles').and.resolveTo(ROLE_BY_SLUG);
+
+    const stats = await getRoleStats({
+      ...options,
+      loadHeroRoles,
+      fetch: answering({ half_seasons: [], totals: [], heroes: [] }),
+    });
+
+    expect(stats.status).toBe('not-enough-data');
+    expect(loadHeroRoles).not.toHaveBeenCalled();
+  });
+
+  for (const [status, code] of [
+    [404, 'PGRST202'],
+    [404, undefined],
+    [400, '42883'],
+    [400, '42P01'],
+  ] as const) {
+    it(`is the empty state with HTTP 200, not an error, while the function is not deployed (${status} ${code ?? 'no code'})`, async () => {
+      const warn = console.warn as jasmine.Spy;
+
+      const stats = await getRoleStats({ ...options, fetch: answering(code ? { code } : {}, status) });
+
+      expect(stats.status).toBe('not-enough-data');
+      expect(stats.halfSeason).toBeNull();
+      expect(stats.modes.length).toBe(3);
+      expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
+    });
+  }
+
+  it('treats an error body that is not JSON as a status only', async () => {
+    const fetcher: typeof fetch = async () => new Response('Not Found', { status: 404 });
+
+    expect((await getRoleStats({ ...options, fetch: fetcher })).status).toBe('not-enough-data');
+    await expectAsync(
+      getRoleStats({ ...options, fetch: async () => new Response('oops', { status: 503 }) }),
+    ).toBeRejectedWithError('read_hero_stats answered 503');
+  });
+
+  it('still fails on a refused call or a missing configuration', async () => {
+    await expectAsync(getRoleStats({ ...options, fetch: answering({ code: '42501' }, 401) })).toBeRejectedWithError(
+      'read_hero_stats answered 401',
+    );
+    await expectAsync(getRoleStats({ ...options, env: {}, fetch: answering({}) })).toBeRejected();
   });
 });

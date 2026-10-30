@@ -4,7 +4,7 @@ import { BehaviorSubject, switchMap, tap } from 'rxjs';
 
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { HeroDataService } from '../../heroes/hero-data.service';
-import { identitiesOf } from '../hero-identity';
+import { heroIdentities } from '../hero-identity';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
 import { buildTierListView, seasonOptions, type SeasonOption } from './tier-list-view';
@@ -32,7 +32,7 @@ export class TierListPageComponent {
     ),
   );
   private readonly heroes = toSignal(inject(HeroDataService).getHeroes());
-  private readonly identities = computed(() => identitiesOf(this.heroes() ?? []));
+  private readonly identities = computed(() => heroIdentities(this.heroes() ?? []));
 
   /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
   readonly loading = computed(() => this.stats() === undefined || this.heroes() === undefined);

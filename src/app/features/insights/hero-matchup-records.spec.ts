@@ -8,6 +8,7 @@ import {
   recordSampleLabel,
   recordSentence,
   recordWinRateLabel,
+  strongestRecords,
   winningRecordsAgainst,
   winningRecordsOf,
 } from './hero-matchup-records';
@@ -84,5 +85,30 @@ describe('hero matchup records', () => {
     const text = JSON.stringify(recordCards(winningRecordsOf(matchups, 'hulk'), 'enemy', roster));
 
     expect(text).not.toMatch(/NaN|Infinity/);
+  });
+
+  it('lists the strongest winning records first, by shrunk win rate, and never a losing one', () => {
+    const strongest = strongestRecords(matchups, 10);
+
+    expect(strongest.map((record) => `${record.hero}>${record.enemy}`)).toEqual([
+      'storm>thor',
+      'hulk>thor',
+    ]);
+  });
+
+  it('breaks a tie by the larger sample and then by hero ids, and stops at the limit', () => {
+    const tied = matchupsOf([
+      matchup('hulk', 'thor', 18, 24),
+      matchup('storm', 'thor', 9, 12),
+      matchup('hulk', 'storm', 9, 12),
+    ]);
+
+    expect(strongestRecords(tied, 10).map((record) => `${record.hero}>${record.enemy}`)).toEqual([
+      'hulk>thor',
+      'hulk>storm',
+      'storm>thor',
+    ]);
+    expect(strongestRecords(tied, 1).length).toBe(1);
+    expect(strongestRecords(tied, 0)).toEqual([]);
   });
 });
