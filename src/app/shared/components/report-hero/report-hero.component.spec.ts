@@ -21,7 +21,7 @@ describe('ReportHeroComponent', () => {
     fixture.componentRef.setInput('actions', [
       {
         label: 'Open report',
-        routerLink: '/win-rates/9',
+        routerLink: '/win-rates',
         primary: true,
       },
     ]);

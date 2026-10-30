@@ -6,7 +6,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 
 - **Hero encyclopedia** - searchable role-based roster with full ability kits, technical stats, matchup notes, synergies, videos, playstyles, and multi-role hero support.
 - **Draft and matchup tools** - a six-player team builder with composition scoring, a two-way hero counter explorer, and coach-authored build profiles.
-- **Current meta views** - synced ranked tier lists, hourly Steam population snapshots with trends, and a Season 9 win-rate report by rank and hero archetype.
+- **Current meta views** - synced ranked tier lists, hourly Steam population snapshots with trends, and hero win rates counted from matches that Rivals Pulse players record.
 - **Structured coaching** - hero guides, beginner lessons, learning paths, positioning and cover guides, build theory, glossary terms, media tutorials, and a "watch next" quiz.
 - **Refreshable content** - Turso-backed hero, home, news, glossary, tier-list, video, and game-stat data populated from official and community sources.
 
@@ -15,7 +15,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 | Area | Routes |
 | --- | --- |
 | Heroes and matchups | `/heroes`, `/hero-guides`, `/counters` |
-| Draft and meta | `/team-builder`, `/tier-list`, `/win-rates/:season`, `/game-stats` |
+| Draft and meta | `/team-builder`, `/tier-list`, `/win-rates`, `/game-stats` |
 | Coaching fundamentals | `/beginner-interactive-guide`, `/techniques`, `/build-theory` |
 | Positioning and strategy | `/power-positions`, `/strategic-cover`, `/triple-support-counter` |
 | Guided learning | `/learning-paths`, `/media-tutorials`, `/watch-next`, `/glossary` |
