@@ -10,18 +10,18 @@ import type {
  * of the day (UTC), or at a place in a play session.
  */
 
-/** Matches a bucket needs before it, or its win rate, is shown. */
-export const INSIGHTS_MIN_MATCHES = 30;
+/**
+ * Shown buckets a dimension needs before any of them is shown. One or two buckets say little, and
+ * with one hidden the missing one would be easy to work out from a total.
+ */
+export const INSIGHTS_MIN_SHOWN_BUCKETS = 3;
 
 /**
- * Players who recorded matches in a bucket before it is shown. With one or two uploaders a bucket
- * would be somebody's diary, not the community's.
+ * One bucket as `read_community_insights()` returns it. The database has already added the
+ * half-seasons whose own row passed its gates (matches, different players, no one player over a
+ * share), so a bucket that failed is simply absent.
  */
-export const INSIGHTS_MIN_RECORDERS = 3;
-
-/** One bucket of one half-season, as `read_community_insights()` returns it. */
 export interface InsightsBucketRow {
-  halfSeason: number;
   /** `weekday`, `time_of_day` or `session_position`; anything else is ignored. */
   dimension: string;
   bucket: number;
@@ -29,12 +29,13 @@ export interface InsightsBucketRow {
   /** Matches with a win or a loss. */
   decidedMatches: number;
   wins: number;
-  /** How many different players recorded these matches. Never a name or an id. */
-  recorders: number;
 }
 
 export interface InsightsSource {
   sessionGapMinutes: number;
+  minimumMatches: number;
+  minimumRecorders: number;
+  maxRecorderSharePercent: number;
   buckets: readonly InsightsBucketRow[];
 }
 
@@ -76,25 +77,22 @@ const DIMENSIONS: readonly DimensionSpec[] = [
   },
 ];
 
-interface Pooled {
+interface Counts {
   matches: number;
   decidedMatches: number;
   wins: number;
-  recorders: number;
 }
 
 /**
- * The tab's numbers. A null source (the aggregates cannot be read) and an empty one give the same
+ * The tab's numbers. A null source (the aggregates do not exist yet) and an empty one give the same
  * answer: every bucket named, none shown.
  *
- * Half-seasons are added together, because when people play does not depend on the patch. Recorders
- * are not: the same player can appear in two half-seasons and no identity is kept to tell, so the
- * largest single half-season count is used. It can only understate, which keeps a bucket hidden
- * rather than shown too early.
+ * A dimension with fewer than `INSIGHTS_MIN_SHOWN_BUCKETS` shown buckets shows none, and a share is
+ * the bucket's matches over the shown buckets' matches, never over a total that includes a hidden one.
  */
 export function deriveCommunityInsights(source: InsightsSource | null): CommunityInsights {
   const rows = source?.buckets ?? [];
-  const dimensions = DIMENSIONS.map((spec) => deriveDimension(spec, rows));
+  const dimensions = DIMENSIONS.map((spec) => deriveDimension(spec, rows, source?.minimumMatches ?? 0));
 
   return {
     status: dimensions.some((dimension) => dimension.buckets.some((bucket) => bucket.status === 'ready'))
@@ -102,40 +100,52 @@ export function deriveCommunityInsights(source: InsightsSource | null): Communit
       : 'not-enough-data',
     timeZone: 'UTC',
     sessionGapMinutes: source?.sessionGapMinutes ?? null,
-    minimumMatches: INSIGHTS_MIN_MATCHES,
-    minimumRecorders: INSIGHTS_MIN_RECORDERS,
+    minimumMatches: source?.minimumMatches ?? null,
+    minimumRecorders: source?.minimumRecorders ?? null,
+    maxRecorderSharePercent: source?.maxRecorderSharePercent ?? null,
     dimensions,
   };
 }
 
-function deriveDimension(spec: DimensionSpec, rows: readonly InsightsBucketRow[]): CommunityInsightsDimension {
-  const pooled = new Map<number, Pooled>();
+function deriveDimension(
+  spec: DimensionSpec,
+  rows: readonly InsightsBucketRow[],
+  minimumDecidedMatches: number,
+): CommunityInsightsDimension {
+  const shown = new Map<number, Counts>();
   const known = new Set(spec.buckets.map(([bucket]) => bucket));
 
   for (const row of rows) {
-    if (row.dimension !== spec.column || !known.has(row.bucket)) {
+    if (row.dimension !== spec.column || !known.has(row.bucket) || row.matches <= 0) {
       continue;
     }
 
-    const total = pooled.get(row.bucket) ?? { matches: 0, decidedMatches: 0, wins: 0, recorders: 0 };
+    const total = shown.get(row.bucket) ?? { matches: 0, decidedMatches: 0, wins: 0 };
     total.matches += row.matches;
     total.decidedMatches += row.decidedMatches;
     total.wins += row.wins;
-    total.recorders = Math.max(total.recorders, row.recorders);
-    pooled.set(row.bucket, total);
+    shown.set(row.bucket, total);
   }
 
-  const dimensionMatches = [...pooled.values()].reduce((sum, bucket) => sum + bucket.matches, 0);
+  const enough = shown.size >= INSIGHTS_MIN_SHOWN_BUCKETS;
+  const shownMatches = [...shown.values()].reduce((sum, bucket) => sum + bucket.matches, 0);
 
   return {
     id: spec.id,
     title: spec.title,
-    buckets: spec.buckets.map(([bucket, label]) => toBucket(label, pooled.get(bucket), dimensionMatches)),
+    buckets: spec.buckets.map(([bucket, label]) =>
+      toBucket(label, enough ? shown.get(bucket) : undefined, shownMatches, minimumDecidedMatches),
+    ),
   };
 }
 
-function toBucket(label: string, counts: Pooled | undefined, dimensionMatches: number): CommunityInsightsBucket {
-  if (!counts || counts.matches < INSIGHTS_MIN_MATCHES || counts.recorders < INSIGHTS_MIN_RECORDERS) {
+function toBucket(
+  label: string,
+  counts: Counts | undefined,
+  shownMatches: number,
+  minimumDecidedMatches: number,
+): CommunityInsightsBucket {
+  if (!counts) {
     return { label, status: 'not-enough-data', matches: null, share: null, winRate: null };
   }
 
@@ -143,8 +153,11 @@ function toBucket(label: string, counts: Pooled | undefined, dimensionMatches: n
     label,
     status: 'ready',
     matches: counts.matches,
-    share: percent(counts.matches, dimensionMatches),
-    winRate: counts.decidedMatches >= INSIGHTS_MIN_MATCHES ? percent(counts.wins, counts.decidedMatches) : null,
+    share: percent(counts.matches, shownMatches),
+    winRate:
+      counts.decidedMatches > 0 && counts.decidedMatches >= minimumDecidedMatches
+        ? percent(counts.wins, counts.decidedMatches)
+        : null,
   };
 }
 

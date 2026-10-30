@@ -146,6 +146,10 @@ describe('fetchHeroStatsSource', () => {
     );
   });
 
+  it('names the function when the answer is not an object', () => {
+    expect(() => parseHeroStatsSource([])).toThrowError('read_hero_stats did not return an object');
+  });
+
   it('rejects an answer that is not the expected shape', async () => {
     await expectAsync(fetchHeroStatsSource(ENV, answering([]))).toBeRejected();
     await expectAsync(

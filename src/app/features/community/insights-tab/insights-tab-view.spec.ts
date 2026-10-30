@@ -8,6 +8,7 @@ function insights(overrides: Partial<CommunityInsights> = {}): CommunityInsights
     sessionGapMinutes: 30,
     minimumMatches: 30,
     minimumRecorders: 3,
+    maxRecorderSharePercent: 50,
     dimensions: [
       {
         id: 'weekday',
@@ -28,8 +29,11 @@ describe('buildInsightsTabView', () => {
     expect(buildInsightsTabView(undefined)).toEqual({ kind: 'loading' });
   });
 
-  it('is the empty state when the answer failed or has no shown bucket', () => {
-    expect(buildInsightsTabView(null)).toEqual({ kind: 'not-enough-data' });
+  it('is unavailable, not the empty state, when the request failed', () => {
+    expect(buildInsightsTabView(null)).toEqual({ kind: 'unavailable' });
+  });
+
+  it('is the empty state when the answer has no shown bucket', () => {
     expect(buildInsightsTabView(insights({ status: 'not-enough-data' }))).toEqual({ kind: 'not-enough-data' });
   });
 
@@ -73,6 +77,7 @@ describe('buildInsightsTabView', () => {
     expect(view.notes.join(' ')).toContain('30 minutes');
     expect(view.notes.join(' ')).toContain('30 matches');
     expect(view.notes.join(' ')).toContain('3 players');
+    expect(view.notes.join(' ')).toContain('more than 50%');
   });
 
   it('leaves the session sentence out when the gap is not known', () => {
@@ -82,5 +87,16 @@ describe('buildInsightsTabView', () => {
       throw new Error('expected a ready view');
     }
     expect(view.notes.join(' ')).not.toContain('session ends');
+  });
+});
+
+describe('buildInsightsTabView gates', () => {
+  it('leaves the gate sentence out when they are not known', () => {
+    const view = buildInsightsTabView(insights({ minimumMatches: null }));
+
+    if (view.kind !== 'ready') {
+      throw new Error('expected a ready view');
+    }
+    expect(view.notes.join(' ')).not.toContain('players are behind');
   });
 });

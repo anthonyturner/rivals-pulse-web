@@ -19,6 +19,7 @@ import {
   getTierListFromDatabase,
 } from './content-database';
 import { getCommunityInsights } from './community-insights-read';
+import { getHeroMatchups } from './hero-matchups-read';
 import { getHeroStats, halfSeasonFromQuery } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
 import { syncGameStats } from './game-stats-sync';
@@ -41,6 +42,10 @@ app.get('/api/hero-stats', (req, res) => {
 
 app.get('/api/community/insights', (_req, res) => {
   handleApiResponse(res, () => getCommunityInsights());
+});
+
+app.get('/api/hero-matchups', (_req, res) => {
+  handleApiResponse(res, () => getHeroMatchups());
 });
 
 app.get('/api/heroes', (_req, res) => {

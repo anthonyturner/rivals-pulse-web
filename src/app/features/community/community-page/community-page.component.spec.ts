@@ -34,6 +34,7 @@ describe('CommunityPageComponent', () => {
         sessionGapMinutes: null,
         minimumMatches: 30,
         minimumRecorders: 3,
+        maxRecorderSharePercent: 50,
         dimensions: [],
       });
     await harness.fixture.whenStable();

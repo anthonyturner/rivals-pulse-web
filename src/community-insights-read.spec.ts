@@ -5,22 +5,24 @@ const ENV = { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE
 
 /** What `read_community_insights()` answers, with extra keys that no allow-list should let through. */
 function functionAnswer(): Record<string, unknown> {
+  const bucket = (n: number) => ({
+    dimension: 'weekday',
+    bucket: n,
+    matches: 40,
+    decided_matches: 36,
+    wins: 18,
+    recorders: 4,
+    uid: 'secret-uid',
+    name: 'a player',
+    player_id: 7,
+  });
+
   return {
     session_gap_minutes: 30,
-    buckets: [
-      {
-        half_season: 10.5,
-        dimension: 'weekday',
-        bucket: 1,
-        matches: 40,
-        decided_matches: 36,
-        wins: 18,
-        recorders: 4,
-        uid: 'secret-uid',
-        name: 'a player',
-        player_id: 7,
-      },
-    ],
+    minimum_matches: 30,
+    minimum_recorders: 3,
+    max_recorder_share_percent: 50,
+    buckets: [bucket(1), bucket(2), bucket(3)],
   };
 }
 
@@ -48,7 +50,7 @@ describe('getCommunityInsights', () => {
       label: 'Monday',
       status: 'ready',
       matches: 40,
-      share: 100,
+      share: 33.3,
       winRate: 50,
     });
   });
@@ -61,42 +63,55 @@ describe('getCommunityInsights', () => {
     expect(text).not.toContain('secret-uid');
     expect(text).not.toContain('a player');
     expect(text).not.toContain('player_id');
-    expect(text).not.toContain('recorders');
+    expect(text).not.toContain('recorders"');
   });
 
-  it('answers not enough data, and does not throw, when the function does not exist yet', async () => {
-    const { client } = clientAnswering(
-      { code: 'PGRST202', message: 'Could not find the function public.read_community_insights' },
-      404,
-    );
+  for (const [code, status] of [
+    ['PGRST202', 404],
+    ['42883', 404],
+    ['42P01', 404],
+  ] as const) {
+    it(`answers not enough data when the function or table does not exist yet (${code})`, async () => {
+      const { client } = clientAnswering({ code, message: 'does not exist' }, status);
 
-    const insights = await getCommunityInsights({ getClient: () => client });
+      const insights = await getCommunityInsights({ getClient: () => client });
 
-    expect(insights.status).toBe('not-enough-data');
-    expect(insights.sessionGapMinutes).toBeNull();
-    expect(insights.dimensions.length).toBe(3);
-  });
+      expect(insights.status).toBe('not-enough-data');
+      expect(insights.sessionGapMinutes).toBeNull();
+      expect(insights.dimensions.length).toBe(3);
+    });
+  }
 
-  it('answers not enough data when the answer is not the expected shape', async () => {
+  for (const status of [401, 403, 500, 503]) {
+    it(`keeps the error when Supabase answers ${status}, so an outage is not hidden`, async () => {
+      const { client } = clientAnswering({ code: 'PGRST301', message: 'JWT expired' }, status);
+
+      await expectAsync(getCommunityInsights({ getClient: () => client })).toBeRejectedWithError(
+        /read_community_insights answered/,
+      );
+    });
+  }
+
+  it('keeps the error when the answer is not the expected shape', async () => {
     const { client } = clientAnswering({ buckets: 'nope' });
 
-    expect((await getCommunityInsights({ getClient: () => client })).status).toBe('not-enough-data');
+    await expectAsync(getCommunityInsights({ getClient: () => client })).toBeRejected();
   });
 
-  it('answers not enough data when the project cannot be reached', async () => {
+  it('keeps the error when the project cannot be reached', async () => {
     const client = createSupabaseClient(ENV, {
       fetch: async () => {
         throw new TypeError('network down');
       },
     });
 
-    expect((await getCommunityInsights({ getClient: () => client })).status).toBe('not-enough-data');
+    await expectAsync(getCommunityInsights({ getClient: () => client })).toBeRejected();
   });
 
-  it('answers not enough data when Supabase is not configured here', async () => {
+  it('keeps the error when Supabase is not configured here', async () => {
     const getClient = () => createSupabaseClient({});
 
-    expect((await getCommunityInsights({ getClient })).status).toBe('not-enough-data');
+    await expectAsync(getCommunityInsights({ getClient })).toBeRejectedWithError(/not configured/);
   });
 });
 

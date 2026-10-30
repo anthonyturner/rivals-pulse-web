@@ -2,6 +2,10 @@
 
 @if (current.kind === 'loading') {
   <p class="insights__message" role="status">Loading when the community plays...</p>
+} @else if (current.kind === 'unavailable') {
+  <p class="insights__message" role="status">
+    When the community plays cannot be loaded right now. The rest of this page is not affected.
+  </p>
 } @else if (current.kind === 'not-enough-data') {
   <app-community-empty-state
     heading="When the community plays and wins"

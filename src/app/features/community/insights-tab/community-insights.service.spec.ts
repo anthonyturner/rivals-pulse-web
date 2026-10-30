@@ -12,6 +12,7 @@ const notEnoughData: CommunityInsights = {
   sessionGapMinutes: null,
   minimumMatches: 30,
   minimumRecorders: 3,
+  maxRecorderSharePercent: 50,
   dimensions: [],
 };
 

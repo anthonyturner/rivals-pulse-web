@@ -6,10 +6,9 @@ import {
   type HeroStatsSource,
   type MatchTotalsRow,
 } from './hero-stats.js';
+import { answerReader, callSupabaseFunction, type SupabaseReadEnv } from './supabase-rpc.js';
 
-export const HERO_STATS_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'] as const;
-
-export type HeroStatsEnv = Readonly<Record<string, string | undefined>>;
+export type HeroStatsEnv = SupabaseReadEnv;
 
 export interface HeroStatsReadOptions {
   env?: HeroStatsEnv;
@@ -20,42 +19,19 @@ export interface HeroStatsReadOptions {
 }
 
 const READ_FUNCTION = 'read_hero_stats';
-const READ_TIMEOUT_MS = 5000;
+const { answerOf, recordsOf, numberOf, stringOf } = answerReader(READ_FUNCTION);
 
-/**
- * Reads the aggregates through `public.read_hero_stats()` over PostgREST (Supabase's REST layer)
- * with the publishable key. That function is the only thing the key can reach: the aggregate
- * tables themselves have no grant, so a leaked key reads nothing it should not.
- */
+/** Reads the aggregates through `public.read_hero_stats()`; see `callSupabaseFunction`. */
 export async function fetchHeroStatsSource(
   env: HeroStatsEnv,
   fetcher: typeof fetch = fetch,
 ): Promise<HeroStatsSource> {
-  const url = env['SUPABASE_URL']?.trim();
-  const key = env['SUPABASE_PUBLISHABLE_KEY']?.trim();
-
-  if (!url || !key) {
-    const missing = HERO_STATS_ENV_NAMES.filter((name) => !env[name]?.trim());
-    throw new Error(`Hero stats are not configured. Set ${missing.join(' and ')}.`);
-  }
-
-  const response = await fetcher(`${url.replace(/\/+$/, '')}/rest/v1/rpc/${READ_FUNCTION}`, {
-    method: 'POST',
-    headers: { apikey: key, 'content-type': 'application/json' },
-    body: '{}',
-    signal: AbortSignal.timeout(READ_TIMEOUT_MS),
-  });
-
-  if (!response.ok) {
-    throw new Error(`${READ_FUNCTION} answered ${response.status}`);
-  }
-
-  return parseHeroStatsSource(await response.json());
+  return parseHeroStatsSource(await callSupabaseFunction('Hero stats', READ_FUNCTION, {}, env, fetcher));
 }
 
 /** Picks the known fields out of the function's answer and rejects anything that is not a number. */
 export function parseHeroStatsSource(body: unknown): HeroStatsSource {
-  const payload = recordOf(body, READ_FUNCTION);
+  const payload = answerOf(body);
 
   return {
     halfSeasons: recordsOf(payload['half_seasons'], 'half_seasons').map((row) => ({
@@ -114,44 +90,4 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
   }
 
   return stats;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function recordOf(value: unknown, what: string): Record<string, unknown> {
-  if (!isRecord(value)) {
-    throw new Error(`${what} did not return an object`);
-  }
-
-  return value;
-}
-
-function recordsOf(value: unknown, what: string): Record<string, unknown>[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`${READ_FUNCTION}: ${what} is not a list`);
-  }
-
-  return value.map((row) => recordOf(row, `${READ_FUNCTION}: a ${what} entry`));
-}
-
-function numberOf(row: Record<string, unknown>, key: string): number {
-  const value = row[key];
-
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw new Error(`${READ_FUNCTION}: ${key} is not a number`);
-  }
-
-  return value;
-}
-
-function stringOf(row: Record<string, unknown>, key: string): string {
-  const value = row[key];
-
-  if (typeof value !== 'string') {
-    throw new Error(`${READ_FUNCTION}: ${key} is not a string`);
-  }
-
-  return value;
 }

@@ -18,16 +18,24 @@ export interface InsightsDimensionView {
 
 export type InsightsTabView =
   | { kind: 'loading' }
+  | { kind: 'unavailable' }
   | { kind: 'not-enough-data' }
   | { kind: 'ready'; notes: string[]; dimensions: InsightsDimensionView[] };
 
-/** `undefined` is still loading; `null` is an answer that could not be read, shown as the empty state. */
+/**
+ * `undefined` is still loading; `null` is a request that failed or an answer that could not be read,
+ * which is an outage and not "no data yet", so it is told apart from the designed empty state.
+ */
 export function buildInsightsTabView(insights: CommunityInsights | null | undefined): InsightsTabView {
   if (insights === undefined) {
     return { kind: 'loading' };
   }
 
-  if (insights === null || insights.status === 'not-enough-data') {
+  if (insights === null) {
+    return { kind: 'unavailable' };
+  }
+
+  if (insights.status === 'not-enough-data') {
     return { kind: 'not-enough-data' };
   }
 
@@ -36,7 +44,7 @@ export function buildInsightsTabView(insights: CommunityInsights | null | undefi
     ...(insights.sessionGapMinutes === null
       ? []
       : [`A play session ends after ${insights.sessionGapMinutes} minutes without a match.`]),
-    `A row appears once at least ${insights.minimumMatches} matches from at least ${insights.minimumRecorders} players are behind it.`,
+    ...gateNotes(insights),
   ];
 
   return {
@@ -64,4 +72,16 @@ export function buildInsightsTabView(insights: CommunityInsights | null | undefi
       };
     }),
   };
+}
+
+function gateNotes(insights: CommunityInsights): string[] {
+  const { minimumMatches, minimumRecorders, maxRecorderSharePercent } = insights;
+
+  if (minimumMatches === null || minimumRecorders === null || maxRecorderSharePercent === null) {
+    return [];
+  }
+
+  return [
+    `A row appears once at least ${minimumMatches} matches from at least ${minimumRecorders} players are behind it in a half-season, and no one player recorded more than ${maxRecorderSharePercent}% of them. Percentages are shares of the rows shown.`,
+  ];
 }

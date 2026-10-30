@@ -17,6 +17,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | `glossary.json` | The glossary terms, exactly as `GET /api/glossary` returns them. |
 | `maps.json` | Map ids to names: a list of `{ "id": number, "name": string }`. Source: [data/pulse-atlas/seed-maps.json](../data/pulse-atlas/seed-maps.json), copied unchanged from the overlay repo's `src/app/data/seed-maps.json`. |
 | `hero-styles.json` | Each hero's playstyle mix: whole-number percentages of Poke, Dive and Brawl. Shape below. Source: [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json), hand-maintained in this repository. |
+| `hero-stats.json` | Each hero's community stats in every half-season that has started: win rate, pick rate, KDA, final hits and the matches behind them, with an "enough data" flag per hero. One file for all half-seasons. Shape below. |
 | `manifest.json` | Every file above with its hash. |
 
 Every dataset file has this shape:
@@ -135,6 +136,88 @@ season has a file too, so a client can treat every season the same way.
   rate or count, or if a snapshot's `matchesCounted`, `belowMinimum` or
   `fallbackFromSeasonId` is malformed.
 
+### The `hero-stats` data
+
+The per-hero numbers behind the tier list, for readers that want the figures
+and not the tiers. Like the tier list it is the **community** data: built from
+the matches Rivals Pulse players upload, by the hero-stats derivation behind
+`GET /api/hero-stats` ([src/hero-stats.ts](../src/hero-stats.ts)), and from
+nothing else. It is **one file for every half-season**, listed in the manifest:
+
+```json
+{
+  "provenance": "rivals-pulse-community",
+  "minimumMatches": 10,
+  "currentSeasonId": 21,
+  "seasons": [
+    {
+      "id": 21, "label": "Season 10.5", "startTime": "2026-10-09T09:00:00Z",
+      "decidedMatches": 146,
+      "heroes": [
+        { "heroId": 1016, "appearances": 4, "enoughData": false, "winRate": null, "pickRate": null, "kda": null, "finalHitsAverage": null },
+        { "heroId": 1042, "appearances": 25, "enoughData": true, "winRate": 64, "pickRate": 17.12, "kda": 5.35, "finalHitsAverage": 4.5 }
+      ]
+    }
+  ]
+}
+```
+
+- **`provenance` is `"rivals-pulse-community"`, at the top level of `data`**,
+  as in the tier list. The generator refuses to build a table without it and
+  the read-back check fails if the written file lacks it.
+- **Seasons** are the same as the tier list's: one per started half-season,
+  the id is the half-season number times two (10 is 20, 10.5 is 21), oldest
+  first, with `startTime` and `endTime` left out when unknown (`endTime` is
+  absent on the latest). `currentSeasonId` is the latest half-season whose
+  start has passed. Each season is that half-season's **own** numbers: unlike
+  the tier list's current snapshot, a season whose own numbers are thin never
+  shows the previous season's instead.
+- **`decidedMatches`** is the number of matches with a win or a loss in
+  Competitive or Quick Match in that half-season: the denominator of the pick
+  rate (`matchesCounted` in the hero-stats API). It is `0` for a half-season
+  nobody has played.
+- **A hero cell is** `{ heroId, appearances, enoughData, winRate, pickRate, kda, finalHitsAverage }`,
+  ordered by `heroId`. `heroId` is the game's numeric hero id (the same as in
+  the tier list; join it to `heroes.json`). `appearances` is the number of
+  scoreboard lines of the hero, so it can exceed `decidedMatches` and
+  `pickRate` can exceed 100 when a hero is on both teams. `winRate` and
+  `pickRate` are percentages, `kda` is (kills + assists) / deaths over all
+  lines, and `finalHitsAverage` is final hits per line, all to two decimals.
+  A hero with no match in a half-season has no cell.
+- **`enoughData`** is `true` exactly when `appearances` is at least
+  `minimumMatches` (the same minimum that places a hero in the tier list); the
+  generator refuses a cell where the two disagree. A cell with
+  `enoughData: false` is "not enough data yet": it still carries its
+  `appearances`, but its four figures are `null`, because the API reports only
+  the appearances of a hero below the minimum. A cell with `enoughData: true`
+  always has `winRate` and `pickRate`; its `kda` or `finalHitsAverage` is `null`
+  when no line carried that figure.
+- **With no matches the file is still valid.** A half-season nobody has played
+  is `{ "decidedMatches": 0, "heroes": [] }`, and the file as a whole stays in
+  the same shape.
+- **One file, not one per half-season.** The table is about 6 KB per half-season
+  with the current heroes (two half-seasons a year), so the whole history stays
+  small for years, and a client that syncs what the manifest lists gets it with
+  the rest. The tier list is split by season only because each season carries
+  every tier row and the overlay downloads a past one on demand; this file
+  needs no such mechanism. If it ever grows past a size worth parsing for the
+  current season alone, splitting it is a `v2` question.
+- **Only these keys are published.** The generator allows exactly the keys
+  above (`checkKeys` in [src/pulse-atlas.ts](../src/pulse-atlas.ts)) and refuses
+  to build if the file, a season or a cell has any other, if a key names
+  something private (see below), or if a value is not a number, boolean or
+  `null` where one is expected. The file holds no player-level data: no
+  names, uids, teams, matches or per-match rows, only per-hero counts and
+  averages. A unit test runs the same check.
+- A hero in the stats that no `gameId` in `hero-game-ids.json` matches is left
+  out, with a warning on the workflow run; a `heroId` that no hero in
+  `heroes.json` has as its `gameId` is published, with a warning, as in the tier
+  list. Neither holds up the feed.
+- Source: the generator reads `/api/hero-stats` once for the list of
+  half-seasons and then once per half-season, the current one included
+  (`?halfSeason=<number>`), so each season's numbers are its own. The envelope's
+  `source` is `rivals-pulse-web:hero-stats-api`.
+
 ### The hero `gameId`
 
 `heroes.json` carries the game's numeric hero id on each hero, so a consumer
@@ -242,7 +325,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -269,10 +352,11 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
 1. Fetches `/api/heroes` and `/api/glossary` from the public production API
    (`PULSE_ATLAS_API_BASE` overrides the base URL), plus `/api/hero-stats` once
    (the current half-season, with the list of every started half-season) and
-   then once per other half-season (`?halfSeason=<number>`). That needs no
-   secret. The tier list is assembled from those answers and the hero ids in
-   `hero-game-ids.json` by `assembleCommunityTierList`; nothing reads the
-   Rivals Meta tables or `/api/tier-list`.
+   then once per half-season (`?halfSeason=<number>`), the current one
+   included. That needs no secret. The tier list and the hero stats are
+   assembled from those same answers and the hero ids in `hero-game-ids.json`
+   by `assembleCommunityTierList` and `assembleCommunityHeroStats`; nothing
+   reads the Rivals Meta tables or `/api/tier-list`.
 2. Reads the maps, hero-styles and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).

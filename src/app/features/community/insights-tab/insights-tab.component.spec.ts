@@ -13,6 +13,7 @@ const ready: CommunityInsights = {
   sessionGapMinutes: 30,
   minimumMatches: 30,
   minimumRecorders: 3,
+  maxRecorderSharePercent: 50,
   dimensions: [
     {
       id: 'weekday',
@@ -68,14 +69,15 @@ describe('InsightsTabComponent', () => {
     expect(host.querySelector('table')).toBeNull();
   });
 
-  it('shows the empty state, not a blank panel, when the request fails', async () => {
+  it('says it cannot be loaded, not that there is no data, when the request fails', async () => {
     const { fixture, host } = render();
 
     http.expectOne('/api/community/insights').flush('down', { status: 500, statusText: 'Server Error' });
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(host.textContent).toContain('Not enough data yet');
+    expect(host.textContent).toContain('cannot be loaded');
+    expect(host.textContent).not.toContain('Not enough data yet');
   });
 
   it('shows shown rows with their volume and win rate, and hidden rows as not enough data', async () => {

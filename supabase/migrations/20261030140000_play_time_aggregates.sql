@@ -10,6 +10,9 @@
 --
 -- Time zone: every day and hour is UTC. The upload carries no offset to use instead.
 --
+-- Anonymity: a bucket is stored whole, but `read_community_insights` hands out only buckets that pass
+-- the gates below on their own half-season, so thin or one-person buckets never leave the database.
+--
 -- Recompute and freeze, on this feature's own hourly job: `recompute_play_time_aggregates` rebuilds
 -- every half-season that is not frozen from scratch (running it twice changes nothing) and freezes a
 -- half-season once it has ended and the late-upload grace has passed. `purge_expired_participants`
@@ -42,6 +45,27 @@ immutable
 set search_path = ''
 as $$ select array[0, 1]::smallint[] $$;
 
+-- The gates a bucket must pass, in one half-season, before the site may see it: enough matches, enough
+-- different players, and no one player making up more than a share of them. With one uploader today
+-- every bucket fails the second gate, and "not enough data yet" is the intended state.
+create or replace function public.insights_min_matches() returns integer
+language sql
+immutable
+set search_path = ''
+as $$ select 30 $$;
+
+create or replace function public.insights_min_recorders() returns integer
+language sql
+immutable
+set search_path = ''
+as $$ select 3 $$;
+
+create or replace function public.insights_max_recorder_share_percent() returns integer
+language sql
+immutable
+set search_path = ''
+as $$ select 50 $$;
+
 -- Upload accepts a match up to 7 days old, so a half-season is frozen only this long after it ended.
 create or replace function public.play_time_freeze_grace() returns interval
 language sql
@@ -58,8 +82,9 @@ create table if not exists public.play_time_aggregate_half_seasons (
 );
 
 -- One row per half-season, dimension and bucket (see `fill_play_time_aggregates` for the meaning of
--- the bucket number). `recorders` is how many different players recorded the matches, a count only;
--- it lets the site hold a bucket back until it is not one person's diary.
+-- the bucket number). `recorders` is how many different players recorded the matches and
+-- `top_recorder_matches` how many of them the busiest one recorded: counts only, which let the read
+-- function hold a bucket back until it is not one person's diary.
 create table if not exists public.play_time_aggregates (
   half_season numeric(4,1) not null,
   dimension text not null,
@@ -69,6 +94,7 @@ create table if not exists public.play_time_aggregates (
   decided_matches integer not null,
   wins integer not null,
   recorders integer not null,
+  top_recorder_matches integer not null,
   primary key (half_season, dimension, bucket),
   constraint play_time_aggregates_bucket_in_range check (
     (dimension = 'weekday' and bucket between 1 and 7)
@@ -77,6 +103,7 @@ create table if not exists public.play_time_aggregates (
   ),
   constraint play_time_aggregates_counts_consistent check (
     wins <= decided_matches and decided_matches <= matches and recorders between 1 and matches
+    and top_recorder_matches between 1 and matches
   )
 );
 
@@ -167,22 +194,27 @@ language sql
 set search_path = ''
 as $$
   insert into public.play_time_aggregates
-    (half_season, dimension, bucket, matches, decided_matches, wins, recorders)
-  select p_half_season, d.dimension, d.bucket,
-         count(*),
-         count(m.is_win),
-         count(*) filter (where m.is_win),
-         count(distinct m.player_id)
-  from public.play_time_matches() m
-  cross join lateral (
-    values
-      ('weekday', extract(isodow from timezone('UTC', m.started_at))::smallint),
-      ('time_of_day', floor(extract(hour from timezone('UTC', m.started_at)) / 4)::smallint),
-      ('session_position', least(m.session_position, public.play_session_position_cap())::smallint)
-  ) as d(dimension, bucket)
-  where m.half_season = p_half_season
-    and m.play_mode_id = any (public.play_time_mode_ids())
-  group by d.dimension, d.bucket
+    (half_season, dimension, bucket, matches, decided_matches, wins, recorders, top_recorder_matches)
+  select p_half_season, r.dimension, r.bucket,
+         sum(r.matches), sum(r.decided_matches), sum(r.wins), count(*), max(r.matches)
+  from (
+    -- One row per recorder and bucket: the recorder exists only here, to count them and find the busiest.
+    select d.dimension, d.bucket, m.player_id,
+           count(*) as matches,
+           count(m.is_win) as decided_matches,
+           count(*) filter (where m.is_win) as wins
+    from public.play_time_matches() m
+    cross join lateral (
+      values
+        ('weekday', extract(isodow from timezone('UTC', m.started_at))::smallint),
+        ('time_of_day', floor(extract(hour from timezone('UTC', m.started_at)) / 4)::smallint),
+        ('session_position', least(m.session_position, public.play_session_position_cap())::smallint)
+    ) as d(dimension, bucket)
+    where m.half_season = p_half_season
+      and m.play_mode_id = any (public.play_time_mode_ids())
+    group by d.dimension, d.bucket, m.player_id
+  ) r
+  group by r.dimension, r.bucket
 $$;
 
 -- A half-season is settled once the next one began and the late-upload grace has passed.
@@ -254,8 +286,11 @@ end
 $$;
 
 -- The one way the website reads the buckets. It runs as its owner, reads only the aggregate table, and
--- returns counts only. One jsonb value instead of a set of rows, so PostgREST's 1000-row page limit
--- never cuts the answer short. The session gap travels with it so the page can state it.
+-- returns counts only. A bucket leaves the database only if its own half-season row passes all three
+-- gates; the rows that pass are added together over half-seasons here, so the site never sees a
+-- recorder count, a half-season or a bucket that failed. One jsonb value instead of a set of rows, so
+-- PostgREST's 1000-row page limit never cuts the answer short. The gates and the session gap travel
+-- with it so the page can state them.
 create or replace function public.read_community_insights() returns jsonb
 language sql
 stable
@@ -264,17 +299,28 @@ set search_path = ''
 as $$
   select jsonb_build_object(
     'session_gap_minutes', extract(epoch from public.play_session_gap()) / 60,
+    'minimum_matches', public.insights_min_matches(),
+    'minimum_recorders', public.insights_min_recorders(),
+    'max_recorder_share_percent', public.insights_max_recorder_share_percent(),
     'buckets', coalesce((
       select jsonb_agg(jsonb_build_object(
-               'half_season', a.half_season,
-               'dimension', a.dimension,
-               'bucket', a.bucket,
-               'matches', a.matches,
-               'decided_matches', a.decided_matches,
-               'wins', a.wins,
-               'recorders', a.recorders)
-             order by a.half_season, a.dimension, a.bucket)
-      from public.play_time_aggregates a
+               'dimension', b.dimension,
+               'bucket', b.bucket,
+               'matches', b.matches,
+               'decided_matches', b.decided_matches,
+               'wins', b.wins)
+             order by b.dimension, b.bucket)
+      from (
+        select a.dimension, a.bucket,
+               sum(a.matches)::integer as matches,
+               sum(a.decided_matches)::integer as decided_matches,
+               sum(a.wins)::integer as wins
+        from public.play_time_aggregates a
+        where a.matches >= public.insights_min_matches()
+          and a.recorders >= public.insights_min_recorders()
+          and a.top_recorder_matches * 100 <= a.matches * public.insights_max_recorder_share_percent()
+        group by a.dimension, a.bucket
+      ) b
     ), '[]'::jsonb)
   )
 $$;
@@ -285,6 +331,9 @@ revoke execute on function public.play_session_gap() from public, anon, authenti
 revoke execute on function public.play_session_position_cap() from public, anon, authenticated;
 revoke execute on function public.play_time_mode_ids() from public, anon, authenticated;
 revoke execute on function public.play_time_freeze_grace() from public, anon, authenticated;
+revoke execute on function public.insights_min_matches() from public, anon, authenticated;
+revoke execute on function public.insights_min_recorders() from public, anon, authenticated;
+revoke execute on function public.insights_max_recorder_share_percent() from public, anon, authenticated;
 revoke execute on function public.play_time_matches() from public, anon, authenticated;
 revoke execute on function public.fill_play_time_aggregates(numeric) from public, anon, authenticated;
 revoke execute on function public.play_time_half_season_settled(numeric) from public, anon, authenticated;
@@ -295,6 +344,9 @@ grant execute on function public.play_session_gap() to service_role;
 grant execute on function public.play_session_position_cap() to service_role;
 grant execute on function public.play_time_mode_ids() to service_role;
 grant execute on function public.play_time_freeze_grace() to service_role;
+grant execute on function public.insights_min_matches() to service_role;
+grant execute on function public.insights_min_recorders() to service_role;
+grant execute on function public.insights_max_recorder_share_percent() to service_role;
 grant execute on function public.play_time_matches() to service_role;
 grant execute on function public.fill_play_time_aggregates(numeric) to service_role;
 grant execute on function public.play_time_half_season_settled(numeric) to service_role;

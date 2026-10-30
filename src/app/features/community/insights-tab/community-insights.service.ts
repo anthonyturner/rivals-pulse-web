@@ -32,9 +32,9 @@ export function isCommunityInsights(body: unknown): body is CommunityInsights {
 
   return (
     (insights.status === 'ready' || insights.status === 'not-enough-data') &&
-    typeof insights.minimumMatches === 'number' &&
-    typeof insights.minimumRecorders === 'number' &&
-    (insights.sessionGapMinutes === null || typeof insights.sessionGapMinutes === 'number') &&
+    [insights.sessionGapMinutes, insights.minimumMatches, insights.minimumRecorders, insights.maxRecorderSharePercent].every(
+      (value) => value === null || typeof value === 'number',
+    ) &&
     Array.isArray(insights.dimensions) &&
     insights.dimensions.every(
       (dimension) =>

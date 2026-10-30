@@ -1,7 +1,9 @@
 import { fakeSupabaseClient } from './fake-supabase-client';
 import {
+  countExternalSources,
   finishSyncRun,
   getExternalSourcePayload,
+  getStoredExternalSourcePayload,
   saveExternalSource,
   startSyncRun,
 } from './sync-log';
@@ -91,5 +93,38 @@ describe('getExternalSourcePayload', () => {
 
     expect(await getExternalSourcePayload(missing, 'x')).toBeUndefined();
     expect(await getExternalSourcePayload(empty, 'x')).toBeUndefined();
+  });
+});
+
+describe('getStoredExternalSourcePayload', () => {
+  it('returns the payload as saved, even an empty one', async () => {
+    const empty = fakeSupabaseClient(() => ({ data: { payload: {} } }));
+
+    expect(await getStoredExternalSourcePayload(empty.client, 'fandom-deadpool')).toEqual({});
+    expect(empty.calls[0].steps).toContain(['eq', ['source_key', 'fandom-deadpool']]);
+  });
+
+  it('returns undefined for a source never saved', async () => {
+    const { client } = fakeSupabaseClient(() => ({ data: null }));
+
+    expect(await getStoredExternalSourcePayload(client, 'nothing')).toBeUndefined();
+  });
+
+  it('names the failure', async () => {
+    const { client } = fakeSupabaseClient(() => ({ error: { message: 'boom' } }));
+
+    await expectAsync(getStoredExternalSourcePayload(client, 'x')).toBeRejectedWithError(
+      'Reading source x failed: boom',
+    );
+  });
+});
+
+describe('countExternalSources', () => {
+  it('counts without reading rows', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({ count: 8 }));
+
+    expect(await countExternalSources(client)).toBe(8);
+    expect(calls[0].table).toBe('external_sources');
+    expect(calls[0].steps[0]).toEqual(['select', ['*', { count: 'exact', head: true }]]);
   });
 });

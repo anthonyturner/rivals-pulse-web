@@ -12,6 +12,7 @@ import {
   getTierListFromDatabase,
 } from '../src/content-database.js';
 import { getCommunityInsights } from '../src/community-insights-read.js';
+import { getHeroMatchups } from '../src/hero-matchups-read.js';
 import { getHeroStats, halfSeasonFromQuery } from '../src/hero-stats-read.js';
 import gameStatsHandler from './game-stats.js';
 import gameStatsSyncHandler from './sync/game-stats.js';
@@ -87,6 +88,11 @@ export default async function handler(req: VercelRequest, res: ServerResponse) {
 
     if (route === 'community/insights') {
       sendJson(res, 200, await getCommunityInsights());
+      return;
+    }
+
+    if (route === 'hero-matchups') {
+      sendJson(res, 200, await getHeroMatchups());
       return;
     }
 
