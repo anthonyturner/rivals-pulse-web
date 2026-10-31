@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -8,6 +8,21 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { communityRoutes } from '../community.routes';
 
 const TAB_LABELS = ['Heroes', 'Matches', 'Counters', 'Tier list', 'Stats', 'Insights'];
+
+// What /api/community/matches answers while no half-season has enough matches yet.
+const MATCHES_NOT_ENOUGH_DATA = {
+  status: 'not-enough-data',
+  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
+  halfSeasons: [],
+  halfSeason: null,
+  inPlaceOf: null,
+  matchesBand: null,
+  maps: [],
+  mapsBelowMinimum: [],
+  modeMix: null,
+  averageLengthMinutes: null,
+  perDay: null,
+};
 
 describe('CommunityPageComponent', () => {
   let harness: RouterTestingHarness;
@@ -24,6 +39,29 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
   }
 
+  /** The Insights tab reads its numbers from the site's API; the API's own answer for "nothing yet". */
+  async function answerInsightsWithNoData(): Promise<void> {
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/community/insights')
+      .flush({
+        status: 'not-enough-data',
+        timeZone: 'UTC',
+        sessionGapMinutes: null,
+        minimumMatches: 30,
+        minimumRecorders: 3,
+        maxRecorderSharePercent: 50,
+        dimensions: [],
+      });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
+  async function answerMatchesTab(): Promise<void> {
+    TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
   async function pressOnSelectedTab(key: string, modifiers: KeyboardEventInit = {}): Promise<void> {
     selectedTab()?.dispatchEvent(
       new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...modifiers }),
@@ -36,9 +74,9 @@ describe('CommunityPageComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter(communityRoutes),
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter(communityRoutes),
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -91,6 +129,7 @@ describe('CommunityPageComponent', () => {
 
     expect(router.url).toBe('/matches');
     expect(selectedTab()?.textContent?.trim()).toBe('Matches');
+    await answerMatchesTab();
     expect(panel().textContent).toContain('Community matches');
   });
 
@@ -154,6 +193,12 @@ describe('CommunityPageComponent', () => {
   ]) {
     it(`shows the designed empty state on the ${label} tab`, async () => {
       await open(`/${id}`);
+      if (id === 'insights') {
+        await answerInsightsWithNoData();
+      }
+      if (id === 'matches') {
+        await answerMatchesTab();
+      }
 
       const text = panel().textContent ?? '';
       expect(text).toContain('Not enough data yet');
