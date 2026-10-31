@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Typing the address of Learning Paths or Watch Next Quiz now opens the Tools page, where both show as Coming soon, until each page is released ([#232](https://github.com/anthonyturner/rivals-pulse-web/pull/232)).
 - Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
 
 ### Added
