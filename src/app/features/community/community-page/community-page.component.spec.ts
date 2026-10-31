@@ -39,6 +39,23 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
   }
 
+  /** The Insights tab reads its numbers from the site's API; the API's own answer for "nothing yet". */
+  async function answerInsightsWithNoData(): Promise<void> {
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/community/insights')
+      .flush({
+        status: 'not-enough-data',
+        timeZone: 'UTC',
+        sessionGapMinutes: null,
+        minimumMatches: 30,
+        minimumRecorders: 3,
+        maxRecorderSharePercent: 50,
+        dimensions: [],
+      });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
   async function answerMatchesTab(): Promise<void> {
     TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
     await harness.fixture.whenStable();
@@ -57,9 +74,9 @@ describe('CommunityPageComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter(communityRoutes),
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter(communityRoutes),
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -176,6 +193,9 @@ describe('CommunityPageComponent', () => {
   ]) {
     it(`shows the designed empty state on the ${label} tab`, async () => {
       await open(`/${id}`);
+      if (id === 'insights') {
+        await answerInsightsWithNoData();
+      }
       if (id === 'matches') {
         await answerMatchesTab();
       }

@@ -69,6 +69,7 @@ repo's build. This is a move, not a redesign.
 | `20261031011746_game_stats.sql` | `game_stat_snapshots`, `game_stat_snapshot_games` and the `record_game_stat_snapshot` function (the website's game stats, moved from Turso) |
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
+| `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 
 Link once per machine, check history, then apply:
 
@@ -417,24 +418,40 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   recorded") is left out of the numbers and logged. Deadpool's base id and role variants count as
   one hero.
 
-Hero against hero is derived in [`src/hero-matchups.ts`](../src/hero-matchups.ts) and served by
-`GET /api/hero-matchups`. It describes a record and nothing else: no tier, no rank, no ban score.
+## Play-time aggregates (Community Insights tab)
 
-- A pair is listed once the two heroes have faced each other in 10 matches with a win or a loss
-  (`HERO_MATCHUP_MIN_MATCHES`, equal to `hero_matchup_min_matches()`). Below that the pair is absent,
-  and the pages say "Not enough data yet".
-- A pair's win rate is the hero's wins over its scoreboard lines against that enemy; `shrunkWinRate`
-  uses the same `(wins + 5) / (lines + 10)` as the tier rule. The list is sorted by hero then enemy,
-  not by strength. A hero against itself (including two Deadpool forms) is dropped.
-- Deadpool's role forms are merged only after the per-row minimum. The database keeps a pair of game
-  hero ids only when that pair alone reaches the minimum, so a form with fewer than 10 matches
-  against an enemy never reaches the merge, and Deadpool's merged figure can understate his real
-  total. The minimum is applied to the merged sum as well, so it can only remove more pairs.
-- Competitive and Quick Match are blended, the half-season is chosen as for hero stats (the current
-  one, or the previous one labelled with `inPlaceOf` while the current has no pair at the minimum),
-  and a game hero id with no mapping is left out and logged.
-- A page calls a hero's record a winning one when its shrunk win rate is above 50%
-  (`WINNING_RECORD_CUT_OFF`).
+`play_time_aggregates` keeps, per half-season, the matches and decided wins of the recorders' own
+matches by weekday (`weekday`, ISO 1 Monday to 7 Sunday), by four-hour block of the day
+(`time_of_day`, 0 is 00:00 to 03:59) and by place in a play session (`session_position`, 1 to 3 and
+4 for the fourth and later), with `recorders` (the number of different players behind the bucket) and `top_recorder_matches` (how
+many of its matches the busiest one recorded). It holds no player id, uid, name or per-match row. RLS is on with no policy, and only the service role
+reaches it.
+
+- Source: `tracked_matches` (a recorder's own matches, with their own result), not `participants`,
+  which does not say which scoreboard line is the recorder's. A match two recorders both played
+  counts once for each. A player in `do_not_store` is left out.
+- Every day and hour is UTC: the upload carries no offset. A match is placed by its start (end time
+  minus duration). Only Quick Match and Competitive count.
+- A session ends after `play_session_gap()` (30 minutes) idle between one of a recorder's matches and
+  the next. The recorder's id is used inside the aggregation only and never stored.
+- `recompute_play_time_aggregates()` rebuilds every half-season that is not frozen, from scratch, on the
+  hourly `recompute-play-time-aggregates` job, and freezes a half-season once the next one began and
+  `play_time_freeze_grace()` (8 days, past the 7-day upload window) has passed. It does not touch
+  `purge_expired_participants`.
+- `read_community_insights()` (granted to `service_role` only) returns the session gap, the gates and,
+  per shown bucket, a whole-number `share_percent` and `win_rate_percent`. It returns no counts: every
+  dimension adds up to the same matches, so an exact count would let a bucket hidden in another
+  dimension be found by subtraction. A bucket is shown only if its own half-season row has at least
+  `insights_min_matches()` (30) matches, at least `insights_min_recorders()` (3) different players, and
+  no one player over `insights_max_recorder_share_percent()` (50) of its matches; the rows that pass
+  are added over half-seasons inside the function. A share is over the shown buckets of its dimension
+  only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
+  win rate is null with fewer than 30 results. With one main uploader nothing passes, and "not enough
+  data yet" is the expected state.
+- The server calls it with the shared client and labels the answer in
+  [`src/community-insights.ts`](../src/community-insights.ts), served by `GET /api/community/insights`.
+  A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP
+  200; any other failure keeps its error status (epic 170 error policy).
 
 ### Role benchmarks (Community Stats tab)
 
@@ -550,11 +567,12 @@ policy's hard limit), but later than promised.
 ## After setup
 
 - **Required:** `select jobname from cron.job where jobname in
-  ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates');` must
-  show all three jobs (the daily purge and the two hourly aggregate rebuilds). If one is missing (the
-  migrations warn when `pg_cron` is unavailable), enable `pg_cron` and schedule
-  `select public.purge_expired_participants();` daily, `select public.recompute_hero_aggregates();`
-  and `select public.recompute_extended_aggregates();` hourly by hand.
+  ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
+  'recompute-play-time-aggregates');` must show all four jobs (the daily purge and the three hourly
+  aggregate rebuilds). If one is missing (the migrations warn when `pg_cron` is unavailable), enable
+  `pg_cron` and schedule `select public.purge_expired_participants();` daily, and
+  `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();` and
+  `select public.recompute_play_time_aggregates();` hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
