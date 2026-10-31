@@ -1,10 +1,12 @@
 import { Routes } from '@angular/router';
 
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
+import { HOME_TITLE } from './core/seo/site-meta';
 
 export const routes: Routes = [
   {
     path: '',
+    title: HOME_TITLE,
     loadComponent: () =>
       import('./features/home/home-page.component').then((module) => module.HomePageComponent),
   },
@@ -201,6 +203,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/tools/team-builder/team-builder-page.component').then(
         (module) => module.TeamBuilderPageComponent,
+      ),
+  },
+  {
+    path: 'how-we-count',
+    title: 'How we count | Rivals Pulse Coach',
+    loadComponent: () =>
+      import('./features/how-we-count/how-we-count-page.component').then(
+        (module) => module.HowWeCountPageComponent,
       ),
   },
   {

@@ -201,6 +201,13 @@ describe('CommunityPageComponent', () => {
     expect(link?.getAttribute('href')).toBe('/privacy');
   });
 
+  it('links the anonymity note to the How we count explainer', async () => {
+    await open('/heroes');
+
+    const links = host().querySelectorAll<HTMLAnchorElement>('.community-page__note a');
+    expect(links[1]?.getAttribute('href')).toBe('/how-we-count');
+  });
+
   it('says the numbers are anonymous community totals', async () => {
     await open('/heroes');
 

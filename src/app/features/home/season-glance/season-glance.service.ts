@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, take } from 'rxjs';
 
 import type { SeasonGlanceContent } from '../home-content.model';
 import { HomeContentService } from '../home-content.service';
@@ -29,7 +29,8 @@ export class SeasonGlanceService {
   getSeasonGlance(): Observable<SeasonGlanceState> {
     return forkJoin({
       content: this.homeContent.getHomeContent(),
-      stats: this.heroStats.getHeroStats(),
+      // The shared stats stream stays open for reloads, and forkJoin waits for a stream to finish.
+      stats: this.heroStats.getHeroStats().pipe(take(1)),
     }).pipe(
       map(({ content, stats }) => ({
         content: content.seasonGlance,

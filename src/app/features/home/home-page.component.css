@@ -198,45 +198,6 @@ h1 {
   line-height: 1.68;
 }
 
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 36px;
-}
-
-.hero-actions a {
-  color: inherit;
-  font-weight: 820;
-  text-decoration: none;
-}
-
-.hero-actions a {
-  display: inline-grid;
-  min-height: 48px;
-  place-items: center;
-  padding: 0 20px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 6px;
-  background: rgba(7, 17, 31, 0.46);
-  backdrop-filter: blur(12px);
-  transition:
-    transform 180ms ease,
-    background 180ms ease;
-}
-
-.hero-actions a:first-child {
-  border-color: #ffd866;
-  background: #ffd866;
-  color: #111827;
-}
-
-.hero-actions a:hover {
-  transform: translateY(-2px);
-  background: #fff8dd;
-  color: #111827;
-}
-
 .hero-spotlight {
   display: grid;
   gap: 14px;
@@ -344,6 +305,21 @@ h1 {
   outline-offset: 3px;
 }
 
+.home-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 28px;
+  width: min(1320px, 100%);
+  margin-inline: auto;
+}
+
+.home-main {
+  display: grid;
+  gap: 32px;
+  min-width: 0;
+}
+
 @keyframes video-popout-in {
   from {
     opacity: 0;
@@ -417,7 +393,6 @@ h1 {
   }
 
   .home-page-background.is-popout,
-  .hero-actions a,
   .hero-spotlight-actions a,
   .hero-spotlight-actions button {
     animation: none;

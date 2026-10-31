@@ -1,3 +1,5 @@
+import { APP_BASE_HREF } from '@angular/common';
+import { provideHttpClient } from '@angular/common/http';
 import { Component, destroyPlatform, provideZonelessChangeDetection } from '@angular/core';
 import { getTestBed } from '@angular/core/testing';
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -5,31 +7,16 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { renderApplication } from '@angular/platform-server';
 import { provideRouter } from '@angular/router';
 
-import type { HeroStats } from '../../../../../contracts/hero-stats.model';
-import { HeroUsageSectionComponent } from './hero-usage-section.component';
-import { buildHeroUsageView } from './hero-usage-view';
-
-const emptyDataset: HeroStats = {
-  status: 'not-enough-data',
-  minimumMatches: 10,
-  halfSeasons: [],
-  halfSeason: null,
-  inPlaceOf: null,
-  matchesCounted: 0,
-  tiers: [],
-  belowMinimum: [],
-};
+import { StatsSnapshotComponent } from './stats-snapshot.component';
 
 @Component({
   selector: 'app-root',
-  imports: [HeroUsageSectionComponent],
-  template: `<app-hero-usage-section eyebrow="Season 10 meta" title="Most-used heroes" [view]="view" />`,
+  imports: [StatsSnapshotComponent],
+  template: `<app-stats-snapshot />`,
 })
-class SsrHostComponent {
-  readonly view = buildHeroUsageView(emptyDataset, new Map());
-}
+class SsrHostComponent {}
 
-describe('HeroUsageSectionComponent server render', () => {
+describe('StatsSnapshotComponent server render', () => {
   // Two things leak out of a server render, so both are put back for the specs that run after it.
   // Angular allows one platform at a time and the test runner holds the browser one; and the server
   // platform overwrites the browser's globals (Event, Node, Element...) with its own DOM classes.
@@ -56,21 +43,32 @@ describe('HeroUsageSectionComponent server render', () => {
     });
   });
 
-  it('renders the compact empty notice and the source label, with no cards, zeros or NaN, from an empty dataset', async () => {
-    const html = await renderApplication(
+  it('renders the heading, the reserved loading panel, the links and the invitation, with no zeros or NaN', async () => {
+    const page = await renderApplication(
       (context) =>
         bootstrapApplication(
           SsrHostComponent,
-          { providers: [provideZonelessChangeDetection(), provideRouter([])] },
+          {
+            providers: [
+              provideZonelessChangeDetection(),
+              provideRouter([]),
+              provideHttpClient(),
+              { provide: APP_BASE_HREF, useValue: '/' },
+            ],
+          },
           context,
         ),
       { document: '<html><body><app-root></app-root></body></html>' },
     );
 
-    expect(html).toContain('Based on Rivals Pulse players');
-    expect(html).toContain('Not enough data yet');
-    expect(html).toContain('class="usage-empty"');
-    expect(html).not.toMatch(/NaN|Infinity|class="usage-card|<dl/);
+    const html = page.replace(/<style[\s\S]*?<\/style>/g, '');
+
+    expect(html).toContain('Hero stats');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('href="/tier-list"');
+    expect(html).toContain('Every match played with Rivals Pulse makes these stats sharper.');
+    expect(html.match(/NaN|Infinity|undefined|<table|role="tab"/)).toBeNull();
+    expect(html.match(/(^|[^\d.])0(\.0)?%/)).toBeNull();
   });
 });
 
