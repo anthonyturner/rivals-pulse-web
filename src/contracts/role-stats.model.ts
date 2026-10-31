@@ -1,11 +1,11 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.js';
+import type { HeroStatsHalfSeason, HeroStatsModeId } from './hero-stats.model.js';
 
 export const HERO_ROLES = ['Vanguard', 'Duelist', 'Strategist'] as const;
 
 export type HeroRole = (typeof HERO_ROLES)[number];
 
-/** `all` blends Quick Match and Competitive, the same modes the hero numbers blend. */
-export type RoleStatsModeId = 'all' | 'quick-match' | 'competitive';
+/** The hero numbers' modes: `all` blends Quick Match and Competitive. */
+export type RoleStatsModeId = HeroStatsModeId;
 
 /**
  * What the community plays like in one role and mode. Every figure is per scoreboard line (one
@@ -52,6 +52,6 @@ export interface RoleStats {
   halfSeason: HeroStatsHalfSeason | null;
   /** Set only when `halfSeason` is the previous half-season, shown while the current one has no ready role. */
   inPlaceOf: HeroStatsHalfSeason | null;
-  /** Always every mode, in the order `all`, `quick-match`, `competitive`. */
+  /** Always every mode, in the order `all`, `quick-match`, `competitive`, `arcade`, `practice`. */
   modes: RoleStatsMode[];
 }

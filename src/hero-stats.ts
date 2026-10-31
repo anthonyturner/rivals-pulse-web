@@ -3,6 +3,7 @@ import type {
   HeroStatsBelowMinimum,
   HeroStatsHalfSeason,
   HeroStatsHero,
+  HeroStatsModeId,
   HeroStatsTier,
 } from './contracts/hero-stats.model.js';
 import type { TierName } from './contracts/tier-list.model.js';
@@ -36,11 +37,43 @@ const TIER_ORDER: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
 export const PLAY_MODE_IDS = { quickMatch: 0, competitive: 1, arcade: 2, practice: 3, unknown: -1 } as const;
 
 /**
- * The modes the numbers blend. Unknown (-1) is left out on purpose: the game reports Practice
- * against bots as Quick Match, so an unlabelled match may be Practice or Arcade, and counting it
- * would let those in. The overlay drops a match with no mode for the same reason.
+ * The modes the numbers blend. Unknown (-1) is left out on purpose: an unlabelled match could be
+ * any mode, Practice and Arcade included, and counting it would let those in. The overlay drops a
+ * match with no mode for the same reason. Practice against bots is stored as 3, not as Quick Match:
+ * every Quick Match match in production has 12 lines on 2 teams (spike issue 216).
  */
 export const BLENDED_PLAY_MODE_IDS: readonly number[] = [PLAY_MODE_IDS.quickMatch, PLAY_MODE_IDS.competitive];
+
+export interface PlayMode {
+  id: HeroStatsModeId;
+  label: string;
+  /** The `participants.play_mode_id` values this mode counts. Unknown (-1) is in none of them. */
+  playModeIds: readonly number[];
+}
+
+/**
+ * Every way of counting, in display order: the blend first, then each game mode alone. The hero
+ * numbers and the role stats both offer exactly this list.
+ */
+export const PLAY_MODES: readonly PlayMode[] = [
+  { id: 'all', label: 'Quick Match and Competitive', playModeIds: BLENDED_PLAY_MODE_IDS },
+  { id: 'quick-match', label: 'Quick Match', playModeIds: [PLAY_MODE_IDS.quickMatch] },
+  { id: 'competitive', label: 'Competitive', playModeIds: [PLAY_MODE_IDS.competitive] },
+  { id: 'arcade', label: 'Arcade', playModeIds: [PLAY_MODE_IDS.arcade] },
+  { id: 'practice', label: 'Practice', playModeIds: [PLAY_MODE_IDS.practice] },
+];
+
+const DEFAULT_PLAY_MODE = PLAY_MODES[0];
+
+/**
+ * The mode a `mode` query value names: the blend when there is none, and undefined for a value that
+ * names no mode, which then counts nothing rather than quietly counting the blend.
+ */
+export function playModeFromQuery(value: string | undefined): PlayMode | undefined {
+  const id = value?.trim().toLowerCase();
+
+  return id === undefined || id === '' ? DEFAULT_PLAY_MODE : PLAY_MODES.find((mode) => mode.id === id);
+}
 
 /** One hero in one half-season and mode, as `read_hero_stats()` returns it. */
 export interface HeroAggregateRow {
@@ -86,6 +119,11 @@ export interface DeriveHeroStatsOptions {
    * not started, or that nothing knows, gives the empty state.
    */
   halfSeason?: number;
+  /**
+   * The `mode` query value; see `playModeFromQuery`. None counts the Quick Match and Competitive
+   * blend, and a value naming no mode counts nothing.
+   */
+  mode?: string;
   /** Game hero id to the hero's id in `heroes.json`. A game id missing here is left out of the numbers. */
   heroSlugByGameId: ReadonlyMap<number, string>;
 }
@@ -212,13 +250,14 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
     source.heroes.map((row) => row.halfSeason),
     options.now,
   );
+  const mode = playModeFromQuery(options.mode);
   const excludedGameIds = new Set<number>();
   const snapshots = new Map<number, HalfSeasonSnapshot>();
   const snapshot = (id: number): HalfSeasonSnapshot => {
     let result = snapshots.get(id);
 
     if (result === undefined) {
-      result = snapshotOf(source, id, options.heroSlugByGameId);
+      result = snapshotOf(source, id, mode?.playModeIds ?? [], options.heroSlugByGameId);
       result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
       snapshots.set(id, result);
     }
@@ -240,6 +279,12 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
       halfSeasons: timeline.started.map(timeline.describe),
       halfSeason: shown === undefined ? null : timeline.describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
+      mode: mode?.id ?? null,
+      modes: PLAY_MODES.map(({ id, label, playModeIds }) => ({
+        id,
+        label,
+        decidedMatches: shown === undefined ? 0 : decidedMatchesOf(source, shown, playModeIds),
+      })),
       matchesCounted: result?.matchesCounted ?? 0,
       tiers: result?.tiers ?? [],
       belowMinimum: result?.belowMinimum ?? [],
@@ -273,19 +318,24 @@ export function addRow(tally: Tally, row: HeroAggregateRow): void {
   tally.finalHitsN += row.finalHitsN;
 }
 
+function decidedMatchesOf(source: HeroStatsSource, halfSeason: number, playModeIds: readonly number[]): number {
+  return source.totals
+    .filter((row) => row.halfSeason === halfSeason && playModeIds.includes(row.playModeId))
+    .reduce((sum, row) => sum + row.decidedMatches, 0);
+}
+
 function snapshotOf(
   source: HeroStatsSource,
   halfSeason: number,
+  playModeIds: readonly number[],
   heroSlugByGameId: ReadonlyMap<number, string>,
 ): HalfSeasonSnapshot {
-  const blended = (row: { halfSeason: number; playModeId: number }): boolean =>
-    row.halfSeason === halfSeason && BLENDED_PLAY_MODE_IDS.includes(row.playModeId);
-
-  const matchesCounted = source.totals.filter(blended).reduce((sum, row) => sum + row.decidedMatches, 0);
+  const matchesCounted = decidedMatchesOf(source, halfSeason, playModeIds);
   const tallies = new Map<string, Tally>();
   const excludedGameIds = new Set<number>();
+  const counted = source.heroes.filter((row) => row.halfSeason === halfSeason && playModeIds.includes(row.playModeId));
 
-  for (const row of source.heroes.filter(blended)) {
+  for (const row of counted) {
     const slug = heroSlugByGameId.get(row.gameHeroId);
 
     if (slug === undefined) {

@@ -158,29 +158,44 @@ describe('deriveRoleStats modes', () => {
   const quick = (heroId: number, lines: number, wins: number) =>
     fullRow(heroId, lines, wins, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.quickMatch });
 
-  it('blends Quick Match and Competitive in `all` and leaves Arcade, Practice and unknown out of every mode', () => {
+  it('blends Quick Match and Competitive in `all`, counts each other mode alone, and counts unknown nowhere', () => {
     const source = sourceOf([
       quick(HULK, MIN, MIN),
       fullRow(HULK, MIN, 0, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.competitive }),
-      fullRow(HULK, MIN, MIN, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.arcade }),
-      fullRow(HULK, MIN, MIN, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.practice }),
+      fullRow(HULK, 2 * MIN, MIN / 2, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.arcade }),
+      fullRow(HULK, 3 * MIN, (3 * MIN) / 5, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.practice }),
       fullRow(HULK, MIN, MIN, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.unknown }),
     ]);
 
     expect(roleOf(source, 'quick-match', 'Vanguard')).toEqual(jasmine.objectContaining({ appearances: MIN, winRate: 100 }));
     expect(roleOf(source, 'competitive', 'Vanguard')).toEqual(jasmine.objectContaining({ appearances: MIN, winRate: 0 }));
     expect(roleOf(source, 'all', 'Vanguard')).toEqual(jasmine.objectContaining({ appearances: 2 * MIN, winRate: 50 }));
+    expect(roleOf(source, 'arcade', 'Vanguard')).toEqual(jasmine.objectContaining({ appearances: 2 * MIN, winRate: 25 }));
+    expect(roleOf(source, 'practice', 'Vanguard')).toEqual(jasmine.objectContaining({ appearances: 3 * MIN, winRate: 20 }));
   });
 
-  it('always lists the three modes in order, each with every role', () => {
+  it('always lists every mode in order, each with every role', () => {
     const { stats } = derive(sourceOf([]));
 
     expect(stats.modes.map((mode) => [mode.id, mode.label])).toEqual([
       ['all', 'Quick Match and Competitive'],
       ['quick-match', 'Quick Match'],
       ['competitive', 'Competitive'],
+      ['arcade', 'Arcade'],
+      ['practice', 'Practice'],
     ]);
     expect(stats.modes.every((mode) => mode.roles.length === 3)).toBeTrue();
+  });
+
+  it('picks the half-season by the blend, so a current half-season with only Arcade lines falls back', () => {
+    const arcade = fullRow(HULK, MIN, 0, [1, 1, 1, 1], { playModeId: PLAY_MODE_IDS.arcade });
+    const source = sourceOf([arcade, fullRow(HULK, MIN, 0, [1, 1, 1, 1], { halfSeason: 10 })]);
+
+    const { stats } = derive(source);
+
+    expect(stats.halfSeason?.id).toBe(10);
+    expect(stats.inPlaceOf?.id).toBe(10.5);
+    expect(roleOf(source, 'arcade', 'Vanguard').appearances).toBe(0);
   });
 
   it('gates each mode on its own sample, so a thin mode hides while the blend shows', () => {

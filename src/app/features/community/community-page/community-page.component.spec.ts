@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -8,6 +8,21 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { communityRoutes } from '../community.routes';
 
 const TAB_LABELS = ['Heroes', 'Matches', 'Counters', 'Tier list', 'Stats', 'Insights'];
+
+// What /api/community/matches answers while no half-season has enough matches yet.
+const MATCHES_NOT_ENOUGH_DATA = {
+  status: 'not-enough-data',
+  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
+  halfSeasons: [],
+  halfSeason: null,
+  inPlaceOf: null,
+  matchesBand: null,
+  maps: [],
+  mapsBelowMinimum: [],
+  modeMix: null,
+  averageLengthMinutes: null,
+  perDay: null,
+};
 
 describe('CommunityPageComponent', () => {
   let harness: RouterTestingHarness;
@@ -21,6 +36,12 @@ describe('CommunityPageComponent', () => {
 
   async function open(url: string): Promise<void> {
     await harness.navigateByUrl(url);
+    harness.detectChanges();
+  }
+
+  async function answerMatchesTab(): Promise<void> {
+    TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
+    await harness.fixture.whenStable();
     harness.detectChanges();
   }
 
@@ -91,6 +112,7 @@ describe('CommunityPageComponent', () => {
 
     expect(router.url).toBe('/matches');
     expect(selectedTab()?.textContent?.trim()).toBe('Matches');
+    await answerMatchesTab();
     expect(panel().textContent).toContain('Community matches');
   });
 
@@ -154,6 +176,9 @@ describe('CommunityPageComponent', () => {
   ]) {
     it(`shows the designed empty state on the ${label} tab`, async () => {
       await open(`/${id}`);
+      if (id === 'matches') {
+        await answerMatchesTab();
+      }
 
       const text = panel().textContent ?? '';
       expect(text).toContain('Not enough data yet');
