@@ -63,7 +63,7 @@
   color: #5fe0d6;
 }
 
-h2 {
+h3 {
   margin: 0.75rem 0;
   font-size: clamp(1.875rem, 3.8vw, 3rem);
   font-weight: 900;
@@ -72,11 +72,11 @@ h2 {
   text-wrap: balance;
 }
 
-h2 .ally {
+h3 .ally {
   color: var(--ally);
 }
 
-h2 .enemy {
+h3 .enemy {
   color: var(--enemy);
 }
 
