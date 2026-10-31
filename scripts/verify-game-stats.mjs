@@ -43,7 +43,7 @@ const FUNCTION_SIGNATURE = 'public.record_game_stat_snapshot(timestamptz, text, 
 // Every table privilege Postgres has. The project's default privileges grant all of them to `anon`
 // and `authenticated` on any new table in `public`, so the migration's `revoke all` is the only
 // thing keeping the publishable key out.
-const TABLE_PRIVILEGES = ['select', 'insert', 'update', 'delete', 'truncate', 'references', 'trigger'];
+const TABLE_PRIVILEGES = ['select', 'insert', 'update', 'delete', 'truncate', 'references', 'trigger', 'maintain'];
 const SEQUENCE_PRIVILEGES = ['usage', 'select', 'update'];
 const PUBLIC_ROLES = ['anon', 'authenticated'];
 // Snapshot ids spread over the history, and one game of each. The capture's snapshot is checked too.
