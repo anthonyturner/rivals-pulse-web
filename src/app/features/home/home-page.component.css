@@ -6,7 +6,8 @@
   position: relative;
   isolation: isolate;
   min-height: 100%;
-  overflow: hidden;
+  /* clip, unlike hidden, leaves the page as the scroller, so the news rail can stick. */
+  overflow: clip;
   padding: 24px 32px 96px;
   background: var(--bg);
 }
@@ -129,15 +130,9 @@
 .season-hero {
   position: relative;
   z-index: 1;
+  display: grid;
   width: min(1320px, 100%);
   margin-inline: auto;
-}
-
-.season-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
-  gap: clamp(36px, 7vw, 110px);
-  align-items: start;
   min-height: min(680px, calc(100dvh - 80px));
   padding: clamp(70px, 4vw, 144px) clamp(10px, 3vw, 40px) 88px;
   color: #fff;
@@ -148,20 +143,6 @@
   align-content: start;
   max-width: 810px;
   padding-top: clamp(18px, 3vw, 40px);
-}
-
-.hero-sidecar {
-  display: grid;
-  align-content: start;
-  align-self: start;
-  gap: 20px;
-  width: min(100%, 340px);
-  justify-self: end;
-  min-width: 0;
-}
-
-.hero-sidecar > * {
-  min-width: 0;
 }
 
 .eyebrow {
@@ -198,113 +179,6 @@ h1 {
   line-height: 1.68;
 }
 
-.hero-spotlight {
-  display: grid;
-  gap: 14px;
-  padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 24px;
-  background:
-    linear-gradient(145deg, rgba(7, 17, 31, 0.82), rgba(9, 40, 61, 0.56)),
-    rgba(7, 17, 31, 0.58);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
-}
-
-.hero-spotlight-heading {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hero-spotlight-kicker,
-.hero-spotlight-date,
-.hero-spotlight-description {
-  margin: 0;
-}
-
-.hero-spotlight-kicker {
-  color: #9ff7ef;
-  font-size: 0.72rem;
-  font-weight: 860;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.hero-spotlight-date {
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.78rem;
-  font-weight: 720;
-}
-
-.hero-spotlight h2 {
-  color: #fff;
-  font-size: clamp(1.45rem, 2.2vw, 2rem);
-  line-height: 1.1;
-}
-
-.hero-spotlight-description {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.98rem;
-  line-height: 1.6;
-}
-
-.hero-spotlight-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.hero-spotlight-actions a,
-.hero-spotlight-actions button {
-  display: inline-grid;
-  min-height: 42px;
-  place-items: center;
-  padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 820;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    background 180ms ease,
-    color 180ms ease;
-}
-
-.hero-spotlight-actions button {
-  border-color: #77eed7;
-  background: #77eed7;
-  color: #07111f;
-}
-
-.hero-spotlight-actions a:hover,
-.hero-spotlight-actions button:hover {
-  transform: translateY(-2px);
-}
-
-.hero-spotlight-actions a:hover {
-  border-color: rgba(255, 255, 255, 0.62);
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.hero-spotlight-actions button:hover {
-  background: #baf8eb;
-}
-
-.hero-spotlight-actions a:focus-visible,
-.hero-spotlight-actions button:focus-visible {
-  outline: 3px solid #ffd866;
-  outline-offset: 3px;
-}
-
 .home-body {
   position: relative;
   z-index: 1;
@@ -332,20 +206,11 @@ h1 {
   }
 }
 
-@media (max-width: 1080px) {
-  .season-hero {
-    grid-template-columns: 1fr;
+@media (min-width: 1081px) {
+  .home-body {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 32px;
     align-items: start;
-  }
-
-  .hero-copy,
-  .hero-sidecar {
-    max-width: 720px;
-  }
-
-  .hero-sidecar {
-    width: 100%;
-    justify-self: start;
   }
 }
 
@@ -360,21 +225,12 @@ h1 {
   }
 
   .season-hero {
-    gap: 34px;
     min-height: auto;
     padding: 110px 0 64px;
   }
 
   .hero-copy {
     padding-top: 0;
-  }
-
-  .hero-sidecar {
-    gap: 16px;
-  }
-
-  .hero-spotlight {
-    padding: 18px;
   }
 
   h1 {
@@ -392,10 +248,7 @@ h1 {
     display: block;
   }
 
-  .home-page-background.is-popout,
-  .hero-spotlight-actions a,
-  .hero-spotlight-actions button {
+  .home-page-background.is-popout {
     animation: none;
-    transition: none;
   }
 }

@@ -43,8 +43,6 @@ type DashboardSection = {
 };
 
 type SeasonDashboardContent = {
-  /** Its description is written by the site, which knows what its numbers cover. */
-  heroUsage: Omit<DashboardSection, 'description'>;
   officialUpdates: DashboardSection;
   events: DashboardSection & { sourceLabel: string; sourceUrl: string };
 };
@@ -153,7 +151,6 @@ export async function syncHomeNews(
     const seasonUpdates = enrichedNews.slice(0, 3).map(toSeasonUpdate);
     const seasonEvents = latestPatchHtml ? parseSeasonEvents(latestPatchHtml) : [];
     const seasonDashboard = buildSeasonDashboardContent(
-      battlePassSnapshot,
       latestPatch?.sourceUrl ?? officialHomeSource.url,
       fetchedAt,
     );
@@ -273,7 +270,6 @@ function describePatchAddition(heading: string): string | undefined {
 }
 
 function buildSeasonDashboardContent(
-  battlePass: BattlePassSnapshot,
   eventsSourceUrl: string,
   fetchedAt: string,
 ): SeasonDashboardContent {
@@ -283,10 +279,6 @@ function buildSeasonDashboardContent(
   }).format(new Date(fetchedAt));
 
   return {
-    heroUsage: {
-      eyebrow: `${battlePass.currentSeason} meta`,
-      title: 'Most-used heroes',
-    },
     officialUpdates: {
       eyebrow: 'Official updates',
       title: 'Latest news and patch notes',
