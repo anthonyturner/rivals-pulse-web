@@ -10,6 +10,7 @@ import {
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
 } from '../src/content-database.js';
+import { getCommunityInsights } from '../src/community-insights-read.js';
 import { getCommunityMatches } from '../src/community-matches-read.js';
 import { getHeroMatchups } from '../src/hero-matchups-read.js';
 import { getHeroStats, halfSeasonFromQuery, heroStatsQueryFrom } from '../src/hero-stats-read.js';
@@ -73,6 +74,11 @@ export default async function handler(req: VercelRequest, res: ServerResponse) {
       const halfSeason = halfSeasonFromQuery(url.searchParams.get('halfSeason') ?? undefined);
 
       sendJson(res, 200, await getCommunityMatches({ halfSeason }));
+      return;
+    }
+
+    if (route === 'community/insights') {
+      sendJson(res, 200, await getCommunityInsights());
       return;
     }
 
