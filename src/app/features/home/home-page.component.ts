@@ -14,8 +14,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
 import { HomeContentService } from './home-content.service';
-import { JarvisConsoleComponent } from './jarvis-console/jarvis-console.component';
 import { buildHomeHeroMedia, buildSeasonUpdateSpotlight } from './home-page-hero.utils';
+import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
 import { SeasonDashboardComponent } from './season-dashboard/season-dashboard.component';
 import { SeasonGlanceComponent } from './season-glance/season-glance.component';
 import { StatsSnapshotComponent } from './stats-snapshot/stats-snapshot.component';
@@ -25,7 +25,7 @@ import { ToolsRowComponent } from './tools-row/tools-row.component';
   selector: 'app-home-page',
   imports: [
     HeroOverlayActionsComponent,
-    JarvisConsoleComponent,
+    OverlaySectionComponent,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
     StatsSnapshotComponent,
