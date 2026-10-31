@@ -60,3 +60,8 @@
   font-size: 0.9rem;
   line-height: 1.5;
 }
+
+.counters-tab__kill-feed {
+  display: block;
+  margin-top: 24px;
+}

@@ -2,10 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { HeroDataService } from '../../heroes/hero-data.service';
+import { CommunityKillsService } from '../../insights/community-kills.service';
+import { KILL_FEED_CAVEAT } from '../../insights/hero-kill-feed';
 import { HeroMatchupsService } from '../../insights/hero-matchups.service';
 import { heroIdentities } from '../../insights/hero-identity';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { buildCountersTabView } from './counters-tab-view';
+import { buildCountersKillFeedView } from './kill-feed-view';
 
 /** The winning records with the clearest edge, from Rivals Pulse uploads, or the reason there are none yet. */
 @Component({
@@ -18,6 +21,7 @@ import { buildCountersTabView } from './counters-tab-view';
 export class CountersTabComponent {
   // undefined while the request runs, null once it has failed.
   private readonly matchups = toSignal(inject(HeroMatchupsService).getHeroMatchups());
+  private readonly kills = toSignal(inject(CommunityKillsService).getKills());
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
 
   /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */
@@ -27,6 +31,13 @@ export class CountersTabComponent {
     return buildCountersTabView(roster === undefined ? undefined : this.matchups(), heroIdentities(roster ?? []));
   });
 
+  protected readonly killFeedView = computed(() => {
+    const roster = this.roster();
+
+    return buildCountersKillFeedView(roster === undefined ? undefined : this.kills(), heroIdentities(roster ?? []));
+  });
+
+  protected readonly killFeedCaveat = KILL_FEED_CAVEAT;
   protected readonly link = { label: 'Open the counters tool', path: '/counters' };
 
   protected onImageError(event: Event): void {

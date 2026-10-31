@@ -9,8 +9,10 @@ import {
   HERO_GUIDES,
   HeroUltimateGuide,
 } from '../learning/guides/hero-guides/hero-guide-data';
+import type { CommunityKills } from '../../../contracts/community-kills.model';
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
 import type { HeroStats } from '../../../contracts/hero-stats.model';
+import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
@@ -94,6 +96,7 @@ export class HeroesPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
   private readonly heroStatsService = inject(HeroStatsService);
   private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly communityKillsService = inject(CommunityKillsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
@@ -104,6 +107,8 @@ export class HeroesPageComponent implements OnInit {
   readonly heroStats = signal<HeroStats | null | undefined>(undefined);
   /** Rivals Pulse player matchups for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroMatchups = signal<HeroMatchups | null | undefined>(undefined);
+  /** Rivals Pulse player kill-feed counters for every hero: `undefined` while loading, `null` when unreadable. */
+  readonly heroKills = signal<CommunityKills | null | undefined>(undefined);
   /** Every hero, for the counters section to name and picture the heroes in a matchup. */
   readonly heroRoster = this.heroes.asReadonly();
   readonly roles: HeroRoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist'];
@@ -465,6 +470,11 @@ export class HeroesPageComponent implements OnInit {
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.heroMatchups.set(matchups));
+
+    this.communityKillsService
+      .getKills()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((kills) => this.heroKills.set(kills));
 
     forkJoin({
       heroes: this.heroDataService.getHeroes(),

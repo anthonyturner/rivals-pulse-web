@@ -17,6 +17,7 @@ import {
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
 } from './content-database';
+import { getCommunityFigures, getCommunityKills } from './community-extended-read';
 import { getCommunityInsights } from './community-insights-read';
 import { getCommunityMatches } from './community-matches-read';
 import { getHeroMatchups } from './hero-matchups-read';
@@ -45,6 +46,18 @@ app.get('/api/community/matches', (req, res) => {
   const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
   handleApiResponse(res, () => getCommunityMatches({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/community/figures', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
+
+  handleApiResponse(res, () => getCommunityFigures({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/community/kills', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
+
+  handleApiResponse(res, () => getCommunityKills({ halfSeason: halfSeasonFromQuery(halfSeason) }));
 });
 
 app.get('/api/community/insights', (_req, res) => {

@@ -1,0 +1,125 @@
+:host {
+  display: block;
+}
+
+.kill-feed {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(224, 169, 0, 0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 203, 0.38)),
+    rgb(255 255 255);
+  box-shadow: var(--heroes-box-shadow);
+}
+
+.kill-feed__heading {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(224, 169, 0, 0.18);
+}
+
+.kill-feed__heading h3,
+.kill-feed__heading p,
+.kill-feed__groups h4 {
+  margin: 0;
+}
+
+.kill-feed__eyebrow {
+  color: var(--accent-strong);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.kill-feed__result {
+  display: grid;
+  gap: 12px;
+}
+
+.kill-feed__groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+}
+
+.kill-feed__groups h4 {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.kill-feed__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kill-feed__cards li:not(.kill-feed__none) {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 92px;
+  padding: 8px 6px;
+  border: 1px solid rgba(224, 169, 0, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.kill-feed__cards img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.kill-feed__name {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.kill-feed__cards small {
+  color: var(--text-muted);
+}
+
+.kill-feed__none,
+.kill-feed__sample,
+.kill-feed__scope,
+.kill-feed__message,
+.kill-feed__notice,
+.kill-feed__status {
+  margin: 0;
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
+}
+
+.kill-feed__notice {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel-soft);
+}
+
+.kill-feed__empty {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.kill-feed__status {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.kill-feed__scope {
+  font-weight: 700;
+}
