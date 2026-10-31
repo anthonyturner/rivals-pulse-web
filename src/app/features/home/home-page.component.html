@@ -60,21 +60,14 @@
 
   <header #heroBanner class="season-hero">
     <div class="hero-copy">
-      <p class="eyebrow">{{ seasonHeroCopy().eyebrow }}</p>
-      <h1>{{ seasonHeroCopy().title }}</h1>
-      <p class="lede">{{ seasonHeroCopy().lede }}</p>
+      <p class="eyebrow">Player stats overlay for Marvel Rivals</p>
+      <h1>Your Marvel Rivals stats overlay.</h1>
+      <p class="lede">
+        Rivals Pulse runs on Overwolf while you play, and every number on this site is counted from
+        real matches it recorded.
+      </p>
 
-      <div class="hero-actions" aria-label="Season actions">
-        <a
-          [href]="latestPatchUrl()"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Read patch notes
-        </a>
-        <a routerLink="/tier-list">View full tier list</a>
-        <a routerLink="/hero-guides">Browse guides</a>
-      </div>
+      <app-hero-overlay-actions />
     </div>
 
     <div class="hero-sidecar">
@@ -105,7 +98,14 @@
       }
     </div>
   </header>
-  <app-jarvis-console />
-  <app-featured-content />
-  <app-season-dashboard />
+
+  <div class="home-body">
+    <main class="home-main">
+      <app-stats-snapshot />
+      <app-jarvis-console />
+      <app-tools-row />
+    </main>
+
+    <app-season-dashboard />
+  </div>
 </section>

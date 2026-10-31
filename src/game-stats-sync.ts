@@ -1,4 +1,4 @@
-import { connect, type Connection } from '@tursodatabase/serverless';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type {
   GameComparison,
@@ -9,39 +9,29 @@ import type {
   RankComparison,
   SnapshotTrend,
 } from './contracts/game-stats.model.js';
+import type { recordSyncRun, SyncRunResult } from './sync-log.js';
 
-const nodeProcess = process as typeof process & {
-  loadEnvFile?: (path?: string) => void;
-};
+// The one place that knows how game stats are captured and stored in Supabase, shared by the API,
+// the hourly sync and `npm run sync:game-stats`. No relative runtime import, for the same reason as
+// hero-store.ts.
 
-try {
-  nodeProcess.loadEnvFile?.('.env');
-} catch {
-  // Environment variables may already be provided by the shell or deployment host.
+/** The `sync_runs.source_key` of the hourly sync. */
+export const GAME_STATS_SYNC_KEY = 'game-stats';
+
+export interface GameStatsSyncOptions {
+  /** Reaches Steam; a test passes a stand-in. */
+  fetch?: typeof fetch;
+  now?: () => Date;
 }
 
 interface SteamGameDefinition extends Omit<GameComparison, 'currentPlayers' | 'comparison'> {
   fallbackCurrentPlayers: number;
 }
 
-interface StoredSnapshotRow {
-  id: number;
-  snapshot_date: string;
-  captured_at: string;
-}
-
-interface StoredGameRow {
-  app_id: number;
-  name: string;
-  category: string;
-  current_players: number;
-  daily_peak: number;
-  all_time_peak: number;
-  steam_daily_rank: string;
-  top_seller_rank: string;
-  twitch_viewers: number;
-  review_summary: string;
-  source_url: string;
+/** A capture, and why it could not be stored when it was not. */
+export interface GameStatsCapture {
+  response: GameStatsResponse;
+  storeFailure?: string;
 }
 
 interface PersistedSnapshotContext {
@@ -50,6 +40,10 @@ interface PersistedSnapshotContext {
   previousGames: Map<number, GameComparison>;
 }
 
+const SNAPSHOT_TABLE = 'game_stat_snapshots';
+const SNAPSHOT_GAME_TABLE = 'game_stat_snapshot_games';
+const RECORD_FUNCTION = 'record_game_stat_snapshot';
+const currentPlayerSource = 'Valve ISteamUserStats GetNumberOfCurrentPlayers';
 const steamCurrentPlayersUrl =
   'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/';
 
@@ -121,18 +115,77 @@ const games: SteamGameDefinition[] = [
   },
 ];
 
-let client: Connection | undefined;
-let schemaReady = false;
+/**
+ * Reads the current Steam player counts, stores them as this hour's capture unless the hour already
+ * has one, and compares them with the capture before it. When storing fails the live values are
+ * still returned, with `snapshot.persisted` false and no comparison.
+ */
+export async function syncGameStats(
+  client: SupabaseClient,
+  options: GameStatsSyncOptions = {},
+): Promise<GameStatsResponse> {
+  return (await captureGameStats(client, options)).response;
+}
 
-export async function syncGameStats(): Promise<GameStatsResponse> {
-  const fetchedAt = new Date().toISOString();
+/**
+ * The hourly sync: one capture, recorded in `sync_runs` under `game-stats`. `record` is
+ * sync-log's `recordSyncRun`, passed in because this module has no relative runtime import.
+ */
+export async function runGameStatsSync(
+  client: SupabaseClient,
+  record: typeof recordSyncRun,
+  options: GameStatsSyncOptions = {},
+): Promise<GameStatsResponse> {
+  const capture = await record(
+    client,
+    GAME_STATS_SYNC_KEY,
+    'Capturing the hourly game stats',
+    () => captureGameStats(client, options),
+    gameStatsRunResult,
+  );
+
+  return capture.response;
+}
+
+/** How a sync run is recorded: a capture that could not be stored is a failed run. */
+export function gameStatsRunResult({ response, storeFailure }: GameStatsCapture): SyncRunResult {
+  const { snapshot } = response;
+
+  if (!snapshot.persisted) {
+    return {
+      status: 'error',
+      message: `Could not store the game stats captured at ${response.fetchedAt}: ${storeFailure ?? 'unknown error'}`,
+    };
+  }
+
+  return {
+    status: 'success',
+    message: `Captured ${response.games.length} games; the hour's snapshot is ${snapshot.id} (${snapshot.capturedAt})`,
+    details: { snapshotId: snapshot.id, previousSnapshotId: response.previousSnapshot?.id ?? null },
+  };
+}
+
+export async function countGameStatSnapshots(client: SupabaseClient): Promise<number> {
+  return countRows(client, SNAPSHOT_TABLE);
+}
+
+export async function countGameStatSnapshotGames(client: SupabaseClient): Promise<number> {
+  return countRows(client, SNAPSHOT_GAME_TABLE);
+}
+
+async function captureGameStats(
+  client: SupabaseClient,
+  options: GameStatsSyncOptions,
+): Promise<GameStatsCapture> {
+  const fetcher = options.fetch ?? fetch;
+  const fetchedAt = (options.now?.() ?? new Date()).toISOString();
   const snapshotDate = formatSnapshotDate(fetchedAt);
   const liveGames = await Promise.all(games.map(async (game) => {
     const { fallbackCurrentPlayers, ...metadata } = game;
 
     return {
       ...metadata,
-      currentPlayers: await getCurrentPlayers(game.appId, fallbackCurrentPlayers),
+      currentPlayers: await getCurrentPlayers(fetcher, game.appId, fallbackCurrentPlayers),
     } satisfies GameComparison;
   }));
 
@@ -145,16 +198,19 @@ export async function syncGameStats(): Promise<GameStatsResponse> {
     previousGames: new Map(),
   };
 
+  let storeFailure: string | undefined;
+
   try {
-    context = await persistSnapshot(snapshotDate, fetchedAt, liveGames);
+    context = await persistSnapshot(client, snapshotDate, fetchedAt, liveGames);
   } catch (error) {
+    storeFailure = error instanceof Error ? error.message : String(error);
     console.error('Game stat snapshot persistence failed; serving live values without history', error);
   }
 
-  return {
+  const response: GameStatsResponse = {
     snapshotDate,
     fetchedAt,
-    currentPlayerSource: 'Valve ISteamUserStats GetNumberOfCurrentPlayers',
+    currentPlayerSource,
     currentPlayerSourceUrl: steamCurrentPlayersUrl,
     snapshot: context.current,
     previousSnapshot: context.previous,
@@ -167,6 +223,8 @@ export async function syncGameStats(): Promise<GameStatsResponse> {
       ),
     })),
   };
+
+  return { response, storeFailure };
 }
 
 export function buildSnapshotComparison(
@@ -259,152 +317,53 @@ function describeRank(label: string, comparison: RankComparison): string {
 }
 
 async function persistSnapshot(
+  client: SupabaseClient,
   snapshotDate: string,
   capturedAt: string,
   currentGames: GameComparison[],
 ): Promise<PersistedSnapshotContext> {
-  await ensureGameStatsSchema();
+  const { data, error } = await client.rpc(RECORD_FUNCTION, {
+    p_capture_bucket: toHourlyCaptureBucket(capturedAt),
+    p_snapshot_date: snapshotDate,
+    p_captured_at: capturedAt,
+    p_current_player_source: currentPlayerSource,
+    p_current_player_source_url: steamCurrentPlayersUrl,
+    p_games: currentGames,
+  });
 
-  const captureBucket = toHourlyCaptureBucket(capturedAt);
-  const previousRow = await queryOne<StoredSnapshotRow>(
-    `SELECT id, snapshot_date, captured_at
-    FROM game_stat_snapshots
-    WHERE capture_bucket < ?
-    ORDER BY capture_bucket DESC
-    LIMIT 1`,
-    captureBucket,
-  );
-
-  await execute(
-    `INSERT OR IGNORE INTO game_stat_snapshots (
-      capture_bucket, snapshot_date, captured_at, current_player_source, current_player_source_url
-    ) VALUES (?, ?, ?, ?, ?)`,
-    captureBucket,
-    snapshotDate,
-    capturedAt,
-    'Valve ISteamUserStats GetNumberOfCurrentPlayers',
-    steamCurrentPlayersUrl,
-  );
-
-  const currentRow = await queryOne<StoredSnapshotRow>(
-    `SELECT id, snapshot_date, captured_at
-    FROM game_stat_snapshots
-    WHERE capture_bucket = ?`,
-    captureBucket,
-  );
-
-  if (!currentRow) {
-    throw new Error('Failed to load the saved game-stat snapshot');
+  if (error) {
+    throw new Error(`Storing the game-stat snapshot failed: ${error.message}`);
   }
 
-  const storedGameCount = await queryOne<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM game_stat_snapshot_games WHERE snapshot_id = ?',
-    currentRow.id,
-  );
-
-  if (Number(storedGameCount?.count ?? 0) < currentGames.length) {
-    await getClient().batch(currentGames.map((game) => ({
-      sql: `INSERT OR IGNORE INTO game_stat_snapshot_games (
-        snapshot_id, app_id, name, category, current_players, daily_peak, all_time_peak,
-        steam_daily_rank, top_seller_rank, twitch_viewers, review_summary, source_url
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        currentRow.id,
-        game.appId,
-        game.name,
-        game.category,
-        game.currentPlayers,
-        game.dailyPeak,
-        game.allTimePeak,
-        game.steamDailyRank,
-        game.topSellerRank,
-        game.twitchViewers,
-        game.reviewSummary,
-        game.sourceUrl,
-      ],
-    })), 'immediate');
-  }
-
-  const previousGames = previousRow
-    ? await getStoredGames(previousRow.id)
-    : new Map<number, GameComparison>();
+  const answer = recordOf(data, 'the answer');
+  const previous = answer['previous'] === null ? undefined : recordOf(answer['previous'], 'previous');
 
   return {
-    current: toSnapshotReference(currentRow),
-    previous: previousRow ? toSnapshotReference(previousRow) : undefined,
-    previousGames,
+    current: toSnapshotReference(recordOf(answer['current'], 'current')),
+    previous: previous ? toSnapshotReference(previous) : undefined,
+    previousGames: new Map(
+      listOf(previous?.['games'] ?? [], 'previous.games').map((row) => {
+        const game = toGameComparison(recordOf(row, 'a previous game'));
+
+        return [game.appId, game];
+      }),
+    ),
   };
 }
 
-async function getStoredGames(snapshotId: number): Promise<Map<number, GameComparison>> {
-  const rows = await queryRows<StoredGameRow>(
-    `SELECT app_id, name, category, current_players, daily_peak, all_time_peak,
-      steam_daily_rank, top_seller_rank, twitch_viewers, review_summary, source_url
-    FROM game_stat_snapshot_games
-    WHERE snapshot_id = ?`,
-    snapshotId,
-  );
+async function countRows(client: SupabaseClient, table: string): Promise<number> {
+  const { count, error } = await client.from(table).select('*', { count: 'exact', head: true });
 
-  return new Map(rows.map((row) => [Number(row.app_id), {
-    appId: Number(row.app_id),
-    name: row.name,
-    category: row.category,
-    currentPlayers: Number(row.current_players),
-    dailyPeak: Number(row.daily_peak),
-    allTimePeak: Number(row.all_time_peak),
-    steamDailyRank: row.steam_daily_rank,
-    topSellerRank: row.top_seller_rank,
-    twitchViewers: Number(row.twitch_viewers),
-    reviewSummary: row.review_summary,
-    sourceUrl: row.source_url,
-  }]));
-}
-
-async function ensureGameStatsSchema(): Promise<void> {
-  if (schemaReady) {
-    return;
+  if (error) {
+    throw new Error(`Counting ${table} failed: ${error.message}`);
   }
 
-  const statements = [
-    `CREATE TABLE IF NOT EXISTS game_stat_snapshots (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      capture_bucket TEXT NOT NULL UNIQUE,
-      snapshot_date TEXT NOT NULL,
-      captured_at TEXT NOT NULL,
-      current_player_source TEXT NOT NULL,
-      current_player_source_url TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    `CREATE TABLE IF NOT EXISTS game_stat_snapshot_games (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      snapshot_id INTEGER NOT NULL REFERENCES game_stat_snapshots(id) ON DELETE CASCADE,
-      app_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      category TEXT NOT NULL,
-      current_players INTEGER NOT NULL,
-      daily_peak INTEGER NOT NULL,
-      all_time_peak INTEGER NOT NULL,
-      steam_daily_rank TEXT NOT NULL,
-      top_seller_rank TEXT NOT NULL,
-      twitch_viewers INTEGER NOT NULL,
-      review_summary TEXT NOT NULL,
-      source_url TEXT NOT NULL,
-      UNIQUE (snapshot_id, app_id)
-    )`,
-    'CREATE INDEX IF NOT EXISTS idx_game_stat_snapshots_captured_at ON game_stat_snapshots(captured_at DESC)',
-    'CREATE INDEX IF NOT EXISTS idx_game_stat_snapshot_games_app ON game_stat_snapshot_games(app_id, snapshot_id)',
-  ];
-
-  for (const statement of statements) {
-    await execute(statement);
-  }
-
-  schemaReady = true;
+  return count ?? 0;
 }
 
-async function getCurrentPlayers(appId: number, fallback: number): Promise<number> {
+async function getCurrentPlayers(fetcher: typeof fetch, appId: number, fallback: number): Promise<number> {
   try {
-    const response = await fetch(`${steamCurrentPlayersUrl}?appid=${appId}`, {
+    const response = await fetcher(`${steamCurrentPlayersUrl}?appid=${appId}`, {
       headers: {
         accept: 'application/json',
         'user-agent': 'rivals-pulse-game-stats/2.0',
@@ -427,44 +386,78 @@ async function getCurrentPlayers(appId: number, fallback: number): Promise<numbe
   }
 }
 
-async function queryRows<T>(sql: string, ...params: unknown[]): Promise<T[]> {
-  const result = await getClient().execute(sql, params);
-
-  return result.rows as unknown as T[];
-}
-
-async function queryOne<T>(sql: string, ...params: unknown[]): Promise<T | undefined> {
-  return (await queryRows<T>(sql, ...params))[0];
-}
-
-async function execute(sql: string, ...params: unknown[]): Promise<void> {
-  await getClient().execute(sql, params);
-}
-
-function getClient(): Connection {
-  if (client) {
-    return client;
-  }
-
-  const url = process.env['TURSO_DATABASE_URL'];
-  const authToken = process.env['TURSO_AUTH_TOKEN'];
-
-  if (!url || !authToken) {
-    throw new Error('Turso is not configured. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.');
-  }
-
-  client = connect({ url, authToken });
-
-  return client;
-}
-
-function toSnapshotReference(row: StoredSnapshotRow): GameStatsSnapshotReference {
+function toSnapshotReference(row: Record<string, unknown>): GameStatsSnapshotReference {
   return {
-    id: Number(row.id),
-    snapshotDate: row.snapshot_date,
-    capturedAt: row.captured_at,
+    id: numberOf(row, 'id'),
+    snapshotDate: stringOf(row, 'snapshotDate'),
+    capturedAt: instantOf(row, 'capturedAt'),
     persisted: true,
   };
+}
+
+function toGameComparison(row: Record<string, unknown>): GameComparison {
+  return {
+    appId: numberOf(row, 'appId'),
+    name: stringOf(row, 'name'),
+    category: stringOf(row, 'category'),
+    currentPlayers: numberOf(row, 'currentPlayers'),
+    dailyPeak: numberOf(row, 'dailyPeak'),
+    allTimePeak: numberOf(row, 'allTimePeak'),
+    steamDailyRank: stringOf(row, 'steamDailyRank'),
+    topSellerRank: stringOf(row, 'topSellerRank'),
+    twitchViewers: numberOf(row, 'twitchViewers'),
+    reviewSummary: stringOf(row, 'reviewSummary'),
+    sourceUrl: stringOf(row, 'sourceUrl'),
+  };
+}
+
+// Readers for the function's answer: a changed answer fails the capture instead of serving NaN.
+function recordOf(value: unknown, what: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${RECORD_FUNCTION}: ${what} is not an object`);
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function listOf(value: unknown, what: string): unknown[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${RECORD_FUNCTION}: ${what} is not a list`);
+  }
+
+  return value;
+}
+
+function numberOf(row: Record<string, unknown>, key: string): number {
+  const value = row[key];
+
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`${RECORD_FUNCTION}: ${key} is not a number`);
+  }
+
+  return value;
+}
+
+function stringOf(row: Record<string, unknown>, key: string): string {
+  const value = row[key];
+
+  if (typeof value !== 'string') {
+    throw new Error(`${RECORD_FUNCTION}: ${key} is not a string`);
+  }
+
+  return value;
+}
+
+// Postgres writes a timestamptz as `2026-10-31T00:10:03.279+00:00`; the API has always returned
+// the `toISOString()` form.
+function instantOf(row: Record<string, unknown>, key: string): string {
+  const time = Date.parse(stringOf(row, key));
+
+  if (Number.isNaN(time)) {
+    throw new Error(`${RECORD_FUNCTION}: ${key} is not a timestamp`);
+  }
+
+  return new Date(time).toISOString();
 }
 
 function toHourlyCaptureBucket(value: string): string {

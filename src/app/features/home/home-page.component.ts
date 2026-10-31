@@ -11,29 +11,25 @@ import {
   inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 
-import { FeaturedContentComponent } from './featured-content/featured-content.component';
+import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
 import { HomeContentService } from './home-content.service';
 import { JarvisConsoleComponent } from './jarvis-console/jarvis-console.component';
-import {
-  buildHomeHeroMedia,
-  buildSeasonHeroCopy,
-  buildSeasonUpdateSpotlight,
-} from './home-page-hero.utils';
+import { buildHomeHeroMedia, buildSeasonUpdateSpotlight } from './home-page-hero.utils';
 import { SeasonDashboardComponent } from './season-dashboard/season-dashboard.component';
 import { SeasonGlanceComponent } from './season-glance/season-glance.component';
-
-const seasonLaunchPatchUrl = 'https://www.marvelrivals.com/20260708/41525_1306959.html';
+import { StatsSnapshotComponent } from './stats-snapshot/stats-snapshot.component';
+import { ToolsRowComponent } from './tools-row/tools-row.component';
 
 @Component({
   selector: 'app-home-page',
   imports: [
-    FeaturedContentComponent,
+    HeroOverlayActionsComponent,
     JarvisConsoleComponent,
-    RouterLink,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
+    StatsSnapshotComponent,
+    ToolsRowComponent,
   ],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css',
@@ -50,13 +46,7 @@ export class HomePageComponent implements AfterViewInit {
   readonly homeContent = toSignal(this.homeContentService.getHomeContent(), {
     initialValue: this.homeContentService.fallbackContent,
   });
-  readonly latestPatchUrl = computed(
-    () =>
-      this.homeContent().latestNews.find((item) => item.label === 'Patch Notes')?.sourceUrl ??
-      seasonLaunchPatchUrl,
-  );
   readonly heroMedia = computed(() => buildHomeHeroMedia(this.homeContent()));
-  readonly seasonHeroCopy = computed(() => buildSeasonHeroCopy(this.homeContent()));
   readonly seasonUpdateSpotlight = computed(() => buildSeasonUpdateSpotlight(this.homeContent()));
 
   ngAfterViewInit(): void {

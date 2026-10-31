@@ -8,9 +8,17 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
+
 ### Added
 
 - The Community Matches tab shows win rate by map, the mix of game modes, average match length and matches per day, counted once per match and anonymous; each figure says "not enough data yet" until enough matches back it, and a new half-season shows the previous one, labelled, until it has enough ([#194](https://github.com/anthonyturner/rivals-pulse-web/pull/194)).
+- The home page opens with a hero stats snapshot: the five most-picked heroes with their tier, win rate, pick rate and appearances, switchable between All, Vanguard, Duelist and Strategist, from matches Rivals Pulse players recorded; a role without enough data says so, and the old most-used heroes block is gone from the season section ([#212](https://github.com/anthonyturner/rivals-pulse-web/pull/212)).
+- A "How we count" page at `/how-we-count`, linked beside the home page hero line and from the Community and tier list pages, says in plain words where the hero numbers come from, what an appearance is, the 10-appearance minimum, that ranks are blended, which modes count, and how half-seasons and the previous half-season standing in work ([#210](https://github.com/anthonyturner/rivals-pulse-web/pull/210)).
+- Sharing rivalspulse.com in Discord, X or a search result now shows a title, description and preview image, and each page names its own address as canonical; the preview image is a plain brand card that can later be swapped for a gameplay screenshot ([#207](https://github.com/anthonyturner/rivals-pulse-web/pull/207)).
+- A tools row on the home page links straight to the tier list, the team builder and the hero guides ([#206](https://github.com/anthonyturner/rivals-pulse-web/pull/206)).
 - The Community Heroes, Tier list and Counters tabs now show a summary from Rivals Pulse uploads: the most-picked and highest-winning heroes, the S and A tiers, and the winning matchups with the clearest edge, each linking to its full page, with "not enough data yet" until enough matches are uploaded ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
 - `/api/hero-stats` and `/api/hero-matchups` answer "not enough data yet" instead of an error while the database read function is not deployed yet; any other failure still returns an error ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
 - The Community Stats tab shows what a normal game looks like for each role (Vanguard, Duelist, Strategist): average kills, deaths, assists, KDA, final hits and win rate, for Quick Match and Competitive together or each alone, once a role has 50 lines in a mode, and "not enough data yet" until then ([#192](https://github.com/anthonyturner/rivals-pulse-web/pull/192)).
@@ -38,6 +46,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The home page hero now introduces Rivals Pulse as an Overwolf stats overlay, with a "Get Rivals Pulse on Overwolf" button (shown as "Coming soon" until the app has a store listing), a "See stats" button to the Community page, and a line saying how many matches the site's numbers are counted from ([#208](https://github.com/anthonyturner/rivals-pulse-web/pull/208)).
 - The tier list, the home page's most-used heroes and the season dashboard now show numbers from matches that Rivals Pulse players record, each labelled "Based on Rivals Pulse players" with the matches behind it, and say "Not enough data yet" (with progress toward 10 appearances) until a hero has enough; the tier list drops the rank picker and the Ban column, and the season picker lists every half-season that has started. The season glance dates come from the half-season start dates and end with "ongoing" for the current one ([#196](https://github.com/anthonyturner/rivals-pulse-web/pull/196)).
 - The Hero Counters page and the Dive Response Planner now come from matches that Rivals Pulse players record: each card shows how often a hero won against another, with the matches behind it, and says "Not enough data yet" until a pairing has 10 matches. A hero page shows the same records in place of its old counters list, below its community stats ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
 - The win-rate page at `/win-rates` now shows each hero's win rate and appearances from matches that Rivals Pulse players record, for one half-season, with "not enough data yet" until a hero has 10 appearances and a plain empty state while no matches are counted. It drops the rank breakdowns, because Rivals Pulse has no rank data, and old season addresses such as `/win-rates/9` now say the page shows only the current half-season instead of showing a Season 9 report ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).

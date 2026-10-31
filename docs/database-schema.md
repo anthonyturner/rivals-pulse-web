@@ -6,7 +6,8 @@
 > `home_content_blocks`) and the home news sync followed in issue 107; see
 > [supabase.md](supabase.md#website-home-content). The Turso copies are frozen and are dropped
 > with Turso (issue 110). `hero_videos`, `glossary_terms` and `external_sources` followed in issue
-> 106 ([supabase.md](supabase.md#website-reference-content)).
+> 106 ([supabase.md](supabase.md#website-reference-content)), and the game stat tables in issue 109
+> ([supabase.md](supabase.md#website-game-stats)).
 
 The app uses one shared Turso/libSQL database for curated content and cached external API payloads.
 The mock JSON files under `data/seeds` are seed inputs only; runtime pages read from the Express API backed by Turso.
@@ -84,11 +85,11 @@ Stores cached payloads from external APIs such as Fandom. This lets the app read
 
 Stores update history for external sync jobs.
 
-### `game_stat_snapshots`
+### `game_stat_snapshots` (now in Supabase)
 
 Stores one game-stat capture header per UTC hour. The unique `capture_bucket` prevents page traffic and cron retries from creating duplicate hourly snapshots.
 
-### `game_stat_snapshot_games`
+### `game_stat_snapshot_games` (now in Supabase)
 
 Stores the per-game values for each snapshot, including current players, 24-hour peak, all-time peak, daily rank, seller rank, review text, and source URL. The Game Stats API joins the latest incoming values with the preceding snapshot to calculate historical deltas.
 

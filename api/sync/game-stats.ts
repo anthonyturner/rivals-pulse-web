@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { syncGameStats } from '../../src/game-stats-sync.js';
+import { runGameStatsSync } from '../../src/game-stats-sync.js';
+import { getSupabaseClient } from '../../src/supabase-client.js';
+import { recordSyncRun } from '../../src/sync-log.js';
 import { sendJson } from '../../src/vercel-api.js';
 
 const noStoreHeaders = {
@@ -19,7 +21,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   try {
-    sendJson(res, 200, await syncGameStats(), noStoreHeaders);
+    sendJson(res, 200, await runGameStatsSync(getSupabaseClient(), recordSyncRun), noStoreHeaders);
   } catch (error) {
     console.error('Game stats sync failed', error);
     sendJson(

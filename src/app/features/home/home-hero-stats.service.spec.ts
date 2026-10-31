@@ -4,7 +4,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import type { HeroStats } from '../../../contracts/hero-stats.model';
-import { SeasonDashboardService, type SeasonDashboardState } from './season-dashboard/season-dashboard.service';
+import { HomeHeroStatsService } from './home-hero-stats.service';
 import { SeasonGlanceService, type SeasonGlanceState } from './season-glance/season-glance.service';
 
 const ended = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
@@ -21,7 +21,6 @@ const stats: HeroStats = {
 };
 const home = {
   seasonGlance: { ariaLabel: 'Season 10 at a glance' },
-  seasonDashboard: { heroUsage: { eyebrow: 'Season 10 meta', title: 'Most-used heroes' } },
   seasonUpdates: [],
   seasonEvents: [],
   latestTuning: null,
@@ -65,50 +64,35 @@ describe('the home page sections that use the hero stats', () => {
     expect(state?.content).not.toBeNull();
   });
 
-  it('asks for the hero stats once for the dashboard and the glance together', () => {
-    let dashboard: SeasonDashboardState | undefined;
+  it('asks for the hero stats once for the glance and every other section together', () => {
+    let shared: HeroStats | null | undefined;
     let glance: SeasonGlanceState | undefined;
 
-    TestBed.inject(SeasonDashboardService)
-      .getSeasonDashboard()
-      .subscribe((value) => (dashboard = value));
+    TestBed.inject(HomeHeroStatsService)
+      .getHeroStats()
+      .subscribe((value) => (shared = value));
     TestBed.inject(SeasonGlanceService)
       .getSeasonGlance()
       .subscribe((value) => (glance = value));
 
     http.expectOne('/api/home/content').flush(home);
-    http.expectOne('/api/heroes').flush([]);
     http.expectOne('/api/hero-stats').flush(stats);
 
-    expect(dashboard?.heroUsage.state).toBe('empty');
+    expect(shared).toEqual(stats);
     expect(glance?.seasonDateRange).not.toBe('');
   });
 
-  it('gives the dashboard the not-enough-data hero usage, with the previous season labelled', () => {
-    let state: SeasonDashboardState | undefined;
+  it('asks again on a reload and hands the new answer to everyone who listens', () => {
+    const answers: (HeroStats | null)[] = [];
 
-    TestBed.inject(SeasonDashboardService)
-      .getSeasonDashboard()
-      .subscribe((value) => (state = value));
-    http.expectOne('/api/home/content').flush(home);
-    http.expectOne('/api/heroes').flush([]);
-    http.expectOne('/api/hero-stats').flush(stats);
-
-    expect(state?.heroUsage.state).toBe('empty');
-    expect(state?.heroUsage.sourceLabel).toBe('Based on Rivals Pulse players · 3 matches · Season 10');
-    expect(state?.heroUsage.fallbackNotice).toContain('Season 10.5 does not have enough data yet');
-  });
-
-  it('gives the dashboard the unavailable hero usage when the hero stats cannot be read', () => {
-    let state: SeasonDashboardState | undefined;
-
-    TestBed.inject(SeasonDashboardService)
-      .getSeasonDashboard()
-      .subscribe((value) => (state = value));
-    http.expectOne('/api/home/content').flush(home);
-    http.expectOne('/api/heroes').flush([]);
+    TestBed.inject(HomeHeroStatsService)
+      .getHeroStats()
+      .subscribe((value) => answers.push(value));
     http.expectOne('/api/hero-stats').flush('down', { status: 500, statusText: 'Server Error' });
 
-    expect(state?.heroUsage.state).toBe('unavailable');
+    TestBed.inject(HomeHeroStatsService).reload();
+    http.expectOne('/api/hero-stats').flush(stats);
+
+    expect(answers).toEqual([null, stats]);
   });
 });

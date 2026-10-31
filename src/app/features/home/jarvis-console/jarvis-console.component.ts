@@ -12,12 +12,8 @@ import {
   viewChild,
 } from '@angular/core';
 
-import {
-  JARVIS_EXCHANGES,
-  JARVIS_STATES,
-  OVERWOLF_APP_URL,
-  type JarvisState,
-} from './jarvis-console.data';
+import { OVERWOLF_APP_URL } from '../../../shared/overwolf-app';
+import { JARVIS_EXCHANGES, JARVIS_STATES, type JarvisState } from './jarvis-console.data';
 import { JarvisCoreRenderer } from './jarvis-core.renderer';
 
 /** Fewer particles on a phone, where the core is drawn much smaller anyway. */

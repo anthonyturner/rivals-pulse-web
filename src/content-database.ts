@@ -1,9 +1,8 @@
-import { createClient, type Client } from '@tursodatabase/serverless/compat';
-
 import { GlossaryTerm } from './app/features/reference/glossary/glossary.model.js';
 import { HomeContent, PortalCard } from './app/features/home/home-content.model.js';
 import { Hero, HeroVideo } from './app/features/heroes/hero.model.js';
 import { type CommunityHeroStatsStatus, readCommunityHeroStatsStatus } from './community-hero-stats-status.js';
+import { countGameStatSnapshotGames, countGameStatSnapshots } from './game-stats-sync.js';
 import { countGlossaryTerms, listGlossaryTerms } from './glossary-store.js';
 import { countHeroes, getHero, listHeroes } from './hero-store.js';
 import { countHeroVideos, listHeroVideos } from './hero-video-store.js';
@@ -41,8 +40,6 @@ type ContentStatus = {
   gameStatSnapshotGames: number;
   supabase: SupabaseStatus;
 };
-
-let client: Client | undefined;
 
 export function getHeroesFromDatabase(): Promise<Hero[]> {
   return listHeroes(getSupabaseClient());
@@ -84,56 +81,10 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     homePortals: await countHomePortals(getSupabaseClient()),
     homeContentBlocks: await countHomeContentBlocks(getSupabaseClient()),
     communityHeroStats: await readCommunityHeroStatsStatus(),
-    gameStatSnapshots: await getOptionalCount('game_stat_snapshots'),
-    gameStatSnapshotGames: await getOptionalCount('game_stat_snapshot_games'),
+    gameStatSnapshots: await countGameStatSnapshots(getSupabaseClient()),
+    gameStatSnapshotGames: await countGameStatSnapshotGames(getSupabaseClient()),
     supabase: await getSupabaseStatus(),
   };
-}
-
-async function queryRows<T>(sql: string, ...params: unknown[]): Promise<T[]> {
-  const result = await getClient().execute(sql, params as never[]);
-
-  return result.rows as unknown as T[];
-}
-
-async function queryOne<T>(sql: string, ...params: unknown[]): Promise<T | undefined> {
-  const rows = await queryRows<T>(sql, ...params);
-
-  return rows[0];
-}
-
-async function getCount(tableName: string): Promise<number> {
-  const row = await queryOne<{ count: number }>(`SELECT COUNT(*) AS count FROM ${tableName}`);
-
-  return row?.count ?? 0;
-}
-
-async function getOptionalCount(tableName: string): Promise<number> {
-  try {
-    return await getCount(tableName);
-  } catch {
-    return 0;
-  }
-}
-
-function getClient(): Client {
-  if (client) {
-    return client;
-  }
-
-  const url = process.env['TURSO_DATABASE_URL'];
-  const authToken = process.env['TURSO_AUTH_TOKEN'];
-
-  if (!url || !authToken) {
-    throw new Error('Turso is not configured. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.');
-  }
-
-  client = createClient({
-    url,
-    authToken,
-  });
-
-  return client;
 }
 
 function getSafeDatabaseUrl(): string {
