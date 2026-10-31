@@ -11,7 +11,7 @@
           loading="lazy"
           (error)="onImageError($event)"
         />
-        <a class="hero-list__name" routerLink="/heroes" [queryParams]="{ hero: hero.hero }">{{ hero.name }}</a>&ngsp;<span class="hero-list__figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>&ngsp;<span class="hero-list__sample">{{ hero.sample }}</span>
+        <a class="hero-list__name" routerLink="/heroes" [queryParams]="{ hero: hero.hero }">{{ hero.name }}</a>&ngsp;<span class="hero-list__figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>@if (hero.sample) {&ngsp;<span class="hero-list__sample">{{ hero.sample }}</span>}
       </li>
     }
   </ol>

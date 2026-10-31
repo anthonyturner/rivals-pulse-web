@@ -27,3 +27,8 @@
   font-size: 0.9rem;
   line-height: 1.5;
 }
+
+.heroes-tab__figures {
+  display: block;
+  margin-top: 24px;
+}

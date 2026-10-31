@@ -10,6 +10,7 @@ import {
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
 } from '../src/content-database.js';
+import { getCommunityFigures, getCommunityKills } from '../src/community-extended-read.js';
 import { getCommunityInsights } from '../src/community-insights-read.js';
 import { getCommunityMatches } from '../src/community-matches-read.js';
 import { getHeroMatchups } from '../src/hero-matchups-read.js';
@@ -74,6 +75,18 @@ export default async function handler(req: VercelRequest, res: ServerResponse) {
       const halfSeason = halfSeasonFromQuery(url.searchParams.get('halfSeason') ?? undefined);
 
       sendJson(res, 200, await getCommunityMatches({ halfSeason }));
+      return;
+    }
+
+    if (route === 'community/figures' || route === 'community/kills') {
+      const url = new URL(req.url ?? '/', 'https://local.invalid');
+      const halfSeason = halfSeasonFromQuery(url.searchParams.get('halfSeason') ?? undefined);
+
+      sendJson(
+        res,
+        200,
+        route === 'community/figures' ? await getCommunityFigures({ halfSeason }) : await getCommunityKills({ halfSeason }),
+      );
       return;
     }
 

@@ -1,0 +1,68 @@
+<section class="kill-feed" [attr.aria-labelledby]="'kill-feed-title-' + heroId()">
+  <div class="kill-feed__heading">
+    <p class="kill-feed__eyebrow">Kill feed &middot; a separate measure</p>
+    <h3 [id]="'kill-feed-title-' + heroId()">{{ heroName() }} in the kill feed</h3>
+  </div>
+
+  <div class="kill-feed__result" role="status" aria-live="polite">
+    @let current = view();
+
+    @if (current.kind === 'loading') {
+    <p class="kill-feed__message">Loading Rivals Pulse kill-feed counters...</p>
+    } @else if (current.kind === 'unavailable') {
+    <p class="kill-feed__message">
+      Rivals Pulse kill-feed counters cannot be loaded right now. The rest of this page is not affected.
+    </p>
+    } @else {
+    @if (current.halfSeasonLabel) {
+    <p class="kill-feed__scope">
+      Half-season: {{ current.halfSeasonLabel }}@if (current.kind === 'not-enough-data' && current.fallbackFor) { (standing in for {{ current.fallbackFor }}) }
+    </p>
+    }
+
+    @if (current.kind === 'ready') {
+    @if (current.notice) {
+    <p class="kill-feed__notice"><strong>Previous half-season.</strong> {{ current.notice }}</p>
+    }
+
+    <div class="kill-feed__groups">
+      <section [attr.aria-labelledby]="'kill-feed-kills-' + heroId()">
+        <h4 [id]="'kill-feed-kills-' + heroId()">Heroes {{ heroName() }} is seen killing most</h4>
+        <ul class="kill-feed__cards">
+          @for (card of current.killsMost; track card.hero.id) {
+          <li [title]="card.description">
+            <img [src]="card.hero.imageUrl" alt="" />
+            <span class="kill-feed__name">{{ card.hero.name }}</span>
+            <small>{{ card.band }}</small>
+          </li>
+          } @empty {
+          <li class="kill-feed__none">{{ heroName() }} is not in enough kill feeds as the killer yet.</li>
+          }
+        </ul>
+      </section>
+
+      <section [attr.aria-labelledby]="'kill-feed-killed-' + heroId()">
+        <h4 [id]="'kill-feed-killed-' + heroId()">Heroes seen killing {{ heroName() }} most</h4>
+        <ul class="kill-feed__cards">
+          @for (card of current.killedByMost; track card.hero.id) {
+          <li [title]="card.description">
+            <img [src]="card.hero.imageUrl" alt="" />
+            <span class="kill-feed__name">{{ card.hero.name }}</span>
+            <small>{{ card.band }}</small>
+          </li>
+          } @empty {
+          <li class="kill-feed__none">{{ heroName() }} is not in enough kill feeds as the victim yet.</li>
+          }
+        </ul>
+      </section>
+    </div>
+    <p class="kill-feed__sample">{{ caveat }}</p>
+    } @else {
+    <div class="kill-feed__empty">
+      <p class="kill-feed__status">Not enough data yet</p>
+      <p class="kill-feed__message">{{ current.summary }}</p>
+    </div>
+    }
+    }
+  </div>
+</section>

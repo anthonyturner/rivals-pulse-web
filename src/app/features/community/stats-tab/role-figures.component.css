@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  margin-top: 24px;
+}
+
+.role-figures__scroll {
+  overflow-x: auto;
+}
+
+.role-figures__table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.role-figures__table th,
+.role-figures__table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.role-figures__table thead th {
+  background: var(--bg-panel-soft);
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.role-figures__table td {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.role-figures__caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.role-figures__note {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
