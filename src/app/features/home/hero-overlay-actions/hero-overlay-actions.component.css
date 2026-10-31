@@ -65,13 +65,37 @@ a.cta-primary:hover {
   outline-offset: 3px;
 }
 
+.safety-note {
+  min-height: 24px;
+  margin: 18px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.85rem;
+  line-height: 24px;
+}
+
+.safety-link {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.safety-link:hover {
+  color: #ffd866;
+}
+
+.safety-link:focus-visible {
+  outline: 3px solid #ffd866;
+  outline-offset: 3px;
+}
+
 .trust-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0 14px;
   min-height: 24px;
-  margin-top: 18px;
+  margin-top: 6px;
 }
 
 .trust-line {
