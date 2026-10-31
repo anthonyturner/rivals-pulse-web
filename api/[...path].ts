@@ -12,7 +12,7 @@ import {
 } from '../src/content-database.js';
 import { getCommunityMatches } from '../src/community-matches-read.js';
 import { getHeroMatchups } from '../src/hero-matchups-read.js';
-import { getHeroStats, heroStatsQueryFrom } from '../src/hero-stats-read.js';
+import { getHeroStats, halfSeasonFromQuery, heroStatsQueryFrom } from '../src/hero-stats-read.js';
 import gameStatsHandler from './game-stats.js';
 import gameStatsSyncHandler from './sync/game-stats.js';
 import homeNewsSyncHandler from './sync/home-news.js';
