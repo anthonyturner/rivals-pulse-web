@@ -1,0 +1,132 @@
+<section class="snapshot" aria-labelledby="stats-snapshot-title">
+  <h2 id="stats-snapshot-title" class="snapshot__title">{{ heading() }}</h2>
+
+  @let current = view();
+
+  @if (current === null) {
+    <div class="snapshot__body" role="status" aria-busy="true">
+      <span class="visually-hidden">Loading hero stats</span>
+      <div class="skeleton" aria-hidden="true">
+        @for (row of skeletonRows; track row) {
+          <span class="skeleton__row"></span>
+        }
+      </div>
+    </div>
+  } @else if (current.kind === 'unavailable') {
+    <div class="snapshot__body snapshot__message" role="status">
+      <p>{{ current.message }}</p>
+      <button class="snapshot__retry" type="button" (click)="retry()">Try again</button>
+    </div>
+  } @else {
+    @if (current.fallbackNotice; as notice) {
+      <p class="snapshot__notice" role="note"><strong>Previous half-season.</strong> {{ notice }}</p>
+    }
+
+    <div class="tabs" role="tablist" aria-label="Hero stats by role">
+      @for (tab of tabs(); track tab.id; let index = $index) {
+        <button
+          #tab
+          class="tabs__tab"
+          type="button"
+          role="tab"
+          [id]="tab.tabId"
+          [attr.aria-selected]="tab.selected"
+          [attr.aria-controls]="panelId"
+          [attr.tabindex]="tab.selected ? 0 : -1"
+          (click)="select(tab.id)"
+          (keydown)="onTabKeydown($event, index)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </div>
+
+    <div
+      class="snapshot__body"
+      role="tabpanel"
+      tabindex="0"
+      [id]="panelId"
+      [attr.aria-labelledby]="selectedTab().tabId"
+    >
+      @if (panel(); as shown) {
+        @if (shown.rows.length > 0) {
+          <!-- The explicit roles keep the table a table when the narrow layout stops it displaying as one. -->
+          <table class="table" role="table">
+            <caption class="visually-hidden">
+              {{ shown.label }} heroes, most picked first
+            </caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader" scope="col">Hero</th>
+                <th role="columnheader" scope="col">Tier</th>
+                <th role="columnheader" scope="col" class="table__figure">Win rate</th>
+                <th role="columnheader" scope="col" class="table__figure">Pick rate</th>
+                <th role="columnheader" scope="col" class="table__figure">Appearances</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              @for (row of shown.rows; track row.hero) {
+                <tr role="row">
+                  <th role="rowheader" scope="row" class="table__hero">
+                    <span class="table__identity">
+                      <img
+                        class="table__image"
+                        [src]="row.imageUrl"
+                        alt=""
+                        width="40"
+                        height="40"
+                        loading="lazy"
+                        (error)="onImageError($event)"
+                      />
+                      <span class="table__name">
+                        <a routerLink="/heroes" [queryParams]="{ hero: row.hero }">{{ row.name }}</a>
+                        @if (row.role) {
+                          <span class="table__role">{{ row.role }}</span>
+                        }
+                      </span>
+                    </span>
+                  </th>
+                  <td role="cell" class="table__tier">
+                    @if (row.tier; as tier) {
+                      <span class="tier" [attr.data-tier]="tier"
+                        ><span class="visually-hidden">Tier </span>{{ tier }}</span
+                      >
+                    }
+                  </td>
+                  <td role="cell" class="table__figure" data-label="Win">
+                    {{ row.winRateLabel }}
+                    @if (row.winRateSide === 'above') {
+                      <span class="cue cue--above" aria-hidden="true">▲</span
+                      ><span class="visually-hidden">, above 50%</span>
+                    } @else if (row.winRateSide === 'below') {
+                      <span class="cue cue--below" aria-hidden="true">▼</span
+                      ><span class="visually-hidden">, below 50%</span>
+                    }
+                  </td>
+                  <td role="cell" class="table__figure" data-label="Pick">{{ row.pickRateLabel }}</td>
+                  <td role="cell" class="table__figure table__appearances">
+                    {{ row.appearancesLabel }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="empty">
+            <p class="empty__message">{{ shown.emptyMessage }}</p>
+            <a class="empty__link" routerLink="/community">See what has been recorded so far</a>
+          </div>
+        }
+      }
+    </div>
+
+    <p class="snapshot__sample">{{ current.sample }}</p>
+  }
+
+  <p class="snapshot__invitation">{{ invitation }}</p>
+
+  <p class="snapshot__links">
+    <a routerLink="/community">See all hero stats</a>
+    <a routerLink="/tier-list">See full tier list</a>
+  </p>
+</section>

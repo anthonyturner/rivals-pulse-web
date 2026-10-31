@@ -2,7 +2,6 @@ import { isPlatformBrowser } from '@angular/common';
 import { Component, DestroyRef, PLATFORM_ID, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { HeroUsageSectionComponent } from '../sections/hero-usage-section/hero-usage-section.component';
 import { HighlightCardsSectionComponent } from '../sections/highlight-cards-section/highlight-cards-section.component';
 import { SeasonUpdatesSectionComponent } from '../sections/season-updates-section/season-updates-section.component';
 import {
@@ -12,11 +11,7 @@ import {
 
 @Component({
   selector: 'app-season-dashboard',
-  imports: [
-    HeroUsageSectionComponent,
-    HighlightCardsSectionComponent,
-    SeasonUpdatesSectionComponent,
-  ],
+  imports: [HighlightCardsSectionComponent, SeasonUpdatesSectionComponent],
   templateUrl: './season-dashboard.component.html',
   styleUrl: './season-dashboard.component.css',
 })

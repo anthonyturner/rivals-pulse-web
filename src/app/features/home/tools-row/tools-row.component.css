@@ -2,8 +2,6 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: min(1320px, 100%);
-  margin: 2rem auto 0;
 }
 
 h2 {
