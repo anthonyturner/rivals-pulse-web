@@ -105,35 +105,6 @@ h1 {
   padding: 16px;
 }
 
-.toolbar label {
-  display: grid;
-  gap: 6px;
-  min-width: min(190px, 100%);
-}
-
-.toolbar span {
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
-select {
-  min-height: 42px;
-  padding: 0 34px 0 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: 7px;
-  background: var(--bg-elevated);
-  color: var(--text);
-  font: inherit;
-  font-weight: 700;
-}
-
-select:focus {
-  border-color: var(--teal);
-  outline: 3px solid var(--focus-ring);
-}
-
 .meta-strip {
   display: flex;
   flex-wrap: wrap;
@@ -362,11 +333,6 @@ abbr {
   .toolbar {
     align-items: stretch;
     padding: var(--mobile-panel-padding);
-  }
-
-  .toolbar label,
-  select {
-    width: 100%;
   }
 
   .state-panel,

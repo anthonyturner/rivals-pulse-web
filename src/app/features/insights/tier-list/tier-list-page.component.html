@@ -5,7 +5,8 @@
       <h1>Marvel Rivals tier list</h1>
       <p class="lede">
         Heroes are placed by their win rate in matches that Rivals Pulse players recorded: every
-        player on the scoreboard, all ranks together, Competitive and Quick Match combined.
+        player on the scoreboard, all ranks together. Quick Match and Competitive are counted
+        together unless you pick a single mode.
         <a class="lede-link" routerLink="/how-we-count">How we count</a>
       </p>
     </div>
@@ -18,24 +19,31 @@
           @if (season.dateRange; as range) {
             <small>{{ range }}</small>
           }
+          <small>{{ v.modeLabel }}</small>
           <small>{{ v.matchesCountedLabel }}</small>
         </div>
       }
     }
   </header>
 
-  @if (showSeasonPicker()) {
+  @if (showSeasonPicker() || showModePicker()) {
     <section class="toolbar" aria-label="Tier list filters">
-      <label>
-        <span>Season</span>
-        <select (change)="chooseSeason($event)">
-          @for (season of seasons(); track season.id) {
-            <option [value]="season.id" [selected]="season.id === selectedSeason()">
-              {{ season.label }}
-            </option>
-          }
-        </select>
-      </label>
+      @if (showModePicker()) {
+        <app-filter-select
+          label="Mode"
+          [options]="modeChoices()"
+          [value]="selectedMode()"
+          (valueChange)="chooseMode($event)"
+        />
+      }
+      @if (showSeasonPicker()) {
+        <app-filter-select
+          label="Season"
+          [options]="seasonChoices()"
+          [value]="selectedSeason()"
+          (valueChange)="chooseSeason($event)"
+        />
+      }
     </section>
   }
 
@@ -50,6 +58,10 @@
       <p>Fetching the latest counted matches.</p>
     </section>
   } @else if (view(); as v) {
+    @if (v.modeCaveat; as caveat) {
+      <p class="notice" role="note">{{ caveat }}</p>
+    }
+
     @if (v.fallbackNotice; as notice) {
       <p class="notice" role="note">{{ notice }}</p>
     }
@@ -114,17 +126,14 @@
       </section>
     } @else {
       <section class="state-panel">
-        <h2>Not enough data yet</h2>
+        <h2>Not enough data yet {{ v.scopeLabel }}</h2>
         <p class="state-count">
           @if (v.state === 'building') {
-            {{ v.matchesCountedLabel }} counted
+            {{ v.matchesCountedLabel }}
           } @else {
-            No matches counted
+            No matches
           }
-          @if (v.season; as season) {
-            in {{ season.label }}
-          }
-          so far.
+          counted {{ v.scopeLabel }} so far.
         </p>
         <p>
           The tier list is built from matches that Rivals Pulse players record, so it fills in as
@@ -149,7 +158,8 @@
 
     <p class="method-note">
       Rivals Pulse has no rank breakdown, so every figure covers all ranks together. A hero on both
-      teams of one match is counted twice. Draws, Arcade and Practice matches are left out.
+      teams of one match is counted twice. Matches without a win or a loss, and matches where the
+      game did not say which mode they were, are left out.
     </p>
   }
 </section>

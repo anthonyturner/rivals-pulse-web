@@ -37,10 +37,10 @@
 
     @if (backgroundVideoForeground) {
       <button
+        #videoClose
         class="home-page-video-close"
         type="button"
         aria-label="Close foreground video"
-        autofocus
         (click)="$event.stopPropagation(); closeBackgroundVideo()"
       >
         Close
@@ -69,43 +69,15 @@
 
       <app-hero-overlay-actions />
     </div>
-
-    <div class="hero-sidecar">
-      <app-season-glance />
-
-      @if (seasonUpdateSpotlight(); as spotlight) {
-        <section class="hero-spotlight" aria-labelledby="season-update-spotlight-title">
-          <div class="hero-spotlight-heading">
-            <p class="hero-spotlight-kicker">{{ spotlight.eyebrow }}</p>
-            <p class="hero-spotlight-date">{{ spotlight.date }}</p>
-          </div>
-
-          <h2 id="season-update-spotlight-title">{{ spotlight.title }}</h2>
-          <p class="hero-spotlight-description">{{ spotlight.description }}</p>
-
-          <div class="hero-spotlight-actions">
-            @if (spotlight.hasVideo) {
-              <button type="button" (click)="onBackgroundVideoSurfaceClick(backgroundVideo)">
-                Watch update video
-              </button>
-            }
-
-            <a [href]="spotlight.sourceUrl" target="_blank" rel="noopener noreferrer">
-              Read season update
-            </a>
-          </div>
-        </section>
-      }
-    </div>
   </header>
 
   <div class="home-body">
     <main class="home-main">
       <app-stats-snapshot />
-      <app-jarvis-console />
+      <app-overlay-section />
       <app-tools-row />
     </main>
 
-    <app-season-dashboard />
+    <app-game-news-rail [content]="homeContent()" (watchVideo)="onWatchUpdateVideo(backgroundVideo)" />
   </div>
 </section>

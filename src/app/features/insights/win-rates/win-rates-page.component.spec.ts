@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
+import type { HeroStats, HeroStatsHero, HeroStatsMode } from '../../../../contracts/hero-stats.model';
 import { WinRatesPageComponent } from './win-rates-page.component';
 
 const season = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
@@ -23,6 +23,14 @@ function hero(slug: string, appearances: number, wins: number): HeroStatsHero {
     finalHitsAverage: null,
   };
 }
+
+const MODES: HeroStatsMode[] = [
+  { id: 'all', label: 'Quick Match and Competitive', decidedMatches: 173 },
+  { id: 'quick-match', label: 'Quick Match', decidedMatches: 145 },
+  { id: 'competitive', label: 'Competitive', decidedMatches: 28 },
+  { id: 'arcade', label: 'Arcade', decidedMatches: 0 },
+  { id: 'practice', label: 'Practice', decidedMatches: 1 },
+];
 
 const empty: HeroStats = {
   status: 'not-enough-data',
@@ -140,9 +148,12 @@ describe('WinRatesPageComponent', () => {
   it('shows the matches counted and no table while no hero has enough data', async () => {
     const element = await open('/win-rates', partial);
 
-    expect(text(element, '.state-panel h2')).toEqual(['Not enough data yet']);
-    expect(text(element, '.state-panel p')[0]).toContain('3 matches counted');
-    expect(text(element, '.state-panel p')[0]).toContain('Season 10.5');
+    expect(text(element, '.state-panel h2')).toEqual([
+      'Not enough data yet in Quick Match and Competitive for Season 10.5',
+    ]);
+    expect(text(element, '.state-panel p')[0].replace(/\s+/g, ' ')).toContain(
+      '3 matches counted in Quick Match and Competitive for Season 10.5 so far',
+    );
     expect(element.querySelector('table')).toBeNull();
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
   });
@@ -150,8 +161,10 @@ describe('WinRatesPageComponent', () => {
   it('draws a designed empty state, not blank panels, when nothing is counted', async () => {
     const element = await open('/win-rates', empty);
 
-    expect(text(element, '.state-panel h2')).toEqual(['Not enough data yet']);
-    expect(text(element, '.state-panel p')[0]).toContain('No matches are counted');
+    expect(text(element, '.state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive']);
+    expect(text(element, '.state-panel p')[0].replace(/\s+/g, ' ')).toContain(
+      'No matches are counted in Quick Match and Competitive yet',
+    );
     expect(element.querySelector('table')).toBeNull();
     expect(element.querySelector('.building')).toBeNull();
     expect(element.querySelector('.season-card')).toBeNull();
@@ -189,5 +202,110 @@ describe('WinRatesPageComponent', () => {
 
     expect(text(element, '.notice')[0]).toContain('Season 10.5 does not have enough data yet');
     expect(text(element, '.season-card strong')).toEqual(['Season 10']);
+  });
+
+  describe('the mode picker', () => {
+    const withModes: HeroStats = { ...full, mode: 'all', modes: MODES };
+    const modeSelect = (element: HTMLElement): HTMLSelectElement =>
+      element.querySelector('app-filter-select select') as HTMLSelectElement;
+
+    function choose(select: HTMLSelectElement, value: string): void {
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+    }
+
+    async function openWithPicker(): Promise<{ harness: RouterTestingHarness; element: HTMLElement }> {
+      const harness = await RouterTestingHarness.create();
+
+      await harness.navigateByUrl('/win-rates');
+      http.expectOne('/api/heroes').flush([]);
+      http.expectOne('/api/hero-stats').flush(withModes);
+      harness.detectChanges();
+
+      return { harness, element: harness.routeNativeElement as HTMLElement };
+    }
+
+    it('lists only the modes that hold a decided match, the default first, and never Practice', async () => {
+      const { element } = await openWithPicker();
+
+      expect(text(element, '.filter-select__label')).toEqual(['Mode']);
+      expect(Array.from(modeSelect(element).options).map((option) => option.textContent?.trim())).toEqual([
+        'Quick Match and Competitive',
+        'Quick Match',
+        'Competitive',
+      ]);
+      expect(modeSelect(element).value).toBe('all');
+    });
+
+    it('draws no picker when only the default blend holds matches', async () => {
+      const element = await open('/win-rates', { ...withModes, modes: [MODES[0]] });
+
+      expect(element.querySelector('.toolbar')).toBeNull();
+    });
+
+    it('asks for the mode chosen, shows it is loading, then names the mode and the matches in it', async () => {
+      const { harness, element } = await openWithPicker();
+
+      choose(modeSelect(element), 'competitive');
+      harness.detectChanges();
+
+      expect(element.querySelector('table')).toBeNull();
+      expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading win rates');
+
+      http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
+      harness.detectChanges();
+
+      expect(text(element, '.season-card small')).toContain('Competitive');
+      expect(text(element, '.season-card small')).toContain('28 matches');
+      expect(modeSelect(element).value).toBe('competitive');
+    });
+
+    it('names an empty mode and its half-season, and keeps the picker so the mode can be left', async () => {
+      const { harness, element } = await openWithPicker();
+
+      choose(modeSelect(element), 'competitive');
+      http.expectOne('/api/hero-stats?mode=competitive').flush({
+        ...withModes,
+        mode: 'competitive',
+        status: 'not-enough-data',
+        matchesCounted: 0,
+        tiers: [],
+        belowMinimum: [],
+        modes: MODES.map((mode) => (mode.id === 'competitive' ? { ...mode, decidedMatches: 0 } : mode)),
+      });
+      harness.detectChanges();
+
+      expect(text(element, '.state-panel h2')).toEqual(['Not enough data yet in Competitive for Season 10.5']);
+      expect(modeSelect(element).options.length).toBe(3);
+    });
+
+    it('names the mode in the notice when the previous half-season stands in for it', async () => {
+      const previous = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: season.startsAt };
+      const { harness, element } = await openWithPicker();
+
+      choose(modeSelect(element), 'competitive');
+      http.expectOne('/api/hero-stats?mode=competitive').flush({
+        ...withModes,
+        mode: 'competitive',
+        halfSeason: previous,
+        inPlaceOf: season,
+      });
+      harness.detectChanges();
+
+      expect(text(element, '.notice')[0]).toBe(
+        "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
+      );
+    });
+
+    it('keeps the picker when a request for one mode fails', async () => {
+      const { harness, element } = await openWithPicker();
+
+      choose(modeSelect(element), 'competitive');
+      http.expectOne('/api/hero-stats?mode=competitive').flush('down', { status: 500, statusText: 'Server Error' });
+      harness.detectChanges();
+
+      expect(text(element, '.state-panel h2')).toEqual(['Win rates could not be loaded']);
+      expect(modeSelect(element).options.length).toBe(3);
+    });
   });
 });

@@ -217,6 +217,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'overlay-faq',
+    title: 'Overlay FAQ | Rivals Pulse Coach',
+    loadComponent: () =>
+      import('./features/overlay-faq/overlay-faq-page.component').then(
+        (module) => module.OverlayFaqPageComponent,
+      ),
+  },
+  {
     path: 'privacy',
     title: 'Privacy notes',
     loadComponent: () =>

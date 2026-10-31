@@ -5,7 +5,8 @@
       <h1>How heroes are winning in Rivals Pulse matches.</h1>
       <p class="lede">
         Win rates come only from matches that Rivals Pulse players recorded: every player on the
-        scoreboard, all ranks together, Competitive and Quick Match combined.
+        scoreboard, all ranks together. Quick Match and Competitive are counted together unless you
+        pick a single mode.
       </p>
     </div>
 
@@ -17,11 +18,23 @@
           @if (season.dateRange; as range) {
             <small>{{ range }}</small>
           }
+          <small>{{ v.modeLabel }}</small>
           <small>{{ v.matchesCountedLabel }}</small>
         </div>
       }
     }
   </header>
+
+  @if (showModePicker()) {
+    <section class="toolbar" aria-label="Win rate filters">
+      <app-filter-select
+        label="Mode"
+        [options]="modeChoices()"
+        [value]="selectedMode()"
+        (valueChange)="chooseMode($event)"
+      />
+    </section>
+  }
 
   @if (failed()) {
     <section class="state-panel" role="status">
@@ -34,6 +47,10 @@
       <p>Fetching the latest counted matches.</p>
     </section>
   } @else if (view(); as v) {
+    @if (v.modeCaveat; as caveat) {
+      <p class="notice" role="note">{{ caveat }}</p>
+    }
+
     @if (v.fallbackNotice; as notice) {
       <p class="notice" role="note">{{ notice }}</p>
     }
@@ -53,12 +70,9 @@
       }
       @case ('empty') {
         <section class="state-panel">
-          <h2>Not enough data yet</h2>
+          <h2>Not enough data yet {{ v.scopeLabel }}</h2>
           <p>
-            No matches are counted
-            @if (v.season; as season) {
-              in {{ season.label }}
-            }
+            No matches are counted {{ v.scopeLabel }}
             yet. Win rates appear here as Rivals Pulse players record matches, once a hero has
             {{ v.minimumMatches }} appearances.
           </p>
@@ -66,12 +80,9 @@
       }
       @case ('partial') {
         <section class="state-panel">
-          <h2>Not enough data yet</h2>
+          <h2>Not enough data yet {{ v.scopeLabel }}</h2>
           <p>
-            {{ v.matchesCountedLabel }} counted
-            @if (v.season; as season) {
-              in {{ season.label }}
-            }
+            {{ v.matchesCountedLabel }} counted {{ v.scopeLabel }}
             so far, but no hero has reached {{ v.minimumMatches }} appearances. A hero's win rate
             appears once it has.
           </p>
@@ -163,7 +174,8 @@
     @if (v.state !== 'unavailable-season') {
       <p class="method-note">
         Rivals Pulse has no rank breakdown, so every figure covers all ranks together. A hero on
-        both teams of one match is counted twice. Draws, Arcade and Practice matches are left out.
+        both teams of one match is counted twice. Matches without a win or a loss, and matches
+        where the game did not say which mode they were, are left out.
       </p>
     }
   }

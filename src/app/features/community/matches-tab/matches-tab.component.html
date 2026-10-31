@@ -1,0 +1,159 @@
+@let current = view();
+
+@if (current.kind === 'loading') {
+  <p class="matches-tab__message" role="status" aria-busy="true">Loading the community's matches...</p>
+} @else if (current.kind === 'unavailable') {
+  <p class="matches-tab__message" role="status">
+    The community match totals cannot be loaded right now. The rest of this page is not affected.
+  </p>
+} @else if (current.kind === 'not-enough-data') {
+  <app-community-empty-state heading="Community matches" [preview]="emptyPreview()" />
+} @else {
+  <div class="matches-tab">
+    <header class="matches-tab__scope">
+      @if (current.halfSeasonLabel) {
+        <p class="matches-tab__season">Showing {{ current.halfSeasonLabel }}</p>
+      }
+      <p class="matches-tab__sample">{{ current.sample }}</p>
+      @if (current.notice) {
+        <p class="matches-tab__notice" role="note"><strong>Previous half-season.</strong> {{ current.notice }}</p>
+      }
+    </header>
+
+    <section class="matches-tab__panel" aria-labelledby="matches-maps-title">
+      <h2 id="matches-maps-title">Win rate by map</h2>
+      <p class="matches-tab__hint">
+        Competitive and Quick Match together, from the side of the player who recorded each match.
+      </p>
+      @if (current.maps.rows.length > 0) {
+        <div class="matches-tab__table-wrap">
+          <table>
+            <caption class="visually-hidden">Win rate on each map, as a whole percentage</caption>
+            <thead>
+              <tr>
+                <th scope="col">Map</th>
+                <th scope="col">Win rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of current.maps.rows; track row.map) {
+                <tr>
+                  <th scope="row">{{ row.map }}</th>
+                  <td>
+                    <div class="matches-tab__rate">
+                      <strong>{{ row.winRateLabel }}</strong>
+                      <span class="matches-tab__bar" aria-hidden="true">
+                        <span class="matches-tab__bar-fill" [style.width.%]="row.barPercent"></span>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (current.maps.note) {
+        <p class="matches-tab__empty">{{ current.maps.note }}</p>
+      }
+      @if (current.maps.pending.length > 0) {
+        <div class="matches-tab__pending">
+          <p class="matches-tab__pending-title">Not enough data yet for these maps</p>
+          <ul>
+            @for (entry of current.maps.pending; track entry) {
+              <li>{{ entry }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </section>
+
+    <section class="matches-tab__panel" aria-labelledby="matches-modes-title">
+      <h2 id="matches-modes-title">Game modes played</h2>
+      <p class="matches-tab__hint">Shares of the matches where the game reported the mode.</p>
+      @if (current.modeMix.rows.length > 0) {
+        <div class="matches-tab__table-wrap">
+          <table>
+            <caption class="visually-hidden">Each game mode's share of the matches, with its average length</caption>
+            <thead>
+              <tr>
+                <th scope="col">Mode</th>
+                <th scope="col">Share</th>
+                <th scope="col">Average length</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of current.modeMix.rows; track row.mode) {
+                <tr>
+                  <th scope="row">{{ row.mode }}</th>
+                  <td>
+                    <div class="matches-tab__rate">
+                      <strong>{{ row.shareLabel }}</strong>
+                      <span class="matches-tab__bar" aria-hidden="true">
+                        <span class="matches-tab__bar-fill" [style.width.%]="row.barPercent"></span>
+                      </span>
+                    </div>
+                  </td>
+                  <td>{{ row.lengthLabel ?? 'Not enough data yet' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (current.modeMix.note) {
+        <p class="matches-tab__empty">{{ current.modeMix.note }}</p>
+      }
+    </section>
+
+    <section class="matches-tab__panel" aria-labelledby="matches-length-title">
+      <h2 id="matches-length-title">Average match length</h2>
+      <p class="matches-tab__hint">Over the matches that reported how long they lasted.</p>
+      @if (current.averageLength.label) {
+        <p class="matches-tab__figure">{{ current.averageLength.label }}</p>
+      }
+      @if (current.averageLength.note) {
+        <p class="matches-tab__empty">{{ current.averageLength.note }}</p>
+      }
+    </section>
+
+    <section class="matches-tab__panel" aria-labelledby="matches-days-title">
+      <h2 id="matches-days-title">Matches per day</h2>
+      <p class="matches-tab__hint">
+        Each day's share of the matches shown. Days are counted in UTC, and a day is listed only when enough
+        players recorded matches on it.
+      </p>
+      @if (current.perDay.rows.length > 0) {
+        <div class="matches-tab__table-wrap">
+          <table>
+            <caption class="visually-hidden">Each day's share of the matches</caption>
+            <thead>
+              <tr>
+                <th scope="col">Day</th>
+                <th scope="col">Share of matches</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of current.perDay.rows; track row.day) {
+                <tr>
+                  <th scope="row">{{ row.day }}</th>
+                  <td>
+                    <div class="matches-tab__rate">
+                      <strong>{{ row.shareLabel }}</strong>
+                      <span class="matches-tab__bar" aria-hidden="true">
+                        <span class="matches-tab__bar-fill" [style.width.%]="row.barPercent"></span>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (current.perDay.note) {
+        <p class="matches-tab__empty">{{ current.perDay.note }}</p>
+      }
+    </section>
+  </div>
+}

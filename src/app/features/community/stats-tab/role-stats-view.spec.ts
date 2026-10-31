@@ -1,3 +1,4 @@
+import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import type { RoleStats, RoleStatsRole } from '../../../../contracts/role-stats.model';
 import { buildRoleStatsView } from './role-stats-view';
 
@@ -51,7 +52,7 @@ function statsOf(extra: Partial<RoleStats> = {}): RoleStats {
   };
 }
 
-function ready(stats: RoleStats, mode = 'all') {
+function ready(stats: RoleStats, mode: HeroStatsModeId = 'all') {
   const view = buildRoleStatsView(stats, mode);
 
   if (view.kind !== 'ready') {
@@ -122,21 +123,80 @@ describe('buildRoleStatsView', () => {
     expect(values.join(' ')).not.toMatch(/NaN|undefined|null|Infinity/);
   });
 
-  it('lists the modes, marks the chosen one, and falls back to the first for an unknown mode', () => {
-    expect(ready(statsOf(), 'competitive').modes.map((mode) => [mode.id, mode.selected])).toEqual([
+  it('lists the modes that hold lines, marks the chosen one, and falls back to the first for an unknown mode', () => {
+    expect(ready(statsOf()).modes.map((mode) => [mode.id, mode.selected])).toEqual([
+      ['all', true],
+      ['quick-match', false],
+    ]);
+    expect(ready(statsOf(), 'nonsense' as HeroStatsModeId).modes[0].selected).toBeTrue();
+    expect(ready(statsOf(), 'quick-match').cards[0].appearancesLabel).toBe('30 lines');
+  });
+
+  it('keeps the chosen mode on the switch even when it holds no lines, so it can be left', () => {
+    const view = ready(statsOf(), 'competitive');
+
+    expect(view.modes.map((mode) => [mode.id, mode.selected])).toEqual([
       ['all', false],
       ['quick-match', false],
       ['competitive', true],
     ]);
-    expect(ready(statsOf(), 'nonsense').modes[0].selected).toBeTrue();
-    expect(ready(statsOf(), 'quick-match').cards[0].appearancesLabel).toBe('30 lines');
+    expect(view.cards.every((card) => !card.ready)).toBeTrue();
   });
 
-  it('keeps the mode switch when the chosen mode has no ready role while another has', () => {
-    const view = ready(statsOf(), 'competitive');
+  it('leaves out Arcade and Practice buttons until they hold lines, and Practice while it is held back', () => {
+    const withLines = (id: 'arcade' | 'practice', label: string): RoleStats['modes'][number] => ({
+      id,
+      label,
+      roles: [role('Vanguard', { appearances: 4 }), role('Duelist'), role('Strategist')],
+    });
+    const empty = (id: 'arcade' | 'practice', label: string): RoleStats['modes'][number] => ({
+      id,
+      label,
+      roles: [role('Vanguard'), role('Duelist'), role('Strategist')],
+    });
+    const offeredIds = (stats: RoleStats): string[] => ready(stats).modes.map((mode) => mode.id);
+    const base = statsOf().modes;
 
-    expect(view.cards.every((card) => !card.ready)).toBeTrue();
-    expect(view.modes.length).toBe(3);
+    expect(offeredIds(statsOf({ modes: [...base, empty('arcade', 'Arcade'), empty('practice', 'Practice')] }))).toEqual([
+      'all',
+      'quick-match',
+    ]);
+    expect(offeredIds(statsOf({ modes: [...base, withLines('arcade', 'Arcade'), withLines('practice', 'Practice')] }))).toEqual([
+      'all',
+      'quick-match',
+      'arcade',
+    ]);
+  });
+
+  it('draws no mode switch when only the default blend holds lines', () => {
+    const [blend] = statsOf().modes;
+
+    expect(ready(statsOf({ modes: [blend] })).modes).toEqual([]);
+  });
+
+  it('names the mode when a role is short of lines in one mode alone', () => {
+    const [, duelist] = ready(statsOf(), 'quick-match').cards;
+
+    expect(ready(statsOf(), 'quick-match').cards[0].message).toBe(
+      'Not enough data yet in Quick Match: 30 of 50 lines.',
+    );
+    expect(duelist.message).toBe('Not enough data yet in Quick Match: no lines recorded so far.');
+  });
+
+  it('warns that Arcade is not comparable with the other modes', () => {
+    const arcade: RoleStats['modes'][number] = {
+      id: 'arcade',
+      label: 'Arcade',
+      roles: [role('Vanguard', { appearances: 4 }), role('Duelist'), role('Strategist')],
+    };
+
+    expect(ready(statsOf({ modes: [...statsOf().modes, arcade] }), 'arcade').caveat).toContain('Arcade');
+    expect(ready(statsOf()).caveat).toBeNull();
+  });
+
+  it('no longer claims Arcade and Practice are left out, since a mode shows once it has lines', () => {
+    expect(ready(statsOf()).sample).not.toMatch(/Practice|Arcade/);
+    expect(ready(statsOf()).sample).toContain('no recorded mode are left out');
   });
 
   it('labels the half-season and notes a previous half-season standing in for the current one', () => {
@@ -168,6 +228,21 @@ describe('buildRoleStatsView', () => {
 
     expect(summary).toContain('50 lines');
     expect(summary).toContain('40 lines');
+  });
+
+  it('counts only the modes on offer when saying the most any role has', () => {
+    const summary = summaryOf(
+      statsOf({
+        status: 'not-enough-data',
+        modes: [
+          { id: 'all', label: 'All', roles: [role('Vanguard', { appearances: 12 }), role('Duelist'), role('Strategist')] },
+          { id: 'practice', label: 'Practice', roles: [role('Vanguard', { appearances: 49 }), role('Duelist'), role('Strategist')] },
+        ],
+      }),
+    );
+
+    expect(summary).toContain('12 lines');
+    expect(summary).not.toContain('49 lines');
   });
 
   it('is the empty state with no lines at all, never "0 lines" or NaN', () => {

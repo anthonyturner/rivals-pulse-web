@@ -1,5 +1,6 @@
 import type { HeroStats, HeroStatsHalfSeason, HeroStatsHero } from '../../../../contracts/hero-stats.model';
 import type { TierName } from '../../../../contracts/tier-list.model';
+import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
@@ -35,10 +36,16 @@ export interface TierListView {
   state: TierListState;
   /** The half-season the numbers come from; null before any half-season exists. */
   season: SeasonView | null;
+  /** The mode the numbers count, such as "Competitive" or "Quick Match and Competitive". */
+  modeLabel: string;
+  /** Set for a mode whose numbers do not mean what Quick Match and Competitive do. */
+  modeCaveat: string | null;
   /** Set when the numbers are the previous half-season's, shown until the current one has enough data. */
   fallbackNotice: string | null;
   minimumMatches: number;
   matchesCountedLabel: string;
+  /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
+  scopeLabel: string;
   /** All six tiers when `ready`; none otherwise. */
   tiers: TierRowView[];
   /** Heroes short of the minimum, drawn in the same place whether or not other heroes are placed. */
@@ -68,14 +75,20 @@ export function buildTierListView(stats: HeroStats, identities: HeroIdentities):
   );
   const placed = rows.some((row) => row.heroes.length > 0);
   const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
+  const modeLabel = modeLabelOf(stats);
 
   return {
     state: placed ? 'ready' : building.length > 0 || stats.matchesCounted > 0 ? 'building' : 'empty',
     season,
+    modeLabel,
+    modeCaveat: modeCaveat(stats.mode),
     fallbackNotice:
-      stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null),
+      stats.inPlaceOf === null
+        ? null
+        : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null, nonDefaultModeLabel(stats)),
     minimumMatches: stats.minimumMatches,
     matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
+    scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     tiers: placed ? rows : [],
     building,
   };

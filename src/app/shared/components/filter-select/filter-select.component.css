@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  min-width: min(190px, 100%);
+}
+
+.filter-select {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-select__label {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.filter-select__control {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 34px 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+}
+
+.filter-select__control:focus {
+  border-color: var(--teal);
+  outline: 3px solid var(--focus-ring);
+}
+
+/* Full width below the breakpoint the pages' toolbars stack at, so two filters never share a row on a phone. */
+@media (max-width: 760px) {
+  :host {
+    flex: 1 1 100%;
+  }
+}
