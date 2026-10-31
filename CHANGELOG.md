@@ -14,6 +14,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- The Community Matches tab shows win rate by map, the mix of game modes, average match length and matches per day, counted once per match and anonymous; each figure says "not enough data yet" until enough matches back it, and a new half-season shows the previous one, labelled, until it has enough ([#194](https://github.com/anthonyturner/rivals-pulse-web/pull/194)).
 - `GET /api/hero-stats?mode=` answers for Quick Match, Competitive, Arcade or Practice on its own, every answer lists the modes on offer with their match counts, and the Community Stats role benchmarks now include Arcade and Practice; without a `mode` the Quick Match and Competitive numbers are unchanged ([#221](https://github.com/anthonyturner/rivals-pulse-web/pull/221)).
 - The home page has a "What the overlay does" section below the hero stats: the Jarvis demo and three short tiles on what the overlay offers (ranks in game, recorded matches, the community tier list), with no hotkeys named until they are checked against the overlay ([#222](https://github.com/anthonyturner/rivals-pulse-web/pull/222)).
 - The home page opens with a hero stats snapshot: the five most-picked heroes with their tier, win rate, pick rate and appearances, switchable between All, Vanguard, Duelist and Strategist, from matches Rivals Pulse players recorded; a role without enough data says so, and the old most-used heroes block is gone from the season section ([#212](https://github.com/anthonyturner/rivals-pulse-web/pull/212)).
