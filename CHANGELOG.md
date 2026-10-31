@@ -8,6 +8,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
+
 ### Added
 
 - A "How we count" page at `/how-we-count`, linked beside the home page hero line and from the Community and tier list pages, says in plain words where the hero numbers come from, what an appearance is, the 10-appearance minimum, that ranks are blended, which modes count, and how half-seasons and the previous half-season standing in work ([#210](https://github.com/anthonyturner/rivals-pulse-web/pull/210)).

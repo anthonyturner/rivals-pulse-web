@@ -27,4 +27,13 @@ describe('FirstTimeGuidePageComponent', () => {
     expect(component.sections.length).toBeGreaterThan(5);
     expect(component.quickRules).toContain('Fight with teammates.');
   });
+
+  it('points the hero actions at released pages only', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const targets = Array.from(element.querySelectorAll('.hero-actions a')).map((link) =>
+      link.getAttribute('href'),
+    );
+
+    expect(targets).toEqual(['/beginner-interactive-guide', '/media-tutorials']);
+  });
 });

@@ -23,6 +23,15 @@ describe('BeginnerGuidePageComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('points the hero actions at released pages only', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const targets = Array.from(element.querySelectorAll('.hero-actions a')).map((link) =>
+      link.getAttribute('href'),
+    );
+
+    expect(targets).toEqual(['/hero-guides', '/media-tutorials']);
+  });
+
   it('updates the recommended plan when a role is selected', () => {
     component.selectRole('Duelist');
 
