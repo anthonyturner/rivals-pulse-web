@@ -8,18 +8,18 @@
 /** Fixed production origin, so a deploy preview never becomes a canonical URL. */
 export const SITE_ORIGIN = 'https://rivalspulse.com';
 
-export const SITE_NAME = 'Rivals Pulse Coach';
+export const SITE_NAME = 'RivalsPulse';
 
-export const HOME_TITLE = 'Rivals Pulse Coach | Marvel Rivals hero stats and coaching';
+export const HOME_TITLE = 'RivalsPulse | Your Marvel Rivals stats overlay';
 
 export const SITE_DESCRIPTION =
-  'Marvel Rivals coaching built on real matches: hero win rates, counters and tier lists from the Rivals Pulse overlay, plus hero guides and a team builder.';
+  'A stats overlay for Marvel Rivals. Hero win rates, counters and tier lists counted from real matches the overlay recorded, plus hero guides and a team builder.';
 
-/** Placeholder until the final 1200x630 image replaces the file at this path. */
-export const PREVIEW_IMAGE_PATH = '/images/site/og-preview-placeholder.png';
+/** Interim 1200x630 text card; the maintainer may replace this file with a gameplay screenshot. */
+export const PREVIEW_IMAGE_PATH = '/images/site/og-preview.png';
 
 export const PREVIEW_IMAGE_WIDTH = 1200;
 
 export const PREVIEW_IMAGE_HEIGHT = 630;
 
-export const PREVIEW_IMAGE_ALT = 'Rivals Pulse Coach: Draft smarter. Fight cleaner.';
+export const PREVIEW_IMAGE_ALT = 'RivalsPulse: Your Marvel Rivals stats overlay.';
