@@ -1,0 +1,100 @@
+<aside class="rail" aria-labelledby="game-news-title">
+  <h2 id="game-news-title" class="rail__title">Game News</h2>
+
+  @let current = view();
+
+  @if (current.season; as season) {
+    <section class="block" aria-labelledby="game-news-season">
+      <h3 id="game-news-season" class="block__heading">{{ season.heading }}</h3>
+      <p class="block__strong">{{ season.value }}</p>
+      @if (season.dateRange) {
+        <p class="block__meta">{{ season.dateRange }}</p>
+      }
+      @if (season.tuning; as tuning) {
+        <p class="block__meta">{{ tuning.label }}: {{ tuning.title }} · {{ tuning.meta }}</p>
+        <a class="block__link" [href]="tuning.url" target="_blank" rel="noopener noreferrer">
+          {{ tuning.linkLabel }}<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      }
+    </section>
+  }
+
+  @if (current.newestHero; as hero) {
+    <section class="block" aria-labelledby="game-news-hero">
+      <h3 id="game-news-hero" class="block__heading">{{ hero.heading }}</h3>
+      <div class="hero">
+        @if (hero.imageUrl) {
+          <img
+            class="hero__image"
+            [src]="hero.imageUrl"
+            alt=""
+            width="40"
+            height="40"
+            loading="lazy"
+            (error)="onImageError($event)"
+          />
+        }
+        <div>
+          <p class="block__strong">{{ hero.name }}</p>
+          <p class="block__meta">{{ hero.detail }}</p>
+        </div>
+      </div>
+    </section>
+  }
+
+  @if (current.updates; as updates) {
+    <section class="block" aria-labelledby="game-news-updates">
+      <h3 id="game-news-updates" class="block__heading">{{ updates.heading }}</h3>
+      <ul class="list">
+        @for (item of updates.items; track item.url) {
+          <li>
+            <a class="list__link" [href]="item.url" target="_blank" rel="noopener noreferrer">
+              <span class="list__meta">{{ item.meta }}</span>
+              <span class="list__title">{{ item.title }}</span
+              ><span class="visually-hidden"> (opens in a new tab)</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (current.spotlight; as spotlight) {
+    <section class="block" aria-labelledby="game-news-spotlight">
+      <p class="block__kicker">{{ spotlight.eyebrow }} · {{ spotlight.date }}</p>
+      <h3 id="game-news-spotlight" class="block__heading block__heading--title">{{ spotlight.title }}</h3>
+      <p class="spotlight__blurb">{{ spotlight.description }}</p>
+      <div class="actions">
+        @if (spotlight.hasVideo) {
+          <button class="actions__watch" type="button" (click)="watchVideo.emit()">Watch update video</button>
+        }
+        <a class="block__link" [href]="spotlight.sourceUrl" target="_blank" rel="noopener noreferrer">
+          Read season update<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      </div>
+    </section>
+  }
+
+  @if (current.events; as events) {
+    <section class="block" aria-labelledby="game-news-events">
+      <h3 id="game-news-events" class="block__heading">{{ events.heading }}</h3>
+      <ul class="list">
+        @for (event of events.items; track event.title) {
+          <li class="event">
+            <span class="event__chip">{{ event.label }}</span>
+            <span class="list__title">{{ event.title }}</span>
+          </li>
+        }
+      </ul>
+      @if (events.sourceUrl && events.sourceLabel) {
+        <a class="block__link" [href]="events.sourceUrl" target="_blank" rel="noopener noreferrer">
+          {{ events.sourceLabel }}<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      }
+    </section>
+  }
+
+  @if (!current.hasNews) {
+    <p class="block__meta">No news yet.</p>
+  }
+</aside>

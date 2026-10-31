@@ -245,7 +245,7 @@ Already database-backed:
 - Heroes page
 - Glossary page
 - Home page official updates, latest tuning, and events/rewards
-- Tier list, the home hero stats snapshot and the season glance dates, from Rivals Pulse players' matches
+- Tier list, the home hero stats snapshot and the Game News rail's season dates, from Rivals Pulse players' matches
 
 ```mermaid
 flowchart LR
@@ -259,16 +259,24 @@ flowchart LR
   StatsApi --> TierPage["Tier list page"]
 ```
 
-The hero stats snapshot, the season dashboard and the season glance render only content returned by
-`/api/home/content` and `/api/hero-stats`; none contains local content fallbacks. Every hero number on the site is a
-Rivals Pulse number: no third-party source is read, and below the minimum sample a page shows
-"not enough data yet". `SeasonGlanceService` composes the cached official content with the
-half-season dates for the glance component (the end is the next half-season's start, otherwise
-"ongoing"), while `SeasonDashboardService` passes the cached official content to the dashboard
-component. `StatsSnapshotComponent` reads the hero stats through `HomeHeroStatsService`, which
-fetches `/api/hero-stats` once for the hero trust line, the glance and the snapshot together, and
-the hero list for roles and portraits, in the browser only. `HomePageComponent` only composes those
-components and owns video behavior.
+The home page renders only content returned by `/api/home/content` and `/api/hero-stats`; none of
+it has a local content fallback. Every hero number on the site is a Rivals Pulse number: no
+third-party source is read, and below the minimum sample a page shows "not enough data yet".
+
+`HomePageComponent` composes the sections and owns the hero video. It reads the cached official
+content through `HomeContentService` (one `/api/home/content` request, shared) and passes it, as a
+plain input, to the Game News rail:
+
+- `GameNewsRailComponent` is the one labelled `<aside>` that holds every news block: the season at a
+  glance (with the latest tuning post), the newest hero, the official updates as the patch-notes
+  block, the season update spotlight and events. `buildGameNewsView` turns the content into those
+  blocks, caps each list at three and collapses a block with nothing to show. The half-season dates
+  for the glance come from the hero stats, in the browser only (the end is the next half-season's
+  start, otherwise "ongoing"). The spotlight's "Watch update video" button emits `watchVideo`; the
+  page, which owns the video, opens its player.
+- `StatsSnapshotComponent` reads the hero stats and the hero list (roles and portraits) in the
+  browser only. `HomeHeroStatsService` fetches `/api/hero-stats` once for the hero trust line, the
+  snapshot and the rail's dates, and can reload it for a retry.
 
 That would make the home page use the same database-backed flow as the rest of the site.
 
