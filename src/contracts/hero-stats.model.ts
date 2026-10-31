@@ -9,6 +9,20 @@ export interface HeroStatsHalfSeason {
   endsAt: string | null;
 }
 
+/**
+ * A way of counting matches. `all` is the Quick Match and Competitive blend, the default; every other
+ * id counts one game mode on its own.
+ */
+export type HeroStatsModeId = 'all' | 'quick-match' | 'competitive' | 'arcade' | 'practice';
+
+/** One mode a client can ask for, with how many matches it holds in the half-season shown. */
+export interface HeroStatsMode {
+  id: HeroStatsModeId;
+  label: string;
+  /** Matches with a win or a loss in this mode: what `matchesCounted` is while the mode is selected. */
+  decidedMatches: number;
+}
+
 /** One hero's record. Every rate here is a percentage from 0 to 100. */
 export interface HeroStatsHero {
   /** The hero's id in `heroes.json`, such as `captain-america`. */
@@ -59,7 +73,14 @@ export interface HeroStats {
    * below the minimum.
    */
   inPlaceOf: HeroStatsHalfSeason | null;
-  /** Matches with a win or a loss in Competitive or Quick Match: the pick rate's denominator. */
+  /**
+   * The mode the numbers count, or null when the request named a mode that does not exist (then
+   * nothing is counted). Absent only in an answer the CDN cached before this field existed.
+   */
+  mode?: HeroStatsModeId | null;
+  /** Every mode a client can ask for, in display order, counted in the half-season shown. Absent when `mode` is. */
+  modes?: HeroStatsMode[];
+  /** Matches with a win or a loss in the selected mode: the pick rate's denominator. */
   matchesCounted: number;
   tiers: HeroStatsTier[];
   belowMinimum: HeroStatsBelowMinimum[];

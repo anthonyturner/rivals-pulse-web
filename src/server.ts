@@ -19,7 +19,7 @@ import {
 } from './content-database';
 import { getCommunityMatches } from './community-matches-read';
 import { getHeroMatchups } from './hero-matchups-read';
-import { getHeroStats, getRoleStats, halfSeasonFromQuery } from './hero-stats-read';
+import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
 import { runGameStatsSync, syncGameStats } from './game-stats-sync';
 import { getSupabaseClient } from './supabase-client';
@@ -35,9 +35,9 @@ app.get('/api/content/status', (_req, res) => {
 });
 
 app.get('/api/hero-stats', (req, res) => {
-  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
+  const read = (name: string): string | undefined => (typeof req.query[name] === 'string' ? req.query[name] : undefined);
 
-  handleApiResponse(res, () => getHeroStats({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+  handleApiResponse(res, () => getHeroStats(heroStatsQueryFrom(read)));
 });
 
 app.get('/api/community/matches', (req, res) => {
