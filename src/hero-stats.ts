@@ -37,9 +37,10 @@ const TIER_ORDER: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
 export const PLAY_MODE_IDS = { quickMatch: 0, competitive: 1, arcade: 2, practice: 3, unknown: -1 } as const;
 
 /**
- * The modes the numbers blend. Unknown (-1) is left out on purpose: the game reports Practice
- * against bots as Quick Match, so an unlabelled match may be Practice or Arcade, and counting it
- * would let those in. The overlay drops a match with no mode for the same reason.
+ * The modes the numbers blend. Unknown (-1) is left out on purpose: an unlabelled match could be
+ * any mode, Practice and Arcade included, and counting it would let those in. The overlay drops a
+ * match with no mode for the same reason. Practice against bots is stored as 3, not as Quick Match:
+ * every Quick Match match in production has 12 lines on 2 teams (spike issue 216).
  */
 export const BLENDED_PLAY_MODE_IDS: readonly number[] = [PLAY_MODE_IDS.quickMatch, PLAY_MODE_IDS.competitive];
 

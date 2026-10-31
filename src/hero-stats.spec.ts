@@ -1,3 +1,4 @@
+import type { HeroStatsModeId } from './contracts/hero-stats.model.js';
 import type { TierName } from './contracts/tier-list.model.js';
 import {
   BLENDED_PLAY_MODE_IDS,
@@ -415,7 +416,7 @@ describe('deriveHeroStats for one mode', () => {
   const deriveMode = (mode?: string, extra: Partial<HeroStatsSource> = {}, halfSeason?: number) =>
     deriveHeroStats({ ...source, ...extra }, { now: NOW, heroSlugByGameId: SLUGS, mode, halfSeason }).stats;
 
-  const cases: [string, number, number][] = [
+  const cases: [HeroStatsModeId, number, number][] = [
     ['quick-match', PLAY_MODE_IDS.quickMatch, MIN],
     ['competitive', PLAY_MODE_IDS.competitive, MIN + 1],
     ['arcade', PLAY_MODE_IDS.arcade, MIN + 2],
