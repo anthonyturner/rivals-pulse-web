@@ -20,9 +20,12 @@ export interface HeroStatsReadOptions {
   now?: () => Date;
   /** One exact half-season instead of the current one; see `DeriveHeroStatsOptions`. */
   halfSeason?: number;
+  /** The `mode` query value, as `DeriveHeroStatsOptions` takes it. */
+  mode?: string;
 }
 
-export interface RoleStatsReadOptions extends HeroStatsReadOptions {
+/** Role stats carry every mode in one answer, so they take no `mode`. */
+export interface RoleStatsReadOptions extends Omit<HeroStatsReadOptions, 'mode'> {
   /** Hero id to role. By default read from `hero_content` through the shared Supabase client. */
   loadHeroRoles?: () => Promise<ReadonlyMap<string, string>>;
 }
@@ -95,6 +98,15 @@ export function halfSeasonFromQuery(value: string | undefined): number | undefin
 }
 
 /**
+ * The hero stats options a request's query string asks for. Every route that serves `/api/hero-stats`
+ * reads its query through this, so they cannot disagree about it. `read` gives one query parameter's
+ * first value, or undefined.
+ */
+export function heroStatsQueryFrom(read: (name: 'halfSeason' | 'mode') => string | undefined): HeroStatsReadOptions {
+  return { halfSeason: halfSeasonFromQuery(read('halfSeason')), mode: read('mode') };
+}
+
+/**
  * The site's hero stats. A game hero id with no mapping is left out of the numbers and logged
  * (hero id 0 is "no hero recorded" and always lands here); it never fails the request.
  */
@@ -103,6 +115,7 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
   const { stats, excludedGameIds } = deriveHeroStats(source, {
     now: (options.now ?? (() => new Date()))(),
     halfSeason: options.halfSeason,
+    mode: options.mode,
     heroSlugByGameId,
   });
 

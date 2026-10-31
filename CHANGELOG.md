@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- `GET /api/hero-stats?mode=` answers for Quick Match, Competitive, Arcade or Practice on its own, every answer lists the modes on offer with their match counts, and the Community Stats role benchmarks now include Arcade and Practice; without a `mode` the Quick Match and Competitive numbers are unchanged ([#221](https://github.com/anthonyturner/rivals-pulse-web/pull/221)).
 - A "How we count" page at `/how-we-count`, linked beside the home page hero line and from the Community and tier list pages, says in plain words where the hero numbers come from, what an appearance is, the 10-appearance minimum, that ranks are blended, which modes count, and how half-seasons and the previous half-season standing in work ([#210](https://github.com/anthonyturner/rivals-pulse-web/pull/210)).
 - Sharing rivalspulse.com in Discord, X or a search result now shows a title, description and preview image, and each page names its own address as canonical; the preview image is a plain brand card that can later be swapped for a gameplay screenshot ([#207](https://github.com/anthonyturner/rivals-pulse-web/pull/207)).
 - A tools row on the home page links straight to the tier list, the team builder and the hero guides ([#206](https://github.com/anthonyturner/rivals-pulse-web/pull/206)).
