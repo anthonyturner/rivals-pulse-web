@@ -2,6 +2,8 @@ import type {
   HeroStats,
   HeroStatsHalfSeason,
   HeroStatsHero,
+  HeroStatsMode,
+  HeroStatsModeId,
 } from '../../../../contracts/hero-stats.model';
 import type { HeroIdentities } from '../hero-identity';
 import { buildWinRatesView } from './win-rates-view';
@@ -60,6 +62,14 @@ const identities: HeroIdentities = new Map([
   ['storm', { name: 'Storm', role: 'Duelist', imageUrl: '/images/heroes/storm.png' }],
   ['luna-snow', { name: 'Luna Snow', role: 'Strategist', imageUrl: '/images/heroes/luna-snow.png' }],
 ]);
+
+const MODES: HeroStatsMode[] = [
+  { id: 'all', label: 'Quick Match and Competitive', decidedMatches: 173 },
+  { id: 'quick-match', label: 'Quick Match', decidedMatches: 145 },
+  { id: 'competitive', label: 'Competitive', decidedMatches: 28 },
+  { id: 'arcade', label: 'Arcade', decidedMatches: 0 },
+  { id: 'practice', label: 'Practice', decidedMatches: 1 },
+];
 
 describe('buildWinRatesView', () => {
   describe('with heroes past the minimum', () => {
@@ -153,6 +163,48 @@ describe('buildWinRatesView', () => {
       expect(view.fallbackNotice).toBe(
         "Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.",
       );
+    });
+  });
+
+  describe('the mode counted', () => {
+    const inMode = (mode: HeroStatsModeId, overrides: Partial<HeroStats> = {}): HeroStats =>
+      statsOf({ mode, modes: MODES, ...overrides });
+
+    it('names the default blend, with no caveat', () => {
+      const view = buildWinRatesView(inMode('all'), null, identities);
+
+      expect(view.modeLabel).toBe('Quick Match and Competitive');
+      expect(view.modeCaveat).toBeNull();
+      expect(view.scopeLabel).toBe('in Quick Match and Competitive for Season 10.5');
+    });
+
+    it('names an empty mode and its half-season', () => {
+      const view = buildWinRatesView(
+        inMode('competitive', { ...nothingCounted, matchesCounted: 0 }),
+        null,
+        identities,
+      );
+
+      expect(view.state).toBe('empty');
+      expect(view.scopeLabel).toBe('in Competitive for Season 10.5');
+    });
+
+    it('names the mode in the fall-back notice for a mode on its own', () => {
+      const view = buildWinRatesView(
+        inMode('competitive', { halfSeason: previous, inPlaceOf: current }),
+        null,
+        identities,
+      );
+
+      expect(view.fallbackNotice).toBe(
+        "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
+      );
+    });
+
+    it('warns that Arcade and Practice are not comparable', () => {
+      expect(buildWinRatesView(inMode('arcade'), null, identities).modeCaveat).toContain('Arcade');
+      expect(buildWinRatesView(inMode('practice'), null, identities).modeCaveat).toContain('bots');
+      expect(buildWinRatesView(inMode('quick-match'), null, identities).modeCaveat).toBeNull();
     });
   });
 

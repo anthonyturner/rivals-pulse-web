@@ -2,6 +2,8 @@ import type {
   HeroStats,
   HeroStatsHalfSeason,
   HeroStatsHero,
+  HeroStatsMode,
+  HeroStatsModeId,
 } from '../../../../contracts/hero-stats.model';
 import type { HeroIdentities } from '../hero-identity';
 import { buildTierListView, seasonOptions } from './tier-list-view';
@@ -45,6 +47,14 @@ function statsOf(overrides: Partial<HeroStats> = {}): HeroStats {
     ...overrides,
   };
 }
+
+const MODES: HeroStatsMode[] = [
+  { id: 'all', label: 'Quick Match and Competitive', decidedMatches: 173 },
+  { id: 'quick-match', label: 'Quick Match', decidedMatches: 145 },
+  { id: 'competitive', label: 'Competitive', decidedMatches: 28 },
+  { id: 'arcade', label: 'Arcade', decidedMatches: 0 },
+  { id: 'practice', label: 'Practice', decidedMatches: 1 },
+];
 
 const nothingPlaced: Partial<HeroStats> = { status: 'not-enough-data', tiers: [], belowMinimum: [] };
 
@@ -125,6 +135,53 @@ describe('buildTierListView', () => {
     expect(view.season?.label).toBe('Season 10');
     expect(view.fallbackNotice).toContain('Season 10.5 does not have enough data yet');
     expect(view.fallbackNotice).toContain("Season 10's numbers");
+  });
+
+  describe('the mode counted', () => {
+    const inMode = (mode: HeroStatsModeId, overrides: Partial<HeroStats> = {}): HeroStats =>
+      statsOf({ mode, modes: MODES, ...overrides });
+
+    it('names the default blend, with no caveat', () => {
+      const view = buildTierListView(inMode('all'), identities);
+
+      expect(view.modeLabel).toBe('Quick Match and Competitive');
+      expect(view.modeCaveat).toBeNull();
+      expect(view.scopeLabel).toBe('in Quick Match and Competitive for Season 10.5');
+    });
+
+    it('names an empty mode and its half-season', () => {
+      const view = buildTierListView(
+        inMode('competitive', { ...nothingPlaced, matchesCounted: 0 }),
+        identities,
+      );
+
+      expect(view.state).toBe('empty');
+      expect(view.scopeLabel).toBe('in Competitive for Season 10.5');
+    });
+
+    it('names the mode in the fall-back notice for a mode on its own, and not for the blend', () => {
+      const standIn = { halfSeason: previous, inPlaceOf: current };
+
+      expect(buildTierListView(inMode('competitive', standIn), identities).fallbackNotice).toBe(
+        "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
+      );
+      expect(buildTierListView(inMode('all', standIn), identities).fallbackNotice).toBe(
+        "Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.",
+      );
+    });
+
+    it('warns that Arcade and Practice are not comparable, and says nothing for the others', () => {
+      expect(buildTierListView(inMode('arcade'), identities).modeCaveat).toContain('Arcade');
+      expect(buildTierListView(inMode('practice'), identities).modeCaveat).toContain('bots');
+      expect(buildTierListView(inMode('quick-match'), identities).modeCaveat).toBeNull();
+    });
+
+    it('falls back to the blend for an answer cached before modes existed', () => {
+      const view = buildTierListView(statsOf(), identities);
+
+      expect(view.modeLabel).toBe('Quick Match and Competitive');
+      expect(view.fallbackNotice).toBeNull();
+    });
   });
 
   it('gives a finished half-season both dates and the latest one a start only', () => {

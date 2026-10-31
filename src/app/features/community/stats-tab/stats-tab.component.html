@@ -25,18 +25,24 @@
         <p class="stats-tab__notice" role="note"><strong>Previous half-season.</strong> {{ notice }}</p>
       }
 
-      <div class="stats-tab__modes" role="group" aria-label="Game mode">
-        @for (mode of current.modes; track mode.id) {
-          <button
-            type="button"
-            class="stats-tab__mode"
-            [attr.aria-pressed]="mode.selected"
-            (click)="selectMode(mode.id)"
-          >
-            {{ mode.label }}
-          </button>
-        }
-      </div>
+      @if (current.modes.length > 0) {
+        <div class="stats-tab__modes" role="group" aria-label="Game mode">
+          @for (mode of current.modes; track mode.id) {
+            <button
+              type="button"
+              class="stats-tab__mode"
+              [attr.aria-pressed]="mode.selected"
+              (click)="selectMode(mode.id)"
+            >
+              {{ mode.label }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (current.caveat; as caveat) {
+        <p class="stats-tab__notice" role="note">{{ caveat }}</p>
+      }
 
       <div class="stats-tab__roles">
         @for (card of current.cards; track card.role) {

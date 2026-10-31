@@ -25,7 +25,9 @@
       pick rate can go over 100%.
     </p>
     <p>
-      Only matches that ended in a win or a loss are counted. A match with no result is left out.
+      Win rate, pick rate, appearances and tiers use only matches that ended in a win or a loss. A
+      match with no result is left out of them. KDA and final hits are different: they are
+      averaged over every recorded line, including those from matches with no result.
     </p>
   </section>
 
@@ -49,9 +51,25 @@
   <section class="how-section" id="modes" aria-labelledby="modes-title">
     <h2 id="modes-title">Which game modes count</h2>
     <p>
-      Quick Match and Competitive are counted together. Arcade and Practice are left out. So is any
-      match where the game did not say which mode it was, because it could have been Practice
-      or Arcade.
+      By default, Quick Match and Competitive are counted together. The tier list and the win rates
+      page have a Mode picker that counts one mode on its own, and so does the switch on the
+      Community Stats tab. The home page and the other Community tabs always use the default.
+    </p>
+    <p>
+      A mode is in the picker only once it has at least one recorded match with a win or a loss,
+      so Arcade appears by itself when it has data. Arcade matches can have more than two teams
+      and custom lobbies, so its win rates are less reliable and do not compare with the other
+      modes. Practice is not offered yet: in Practice against bots the overlay currently records
+      the bots as players, which would count them as people.
+    </p>
+    <p>
+      Competitive has far fewer recorded matches than Quick Match, so on its own most heroes fall
+      below the minimum. When a mode has too little data in the current half-season, the page shows
+      the previous half-season for that mode and says so.
+    </p>
+    <p>
+      A match where the game did not say which mode it was is left out of every view, because it
+      could have been Practice or Arcade.
     </p>
   </section>
 

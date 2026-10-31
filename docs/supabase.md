@@ -404,6 +404,10 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   `decidedMatches` for each mode in the half-season shown); `matchesCounted` is the selected mode's
   `decidedMatches`. `mode` combines with `halfSeason`, and the fall-back to the previous half-season
   below is decided for the selected mode alone. Pulse Atlas and the home page never pass a mode.
+  The site's tier list, win rates page and Community Stats tab build their mode pickers from the list,
+  offering only modes with a decided match and never Practice while `SHOW_PRACTICE_MODE` in
+  [`play-modes.ts`](../src/app/shared/utilities/play-modes.ts) is off (the overlay uploads Practice
+  bots as players: rivals_pulse#1166). A request for the blend carries no `mode`.
 - KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
 - `GET /api/hero-stats?halfSeason=<number>` answers for exactly that half-season (10 or 10.5), with no
   fall back to the previous one; a half-season that has not started, or a value that is not a number,

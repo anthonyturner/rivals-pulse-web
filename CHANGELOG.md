@@ -10,10 +10,13 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Community Stats tab no longer shows Arcade and Practice buttons that only said "not enough data": a mode's button appears once it has data, and an empty role names its mode ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
+- The Community tier list and heroes tabs, and How we count, now say which game modes their numbers cover and how the new Mode picker works ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
 
 ### Added
 
+- A Mode picker beside the Season picker on the tier list and the win rates page counts Quick Match or Competitive on its own instead of the Quick Match and Competitive blend, which stays the default; a mode appears in the picker once it has a recorded match with a win or a loss, an empty mode says so by name, and Practice stays hidden until the overlay stops uploading AI bots as players ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - `GET /api/hero-stats?mode=` answers for Quick Match, Competitive, Arcade or Practice on its own, every answer lists the modes on offer with their match counts, and the Community Stats role benchmarks now include Arcade and Practice; without a `mode` the Quick Match and Competitive numbers are unchanged ([#221](https://github.com/anthonyturner/rivals-pulse-web/pull/221)).
 - The home page has a "What the overlay does" section below the hero stats: the Jarvis demo and three short tiles on what the overlay offers (ranks in game, recorded matches, the community tier list), with no hotkeys named until they are checked against the overlay ([#222](https://github.com/anthonyturner/rivals-pulse-web/pull/222)).
 - The home page opens with a hero stats snapshot: the five most-picked heroes with their tier, win rate, pick rate and appearances, switchable between All, Vanguard, Duelist and Strategist, from matches Rivals Pulse players recorded; a role without enough data says so, and the old most-used heroes block is gone from the season section ([#212](https://github.com/anthonyturner/rivals-pulse-web/pull/212)).
@@ -70,6 +73,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- How we count no longer says matches with no result are left out of everything: they are left out of win rate, pick rate, appearances and tiers, but KDA and final hits include them ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - The home page shows the current season again; it had stayed on Season 9 after Season 10 launched ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - Newly released heroes show their official portrait instead of a placeholder ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - Home page content that loads after the page appears now shows up ([#16](https://github.com/anthonyturner/rivals-pulse-web/pull/16)).

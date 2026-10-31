@@ -123,6 +123,29 @@ describe('StatsTabComponent', () => {
     expect(text()).not.toContain('54.2%');
   });
 
+  it('offers no Arcade or Practice button: Arcade has no lines yet and Practice is held back', async () => {
+    const lines = (appearances: number): RoleStatsRole[] => [
+      role('Vanguard', { appearances }),
+      role('Duelist'),
+      role('Strategist'),
+    ];
+
+    await answer({
+      ...READY,
+      modes: [
+        ...READY.modes,
+        { id: 'arcade', label: 'Arcade', roles: lines(0) },
+        { id: 'practice', label: 'Practice', roles: lines(1) },
+      ],
+    });
+
+    const labels = Array.from(host().querySelectorAll('.stats-tab__mode')).map((button) => button.textContent?.trim());
+
+    expect(labels).toEqual(['Quick Match and Competitive', 'Competitive']);
+    expect(text()).not.toContain('Arcade');
+    expect(text()).not.toContain('Practice');
+  });
+
   it('shows the designed empty state, with the minimum named, when no role has enough lines', async () => {
     await answer(NOT_ENOUGH);
 
