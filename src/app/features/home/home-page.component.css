@@ -305,6 +305,21 @@ h1 {
   outline-offset: 3px;
 }
 
+.home-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 28px;
+  width: min(1320px, 100%);
+  margin-inline: auto;
+}
+
+.home-main {
+  display: grid;
+  gap: 32px;
+  min-width: 0;
+}
+
 @keyframes video-popout-in {
   from {
     opacity: 0;

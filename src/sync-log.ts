@@ -66,6 +66,35 @@ export async function finishSyncRun(
   }
 }
 
+/**
+ * Runs `work` inside a `sync_runs` row and returns what it returned. The row closes with the result
+ * `describe` makes of that value, or as an error with the thrown message, which is rethrown.
+ */
+export async function recordSyncRun<T>(
+  client: SupabaseClient,
+  sourceKey: string,
+  startMessage: string,
+  work: () => Promise<T>,
+  describe: (value: T) => SyncRunResult,
+): Promise<T> {
+  const runId = await startSyncRun(client, sourceKey, startMessage);
+  let value: T;
+
+  try {
+    value = await work();
+  } catch (error) {
+    await finishSyncRun(client, runId, {
+      status: 'error',
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+
+  await finishSyncRun(client, runId, describe(value));
+
+  return value;
+}
+
 export async function saveExternalSource(
   client: SupabaseClient,
   source: ExternalSource,

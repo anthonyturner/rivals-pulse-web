@@ -1,11 +1,5 @@
 @if (state().content; as content) {
-  <main class="season-dashboard">
-    <app-hero-usage-section
-      [eyebrow]="content.heroUsage.eyebrow"
-      [title]="content.heroUsage.title"
-      [view]="state().heroUsage"
-    />
-
+  <div class="season-dashboard">
     <app-season-updates-section
       [eyebrow]="content.officialUpdates.eyebrow"
       [title]="content.officialUpdates.title"
@@ -21,5 +15,5 @@
       [sourceUrl]="content.events.sourceUrl"
       [highlights]="state().seasonEvents"
     />
-  </main>
+  </div>
 }

@@ -20,7 +20,9 @@ import {
 import { getHeroMatchups } from './hero-matchups-read';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
-import { syncGameStats } from './game-stats-sync';
+import { runGameStatsSync, syncGameStats } from './game-stats-sync';
+import { getSupabaseClient } from './supabase-client';
+import { recordSyncRun } from './sync-log';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -91,7 +93,7 @@ app.get('/api/glossary', (_req, res) => {
 });
 
 app.get('/api/game-stats', (_req, res) => {
-  handleApiResponse(res, () => syncGameStats());
+  handleApiResponse(res, () => syncGameStats(getSupabaseClient()));
 });
 
 app.get('/api/sync/game-stats', (req, res) => {
@@ -100,7 +102,7 @@ app.get('/api/sync/game-stats', (req, res) => {
     return;
   }
 
-  handleApiResponse(res, () => syncGameStats());
+  handleApiResponse(res, () => runGameStatsSync(getSupabaseClient(), recordSyncRun));
 });
 
 app.get('/api/external-sources/:sourceKey', (req, res) => {

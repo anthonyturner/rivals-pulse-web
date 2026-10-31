@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 
+import { tabTargetIndex } from '../../../shared/utilities/tab-keys';
 import { COMMUNITY_TABS, DEFAULT_COMMUNITY_TAB_ID } from '../community-tabs';
 
 @Component({
@@ -39,28 +40,12 @@ export class CommunityPageComponent {
     if (event.altKey || event.ctrlKey || event.metaKey) {
       return;
     }
-    const target = this.targetIndex(event.key, index);
+    const target = tabTargetIndex(event.key, index, COMMUNITY_TABS.length);
     if (target === null) {
       return;
     }
     event.preventDefault();
     this.tabElements()[target].nativeElement.focus();
     void this.router.navigate(['..', COMMUNITY_TABS[target].id], { relativeTo: this.route });
-  }
-
-  private targetIndex(key: string, index: number): number | null {
-    const last = COMMUNITY_TABS.length - 1;
-    switch (key) {
-      case 'ArrowRight':
-        return index === last ? 0 : index + 1;
-      case 'ArrowLeft':
-        return index === 0 ? last : index - 1;
-      case 'Home':
-        return 0;
-      case 'End':
-        return last;
-      default:
-        return null;
-    }
   }
 }
