@@ -1,0 +1,249 @@
+{
+  "capturedAt": "2026-10-31T01:49:28.851Z",
+  "base": "https://rivalspulse.com",
+  "response": {
+    "snapshotDate": "October 31, 2026",
+    "fetchedAt": "2026-10-31T01:49:26.295Z",
+    "currentPlayerSource": "Valve ISteamUserStats GetNumberOfCurrentPlayers",
+    "currentPlayerSourceUrl": "https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/",
+    "snapshot": {
+      "id": 2218,
+      "snapshotDate": "October 31, 2026",
+      "capturedAt": "2026-10-31T01:10:03.221Z",
+      "persisted": true
+    },
+    "previousSnapshot": {
+      "id": 2217,
+      "snapshotDate": "October 31, 2026",
+      "capturedAt": "2026-10-31T00:10:03.279Z",
+      "persisted": true
+    },
+    "games": [
+      {
+        "appId": 2767030,
+        "name": "Marvel Rivals",
+        "category": "Hero shooter",
+        "dailyPeak": 118674,
+        "allTimePeak": 644269,
+        "steamDailyRank": "#15",
+        "topSellerRank": "#4",
+        "twitchViewers": 24451,
+        "reviewSummary": "Mostly Positive, 75.74% SteamDB rating, 394k reviews",
+        "sourceUrl": "https://steamdb.info/app/2767030/charts/",
+        "currentPlayers": 62838,
+        "comparison": {
+          "previousCapturedAt": "2026-10-31T00:10:03.279Z",
+          "currentPlayers": {
+            "previous": 54709,
+            "change": 8129,
+            "changePercent": 14.86,
+            "trend": "up"
+          },
+          "dailyPeak": {
+            "previous": 118674,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "allTimePeak": {
+            "previous": 644269,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "steamDailyRank": {
+            "previous": "#15",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "topSellerRank": {
+            "previous": "#4",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "read": "Current players rose by 8,129 (14.86%); the 24h peak is unchanged; the all-time peak is unchanged. Daily rank is unchanged; seller rank is unchanged."
+        }
+      },
+      {
+        "appId": 2357570,
+        "name": "Overwatch",
+        "category": "Hero shooter",
+        "dailyPeak": 81755,
+        "allTimePeak": 165651,
+        "steamDailyRank": "#14",
+        "topSellerRank": "#19",
+        "twitchViewers": 34794,
+        "reviewSummary": "Mostly Negative, 30.94% SteamDB rating, 407k reviews",
+        "sourceUrl": "https://steamdb.info/app/2357570/charts/",
+        "currentPlayers": 59698,
+        "comparison": {
+          "previousCapturedAt": "2026-10-31T00:10:03.279Z",
+          "currentPlayers": {
+            "previous": 57372,
+            "change": 2326,
+            "changePercent": 4.05,
+            "trend": "up"
+          },
+          "dailyPeak": {
+            "previous": 81755,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "allTimePeak": {
+            "previous": 165651,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "steamDailyRank": {
+            "previous": "#14",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "topSellerRank": {
+            "previous": "#19",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "read": "Current players rose by 2,326 (4.05%); the 24h peak is unchanged; the all-time peak is unchanged. Daily rank is unchanged; seller rank is unchanged."
+        }
+      },
+      {
+        "appId": 1172470,
+        "name": "Apex Legends",
+        "category": "Battle royale shooter",
+        "dailyPeak": 194956,
+        "allTimePeak": 624473,
+        "steamDailyRank": "#8",
+        "topSellerRank": "#18",
+        "twitchViewers": 13672,
+        "reviewSummary": "Mixed, 67.41% SteamDB rating, 1.05M reviews",
+        "sourceUrl": "https://steamdb.info/app/1172470/charts/",
+        "currentPlayers": 60401,
+        "comparison": {
+          "previousCapturedAt": "2026-10-31T00:10:03.279Z",
+          "currentPlayers": {
+            "previous": 51433,
+            "change": 8968,
+            "changePercent": 17.44,
+            "trend": "up"
+          },
+          "dailyPeak": {
+            "previous": 194956,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "allTimePeak": {
+            "previous": 624473,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "steamDailyRank": {
+            "previous": "#8",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "topSellerRank": {
+            "previous": "#18",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "read": "Current players rose by 8,968 (17.44%); the 24h peak is unchanged; the all-time peak is unchanged. Daily rank is unchanged; seller rank is unchanged."
+        }
+      },
+      {
+        "appId": 570,
+        "name": "Dota 2",
+        "category": "MOBA",
+        "dailyPeak": 609443,
+        "allTimePeak": 1295114,
+        "steamDailyRank": "#2",
+        "topSellerRank": "#40",
+        "twitchViewers": 39955,
+        "reviewSummary": "Very Positive, 80.38% SteamDB rating, 2.72M reviews",
+        "sourceUrl": "https://steamdb.info/app/570/charts/",
+        "currentPlayers": 351626,
+        "comparison": {
+          "previousCapturedAt": "2026-10-31T00:10:03.279Z",
+          "currentPlayers": {
+            "previous": 376366,
+            "change": -24740,
+            "changePercent": -6.57,
+            "trend": "down"
+          },
+          "dailyPeak": {
+            "previous": 609443,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "allTimePeak": {
+            "previous": 1295114,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "steamDailyRank": {
+            "previous": "#2",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "topSellerRank": {
+            "previous": "#40",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "read": "Current players fell by 24,740 (6.57%); the 24h peak is unchanged; the all-time peak is unchanged. Daily rank is unchanged; seller rank is unchanged."
+        }
+      },
+      {
+        "appId": 730,
+        "name": "Counter-Strike 2",
+        "category": "Tactical shooter",
+        "dailyPeak": 1374512,
+        "allTimePeak": 1862531,
+        "steamDailyRank": "#1",
+        "topSellerRank": "#3",
+        "twitchViewers": 0,
+        "reviewSummary": "Very Positive, 85.83% SteamDB rating, 9.67M reviews",
+        "sourceUrl": "https://steamdb.info/app/730/charts/",
+        "currentPlayers": 531687,
+        "comparison": {
+          "previousCapturedAt": "2026-10-31T00:10:03.279Z",
+          "currentPlayers": {
+            "previous": 626064,
+            "change": -94377,
+            "changePercent": -15.07,
+            "trend": "down"
+          },
+          "dailyPeak": {
+            "previous": 1374512,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "allTimePeak": {
+            "previous": 1862531,
+            "change": 0,
+            "changePercent": 0,
+            "trend": "flat"
+          },
+          "steamDailyRank": {
+            "previous": "#1",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "topSellerRank": {
+            "previous": "#3",
+            "positionsChanged": 0,
+            "trend": "flat"
+          },
+          "read": "Current players fell by 94,377 (15.07%); the 24h peak is unchanged; the all-time peak is unchanged. Daily rank is unchanged; seller rank is unchanged."
+        }
+      }
+    ]
+  }
+}

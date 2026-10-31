@@ -1,5 +1,5 @@
 // The Turso part of `npm run db:seed`. Every seeded table has moved to Supabase, so this only
-// applies the schema of the tables still in Turso (sync runs, tier list, game stats). Issue 110
+// applies the schema of the tables still in Turso (sync runs, tier list). Issue 110
 // deletes it with Turso.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
