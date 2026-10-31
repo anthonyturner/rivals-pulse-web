@@ -1,10 +1,12 @@
 import { Routes } from '@angular/router';
 
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
+import { HOME_TITLE } from './core/seo/site-meta';
 
 export const routes: Routes = [
   {
     path: '',
+    title: HOME_TITLE,
     loadComponent: () =>
       import('./features/home/home-page.component').then((module) => module.HomePageComponent),
   },
