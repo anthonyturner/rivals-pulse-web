@@ -68,6 +68,7 @@ repo's build. This is a move, not a redesign.
 | `20261030120100_extended_aggregates.sql` | Anonymous counts of those: `hero_figure_aggregates`, `hero_kill_aggregates`, `hero_kill_totals`, `extended_aggregate_half_seasons` and the functions that rebuild and freeze them; `purge_expired_participants` freezes them before it deletes; an hourly `recompute-extended-aggregates` job |
 | `20261031011746_game_stats.sql` | `game_stat_snapshots`, `game_stat_snapshot_games` and the `record_game_stat_snapshot` function (the website's game stats, moved from Turso) |
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
+| `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 
 Link once per machine, check history, then apply:
@@ -396,8 +397,15 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
 - A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
   as in the overlay); the pick rate is those lines over the matches counted.
-- Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
-  are left out.
+- By default Competitive and Quick Match (`play_mode_id` 0 and 1) are blended, and unknown (-1) is
+  left out. `GET /api/hero-stats?mode=<id>` counts one mode on its own instead: `quick-match` (0),
+  `competitive` (1), `arcade` (2) or `practice` (3); `all` is the blend. A value that names no mode
+  gets the empty state, not the blend, and no option ever counts -1. The list is `PLAY_MODES` in
+  [`src/hero-stats.ts`](../src/hero-stats.ts), shared with the role benchmarks. Every answer carries
+  `mode` (the id counted, or null for a value that named none) and `modes[]` (`id`, `label` and
+  `decidedMatches` for each mode in the half-season shown); `matchesCounted` is the selected mode's
+  `decidedMatches`. `mode` combines with `halfSeason`, and the fall-back to the previous half-season
+  below is decided for the selected mode alone. Pulse Atlas and the home page never pass a mode.
 - KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
 - `GET /api/hero-stats?halfSeason=<number>` answers for exactly that half-season (10 or 10.5), with no
   fall back to the previous one; a half-season that has not started, or a value that is not a number,
@@ -459,13 +467,87 @@ reads `read_hero_stats()` (so the same environment as above) and a role per hero
   everyone, never an average of per-player averages. KDA uses the hero definition above.
 - A hero's role is the one it has now. Deadpool counts toward the role of the id the match
   reported (his role variants in `hero-game-ids.json`). A game id with no role is left out and logged.
-- Modes: Quick Match and Competitive blended, and each alone. Unknown, Arcade and Practice are left out.
+- Modes: the same `PLAY_MODES` list as the hero numbers, always every one of them in one answer
+  (the blend, then Quick Match, Competitive, Arcade and Practice, each alone). Unknown is left out.
+  The half-season is chosen by the blend, so a half-season with only Arcade or Practice lines still
+  falls back to the previous one.
 - A role in a mode shows figures at `ROLE_STATS_MIN_LINES` (50) decided lines; each average also needs
   that many lines carrying the figure, so older apps' missing final hits are never read as zero.
 - If `read_hero_stats()` is not in the database yet (PostgREST 404 or `PGRST202`, or Postgres
   `42P01` / `42883`) the answer is the empty state with HTTP 200. Any other failure (a refused key, a
   5xx, a timeout, missing environment variables) is an error status and the tab says it cannot load
   the benchmarks: the policy on epic 170, so an outage is never hidden behind "not enough data".
+
+## Community match aggregates
+
+The Community Matches tab (issue 172) reads its own anonymous counts, kept apart from the hero
+aggregates so a change to one cannot break the other. The four tables have RLS on and no policy,
+nothing for `anon` or `authenticated`, and hold counts only: no uid, name, fingerprint or per-player
+row.
+
+- `community_map_aggregates` per half-season, mode and map: matches, matches with a known result, wins.
+  Every bucket row in the three tables also stores `recorders` (how many distinct recorders
+  contributed) and `top_recorder_matches` (how many matches the busiest one contributed): counts only,
+  never who.
+- `community_mode_aggregates` per half-season and mode: matches, and the summed match length with the
+  count of matches it was summed over (a match with no length is never averaged in as zero).
+- `community_day_aggregates` per half-season and UTC day: matches.
+- A match is its roster fingerprint plus its start time, so a match recorded by two players counts once.
+- The result of a match is read from the recorder's side. A recorder's line in `participants` is
+  found by their in-game uid (inside the function only, never stored). Their own win or loss and the
+  match length come from their `tracked_matches` row for this match: the row nearest in time within
+  the four minutes that count as one match, preferring the row whose map is the match's map when two
+  are equally near. A recorder whose rows cannot be told apart gives none, because either could be
+  another match. When recorders on both teams uploaded the match, the earliest upload is the one that
+  counts, so a match is never both a win and a loss. A match with no such row still counts as a match
+  but is left out of win rates and averages.
+- **Privacy gate (epic 170).** `community_bucket_shown` lets a bucket (a map in a mode, a mode, a day)
+  through only with at least 3 distinct recorders and no recorder above 50% of its matches.
+  `read_community_matches()` applies it, so a hidden bucket never leaves the database, and every total
+  the site shows is computed over the shown buckets only. The migration asserts the gate's own cases
+  when it runs. With one or two uploaders nothing passes, and the tab shows "not enough data yet".
+- `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
+  frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
+  half-season a week after the next one began (uploads are refused once a match is a week old), or
+  when its oldest raw row is five months old, ahead of the purge's six-month limit. A frozen
+  half-season is never rebuilt, and `purge_expired_participants()` is not touched: it deletes only
+  after the next half-season has ended, long after this freeze.
+- `read_community_matches()` returns one jsonb value of counts and half-season start dates and is
+  granted to `service_role` only. The server calls it through the shared client
+  ([`src/community-matches-read.ts`](../src/community-matches-read.ts)) and derives every rate, share
+  and average in [`src/community-matches.ts`](../src/community-matches.ts); until the migration is
+  applied the call fails with a "function not found" error, which the server turns into the empty
+  state.
+- **No exact counts leave the server.** A hidden bucket could be recovered by subtracting the shown
+  ones from a total, so `GET /api/community/matches` returns only whole-percentage win rates and
+  shares, average lengths rounded to the minute, and one volume band (`matchesBand`, such as 100 for
+  "100+ matches"; the bands are `MATCH_VOLUME_BANDS`). Maps are ordered by win rate, never by volume,
+  and a map under its minimum is named without a count. `src/community-matches.spec.ts` proves no
+  number equal to a raw count is returned.
+- `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
+  `COMMUNITY_MATCHES_MINIMUMS`): 20 shown matches for the mode mix and matches per day,
+  10 matches with a result for a map's win rate, 10 matches with a length for an average. While the
+  current half-season is below 20 matches and the previous one is not, the previous one is returned
+  with `inPlaceOf` naming the current one.
+
+After applying the migration, compare the tables with a direct count (replace `10.5` as needed); the
+two matches columns must agree, and a second `select public.recompute_community_match_aggregates();`
+must leave the checksum unchanged:
+
+```sql
+select (select count(*) from (select distinct fingerprint, played_at
+          from public.participants where half_season = 10.5) x) as direct_matches,
+       (select coalesce(sum(matches), 0) from public.community_mode_aggregates
+          where half_season = 10.5) as aggregated_matches,
+       (select coalesce(sum(matches), 0) from public.community_day_aggregates
+          where half_season = 10.5) as aggregated_days;
+
+select md5(string_agg(r, '|' order by r)) as checksum from (
+  select 'm' || to_jsonb(a)::text as r from public.community_map_aggregates a
+  union all select 'o' || to_jsonb(a)::text from public.community_mode_aggregates a
+  union all select 'd' || to_jsonb(a)::text from public.community_day_aggregates a
+) t;
+```
 
 ## Each half-season
 

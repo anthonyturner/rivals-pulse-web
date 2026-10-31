@@ -1,8 +1,10 @@
+import type { HeroStatsModeId } from './contracts/hero-stats.model.js';
 import type { TierName } from './contracts/tier-list.model.js';
 import {
   BLENDED_PLAY_MODE_IDS,
   HERO_STATS_MIN_MATCHES,
   PLAY_MODE_IDS,
+  PLAY_MODES,
   deriveHeroStats,
   killDeathAssistRatio,
   shrunkWinRate,
@@ -381,9 +383,141 @@ describe('deriveHeroStats half-seasons', () => {
       halfSeasons: [],
       halfSeason: null,
       inPlaceOf: null,
+      mode: 'all',
+      modes: PLAY_MODES.map(({ id, label }) => ({ id, label, decidedMatches: 0 })),
       matchesCounted: 0,
       tiers: [],
       belowMinimum: [],
+    });
+  });
+});
+
+describe('deriveHeroStats for one mode', () => {
+  const inMode = (playModeId: number, halfSeason = 10.5) => ({ halfSeason, playModeId });
+  const lines = (playModeId: number, hero: number, count: number, wins: number, halfSeason = 10.5) =>
+    heroRow(hero, count, wins, inMode(playModeId, halfSeason));
+  const matches = (playModeId: number, decidedMatches: number, halfSeason = 10.5): MatchTotalsRow => ({
+    ...inMode(playModeId, halfSeason),
+    decidedMatches,
+  });
+  const MODE_IDS = [
+    PLAY_MODE_IDS.quickMatch,
+    PLAY_MODE_IDS.competitive,
+    PLAY_MODE_IDS.arcade,
+    PLAY_MODE_IDS.practice,
+    PLAY_MODE_IDS.unknown,
+  ];
+  // Each mode holds a different number of lines and matches, so counting another mode's rows shows.
+  const source: HeroStatsSource = {
+    halfSeasons: [{ halfSeason: 10.5, startsAt: '2026-10-09T09:00:00Z' }],
+    totals: MODE_IDS.map((id, index) => matches(id, MIN + index)),
+    heroes: MODE_IDS.map((id, index) => lines(id, HERO_A, MIN + index, MIN + index)),
+  };
+  const deriveMode = (mode?: string, extra: Partial<HeroStatsSource> = {}, halfSeason?: number) =>
+    deriveHeroStats({ ...source, ...extra }, { now: NOW, heroSlugByGameId: SLUGS, mode, halfSeason }).stats;
+
+  const cases: [HeroStatsModeId, number, number][] = [
+    ['quick-match', PLAY_MODE_IDS.quickMatch, MIN],
+    ['competitive', PLAY_MODE_IDS.competitive, MIN + 1],
+    ['arcade', PLAY_MODE_IDS.arcade, MIN + 2],
+    ['practice', PLAY_MODE_IDS.practice, MIN + 3],
+  ];
+
+  for (const [mode, , count] of cases) {
+    it(`counts only the ${mode} rows, and its decided matches as the matches counted`, () => {
+      const stats = deriveMode(mode);
+
+      expect(stats.mode).toBe(mode);
+      expect(stats.matchesCounted).toBe(count);
+      expect(stats.tiers[0].heroes[0]).toEqual(jasmine.objectContaining({ appearances: count, wins: count }));
+    });
+  }
+
+  it('counts the blend by default and for `all`, with the answer unchanged between them', () => {
+    const blend = deriveMode();
+
+    expect(blend.mode).toBe('all');
+    expect(blend.matchesCounted).toBe(MIN + MIN + 1);
+    expect(blend.tiers[0].heroes[0].appearances).toBe(MIN + MIN + 1);
+    expect(deriveMode('all')).toEqual(blend);
+    expect(deriveMode('  Competitive ').mode).toBe('competitive');
+    expect(deriveMode('')).toEqual(blend);
+  });
+
+  it('counts the unknown mode (-1) in no option', () => {
+    const only = (mode?: string) => deriveMode(mode, { totals: [matches(-1, 99)], heroes: [lines(-1, HERO_A, 99, 99)] });
+
+    for (const mode of [undefined, 'all', ...cases.map(([id]) => id)]) {
+      expect(only(mode).matchesCounted).withContext(String(mode)).toBe(0);
+      expect(only(mode).tiers).withContext(String(mode)).toEqual([]);
+    }
+  });
+
+  it('is the empty state for a mode that does not exist, still listing the modes on offer', () => {
+    for (const mode of ['pvp', 'quick_match', '0', 'competitive,arcade']) {
+      const stats = deriveMode(mode);
+
+      expect(stats.mode).withContext(mode).toBeNull();
+      expect(stats.status).withContext(mode).toBe('not-enough-data');
+      expect(stats.matchesCounted).withContext(mode).toBe(0);
+      expect(stats.tiers).withContext(mode).toEqual([]);
+      expect(stats.modes?.length).withContext(mode).toBe(PLAY_MODES.length);
+    }
+  });
+
+  it('lists every mode with its own decided matches in the half-season shown', () => {
+    expect(deriveMode('arcade').modes).toEqual([
+      { id: 'all', label: 'Quick Match and Competitive', decidedMatches: 2 * MIN + 1 },
+      { id: 'quick-match', label: 'Quick Match', decidedMatches: MIN },
+      { id: 'competitive', label: 'Competitive', decidedMatches: MIN + 1 },
+      { id: 'arcade', label: 'Arcade', decidedMatches: MIN + 2 },
+      { id: 'practice', label: 'Practice', decidedMatches: MIN + 3 },
+    ]);
+    expect(deriveMode(undefined, { totals: [] }).modes?.every((mode) => mode.decidedMatches === 0)).toBeTrue();
+  });
+
+  describe('across half-seasons', () => {
+    const twoSeasons = (thinMode: string): Partial<HeroStatsSource> => {
+      const thin = cases.find(([mode]) => mode === thinMode)?.[1] ?? PLAY_MODE_IDS.unknown;
+
+      return {
+        halfSeasons: [
+          { halfSeason: 10, startsAt: '2026-09-11T09:00:00Z' },
+          { halfSeason: 10.5, startsAt: '2026-10-09T09:00:00Z' },
+        ],
+        totals: [matches(thin, 3), matches(thin, MIN, 10)],
+        heroes: [lines(thin, HERO_A, 3, 3), lines(thin, HERO_A, MIN, MIN, 10)],
+      };
+    };
+
+    it('stands the previous half-season in for a mode that is thin in the current one, naming what it replaced', () => {
+      const stats = deriveMode('arcade', twoSeasons('arcade'));
+
+      expect(stats.halfSeason?.id).toBe(10);
+      expect(stats.inPlaceOf?.id).toBe(10.5);
+      expect(stats.matchesCounted).toBe(MIN);
+    });
+
+    it("decides the fall-back per mode, so another mode's data cannot keep the current half-season", () => {
+      const extra = twoSeasons('arcade');
+      const withCompetitive = {
+        ...extra,
+        heroes: [...(extra.heroes ?? []), lines(PLAY_MODE_IDS.competitive, HERO_A, MIN, MIN)],
+      };
+
+      expect(deriveMode('arcade', withCompetitive).halfSeason?.id).toBe(10);
+      expect(deriveMode('competitive', withCompetitive).halfSeason?.id).toBe(10.5);
+    });
+
+    it('answers exactly the mode and half-season asked for, with no fall-back', () => {
+      const stats = deriveMode('arcade', twoSeasons('arcade'), 10.5);
+
+      expect(stats.mode).toBe('arcade');
+      expect(stats.halfSeason?.id).toBe(10.5);
+      expect(stats.inPlaceOf).toBeNull();
+      expect(stats.status).toBe('not-enough-data');
+      expect(stats.matchesCounted).toBe(3);
+      expect(deriveMode('arcade', twoSeasons('arcade'), 10).matchesCounted).toBe(MIN);
     });
   });
 });
