@@ -50,6 +50,30 @@ describe('HeroStatsService', () => {
     expect(result).toEqual(notEnoughData);
   });
 
+  it('asks for one mode on its own, with or without a half-season', () => {
+    service.getHeroStats(undefined, 'competitive').subscribe();
+    const byMode = http.expectOne('/api/hero-stats?mode=competitive');
+    expect(byMode.request.params.get('mode')).toBe('competitive');
+    byMode.flush(notEnoughData);
+
+    service.getHeroStats(10, 'arcade').subscribe();
+    const both = http.expectOne('/api/hero-stats?halfSeason=10&mode=arcade');
+    expect(both.request.params.keys().sort()).toEqual(['halfSeason', 'mode']);
+    both.flush(notEnoughData);
+  });
+
+  it('asks for the default blend with no mode, so it shares the default answer', () => {
+    service.getHeroStats(undefined, 'all').subscribe();
+    const plain = http.expectOne('/api/hero-stats');
+    expect(plain.request.params.keys()).toEqual([]);
+    plain.flush(notEnoughData);
+
+    service.getHeroStats(10, 'all').subscribe();
+    const season = http.expectOne('/api/hero-stats?halfSeason=10');
+    expect(season.request.params.has('mode')).toBeFalse();
+    season.flush(notEnoughData);
+  });
+
   it('answers null when the request fails', () => {
     let result: HeroStats | null | undefined;
 
@@ -85,5 +109,19 @@ describe('isHeroStats', () => {
     expect(isHeroStats({ ...notEnoughData, tiers: [null] })).toBeFalse();
     expect(isHeroStats({ ...notEnoughData, belowMinimum: undefined })).toBeFalse();
     expect(isHeroStats({ ...notEnoughData, halfSeasons: undefined })).toBeFalse();
+  });
+
+  it('accepts an answer with no mode list, and one with a well-formed list', () => {
+    const modes = [{ id: 'all', label: 'Quick Match and Competitive', decidedMatches: 173 }];
+
+    expect(isHeroStats({ ...notEnoughData, mode: 'all', modes })).toBeTrue();
+    expect(isHeroStats({ ...notEnoughData, mode: null, modes: [] })).toBeTrue();
+  });
+
+  it('rejects a mode list the pages could not safely read', () => {
+    expect(isHeroStats({ ...notEnoughData, modes: 'all' })).toBeFalse();
+    expect(isHeroStats({ ...notEnoughData, modes: [null] })).toBeFalse();
+    expect(isHeroStats({ ...notEnoughData, modes: [{ id: 'all', label: 'All' }] })).toBeFalse();
+    expect(isHeroStats({ ...notEnoughData, modes: [{ id: 'all', label: 'All', decidedMatches: Number.NaN }] })).toBeFalse();
   });
 });

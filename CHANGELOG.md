@@ -10,10 +10,13 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Community Stats tab no longer shows Arcade and Practice buttons that only said "not enough data": a mode's button appears once it has data, and an empty role names its mode ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
+- The Community tier list and heroes tabs, and How we count, now say which game modes their numbers cover and how the new Mode picker works ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
 
 ### Added
 
+- A Mode picker beside the Season picker on the tier list and the win rates page counts Quick Match or Competitive on its own instead of the Quick Match and Competitive blend, which stays the default; a mode appears in the picker once it has a recorded match with a win or a loss, an empty mode says so by name, and Practice stays hidden until the overlay stops uploading AI bots as players ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - An "Overlay FAQ" page at `/overlay-faq`, linked by a "Worried about a ban?" line under the home page hero buttons, answers whether the overlay can get you banned (it cannot promise otherwise: NetEase's terms prohibit unauthorized third-party software and it has urged players to avoid third-party plugins), what the overlay uploads (with links to the privacy notes and How we count), and what Overwolf has to do with it, each with links to the NetEase and Overwolf pages it rests on ([#230](https://github.com/anthonyturner/rivals-pulse-web/pull/230)).
 - The home page gathers its news into one "Game News" column beside the stats and overlay sections (below them on a phone): the season at a glance, the newest hero, official updates and patch notes, the season update with its "Watch update video" button, and events. The hero no longer carries a side panel, the season dashboard is gone, and closing the update video returns focus to the button that opened it ([#226](https://github.com/anthonyturner/rivals-pulse-web/pull/226)).
 - The Community Insights tab shows when the community plays and wins: matches and win rate by day of the week, by time of day (UTC) and by place in a play session, each row shown only once enough matches from enough different players are behind it, and no one player is most of them; until then it says "not enough data yet" ([#191](https://github.com/anthonyturner/rivals-pulse-web/pull/191)).
@@ -74,6 +77,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- How we count no longer says matches with no result are left out of everything: they are left out of win rate, pick rate, appearances and tiers, but KDA and final hits include them ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - The home page shows the current season again; it had stayed on Season 9 after Season 10 launched ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - Newly released heroes show their official portrait instead of a placeholder ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - Home page content that loads after the page appears now shows up ([#16](https://github.com/anthonyturner/rivals-pulse-web/pull/16)).

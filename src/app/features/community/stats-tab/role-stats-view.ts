@@ -1,4 +1,6 @@
+import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import type { RoleStats, RoleStatsRole } from '../../../../contracts/role-stats.model';
+import { DEFAULT_MODE_ID, modeCaveat, selectableModes } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 
 export interface RoleFigure {
@@ -17,7 +19,7 @@ export interface RoleCard {
 }
 
 export interface RoleModeOption {
-  id: string;
+  id: HeroStatsModeId;
   label: string;
   selected: boolean;
 }
@@ -30,6 +32,9 @@ export type RoleStatsView =
       halfSeasonLabel: string | null;
       /** The shared fallback sentence, set when the previous half-season stands in for the current one. */
       notice: string | null;
+      /** Set for a mode whose numbers do not mean what Quick Match and Competitive do. */
+      caveat: string | null;
+      /** The modes to switch between; empty when there is only one, so no switch is drawn. */
       modes: RoleModeOption[];
       cards: RoleCard[];
       sample: string;
@@ -42,7 +47,10 @@ const NO_FIGURE = 'Not enough data';
  * What the Stats tab shows. `undefined` means the stats have not answered yet and `null` means they
  * could not be read; neither is "not enough data", which is a real answer.
  */
-export function buildRoleStatsView(stats: RoleStats | null | undefined, selectedModeId: string): RoleStatsView {
+export function buildRoleStatsView(
+  stats: RoleStats | null | undefined,
+  selectedModeId: HeroStatsModeId,
+): RoleStatsView {
   if (stats === undefined) {
     return { kind: 'loading' };
   }
@@ -52,7 +60,13 @@ export function buildRoleStatsView(stats: RoleStats | null | undefined, selected
   }
 
   if (stats.status !== 'ready') {
-    const mostLines = Math.max(0, ...stats.modes.flatMap((mode) => mode.roles.map((entry) => entry.appearances)));
+    const offered = new Set(offeredModes(stats, DEFAULT_MODE_ID).map((mode) => mode.id));
+    const mostLines = Math.max(
+      0,
+      ...stats.modes
+        .filter((mode) => offered.has(mode.id))
+        .flatMap((mode) => mode.roles.map((entry) => entry.appearances)),
+    );
     const minimum = countLabel(stats.minimumLines, 'line', 'lines');
 
     return {
@@ -64,7 +78,10 @@ export function buildRoleStatsView(stats: RoleStats | null | undefined, selected
     };
   }
 
-  const chosen = stats.modes.find((mode) => mode.id === selectedModeId) ?? stats.modes[0];
+  const offered = offeredModes(stats, selectedModeId);
+  const chosenId = offered.find((option) => option.id === selectedModeId)?.id ?? offered[0]?.id;
+  const chosen = stats.modes.find((mode) => mode.id === chosenId) ?? stats.modes[0];
+  const namedMode = chosen.id === DEFAULT_MODE_ID ? undefined : chosen.label;
 
   return {
     kind: 'ready',
@@ -73,14 +90,29 @@ export function buildRoleStatsView(stats: RoleStats | null | undefined, selected
       stats.inPlaceOf === null
         ? null
         : halfSeasonFallbackNotice(stats.inPlaceOf.label, stats.halfSeason?.label ?? null),
-    modes: stats.modes.map((mode) => ({ id: mode.id, label: mode.label, selected: mode === chosen })),
-    cards: chosen.roles.map((entry) => cardOf(entry, stats.minimumLines)),
+    caveat: modeCaveat(chosen.id),
+    modes: offered.length > 1 ? offered.map((mode) => ({ ...mode, selected: mode.id === chosen.id })) : [],
+    cards: chosen.roles.map((entry) => cardOf(entry, stats.minimumLines, namedMode)),
     sample:
-      'A line is one player in one match. Figures are averages per line, pooled across every player on the scoreboard. The win rate counts only matches with a win or a loss. Practice, Arcade and matches with no recorded mode are left out.',
+      'A line is one player in one match. Figures are averages per line, pooled across every player on the scoreboard. The win rate counts only matches with a win or a loss. Matches with no recorded mode are left out.',
   };
 }
 
-function cardOf(entry: RoleStatsRole, minimumLines: number): RoleCard {
+/** The modes with at least one line in a decided match, plus the one `selected`; see `selectableModes`. */
+function offeredModes(stats: RoleStats, selected: HeroStatsModeId) {
+  return selectableModes(
+    stats.modes.map((mode) => ({
+      id: mode.id,
+      label: mode.label,
+      hasMatches: mode.roles.some((entry) => entry.appearances > 0),
+    })),
+    selected,
+  );
+}
+
+/** `modeLabel` is set when one mode is counted on its own, so a role short of lines says which mode. */
+function cardOf(entry: RoleStatsRole, minimumLines: number, modeLabel?: string): RoleCard {
+  const shortOf = modeLabel === undefined ? 'Not enough data yet' : `Not enough data yet in ${modeLabel}`;
   const ready = entry.status === 'ready';
 
   return {
@@ -100,8 +132,8 @@ function cardOf(entry: RoleStatsRole, minimumLines: number): RoleCard {
     message: ready
       ? ''
       : entry.appearances > 0
-        ? `Not enough data yet: ${entry.appearances} of ${minimumLines} lines.`
-        : 'Not enough data yet: no lines recorded so far.',
+        ? `${shortOf}: ${entry.appearances} of ${minimumLines} lines.`
+        : `${shortOf}: no lines recorded so far.`,
   };
 }
 

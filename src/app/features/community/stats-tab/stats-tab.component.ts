@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
+import { DEFAULT_MODE_ID } from '../../../shared/utilities/play-modes';
 import { CommunityEmptyStateComponent } from '../community-empty-state/community-empty-state.component';
 import { buildRoleStatsView } from './role-stats-view';
 import { RoleStatsService } from './role-stats.service';
@@ -16,11 +18,11 @@ import { RoleStatsService } from './role-stats.service';
 export class StatsTabComponent {
   // undefined while the request runs, null once it has failed.
   private readonly stats = toSignal(inject(RoleStatsService).getRoleStats());
-  private readonly selectedMode = signal('all');
+  private readonly selectedMode = signal<HeroStatsModeId>(DEFAULT_MODE_ID);
 
   protected readonly view = computed(() => buildRoleStatsView(this.stats(), this.selectedMode()));
 
-  protected selectMode(id: string): void {
+  protected selectMode(id: HeroStatsModeId): void {
     this.selectedMode.set(id);
   }
 }

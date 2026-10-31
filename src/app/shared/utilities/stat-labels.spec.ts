@@ -16,4 +16,10 @@ describe('stat labels', () => {
       "Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.",
     );
   });
+
+  it('names the mode in the fallback notice when one mode is counted on its own', () => {
+    expect(halfSeasonFallbackNotice('Season 10.5', 'Season 10', 'Competitive')).toBe(
+      "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
+    );
+  });
 });

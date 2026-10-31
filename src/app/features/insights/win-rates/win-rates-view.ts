@@ -1,4 +1,5 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
+import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
@@ -29,10 +30,16 @@ export interface WinRatesView {
   season: SeasonView | null;
   /** Set when the address names a half-season that is not the one shown. */
   requestedLabel: string | null;
+  /** The mode the numbers count, such as "Competitive" or "Quick Match and Competitive". */
+  modeLabel: string;
+  /** Set for a mode whose numbers do not mean what Quick Match and Competitive do. */
+  modeCaveat: string | null;
   /** Set when the numbers are the previous half-season's, shown until the current one has enough data. */
   fallbackNotice: string | null;
   minimumMatches: number;
   matchesCountedLabel: string;
+  /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
+  scopeLabel: string;
   ranked: WinRateRowView[];
   building: HeroProgressRow[];
 }
@@ -54,12 +61,16 @@ export function buildWinRatesView(
   const requested = parseSeason(requestedSeason);
   const shown = stats.halfSeason?.id;
   const servedIds = [stats.halfSeason?.id, stats.inPlaceOf?.id];
+  const modeLabel = modeLabelOf(stats);
   const base = {
     season,
     requestedLabel: null,
+    modeLabel,
+    modeCaveat: modeCaveat(stats.mode),
     fallbackNotice: null,
     minimumMatches: stats.minimumMatches,
     matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
+    scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     ranked: [],
     building: [],
   };
@@ -86,7 +97,7 @@ export function buildWinRatesView(
   const fallbackNotice =
     stats.inPlaceOf === null
       ? null
-      : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null);
+      : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null, nonDefaultModeLabel(stats));
   const state: WinRatesState =
     ranked.length > 0 ? 'full' : building.length > 0 || stats.matchesCounted > 0 ? 'partial' : 'empty';
 
