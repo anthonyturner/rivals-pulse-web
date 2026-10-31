@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- Sharing rivalspulse.com in Discord, X or a search result now shows a title, description and preview image, and each page names its own address as canonical; the preview image is a plain brand card that can later be swapped for a gameplay screenshot ([#207](https://github.com/anthonyturner/rivals-pulse-web/pull/207)).
 - A tools row on the home page links straight to the tier list, the team builder and the hero guides ([#206](https://github.com/anthonyturner/rivals-pulse-web/pull/206)).
 - The Community Heroes, Tier list and Counters tabs now show a summary from Rivals Pulse uploads: the most-picked and highest-winning heroes, the S and A tiers, and the winning matchups with the clearest edge, each linking to its full page, with "not enough data yet" until enough matches are uploaded ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
 - `/api/hero-stats` and `/api/hero-matchups` answer "not enough data yet" instead of an error while the database read function is not deployed yet; any other failure still returns an error ([#198](https://github.com/anthonyturner/rivals-pulse-web/pull/198)).
