@@ -387,3 +387,13 @@ abbr {
     padding: 8px;
   }
 }
+
+.lede-link {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.lede-link:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}

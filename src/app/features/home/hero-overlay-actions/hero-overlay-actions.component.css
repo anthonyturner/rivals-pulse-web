@@ -65,12 +65,39 @@ a.cta-primary:hover {
   outline-offset: 3px;
 }
 
+.trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 14px;
+  min-height: 24px;
+  margin-top: 18px;
+}
+
 .trust-line {
   min-height: 24px;
-  margin: 18px 0 0;
+  margin: 0;
   color: rgba(255, 255, 255, 0.82);
   font-size: 0.85rem;
   line-height: 24px;
+}
+
+.how-we-count {
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 24px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.how-we-count:hover {
+  color: #ffd866;
+}
+
+.how-we-count:focus-visible {
+  outline: 3px solid #ffd866;
+  outline-offset: 3px;
 }
 
 .skeleton {
@@ -98,5 +125,12 @@ a.cta-primary:hover {
 
   .cta {
     width: 100%;
+  }
+
+  /* The link takes its own row here, and both rows are reserved so it never moves the buttons. */
+  .trust-row {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 48px;
   }
 }
