@@ -65,7 +65,7 @@ async function fetchImage(url) {
   const response = await fetch(url, {
     headers: {
       accept: 'image/avif,image/webp,image/png,image/jpeg,*/*',
-      'user-agent': 'marvel-rivals-coach-official-image-sync/1.0',
+      'user-agent': 'rivals-pulse-official-image-sync/1.0',
     },
   });
 

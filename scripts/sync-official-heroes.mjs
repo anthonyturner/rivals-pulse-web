@@ -1,10 +1,12 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { createTursoClient, executeSchema } from './turso-client.mjs';
+import { deleteHero, getHero, saveHero } from '../src/hero-store.ts';
+import { finishSyncRun, getExternalSourcePayload, saveExternalSource, startSyncRun } from '../src/sync-log.ts';
+import { getSupabaseClient } from './supabase-client.mjs';
 import {
   diffOfficialPayloads,
   scrapeOfficialHeroes,
@@ -13,7 +15,6 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const schemaPath = join(__dirname, 'sqlite-schema.sql');
 const heroImagesPath = join(projectRoot, 'public', 'images', 'heroes');
 const args = new Set(process.argv.slice(2));
 const checkOnly = args.has('--check') || args.has('--check-only');
@@ -38,14 +39,11 @@ if (watch) {
 }
 
 async function runOnce() {
-  const db = createTursoClient();
-  await executeSchema(db, readFileSync(schemaPath, 'utf8'));
-
-  const startedAt = new Date().toISOString();
-  const runId = await insertSyncRun(db, 'official-heroes', 'running', 'Checking official Marvel Rivals hero data', startedAt);
+  const db = getSupabaseClient();
+  const runId = await startSyncRun(db, 'official-heroes', 'Checking official Marvel Rivals hero data');
 
   try {
-    const previous = await getPreviousPayload(db);
+    const previous = await getExternalSourcePayload(db, 'official-heroes');
     const payload = await scrapeOfficialHeroes();
     const diff = diffOfficialPayloads(previous, payload);
     const statusMessage = `Official heroes: ${diff.added.length} added, ${diff.changed.length} changed, ${diff.removed.length} removed.`;
@@ -56,17 +54,20 @@ async function runOnce() {
       }
     }
 
-    await upsertSource(
-      db,
-      'official-heroes',
-      'Official Marvel Rivals Heroes',
-      payload.sourceUrl,
-      stableOfficialPayload(payload),
-      payload.fetchedAt,
-      'success',
-      null,
-    );
-    await finishSyncRun(db, runId, 'success', checkOnly ? `Check only. ${statusMessage}` : statusMessage, new Date().toISOString());
+    await saveExternalSource(db, {
+      sourceKey: 'official-heroes',
+      sourceName: 'Official Marvel Rivals Heroes',
+      url: payload.sourceUrl,
+      payload: stableOfficialPayload(payload),
+      fetchedAt: payload.fetchedAt,
+      status: 'success',
+      error: null,
+    });
+    await finishSyncRun(db, runId, {
+      status: 'success',
+      message: checkOnly ? `Check only. ${statusMessage}` : statusMessage,
+      details: { checkOnly, ...diff },
+    });
 
     console.log(statusMessage);
     if (diff.added.length) console.log(`Added: ${diff.added.join(', ')}`);
@@ -74,19 +75,24 @@ async function runOnce() {
     if (diff.removed.length) console.log(`Removed: ${diff.removed.join(', ')}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await upsertSource(db, 'official-heroes', 'Official Marvel Rivals Heroes', 'https://www.marvelrivals.com/heroes/index.html', '{}', new Date().toISOString(), 'error', message);
-    await finishSyncRun(db, runId, 'error', message, new Date().toISOString());
+    await saveExternalSource(db, {
+      sourceKey: 'official-heroes',
+      sourceName: 'Official Marvel Rivals Heroes',
+      url: 'https://www.marvelrivals.com/heroes/index.html',
+      payload: {},
+      fetchedAt: new Date().toISOString(),
+      status: 'error',
+      error: message,
+    });
+    await finishSyncRun(db, runId, { status: 'error', message });
     throw error;
-  } finally {
-    db.close();
   }
 }
 
 async function saveOfficialHero(db, officialHero) {
   const legacyHeroId = legacyOfficialHeroIds[officialHero.id];
-  const existing = await getExistingHero(db, officialHero.id)
-    ?? (legacyHeroId ? await getExistingHero(db, legacyHeroId) : undefined);
-  const existingHero = existing ? JSON.parse(existing.raw_json) : undefined;
+  const existingHero = await getHero(db, officialHero.id)
+    ?? (legacyHeroId ? await getHero(db, legacyHeroId) : undefined);
   const officialAbilities = officialHero.abilities.map(({ iconUrl, source, ...ability }) => ability);
   const mergedHero = {
     ...(existingHero ?? {}),
@@ -109,30 +115,32 @@ async function saveOfficialHero(db, officialHero) {
     weaknesses: existingHero?.weaknesses ?? fallbackWeaknesses(officialHero.role),
     counters: existingHero?.counters ?? [],
     synergies: officialTeamUpNames(officialAbilities, existingHero?.synergies ?? []),
-    imageUrl: getImageUrl(officialHero.id, existingHero?.imageUrl),
+    imageUrl: getImageUrl(officialHero.id, existingHero?.imageUrl, officialHero.listImageUrl),
   };
   const heroWithComputedFields = withBuildProfile({
     ...mergedHero,
     playstyle: buildHeroPlaystyle(mergedHero),
   });
 
-  await upsertHero(db, heroWithComputedFields);
-  await db.execute('DELETE FROM hero_abilities WHERE hero_id = ?', [heroWithComputedFields.id]);
-  await insertAbilities(db, heroWithComputedFields.id, null, null, heroWithComputedFields.abilities);
+  await saveHero(db, heroWithComputedFields);
 
   if (legacyHeroId && legacyHeroId !== heroWithComputedFields.id) {
-    await db.execute('DELETE FROM heroes WHERE id = ?', [legacyHeroId]);
+    await deleteHero(db, legacyHeroId);
   }
 }
 
-function getImageUrl(heroId, existingImageUrl) {
+function getImageUrl(heroId, existingImageUrl, officialImageUrl) {
   if (existingImageUrl && !existingImageUrl.includes('default-hero')) {
     return existingImageUrl;
   }
 
-  return existsSync(join(heroImagesPath, `${heroId}.png`))
-    ? `/images/heroes/${heroId}.png`
-    : '/images/heroes/default-hero.png';
+  if (existsSync(join(heroImagesPath, `${heroId}.png`))) {
+    return `/images/heroes/${heroId}.png`;
+  }
+
+  // A hero added mid-season has no committed portrait yet, so the official
+  // image keeps the card correct until `sync:official-hero-images` runs.
+  return officialImageUrl || '/images/heroes/default-hero.png';
 }
 
 function withBuildProfile(hero) {
@@ -143,108 +151,6 @@ function withBuildProfile(hero) {
     buildProfile,
     buildProfileRationale: buildProfileRationale(hero, buildProfile),
   };
-}
-
-async function getExistingHero(db, heroId) {
-  const result = await db.execute('SELECT raw_json FROM heroes WHERE id = ?', [heroId]);
-
-  return result.rows[0];
-}
-
-async function getPreviousPayload(db) {
-  const result = await db.execute('SELECT payload_json FROM external_sources WHERE source_key = ?', ['official-heroes']);
-  const row = result.rows[0];
-
-  if (!row?.payload_json || row.payload_json === '{}') {
-    return undefined;
-  }
-
-  return JSON.parse(row.payload_json);
-}
-
-async function upsertHero(db, hero) {
-  await db.execute(
-    `INSERT INTO heroes (
-      id, name, role, difficulty, summary, playstyle, image_url, raw_json, updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET
-      name = excluded.name,
-      role = excluded.role,
-      difficulty = excluded.difficulty,
-      summary = excluded.summary,
-      playstyle = excluded.playstyle,
-      image_url = excluded.image_url,
-      raw_json = excluded.raw_json,
-      updated_at = CURRENT_TIMESTAMP`,
-    [
-      hero.id,
-      hero.name,
-      hero.role,
-      hero.difficulty,
-      hero.summary,
-      hero.playstyle,
-      hero.imageUrl,
-      JSON.stringify(hero),
-    ],
-  );
-}
-
-async function insertAbilities(db, heroId, kitRole, kitLabel, abilities = []) {
-  for (const [index, ability] of abilities.entries()) {
-    await db.execute(
-      `INSERT INTO hero_abilities (
-        hero_id, kit_role, kit_label, name, ability_type, description, technical_details_json, sort_order
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        heroId,
-        kitRole,
-        kitLabel,
-        ability.name,
-        ability.type,
-        ability.description,
-        JSON.stringify(ability.technicalDetails ?? []),
-        index,
-      ],
-    );
-  }
-}
-
-async function insertSyncRun(db, sourceKey, status, message, startedAt) {
-  const result = await db.execute(
-    `INSERT INTO sync_runs (source_key, status, message, started_at)
-    VALUES (?, ?, ?, ?)`,
-    [sourceKey, status, message, startedAt],
-  );
-
-  return Number(result.lastInsertRowid);
-}
-
-async function finishSyncRun(db, runId, status, message, finishedAt) {
-  await db.execute(
-    `UPDATE sync_runs
-    SET status = ?, message = ?, finished_at = ?
-    WHERE id = ?`,
-    [status, message, finishedAt, runId],
-  );
-}
-
-async function upsertSource(db, sourceKey, sourceName, url, payloadJson, fetchedAt, status, error) {
-  await db.execute(
-    `INSERT INTO external_sources (
-      source_key, source_name, url, payload_json, fetched_at, status, error
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(source_key) DO UPDATE SET
-      source_name = excluded.source_name,
-      url = excluded.url,
-      payload_json = excluded.payload_json,
-      fetched_at = excluded.fetched_at,
-      status = excluded.status,
-      error = excluded.error`,
-    [sourceKey, sourceName, url, payloadJson, fetchedAt, status, error],
-  );
 }
 
 function officialTeamUpNames(abilities, existingSynergies) {

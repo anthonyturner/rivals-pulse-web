@@ -1,0 +1,83 @@
+<section class="home-page">
+  <div
+    class="home-page-background"
+    [class.is-foreground]="backgroundVideoForeground"
+    [class.is-popout]="backgroundVideoPoppedOut"
+    [attr.role]="backgroundVideoForeground ? 'dialog' : 'button'"
+    [attr.aria-modal]="backgroundVideoForeground ? 'true' : null"
+    [attr.aria-label]="
+      backgroundVideoForeground
+        ? heroMedia().title + ' video player'
+        : backgroundVideoPoppedOut
+          ? 'Open the floating video player'
+          : 'Play the background video in the foreground'
+    "
+    [attr.tabindex]="backgroundVideoForeground ? -1 : 0"
+    (click)="onBackgroundVideoSurfaceClick(backgroundVideo)"
+    (keydown)="onBackgroundVideoKeydown($event, backgroundVideo)"
+  >
+    <video
+      #backgroundVideo
+      class="home-page-background-video"
+      autoplay
+      [controls]="backgroundVideoForeground"
+      [muted]="backgroundVideoMuted"
+      [src]="heroMedia().videoUrl"
+      loop
+      playsinline
+      preload="metadata"
+      [poster]="heroMedia().posterUrl"
+      tabindex="-1"
+      (canplay)="startBackgroundVideo(backgroundVideo)"
+      (click)="onForegroundVideoClick($event)"
+      (volumechange)="syncBackgroundVideoSound(backgroundVideo)"
+    >
+      Your browser does not support embedded video playback.
+    </video>
+
+    @if (backgroundVideoForeground) {
+      <button
+        #videoClose
+        class="home-page-video-close"
+        type="button"
+        aria-label="Close foreground video"
+        (click)="$event.stopPropagation(); closeBackgroundVideo()"
+      >
+        Close
+      </button>
+    }
+  </div>
+
+  <button
+    class="home-page-sound-toggle"
+    type="button"
+    [attr.aria-label]="backgroundVideoMuted ? 'Unmute background video' : 'Mute background video'"
+    [attr.aria-pressed]="!backgroundVideoMuted"
+    (click)="toggleBackgroundVideoSound(backgroundVideo)"
+  >
+    {{ backgroundVideoMuted ? 'Sound off' : 'Sound on' }}
+  </button>
+
+  <header #heroBanner class="season-hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Player stats overlay for Marvel Rivals</p>
+      <h1>Your Marvel Rivals stats overlay.</h1>
+      <p class="lede">
+        Rivals Pulse runs on Overwolf while you play, and every number on this site is counted from
+        real matches it recorded.
+      </p>
+
+      <app-hero-overlay-actions />
+    </div>
+  </header>
+
+  <div class="home-body">
+    <main class="home-main">
+      <app-stats-snapshot />
+      <app-overlay-section />
+      <app-tools-row />
+    </main>
+
+    <app-game-news-rail [content]="homeContent()" (watchVideo)="onWatchUpdateVideo(backgroundVideo)" />
+  </div>
+</section>

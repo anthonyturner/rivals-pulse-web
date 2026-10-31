@@ -284,6 +284,6 @@ $result = foreach ($hero in $heroes) {
   }
 }
 
-$outputPath = Join-Path $PSScriptRoot "..\src\app\data\heroes.mock.json"
+$outputPath = Join-Path $PSScriptRoot "..\data\seeds\heroes.mock.json"
 $result | ConvertTo-Json -Depth 8 | Set-Content -Path $outputPath -Encoding utf8
 Write-Host "Wrote $($result.Count) heroes to $outputPath"

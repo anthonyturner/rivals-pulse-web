@@ -1,0 +1,47 @@
+name: Mark PR Ready for Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull request number to mark ready for review'
+        required: true
+      comment:
+        description: 'Optional comment to add when marking ready'
+        required: false
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  mark-ready:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark PR as ready for review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = Number('${{ github.event.inputs.pr_number }}');
+            const comment = '${{ github.event.inputs.comment }}' || '';
+
+            await github.rest.pulls.convertToDraft({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            await github.rest.pulls.markReadyForReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            if (comment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: comment
+              });
+            }

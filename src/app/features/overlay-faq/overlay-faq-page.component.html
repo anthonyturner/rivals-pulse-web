@@ -1,0 +1,75 @@
+<main class="faq-page">
+  <app-page-header
+    eyebrow="Overlay FAQ"
+    title="Overlay FAQ: bans, your data and Overwolf"
+    description="Straight answers to what a cautious player asks before installing an overlay. The rules below were last checked on 30 October 2026, and NetEase and Overwolf can change them at any time."
+  />
+
+  <section class="faq-section" id="ban-risk" aria-labelledby="ban-risk-title">
+    <h2 id="ban-risk-title">Will this get me banned?</h2>
+    <p>
+      We cannot promise it will not. NetEase decides what Marvel Rivals allows: its terms prohibit
+      unauthorized third-party software, and no NetEase document we found names Overwolf, either to
+      allow it or to forbid it. NetEase has also urged players to avoid third-party plugins and has
+      not published a list of approved overlays, so no overlay can guarantee your account is
+      risk-free.
+    </p>
+    <ul class="sources" aria-label="Sources for this answer">
+      <li>
+        <a href="https://store.steampowered.com/eula/2767030_eula_0">
+          NetEase terms of use, updated 15 December 2024
+        </a>
+      </li>
+      <li>
+        <a
+          href="https://web.archive.org/web/20250420014247/https://www.marvelrivals.com/announcements/20250220/40955_1213199.html"
+        >
+          NetEase announcement on third-party plugins, 21 February 2025 (archived copy)
+        </a>
+      </li>
+      <li>
+        <a href="https://www.marvelrivals.com/guide/20250226/41348_1214569.html">
+          NetEase prohibited software list, 26 February 2025
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="faq-section" id="data" aria-labelledby="data-title">
+    <h2 id="data-title">What does the overlay send?</h2>
+    <p>
+      The overlay records the matches you play and uploads each one automatically; the app has no
+      setting to turn that off. An upload holds the scoreboard line of every human player in the
+      match, including in-game names and player ids, plus facts such as the map and the mode. This
+      website publishes only anonymous totals, never names or ids; what is uploaded, what is kept
+      and for how long are in the <a routerLink="/privacy">privacy notes</a>, and how the totals
+      are counted is in <a routerLink="/how-we-count">How we count</a>.
+    </p>
+  </section>
+
+  <section class="faq-section" id="overwolf" aria-labelledby="overwolf-title">
+    <h2 id="overwolf-title">What does Overwolf have to do with it?</h2>
+    <p>
+      Rivals Pulse is an app for Overwolf, a platform that lists Marvel Rivals among its supported
+      games and publishes official game-event support for it. Overwolf says it requires apps to
+      follow each game's terms and that it manually curates and tests the apps it publishes@if (!listed) {; Rivals Pulse is not listed yet, so it has not been through that review}.
+      Rivals Pulse is an independent project, not affiliated with NetEase, Marvel or Overwolf, and
+      what the game allows is still NetEase's decision.
+    </p>
+    <ul class="sources" aria-label="Sources for this answer">
+      <li>
+        <a href="https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/marvel-rivals">
+          Overwolf: Marvel Rivals game events
+        </a>
+      </li>
+      <li>
+        <a href="https://dev.overwolf.com/ow-native/guides/game-compliance/overview">
+          Overwolf: game compliance guide
+        </a>
+      </li>
+      <li><a href="https://www.overwolf.com/our-commitment">Overwolf: our commitment</a></li>
+    </ul>
+  </section>
+
+  <p class="faq-footer"><a routerLink="/">Back to the home page</a></p>
+</main>

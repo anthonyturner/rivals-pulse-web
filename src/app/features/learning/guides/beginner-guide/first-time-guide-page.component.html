@@ -1,0 +1,46 @@
+<section class="first-time-guide">
+  <a class="back-link" routerLink="/hero-guides">Back to guides</a>
+
+  <header class="guide-hero">
+    <div>
+      <p class="kicker">First Time Guide</p>
+      <h1>How to play Marvel Rivals when hero shooters are new to you.</h1>
+      <p class="lede">
+        This is the plain-English version: what the game is asking from you, what each role is
+        supposed to do, how fights work, and what to focus on in your first matches.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/beginner-interactive-guide">Try the interactive version</a>
+        <a routerLink="/media-tutorials">Continue learning</a>
+      </div>
+    </div>
+
+    <img src="/images/heroes/captain-america.png" alt="Captain America" />
+  </header>
+
+  <section class="quick-rules" aria-label="Beginner quick rules">
+    @for (rule of quickRules; track rule; let index = $index) {
+      <article>
+        <span>{{ index + 1 }}</span>
+        <p>{{ rule }}</p>
+      </article>
+    }
+  </section>
+
+  <main class="guide-body" aria-label="First time player guide">
+    @for (section of sections; track section.title; let index = $index) {
+      <article class="guide-section">
+        <div class="section-index">{{ index + 1 }}</div>
+        <div>
+          <h2>{{ section.title }}</h2>
+          <p class="section-summary">{{ section.summary }}</p>
+          <ul>
+            @for (point of section.points; track point) {
+              <li>{{ point }}</li>
+            }
+          </ul>
+        </div>
+      </article>
+    }
+  </main>
+</section>

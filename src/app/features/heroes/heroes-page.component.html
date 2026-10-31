@@ -1,0 +1,38 @@
+<section class="heroes-page">
+  <app-hero-grid
+    [heroes]="filteredHeroes()"
+    [roles]="roles"
+    [selectedRole]="selectedRole()"
+    [selectedHeroId]="selectedHero()?.id ?? ''"
+    [searchTerm]="searchTerm()"
+    [gridMode]="heroGridMode()"
+    (roleSelected)="selectRole($event)"
+    (searchChanged)="updateSearchTerm($event)"
+    (gridModeSelected)="selectHeroGridMode($event)"
+    (heroSelected)="selectHero($event)"
+    (filtersReset)="resetHeroFilters()"
+  ></app-hero-grid>
+
+  <app-hero-page-header
+    [hero]="selectedHero()"
+    [visibleCount]="filteredHeroes().length"
+    [selectedRole]="selectedRole()"
+  ></app-hero-page-header>
+
+  <app-hero-content
+    [hero]="selectedHero()"
+    [isModalOpen]="isHeroDetailModalOpen()"
+    [videos]="selectedHeroVideos()"
+    [youtubeUrl]="selectedHeroYoutubeUrl()"
+    [controller]="detailsController"
+    (profileOpened)="openHeroDetailModal()"
+  ></app-hero-content>
+
+  @if (isHeroDetailModalOpen() && selectedHero(); as hero) {
+    <app-hero-detail-modal
+      [hero]="hero"
+      [controller]="detailsController"
+      (closed)="closeHeroDetailModal()"
+    ></app-hero-detail-modal>
+  }
+</section>

@@ -1,0 +1,99 @@
+<main class="how-page">
+  <app-page-header
+    eyebrow="How we count"
+    title="How we count: where the hero numbers come from"
+    description="Every hero win rate, pick rate and tier on this site is counted from real matches recorded by the Rivals Pulse overlay. This page says what is counted, what is left out, and when a number appears."
+  />
+
+  <section class="how-section" id="source" aria-labelledby="source-title">
+    <h2 id="source-title">Where the numbers come from</h2>
+    <p>
+      Only from matches that Rivals Pulse players record with the overlay and upload. There is no
+      other source: no outside tier list, no other stats site, and no guesses to fill gaps. If not
+      enough matches have been uploaded, the site says "not enough data yet" instead of showing a
+      number. What the overlay uploads is in the
+      <a routerLink="/privacy">privacy notes</a>.
+    </p>
+  </section>
+
+  <section class="how-section" id="appearances" aria-labelledby="appearances-title">
+    <h2 id="appearances-title">What an appearance is</h2>
+    <p>
+      An appearance is one hero on one scoreboard in one match. Everyone in the match is counted,
+      on both teams. If the same hero is on both teams of one match, that match gives the hero two
+      appearances, so a hero's appearances can be higher than the number of matches counted, and a
+      pick rate can go over 100%.
+    </p>
+    <p>
+      Win rate, pick rate, appearances and tiers use only matches that ended in a win or a loss. A
+      match with no result is left out of them. KDA and final hits are different: they are
+      averaged over every recorded line, including those from matches with no result.
+    </p>
+  </section>
+
+  <section class="how-section" id="minimum" aria-labelledby="minimum-title">
+    <h2 id="minimum-title">Why a hero can be missing</h2>
+    <p>
+      A hero needs at least 10 appearances before its win rate, pick rate and tier are shown. Below
+      that, a few lucky or unlucky games would decide the number, so the site shows only how many
+      appearances the hero has so far.
+    </p>
+  </section>
+
+  <section class="how-section" id="ranks" aria-labelledby="ranks-title">
+    <h2 id="ranks-title">Ranks are blended</h2>
+    <p>
+      Every rank is counted together. A player's rank is not recorded with their matches, so there
+      is no way to show one rank on its own.
+    </p>
+  </section>
+
+  <section class="how-section" id="modes" aria-labelledby="modes-title">
+    <h2 id="modes-title">Which game modes count</h2>
+    <p>
+      By default, Quick Match and Competitive are counted together. The tier list and the win rates
+      page have a Mode picker that counts one mode on its own, and so does the switch on the
+      Community Stats tab. The home page and the other Community tabs always use the default.
+    </p>
+    <p>
+      A mode is in the picker only once it has at least one recorded match with a win or a loss,
+      so Arcade appears by itself when it has data. Arcade matches can have more than two teams
+      and custom lobbies, so its win rates are less reliable and do not compare with the other
+      modes. Practice is not offered yet: in Practice against bots the overlay currently records
+      the bots as players, which would count them as people.
+    </p>
+    <p>
+      Competitive has far fewer recorded matches than Quick Match, so on its own most heroes fall
+      below the minimum. When a mode has too little data in the current half-season, the page shows
+      the previous half-season for that mode and says so.
+    </p>
+    <p>
+      A match where the game did not say which mode it was is left out of every view, because it
+      could have been Practice or Arcade.
+    </p>
+  </section>
+
+  <section class="how-section" id="seasons" aria-labelledby="seasons-title">
+    <h2 id="seasons-title">Half-seasons</h2>
+    <p>
+      Numbers are counted one half-season at a time, such as Season 10 and Season 10.5. A new
+      half-season starts with almost no matches. Until one hero in it reaches 10 appearances, the
+      site shows the previous half-season's numbers instead, as long as that one has some, and says
+      so. The line under the home page buttons names the half-season its count is from.
+    </p>
+  </section>
+
+  <section class="how-section" id="tiers" aria-labelledby="tiers-title">
+    <h2 id="tiers-title">Tiers and win rates</h2>
+    <p>
+      The win rate shown for a hero is its plain win rate. Its tier is placed from a slightly
+      adjusted win rate, pulled toward 50% for heroes with few appearances, so a short winning
+      streak cannot put a hero at the top. A hero's tier can therefore look a little different
+      from its win rate alone.
+    </p>
+  </section>
+
+  <p class="how-footer">
+    <a routerLink="/community">See the community stats</a>
+  </p>
+</main>

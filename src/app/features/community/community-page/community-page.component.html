@@ -1,0 +1,42 @@
+<section class="community-page">
+  <header class="community-page__header">
+    <p class="community-page__kicker">Community Pulse</p>
+    <h1 class="community-page__title">See your Rivals Pulse screens as the whole community plays them.</h1>
+    <p class="community-page__lede">
+      One tab for each screen of the Rivals Pulse app, showing what it looks like across everyone who
+      uploads matches instead of only you.
+    </p>
+    <p class="community-page__note">
+      These are anonymous community totals: no names, no player ids and no individual
+      matches, and a number only appears once enough matches back it. See the <a class="community-page__note-link" routerLink="/privacy">privacy notes</a> for what the app uploads, and <a class="community-page__note-link" routerLink="/how-we-count">how we count</a> for what the numbers include.
+    </p>
+  </header>
+
+  <div class="community-page__tabs" role="tablist" aria-label="Community totals by app screen">
+    @for (tab of tabs(); track tab.id; let index = $index) {
+      <a
+        #tabLink
+        class="community-page__tab"
+        role="tab"
+        [id]="tab.tabId"
+        [routerLink]="['..', tab.id]"
+        [attr.aria-selected]="tab.selected"
+        aria-controls="community-panel"
+        [attr.tabindex]="tab.selected ? 0 : -1"
+        (keydown)="onTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </a>
+    }
+  </div>
+
+  <div
+    id="community-panel"
+    class="community-page__panel"
+    role="tabpanel"
+    tabindex="0"
+    [attr.aria-labelledby]="selectedTab().tabId"
+  >
+    <ng-container [ngComponentOutlet]="selectedTab().component" />
+  </div>
+</section>

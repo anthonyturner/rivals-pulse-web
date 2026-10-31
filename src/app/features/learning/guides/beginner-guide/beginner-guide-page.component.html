@@ -1,0 +1,170 @@
+<section class="beginner-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Beginner Guide</p>
+      <h1>Learn how hero shooter fights actually work.</h1>
+      <p class="lede">
+        Pick your role, walk through four match scenarios, and leave with a simple practice plan
+        for your next Marvel Rivals session.
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/hero-guides">View hero guides</a>
+        <a routerLink="/media-tutorials">Find a video</a>
+      </div>
+    </div>
+
+    <aside class="progress-card" aria-label="Beginner guide progress">
+      <span>{{ answeredCount() }} / {{ modules.length }}</span>
+      <small>Scenarios complete</small>
+      <div class="progress-track" aria-hidden="true">
+        <div [style.width.%]="progressPercent()"></div>
+      </div>
+      <strong>{{ strongAnswerCount() }} strong reads</strong>
+    </aside>
+  </header>
+
+  <section class="role-panel" aria-label="Choose your role">
+    <div>
+      <p class="eyebrow">Step 1</p>
+      <h2>Choose the job you want to practice</h2>
+    </div>
+
+    <div class="role-grid">
+      @for (role of roles; track role) {
+        <button
+          type="button"
+          [class.active]="selectedRole() === role"
+          (click)="selectRole(role)"
+        >
+          {{ role }}
+        </button>
+      }
+    </div>
+  </section>
+
+  <main class="lesson-layout">
+    <section class="lesson-panel" aria-labelledby="lesson-title">
+      <div class="lesson-heading">
+        <div>
+          <p class="eyebrow">Module {{ currentModuleIndex() + 1 }}</p>
+          <h2 id="lesson-title">{{ currentModule().title }}</h2>
+          <p>{{ currentModule().shortGoal }}</p>
+        </div>
+        <img [src]="currentModule().heroImage" [alt]="currentModule().title + ' hero image'" />
+      </div>
+
+      <article class="concept-card">
+        <h3>{{ currentModule().concept.heading }}</h3>
+        <p>{{ currentModule().concept.body }}</p>
+
+        <div class="concept-grid">
+          <div>
+            <span>Beginner trap</span>
+            <p>{{ currentModule().concept.beginnerMistake }}</p>
+          </div>
+          <div>
+            <span>Coach tip</span>
+            <p>{{ currentModule().concept.coachTip }}</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="scenario-card">
+        <span>Scenario</span>
+        <h3>{{ currentModule().scenario.prompt }}</h3>
+        <p>{{ currentModule().scenario.context }}</p>
+
+        <div class="choice-list">
+          @for (choice of currentModule().scenario.choices; track choice.id) {
+            <button
+              type="button"
+              [class.active]="selectedAnswers()[currentModule().id] === choice.id"
+              (click)="selectAnswer(currentModule().id, choice.id)"
+            >
+              {{ choice.label }}
+            </button>
+          }
+        </div>
+      </article>
+    </section>
+
+    <aside class="feedback-panel" aria-live="polite" aria-label="Scenario feedback">
+      <p class="eyebrow">Instant Feedback</p>
+      @if (selectedChoice(); as choice) {
+        <h2>{{ choice.feedbackTitle }}</h2>
+        <span class="quality" [class]="choice.quality">{{ choice.quality }}</span>
+        <p>{{ choice.feedbackBody }}</p>
+      } @else {
+        <h2>Choose an answer</h2>
+        <p>
+          Pick the option you would try in match. The coaching note will explain what the decision
+          creates or risks.
+        </p>
+      }
+
+      <div class="cue-box">
+        <span>Beginner cue</span>
+        <strong>{{ currentModule().cue }}</strong>
+      </div>
+
+      <div class="module-controls">
+        <button type="button" (click)="previousModule()" [disabled]="currentModuleIndex() === 0">
+          Previous
+        </button>
+        <button
+          type="button"
+          (click)="nextModule()"
+          [disabled]="currentModuleIndex() === modules.length - 1"
+        >
+          Next
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <section class="module-tabs" aria-label="Beginner guide modules">
+    @for (module of modules; track module.id; let index = $index) {
+      <button
+        type="button"
+        [class.active]="currentModuleIndex() === index"
+        [class.complete]="selectedAnswers()[module.id]"
+        (click)="currentModuleIndex.set(index)"
+      >
+        <span>{{ index + 1 }}</span>
+        {{ module.title }}
+      </button>
+    }
+  </section>
+
+  <section class="practice-section" aria-labelledby="practice-title">
+    <div class="section-heading">
+      <p class="eyebrow">Final Plan</p>
+      <h2 id="practice-title">
+        {{ guideComplete() ? 'Take this into your next match' : 'Finish the scenarios to lock the plan' }}
+      </h2>
+    </div>
+
+    <article class="practice-card" [class.locked]="!guideComplete()">
+      <span>{{ selectedRole() }} practice</span>
+      <h3>{{ recommendedPlan().title }}</h3>
+      <strong>{{ recommendedPlan().cue }}</strong>
+
+      <dl>
+        <div>
+          <dt>Setup</dt>
+          <dd>{{ recommendedPlan().setup }}</dd>
+        </div>
+        <div>
+          <dt>Reps</dt>
+          <dd>{{ recommendedPlan().reps }}</dd>
+        </div>
+        <div>
+          <dt>Review</dt>
+          <dd>{{ recommendedPlan().review }}</dd>
+        </div>
+      </dl>
+
+      <button type="button" (click)="resetGuide()">Reset guide</button>
+    </article>
+  </section>
+</section>

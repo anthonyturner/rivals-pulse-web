@@ -1,5 +1,5 @@
 
-> marvel-rivals-coach@0.0.0 serve:ssr:marvel-rivals-coach
-> node dist/marvel-rivals-coach/server/server.mjs
+> rivals-pulse@0.0.0 serve:ssr:rivals-pulse
+> node dist/rivals-pulse/server/server.mjs
 
 Node Express server listening on http://localhost:4000

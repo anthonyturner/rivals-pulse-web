@@ -1,0 +1,9 @@
+#!/bin/sh
+# Hooks are installed before their packages are, and a project may decline
+# them; a missing checker must not block every commit, the install's included.
+if [ ! -x node_modules/.bin/commitlint ]; then
+  echo "commitlint is not installed; skipping the commit-message check." >&2
+  exit 0
+fi
+# --no stops npx from ever downloading commitlint.
+npx --no -- commitlint --edit "$1"

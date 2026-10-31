@@ -13,6 +13,7 @@ const corsHeaders = {
 
 interface JsonRequestOptions {
   allowCors?: boolean;
+  cacheControl?: string;
 }
 
 export async function handleJsonRequest(
@@ -21,7 +22,10 @@ export async function handleJsonRequest(
   getBody: () => unknown | Promise<unknown>,
   options: JsonRequestOptions = {},
 ): Promise<void> {
-  const extraHeaders = options.allowCors ? corsHeaders : undefined;
+  const extraHeaders = {
+    ...(options.allowCors ? corsHeaders : {}),
+    ...(options.cacheControl ? { 'cache-control': options.cacheControl } : {}),
+  };
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, extraHeaders);

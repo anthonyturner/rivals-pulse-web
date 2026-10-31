@@ -1,5 +1,5 @@
 {
-  "name": "marvel-rivals-coach",
+  "name": "rivals-pulse-coach",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -8,26 +8,30 @@
     "build": "ng build && npm run typecheck:api",
     "vercel:build": "npm run build && npm run sync:glossary:missing -- --vercel-production-only",
     "typecheck:api": "tsc -p tsconfig.api.json --noEmit",
+    "check:browser-bundle": "node scripts/check-browser-bundle.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "db:seed": "node scripts/seed-sqlite.mjs",
+    "test:functions": "node --no-warnings --test \"supabase/functions/**/*.test.ts\" \"scripts/**/*.test.ts\"",
+    "backfill:participants": "node --experimental-strip-types scripts/backfill-participants.mjs",
+    "db:seed": "node scripts/seed-sqlite.mjs && node scripts/seed-home-content.mjs && npm run sync:glossary && npm run sync:hero-videos",
     "db:sync": "node scripts/sync-external-sources.mjs",
     "sync:home-news": "node --experimental-strip-types scripts/sync-home-news.mjs",
     "sync:glossary": "node scripts/sync-glossary.mjs",
-    "sync:glossary:missing": "node scripts/sync-glossary-missing.mjs",
-    "sync:glossary:terms": "node scripts/sync-glossary-terms.mjs",
+    "sync:glossary:missing": "node scripts/sync-glossary.mjs --missing",
+    "sync:glossary:terms": "node scripts/sync-glossary.mjs --terms",
     "sync:heroes": "node scripts/sync-heroes.mjs",
+    "sync:hero-videos": "node scripts/sync-hero-videos.mjs",
+    "sync:hero-archetypes": "node --experimental-strip-types scripts/sync-hero-archetypes.mjs",
     "sync:official-heroes": "node scripts/sync-official-heroes.mjs",
     "sync:official-hero-images": "node scripts/sync-official-hero-images.mjs",
     "check:official-heroes": "node scripts/sync-official-heroes.mjs --check",
     "watch:official-heroes": "node scripts/sync-official-heroes.mjs --watch --interval-days 3",
-    "sync:tier-list": "node --experimental-strip-types scripts/sync-tier-list.mjs",
     "sync:game-stats": "node --experimental-strip-types scripts/sync-game-stats.mjs",
-    "refresh:counters": "node scripts/refresh-counter-picks.mjs",
+    "build:pulse-atlas": "node --experimental-strip-types scripts/build-pulse-atlas.mjs",
     "refresh:playstyles": "node scripts/refresh-playstyles.mjs",
     "refresh:build-profiles": "node scripts/refresh-build-profiles.mjs",
-    "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes && npm run refresh:counters",
-    "serve:ssr:marvel-rivals-coach": "node dist/marvel-rivals-coach/server/server.mjs"
+    "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes",
+    "serve:ssr:rivals-pulse-coach": "node dist/rivals-pulse-coach/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,
@@ -42,6 +46,9 @@
     ]
   },
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
     "@angular/animations": "^20.3.24",
     "@angular/common": "^20.3.0",
@@ -53,6 +60,7 @@
     "@angular/router": "^20.3.0",
     "@angular/ssr": "^20.3.10",
     "@fortawesome/fontawesome-free": "^7.2.0",
+    "@supabase/supabase-js": "^2.118.0",
     "@tursodatabase/serverless": "^1.2.3",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
@@ -65,12 +73,14 @@
     "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^20.19.43",
+    "esbuild": "^0.28.0",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "supabase": "^2.122.0",
     "typescript": "~5.9.2"
   }
 }

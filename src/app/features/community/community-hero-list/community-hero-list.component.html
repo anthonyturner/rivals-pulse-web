@@ -1,0 +1,20 @@
+@if (heroes().length > 0) {
+  <ol class="hero-list">
+    @for (hero of heroes(); track hero.hero) {
+      <li class="hero-list__item">
+        <img
+          class="hero-list__image"
+          [src]="hero.imageUrl"
+          alt=""
+          width="40"
+          height="40"
+          loading="lazy"
+          (error)="onImageError($event)"
+        />
+        <a class="hero-list__name" routerLink="/heroes" [queryParams]="{ hero: hero.hero }">{{ hero.name }}</a>&ngsp;<span class="hero-list__figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>&ngsp;<span class="hero-list__sample">{{ hero.sample }}</span>
+      </li>
+    }
+  </ol>
+} @else {
+  <p class="hero-list__empty">No hero here yet.</p>
+}

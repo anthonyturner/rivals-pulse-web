@@ -1,0 +1,184 @@
+:host {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.menu-toggle {
+  display: none;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+nav a,
+nav .disabled {
+  display: inline-grid;
+  min-height: 38px;
+  place-items: center;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+nav a.active,
+nav a:hover {
+  border-color: rgba(224, 169, 0, 0.45);
+  background: #f7f4e5;
+  color: var(--accent-ink);
+}
+
+nav .disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  :host {
+    display: contents;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin-left: auto;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .menu-toggle:hover,
+  .menu-toggle[aria-expanded="true"] {
+    border-color: rgba(224, 169, 0, 0.58);
+    background: #f7f4e5;
+    color: var(--accent-ink);
+  }
+
+  .menu-toggle-icon,
+  .menu-toggle-icon::before,
+  .menu-toggle-icon::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    transition: transform 160ms ease, background 160ms ease;
+  }
+
+  .menu-toggle-icon {
+    position: relative;
+  }
+
+  .menu-toggle-icon::before,
+  .menu-toggle-icon::after {
+    position: absolute;
+    left: 0;
+    content: '';
+  }
+
+  .menu-toggle-icon::before {
+    top: -6px;
+  }
+
+  .menu-toggle-icon::after {
+    top: 6px;
+  }
+
+  .menu-toggle[aria-expanded="true"] .menu-toggle-icon {
+    background: transparent;
+  }
+
+  .menu-toggle[aria-expanded="true"] .menu-toggle-icon::before {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .menu-toggle[aria-expanded="true"] .menu-toggle-icon::after {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .menu-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  nav {
+    position: absolute;
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    z-index: 20;
+    display: none;
+    max-height: calc(100vh - 70px);
+    padding: 10px 14px 18px;
+    overflow-y: auto;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 18px 32px rgba(17, 35, 57, 0.14);
+    backdrop-filter: blur(18px);
+  }
+
+  nav.is-open {
+    display: grid;
+    gap: 4px;
+  }
+
+  nav a,
+  nav .disabled {
+    width: 100%;
+    min-height: 44px;
+    justify-content: start;
+    padding: 0 10px;
+  }
+}
+
+/* The breathing Jarvis core, shrunk to a nav affordance. */
+.core-orb {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, var(--ally) 0 50%, var(--enemy) 50% 100%);
+  box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 14px rgba(255, 201, 77, 0.7);
+  animation: core-orb-breathe 3.2s ease-in-out infinite;
+}
+
+.core-orb-glow {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 201, 77, 0.75), rgba(12, 34, 51, 0.9) 62%);
+}
+
+@keyframes core-orb-breathe {
+  50% {
+    box-shadow: 0 0 0 3px var(--bg-elevated), 0 0 24px rgba(255, 201, 77, 0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .core-orb {
+    animation: none;
+  }
+}

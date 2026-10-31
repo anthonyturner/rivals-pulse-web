@@ -1,0 +1,24 @@
+project_id = "rivals-pulse"
+
+# verify_jwt is false for every function below, and turning it on breaks the app.
+#
+# The app calls these with the project's publishable key (sb_publishable_...), which is not a JWT.
+# The platform's verify_jwt check only understands the legacy JWT keys, so with it on every call
+# from the app is rejected as an invalid JWT. Supabase's guidance for publishable keys is to leave
+# the platform check off and authorize inside each function instead.
+#
+# "Off" therefore means each function has to decide for itself who may call it. For
+# elevenlabs-agent-token that is a per-address rate limit (issue 569). Whether the other three
+# need more than they have is tracked on the same issue.
+
+[functions.sync-match-history]
+verify_jwt = false
+
+[functions.sync-hero-stats]
+verify_jwt = false
+
+[functions.track-match-history]
+verify_jwt = false
+
+[functions.elevenlabs-agent-token]
+verify_jwt = false

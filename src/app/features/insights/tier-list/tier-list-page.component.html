@@ -1,0 +1,165 @@
+<section class="tier-page">
+  <header class="tier-hero">
+    <div>
+      <p class="kicker">Based on Rivals Pulse players</p>
+      <h1>Marvel Rivals tier list</h1>
+      <p class="lede">
+        Heroes are placed by their win rate in matches that Rivals Pulse players recorded: every
+        player on the scoreboard, all ranks together. Quick Match and Competitive are counted
+        together unless you pick a single mode.
+        <a class="lede-link" routerLink="/how-we-count">How we count</a>
+      </p>
+    </div>
+
+    @if (view(); as v) {
+      @if (v.season; as season) {
+        <div class="season-card">
+          <span>Showing</span>
+          <strong>{{ season.label }}</strong>
+          @if (season.dateRange; as range) {
+            <small>{{ range }}</small>
+          }
+          <small>{{ v.modeLabel }}</small>
+          <small>{{ v.matchesCountedLabel }}</small>
+        </div>
+      }
+    }
+  </header>
+
+  @if (showSeasonPicker() || showModePicker()) {
+    <section class="toolbar" aria-label="Tier list filters">
+      @if (showModePicker()) {
+        <app-filter-select
+          label="Mode"
+          [options]="modeChoices()"
+          [value]="selectedMode()"
+          (valueChange)="chooseMode($event)"
+        />
+      }
+      @if (showSeasonPicker()) {
+        <app-filter-select
+          label="Season"
+          [options]="seasonChoices()"
+          [value]="selectedSeason()"
+          (valueChange)="chooseSeason($event)"
+        />
+      }
+    </section>
+  }
+
+  @if (failed()) {
+    <section class="state-panel">
+      <h2>The tier list could not be loaded</h2>
+      <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+    </section>
+  } @else if (loading()) {
+    <section class="state-panel" role="status" aria-busy="true">
+      <h2>Loading the tier list</h2>
+      <p>Fetching the latest counted matches.</p>
+    </section>
+  } @else if (view(); as v) {
+    @if (v.modeCaveat; as caveat) {
+      <p class="notice" role="note">{{ caveat }}</p>
+    }
+
+    @if (v.fallbackNotice; as notice) {
+      <p class="notice" role="note">{{ notice }}</p>
+    }
+
+    @if (v.state === 'ready') {
+      <section class="meta-strip" aria-label="Tier list metadata">
+        @if (v.season; as season) {
+          @if (season.dateRange; as range) {
+            <span>{{ range }}</span>
+          }
+        }
+        <span>{{ v.matchesCountedLabel }} counted</span>
+        <span>Heroes need {{ v.minimumMatches }} appearances to be placed</span>
+      </section>
+
+      <section class="tiers" aria-label="Hero tiers">
+        @for (tier of v.tiers; track tier.name) {
+          <article class="tier-row tier-{{ tier.name }}">
+            <div class="tier-label">
+              <strong>{{ tier.name }}</strong>
+              <span>{{ tier.heroes.length }}</span>
+            </div>
+
+            <div class="hero-grid">
+              @for (hero of tier.heroes; track hero.hero) {
+                <article class="hero-card">
+                  <img
+                    [src]="hero.imageUrl"
+                    [alt]="hero.name"
+                    width="64"
+                    height="64"
+                    loading="lazy"
+                    (error)="onImageError($event)"
+                  />
+                  <div>
+                    <strong>{{ hero.name }}</strong>
+                    @if (hero.role) {
+                      <span>{{ hero.role }}</span>
+                    }
+                  </div>
+                  <dl>
+                    <div>
+                      <dt><abbr title="Win rate">WR</abbr></dt>
+                      <dd>{{ hero.winRateLabel }}</dd>
+                    </div>
+                    <div>
+                      <dt>Pick</dt>
+                      <dd>{{ hero.pickRateLabel }}</dd>
+                    </div>
+                    <div>
+                      <dt>Games</dt>
+                      <dd>{{ hero.appearancesLabel }}</dd>
+                    </div>
+                  </dl>
+                </article>
+              } @empty {
+                <p class="empty-tier">No heroes in this tier yet.</p>
+              }
+            </div>
+          </article>
+        }
+      </section>
+    } @else {
+      <section class="state-panel">
+        <h2>Not enough data yet {{ v.scopeLabel }}</h2>
+        <p class="state-count">
+          @if (v.state === 'building') {
+            {{ v.matchesCountedLabel }}
+          } @else {
+            No matches
+          }
+          counted {{ v.scopeLabel }} so far.
+        </p>
+        <p>
+          The tier list is built from matches that Rivals Pulse players record, so it fills in as
+          they play. A hero is placed once it has {{ v.minimumMatches }} appearances.
+        </p>
+      </section>
+    }
+
+    @if (v.building.length > 0) {
+      <section class="building" aria-labelledby="building-title">
+        <div class="section-heading">
+          <h2 id="building-title">Progress toward {{ v.minimumMatches }} appearances</h2>
+          <p>
+            Not enough data yet: these heroes need {{ v.minimumMatches }} appearances before they
+            are placed in a tier.
+          </p>
+        </div>
+
+        <app-hero-progress-list [rows]="v.building" />
+      </section>
+    }
+
+    <p class="method-note">
+      Rivals Pulse has no rank breakdown, so every figure covers all ranks together. A hero on both
+      teams of one match is counted twice. Matches without a win or a loss, and matches where the
+      game did not say which mode they were, are left out.
+    </p>
+  }
+</section>

@@ -1,0 +1,31 @@
+<section class="tools-row" aria-labelledby="home-tools-title">
+  <h2 id="home-tools-title">Tools</h2>
+
+  <ul class="tools">
+    @for (tool of tools; track tool.path) {
+      <li>
+        <a class="tool" [routerLink]="tool.path">
+          <span class="tool-icon" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              @for (circle of tool.iconCircles; track $index) {
+                <circle [attr.cx]="circle.cx" [attr.cy]="circle.cy" [attr.r]="circle.r" />
+              }
+              <path [attr.d]="tool.iconPath" />
+            </svg>
+          </span>
+          <h3>{{ tool.title }}</h3>
+          <p>{{ tool.promise }}</p>
+        </a>
+      </li>
+    }
+  </ul>
+</section>

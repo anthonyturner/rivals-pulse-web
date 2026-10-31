@@ -1,0 +1,174 @@
+import { fakeSupabaseClient, type FakeResponse, type RecordedCall } from './fake-supabase-client';
+import {
+  countExternalSources,
+  finishSyncRun,
+  getExternalSourcePayload,
+  getStoredExternalSourcePayload,
+  recordSyncRun,
+  saveExternalSource,
+  startSyncRun,
+} from './sync-log';
+
+describe('startSyncRun', () => {
+  it('opens a running row and returns its id', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({ data: { id: 7 } }));
+
+    expect(await startSyncRun(client, 'official-heroes', 'Checking')).toBe(7);
+
+    const insert = calls[0].steps.find(([method]) => method === 'insert')!;
+    expect(calls[0].table).toBe('sync_runs');
+    expect(insert[1][0]).toEqual(
+      jasmine.objectContaining({
+        source_key: 'official-heroes',
+        status: 'running',
+        message: 'Checking',
+      }),
+    );
+  });
+
+  it('names the source when it fails', async () => {
+    const { client } = fakeSupabaseClient(() => ({ error: { message: 'boom' } }));
+
+    await expectAsync(startSyncRun(client, 'official-heroes', 'Checking')).toBeRejectedWithError(
+      'Recording the official-heroes sync run failed: boom',
+    );
+  });
+});
+
+describe('finishSyncRun', () => {
+  it('closes the row with the result and its details', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({}));
+
+    await finishSyncRun(client, 7, { status: 'success', message: 'Done', details: { added: [] } });
+
+    const update = calls[0].steps.find(([method]) => method === 'update')!;
+    expect(update[1][0]).toEqual(
+      jasmine.objectContaining({ status: 'success', message: 'Done', details: { added: [] } }),
+    );
+    expect(calls[0].steps).toContain(['eq', ['id', 7]]);
+  });
+
+  it('stores null details when there are none', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({}));
+
+    await finishSyncRun(client, 7, { status: 'error', message: 'Failed' });
+
+    const update = calls[0].steps.find(([method]) => method === 'update')!;
+    expect(update[1][0]).toEqual(jasmine.objectContaining({ details: null }));
+  });
+});
+
+describe('saveExternalSource', () => {
+  it('upserts by source key', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({}));
+
+    await saveExternalSource(client, {
+      sourceKey: 'official-heroes',
+      sourceName: 'Official',
+      url: 'https://example.test',
+      payload: { heroes: [] },
+      fetchedAt: '2026-10-29T00:00:00.000Z',
+      status: 'success',
+      error: null,
+    });
+
+    expect(calls[0].table).toBe('external_sources');
+    expect(calls[0].steps[0][0]).toBe('upsert');
+    expect(calls[0].steps[0][1][1]).toEqual({ onConflict: 'source_key' });
+    expect(calls[0].steps[0][1][0]).toEqual(
+      jasmine.objectContaining({ source_key: 'official-heroes', payload: { heroes: [] } }),
+    );
+  });
+});
+
+describe('getExternalSourcePayload', () => {
+  it('returns a saved payload', async () => {
+    const { client } = fakeSupabaseClient(() => ({ data: { payload: { heroes: [1] } } }));
+
+    expect(await getExternalSourcePayload(client, 'official-heroes')).toEqual({ heroes: [1] });
+  });
+
+  it('treats a missing or empty payload as none', async () => {
+    const missing = fakeSupabaseClient(() => ({ data: null })).client;
+    const empty = fakeSupabaseClient(() => ({ data: { payload: {} } })).client;
+
+    expect(await getExternalSourcePayload(missing, 'x')).toBeUndefined();
+    expect(await getExternalSourcePayload(empty, 'x')).toBeUndefined();
+  });
+});
+
+describe('getStoredExternalSourcePayload', () => {
+  it('returns the payload as saved, even an empty one', async () => {
+    const empty = fakeSupabaseClient(() => ({ data: { payload: {} } }));
+
+    expect(await getStoredExternalSourcePayload(empty.client, 'fandom-deadpool')).toEqual({});
+    expect(empty.calls[0].steps).toContain(['eq', ['source_key', 'fandom-deadpool']]);
+  });
+
+  it('returns undefined for a source never saved', async () => {
+    const { client } = fakeSupabaseClient(() => ({ data: null }));
+
+    expect(await getStoredExternalSourcePayload(client, 'nothing')).toBeUndefined();
+  });
+
+  it('names the failure', async () => {
+    const { client } = fakeSupabaseClient(() => ({ error: { message: 'boom' } }));
+
+    await expectAsync(getStoredExternalSourcePayload(client, 'x')).toBeRejectedWithError(
+      'Reading source x failed: boom',
+    );
+  });
+});
+
+describe('countExternalSources', () => {
+  it('counts without reading rows', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({ count: 8 }));
+
+    expect(await countExternalSources(client)).toBe(8);
+    expect(calls[0].table).toBe('external_sources');
+    expect(calls[0].steps[0]).toEqual(['select', ['*', { count: 'exact', head: true }]]);
+  });
+});
+
+describe('recordSyncRun', () => {
+  function respondToRuns(call: RecordedCall): FakeResponse {
+    return call.steps.some(([method]) => method === 'insert') ? { data: { id: 7 } } : {};
+  }
+
+  it('closes the run with the description of what the work returned, and returns it', async () => {
+    const { client, calls } = fakeSupabaseClient(respondToRuns);
+
+    const value = await recordSyncRun(client, 'game-stats', 'Capturing', async () => 5, (count) => ({
+      status: 'success',
+      message: `Captured ${count}`,
+    }));
+
+    expect(value).toBe(5);
+    const update = calls[1].steps.find(([method]) => method === 'update')!;
+    expect(update[1][0]).toEqual(jasmine.objectContaining({ status: 'success', message: 'Captured 5' }));
+    expect(calls[1].steps).toContain(['eq', ['id', 7]]);
+  });
+
+  it('closes the run as an error and rethrows when the work fails', async () => {
+    const { client, calls } = fakeSupabaseClient(respondToRuns);
+    const describe = jasmine.createSpy('describe');
+
+    await expectAsync(
+      recordSyncRun(client, 'game-stats', 'Capturing', () => Promise.reject(new Error('boom')), describe),
+    ).toBeRejectedWithError('boom');
+
+    const update = calls[1].steps.find(([method]) => method === 'update')!;
+    expect(update[1][0]).toEqual(jasmine.objectContaining({ status: 'error', message: 'boom' }));
+    expect(describe).not.toHaveBeenCalled();
+  });
+
+  it('does not run the work when the run cannot be opened', async () => {
+    const { client } = fakeSupabaseClient(() => ({ error: { message: 'down' } }));
+    const work = jasmine.createSpy('work');
+
+    await expectAsync(
+      recordSyncRun(client, 'game-stats', 'Capturing', work, () => ({ status: 'success', message: '' })),
+    ).toBeRejectedWithError('Recording the game-stats sync run failed: down');
+    expect(work).not.toHaveBeenCalled();
+  });
+});

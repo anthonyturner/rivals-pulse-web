@@ -1,0 +1,162 @@
+@if (guide(); as currentGuide) {
+  <article class="detail-page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/strategist-guides">Strategist guides</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ currentGuide.shortTitle }}</span>
+    </nav>
+
+    <header class="detail-header">
+      <div>
+        <div class="header-meta">
+          <span>{{ currentGuide.category }}</span>
+          <span>{{ currentGuide.duration }}</span>
+          <span>{{ currentGuide.heroFocus }}</span>
+        </div>
+        <h1>{{ currentGuide.title }}</h1>
+        <p>{{ currentGuide.summary }}</p>
+      </div>
+
+      <img [src]="currentGuide.heroImage" [alt]="currentGuide.heroFocus" />
+    </header>
+
+    <section class="video-section">
+      <div class="video-frame">
+        @if (embedUrl(); as source) {
+          <iframe
+            [src]="source"
+            [title]="currentGuide.title"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        }
+      </div>
+
+      <div class="watch-copy">
+        <p class="eyebrow">Guide outcome</p>
+        <h2>{{ currentGuide.outcome }}</h2>
+        <a [href]="videoUrl()" target="_blank" rel="noopener">Open source video</a>
+      </div>
+    </section>
+
+    <aside class="patch-note">
+      <strong>Patch-aware note</strong>
+      <p>{{ currentGuide.sourceEra }}</p>
+    </aside>
+
+    <section class="content-section">
+      <div class="section-heading">
+        <p class="eyebrow">Core model</p>
+        <h2>What to carry into your next match</h2>
+      </div>
+
+      <div class="principle-grid">
+        @for (principle of currentGuide.principles; track principle.title; let index = $index) {
+          <article>
+            <span>0{{ index + 1 }}</span>
+            <h3>{{ principle.title }}</h3>
+            <p>{{ principle.body }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="content-section decision-section">
+      <div class="section-heading">
+        <p class="eyebrow">Decision rules</p>
+        <h2>Read the state, then take the action.</h2>
+      </div>
+
+      <div class="decision-table">
+        @for (rule of currentGuide.decisionRules; track rule.when) {
+          <div class="decision-row">
+            <div>
+              <span>When</span>
+              <strong>{{ rule.when }}</strong>
+            </div>
+            <div>
+              <span>Do</span>
+              <p>{{ rule.action }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="section-heading">
+        <p class="eyebrow">Timestamp study</p>
+        <h2>Jump to the decisions that teach the lesson.</h2>
+      </div>
+
+      <div class="checkpoint-list">
+        @for (checkpoint of currentGuide.checkpoints; track checkpoint.time) {
+          <a [href]="videoUrl(checkpoint.time)" target="_blank" rel="noopener">
+            <time>{{ checkpoint.time }}</time>
+            <span>
+              <strong>{{ checkpoint.label }}</strong>
+              <small>{{ checkpoint.note }}</small>
+            </span>
+            <b aria-hidden="true">↗</b>
+          </a>
+        }
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="section-heading">
+        <p class="eyebrow">Practice block</p>
+        <h2>Convert the transcript into a habit.</h2>
+      </div>
+
+      <div class="drill-grid">
+        @for (drill of currentGuide.drills; track drill.title) {
+          <article>
+            <h3>{{ drill.title }}</h3>
+            <p>{{ drill.instructions }}</p>
+            <div>
+              <span>Success check</span>
+              <strong>{{ drill.success }}</strong>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="review-panel">
+      <div>
+        <p class="eyebrow">VOD review</p>
+        <h2>Questions for your next replay</h2>
+      </div>
+      <ol>
+        @for (question of currentGuide.reviewQuestions; track question) {
+          <li>{{ question }}</li>
+        }
+      </ol>
+    </section>
+
+    @if (relatedGuides().length > 0) {
+      <section class="related-section">
+        <div class="section-heading">
+          <p class="eyebrow">Keep learning</p>
+          <h2>Related guides</h2>
+        </div>
+        <div class="related-list">
+          @for (related of relatedGuides(); track related.id) {
+            <a [routerLink]="['/strategist-guides', related.id]">
+              <span>{{ related.category }}</span>
+              <strong>{{ related.shortTitle }}</strong>
+              <small>{{ related.duration }}</small>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  </article>
+} @else {
+  <section class="not-found">
+    <p class="eyebrow">Guide not found</p>
+    <h1>This strategist lesson is not in the field manual.</h1>
+    <a routerLink="/strategist-guides">Return to strategist guides</a>
+  </section>
+}

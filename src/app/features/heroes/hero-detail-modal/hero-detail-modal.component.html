@@ -1,0 +1,33 @@
+<div class="hero-detail-backdrop" (click)="closed.emit()">
+  <aside
+    class="hero-detail hero-detail-modal"
+    [@modalZoom]
+    [ngClass]="controller.roleClass(controller.heroRoleLabel(hero))"
+    aria-modal="true"
+    role="dialog"
+    [attr.aria-label]="hero.name + ' hero details'"
+    (click)="controller.handleAbilityLinkClick($event); $event.stopPropagation()"
+  >
+    <div class="modal-actions">
+      <h1 class="modal-heading">Hero Details</h1>
+
+      @if (controller.roleAbilityKits(hero).length > 0) {
+        <app-hero-role-switcher
+          class="modal-role-switcher"
+          [hero]="hero"
+          [controller]="controller"
+          align="start"
+        ></app-hero-role-switcher>
+      }
+      <button
+        class="modal-close-button"
+        type="button"
+        aria-label="Close hero details"
+        (click)="closed.emit()"
+      >
+        Close
+      </button>
+    </div>
+    <app-hero-details [hero]="hero" [controller]="controller"></app-hero-details>
+  </aside>
+</div>

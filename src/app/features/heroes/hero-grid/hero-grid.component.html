@@ -1,0 +1,85 @@
+<section class="hero-browser" aria-label="Hero browser">
+  <div class="toolbar" aria-label="Hero filters">
+    <label class="search-field">
+      <span>Search heroes</span>
+      <input
+        type="search"
+        placeholder="Name, strength, or note"
+        [value]="searchTerm"
+        (input)="updateSearch($event)"
+      />
+    </label>
+
+    <div class="role-tabs" aria-label="Role filter">
+      @if (selectedRole !== 'All' || searchTerm) {
+        <button
+          type="button"
+          class="clear-filters"
+          data-testid="clear-filters"
+          (click)="resetFilters()"
+        >
+          Clear filters
+        </button>
+      }
+
+      @for (role of roles; track role) {
+        <button
+          type="button"
+          [class.active]="selectedRole === role"
+          (click)="roleSelected.emit(role)"
+        >
+          {{ role }}
+        </button>
+      }
+    </div>
+
+    <div class="view-toggle" aria-label="Hero card layout">
+      <button
+        type="button"
+        [class.active]="gridMode === 'rows'"
+        (click)="gridModeSelected.emit('rows')"
+      >
+        Rows
+      </button>
+      <button
+        type="button"
+        [class.active]="gridMode === 'thumbs'"
+        (click)="gridModeSelected.emit('thumbs')"
+      >
+        Thumbs
+      </button>
+    </div>
+  </div>
+
+  <section class="hero-container">
+    <div class="hero-grid" [class.thumb-grid]="gridMode === 'thumbs'" aria-label="Hero list">
+      @for (hero of heroes; track hero.id) {
+        <button
+          class="hero-card"
+          type="button"
+          [class.selected]="selectedHeroId === hero.id"
+          (click)="heroSelected.emit(hero.id)"
+        >
+          <img class="hero-image" [src]="hero.imageUrl" [alt]="hero.name" />
+          <span class="hero-card-copy">
+            <span class="hero-card-topline">
+              <strong>{{ hero.name }}</strong>
+              <span class="role-pill" [class]="roleClass(heroRoleLabel(hero))">
+                {{ heroRoleLabel(hero) }}
+              </span>
+            </span>
+            @if (gameplayArchetype(hero); as archetype) {
+              <span class="archetype-label">{{ archetype }}</span>
+            }
+            <span>{{ hero.summary }}</span>
+          </span>
+        </button>
+      } @empty {
+        <div class="empty-state" role="status">
+          <strong>No heroes match your current filters</strong>
+          <span>Try a broader search, a different role, or clear the active filters to see the full roster again.</span>
+        </div>
+      }
+    </div>
+  </section>
+</section>

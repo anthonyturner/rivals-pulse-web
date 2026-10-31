@@ -1,12 +1,12 @@
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { createTursoClient } from './turso-client.mjs';
+import { listHeroes, saveHero } from '../src/hero-store.ts';
+import { getSupabaseClient } from './supabase-client.mjs';
 
-const db = createTursoClient();
-const rows = (await db.execute('SELECT id, raw_json FROM heroes')).rows;
+const db = getSupabaseClient();
+const heroes = await listHeroes(db);
 let updated = 0;
 
-for (const row of rows) {
-  const hero = JSON.parse(row.raw_json);
+for (const hero of heroes) {
   const nextPlaystyle = buildHeroPlaystyle(hero);
 
   if (nextPlaystyle === hero.playstyle) {
@@ -18,13 +18,8 @@ for (const row of rows) {
     playstyle: nextPlaystyle,
   };
 
-  await db.execute(
-    'UPDATE heroes SET playstyle = ?, raw_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [nextPlaystyle, JSON.stringify(nextHero), row.id],
-  );
+  await saveHero(db, nextHero);
   updated += 1;
 }
-
-db.close();
 
 console.log(`Refreshed playstyles for ${updated} heroes.`);
