@@ -13,6 +13,10 @@
   <a class="cta cta-ghost" routerLink="/community">See stats</a>
 </div>
 
+<p class="safety-note">
+  Worried about a ban? <a class="safety-link" routerLink="/overlay-faq">Read the overlay FAQ</a>
+</p>
+
 <div class="trust-row">
   <p class="trust-line" [class.is-loading]="loading()" [attr.aria-busy]="loading()">
     @if (trustLine(); as line) {

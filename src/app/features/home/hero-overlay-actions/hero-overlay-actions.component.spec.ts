@@ -82,6 +82,24 @@ describe('HeroOverlayActionsComponent', () => {
     expect(link.getAttribute('href')).toBe('/community');
   });
 
+  describe('the overlay FAQ note', () => {
+    const note = (): HTMLElement => element.querySelector('.safety-note') as HTMLElement;
+    const link = (): HTMLAnchorElement => element.querySelector('a.safety-link') as HTMLAnchorElement;
+
+    it('sits under the buttons and opens the FAQ, from the first render', () => {
+      expect(link().getAttribute('href')).toBe('/overlay-faq');
+      expect(text(link())).toBe('Read the overlay FAQ');
+      expect(text(note())).toBe('Worried about a ban? Read the overlay FAQ');
+      expect(note().previousElementSibling).toBe(element.querySelector('.hero-actions'));
+      expect(note().nextElementSibling).toBe(element.querySelector('.trust-row'));
+      expect(link().tabIndex).toBe(0);
+    });
+
+    it('makes no promise about safety', () => {
+      expect(text(note())).not.toMatch(/safe|ban-proof|won't get banned/i);
+    });
+  });
+
   describe('the trust line', () => {
     it('reserves its row and shows a skeleton while the stats load', () => {
       expect(trustLine().classList).toContain('is-loading');
@@ -131,7 +149,7 @@ describe('HeroOverlayActionsComponent', () => {
     });
 
     for (const width of [340, 1100]) {
-      it(`does not change the height of the trust row or move the buttons at ${width}px`, async () => {
+      it(`does not change the height of the trust row or move the buttons or the FAQ note at ${width}px`, async () => {
         const frame = document.createElement('div');
         frame.style.width = `${width}px`;
         frame.appendChild(element);
@@ -139,10 +157,17 @@ describe('HeroOverlayActionsComponent', () => {
 
         const buttons = element.querySelector('.hero-actions') as HTMLElement;
         const row = element.querySelector('.trust-row') as HTMLElement;
-        const before = { row: row.offsetHeight, buttons: buttons.offsetTop, total: element.offsetHeight };
+        const note = element.querySelector('.safety-note') as HTMLElement;
+        const snapshot = () => ({
+          row: row.offsetHeight,
+          buttons: buttons.offsetTop,
+          note: note.offsetTop,
+          total: element.offsetHeight,
+        });
+        const before = snapshot();
 
         await answer(stats);
-        const after = { row: row.offsetHeight, buttons: buttons.offsetTop, total: element.offsetHeight };
+        const after = snapshot();
         frame.remove();
 
         expect(before.row).toBeGreaterThanOrEqual(24);

@@ -18,7 +18,8 @@ import { HomeHeroStatsService } from '../home-hero-stats.service';
 import { buildHeroTrustLine } from './hero-trust-line-view';
 
 /**
- * The hero's two buttons and the line saying how many matches stand behind the site's numbers.
+ * The hero's two buttons, the link to the overlay FAQ, and the line saying how many matches stand
+ * behind the site's numbers.
  * The Overwolf button is a link once `OVERWOLF_APP_URL` is set and a focusable, unavailable button until then.
  */
 @Component({
