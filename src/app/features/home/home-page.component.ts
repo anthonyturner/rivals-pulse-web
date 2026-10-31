@@ -18,6 +18,7 @@ import { JarvisConsoleComponent } from './jarvis-console/jarvis-console.componen
 import { buildHomeHeroMedia, buildSeasonUpdateSpotlight } from './home-page-hero.utils';
 import { SeasonDashboardComponent } from './season-dashboard/season-dashboard.component';
 import { SeasonGlanceComponent } from './season-glance/season-glance.component';
+import { StatsSnapshotComponent } from './stats-snapshot/stats-snapshot.component';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 
 @Component({
@@ -27,6 +28,7 @@ import { ToolsRowComponent } from './tools-row/tools-row.component';
     JarvisConsoleComponent,
     SeasonDashboardComponent,
     SeasonGlanceComponent,
+    StatsSnapshotComponent,
     ToolsRowComponent,
   ],
   templateUrl: './home-page.component.html',

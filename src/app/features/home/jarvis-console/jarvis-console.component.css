@@ -1,7 +1,5 @@
 :host {
   display: block;
-  /* Overlaps the hero's bottom edge, so the console reads as part of it. */
-  margin-top: -48px;
   position: relative;
   z-index: 2;
 }
