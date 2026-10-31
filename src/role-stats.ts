@@ -3,11 +3,10 @@ import {
   type HeroRole,
   type RoleStats,
   type RoleStatsMode,
-  type RoleStatsModeId,
   type RoleStatsRole,
 } from './contracts/role-stats.model.js';
 import {
-  PLAY_MODE_IDS,
+  PLAY_MODES,
   addRow,
   chooseHalfSeason,
   emptyTally,
@@ -30,16 +29,6 @@ import {
  * unusual match cannot move an average by much.
  */
 export const ROLE_STATS_MIN_LINES = 50;
-
-/**
- * Which `participants.play_mode_id` values each mode takes. Unknown (-1), Arcade and Practice are in
- * none of them, for the reason `BLENDED_PLAY_MODE_IDS` gives for the hero numbers.
- */
-const MODES: readonly { id: RoleStatsModeId; label: string; playModeIds: readonly number[] }[] = [
-  { id: 'all', label: 'Quick Match and Competitive', playModeIds: [PLAY_MODE_IDS.quickMatch, PLAY_MODE_IDS.competitive] },
-  { id: 'quick-match', label: 'Quick Match', playModeIds: [PLAY_MODE_IDS.quickMatch] },
-  { id: 'competitive', label: 'Competitive', playModeIds: [PLAY_MODE_IDS.competitive] },
-];
 
 export interface DeriveRoleStatsOptions {
   now: Date;
@@ -76,7 +65,7 @@ export function deriveRoleStats(source: HeroStatsSource, options: DeriveRoleStat
     const rows = source.heroes.filter((row) => row.halfSeason === halfSeason);
     rows.filter((row) => !options.roleByGameId.has(row.gameHeroId)).forEach((row) => excludedGameIds.add(row.gameHeroId));
 
-    const modes = MODES.map((mode) => ({
+    const modes = PLAY_MODES.map((mode) => ({
       id: mode.id,
       label: mode.label,
       roles: HERO_ROLES.map((role) =>
@@ -90,7 +79,7 @@ export function deriveRoleStats(source: HeroStatsSource, options: DeriveRoleStat
 
     return modes;
   };
-  // The blend holds every line any single mode holds, so it has a ready role whenever one does.
+  // The half-season follows the blend, the default view, so Arcade or Practice lines alone never decide it.
   const isReady = (halfSeason: number): boolean =>
     modesOf(halfSeason)[0].roles.some((entry) => entry.status === 'ready');
 
@@ -139,7 +128,7 @@ function roleLine(role: HeroRole, tally: Tally): RoleStatsRole {
 }
 
 function emptyModes(): RoleStatsMode[] {
-  return MODES.map((mode) => ({
+  return PLAY_MODES.map((mode) => ({
     id: mode.id,
     label: mode.label,
     roles: HERO_ROLES.map((role) => roleLine(role, tallyOf([]))),

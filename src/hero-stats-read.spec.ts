@@ -5,6 +5,7 @@ import {
   getHeroStats,
   getRoleStats,
   halfSeasonFromQuery,
+  heroStatsQueryFrom,
   parseHeroStatsSource,
 } from './hero-stats-read';
 
@@ -58,6 +59,9 @@ const ALLOWED_KEYS = new Set([
   'halfSeasons',
   'halfSeason',
   'inPlaceOf',
+  'mode',
+  'modes',
+  'decidedMatches',
   'matchesCounted',
   'tiers',
   'belowMinimum',
@@ -134,6 +138,48 @@ describe('getHeroStats for one half-season', () => {
 
     expect(stats.halfSeason?.id).toBe(10.5);
     expect(stats.matchesCounted).toBe(12);
+  });
+});
+
+describe('getHeroStats for one mode', () => {
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+
+  it('answers for the mode asked for, and for the blend when none is', async () => {
+    const answer = functionAnswer();
+    answer['totals'] = [
+      { half_season: 10.5, play_mode_id: 1, decided_matches: 12 },
+      { half_season: 10.5, play_mode_id: 2, decided_matches: 7 },
+    ];
+
+    const blend = await getHeroStats({ ...options, fetch: answering(answer) });
+    const arcade = await getHeroStats({ ...options, mode: 'arcade', fetch: answering(answer) });
+
+    expect(blend.mode).toBe('all');
+    expect(blend.matchesCounted).toBe(12);
+    expect(arcade.mode).toBe('arcade');
+    expect(arcade.matchesCounted).toBe(7);
+    expect(arcade.modes?.map((mode) => [mode.id, mode.decidedMatches])).toEqual([
+      ['all', 12],
+      ['quick-match', 0],
+      ['competitive', 12],
+      ['arcade', 7],
+      ['practice', 0],
+    ]);
+  });
+});
+
+describe('heroStatsQueryFrom', () => {
+  it('reads both parameters from whatever query source the route has', () => {
+    const query = new Map([
+      ['halfSeason', '10'],
+      ['mode', 'practice'],
+    ]);
+
+    expect(heroStatsQueryFrom((name) => query.get(name))).toEqual({ halfSeason: 10, mode: 'practice' });
+  });
+
+  it('leaves both unset when the query has neither', () => {
+    expect(heroStatsQueryFrom(() => undefined)).toEqual({ halfSeason: undefined, mode: undefined });
   });
 });
 
@@ -301,7 +347,7 @@ describe('getRoleStats', () => {
 
       expect(stats.status).toBe('not-enough-data');
       expect(stats.halfSeason).toBeNull();
-      expect(stats.modes.length).toBe(3);
+      expect(stats.modes.length).toBe(5);
       expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_stats is not in the database/));
     });
   }

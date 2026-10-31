@@ -395,8 +395,15 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
 - A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
   as in the overlay); the pick rate is those lines over the matches counted.
-- Competitive and Quick Match (`play_mode_id` 0 and 1) are blended. Unknown (-1), Arcade and Practice
-  are left out.
+- By default Competitive and Quick Match (`play_mode_id` 0 and 1) are blended, and unknown (-1) is
+  left out. `GET /api/hero-stats?mode=<id>` counts one mode on its own instead: `quick-match` (0),
+  `competitive` (1), `arcade` (2) or `practice` (3); `all` is the blend. A value that names no mode
+  gets the empty state, not the blend, and no option ever counts -1. The list is `PLAY_MODES` in
+  [`src/hero-stats.ts`](../src/hero-stats.ts), shared with the role benchmarks. Every answer carries
+  `mode` (the id counted, or null for a value that named none) and `modes[]` (`id`, `label` and
+  `decidedMatches` for each mode in the half-season shown); `matchesCounted` is the selected mode's
+  `decidedMatches`. `mode` combines with `halfSeason`, and the fall-back to the previous half-season
+  below is decided for the selected mode alone. Pulse Atlas and the home page never pass a mode.
 - KDA is (kills + assists) over deaths, from totals, with no deaths treated as 1.
 - `GET /api/hero-stats?halfSeason=<number>` answers for exactly that half-season (10 or 10.5), with no
   fall back to the previous one; a half-season that has not started, or a value that is not a number,
@@ -442,7 +449,10 @@ reads `read_hero_stats()` (so the same environment as above) and a role per hero
   everyone, never an average of per-player averages. KDA uses the hero definition above.
 - A hero's role is the one it has now. Deadpool counts toward the role of the id the match
   reported (his role variants in `hero-game-ids.json`). A game id with no role is left out and logged.
-- Modes: Quick Match and Competitive blended, and each alone. Unknown, Arcade and Practice are left out.
+- Modes: the same `PLAY_MODES` list as the hero numbers, always every one of them in one answer
+  (the blend, then Quick Match, Competitive, Arcade and Practice, each alone). Unknown is left out.
+  The half-season is chosen by the blend, so a half-season with only Arcade or Practice lines still
+  falls back to the previous one.
 - A role in a mode shows figures at `ROLE_STATS_MIN_LINES` (50) decided lines; each average also needs
   that many lines carrying the figure, so older apps' missing final hits are never read as zero.
 - If `read_hero_stats()` is not in the database yet (PostgREST 404 or `PGRST202`, or Postgres
