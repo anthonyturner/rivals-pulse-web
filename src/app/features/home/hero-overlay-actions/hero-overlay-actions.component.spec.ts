@@ -106,4 +106,48 @@ describe('HeroOverlayActionsComponent', () => {
       expect(element.textContent).not.toMatch(/NaN|\b0 matches/);
     });
   });
+
+  describe('the How we count link', () => {
+    const link = (): HTMLAnchorElement | null => element.querySelector('a.how-we-count');
+
+    it('is not shown while the stats load', () => {
+      expect(link()).toBeNull();
+    });
+
+    it('sits beside the trust line and opens the explainer', async () => {
+      await answer(stats);
+
+      expect(link()?.getAttribute('href')).toBe('/how-we-count');
+      expect(text(link())).toBe('How we count');
+      expect(link()?.previousElementSibling).toBe(trustLine());
+      expect(link()?.tabIndex).toBe(0);
+    });
+
+    it('stays next to the neutral line shown when the stats cannot be read', async () => {
+      await answer({ unexpected: true });
+
+      expect(text(trustLine())).toBe('Counted from Rivals Pulse player uploads');
+      expect(link()?.getAttribute('href')).toBe('/how-we-count');
+    });
+
+    for (const width of [340, 1100]) {
+      it(`does not change the height of the trust row or move the buttons at ${width}px`, async () => {
+        const frame = document.createElement('div');
+        frame.style.width = `${width}px`;
+        frame.appendChild(element);
+        document.body.appendChild(frame);
+
+        const buttons = element.querySelector('.hero-actions') as HTMLElement;
+        const row = element.querySelector('.trust-row') as HTMLElement;
+        const before = { row: row.offsetHeight, buttons: buttons.offsetTop, total: element.offsetHeight };
+
+        await answer(stats);
+        const after = { row: row.offsetHeight, buttons: buttons.offsetTop, total: element.offsetHeight };
+        frame.remove();
+
+        expect(before.row).toBeGreaterThanOrEqual(24);
+        expect(after).toEqual(before);
+      });
+    }
+  });
 });

@@ -204,6 +204,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'how-we-count',
+    title: 'How we count | Rivals Pulse Coach',
+    loadComponent: () =>
+      import('./features/how-we-count/how-we-count-page.component').then(
+        (module) => module.HowWeCountPageComponent,
+      ),
+  },
+  {
     path: 'privacy',
     title: 'Privacy notes',
     loadComponent: () =>

@@ -13,10 +13,16 @@
   <a class="cta cta-ghost" routerLink="/community">See stats</a>
 </div>
 
-<p class="trust-line" [class.is-loading]="loading()" [attr.aria-busy]="loading()">
-  @if (trustLine(); as line) {
-    {{ line.text }}
-  } @else {
-    <span class="skeleton" aria-hidden="true"></span>
+<div class="trust-row">
+  <p class="trust-line" [class.is-loading]="loading()" [attr.aria-busy]="loading()">
+    @if (trustLine(); as line) {
+      {{ line.text }}
+    } @else {
+      <span class="skeleton" aria-hidden="true"></span>
+    }
+  </p>
+
+  @if (trustLine()) {
+    <a class="how-we-count" routerLink="/how-we-count">How we count</a>
   }
-</p>
+</div>

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { BehaviorSubject, switchMap, tap } from 'rxjs';
 
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
@@ -12,7 +13,7 @@ import { buildTierListView, seasonOptions, type SeasonOption } from './tier-list
 /** The community tier list: Rivals Pulse players' matches only, all ranks together. */
 @Component({
   selector: 'app-tier-list-page',
-  imports: [HeroProgressListComponent],
+  imports: [HeroProgressListComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './tier-list-page.component.html',
   styleUrl: './tier-list-page.component.css',
