@@ -133,6 +133,12 @@ describe('TierListPageComponent', () => {
     expect(page.querySelector('a[target="_blank"]')).toBeNull();
   });
 
+  it('links the lede to the How we count explainer', async () => {
+    const { page } = await open(partial);
+
+    expect(page.querySelector('.lede a')?.getAttribute('href')).toBe('/how-we-count');
+  });
+
   it('draws the six tier rows with the placed heroes, their sample and the matches counted', async () => {
     const { page } = await open(partial);
 
