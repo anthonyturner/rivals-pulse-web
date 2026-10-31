@@ -41,10 +41,10 @@ describe('OverlayFaqPageComponent', () => {
     expect(page.querySelectorAll('h2').length).toBe(3);
   });
 
-  it('keeps each answer short: three sentences, four for Overwolf while the app is unlisted', () => {
-    expect(sentences('ban-risk')).toBe(3);
-    expect(sentences('data')).toBe(3);
-    expect(sentences('overwolf')).toBe(4);
+  it('keeps each answer to three sentences', () => {
+    for (const id of ['ban-risk', 'data', 'overwolf']) {
+      expect(sentences(id)).withContext(id).toBe(3);
+    }
   });
 
   describe('ban risk', () => {
@@ -88,7 +88,9 @@ describe('OverlayFaqPageComponent', () => {
     });
 
     it('says the app is not listed yet while there is no store URL', () => {
-      expect(flat(section('overwolf'))).toContain('not listed yet');
+      expect(flat(section('overwolf'))).toContain(
+        'publishes; Rivals Pulse is not listed yet, so it has not been through that review.',
+      );
     });
 
     it('links the Overwolf sources it rests on', () => {
