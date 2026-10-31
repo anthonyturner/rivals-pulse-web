@@ -194,6 +194,16 @@ describe('the extended upload migrations', () => {
       }
     });
 
+    it('never counts an unattributed kill feed as a recorder, and charges it to the busiest attributed one', () => {
+      const pairs = functionBody('fill_extended_aggregates').slice(
+        functionBody('fill_extended_aggregates').indexOf('pairs as ('),
+      );
+      assert.match(pairs, /count\(x\.source\)::integer/);
+      assert.doesNotMatch(pairs, /count\(\*\)::integer,\s*max\(x\.matches\)/);
+      assert.match(pairs, /max\(x\.matches\) filter \(where x\.source is not null\)/);
+      assert.match(pairs, /sum\(x\.matches\) filter \(where x\.source is null\)/);
+    });
+
     it("counts a hero segment's recorder by the line's uid, never by who uploaded the match", () => {
       const fill = functionBody('fill_extended_aggregates');
       assert.match(fill, /p\.uid as recorder/);

@@ -31,7 +31,7 @@
         <ul class="kill-feed__cards">
           @for (card of current.killsMost; track card.hero.id) {
           <li [title]="card.description">
-            <img [src]="card.hero.imageUrl" alt="" />
+            <img [src]="card.hero.imageUrl" alt="" width="44" height="44" loading="lazy" />
             <span class="kill-feed__name">{{ card.hero.name }}</span>
             <small>{{ card.band }}</small>
           </li>
@@ -46,7 +46,7 @@
         <ul class="kill-feed__cards">
           @for (card of current.killedByMost; track card.hero.id) {
           <li [title]="card.description">
-            <img [src]="card.hero.imageUrl" alt="" />
+            <img [src]="card.hero.imageUrl" alt="" width="44" height="44" loading="lazy" />
             <span class="kill-feed__name">{{ card.hero.name }}</span>
             <small>{{ card.band }}</small>
           </li>

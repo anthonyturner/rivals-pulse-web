@@ -573,9 +573,10 @@ database, so a hidden bucket never leaves it.
   (which is whoever uploaded the match first). Counts only are stored.
 - **Whose kill feed a pair is.** A feed is stored once per match with no recorder on it. Its recorder
   is the player whose hero figures were written in the same `record_match_extras` call (same
-  transaction, same `recorded_at`). A feed with no such figures has an unknown recorder, and all
-  unknown feeds together count as ONE recorder, so a feed that cannot be attributed never makes a pair
-  look more varied than it is.
+  transaction, same `recorded_at`). A feed with no such figures has an unknown recorder, who may
+  already be counted, so it is never a recorder of its own: only attributed recorders are counted
+  and every unattributed feed is charged to the busiest one. The gate can only err toward hiding, and
+  a pair whose feeds are all unattributed has 0 recorders and stays hidden.
 - `fill_extended_aggregates(numeric)` is restated with the same signature; `purge_expired_participants`,
   `record_match_participants` and `record_match_extras` are not touched.
 - **Reads.** `read_community_hero_figures()` returns each hero's figures per half-season and mode.

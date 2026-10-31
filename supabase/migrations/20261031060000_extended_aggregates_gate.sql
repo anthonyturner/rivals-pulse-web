@@ -39,9 +39,11 @@ alter table public.hero_kill_aggregates
 --    player whose upload stored it, found as the player whose hero figures were written in the same
 --    call: `record_match_extras` writes both in one transaction, so their `recorded_at` is the same
 --    instant. A feed with no such figures (the uploader sent a feed without segments, or their
---    figures were stored by an earlier upload) has an unknown recorder. All unknown feeds together
---    count as ONE recorder, so a feed we cannot attribute can never make a pair look more varied
---    than it is.
+--    figures were stored by an earlier upload) has an unknown recorder. It may belong to a player who
+--    is already counted, so it is never a recorder of its own: only attributed recorders are
+--    counted, and every unattributed feed is charged to the busiest attributed recorder. The gate
+--    can therefore only err toward hiding, and a pair whose feeds are all unattributed has 0
+--    recorders and stays hidden.
 create or replace function public.fill_extended_aggregates(p_half_season numeric) returns void
 language sql
 set search_path = ''
@@ -116,9 +118,13 @@ as $$
     insert into public.hero_kill_aggregates
       (half_season, killer_hero, victim_hero, kills, matches, recorders, top_recorder_matches)
     select p_half_season, x.killer_hero, x.victim_hero,
-           sum(x.kills)::bigint, sum(x.matches)::integer, count(*)::integer, max(x.matches)::integer
+           sum(x.kills)::bigint, sum(x.matches)::integer,
+           count(x.source)::integer,
+           (coalesce(max(x.matches) filter (where x.source is not null), 0)
+            + coalesce(sum(x.matches) filter (where x.source is null), 0))::integer
     from (
-      -- One row per recorder of the feeds that had the pair; the null source is one recorder.
+      -- One row per attributed recorder of the feeds that had the pair, plus one row (null source)
+      -- for all the unattributed feeds, which is not a recorder.
       select k.killer_hero, k.victim_hero, s.source, sum(k.kills) as kills, count(*) as matches
       from public.match_hero_kills k
       join feed_sources s on s.fingerprint = k.fingerprint and s.played_at = k.played_at
