@@ -8,6 +8,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
+
 ### Added
 
 - The home page opens with a hero stats snapshot: the five most-picked heroes with their tier, win rate, pick rate and appearances, switchable between All, Vanguard, Duelist and Strategist, from matches Rivals Pulse players recorded; a role without enough data says so, and the old most-used heroes block is gone from the season section ([#212](https://github.com/anthonyturner/rivals-pulse-web/pull/212)).

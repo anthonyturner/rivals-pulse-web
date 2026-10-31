@@ -38,10 +38,10 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
     description:
       'Use these tools before you queue, after a tough fight, or when you want a more deliberate practice session.',
     items: [
-      { label: 'Watch Next Quiz', path: '/watch-next', description: 'Get a targeted lesson for your current problem.', enabled: true },
       { label: 'Counters', path: '/counters', description: 'Explore practical matchup answers.', enabled: true },
       { label: 'Team Builder', path: '/team-builder', description: 'Sketch a team composition with intention.', enabled: true },
-      { label: 'Learning Paths', path: '/learning-paths', description: 'Build a focused route through your next skill.', enabled: true },
+      { label: 'Learning Paths', path: '/learning-paths', description: 'Focused routes through your next skill are coming soon.', enabled: false },
+      { label: 'Watch Next Quiz', path: '/watch-next', description: 'A quiz that picks your next lesson is coming soon.', enabled: false },
       { label: 'AI Coach', path: '/ai-coach', description: 'Personalized coaching is coming soon.', enabled: false },
     ],
   },
