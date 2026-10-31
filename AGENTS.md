@@ -1,11 +1,11 @@
 # Agent Instructions — Rivals Pulse Coach
 
-An Angular SSR coaching companion for Marvel Rivals: hero encyclopedia, counters, team builder, tier lists, game stats and guided lessons, served from Turso-backed APIs on Vercel.
+An Angular SSR coaching companion for Marvel Rivals: hero encyclopedia, counters, team builder, tier lists, game stats and guided lessons, served from Supabase-backed APIs on Vercel.
 
 It is a separate product from the "Rivals Pulse" Overwolf in-game overlay app.
 Content is served through Vercel serverless functions in `api/` (and Express in
-`src/server.ts` for local dev and SSR), backed by a Turso (SQLite-compatible)
-database that the sync scripts in `scripts/` populate from external sources.
+`src/server.ts` for local dev and SSR), backed by Supabase (hosted Postgres),
+which the sync scripts in `scripts/` populate from external sources.
 
 This file is a **router**, not a manual. It holds only what applies to every
 request. Everything else lives in `/docs` and is indexed below — open the file

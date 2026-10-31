@@ -69,9 +69,11 @@ const UNSAFE_KEY =
 
 // Credential shapes, plus the third-party sources the feed must never name or
 // link: the scraped counter source, and Rivals Meta (the overlay ships these
-// files inside its package).
+// files inside its package). Database URLs grant access too: Supabase's
+// Postgres URL, and the libSQL URL of the retired database, which stays live
+// until a person deletes it.
 const UNSAFE_VALUE =
-  /sb_secret_|libsql:\/\/|Bearer\s+\S|-----BEGIN|eyJ[\w-]{10,}\.[\w-]{10,}\.|counter\s*-?\s*watch|rivalsmeta/i;
+  /sb_secret_|libsql:\/\/|postgres(?:ql)?:\/\/|Bearer\s+\S|-----BEGIN|eyJ[\w-]{10,}\.[\w-]{10,}\.|counter\s*-?\s*watch|rivalsmeta/i;
 
 // Case-sensitive on purpose: the site's name is a proper noun, while "Marvel
 // Rivals meta" (the game's metagame) is ordinary glossary text that must not

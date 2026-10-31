@@ -28,17 +28,15 @@ hitting `api/sync/home-news.ts` and `api/sync/game-stats.ts`. Content is also re
 
 ## Database
 
-- Turso (`@tursodatabase/serverless`, SQLite-compatible), accessed via
-  `src/content-database.ts`.
-- Schema lives in `scripts/sqlite-schema.sql`; local seed data in
-  `data/seeds/*.mock.json`, seeded with `npm run db:seed`
-  (`scripts/seed-sqlite.mjs`).
-
-## Supabase
-
-- The overlay upload backend (migrations, Edge Functions) lives in `supabase/`
-  and is deployed by hand with the Supabase CLI. The web app does not read from
-  it yet. See [supabase.md](supabase.md).
+- Supabase (hosted Postgres) is the only database
+  ([ADR-0004](decisions/0004-keep-all-web-data-in-supabase.md)). It holds the
+  web content and the overlay's match uploads. Server code reaches it through
+  `src/supabase-client.ts` with `@supabase/supabase-js`; the per-domain stores
+  (for example `src/hero-store.ts`) sit behind `src/content-database.ts`.
+- Schema lives in `supabase/migrations/`, beside the Edge Functions and
+  `config.toml`; local seed data in `data/seeds/*.mock.json`, seeded with
+  `npm run db:seed`. See [supabase.md](supabase.md) for how migrations reach
+  the live project.
 
 ## Authentication
 

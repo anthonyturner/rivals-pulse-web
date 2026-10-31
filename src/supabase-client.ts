@@ -14,8 +14,8 @@ export interface SupabaseStatus {
   reachable: boolean;
 }
 
-// Until the first Turso migration slice adds a web table, `players` is the one
-// table guaranteed to exist on every project this repo owns. The probe only
+// `players` is an overlay-facing table whose name is frozen (shipped overlays
+// write to it), so the probe never breaks when a web table changes. It only
 // counts it (head-only), so no row ever leaves the database.
 const PROBE_TABLE = 'players';
 const PROBE_TIMEOUT_MS = 3000;

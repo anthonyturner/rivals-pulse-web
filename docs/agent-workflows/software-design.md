@@ -17,7 +17,7 @@ requirements and does not write application code.
    filed issue, and any other `/docs` file relevant to the affected area.
 2. Read the current implementation of the affected area before proposing a
    design — do not design against an assumed structure.
-3. Produce a design that fits the existing Angular / Turso / Vercel
+3. Produce a design that fits the existing Angular / Supabase / Vercel
    serverless-function architecture; flag any new framework, backend
    service, or dependency as an explicit open question rather than
    assuming it.

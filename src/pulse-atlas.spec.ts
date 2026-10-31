@@ -242,6 +242,9 @@ describe('buildPulseAtlas', () => {
       ['key', [{ id: 'thor', name: 'Thor', playerId: '42' }]],
       ['key', [{ id: 'thor', name: 'Thor', apiToken: 'x' }]],
       ['value', [{ id: 'thor', name: 'Thor', note: 'sb_secret_abc123' }]],
+      ['value', [{ id: 'thor', name: 'Thor', note: 'libsql://db.example.io' }]],
+      ['value', [{ id: 'thor', name: 'Thor', note: 'postgresql://postgres:pw@db.example.co:5432/postgres' }]],
+      ['value', [{ id: 'thor', name: 'Thor', note: 'postgres://postgres:pw@db.example.co/postgres' }]],
       ['value', [{ id: 'thor', name: 'Thor', note: 'from Counter Watch' }]],
     ];
 

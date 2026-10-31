@@ -8,7 +8,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 - **Draft and matchup tools** - a six-player team builder with composition scoring, a two-way hero counter explorer, and coach-authored build profiles.
 - **Current meta views** - a community tier list built from matches that Rivals Pulse players record, hourly Steam population snapshots with trends, and hero win rates counted from matches that Rivals Pulse players record.
 - **Structured coaching** - hero guides, beginner lessons, learning paths, positioning and cover guides, build theory, glossary terms, media tutorials, and a "watch next" quiz.
-- **Refreshable content** - Turso-backed hero, home, news, glossary, video, and game-stat data populated from official and community sources.
+- **Refreshable content** - Supabase-backed hero, home, news, glossary, video, and game-stat data populated from official and community sources.
 
 ## Explore the App
 
@@ -22,22 +22,23 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 
 ## Tech Stack
 
-Angular 20 | TypeScript | Signals | RxJS | Angular SSR | Express | Turso/libSQL | Vercel
+Angular 20 | TypeScript | Signals | RxJS | Angular SSR | Express | Supabase | Vercel
 
 ## Local Development
 
-Requirements: Node.js 24, npm, and a Turso database.
+Requirements: Node.js 24, npm, and access to the Supabase project (see [docs/supabase.md](docs/supabase.md)).
 
 ```powershell
 npm.cmd install
 Copy-Item .env.example .env
 ```
 
-Add your Turso credentials to `.env`:
+Add the Supabase settings to `.env` (the server key is a secret `sb_secret_...` key; never commit it):
 
 ```env
-TURSO_DATABASE_URL=libsql://your-database-your-org.turso.io
-TURSO_AUTH_TOKEN=your-token
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-secret-key
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
 Populate the database and start Angular:
@@ -58,7 +59,7 @@ Open `http://localhost:4200/`.
 | `npm.cmd start` | Run the development server |
 | `npm.cmd run build` | Build Angular and type-check the API |
 | `npm.cmd test` | Run unit tests |
-| `npm.cmd run db:seed` | Load the local seed JSON into Supabase: home page portals and blocks, glossary terms and hero videos (heroes are not seeded); also applies the Turso schema |
+| `npm.cmd run db:seed` | Load the local seed JSON into Supabase: home page portals and blocks, glossary terms and hero videos (heroes are not seeded) |
 | `npm.cmd run sync:hero-videos` | Copy the hero videos seed file into Supabase |
 | `npm.cmd run sync:glossary` | Copy every glossary term from the seed file into Supabase |
 | `npm.cmd run db:sync` | Cache configured external sources |
@@ -81,7 +82,7 @@ npm.cmd run sync:glossary:terms -- glnm another-term-id
 ```text
 Seed JSON + external sources
               |
-         Turso/libSQL
+           Supabase
               |
     Express / Vercel APIs
               |
@@ -100,11 +101,11 @@ src/app/
 Seed inputs live in `data/seeds`, outside the Angular application tree. Shared frontend and
 server-side response models live in `src/contracts`.
 
-Local development and production use the same `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` configuration. The main implementation points are:
+Local development and production use the same `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` configuration. The main implementation points are:
 
 - `data/seeds/` - source-controlled seed content
-- `scripts/sqlite-schema.sql` - database schema
-- `scripts/seed-sqlite.mjs` - local seed importer
+- `supabase/migrations/` - database schema
+- `scripts/seed-home-content.mjs` - home page seed importer
 - `scripts/sync-*.mjs` - source-specific refresh jobs
 - `src/contracts/` - shared API response models
 - `src/content-database.ts` - server-side content queries
@@ -124,16 +125,15 @@ npm run vercel:build
 Configure these project environment variables:
 
 ```text
-TURSO_DATABASE_URL
-TURSO_AUTH_TOKEN
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_PUBLISHABLE_KEY
 CRON_SECRET
 SYNC_SECRET
 ```
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (a secret `sb_secret_...` key) let server code reach
-Supabase; see [docs/supabase.md](docs/supabase.md). `CRON_SECRET` authenticates scheduled Vercel cron requests. `SYNC_SECRET` protects manual
+Supabase; `SUPABASE_PUBLISHABLE_KEY` is the publishable key `/api/hero-stats` and `/api/hero-matchups` read the hero counts with; see [docs/supabase.md](docs/supabase.md). `CRON_SECRET` authenticates scheduled Vercel cron requests. `SYNC_SECRET` protects manual
 production sync requests. Scheduled jobs refresh home news and game statistics; deployments do
 not run the full database seed.
 
@@ -142,5 +142,5 @@ not run the full database seed.
 Project planning and contribution notes live in [`docs/agile/README.md`](docs/agile/README.md). Before opening a change:
 
 1. Keep the work scoped to its issue or backlog item.
-2. Never commit `.env` files, Turso tokens, database exports, build output, or local logs.
+2. Never commit `.env` files, Supabase keys, database exports, build output, or local logs.
 3. Run the smallest relevant check, then run `npm.cmd run build` before release.

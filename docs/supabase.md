@@ -57,17 +57,17 @@ repo's build. This is a move, not a redesign.
 | `20261027000000_participants_final_hits.sql` | `participants.final_hits` (each player's Final Hits, null when not counted); `record_match_participants` writes it and fills a blank one on a repeat upload |
 | `20261029000000_participants_mode_map.sql` | `participants.play_mode_id` and `participants.map_name` (null when the game did not say); `record_match_participants` takes them as two trailing arguments and fills a blank one on a repeat upload |
 | `20261030000000_hero_aggregates.sql` | Anonymous hero counts that outlive the purge: `hero_aggregates`, `hero_aggregate_totals`, `hero_matchups`, `hero_aggregate_half_seasons` and the functions that rebuild them; `purge_expired_participants` freezes a half-season before it deletes from it; an hourly `recompute-hero-aggregates` job |
-| `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
-| `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
+| `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data) |
+| `20261030042500_hero_content_data.sql` | The one-off copy of the hero rows from the previous database ([ADR-0004](decisions/0004-keep-all-web-data-in-supabase.md)) into those tables |
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
-| `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content, moved from Turso) |
-| `20261030060507_home_content_data.sql` | The one-off copy of the Turso home rows, and the home news sync's `external_sources` snapshot, into those tables |
-| `20261030060939_reference_content.sql` | `glossary_terms` (the website's glossary, moved from Turso) |
-| `20261030061259_reference_content_data.sql` | The one-off copy of the Turso glossary terms and the four `external_sources` rows the hero and home slices did not copy |
+| `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content) |
+| `20261030060507_home_content_data.sql` | The one-off copy of the previous database's home rows, and the home news sync's `external_sources` snapshot, into those tables |
+| `20261030060939_reference_content.sql` | `glossary_terms` (the website's glossary) |
+| `20261030061259_reference_content_data.sql` | The one-off copy of the previous database's glossary terms and the four `external_sources` rows the hero and home slices did not copy |
 | `20261030120000_extended_upload.sql` | `participant_hero_figures` (the recorder's damage, healing, blocked and seconds per hero, tied to their `participants` line), `match_hero_kills` (a match's kill feed by hero) and `record_match_extras`, the new function that writes them |
 | `20261030120100_extended_aggregates.sql` | Anonymous counts of those: `hero_figure_aggregates`, `hero_kill_aggregates`, `hero_kill_totals`, `extended_aggregate_half_seasons` and the functions that rebuild and freeze them; `purge_expired_participants` freezes them before it deletes; an hourly `recompute-extended-aggregates` job |
-| `20261031011746_game_stats.sql` | `game_stat_snapshots`, `game_stat_snapshot_games` and the `record_game_stat_snapshot` function (the website's game stats, moved from Turso) |
-| `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
+| `20261031011746_game_stats.sql` | `game_stat_snapshots`, `game_stat_snapshot_games` and the `record_game_stat_snapshot` function (the website's game stats) |
+| `20261031015025_game_stats_data.sql` | The one-off copy of the previous database's game stat history into those tables |
 
 Link once per machine, check history, then apply:
 
@@ -112,11 +112,9 @@ secret key can read or write them.
   Both tables are shared by the other web content domains as they move.
 - The scripts and the `Sync new heroes` workflow need `SUPABASE_URL` and
   `SUPABASE_SERVICE_ROLE_KEY` (repository secrets for the workflow).
-- `20261030042500_hero_content_data.sql` was generated from Turso by
-  `scripts/export-turso-heroes.mjs`. It skips rows that already exist, so running it twice never
-  overwrites newer data. Before pushing it, `node scripts/export-turso-heroes.mjs --check
-  <file>` must say Turso still matches it; if not, regenerate it with `--out`. Issue 110 deletes
-  the script with Turso.
+- `20261030042500_hero_content_data.sql` was generated from the previous database by a script
+  removed with it. It skips rows that already exist, so running it twice never overwrites newer
+  data.
 - `jsonb` does not keep the order of an object's keys, so `/api/heroes` returns the same data
   with keys in a different order.
 
@@ -135,18 +133,12 @@ that touches them.
   `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 - `npm run db:seed` loads the portals and the blocks named in `data/seeds/home-content.mock.json`
   through `scripts/seed-home-content.mjs`. It never removes a block the seed file does not name.
-- `20261030060507_home_content_data.sql` was generated from Turso by
-  `scripts/export-turso-home-content.mjs`. The cron rewrites Turso every day at 03:00 UTC until the
-  merge, so run `node scripts/export-turso-home-content.mjs --check <file>` right before the push and
-  regenerate with `--out` if it fails.
-- `scripts/verify-home-content-cutover.mjs` checks the move: `capture` saves the live endpoints to
-  `data/cutover/home-endpoints.json`, no argument compares Supabase with Turso and the capture, `live`
-  compares the deployed endpoints with the capture, and `sync-run` looks for a successful run. Issue
-  110 deletes it, the export script and the capture with Turso.
+- `20261030060507_home_content_data.sql` was generated from the previous database by a script
+  removed with it.
 
 ## Website reference content
 
-The glossary, the hero videos and the cached outside sources moved from Turso in issue 106.
+The glossary, the hero videos and the cached outside sources moved to Supabase in issue 106.
 
 - `glossary_terms` holds one row per term; `raw_json` is the record `/api/glossary` returns.
   `term_sort_key` is generated from `term` and gives the order SQLite's `COLLATE NOCASE` gave.
@@ -166,18 +158,12 @@ The glossary, the hero videos and the cached outside sources moved from Turso in
 - `/api/external-sources/:key` reads `external_sources` through
   [`src/sync-log.ts`](../src/sync-log.ts); `npm run db:sync` refreshes the Fandom sources.
 - Each of these syncs records a `sync_runs` row (`glossary`, `hero-videos`, one per Fandom source).
-- `20261030061259_reference_content_data.sql` was generated by
-  `scripts/export-turso-reference.mjs`, the same way as the hero data. Before pushing it,
-  `node scripts/export-turso-reference.mjs --check <file>` must pass; after the push,
-  `node scripts/verify-reference-content.mjs` compares Supabase with Turso and with the endpoint
-  JSON captured before the cutover (`data/turso-cutover/106`), and checks that `anon` and
-  `authenticated` hold no privilege on `glossary_terms`. Once each writer has run,
-  `node scripts/verify-reference-content.mjs sync-run` checks that its latest `sync_runs` row
-  succeeded. Issue 110 deletes both scripts and the captures with Turso.
+- `20261030061259_reference_content_data.sql` was generated the same way as the hero data. `anon`
+  and `authenticated` hold no privilege on `glossary_terms`.
 
 ## Website game stats
 
-The Game Stats page's Steam player counts moved from Turso in issue 109.
+The Game Stats page's Steam player counts moved to Supabase in issue 109.
 [`src/game-stats-sync.ts`](../src/game-stats-sync.ts) is the only code that touches the tables.
 
 - `game_stat_snapshots` holds one capture per UTC hour (`capture_bucket` is unique) and
@@ -190,16 +176,10 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
 - The hourly Vercel cron `/api/sync/game-stats` and `npm run sync:game-stats` record each run in
   `sync_runs` under `game-stats`; a capture that could not be stored is an `error` run. The public
   endpoint records no run. Vercel needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
-- `20261031015025_game_stats_data.sql` was generated by `scripts/export-turso-game-stats.mjs` and
-  copies every capture up to the hour on its `-- Last hour copied:` line, with Turso's ids. Turso
-  keeps capturing every hour until the merge: `--check <file>` passes as long as the rows it copies
-  are unchanged and counts the later hours, and after the merge `--top-up <file> --out
-  tmp-game-stats-top-up.sql` writes the SQL that copies them (new ids, matched by hour), applied with
-  `npx supabase db query --linked -f tmp-game-stats-top-up.sql`.
-- `scripts/verify-game-stats.mjs` checks the move: `capture` saves the endpoint before the cutover
-  (`data/turso-cutover/109/game-stats.json`), no argument compares Supabase with Turso, the grants and
-  the capture, `live` checks the deployed endpoint, `top-up` that every Turso hour arrived, and
-  `sync-run` the cron's latest run. Issue 110 deletes both scripts and the capture with Turso.
+- `20261031015025_game_stats_data.sql` was generated from the previous database by a script removed
+  with it, and copies every capture up to the hour on its `-- Last hour copied:` line with that
+  database's ids. The hours captured between that line and the cutover were copied once by hand
+  afterwards, with new ids matched by hour.
 
 ## Edge Functions
 

@@ -62,6 +62,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Removed
 
+- Turso, the site's old content database: every page already read Supabase, and now `/api/content/status` reports `databaseProvider: "supabase"` and no longer returns `databaseUrl` (which showed part of the old database's host name) or the top-level `configured` flag, which `supabase.configured` replaces ([#225](https://github.com/anthonyturner/rivals-pulse-web/pull/225)).
 - The Rivals Meta tier-list sync (the six-hourly job, `npm run sync:tier-list`, `/api/sync/tier-list` and `/api/tier-list`) and every page, label and link that named Rivals Meta; `/api/content/status` now reports `communityHeroStats` in place of the tier-list counts ([#196](https://github.com/anthonyturner/rivals-pulse-web/pull/196)).
 - The counter picks copied from Rivals Meta, with the script that refreshed them (`npm run refresh:counters`) and the hand-written reasons that went with them ([#190](https://github.com/anthonyturner/rivals-pulse-web/pull/190)).
 - The Season 9 Week 1 and Week 2 win-rate reports, which were built from YouTube video transcripts, and the win-rate summaries they added to each hero record; the featured slide on the home page now points to the new win-rate page ([#167](https://github.com/anthonyturner/rivals-pulse-web/pull/167)).

@@ -4,11 +4,12 @@ This page explains where the site content comes from, where it is stored, and ho
 
 ## Short Version
 
-The website should read content from the shared Turso/libSQL database.
+The website reads all of its content from one database, Supabase (hosted Postgres). See
+[supabase.md](supabase.md) for its tables.
 
 ```mermaid
 flowchart LR
-  Database["Turso/libSQL Database"] --> Api["Express API"]
+  Database["Supabase"] --> Api["Express API"]
   Api --> Angular["Angular Website"]
 ```
 
@@ -16,16 +17,16 @@ That is the main idea.
 
 The JSON files and wiki API calls are used to fill or update the database.
 
-## The Three Jobs
+## The Four Jobs
 
-There are three separate jobs in the content system.
+There are four separate jobs in the content system.
 
 | Job | What It Does | Main Files |
 | --- | --- | --- |
-| Seed | Copies local JSON data into Turso, and the home page seeds into Supabase | `scripts/seed-sqlite.mjs`, `scripts/seed-home-content.mjs` |
+| Seed | Copies the local JSON seed files into Supabase | `scripts/seed-home-content.mjs`, `scripts/sync-glossary.mjs`, `scripts/sync-hero-videos.mjs` |
 | Sync | Fetches outside data from official, stats, and Fandom/wiki sources | `scripts/sync-external-sources.mjs`, `scripts/sync-home-news.mjs` |
 | Hero Sync | Finds current Fandom heroes and updates the heroes in Supabase | `scripts/sync-heroes.mjs` |
-| Read | Lets Angular pages get data from Turso | `src/server.ts`, `src/content-database.ts` |
+| Read | Lets Angular pages get data from Supabase | `src/server.ts`, `src/content-database.ts` |
 
 ## 1. Seed Data
 
@@ -33,10 +34,12 @@ Seed data is your starting content.
 
 These files are seed data:
 
-- `data/seeds/heroes.mock.json`
+- `data/seeds/home-portals.mock.json`
+- `data/seeds/home-content.mock.json`
 - `data/seeds/glossary.mock.json`
+- `data/seeds/hero-videos.mock.json`
 
-They are not the main runtime source anymore.
+They are not the main runtime source anymore. Heroes are not seeded: the hero syncs write them.
 
 When you run:
 
@@ -44,16 +47,17 @@ When you run:
 npm run db:seed
 ```
 
-the seed script copies those JSON files into Turso.
+the seed scripts copy those JSON files into Supabase.
 
 ```mermaid
 flowchart LR
-  HeroesJson["heroes.mock.json"] --> SeedScript["npm run db:seed"]
+  HomeJson["home-portals and home-content"] --> SeedScript["npm run db:seed"]
   GlossaryJson["glossary.mock.json"] --> SeedScript
-  SeedScript --> Database["Turso/libSQL Database"]
+  VideosJson["hero-videos.mock.json"] --> SeedScript
+  SeedScript --> Database["Supabase"]
 ```
 
-After that, the website reads from Turso, not directly from those JSON files.
+After that, the website reads from Supabase, not directly from those JSON files.
 
 ## 2. Wiki/API Sync
 
@@ -93,11 +97,11 @@ sequenceDiagram
   participant Page as Heroes Page
   participant Service as HeroDataService
   participant Api as /api/heroes
-  participant DB as Turso
+  participant DB as Supabase
 
   Page->>Service: Need hero data
   Service->>Api: GET /api/heroes
-  Api->>DB: Read heroes
+  Api->>DB: Read hero_content
   DB-->>Api: Hero rows
   Api-->>Service: Hero JSON
   Service-->>Page: Render heroes
@@ -139,16 +143,18 @@ sequenceDiagram
 
 ## What Each Piece Means
 
-### Turso Database
+### Supabase
 
-The shared content database is configured with:
+The content database is Supabase. Server code reaches it with:
 
 ```text
-TURSO_DATABASE_URL
-TURSO_AUTH_TOKEN
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
 ```
 
-It stores heroes, abilities, glossary terms, and cached external API responses.
+It stores heroes, abilities, home page content, glossary terms, hero videos, game stats, sync runs
+and cached external API responses, beside the match data the overlay uploads. See
+[supabase.md](supabase.md).
 
 ### Express API
 
@@ -184,7 +190,7 @@ It replaced the old tier-list counts.
 
 ### Angular Services
 
-Angular pages should not read Turso directly.
+Angular pages should not read the database directly.
 
 They use services:
 
@@ -231,7 +237,7 @@ When a new hero appears on Fandom:
 flowchart LR
   FandomHeroes["Fandom Category:Heroes"] --> HeroSync["npm run sync:heroes"]
   HeroSync --> NewHero["New/updated hero row"]
-  NewHero --> DB["Turso/libSQL"]
+  NewHero --> DB["Supabase"]
   DB --> Api["/api/heroes"]
   Api --> Page["Heroes Page"]
 ```
@@ -249,7 +255,7 @@ Already database-backed:
 
 ```mermaid
 flowchart LR
-  Official["Official Marvel Rivals site"] --> HomeSync["Daily home news sync"]
+  Official["Official Marvel Rivals site"] --> HomeSync["Daily home news sync, 03:00 UTC"]
   Matches["Matches Rivals Pulse players record"] --> Aggregates["Supabase hero aggregates"]
   HomeSync --> Supabase["Supabase home content"]
   Supabase --> HomeApi["/api/home/content"]
@@ -277,13 +283,13 @@ That would make the home page use the same database-backed flow as the rest of t
 Think of it like this:
 
 ```text
-JSON files and wiki APIs fill Turso.
-Turso feeds the API.
+JSON files and wiki APIs fill Supabase.
+Supabase feeds the API.
 The API feeds the Angular pages.
 ```
 
 Or shorter:
 
 ```text
-Sources -> Turso -> API -> Website
+Sources -> Supabase -> API -> Website
 ```

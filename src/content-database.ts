@@ -26,9 +26,7 @@ try {
 }
 
 type ContentStatus = {
-  databaseProvider: 'turso';
-  databaseUrl: string;
-  configured: boolean;
+  databaseProvider: 'supabase';
   heroes: number;
   glossaryTerms: number;
   externalSources: number;
@@ -71,9 +69,7 @@ export function getExternalSourceFromDatabase(sourceKey: string): Promise<unknow
 
 export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
   return {
-    databaseProvider: 'turso',
-    databaseUrl: getSafeDatabaseUrl(),
-    configured: Boolean(process.env['TURSO_DATABASE_URL'] && process.env['TURSO_AUTH_TOKEN']),
+    databaseProvider: 'supabase',
     heroes: await countHeroes(getSupabaseClient()),
     glossaryTerms: await countGlossaryTerms(getSupabaseClient()),
     externalSources: await countExternalSources(getSupabaseClient()),
@@ -85,14 +81,4 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     gameStatSnapshotGames: await countGameStatSnapshotGames(getSupabaseClient()),
     supabase: await getSupabaseStatus(),
   };
-}
-
-function getSafeDatabaseUrl(): string {
-  const url = process.env['TURSO_DATABASE_URL'];
-
-  if (!url) {
-    return 'not configured';
-  }
-
-  return url.replace(/\/\/([^./]+)[^.]*/, '//$1...');
 }

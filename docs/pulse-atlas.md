@@ -33,8 +33,8 @@ Every dataset file has this shape:
   feed last ran. A run that finds a dataset unchanged keeps the published
   file's exact bytes, so its `generatedAt` and `sha256` stay the same.
 - `source` is a provenance label. Its **value** may change when the content
-  moves from Turso to Supabase; the **shape** of the file never does. Do not
-  branch on it.
+  moves to a new source; the **shape** of the file never does. Do not branch
+  on it.
 - `data` is the dataset itself, unchanged from the source.
 
 ### The `tier-list` data

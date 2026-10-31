@@ -49,3 +49,4 @@ ADR when the project decides differently.
 | [0001](0001-record-refinement-on-the-issue.md) | Record engineering refinement on the issue | Accepted |
 | [0002](0002-track-work-in-github-only.md) | Track work in GitHub only | Accepted |
 | [0003](0003-agent-autonomy.md) | Agent autonomy | Accepted |
+| [0004](0004-keep-all-web-data-in-supabase.md) | Keep all web data in Supabase | Accepted |

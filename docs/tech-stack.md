@@ -22,9 +22,10 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 ## Database
 
-- Turso (`@tursodatabase/serverless`), SQLite-compatible: web content
-- Supabase (Postgres and Edge Functions): the overlay upload backend, owned by
-  this repo under `supabase/`; see [supabase.md](supabase.md)
+- Supabase (Postgres and Edge Functions), the only database: web content and
+  the overlay upload backend, owned by this repo under `supabase/` and reached
+  from server code with `@supabase/supabase-js`; see [supabase.md](supabase.md)
+  and [ADR-0004](decisions/0004-keep-all-web-data-in-supabase.md)
 
 ## Authentication
 

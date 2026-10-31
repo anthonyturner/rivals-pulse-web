@@ -1,6 +1,6 @@
 # Rivals Pulse Coach Copilot instructions
 
-An Angular SSR coaching companion for Marvel Rivals: hero encyclopedia, counters, team builder, tier lists, game stats and guided lessons, served from Turso-backed APIs on Vercel.
+An Angular SSR coaching companion for Marvel Rivals: hero encyclopedia, counters, team builder, tier lists, game stats and guided lessons, served from Supabase-backed APIs on Vercel.
 
 This file is Copilot's entry point. It is deliberately short: it routes you to
 the documents that hold the rules, and holds none of its own.

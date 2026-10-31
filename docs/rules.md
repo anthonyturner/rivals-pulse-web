@@ -81,7 +81,7 @@ own `AGENTS.md` and `.github/copilot-instructions.md` when the playbook was
 installed, and bind as hard as the ones above.
 
 16. Never commit `.env` or any other env file, database files (`data/*.db`),
-    `dist`, `node_modules`, or temporary source dumps (`tmp-*`). Turso credentials stay in environment variables only.
+    `dist`, `node_modules`, or temporary source dumps (`tmp-*`). Database credentials, such as the Supabase keys, stay in environment variables only.
 17. Do not run `npm run db:seed` or any other destructive or reseed script
     unless the task explicitly requires it: `db:seed` deletes and reloads the
     content tables. For glossary-only additions, prefer
