@@ -1,8 +1,9 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { OVERWOLF_APP_URL } from '../../../shared/overwolf-app';
 import { JarvisConsoleComponent } from './jarvis-console.component';
-import { JARVIS_EXCHANGES, JARVIS_STATES, OVERWOLF_APP_URL } from './jarvis-console.data';
+import { JARVIS_EXCHANGES, JARVIS_STATES } from './jarvis-console.data';
 
 describe('JarvisConsoleComponent', () => {
   let fixture: ComponentFixture<JarvisConsoleComponent>;
