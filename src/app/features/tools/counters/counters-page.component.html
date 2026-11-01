@@ -1,4 +1,4 @@
-<div class="counters page-container page-container--wide">
+<main class="counters page-container page-container--wide">
   <app-page-header
     title="Hero Counters"
     description="How each hero fares against every other in RivalsPulse players’ matches."
@@ -22,7 +22,7 @@
       <p class="visually-hidden" role="status">{{ pickerStatus() }}</p>
 
       @if (!heroesLoaded()) {
-        <app-state-panel kind="loading">Loading heroes…</app-state-panel>
+        <app-state-panel kind="loading" [announce]="false">Loading heroes…</app-state-panel>
       } @else if (pickerRows().length > 0) {
         <ul class="hero-list" aria-label="Heroes">
           @for (row of pickerRows(); track row.hero.id) {
@@ -55,7 +55,7 @@
         <header class="result-head">
           <img appHeroImageFallback [src]="current.hero.imageUrl" alt="" width="56" height="56" />
           <div>
-            <h2>{{ current.hero.name }}</h2>
+            <h2 #resultHeading tabindex="-1">{{ current.hero.name }}</h2>
             <p class="detail">{{ current.detail }}</p>
           </div>
           <a class="link" routerLink="/heroes" [queryParams]="current.query">Open in Heroes</a>
@@ -63,11 +63,11 @@
         </header>
 
         @if (matchupNotice(); as notice) {
-          <app-state-panel [kind]="notice.kind" [heading]="notice.heading" [headingLevel]="3">
+          <app-state-panel [kind]="notice.kind" [heading]="notice.heading" [headingLevel]="3" [announce]="false">
             {{ notice.message }}
           </app-state-panel>
         } @else {
-          @for (panel of panels(); track panel.title) {
+          @for (panel of panels(); track panel.key) {
             <section class="panel">
               <div class="panel-head">
                 <h3>{{ panel.title }}</h3>
@@ -77,7 +77,7 @@
                 <ul class="tiles">
                   @for (card of panel.cards; track card.hero.id) {
                     <li>
-                      <button type="button" class="pick" (click)="selectHero(card.hero.id)">
+                      <button type="button" class="pick" (click)="pivotTo(card.hero.id)">
                         <app-hero-tile selectable [name]="card.hero.name" [imageUrl]="card.hero.imageUrl">
                           <span tileFigure class="figure"><span class="visually-hidden">, win rate </span>{{ card.winRate }}</span>
                           <span class="detail">{{ card.sample }}</span>
@@ -100,7 +100,7 @@
       } @else if (heroesLoaded()) {
         <app-state-panel>Pick a hero to see its matchups.</app-state-panel>
       } @else {
-        <app-state-panel kind="loading">Loading matchups…</app-state-panel>
+        <app-state-panel kind="loading" [announce]="false">Loading matchups…</app-state-panel>
       }
     </div>
   </div>
@@ -135,7 +135,7 @@
               </li>
             }
           </ul>
-        } @else {
+        } @else if (heroesLoaded()) {
           <app-state-panel>Select at least one enemy threat.</app-state-panel>
         }
       </section>
@@ -160,7 +160,7 @@
           <ul class="tiles">
             @for (answer of answerRows(); track answer.hero.id) {
               <li>
-                <button type="button" class="pick" (click)="selectHero(answer.hero.id)">
+                <button type="button" class="pick" (click)="pivotTo(answer.hero.id)">
                   <app-hero-tile selectable [name]="answer.hero.name" [imageUrl]="answer.hero.imageUrl">
                     <span tileFigure class="figure"><span class="visually-hidden">, covers </span>{{ answer.covers }}</span>
                     <span class="detail">{{ answer.detail }}</span>
@@ -175,4 +175,4 @@
 
     <app-jubilee-case-study />
   </section>
-</div>
+</main>

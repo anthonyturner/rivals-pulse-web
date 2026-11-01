@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 
 import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
+import type { Hero } from '../../heroes/hero.model';
 import { heroOf, matchup, matchupsOf, season } from '../../insights/hero-matchup.fixtures';
 import { CountersPageComponent } from './counters-page.component';
 
@@ -35,10 +36,17 @@ describe('CountersPageComponent', () => {
   afterEach(() => http.verify());
 
   /** Opens the page; `matchups` is what `/api/hero-matchups` answers, or a status code for a failed call. */
-  async function open(matchups: HeroMatchups | number | 'pending'): Promise<HTMLElement> {
+  async function open(
+    matchups: HeroMatchups | number | 'pending',
+    heroes: Hero[] | 'pending' = roster,
+  ): Promise<HTMLElement> {
     fixture = TestBed.createComponent(CountersPageComponent);
     fixture.detectChanges();
-    http.expectOne('/api/heroes').flush(roster);
+
+    const heroRequest = http.expectOne('/api/heroes');
+    if (heroes !== 'pending') {
+      heroRequest.flush(heroes);
+    }
 
     const request = http.expectOne('/api/hero-matchups');
     if (typeof matchups === 'number') {
@@ -63,6 +71,43 @@ describe('CountersPageComponent', () => {
     (button as HTMLButtonElement).click();
     await fixture.whenStable();
   };
+
+  describe('landmarks', () => {
+    it('is the one main region of the page, with the headings inside it', async () => {
+      const root = await open(matchupsOf([]));
+
+      expect(root.querySelector('main.counters.page-container--wide')).not.toBeNull();
+      expect(root.querySelectorAll('header').length).toBe(2);
+      expect([...root.querySelectorAll('header')].every((header) => header.closest('main') !== null)).toBeTrue();
+    });
+  });
+
+  describe('while the roster loads', () => {
+    it('shows a loading panel in the list and the result, and announces no hero count', async () => {
+      const root = await open(matchupsOf([]), 'pending');
+
+      expect(text(root, '.picker app-state-panel')).toContain('Loading heroes');
+      expect(text(root, '.result app-state-panel')).toContain('Loading matchups');
+      expect(root.querySelectorAll('.hero-list').length).toBe(0);
+      expect(text(root, '.picker [role="status"]').trim()).toBe('');
+    });
+
+    it('announces one loading panel, not one for each place that waits', async () => {
+      const root = await open('pending', 'pending');
+
+      expect(root.querySelectorAll('app-state-panel[role="status"]').length).toBe(1);
+    });
+  });
+
+  describe('when the roster cannot be loaded', () => {
+    it('says so in the list instead of suggesting a different search', async () => {
+      const root = await open(matchupsOf([]), []);
+
+      expect(text(root, '.picker')).toContain('Heroes cannot be loaded right now.');
+      expect(text(root, '.picker')).not.toContain('No heroes match');
+      expect(text(root, '.result')).toContain('Pick a hero to see its matchups');
+    });
+  });
 
   describe('when no matchup qualifies yet', () => {
     it('shows one designed empty state in the planner and for the selected hero, with no NaN', async () => {
@@ -89,6 +134,7 @@ describe('CountersPageComponent', () => {
 
       expect(text(root, '.result')).toContain('Matchups unavailable');
       expect(text(root, '.result')).toContain('cannot be loaded right now');
+      expect(root.querySelectorAll('app-state-panel[role="status"]').length).toBe(1);
       expect(text(root, answersStep)).toContain('Matchups unavailable');
       expect(root.querySelectorAll('.hero-list .pick').length).toBe(roster.length);
       expect(pickerDetails(root).every((detail) => detail?.endsWith('Unavailable'))).toBeTrue();
@@ -195,7 +241,7 @@ describe('CountersPageComponent', () => {
       await fixture.whenStable();
 
       expect(names(root, '.hero-list')).toEqual(['Black Cat']);
-      expect(text(root, '.picker [role="status"]')).toContain('1 heroes');
+      expect(text(root, '.picker [role="status"]')).toBe('1 hero');
       expect(text(root, '.result-head h2')).toBe('Black Cat');
 
       const role = root.querySelector('app-filter-select select') as HTMLSelectElement;
@@ -226,6 +272,23 @@ describe('CountersPageComponent', () => {
 
       expect(text(root, '.result-head h2')).toBe('Peni Parker');
       expect(root.querySelector('.hero-list [aria-current="true"]')?.textContent).toContain('Peni Parker');
+    });
+
+    it('moves focus to the new hero heading when a card is chosen', async () => {
+      const root = await open(partial);
+
+      await click(panels(root)[0].querySelector('.pick'));
+
+      expect(document.activeElement).toBe(root.querySelector('.result-head h2'));
+    });
+
+    it('keeps the two panels in place when the hero changes', async () => {
+      const root = await open(partial);
+      const before = [...panels(root)];
+
+      await click(root.querySelectorAll('.hero-list .pick')[3]);
+
+      expect([...panels(root)]).toEqual(before);
     });
 
     it('opens the hero named in the address and links to it on the Heroes page', async () => {

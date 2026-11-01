@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -8,7 +18,7 @@ import { NoticeComponent } from '../../../shared/components/notice/notice.compon
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { HeroImageFallbackDirective } from '../../../shared/directives/hero-image-fallback.directive';
-import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero, HeroRole } from '../../heroes/hero.model';
 import { HeroMatchupsService } from '../../insights/hero-matchups.service';
@@ -55,6 +65,7 @@ export class CountersPageComponent implements OnInit {
   private readonly heroMatchupsService = inject(HeroMatchupsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly resultHeading = viewChild<ElementRef<HTMLElement>>('resultHeading');
 
   /** The roster: `undefined` until it has loaded. */
   private readonly heroes = signal<Hero[] | undefined>(undefined);
@@ -98,7 +109,7 @@ export class CountersPageComponent implements OnInit {
     const halfSeason = this.matchups()?.halfSeason;
     const heroCount = this.heroes()?.length ?? 0;
 
-    return [halfSeason && `Half-season: ${halfSeason.label}`, heroCount > 0 && `${heroCount} heroes`]
+    return [halfSeason && `Half-season: ${halfSeason.label}`, heroCount > 0 && countLabel(heroCount, 'hero', 'heroes')]
       .filter(Boolean)
       .join(' · ');
   });
@@ -133,7 +144,10 @@ export class CountersPageComponent implements OnInit {
     this.filteredHeroes().map((hero) => ({ hero, detail: this.heroDetail(hero) })),
   );
 
-  protected readonly pickerStatus = computed(() => `${this.pickerRows().length} heroes`);
+  /** The filtered count for a screen reader; empty until the roster has loaded. */
+  protected readonly pickerStatus = computed(() =>
+    this.heroesLoaded() ? countLabel(this.pickerRows().length, 'hero', 'heroes') : '',
+  );
 
   protected readonly pickerEmptyMessage = computed(() =>
     this.heroes()?.length === 0
@@ -160,11 +174,13 @@ export class CountersPageComponent implements OnInit {
 
     return [
       {
+        key: 'against',
         title: `Heroes that beat ${hero.name}`,
         cards: this.counterEngine.winningAgainst(hero, roster, matchups),
         empty: `No hero has a winning record against ${hero.name} in enough recorded matches yet.`,
       },
       {
+        key: 'for',
         title: `Heroes ${hero.name} beats`,
         cards: this.counterEngine.winningFor(hero, roster, matchups),
         empty: `${hero.name} has no winning record against another hero in enough recorded matches yet.`,
@@ -227,6 +243,12 @@ export class CountersPageComponent implements OnInit {
 
   protected selectHero(heroId: string): void {
     this.selectedHeroId.set(heroId);
+  }
+
+  /** Shows a hero picked from a card or an answer. The card is replaced, so focus moves to the new heading. */
+  protected pivotTo(heroId: string): void {
+    this.selectHero(heroId);
+    this.resultHeading()?.nativeElement.focus();
   }
 
   protected toggleDiveThreat(heroId: string): void {

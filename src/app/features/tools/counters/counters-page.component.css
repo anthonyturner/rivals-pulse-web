@@ -52,12 +52,24 @@ img {
 .note,
 .lede {
   color: var(--text-soft);
-  font-size: var(--type-caption);
   line-height: 1.4;
+}
+
+.source,
+.detail,
+.note {
+  font-size: var(--type-caption);
+}
+
+.lede {
+  font-size: var(--type-small);
 }
 
 .detail {
   display: block;
+}
+
+.hero-list .detail {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -120,11 +132,6 @@ app-filter-select,
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
 }
 
-.tiles .detail,
-.reads .detail {
-  white-space: normal;
-}
-
 .pick,
 .chip {
   width: 100%;
@@ -143,11 +150,15 @@ app-filter-select,
   padding: 0;
 }
 
-.pick:focus-visible,
 .chip:focus-visible,
-.link:focus-visible {
+.link:focus-visible,
+.pick:focus-visible > app-hero-tile {
   outline: 3px solid var(--link);
   outline-offset: -3px;
+}
+
+.pick:focus-visible {
+  outline: none;
 }
 
 .figure {
@@ -171,10 +182,6 @@ app-filter-select,
 
 .result-head h2 {
   font-size: var(--type-title);
-}
-
-.result-head .detail {
-  white-space: normal;
 }
 
 .link {
@@ -205,10 +212,6 @@ app-filter-select,
 .planner h2 {
   padding-top: 8px;
   font-size: var(--type-h2);
-}
-
-.lede {
-  font-size: var(--type-small);
 }
 
 .chips {
