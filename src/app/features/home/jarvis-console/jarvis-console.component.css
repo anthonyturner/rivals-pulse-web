@@ -64,6 +64,16 @@
   color: #5fe0d6;
 }
 
+.premium {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--cta-yellow);
+  color: #111827;
+  letter-spacing: 0.08em;
+}
+
 h3 {
   margin: 0.75rem 0;
   font-size: clamp(1.875rem, 3.8vw, 3rem);

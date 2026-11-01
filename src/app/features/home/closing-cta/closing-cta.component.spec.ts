@@ -26,7 +26,7 @@ describe('ClosingCtaComponent', () => {
   });
 
   it('links the stats and How we count', () => {
-    const hrefs = Array.from(element.querySelectorAll('.links a')).map((link) => link.getAttribute('href'));
+    const hrefs = Array.from(element.querySelectorAll('.links a:not([target])')).map((link) => link.getAttribute('href'));
 
     expect(hrefs).toEqual(['/community', '/how-we-count']);
   });
@@ -36,28 +36,21 @@ describe('ClosingCtaComponent', () => {
   });
 
   describe('the Discord link', () => {
-    it('is left out while no Discord URL is configured', () => {
-      expect(DISCORD_INVITE_URL).toBe('');
-      expect(discord()).toBeNull();
-      expect(text(element)).not.toContain('Discord');
-    });
-
-    it('is left out when the configured URL is empty', () => {
-      fixture.componentRef.setInput('discordUrl', '');
-      fixture.detectChanges();
-
-      expect(discord()).toBeNull();
-    });
-
-    it('renders, first and opening in a new tab, once a URL is configured', () => {
-      fixture.componentRef.setInput('discordUrl', 'https://discord.gg/example');
-      fixture.detectChanges();
-
-      expect(discord()?.getAttribute('href')).toBe('https://discord.gg/example');
+    it('links the configured Discord invite, first and opening in a new tab', () => {
+      expect(DISCORD_INVITE_URL).toBe('https://discord.gg/TtGh6btTr');
+      expect(discord()?.getAttribute('href')).toBe(DISCORD_INVITE_URL);
       expect(discord()?.target).toBe('_blank');
       expect(discord()?.rel).toBe('noopener noreferrer');
       expect(text(discord())).toBe('Join the Discord (opens in a new tab)');
       expect(element.querySelector('.links a')).toBe(discord());
+    });
+
+    it('is left out when the configured URL is emptied', () => {
+      fixture.componentRef.setInput('discordUrl', '');
+      fixture.detectChanges();
+
+      expect(discord()).toBeNull();
+      expect(text(element)).not.toContain('Discord');
     });
   });
 });

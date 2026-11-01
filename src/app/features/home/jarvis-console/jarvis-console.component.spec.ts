@@ -86,6 +86,15 @@ describe('JarvisConsoleComponent', () => {
     expect(button.querySelector('a')).toBeNull();
   });
 
+  it('labels Jarvis as Premium and makes no rank or free claim', () => {
+    const element: HTMLElement = fixture.nativeElement;
+    const copy = (element.querySelector('.console-copy') as HTMLElement).textContent?.replace(/\s+/g, ' ') ?? '';
+
+    expect(element.querySelector('.eyebrow .premium')?.textContent?.trim()).toBe('Premium');
+    expect(element.querySelector('.lead')?.textContent).toContain('Premium');
+    expect(copy).not.toMatch(/\branks?\b|twelve|free|Grandmaster/i);
+  });
+
   it('names Alt+V as the push-to-talk binding, matching the overlay', () => {
     const lead = fixture.nativeElement.querySelector('.lead').textContent.replace(/\s+/g, ' ');
 
