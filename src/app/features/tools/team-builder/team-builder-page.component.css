@@ -4,15 +4,7 @@
 
 .team-builder-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-hero,
-.draft-board,
-.analysis-panel,
-.hero-pool {
-  width: min(1240px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .page-hero {
@@ -427,7 +419,7 @@ meter {
 
 @media (max-width: 1020px) {
   .team-builder-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .draft-board {
@@ -442,7 +434,7 @@ meter {
 
 @media (max-width: 640px) {
   .team-builder-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .page-hero {

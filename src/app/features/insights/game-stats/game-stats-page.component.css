@@ -6,17 +6,7 @@
 
 .stats-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-hero,
-.hero-metrics,
-.read-panel,
-.comparison-section,
-.milestones,
-.source-panel {
-  width: min(1220px, 100%);
-  margin-inline: auto;
+  padding-block: 32px;
 }
 
 .page-hero {
@@ -288,7 +278,7 @@ h2 {
 
 @media (max-width: 920px) {
   .stats-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .page-hero,
@@ -344,7 +334,7 @@ h2 {
 
 @media (max-width: 680px) {
   .stats-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .page-hero {

@@ -4,17 +4,7 @@
 
 .techniques-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.guide-hero,
-.training-map,
-.toolbar,
-.guide-grid,
-.workshops,
-.role-index {
-  width: min(1220px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .guide-hero {
@@ -434,7 +424,7 @@ h1 {
 
 @media (max-width: 940px) {
   .techniques-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .guide-hero,
@@ -455,7 +445,7 @@ h1 {
 
 @media (max-width: 560px) {
   .techniques-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .guide-card,

@@ -4,9 +4,7 @@
 
 .detail-page,
 .not-found {
-  width: min(1120px, calc(100% - 64px));
-  margin: 0 auto;
-  padding: 30px 0 56px;
+  padding-block: 30px 56px;
 }
 
 .breadcrumb {
@@ -414,11 +412,6 @@
 }
 
 @media (max-width: 620px) {
-  .detail-page,
-  .not-found {
-    width: calc(100% - (var(--mobile-page-gutter) * 2));
-  }
-
   .principle-grid,
   .decision-row,
   .patch-note {

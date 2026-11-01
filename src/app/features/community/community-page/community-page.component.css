@@ -5,9 +5,7 @@
 }
 
 .community-page {
-  width: min(1220px, 100%);
-  margin-inline: auto;
-  padding: 32px;
+  padding-block: 32px;
 }
 
 .community-page__header {
@@ -92,7 +90,7 @@
 
 @media (max-width: 640px) {
   .community-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .community-page__tabs {

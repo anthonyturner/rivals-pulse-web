@@ -46,6 +46,17 @@
   --shadow-soft: 0 18px 45px rgba(17, 35, 57, 0.12);
   --mobile-page-gutter: 8px;
   --mobile-panel-padding: 12px;
+  /* Container widths for .page-container, as content widths (the gutter sits outside them). */
+  --container-narrow: 768px;
+  --container: 1120px;
+  --container-wide: 1220px;
+  --page-gutter: 32px;
+}
+
+@media (max-width: 560px) {
+  :root {
+    --page-gutter: var(--mobile-page-gutter);
+  }
 }
 
 html,
@@ -148,6 +159,21 @@ h2,
 h3,
 p {
   margin-block: 0;
+}
+
+/* The width is the content width, so the element takes no side padding of its own: padding would be taken off a second time. */
+.page-container {
+  --container-max: var(--container);
+  width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+  margin-inline: auto;
+}
+
+.page-container--narrow {
+  --container-max: var(--container-narrow);
+}
+
+.page-container--wide {
+  --container-max: var(--container-wide);
 }
 
 .score-low {

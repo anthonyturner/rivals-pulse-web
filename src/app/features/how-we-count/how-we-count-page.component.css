@@ -4,10 +4,8 @@
 
 .how-page {
   display: grid;
-  width: min(900px, 100%);
   gap: 20px;
-  margin: 0 auto;
-  padding: 32px;
+  padding-block: 32px;
 }
 
 .how-section {
@@ -45,7 +43,7 @@ li + li {
 
 @media (max-width: 760px) {
   .how-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .how-section {
