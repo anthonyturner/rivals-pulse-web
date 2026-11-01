@@ -1,6 +1,7 @@
 import { provideZonelessChangeDetection, type Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 
 import { BuildTheoryPageComponent } from './composition/build-theory/build-theory-page.component';
 import { TripleSupportGuidePageComponent } from './composition/triple-support/triple-support-guide-page.component';
@@ -16,7 +17,7 @@ describe('guide page eyebrows', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['heroId', heroId]]) } } },
+        { provide: ActivatedRoute, useValue: { paramMap: of(new Map([['heroId', heroId]])) } },
       ],
     });
     const fixture = TestBed.createComponent(page);

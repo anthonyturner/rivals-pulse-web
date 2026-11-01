@@ -1,55 +1,79 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
+import { NoticeComponent } from '../../../../shared/components/notice/notice.component';
+import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
+import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
+import { GuideCardComponent } from '../guide-card/guide-card.component';
 import { STRATEGIST_GUIDES } from './strategist-guides.data';
+
+const RELATED_GUIDE_LIMIT = 3;
 
 @Component({
   selector: 'app-strategist-guide-detail-page',
-  imports: [RouterLink],
+  imports: [
+    EyebrowComponent,
+    GuideCardComponent,
+    HeroImageFallbackDirective,
+    NoticeComponent,
+    RouterLink,
+    StatePanelComponent,
+  ],
   templateUrl: './strategist-guide-detail-page.component.html',
-  styleUrl: './strategist-guide-detail-page.component.css',
+  styleUrls: ['../guide-article/guide-article.css', './strategist-guide-detail-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StrategistGuideDetailPageComponent {
-  private readonly route = inject(ActivatedRoute);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly routeParams = toSignal(this.route.paramMap);
+  private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
   readonly guide = computed(() => {
-    const guideId = this.routeParams()?.get('guideId');
+    const guideId = this.routeParams().get('guideId');
+
     return STRATEGIST_GUIDES.find((guide) => guide.id === guideId) ?? null;
   });
 
   readonly embedUrl = computed(() => {
     const guide = this.guide();
+
     return guide
-      ? this.sanitizer.bypassSecurityTrustResourceUrl(
-          `https://www.youtube.com/embed/${guide.youtubeId}`,
-        )
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${guide.youtubeId}`)
       : null;
+  });
+
+  readonly videoUrl = computed(() => {
+    const guide = this.guide();
+
+    return guide ? `https://www.youtube.com/watch?v=${guide.youtubeId}` : null;
+  });
+
+  readonly checkpoints = computed(() => {
+    const videoUrl = this.videoUrl();
+
+    return (this.guide()?.checkpoints ?? []).map((checkpoint) => ({
+      ...checkpoint,
+      url: `${videoUrl}&t=${this.toSeconds(checkpoint.time)}s`,
+    }));
   });
 
   readonly relatedGuides = computed(() => {
     const current = this.guide();
-    if (!current) {
-      return [];
-    }
 
     return STRATEGIST_GUIDES.filter(
-      (guide) => guide.id !== current.id && guide.category === current.category,
-    ).slice(0, 3);
+      (guide) => guide.id !== current?.id && guide.category === current?.category,
+    )
+      .slice(0, RELATED_GUIDE_LIMIT)
+      .map((guide) => ({
+        id: guide.id,
+        title: guide.shortTitle,
+        route: ['/strategist-guides', guide.id],
+        imageUrl: guide.heroImage,
+        caption: `${guide.category} · ${guide.heroFocus} · ${guide.duration}`,
+      }));
   });
-
-  videoUrl(time?: string): string {
-    const guide = this.guide();
-    if (!guide) {
-      return 'https://www.youtube.com/';
-    }
-
-    const base = `https://www.youtube.com/watch?v=${guide.youtubeId}`;
-    return time ? `${base}&t=${this.toSeconds(time)}s` : base;
-  }
 
   private toSeconds(timestamp: string): number {
     return timestamp

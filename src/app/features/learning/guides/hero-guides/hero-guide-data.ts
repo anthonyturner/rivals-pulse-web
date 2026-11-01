@@ -10,12 +10,6 @@ export interface HeroUltimateGuide {
   avoidInto: string[];
 }
 
-export interface HeroGuideImage {
-  src: string;
-  alt: string;
-  label: string;
-}
-
 export interface HeroGuide {
   heroId: string;
   heroName: string;
@@ -24,7 +18,6 @@ export interface HeroGuide {
   image: string;
   sourceLabel: string;
   sourceUrl?: string;
-  relatedImages?: HeroGuideImage[];
   summary: string;
   poolJob: string;
   pickWhen: string;
@@ -130,14 +123,6 @@ export const HERO_GUIDES: HeroGuide[] = [
     image: '/images/heroes/captain-america.png',
     sourceLabel: 'Tank rank-up guide transcript',
     sourceUrl: 'https://www.youtube.com/watch?v=axEc0rgvYi4&t=1801s',
-    relatedImages: [
-      { src: '/images/heroes/magneto.png', alt: 'Magneto', label: 'Solo tank anchor' },
-      { src: '/images/heroes/doctor-strange.png', alt: 'Doctor Strange', label: 'Point control' },
-      { src: '/images/heroes/emma-frost.png', alt: 'Emma Frost', label: 'Frontline turns' },
-      { src: '/images/heroes/venom.png', alt: 'Venom', label: 'Dive timing' },
-      { src: '/images/heroes/hulk.png', alt: 'Hulk', label: 'Side-space bully' },
-      { src: '/images/heroes/thor.png', alt: 'Thor', label: 'Angle clear' },
-    ],
     summary:
       'A Vanguard fundamentals guide about taking turns, holding space, main tank vs off tank jobs, solo tanking, and using ultimates during the fight instead of forcing them as risky openers.',
     poolJob:
@@ -267,14 +252,6 @@ export const HERO_GUIDES: HeroGuide[] = [
     image: '/images/heroes/captain-america.png',
     sourceLabel: 'Paz Captain America comprehensive guide',
     sourceUrl: 'https://www.youtube.com/watch?v=HZrBVN4tuik',
-    relatedImages: [
-      { src: '/images/heroes/venom.png', alt: 'Venom', label: 'Best tank partner' },
-      { src: '/images/heroes/psylocke.png', alt: 'Psylocke', label: 'Dive follow-up' },
-      { src: '/images/heroes/black-panther.png', alt: 'Black Panther', label: 'Backline collapse' },
-      { src: '/images/heroes/iron-fist.png', alt: 'Iron Fist', label: 'Pressure duo' },
-      { src: '/images/heroes/luna-snow.png', alt: 'Luna Snow', label: 'Support pairing' },
-      { src: '/images/heroes/the-punisher.png', alt: 'The Punisher', label: 'Shield threat' },
-    ],
     summary:
       'Captain America is a mobile dive Vanguard who wins through pressure, displacement, soft engages, backline disruption, and timely peel instead of sitting main and punching tanks all game.',
     poolJob:
@@ -469,13 +446,6 @@ export const HERO_GUIDES: HeroGuide[] = [
     image: '/images/heroes/jubilee.png',
     sourceLabel: 'True Vanguard advanced Jubilee guide',
     sourceUrl: 'https://www.youtube.com/watch?v=-XnynKZDHls',
-    relatedImages: [
-      { src: '/images/heroes/the-thing.png', alt: 'The Thing', label: 'Brawl anchor' },
-      { src: '/images/heroes/magneto.png', alt: 'Magneto', label: 'Frontline partner' },
-      { src: '/images/heroes/emma-frost.png', alt: 'Emma Frost', label: 'Frontline partner' },
-      { src: '/images/heroes/devil-dinosaur.png', alt: 'Devil Dinosaur', label: 'Frontline partner' },
-      { src: '/images/heroes/blade.png', alt: 'Blade', label: 'Vampiric Kin' },
-    ],
     summary:
       'Jubilee is an active brawl and tempo Strategist who leapfrogs charged Blooming Balls with her frontline, detonates them for burst sustain and utility, and chains Sparkle Marks to keep enhanced Energy Plasmoids running.',
     poolJob:

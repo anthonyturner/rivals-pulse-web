@@ -9,10 +9,9 @@
 }
 
 .filter-select__label {
-  color: var(--text-muted);
+  color: var(--text-soft);
   font-size: 0.76rem;
   font-weight: 850;
-  text-transform: uppercase;
 }
 
 .filter-select__control {
