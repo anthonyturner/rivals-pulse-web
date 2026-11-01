@@ -76,7 +76,7 @@ export function buildCountersTabView(
     notice:
       matchups.inPlaceOf === null ? null : halfSeasonFallbackNotice(matchups.inPlaceOf.label, halfSeasonLabel),
     footnote:
-      'These are records from matches Rivals Pulse players recorded, ordered by how clear the edge is. They describe what happened; they do not say whom to pick or ban.',
+      'These are records from matches RivalsPulse players recorded, ordered by how clear the edge is. They describe what happened; they do not say whom to pick or ban.',
     records: strongest.map((record) => {
       const winner = heroCell(record.hero, identities);
       const loser = heroCell(record.enemy, identities);

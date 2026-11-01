@@ -11,6 +11,24 @@
   background: var(--bg);
 }
 
+.app-body__page {
+  min-width: 0;
+}
+
+/* Below this width the pages' own layouts would be squeezed by the sidebar column, so it stacks under the page instead. */
+@media (min-width: 1280px) {
+  .app-body--with-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .app-body__sidebar {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+}
+
 .top-nav {
   position: sticky;
   top: 0;

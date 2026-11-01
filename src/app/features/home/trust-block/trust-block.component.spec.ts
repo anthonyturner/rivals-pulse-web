@@ -37,11 +37,11 @@ describe('TrustBlockComponent', () => {
     expect(links.every((link) => link.target === '_blank' && link.rel === 'noopener noreferrer')).toBeTrue();
   });
 
-  it('links the overlay FAQ for the rest', () => {
+  it('links the FAQ for the rest', () => {
     expect(element.querySelector('a[href="/overlay-faq#ban-risk"]')).toBeTruthy();
   });
 
-  it('never calls the overlay safe or promises more than the FAQ does', () => {
+  it('never calls the app safe or promises more than the FAQ does', () => {
     expect(text(element)).not.toMatch(/\bsafe\b|ban-proof|risk-free|100%|guarantee/i);
   });
 });

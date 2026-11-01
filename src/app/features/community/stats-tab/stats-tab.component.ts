@@ -8,7 +8,7 @@ import { CommunitySummaryComponent } from '../community-summary/community-summar
 import { buildRoleStatsView } from './role-stats-view';
 import { RoleStatsService } from './role-stats.service';
 
-/** Community benchmarks per role, from Rivals Pulse uploads, or the reason there are none to show yet. */
+/** Community benchmarks per role, from RivalsPulse uploads, or the reason there are none to show yet. */
 @Component({
   selector: 'app-community-stats-tab',
   imports: [CommunitySummaryComponent, NoticeComponent],

@@ -1,0 +1,11 @@
+:host {
+  display: block;
+  padding: 24px var(--page-gutter) 32px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}

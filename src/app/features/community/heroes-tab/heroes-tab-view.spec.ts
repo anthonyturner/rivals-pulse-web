@@ -77,14 +77,14 @@ describe('buildHeroesTabView', () => {
 
     expect(view).toEqual({
       kind: 'not-enough-data',
-      summary: "12 matches recorded by Rivals Pulse players so far. A hero's numbers appear at 10 appearances.",
+      summary: "12 matches recorded by RivalsPulse players so far. A hero's numbers appear at 10 appearances.",
     });
   });
 
   it('says plainly that no match is counted yet', () => {
     const view = buildHeroesTabView(statsOf([], { matchesCounted: 0, halfSeason: null, halfSeasons: [] }), identities);
 
-    expect(view.kind === 'not-enough-data' && view.summary).toContain('No match recorded by Rivals Pulse players is counted yet.');
+    expect(view.kind === 'not-enough-data' && view.summary).toContain('No match recorded by RivalsPulse players is counted yet.');
   });
 
   it('leaves out a line with a figure that is not a number, so NaN is never printed', () => {

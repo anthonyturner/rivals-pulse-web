@@ -50,8 +50,8 @@ describe('OverlayFaqPageComponent', () => {
   });
 
   describe('ban risk', () => {
-    it('asks about Rivals Pulse and answers No', () => {
-      expect(page.querySelector('#ban-risk-title')?.textContent).toBe('Will Rivals Pulse get me banned?');
+    it('asks about RivalsPulse and answers No', () => {
+      expect(page.querySelector('#ban-risk-title')?.textContent).toBe('Will RivalsPulse get me banned?');
       expect(flat(section('ban-risk').querySelector('p'))).toMatch(/^No\. /);
     });
 
@@ -71,7 +71,7 @@ describe('OverlayFaqPageComponent', () => {
 
     it('says the app is not on the Overwolf store yet while there is no store URL', () => {
       expect(flat(section('ban-risk').querySelector('p'))).toContain(
-        "banned, though Rivals Pulse isn't listed on the Overwolf store yet.",
+        "banned, though RivalsPulse isn't listed on the Overwolf store yet.",
       );
     });
 
@@ -113,7 +113,7 @@ describe('OverlayFaqPageComponent', () => {
 
     it('says the app is not listed yet while there is no store URL', () => {
       expect(flat(section('overwolf'))).toContain(
-        'publishes; Rivals Pulse is not listed yet, so it has not been through that review.',
+        'publishes; RivalsPulse is not listed yet, so it has not been through that review.',
       );
     });
 
@@ -126,13 +126,13 @@ describe('OverlayFaqPageComponent', () => {
     });
   });
 
-  it('never says "safe", or that NetEase approves, endorses or partners with the overlay', () => {
+  it('never says "safe", or that NetEase approves, endorses or partners with the app', () => {
     expect(flat(page)).not.toMatch(
       /\bsafe\b|ban-proof|won't get banned|(approved|endorsed|partnered) (by|with)|anti-cheat|game memory|doesn't read/i,
     );
   });
 
-  it('does not claim the overlay avoids the features NetEase called unfair', () => {
+  it('does not claim the app avoids the features NetEase called unfair', () => {
     expect(flat(page)).not.toMatch(/damage and healing|hero-ban|ultimate prediction|avoids/i);
   });
 });

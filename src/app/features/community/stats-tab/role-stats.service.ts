@@ -4,7 +4,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 
 import type { RoleStats } from '../../../../contracts/role-stats.model';
 
-/** The site's own `/api/community/stats`: Rivals Pulse match numbers, with no outside request. */
+/** The site's own `/api/community/stats`: RivalsPulse match numbers, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class RoleStatsService {
   private readonly http = inject(HttpClient);

@@ -20,7 +20,7 @@ interface TierListRequest {
   mode: HeroStatsModeId;
 }
 
-/** The community tier list: Rivals Pulse players' matches only, all ranks together. */
+/** The community tier list: RivalsPulse players' matches only, all ranks together. */
 @Component({
   selector: 'app-tier-list-page',
   imports: [

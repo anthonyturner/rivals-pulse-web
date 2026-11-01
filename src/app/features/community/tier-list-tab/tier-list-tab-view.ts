@@ -43,8 +43,8 @@ export function buildTierListTabView(
   if (stats.status !== 'ready' || !placed) {
     const counted =
       stats.matchesCounted > 0
-        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by Rivals Pulse players so far.`
-        : 'No match recorded by Rivals Pulse players is counted yet.';
+        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players so far.`
+        : 'No match recorded by RivalsPulse players is counted yet.';
 
     return {
       kind: 'not-enough-data',
@@ -59,7 +59,7 @@ export function buildTierListTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by Rivals Pulse players. A hero's tier comes from its win rate pulled toward 50%, so a short run cannot place it high. Heroes need enough appearances to be placed.`,
+    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero's tier comes from its win rate pulled toward 50%, so a short run cannot place it high. Heroes need enough appearances to be placed.`,
     tiers: tierRowsOf(stats, TIER_LIST_TAB_TIERS, identities),
   };
 }

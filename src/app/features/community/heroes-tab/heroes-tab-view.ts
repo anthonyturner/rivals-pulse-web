@@ -44,8 +44,8 @@ export function buildHeroesTabView(
   if (stats.status !== 'ready' || placed.length === 0) {
     const counted =
       stats.matchesCounted > 0
-        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by Rivals Pulse players so far.`
-        : 'No match recorded by Rivals Pulse players is counted yet.';
+        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players so far.`
+        : 'No match recorded by RivalsPulse players is counted yet.';
 
     return {
       kind: 'not-enough-data',
@@ -60,7 +60,7 @@ export function buildHeroesTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by Rivals Pulse players. A hero on both teams of one match counts twice. Only heroes with enough appearances are listed.`,
+    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero on both teams of one match counts twice. Only heroes with enough appearances are listed.`,
     mostPicked: leaders(placed, 'pickRate', identities),
     highestWinRate: leaders(placed, 'winRate', identities),
   };

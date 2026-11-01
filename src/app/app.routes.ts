@@ -3,12 +3,14 @@ import { Routes } from '@angular/router';
 import { signedInGuard } from './core/auth/signed-in.guard';
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
+import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
 import { HOME_TITLE } from './core/seo/site-meta';
 
 export const routes: Routes = [
   {
     path: '',
     title: HOME_TITLE,
+    data: ROUTE_WITHOUT_SIDEBAR,
     loadComponent: () =>
       import('./features/home/home-page.component').then((module) => module.HomePageComponent),
   },
@@ -21,7 +23,7 @@ export const routes: Routes = [
   },
   {
     path: 'community',
-    title: 'Community | Rivals Pulse Coach',
+    title: 'Community | RivalsPulse',
     loadChildren: () =>
       import('./features/community/community.routes').then((module) => module.communityRoutes),
   },
@@ -211,7 +213,7 @@ export const routes: Routes = [
   },
   {
     path: 'how-we-count',
-    title: 'How we count | Rivals Pulse Coach',
+    title: 'How we count | RivalsPulse',
     loadComponent: () =>
       import('./features/how-we-count/how-we-count-page.component').then(
         (module) => module.HowWeCountPageComponent,
@@ -219,7 +221,7 @@ export const routes: Routes = [
   },
   {
     path: 'overlay-faq',
-    title: 'Overlay FAQ | Rivals Pulse Coach',
+    title: 'FAQ | RivalsPulse',
     loadComponent: () =>
       import('./features/overlay-faq/overlay-faq-page.component').then(
         (module) => module.OverlayFaqPageComponent,
@@ -235,7 +237,7 @@ export const routes: Routes = [
   },
   {
     path: 'sign-in',
-    title: 'Sign in | Rivals Pulse Coach',
+    title: 'Sign in | RivalsPulse',
     loadComponent: () =>
       import('./features/account/sign-in-page.component').then(
         (module) => module.SignInPageComponent,
@@ -243,7 +245,7 @@ export const routes: Routes = [
   },
   {
     path: 'account',
-    title: 'Your account | Rivals Pulse Coach',
+    title: 'Your account | RivalsPulse',
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./features/account/account-page.component').then(

@@ -4,7 +4,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 
 import type { CommunityInsights } from '../../../../contracts/community-insights.model';
 
-/** The site's own `/api/community/insights`: Rivals Pulse match totals, with no outside request. */
+/** The site's own `/api/community/insights`: RivalsPulse match totals, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class CommunityInsightsService {
   private readonly http = inject(HttpClient);

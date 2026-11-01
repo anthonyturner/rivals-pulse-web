@@ -10,7 +10,7 @@ export interface HowItWorksStep {
 }
 
 /**
- * Three things the overlay is known to do, and nothing more: it is installed from Overwolf, it runs
+ * Three things the app is known to do, and nothing more: it is installed from Overwolf, it runs
  * beside the game, and it records each match for this site's numbers. Whether the install step says
  * "coming soon" follows the Overwolf listing. Autostart, hotkeys and Jarvis stay out of the steps
  * because they are not what makes the numbers on this site.
@@ -18,14 +18,14 @@ export interface HowItWorksStep {
 export function buildHowItWorksSteps(listed: boolean): readonly HowItWorksStep[] {
   return [
     {
-      title: 'Install Rivals Pulse from Overwolf',
+      title: 'Install RivalsPulse from Overwolf',
       text: listed
-        ? 'Rivals Pulse is an Overwolf app. Get it from the Overwolf store.'
-        : 'Rivals Pulse is an Overwolf app. It is coming soon to the Overwolf store.',
+        ? 'RivalsPulse is an Overwolf app. Get it from the Overwolf store.'
+        : 'RivalsPulse is an Overwolf app. It is coming soon to the Overwolf store.',
     },
     {
-      title: 'Play Marvel Rivals with the overlay running',
-      text: 'Rivals Pulse runs beside the game through Overwolf while you play.',
+      title: 'Play Marvel Rivals with RivalsPulse running',
+      text: 'RivalsPulse runs beside the game through Overwolf while you play.',
     },
     {
       title: 'Your matches are recorded and counted',
@@ -34,7 +34,7 @@ export function buildHowItWorksSteps(listed: boolean): readonly HowItWorksStep[]
   ];
 }
 
-/** How the overlay turns your matches into the numbers on this site, then the ban question answered. */
+/** How the app turns your matches into the numbers on this site, then the ban question answered. */
 @Component({
   selector: 'app-how-it-works',
   imports: [HomeBandComponent, TrustBlockComponent],

@@ -52,7 +52,7 @@ describe('buildHeroCommunityStatsView', () => {
       fallbackFor: null,
       notice: null,
       sample:
-        'From 24 appearances in 150 matches recorded by Rivals Pulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.',
+        'From 24 appearances in 150 matches recorded by RivalsPulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.',
       figures: [
         { label: 'Win rate', value: '54.2%' },
         { label: 'Pick rate', value: '16.0%' },
@@ -103,7 +103,7 @@ describe('buildHeroCommunityStatsView', () => {
       halfSeasonLabel: 'Season 10.5',
       fallbackFor: null,
       summary:
-        'Storm has 4 appearances so far, from matches recorded by Rivals Pulse players. The numbers appear at 10 appearances.',
+        'Storm has 4 appearances so far, from matches recorded by RivalsPulse players. The numbers appear at 10 appearances.',
     });
   });
 
@@ -125,7 +125,7 @@ describe('buildHeroCommunityStatsView', () => {
       halfSeasonLabel: 'Season 10',
       fallbackFor: 'Season 10.5',
       summary:
-        'Storm has 1 appearance so far in Season 10, from matches recorded by Rivals Pulse players. The numbers appear at 10 appearances.',
+        'Storm has 1 appearance so far in Season 10, from matches recorded by RivalsPulse players. The numbers appear at 10 appearances.',
     });
   });
 
@@ -141,7 +141,7 @@ describe('buildHeroCommunityStatsView', () => {
       halfSeasonLabel: null,
       fallbackFor: null,
       summary:
-        'No match recorded by Rivals Pulse players has Storm yet. The numbers appear at 10 appearances.',
+        'No match recorded by RivalsPulse players has Storm yet. The numbers appear at 10 appearances.',
     });
   });
 

@@ -163,7 +163,7 @@ describe('buildStatsSnapshotView', () => {
       const view = ready(buildStatsSnapshotView(sample, identities));
 
       expect(view.eyebrow).toBe('Season 10.5 · 149 matches');
-      expect(view.sample).toBe('From 149 matches by Rivals Pulse players. Only heroes with at least 10 appearances are listed.');
+      expect(view.sample).toBe('From 149 matches by RivalsPulse players. Only heroes with at least 10 appearances are listed.');
     });
 
     it('names the previous half-season when it stands in for the current one', () => {
@@ -181,7 +181,7 @@ describe('buildStatsSnapshotView', () => {
       );
 
       expect(view.eyebrow).toBeNull();
-      expect(view.sample).toBe('From matches recorded by Rivals Pulse players. Only heroes with at least 10 appearances are listed.');
+      expect(view.sample).toBe('From matches recorded by RivalsPulse players. Only heroes with at least 10 appearances are listed.');
     });
 
     it('uses the singular for one match', () => {

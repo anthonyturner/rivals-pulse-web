@@ -60,7 +60,7 @@ describe('buildTierListTabView', () => {
 
     expect(view).toEqual({
       kind: 'not-enough-data',
-      summary: '12 matches recorded by Rivals Pulse players so far. A hero is placed in a tier at 10 appearances.',
+      summary: '12 matches recorded by RivalsPulse players so far. A hero is placed in a tier at 10 appearances.',
     });
   });
 
