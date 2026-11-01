@@ -52,8 +52,13 @@ describe('20261101020000_player_links.sql', () => {
     assert.deepEqual(grants('purge_link_data'), ['service_role']);
     assert.deepEqual(grants('link_issue_window'), ['service_role']);
     assert.deepEqual(grants('link_lockout_window'), ['service_role']);
-    for (const name of ['issue_link_code', 'link_code_hash', 'redeem_link_code', 'unlink_player', 'purge_link_data', 'link_issue_window', 'link_lockout_window']) {
-      assert.match(sql, new RegExp(`revoke execute on function public\\.${name}\\([^)]*\\) from public, anon, authenticated`), name);
+    const revoked = (name: string) => (sql.match(new RegExp(`revoke execute on function public\\.${name}\\([^)]*\\) from ([^;]*);`))?.[1] ?? '')
+      .split(',').map(role => role.trim()).sort();
+    for (const name of ['issue_link_code', 'link_code_hash', 'purge_link_data', 'link_issue_window', 'link_lockout_window']) {
+      assert.deepEqual(revoked(name), ['anon', 'authenticated', 'public'], name);
+    }
+    for (const name of ['redeem_link_code', 'unlink_player']) {
+      assert.deepEqual(revoked(name), ['anon', 'authenticated', 'public', 'service_role'], name);
     }
   });
 
