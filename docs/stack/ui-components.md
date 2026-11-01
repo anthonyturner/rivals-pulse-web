@@ -115,6 +115,14 @@ cards use an `<h2>`).
 - Numeric readouts (stat figures, tier letters, step numerals) and body text are
   not headings and keep their own sizes.
 
+Three more tokens size text that is not a heading. Body text is 1rem.
+
+| Token | At 1366px | Use for |
+| --- | --- | --- |
+| `--type-title` | 24px | The name of a selected item in a panel (the selected hero's name). |
+| `--type-small` | 14px | Card names, ledes, summaries, chips and buttons. |
+| `--type-caption` | 12px | Role pills, labels, source links. No text is smaller. |
+
 ## Page containers
 
 This section always applies, whatever the styling conventions above. It is a
