@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
-import { allowedAvatarUrl, OVERWOLF_AVATAR_DOMAINS, readPlayerClaim } from './player-claim.ts';
+import { allowedAvatarUrl, OVERWOLF_AVATAR_DOMAINS, readPlayerClaim, readPlayerProfile } from './player-claim.ts';
 
 describe('allowedAvatarUrl', () => {
   it('keeps an https address on an allowed host', () => {
@@ -92,6 +92,35 @@ describe('readPlayerClaim', () => {
     assert.equal(claim?.uid, '12');
     assert.ok(claim?.name.startsWith('Aurora'));
     assert.equal(claim?.name.length, 64);
+  });
+});
+
+describe('readPlayerProfile', () => {
+  it('reads a cleaned name and an allowed avatar, and needs no uid', () => {
+    assert.deepEqual(
+      readPlayerProfile({ playerName: ' Au\u200Brora ', avatarUrl: 'https://content.overwolf.com/a.png' }),
+      { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+    );
+  });
+
+  it('turns an avatar that is not allowed into none, and keeps the name', () => {
+    for (const avatarUrl of ['https://evil.example/a.png', 'http://content.overwolf.com/a.png', 7, undefined]) {
+      assert.deepEqual(readPlayerProfile({ playerName: 'Aurora', avatarUrl }), { name: 'Aurora', avatarUrl: null });
+    }
+  });
+
+  it('refuses a body with no usable name', () => {
+    for (const body of [null, undefined, 'text', {}, { playerName: '  ' }, { playerName: '\u200B' }, { playerName: 5.5 }]) {
+      assert.equal(readPlayerProfile(body), null, String(body));
+    }
+  });
+
+  it('ignores a uid, so a refresh cannot carry one', () => {
+    assert.deepEqual(readPlayerProfile({ playerUid: '9', playerName: 'Aurora' }), { name: 'Aurora', avatarUrl: null });
+  });
+
+  it('caps the name by whole characters', () => {
+    assert.equal(Array.from(readPlayerProfile({ playerName: '\u{1F600}'.repeat(100) })?.name ?? '').length, 64);
   });
 });
 

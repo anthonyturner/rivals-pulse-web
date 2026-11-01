@@ -72,6 +72,7 @@ repo's build. This is a move, not a redesign.
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 | `20261101010000_profiles.sql` | `profiles`, one row per website account (RLS: the owner selects and inserts) |
 | `20261101020000_player_links.sql` | Linking an account to an in-game player: `player_links` (the owner selects), `link_codes` and `link_attempt_log` (service role and the functions only), and `link_code_hash`, `issue_link_code`, `redeem_link_code`, `unlink_player` |
+| `20261101040000_refresh_linked_player.sql` | The app refreshing its link's name and avatar: `refresh_linked_player` and the shared per-recorder limiter `take_link_app_call` (service role only), a `refresh` kind in `link_attempt_log`, and a `purge_link_data` that ages out every kind of the app's own calls |
 
 Link once per machine, check history, then apply:
 
@@ -215,6 +216,7 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
 | `sync-hero-stats` | yes, but not used by the release overlay |
 | `marvel-rivals-proxy` | yes, but its source is not in this repo yet (it lives on the overlay branch `fix/381-api-key-server-side`) |
 | `issue-link-code` | new (issue 264); deploy it after the `player_links` migration and with the secrets below. Additive: no shipped overlay calls it |
+| `refresh-linked-player` | new (issue 320); deploy it after the `refresh_linked_player` migration. Additive: no shipped overlay calls it |
 
 The live deployments can be older than the source here. Check
 `npx supabase functions list` before assuming they match.
@@ -236,8 +238,8 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | Secret | Used by | Note |
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | all | Supplied by Supabase itself |
-| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token`, `issue-link-code` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
-| `RECORDER_ID_SECRET` | `track-match-history`, `issue-link-code` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. **Rotating it breaks every account link**: `player_links.recorder_id` holds the old hash, so no new code (made with the new key) can match it, and every linked player has to link again; it also resets everyone's rate-limit history and detaches the `recorded_by` already stored on matches. Do not rotate it without a plan for both. |
+| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token`, `issue-link-code`, `refresh-linked-player` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
+| `RECORDER_ID_SECRET` | `track-match-history`, `issue-link-code`, `refresh-linked-player` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. **Rotating it breaks every account link**: `player_links.recorder_id` holds the old hash, so no new code (made with the new key) can match it, and every linked player has to link again; it also resets everyone's rate-limit history and detaches the `recorded_by` already stored on matches. Do not rotate it without a plan for both. |
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
@@ -672,13 +674,13 @@ name and avatar the app sends with the code request are claims and are only show
   also sweep their own kind, so retention does not depend on the scheduler. Wrong-code rows carry the account id with
   `on delete cascade`, so deleting the account deletes them. `redeem_link_code` refuses anonymous Supabase sessions.
 - `avatar_url` is stored only when it is an `https` address on an Overwolf host (`OVERWOLF_AVATAR_DOMAINS` in
-  `supabase/functions/issue-link-code/player-claim.ts`, the one place to change it); the tables also refuse anything
+  `supabase/functions/_shared/player-claim.ts`, the one place to change it); the tables also refuse anything
   not starting `https://`. The real host has not been captured from a live overlay session yet, so the list is any
   host under `overwolf.com` until it is. The header and account page fall back to the player's initial.
 - The overlay sends the request (issue `rivals_pulse` 1167): `POST` to `/functions/v1/issue-link-code` with the
   header `x-overwolf-session` and the body `{ "playerUid": "...", "playerName": "...", "avatarUrl": "..." }`.
-- Not done here: refreshing the name and avatar after linking, and attributing matches to the link (issue 266).
-  Forgetting the *linked* uid must narrow to rows where `recorded_by` is the link's `recorder_id`.
+- Not done here: attributing matches to the link (issue 266). Forgetting the *linked* uid must narrow to rows
+  where `recorded_by` is the link's `recorder_id`.
 - Deploy order: the migration by hand (`npx supabase db push`, before the pull request merges), then
   `npx supabase functions deploy issue-link-code`. The function needs `OVERWOLF_EXTENSION_ID`,
   `RECORDER_ID_SECRET`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; the first two are already set for
@@ -686,6 +688,32 @@ name and avatar the app sends with the code request are claims and are only show
   answers 503.
 - `supabase/checks/player_links.sql` proves the rules against the linked project and rolls back:
   `npx supabase db query --linked -f supabase/checks/player_links.sql`. Run it after `db push`.
+
+### The app's own calls about its link (issue 320)
+
+The desktop app calls these with `x-overwolf-session`. Each is an Edge Function with `verify_jwt = false`, all
+built on `overwolfEndpoint` in `supabase/functions/_shared/overwolf-endpoint.ts` (CORS, method check, Overwolf
+session check, the `recorder_id` hash, a plain 500 for anything unexpected). A function supplies only what it does
+for the recorder; its logic sits in its own module (`refresh.ts`) so the Node tests run the whole request path
+with a fake database, and `index.ts` is one line of wiring. An unverified session is answered 401 (503 when
+Overwolf is down) before anything is read or written. The database side is a service-role-only SQL function per
+action, never a broad table grant.
+
+- `refresh-linked-player`: `POST` with `{ "playerName": "...", "avatarUrl": "..." }` (a `playerUid` is ignored).
+  It calls `refresh_linked_player`, which sets `player_name` and `avatar_url` on the `player_links` row whose
+  `recorder_id` is the verified session's, and nothing else: the uid, the account, the recorder and the link date
+  never change, and no link is created. Answers `200 { "linked": true, "playerName": "..." }`,
+  `200 { "linked": false }` when the session has no link (nothing written), `422 { "reason": "no-player" }` when
+  there is no usable name, and `429` with a `Retry-After` header past 30 calls an hour per recorder. The name is
+  cleaned and cut by the same rules as the link request. The avatar sent replaces the stored one; one that is not
+  an `https` address on an allowed host is stored as none, so the page falls back to the player's initial.
+- Rate limiting is `take_link_app_call(kind, recorder, limit)`, the same counting as `issue_link_code` over
+  `link_issue_window()` with one `link_attempt_log` kind per function. A refused call is not logged. The purge
+  ages out every kind except `redeem_failed` by the hour window, so a new kind needs no purge change.
+- `supabase/checks/app_link_calls.sql` proves the rules against the linked project and rolls back:
+  `npx supabase db query --linked -f supabase/checks/app_link_calls.sql`. Run it after `db push`.
+- Deploy order: the migration by hand, then `npx supabase functions deploy refresh-linked-player`. `issue-link-code`
+  now runs on the same shared module, so redeploy it too. The secrets are the ones it already uses.
 
 ## Tests
 

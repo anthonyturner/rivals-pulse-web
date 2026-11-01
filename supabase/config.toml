@@ -25,3 +25,6 @@ verify_jwt = false
 
 [functions.issue-link-code]
 verify_jwt = false
+
+[functions.refresh-linked-player]
+verify_jwt = false
