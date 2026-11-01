@@ -27,6 +27,23 @@ describe('the session cookie', () => {
     expect(readSessionTokens(header)).toEqual(tokens);
   });
 
+  it('carries the time of the Discord sign-in and reads it back', () => {
+    const signedIn = { ...tokens, signedInAt: 1_800_000_000 };
+
+    expect(readSessionTokens(asRequestCookie(serializeSessionCookie(signedIn)))).toEqual(signedIn);
+  });
+
+  it('reads a cookie from before the sign-in time existed, with no time', () => {
+    expect(readSessionTokens('rp_session=a~b')).toEqual({ accessToken: 'a', refreshToken: 'b' });
+  });
+
+  it('refuses a sign-in time that is not whole seconds', () => {
+    expect(readSessionTokens('rp_session=a~b~-1')).toBeUndefined();
+    expect(readSessionTokens('rp_session=a~b~1.5')).toBeUndefined();
+    expect(readSessionTokens('rp_session=a~b~')).toBeUndefined();
+    expect(readSessionTokens('rp_session=a~b~1~2')).toBeUndefined();
+  });
+
   it('is cleared by an immediately expiring cookie on the same path', () => {
     const cookie = clearSessionCookie();
 

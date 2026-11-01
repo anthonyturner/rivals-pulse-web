@@ -4,6 +4,8 @@ import { AuthUnavailableError, type AuthGateway } from './auth-gateway';
 const TOKENS = { accessToken: 'access.jwt.value', refreshToken: 'refresh-value' };
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
 const SESSION_COOKIE = `rp_session=${TOKENS.accessToken}~${TOKENS.refreshToken}`;
+const NOW_MS = 1_800_000_000_000;
+const signedInCookie = (secondsAgo: number): string => `${SESSION_COOKIE}~${NOW_MS / 1000 - secondsAgo}`;
 const PKCE_COOKIE = `rp_pkce=${encodeURIComponent(JSON.stringify({ verifier: 'the-verifier', next: '/account' }))}`;
 const AUTHORIZE_URL = 'https://project.supabase.co/auth/v1/authorize?x=1';
 
@@ -13,6 +15,7 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     exchangeCode: async () => TOKENS,
     resolve: async (tokens) => ({ account: ACCOUNT, tokens }),
     signOut: async () => undefined,
+    deleteAccount: async () => 'deleted',
     ...overrides,
   };
 }
@@ -70,6 +73,17 @@ describe('GET auth/session', () => {
 
     expect(response.cookies.length).toBe(1);
     expect(response.cookies[0]).toContain('rp_session=new.jwt~new-refresh');
+  });
+
+  it('keeps the original sign-in time when the tokens are refreshed', async () => {
+    const response = await run(
+      request('auth/session', { cookieHeader: signedInCookie(120) }),
+      gateway({
+        resolve: async () => ({ account: ACCOUNT, tokens: { accessToken: 'new.jwt', refreshToken: 'new-refresh' } }),
+      }),
+    );
+
+    expect(response.cookies[0]).toContain(`rp_session=new.jwt~new-refresh~${NOW_MS / 1000 - 120};`);
   });
 });
 
@@ -173,6 +187,12 @@ describe('GET auth/callback', () => {
     expect(response.cookies[0]).toContain(SESSION_COOKIE);
     expect(response.cookies[0]).toContain('HttpOnly; Secure; SameSite=Lax');
     expect(response.cookies[1]).toContain('rp_pkce=;');
+  });
+
+  it('records when the player signed in, from the request clock', async () => {
+    const response = await run({ ...callback({ code: 'abc' }), nowMs: NOW_MS });
+
+    expect(response.cookies[0]).toContain(`${SESSION_COOKIE}~${NOW_MS / 1000};`);
   });
 
   it('goes back to sign-in when Supabase refuses the code', async () => {
@@ -305,6 +325,168 @@ describe('POST auth/sign-out', () => {
     const response = await run(post({ host: 'localhost:4200', originHeader: 'http://localhost:4200', protocol: 'http' }));
 
     expect(response.status).toBe(200);
+  });
+});
+
+describe('POST account/delete', () => {
+  const ASKED = { mode: 'account', confirmation: 'delete my account' };
+  const post = (overrides: Partial<AccountRequest> = {}) =>
+    request('account/delete', {
+      method: 'POST',
+      originHeader: 'https://rivalspulse.com',
+      cookieHeader: signedInCookie(60),
+      body: ASKED,
+      nowMs: NOW_MS,
+      ...overrides,
+    });
+  /** A gateway that records the sessions it was asked to delete. */
+  const recording = (result: 'deleted' | 'not-signed-in' = 'deleted') => {
+    const seen = { tokens: [] as unknown[] };
+
+    return {
+      seen,
+      gateway: gateway({
+        deleteAccount: async (tokens) => {
+          seen.tokens.push(tokens);
+
+          return result;
+        },
+      }),
+    };
+  };
+
+  it('deletes the account for the session in the cookie and signs the player out', async () => {
+    const { seen, gateway: gw } = recording();
+    const response = await run(post(), gw);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ deleted: true });
+    expect(seen.tokens).toEqual([{ ...TOKENS, signedInAt: NOW_MS / 1000 - 60 }]);
+    expect(response.cookies.length).toBe(1);
+    expect(response.cookies[0]).toContain('rp_session=;');
+    expect(response.cookies[0]).toContain('Max-Age=0');
+  });
+
+  it('accepts the phrase in any case with spaces around it', async () => {
+    const { seen, gateway: gw } = recording();
+
+    expect((await run(post({ body: { ...ASKED, confirmation: '  Delete My Account ' } }), gw)).status).toBe(200);
+    expect(seen.tokens.length).toBe(1);
+  });
+
+  const unconfirmed: [string, unknown][] = [
+    ['no body', undefined],
+    ['a body that is not an object', 'delete my account'],
+    ['no confirmation', { mode: 'account' }],
+    ['a confirmation that is not text', { mode: 'account', confirmation: true }],
+    ['the wrong phrase', { mode: 'account', confirmation: 'yes' }],
+    ['an empty phrase', { mode: 'account', confirmation: '' }],
+    ['an unknown mode', { mode: 'everything', confirmation: 'delete my account' }],
+    ['no mode', { confirmation: 'delete my account' }],
+  ];
+
+  for (const [name, body] of unconfirmed) {
+    it(`deletes nothing and keeps the session with ${name}`, async () => {
+      const { seen, gateway: gw } = recording();
+      const response = await run(post({ body }), gw);
+
+      expect(response.status).toBe(400);
+      expect(seen.tokens).toEqual([]);
+      expect(response.cookies).toEqual([]);
+    });
+  }
+
+  it('refuses the forget-me mode for now, and deletes nothing', async () => {
+    const { seen, gateway: gw } = recording();
+    const response = await run(post({ body: { mode: 'account-and-matches', confirmation: 'delete my account' } }), gw);
+
+    expect(response.status).toBe(409);
+    expect(seen.tokens).toEqual([]);
+    expect(response.cookies).toEqual([]);
+  });
+
+  describe('recent sign-in', () => {
+    it('accepts a sign-in exactly ten minutes old', async () => {
+      const { seen, gateway: gw } = recording();
+
+      expect((await run(post({ cookieHeader: signedInCookie(600) }), gw)).status).toBe(200);
+      expect(seen.tokens.length).toBe(1);
+    });
+
+    const tooOld: [string, string][] = [
+      ['older than ten minutes', signedInCookie(601)],
+      ['a session from before the time was recorded', SESSION_COOKIE],
+      ['a sign-in time in the future', signedInCookie(-5)],
+    ];
+
+    for (const [name, cookieHeader] of tooOld) {
+      it(`asks the player to sign in again, and deletes nothing, with ${name}`, async () => {
+        const { seen, gateway: gw } = recording();
+        const response = await run(post({ cookieHeader }), gw);
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+          error: jasmine.any(String),
+          reason: 'recent-sign-in-required',
+        });
+        expect(seen.tokens).toEqual([]);
+        expect(response.cookies).toEqual([]);
+      });
+    }
+
+    it('checks the phrase first, so a bad request is not sent to sign in', async () => {
+      const response = await run(
+        post({ cookieHeader: signedInCookie(3600), body: { mode: 'account', confirmation: 'no' } }),
+      );
+
+      expect(response.status).toBe(400);
+    });
+  });
+
+  it('needs a session cookie', async () => {
+    const { seen, gateway: gw } = recording();
+    const response = await run(post({ cookieHeader: undefined }), gw);
+
+    expect(response.status).toBe(401);
+    expect(seen.tokens).toEqual([]);
+  });
+
+  it('answers 401 and clears the cookie when the session is no longer valid', async () => {
+    const response = await run(post(), recording('not-signed-in').gateway);
+
+    expect(response.status).toBe(401);
+    expect(response.cookies[0]).toContain('Max-Age=0');
+  });
+
+  it('refuses a POST from another origin, or with none, before doing anything', async () => {
+    const { seen, gateway: gw } = recording();
+
+    expect((await run(post({ originHeader: 'https://evil.example' }), gw)).status).toBe(403);
+    expect((await run(post({ originHeader: undefined }), gw)).status).toBe(403);
+    expect((await run(post({ originHeader: 'https://rivalspulse.com.evil.example' }), gw)).status).toBe(403);
+    expect(seen.tokens).toEqual([]);
+  });
+
+  it('is a POST route only', async () => {
+    expect((await run(post({ method: 'GET' }))).status).toBe(405);
+  });
+
+  it('keeps the session and says 503 when the deletion could not be made', async () => {
+    spyOn(console, 'warn');
+    const response = await run(
+      post(),
+      gateway({
+        deleteAccount: async () => {
+          throw new AuthUnavailableError('service key refused');
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.cookies).toEqual([]);
+    expect(JSON.stringify(response.body)).not.toContain('service key');
+    expect(JSON.stringify(response.body)).toContain('deletion did not go through');
+    expect(JSON.stringify(response.body)).not.toContain('Sign-in');
   });
 });
 

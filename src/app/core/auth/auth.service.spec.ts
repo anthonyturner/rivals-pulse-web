@@ -75,4 +75,68 @@ describe('AuthService', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(3);
     expect(service.state().status).toBe('signedIn');
   });
+
+  describe('deleteAccount', () => {
+    const asked = { mode: 'account', confirmation: 'delete my account' } as const;
+
+    it('posts the choice and the typed phrase as JSON, then shows the visitor as signed out', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT }), answer(200, { deleted: true }));
+      await service.load();
+
+      const result = await service.deleteAccount(asked);
+
+      expect(result).toEqual({ status: 'deleted' });
+      expect(fetchSpy.calls.argsFor(1)).toEqual([
+        '/api/account/delete',
+        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(asked) },
+      ]);
+      expect(service.state()).toEqual({ status: 'signedOut' });
+      expect(await service.load()).toEqual({ status: 'signedOut' });
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports an ended session as signed out, not as a failure', async () => {
+      create(answer(401, { error: 'Your session has ended.' }));
+
+      expect(await service.deleteAccount(asked)).toEqual({ status: 'signedOut' });
+      expect(service.state()).toEqual({ status: 'signedOut' });
+    });
+
+    it('asks for a fresh sign-in, keeping the visitor signed in, when the last one is too old', async () => {
+      create(
+        answer(200, { signedIn: true, account: ACCOUNT }),
+        answer(401, { error: 'Sign in again.', reason: 'recent-sign-in-required' }),
+      );
+      await service.load();
+
+      expect(await service.deleteAccount(asked)).toEqual({ status: 'signInAgain' });
+      expect(service.state().status).toBe('signedIn');
+    });
+
+    it('keeps the visitor signed in and passes on the server message when it refuses', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT }), answer(503, { error: 'Try again in a moment.' }));
+      await service.load();
+
+      expect(await service.deleteAccount(asked)).toEqual({ status: 'failed', message: 'Try again in a moment.' });
+      expect(service.state().status).toBe('signedIn');
+    });
+
+    it('gives a plain message when the answer has no readable error', async () => {
+      create(answer(500));
+
+      const result = await service.deleteAccount(asked);
+
+      expect(result.status).toBe('failed');
+      expect(result.status === 'failed' && result.message).toContain('did not go through');
+    });
+
+    it('fails without signing the visitor out when the network is down', async () => {
+      TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+      fetchSpy = spyOn(window, 'fetch').and.rejectWith(new TypeError('offline'));
+      service = TestBed.inject(AuthService);
+
+      expect((await service.deleteAccount(asked)).status).toBe('failed');
+      expect(service.state()).toEqual({ status: 'loading' });
+    });
+  });
 });

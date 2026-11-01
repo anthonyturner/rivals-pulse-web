@@ -7,6 +7,10 @@
   <section class="account-section" aria-labelledby="sign-in-title">
     <h2 id="sign-in-title">Continue with Discord</h2>
 
+    @if (notice(); as message) {
+      <p class="account-note" role="status">{{ message }}</p>
+    }
+
     @if (error(); as message) {
       <p class="account-error" role="alert">{{ message }}</p>
     }

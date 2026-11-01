@@ -7,6 +7,11 @@ import {
   serializeSessionCookie,
 } from './auth-cookies.js';
 import { AuthUnavailableError, type AuthGateway } from './auth-gateway.js';
+import {
+  DELETION_MODES,
+  isDeletionConfirmed,
+  type DeleteAccountRequest,
+} from './app/core/auth/account-deletion.types.js';
 
 /**
  * A request as the account routes see it, free of any server framework: Express and the Vercel
@@ -19,6 +24,10 @@ export interface AccountRequest {
   query: URLSearchParams;
   cookieHeader?: string;
   originHeader?: string;
+  /** The JSON body of a POST, already parsed. Undefined when there was none or it was not JSON. */
+  body?: unknown;
+  /** The time of the request in milliseconds; the adapter leaves it out and the routes read the clock. */
+  nowMs?: number;
   /** The host the visitor used, with any port. */
   host: string;
   /** `http` or `https`, from the proxy when there is one. */
@@ -38,6 +47,9 @@ const SIGN_IN_HOSTNAMES: readonly string[] = ['rivalspulse.com', 'localhost'];
 const DEFAULT_NEXT = '/account';
 const MAX_NEXT_LENGTH = 200;
 const NEXT_BASE = new URL('https://site.invalid');
+/** How recently the player must have signed in to delete an account (ADR-0004, decision 7). */
+const RECENT_SIGN_IN_SECONDS = 10 * 60;
+const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 export async function handleAccountRequest(
   request: AccountRequest,
@@ -74,6 +86,8 @@ async function route(request: AccountRequest, gateway: () => AuthGateway): Promi
       return method === 'GET' ? finishDiscord(request, gateway) : methodNotAllowed();
     case 'auth/sign-out':
       return method === 'POST' ? signOut(request, gateway) : methodNotAllowed();
+    case 'account/delete':
+      return method === 'POST' ? deleteAccount(request, gateway) : methodNotAllowed();
     default:
       return json(404, { error: 'API route not found' });
   }
@@ -97,7 +111,7 @@ async function readSession(request: AccountRequest, gateway: () => AuthGateway):
 
   return {
     ...json(200, { signedIn: true, account: resolved.account }),
-    cookies: refreshed ? [serializeSessionCookie(resolved.tokens)] : [],
+    cookies: refreshed ? [serializeSessionCookie({ ...resolved.tokens, signedInAt: tokens.signedInAt })] : [],
   };
 }
 
@@ -137,7 +151,7 @@ async function finishDiscord(request: AccountRequest, gateway: () => AuthGateway
   let sessionCookie: string;
 
   try {
-    sessionCookie = serializeSessionCookie(tokens);
+    sessionCookie = serializeSessionCookie({ ...tokens, signedInAt: nowSeconds(request) });
   } catch (error) {
     // A session too big for one cookie cannot be kept; the visitor should see the sign-in page, not JSON.
     console.error('The sign-in session could not be stored', error);
@@ -169,6 +183,76 @@ async function signOut(request: AccountRequest, gateway: () => AuthGateway): Pro
   }
 
   return { ...json(200, { signedIn: false }), cookies: [clearSessionCookie()] };
+}
+
+async function deleteAccount(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  const tokens = readSessionTokens(request.cookieHeader);
+
+  if (!tokens) {
+    return json(401, { error: 'Sign in to delete your account.' });
+  }
+
+  const asked = parseDeletion(request.body);
+
+  if (!asked) {
+    return json(400, { error: 'Choose what to remove.' });
+  }
+
+  if (!isDeletionConfirmed(asked.confirmation)) {
+    return json(400, { error: 'Type the confirmation phrase exactly to delete your account.' });
+  }
+
+  if (asked.mode !== 'account') {
+    return json(409, { error: 'Forgetting your match data is not available yet. Remove the account only.' });
+  }
+
+  if (!signedInRecently(tokens.signedInAt, nowSeconds(request))) {
+    return json(401, {
+      error: 'For your safety, sign in again before deleting your account.',
+      reason: 'recent-sign-in-required',
+    });
+  }
+
+  let result: 'deleted' | 'not-signed-in';
+
+  try {
+    result = await gateway().deleteAccount(tokens);
+  } catch (error) {
+    if (!(error instanceof AuthUnavailableError)) {
+      throw error;
+    }
+
+    console.warn('Account deletion failed:', error.message);
+
+    return json(503, { error: DELETE_FAILED });
+  }
+
+  return {
+    ...(result === 'deleted'
+      ? json(200, { deleted: true })
+      : json(401, { error: 'Your session has ended. Sign in again to delete your account.' })),
+    cookies: [clearSessionCookie()],
+  };
+}
+
+/** A sign-in time in the future is as untrustworthy as a missing one. */
+function signedInRecently(signedInAt: number | undefined, nowSeconds: number): boolean {
+  return signedInAt !== undefined && signedInAt <= nowSeconds && nowSeconds - signedInAt <= RECENT_SIGN_IN_SECONDS;
+}
+
+function nowSeconds(request: AccountRequest): number {
+  return Math.floor((request.nowMs ?? Date.now()) / 1000);
+}
+
+function parseDeletion(body: unknown): DeleteAccountRequest | undefined {
+  if (typeof body !== 'object' || body === null) {
+    return undefined;
+  }
+
+  const { mode, confirmation } = body as { mode?: unknown; confirmation?: unknown };
+  const known = DELETION_MODES.find((candidate) => candidate === mode);
+
+  return known && typeof confirmation === 'string' ? { mode: known, confirmation } : undefined;
 }
 
 function redirectToSignIn(reason: 'cancelled' | 'failed'): AccountResponse {

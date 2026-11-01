@@ -8,6 +8,12 @@
 export interface SessionTokens {
   accessToken: string;
   refreshToken: string;
+  /**
+   * When the player last went through the Discord sign-in, in Unix seconds. Supabase moves its own
+   * `last_sign_in_at` forward on every token refresh, so it cannot say that; this does. It is absent
+   * from a cookie written before it existed, which counts as not recent.
+   */
+  signedInAt?: number;
 }
 
 export interface PkceState {
@@ -28,7 +34,13 @@ const MAX_COOKIE_BYTES = 4096;
 const TOKEN_SEPARATOR = '~';
 
 export function serializeSessionCookie(tokens: SessionTokens): string {
-  return serialize(SESSION_COOKIE, `${tokens.accessToken}${TOKEN_SEPARATOR}${tokens.refreshToken}`, SESSION_PATH, SESSION_MAX_AGE_SECONDS);
+  const parts = [tokens.accessToken, tokens.refreshToken];
+
+  if (tokens.signedInAt !== undefined) {
+    parts.push(String(Math.floor(tokens.signedInAt)));
+  }
+
+  return serialize(SESSION_COOKIE, parts.join(TOKEN_SEPARATOR), SESSION_PATH, SESSION_MAX_AGE_SECONDS);
 }
 
 export function clearSessionCookie(): string {
@@ -45,9 +57,15 @@ export function clearPkceCookie(): string {
 
 /** The signed-in tokens in a `Cookie` header, or undefined when there are none or they are malformed. */
 export function readSessionTokens(cookieHeader: string | undefined): SessionTokens | undefined {
-  const [accessToken, refreshToken, ...rest] = (readCookie(cookieHeader, SESSION_COOKIE) ?? '').split(TOKEN_SEPARATOR);
+  const [accessToken, refreshToken, signedInAt, ...rest] = (readCookie(cookieHeader, SESSION_COOKIE) ?? '').split(
+    TOKEN_SEPARATOR,
+  );
 
-  return accessToken && refreshToken && rest.length === 0 ? { accessToken, refreshToken } : undefined;
+  if (!accessToken || !refreshToken || rest.length > 0 || (signedInAt !== undefined && !/^\d{1,12}$/.test(signedInAt))) {
+    return undefined;
+  }
+
+  return signedInAt === undefined ? { accessToken, refreshToken } : { accessToken, refreshToken, signedInAt: Number(signedInAt) };
 }
 
 export function readPkceState(cookieHeader: string | undefined): PkceState | undefined {

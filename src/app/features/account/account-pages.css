@@ -72,6 +72,86 @@ p {
   background: #f1ebc9;
 }
 
+.account-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.account-button--danger {
+  border-color: var(--danger);
+  background: transparent;
+  color: color-mix(in srgb, var(--danger) 78%, black);
+}
+
+.account-button--danger:hover:not(:disabled),
+.account-button--danger:focus-visible {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.account-choices {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.account-choices legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.account-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.account-choice input {
+  margin-top: 4px;
+}
+
+.account-choice strong {
+  display: block;
+  color: var(--text);
+}
+
+.account-choice em {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+.account-choice--unavailable {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.account-field {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.account-input {
+  width: min(360px, 100%);
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font: inherit;
+}
+
 .account-error {
   color: var(--danger);
   font-weight: 700;

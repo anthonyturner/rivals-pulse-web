@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { DISCORD_INVITE_URL } from '../../shared/discord-invite';
 import {
   EXTENDED_UPLOAD_FIELDS,
   EXTENDED_UPLOAD_STATUS,
@@ -17,7 +16,6 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PrivacyPageComponent {
-  readonly discordInviteUrl = DISCORD_INVITE_URL;
   readonly todayFields = TODAY_UPLOAD_FIELDS;
   readonly extendedFields = EXTENDED_UPLOAD_FIELDS;
   readonly extendedBeingAdded = EXTENDED_UPLOAD_STATUS === 'being-added';

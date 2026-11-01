@@ -9,6 +9,11 @@ const SIGN_IN_ERRORS: Record<string, string> = {
   failed: 'Discord sign-in did not complete. Try again in a moment.',
 };
 
+const SIGN_IN_NOTICES: Record<string, string> = {
+  deleted: 'Your account has been deleted and you are signed out.',
+  reauth: 'For your safety, sign in again to delete your account. After that, go back to the delete section and try again.',
+};
+
 /** A path on this site. The server applies the same rule again before it redirects anywhere. */
 function pathOnThisSite(value: string | null): string {
   return value && value.startsWith('/') && !value.startsWith('//') && !value.includes('\\') ? value : '/account';
@@ -30,12 +35,13 @@ export class SignInPageComponent {
   readonly state = this.auth.state;
   readonly discordHref = `/api/auth/discord/start?next=${encodeURIComponent(this.next)}`;
   readonly error = computed(() => SIGN_IN_ERRORS[this.query.get('error') ?? ''] ?? null);
+  readonly notice = computed(() => SIGN_IN_NOTICES[this.query.get('notice') ?? ''] ?? null);
 
   constructor() {
     void this.auth.load();
 
     effect(() => {
-      if (this.state().status === 'signedIn') {
+      if (this.state().status === 'signedIn' && this.query.get('notice') !== 'reauth') {
         void this.router.navigateByUrl(this.next);
       }
     });

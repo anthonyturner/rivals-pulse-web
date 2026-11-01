@@ -629,7 +629,8 @@ sign-in, not by a trigger. It is additive and touches no object the overlay call
 
 The server reaches Auth and the table with the publishable key plus the visitor's own token
 (`src/auth-gateway.ts`), so `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` must be set; the
-service-role key stays unused until account deletion. Dashboard settings the maintainer makes by hand:
+service-role key (`SUPABASE_SERVICE_ROLE_KEY`) is used for one call only, deleting an account
+(`DELETE /auth/v1/admin/users/<id>` from `POST /api/account/delete`), so Vercel needs it for Production. Dashboard settings the maintainer makes by hand:
 Authentication, URL Configuration with the Site URL `https://rivalspulse.com` and Redirect URLs
 `https://rivalspulse.com/**`, `http://localhost:4200/**` and `http://localhost:4000/**`; and Discord
 enabled under Providers with the Discord application's client id and secret (its redirect is the
