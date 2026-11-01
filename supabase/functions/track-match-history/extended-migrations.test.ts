@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { describe, it } from 'node:test';
+import { columnsOf, createdFunctions, createdTables, escapeRegExp, MIGRATIONS, read, withoutComments } from './migration-sql.ts';
 
 /**
  * The extended upload's migrations cannot be run by this repo's tests (no database here), so these
@@ -8,30 +9,8 @@ import { describe, it } from 'node:test';
  * posture of every new object, the anonymity of the aggregates, and that the purge still freezes
  * them before it deletes.
  */
-const MIGRATIONS = new URL('../../migrations/', import.meta.url);
 const UPLOAD = '20261030120000_extended_upload.sql';
 const AGGREGATES = '20261030120100_extended_aggregates.sql';
-
-const read = (name: string): string => readFileSync(new URL(name, MIGRATIONS), 'utf8');
-const withoutComments = (sql: string): string => sql.replace(/--.*$/gm, '');
-
-function createdTables(sql: string): string[] {
-  return [...withoutComments(sql).matchAll(/create table if not exists (public\.\w+)/g)].map(match => match[1]);
-}
-
-function createdFunctions(sql: string): string[] {
-  return [...withoutComments(sql).matchAll(/create or replace function (public\.\w+)\(([^)]*)\)/g)].map(match => {
-    const types = match[2].split(',').map(argument => argument.trim().split(/\s+/)[1]).filter(Boolean);
-    return `${match[1]}(${types.join(', ')})`;
-  });
-}
-
-function columnsOf(sql: string, table: string): string[] {
-  const body = withoutComments(sql).match(new RegExp(`create table if not exists ${table} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? '';
-  return body.split('\n')
-    .map(line => line.trim().split(/\s+/)[0])
-    .filter(word => /^[a-z_]+$/.test(word) && !['primary', 'constraint', 'unique', 'check'].includes(word));
-}
 
 describe('the extended upload migrations', () => {
   for (const file of [UPLOAD, AGGREGATES]) {
@@ -54,7 +33,7 @@ describe('the extended upload migrations', () => {
 
       it('revokes execute from everyone and grants it to the service role for every function', () => {
         for (const signature of createdFunctions(sql)) {
-          const escaped = signature.replace(/[().,]/g, '\\$&');
+          const escaped = escapeRegExp(signature);
           assert.match(sql, new RegExp(`revoke execute on function ${escaped} from public, anon, authenticated`), signature);
           assert.match(sql, new RegExp(`grant execute on function ${escaped} to service_role`), signature);
         }

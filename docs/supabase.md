@@ -70,6 +70,7 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
+| `20261101020000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 
 Link once per machine, check history, then apply:
 
@@ -349,6 +350,42 @@ aggregates' freeze and before its first delete, so the counts are kept when the 
 later migration that restates `purge_expired_participants` must keep both calls**; a test reads the
 latest definition and fails if either is gone or comes after a delete.
 
+## Hero pair aggregates
+
+`hero_pair_aggregates` keeps, per half-season, game mode, rank bucket and pair of heroes, how often the
+pair met on opposite teams (`vs`) or played together on one team (`with`). `hero_pair_totals` keeps,
+per half-season, mode and rank bucket, the matches counted and, as numbers only, how many distinct
+recorders made them and how many matches the busiest one did. Neither table holds a uid, name,
+fingerprint or per-player row, both have RLS on with no policy, and only the service role reaches
+them. It is a family of its own, like the extended aggregates: `fill_hero_aggregates` is untouched.
+
+- `vs` is directional and counted like `hero_matchups`. `with` is stored once per unordered pair
+  (`hero_id < other_hero_id`) and counted once per team occurrence: a team in a match where two
+  different players played the two heroes. A match where both teams field the pair adds two
+  occurrences (`decided_lines`, `wins`) and one match. The same hero twice on a team is not a pair.
+  A team's result is the result its lines agree on.
+- A pair is stored, in every mode and bucket it was seen in, only when its decided matches summed over
+  the half-season reach `hero_pair_min_matches()` (10).
+- `rank_bucket` is -1 (unknown) on every row today: no rank is stored with an upload. Buckets of 0 or
+  more are reserved for 100-point buckets of the recorder's rank score once one is stored (issue
+  337); `fill_hero_pair_aggregates` is the one place that will derive it.
+- `recompute_hero_pair_aggregates()` rebuilds every half-season that still has raw rows and is not
+  frozen (hourly job `recompute-hero-pair-aggregates`). `purge_expired_participants()` calls
+  `freeze_hero_pair_aggregates()` before its first delete. **Any later migration that restates the
+  purge must keep calling every freeze**; a test reads the latest definition and fails if one is gone
+  or comes after a delete. Half-seasons whose raw rows were already purged before this migration ran
+  have no pair counts and cannot be filled.
+- `read_hero_pairs(p_play_mode_ids)` (granted to `anon` and `service_role`, as `read_hero_matchups`
+  is) returns `half_season, rank_bucket, kind, hero_id, other_hero_id, decided_matches, decided_lines,
+  wins`, summed over the modes asked for (default Quick Match and Competitive), with the minimum
+  applied again to the sum. Rank bucket -1 is returned without a recorder gate, as `hero_matchups` is
+  today; a bucket of 0 or more only when `community_bucket_shown` passes, using the most recorders of
+  any one chosen mode and the sum of the busiest recorders (bounds that stay true across modes).
+  Recorder counts are never returned. It returns a set of rows, so a caller that reads more than
+  1000 of them pages through the (stable) order with a range.
+- Once a rank source exists, an all-ranks total built by adding buckets would include a bucket that
+  was hidden; whoever adds that must not publish it next to the visible ones.
+
 ## Backfilling participants from stored matches
 
 `npm run backfill:participants` replays the rows of `tracked_matches` through
@@ -572,11 +609,12 @@ policy's hard limit), but later than promised.
 
 - **Required:** `select jobname from cron.job where jobname in
   ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
-  'recompute-play-time-aggregates');` must show all four jobs (the daily purge and the three hourly
-  aggregate rebuilds). If one is missing (the migrations warn when `pg_cron` is unavailable), enable
-  `pg_cron` and schedule `select public.purge_expired_participants();` daily, and
-  `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();` and
-  `select public.recompute_play_time_aggregates();` hourly by hand.
+  'recompute-play-time-aggregates', 'recompute-hero-pair-aggregates');` must show all five jobs (the
+  daily purge and the four hourly aggregate rebuilds). If one is missing (the migrations warn when
+  `pg_cron` is unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();`
+  daily, and `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
+  `select public.recompute_play_time_aggregates();` and `select public.recompute_hero_pair_aggregates();`
+  hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
