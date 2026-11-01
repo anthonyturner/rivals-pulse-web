@@ -1,4 +1,5 @@
 import type { DashboardResult } from '../../core/auth/auth.service';
+import { PLAY_MODE_NAMES } from '../../../contracts/play-modes';
 import type { LinkedPlayer } from '../../core/auth/linked-player.types';
 import type {
   OwnDashboardStats,
@@ -9,7 +10,6 @@ import type {
   OwnRecentMatch,
   OwnRecord,
 } from '../../core/auth/own-dashboard.types';
-import { playModeName } from '../../shared/utilities/play-modes';
 import { countLabel, percentLabel } from '../../shared/utilities/stat-labels';
 import type { CommunityHeroRow } from '../community/community-hero-list/community-hero-list.component';
 import { heroCell, type HeroIdentities } from '../insights/hero-identity';
@@ -224,7 +224,8 @@ function topHeroRow(hero: OwnHeroSummary, identities: HeroIdentities): Community
 
 function recentRow(match: OwnRecentMatch, index: number, identities: HeroIdentities): ProfileRecentMatch {
   const recordedAll = match.kills !== null && match.deaths !== null && match.assists !== null;
-  const where = [playModeName(match.playModeId), match.mapName].filter((part) => part !== null);
+  const mode = match.playModeId === null ? null : (PLAY_MODE_NAMES.get(match.playModeId) ?? null);
+  const where = [mode, match.mapName].filter((part) => part !== null);
 
   return {
     key: `${match.playedAt}-${index}`,

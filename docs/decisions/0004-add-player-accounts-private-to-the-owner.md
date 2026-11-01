@@ -190,12 +190,12 @@ lines (`src/own-dashboard.ts`) and sends the browser only the results.
 | Dashboard content | Source | Depth |
 | --- | --- | --- |
 | Matches, wins and losses, kills, deaths, assists, final hits, most-played heroes, records, latest matches | `participants` | Six months at most, newest 2,000 lines |
-| Damage, healing and blocked per minute | `participant_hero_figures` | Six months at most |
+| Damage, healing and blocked per minute | `participant_hero_figures` | Six months at most, and only for the same newest 2,000 lines |
 
 The page says the depth is about six months. It also says a match may be missing when another
-overlay user in the lobby uploaded it first (a match is stored once, by its first uploader), when
-it was uploaded before 2026-10-09 (when `participants` began), or when it came from the backfill,
-whose lines carry no real recorder. A figure the desktop app did not record is shown as "not
+overlay user in the lobby uploaded it first (a match is stored once, by its first uploader) or
+when it was uploaded before 2026-10-09 (when `participants` began). Lines from the backfill carry
+no real recorder, so they are never the player's; the page does not name them separately. A figure the desktop app did not record is shown as "not
 counted", never as 0.
 
 **6. Consent wording.** Wording is shown before the data is collected, in plain
@@ -442,7 +442,7 @@ A reviewer checks a change against this ADR by looking for:
   update with the setting off stores nothing.
 - Both deletion choices exist, each with its confirmation, and "forget me" calls
   `forget_player` before the account is deleted.
-- No level, rank and no Discord avatar or handle appears anywhere on the site. The only
+- No level, no player rank and no Discord avatar or handle appears anywhere on the site. The only
   avatar is the Overwolf account avatar the desktop app reported, stored only when
   it is an `https` address on the allow-list (amended 2026-11-01), shown in the header,
   on the account page and on the dashboard page.

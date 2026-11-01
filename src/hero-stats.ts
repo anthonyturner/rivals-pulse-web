@@ -6,6 +6,7 @@ import type {
   HeroStatsModeId,
   HeroStatsTier,
 } from './contracts/hero-stats.model.js';
+import { PLAY_MODE_IDS } from './contracts/play-modes.js';
 import type { TierName } from './contracts/tier-list.model.js';
 
 /**
@@ -33,8 +34,7 @@ export const TIER_CUT_OFFS: readonly (readonly [TierName, number])[] = [
 export const LOWEST_TIER: TierName = 'F';
 const TIER_ORDER: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
 
-/** `participants.play_mode_id`: -1 is stored when the game did not say which mode a match was. */
-export const PLAY_MODE_IDS = { quickMatch: 0, competitive: 1, arcade: 2, practice: 3, unknown: -1 } as const;
+export { PLAY_MODE_IDS };
 
 /**
  * The modes the numbers blend. Unknown (-1) is left out on purpose: an unlabelled match could be

@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 
@@ -32,6 +42,9 @@ import { buildProfileView, DEPTH_NOTE } from './profile-view';
 export class ProfilePageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
+  private destroyed = false;
   // undefined while the request runs.
   private readonly result = signal<DashboardResult | undefined>(undefined);
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
@@ -44,13 +57,22 @@ export class ProfilePageComponent {
   });
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => (this.destroyed = true));
     void this.load();
   }
 
-  protected async load(): Promise<void> {
+  /**
+   * Reads the stats. A retry replaces the button that was pressed, so it passes `restoreFocus` and
+   * focus moves to the heading of whatever the answer is.
+   */
+  protected async load(restoreFocus = false): Promise<void> {
     this.result.set(undefined);
 
     const result = await this.auth.loadDashboard();
+
+    if (this.destroyed) {
+      return;
+    }
 
     if (result.status === 'signedOut') {
       await this.router.navigate(['/sign-in'], { queryParams: { next: '/profile' } });
@@ -59,5 +81,18 @@ export class ProfilePageComponent {
     }
 
     this.result.set(result);
+
+    if (restoreFocus) {
+      afterNextRender(() => this.focusHeading(), { injector: this.injector });
+    }
+  }
+
+  private focusHeading(): void {
+    const heading = this.host.nativeElement.querySelector<HTMLElement>('.player-name, app-state-panel h2');
+
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus();
+    }
   }
 }

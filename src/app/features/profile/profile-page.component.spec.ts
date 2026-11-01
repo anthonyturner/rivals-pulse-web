@@ -108,6 +108,17 @@ describe('ProfilePageComponent', () => {
       expect(loadDashboard).toHaveBeenCalledTimes(2);
       expect(host().querySelector('.player-name')?.textContent).toBe('Aurora');
     });
+
+    it('moves focus to the result heading after a retry, since the button is gone', async () => {
+      document.body.appendChild(host());
+      (host().querySelector('button') as HTMLButtonElement).click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(document.activeElement).toBe(host().querySelector('.player-name'));
+      host().remove();
+    });
   });
 
   describe('for a linked player with matches', () => {
@@ -191,6 +202,32 @@ describe('ProfilePageComponent', () => {
     await open({ status: 'ready', dashboard: linkedDashboard({}, true) });
 
     expect(host().querySelector('app-notice')?.textContent).toContain('more matches than we read');
+  });
+
+  it('does not navigate to sign-in when the page was left before a late 401 arrived', async () => {
+    let answerLate: (result: DashboardResult) => void = () => undefined;
+    loadDashboard = jasmine.createSpy('loadDashboard').and.returnValue(new Promise((resolve) => (answerLate = resolve)));
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: { loadDashboard } },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/heroes').flush([]);
+    fixture.destroy();
+
+    answerLate({ status: 'signedOut' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('sends a visitor whose session has ended to sign in, and back here after', async () => {

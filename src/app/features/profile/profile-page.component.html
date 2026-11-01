@@ -15,7 +15,7 @@
     @case ('unavailable') {
       <app-state-panel kind="error" heading="Your stats are unavailable right now">
         <p>Your account is fine, we just could not read your matches. Try again in a moment.</p>
-        <button class="action" type="button" (click)="load()">Try again</button>
+        <button class="action" type="button" (click)="load(true)">Try again</button>
       </app-state-panel>
     }
     @case ('not-linked') {
