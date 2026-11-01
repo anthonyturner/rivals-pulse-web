@@ -143,4 +143,24 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('cannot be undone');
     expect(accounts.querySelector('a[href^="https://discord.gg/"]')).toBeNull();
   });
+
+  it('discloses Google AdSense in the summary and its own section', () => {
+    const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+    const advertising = section('advertising');
+    const text = (advertising.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(summary).toContain('Google AdSense');
+    expect(text).toContain('IP address');
+    expect(text).toContain('cookies or similar browser storage');
+    expect(text).toContain('never data about you');
+    expect(advertising.querySelector('a[href="https://policies.google.com/technologies/partner-sites"]'))
+      .withContext("the link to Google's partner-sites policy")
+      .toBeTruthy();
+  });
+
+  it('no longer says the website has no advertising', () => {
+    const text = (section('more').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).not.toContain('also covers advertising');
+  });
 });
