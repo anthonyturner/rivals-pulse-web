@@ -83,8 +83,8 @@ to also be forgotten by the match database.
   architecture and tech-stack docs say pages are server-rendered; #263a fixes
   them.) The API accepts only GET today and caches answers for five minutes
   (`s-maxage=300`), so a per-user answer must opt out of caching.
-- `releasedPageGuard` and `SHOW_UNRELEASED_PAGES` already hide unfinished pages
-  in production.
+- The website privacy page (`/privacy`) says there are no accounts, no login and
+  no cookies of its own.
 
 **Why doing nothing is not an option.** The epic's goal is a way for a player
 to review their own play and follow a live match without the overlay open. That
@@ -211,22 +211,26 @@ match ends, the owner switches it off, or a short expiry passes, whichever is
 first. The 5,000-match and six-month limits on linked history are the existing
 ones (decision 5); this ADR does not lengthen them.
 
-**9. Session model and release gate (adopted after the #263 refinement).**
+**9. Session model and launch (adopted after the #263 refinement).**
 
 - The login session is held on our server, in an `HttpOnly; Secure;
   SameSite=Lax; Path=/api` cookie. The browser calls `/api/auth/*` and
   `/api/account/*` handlers, written once, runtime-neutral, and mounted in both
-  Express and the Vercel function. Each request builds its own Supabase client
-  from the publishable key with the user's session (PKCE sign-in flow), so RLS
-  is the real guard. The service-role key is used only for account deletion.
+  Express and the Vercel function. Each request calls Supabase Auth and PostgREST
+  with the publishable key and the user's own token (the PKCE sign-in flow, done
+  by hand over `fetch`), so RLS is the real guard. The service-role key is used
+  only for account deletion.
 - The browser gets no `@supabase/supabase-js`; `scripts/check-browser-bundle.mjs`
   stays unchanged. Every auth and account answer carries `Cache-Control:
   private, no-store`, and every POST checks the `Origin` header against forged
   requests.
 - Live status uses polling, not Supabase Realtime in the browser (that would
   need the browser client).
-- The auth UI ships behind the existing `SHOW_UNRELEASED_PAGES` /
-  `releasedPageGuard` gate until the privacy update (#265) lands.
+- Discord sign-in goes live on production at once, with no release gate
+  (maintainer decision, 2026-11-01, replacing an earlier plan to gate it).
+  Email and password follow later (#272). The change that ships sign-in (#270)
+  also updates the website privacy page to say what an account stores; the
+  overlay policy changes when linking (#264) lands (#265).
 - Discord sign-in is allowed on production and localhost only; no wildcard for
   preview deployments.
 
@@ -286,7 +290,9 @@ ones (decision 5); this ADR does not lengthen them.
 
 - The project holds personal data for the first time (email addresses, a link
   between an email and a player). The overlay policy's "no accounts, no email"
-  sentences become false, so #265 ships before or with #264.
+  sentences become false once linking exists, so #265 ships before or with #264.
+  The website privacy page is updated by the change that launches sign-in, because
+  accounts exist in production from that day.
 - `recorded_by` changes purpose. Today it is a pseudonymous code used only to
   limit uploads; once it joins to an account it points at a person. The policy's
   description of it must change.
@@ -401,6 +407,7 @@ A reviewer checks a change against this ADR by looking for:
 - No avatar, level or Discord handle appears on the dashboard.
 - `@supabase/supabase-js` is absent from the browser build, the session cookie is
   `HttpOnly`, and auth and account answers are `private, no-store`.
-- Auth pages stay behind `releasedPageGuard` until #265 has landed.
+- The website privacy page describes accounts, the sign-in cookie and deletion
+  in the same change that launches sign-in.
 - The privacy policy change (#265) is merged before or with the first link (#264).
 - No secret value appears in the repo; credentials are named only.
