@@ -87,11 +87,13 @@
                       (error)="onImageError($event)"
                     />
                     <span class="hero-name">{{ hero.name }}</span>
-                    <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
-                    <span class="hero-caption">
-                      <span class="hero-pick"
-                        ><span class="visually-hidden">, pick rate </span>{{ hero.pickRateLabel }}<span aria-hidden="true"> pick &middot; </span></span
-                      ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
+                    <span class="hero-figures">
+                      <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
+                      <span class="hero-caption">
+                        <span class="hero-pick"
+                          ><span class="visually-hidden">, pick rate </span>{{ hero.pickRateLabel }}<span aria-hidden="true"> pick &middot; </span></span
+                        ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
+                      </span>
                     </span>
                   </li>
                 }

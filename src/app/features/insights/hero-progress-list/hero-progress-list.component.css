@@ -38,7 +38,7 @@
 }
 
 .building-count {
-  color: var(--text-muted);
+  color: var(--text-soft);
   font-size: var(--type-caption);
   font-weight: 800;
 }

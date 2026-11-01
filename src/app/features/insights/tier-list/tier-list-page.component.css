@@ -54,8 +54,9 @@ h1 {
   line-height: 1.5;
 }
 
+/* --blue is 3.7:1 on the page background; this is 5.0:1. */
 .lede-link {
-  color: var(--blue);
+  color: #0e6a98;
   font-weight: 700;
 }
 
@@ -72,7 +73,7 @@ h1 {
 }
 
 .toolbar app-filter-select {
-  flex: 0 1 240px;
+  flex: 0 1 280px;
   min-width: 0;
 }
 
@@ -163,7 +164,7 @@ h1 {
 }
 
 .hero-tile img {
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   width: 40px;
   height: 40px;
   border-radius: 6px;
@@ -172,8 +173,7 @@ h1 {
 }
 
 .hero-name,
-.hero-rate,
-.hero-caption {
+.hero-figures {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -183,6 +183,11 @@ h1 {
   font-size: var(--type-small);
   font-weight: 800;
   line-height: 1.2;
+}
+
+.hero-rate,
+.hero-caption {
+  display: block;
 }
 
 .hero-rate {
@@ -201,7 +206,7 @@ h1 {
 .empty-tier {
   align-self: center;
   padding: 0 12px;
-  color: var(--text-muted);
+  color: var(--text-soft);
   font-size: var(--type-small);
 }
 
@@ -335,6 +340,21 @@ h1 {
     line-clamp: 2;
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  .hero-figures {
+    font-size: var(--type-caption);
+    line-height: 1.3;
+    white-space: normal;
+  }
+
+  .hero-rate,
+  .hero-caption {
+    display: inline;
+  }
+
+  .hero-rate {
+    margin-right: 6px;
   }
 
   .hero-pick {
