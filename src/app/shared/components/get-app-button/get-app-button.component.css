@@ -1,0 +1,56 @@
+:host {
+  display: inline-flex;
+}
+
+.get-app {
+  display: inline-flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+  border: 1px solid var(--cta-yellow);
+  border-radius: 6px;
+  background: var(--cta-yellow);
+  color: #111827;
+  font: inherit;
+  font-weight: 820;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.get-app:hover {
+  background: #fff8dd;
+}
+
+.get-app.is-pending {
+  cursor: not-allowed;
+}
+
+.get-app:focus-visible {
+  outline: 3px solid var(--cta-yellow);
+  outline-offset: 3px;
+}
+
+.pill {
+  flex: none;
+  white-space: nowrap;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #111827;
+  color: var(--cta-yellow);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

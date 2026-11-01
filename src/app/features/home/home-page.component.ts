@@ -14,8 +14,10 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+import { ClosingCtaComponent } from './closing-cta/closing-cta.component';
 import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
+import { HomeFaqComponent } from './home-faq/home-faq.component';
 import { HomeContentService } from './home-content.service';
 import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
@@ -25,8 +27,10 @@ import { ToolsRowComponent } from './tools-row/tools-row.component';
 @Component({
   selector: 'app-home-page',
   imports: [
+    ClosingCtaComponent,
     GameNewsBandComponent,
     HeroOverlayActionsComponent,
+    HomeFaqComponent,
     OverlaySectionComponent,
     StatsSnapshotComponent,
     ToolsRowComponent,

@@ -206,28 +206,6 @@ kbd {
   margin: 0;
 }
 
-.get-app {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #ffd24d;
-  border-radius: 6px;
-  background: #ffd24d;
-  color: var(--accent-ink);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-/* No listing yet, so this reads as a status rather than a button. */
-.get-app.is-pending {
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.04);
-  color: #c3cfdc;
-  cursor: default;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
