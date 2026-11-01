@@ -150,3 +150,19 @@ in `src/styles.css`, not from a width written in the page's own CSS.
   chooses its own width.
 - A new width is a new token and a new modifier, not a literal `min(...)` or
   `max-width` in a component.
+
+## Sidebar and ad slots
+
+Every page except the home page (whose route sets `data: ROUTE_WITHOUT_SIDEBAR`)
+gets a sidebar from the app shell, so a page does not add one itself. From
+1280px up it sits beside the page; below that it stacks under it.
+
+- On a page with the sidebar, the page container's `100%` is the page column,
+  not the viewport, so its content is the viewport minus the sidebar column
+  (about 332px) minus the gutters. A page whose layout needs more than that at
+  1280px is a page that needs fixing, not a reason to move the breakpoint.
+- An ad is an `app-ad-slot` with a size id from `AD_SLOT_SIZES`. The slot
+  reserves that size in CSS and knows no ad network; what fills it is the
+  `AdProvider` behind the `AD_PROVIDER` token (the house ad by default). A
+  provider that loads a script sets `browserOnly: true`, and the slot then
+  renders it only after the page has rendered in the browser, never on the server.

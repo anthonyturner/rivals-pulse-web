@@ -3,12 +3,14 @@ import { Routes } from '@angular/router';
 import { signedInGuard } from './core/auth/signed-in.guard';
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
+import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
 import { HOME_TITLE } from './core/seo/site-meta';
 
 export const routes: Routes = [
   {
     path: '',
     title: HOME_TITLE,
+    data: ROUTE_WITHOUT_SIDEBAR,
     loadComponent: () =>
       import('./features/home/home-page.component').then((module) => module.HomePageComponent),
   },

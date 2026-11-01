@@ -12,7 +12,14 @@
      <app-nav></app-nav>
   </header>
 
-  <router-outlet />
+  <div class="app-body" [class.app-body--with-sidebar]="hasSidebar()">
+    <div class="app-body__page">
+      <router-outlet />
+    </div>
+    @if (hasSidebar()) {
+      <app-sidebar class="app-body__sidebar" />
+    }
+  </div>
 
   <app-footer></app-footer>
 </div>

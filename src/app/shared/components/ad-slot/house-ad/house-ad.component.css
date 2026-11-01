@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.house-ad {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #ffffff;
+}
+
+.house-ad__title {
+  font-size: var(--type-h3);
+  line-height: 1.2;
+}
+
+.house-ad__text {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: var(--type-small);
+  line-height: 1.5;
+}
