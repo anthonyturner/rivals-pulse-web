@@ -43,8 +43,8 @@ export const JARVIS_EXCHANGES: readonly JarvisExchange[] = [
   {
     question: "Who's their best player?",
     answer:
-      'Their Hela. Eleven eliminations, two deaths, Grandmaster 2. She has 41 Hela matches this '
-      + 'season, so expect her on the high ground.',
+      'Their Hela. Eleven eliminations, two deaths. She has 41 Hela matches this season, '
+      + 'so expect her on the high ground.',
   },
   {
     question: 'Did I play these guys last match?',

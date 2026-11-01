@@ -3,10 +3,26 @@
   eyebrow="In the game"
   heading="What the overlay does"
   headingId="overlay-section-title"
-  lede="Rivals Pulse runs beside Marvel Rivals through Overwolf. Try the Jarvis demo, then see what else it offers."
+  lede="Rivals Pulse runs beside Marvel Rivals through Overwolf and puts your match on screen while you play."
 >
   <div class="overlay-section">
-    <app-jarvis-console />
+    <ul class="shots">
+      @for (shot of screenshots; track shot.src) {
+        <li>
+          <figure class="shot">
+            <img
+              class="shot__image"
+              [src]="shot.src"
+              [attr.width]="shot.width"
+              [attr.height]="shot.height"
+              [alt]="shot.alt"
+              loading="lazy"
+            />
+            <figcaption class="shot__caption">{{ shot.caption }}</figcaption>
+          </figure>
+        </li>
+      }
+    </ul>
 
     <ul class="features">
       @for (feature of features; track feature.title) {
@@ -27,8 +43,16 @@
           </span>
           <h3>{{ feature.title }}</h3>
           <p>{{ feature.description }}</p>
+          <p class="keys">
+            <span class="keys__label">Default hotkeys</span>
+            @for (key of feature.keys; track key) {
+              <kbd>{{ key }}</kbd>
+            }
+          </p>
         </li>
       }
     </ul>
+
+    <app-jarvis-console />
   </div>
 </app-home-band>

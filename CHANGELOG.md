@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The home page's "What the overlay does" band now shows two real overlay screenshots (player names blurred) and six cards for what the overlay can put on screen, each with its default hotkeys (match preview, team and enemy rosters, last-match recap, hero lookup, tier list and counter search, session record and stats bar, match summary and disconnects), and no longer says the overlay shows players' ranks. The Jarvis demo is labelled Premium and its text no longer presents voice answers as free. The closing band links the Discord server ([#252](https://github.com/anthonyturner/rivals-pulse-web/pull/252)).
 - The home page is now a stack of full-width bands (the overlay, live hero stats, tools and game news) in alternating dark, light and white, with the hero video sized to the hero alone; Game News is a three-column band instead of a sticky side column, and the hero copy now leads with the Overwolf app ([#248](https://github.com/anthonyturner/rivals-pulse-web/pull/248)).
 - Typing the address of Learning Paths or Watch Next Quiz now opens the Tools page, where both show as Coming soon, until each page is released ([#232](https://github.com/anthonyturner/rivals-pulse-web/pull/232)).
 - The Community Stats tab no longer shows Arcade and Practice buttons that only said "not enough data": a mode's button appears once it has data, and an empty role names its mode ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
