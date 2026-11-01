@@ -1,6 +1,4 @@
-import { animate, style, transition, trigger } from '@angular/animations';
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output } from '@angular/core';
 import { SafeResourceUrl } from '@angular/platform-browser';
 
 import { HeroDetailsComponent } from '../hero-details/hero-details.component';
@@ -16,33 +14,47 @@ interface HeroVideoSearch {
 
 @Component({
   selector: 'app-hero-content',
-  imports: [CommonModule, HeroDetailsComponent, HeroRoleSwitcherComponent],
+  imports: [HeroDetailsComponent, HeroRoleSwitcherComponent],
   templateUrl: './hero-content.component.html',
   styleUrl: './hero-content.component.css',
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({
-          opacity: 0,
-          transform: 'translateY(8px)',
-        }),
-        animate(
-          '400ms ease-out',
-          style({
-            opacity: 1,
-            transform: 'translateY(0)',
-          }),
-        ),
-      ]),
-    ]),
-  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroContentComponent {
-  @Input() hero?: Hero;
-  @Input({ required: true }) isModalOpen = false;
-  @Input({ required: true }) videos: HeroVideoSearch[] = [];
-  @Input({ required: true }) youtubeUrl = '';
-  @Input({ required: true }) controller!: any;
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  @Output() readonly profileOpened = new EventEmitter<void>();
+  readonly hero = input<Hero>();
+  readonly isModalOpen = input.required<boolean>();
+  readonly videos = input.required<HeroVideoSearch[]>();
+  readonly youtubeUrl = input.required<string>();
+  readonly controller = input.required<any>();
+
+  readonly profileOpened = output<void>();
+  readonly rosterReturned = output<void>();
+
+  /** The selected hero as a one-item list: tracking by id gives each hero fresh details with the long sections collapsed. */
+  readonly detailHeroes = computed(() => {
+    const hero = this.hero();
+
+    return hero ? [hero] : [];
+  });
+
+  readonly hasRoleKits = computed(() => {
+    const hero = this.hero();
+
+    return !!hero && this.controller().roleAbilityKits(hero).length > 0;
+  });
+
+  /** Brings the panel into view and moves keyboard focus to the hero name. */
+  focusHeading(): void {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    this.host.nativeElement
+      .querySelector('.hero-detail')
+      ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    this.host.nativeElement.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
+  }
+
+  focusProfileButton(): void {
+    this.host.nativeElement.querySelector<HTMLElement>('[data-testid="open-profile"]')?.focus({ preventScroll: true });
+  }
 }
