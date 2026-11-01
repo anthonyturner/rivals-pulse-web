@@ -18,16 +18,35 @@ p {
   margin: 0;
 }
 
-a {
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+a,
+.site-footer__link {
   color: var(--text-soft);
   font-weight: 650;
 }
 
-a:hover {
+.site-footer__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+a:hover,
+.site-footer__link:hover {
   color: var(--accent-strong);
 }
 
-a:focus-visible {
+a:focus-visible,
+.site-footer__link:focus-visible {
   border-radius: 4px;
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;

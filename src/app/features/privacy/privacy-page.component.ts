@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { ADSENSE_CONFIG, hasAdSenseSlot } from '../../shared/components/ad-slot/adsense/adsense.config';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import {
   EXTENDED_UPLOAD_FIELDS,
@@ -18,5 +19,7 @@ import {
 export class PrivacyPageComponent {
   readonly todayFields = TODAY_UPLOAD_FIELDS;
   readonly extendedFields = EXTENDED_UPLOAD_FIELDS;
+  /** Whether Google ads can appear yet, which is when an ad unit id is set. The page words the ads paragraph to match. */
+  readonly adsLive = hasAdSenseSlot(inject(ADSENSE_CONFIG));
   readonly extendedBeingAdded = EXTENDED_UPLOAD_STATUS === 'being-added';
 }
