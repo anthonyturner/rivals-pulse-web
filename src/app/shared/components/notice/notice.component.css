@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+.notice {
+  padding: 8px 12px;
+  border: 1px solid rgba(224, 169, 0, 0.34);
+  border-radius: 8px;
+  background: #fff9df;
+  color: var(--accent-ink);
+  font-size: var(--type-small);
+  font-weight: 700;
+}

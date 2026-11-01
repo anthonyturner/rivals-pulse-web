@@ -1,0 +1,35 @@
+<ol class="tiers">
+  @for (tier of tiers(); track tier.name) {
+    <li class="tier-row tier-{{ tier.name }}">
+      <div class="tier-label" role="heading" [attr.aria-level]="headingLevel()">
+        <span class="visually-hidden">Tier </span>
+        <span class="tier-letter">{{ tier.name }}</span>
+        <span class="visually-hidden">, </span>
+        <span class="tier-count">
+          {{ tier.heroes.length }}<span class="tier-unit visually-hidden">{{ tier.heroes.length === 1 ? ' hero' : ' heroes' }}</span>
+        </span>
+      </div>
+
+      @if (tier.heroes.length > 0) {
+        <ul class="hero-grid">
+          @for (hero of tier.heroes; track hero.hero) {
+            <li>
+              <app-hero-tile [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="linkHeroes() ? hero.hero : null">
+                <span class="hero-figures">
+                  <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
+                  <span class="hero-caption">
+                    <span class="hero-pick"
+                      ><span class="visually-hidden">, pick rate </span>{{ hero.pickRateLabel }}<span aria-hidden="true"> pick &middot; </span></span
+                    ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
+                  </span>
+                </span>
+              </app-hero-tile>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="empty-tier">No heroes in this tier yet.</p>
+      }
+    </li>
+  }
+</ol>

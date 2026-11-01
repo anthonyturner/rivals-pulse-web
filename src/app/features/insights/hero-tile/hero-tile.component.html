@@ -1,0 +1,12 @@
+<img [src]="imageUrl()" alt="" width="40" height="40" loading="lazy" (error)="onImageError($event)" />
+<span class="head">
+  <span class="hero-name">
+    @if (heroQuery(); as query) {
+      <a class="name-link" routerLink="/heroes" [queryParams]="query">{{ name() }}</a>
+    } @else {
+      {{ name() }}
+    }
+  </span>
+  <ng-content select="[tileFigure]" />
+</span>
+<ng-content />

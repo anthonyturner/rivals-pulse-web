@@ -1,0 +1,81 @@
+:host {
+  --portrait: 40px;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--portrait) minmax(0, 1fr);
+  gap: 0 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+img {
+  grid-row: 1 / span 2;
+  width: var(--portrait);
+  height: var(--portrait);
+  border-radius: 6px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.hero-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--type-small);
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name-link {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.name-link:hover {
+  color: #0e6a98;
+}
+
+/* The link covers the whole tile, so the ring does too. */
+.name-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+}
+
+.name-link:focus-visible {
+  outline: none;
+}
+
+.name-link:focus-visible::after {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  :host {
+    --portrait: 36px;
+    padding: 6px;
+  }
+
+  .hero-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
