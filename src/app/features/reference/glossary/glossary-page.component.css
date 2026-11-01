@@ -4,14 +4,7 @@
 
 .glossary-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-header,
-.toolbar,
-.term-grid {
-  width: min(1220px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .page-header {
@@ -239,7 +232,7 @@ h3 {
 
 @media (max-width: 920px) {
   .glossary-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .page-header,
@@ -263,7 +256,7 @@ h3 {
 
 @media (max-width: 560px) {
   .glossary-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .toolbar,

@@ -4,15 +4,7 @@
 
 .cover-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-header,
-.concept-map,
-.section-grid,
-.support-grid {
-  width: min(1220px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .page-header {
@@ -281,7 +273,7 @@ ul {
 
 @media (max-width: 940px) {
   .cover-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .page-header,
@@ -294,7 +286,7 @@ ul {
 
 @media (max-width: 560px) {
   .cover-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .guide-section,

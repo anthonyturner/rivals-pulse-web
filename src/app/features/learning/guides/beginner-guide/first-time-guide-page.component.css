@@ -4,15 +4,7 @@
 
 .first-time-guide {
   min-height: 100%;
-  padding: 32px;
-}
-
-.back-link,
-.guide-hero,
-.quick-rules,
-.guide-body {
-  width: min(1120px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .back-link {
@@ -174,7 +166,7 @@ h1 {
 
 @media (max-width: 860px) {
   .first-time-guide {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .guide-hero,
@@ -189,7 +181,7 @@ h1 {
 
 @media (max-width: 560px) {
   .first-time-guide {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .guide-section {

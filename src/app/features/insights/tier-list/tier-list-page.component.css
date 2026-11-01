@@ -7,19 +7,7 @@
 /* Tall enough that the footer starts below the fold, so it does not jump when the numbers replace the loading panel. */
 .tier-page {
   min-height: 100vh;
-  padding: 32px;
-}
-
-.tier-hero,
-.toolbar,
-.state-panel,
-.notice,
-.meta-strip,
-.tiers,
-.building,
-.method-note {
-  width: min(1220px, 100%);
-  margin-inline: auto;
+  padding-block: 32px;
 }
 
 .tier-hero {
@@ -313,7 +301,7 @@ abbr {
 
 @media (max-width: 760px) {
   .tier-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .tier-hero {

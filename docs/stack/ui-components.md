@@ -114,3 +114,31 @@ cards use an `<h2>`).
   role. Changing a size for the whole site is one edit in `styles.css`.
 - Numeric readouts (stat figures, tier letters, step numerals) and body text are
   not headings and keep their own sizes.
+
+## Page containers
+
+This section always applies, whatever the styling conventions above. It is a
+layout utility, not a global style override: the classes set a width and side
+margins and nothing visual, so they do not restyle anything inside them.
+
+A page's content width comes from the `.page-container` class and three tokens
+in `src/styles.css`, not from a width written in the page's own CSS.
+
+| Class | Token | Content width at 1366px | Use for |
+| --- | --- | --- | --- |
+| `page-container page-container--narrow` | `--container-narrow` | 768px | Reading pages: prose and FAQ-style sections. |
+| `page-container` | `--container` | 1120px | A single guide or article. |
+| `page-container page-container--wide` | `--container-wide` | 1220px | Listings, tools and dashboards. |
+
+- Put the class on the page's outermost wrapper element in the template. The
+  width is the *content* width: the viewport minus `--page-gutter` on each
+  side (32px, falling to `--mobile-page-gutter` at 560px and below), capped at
+  the token.
+- The wrapper takes no side padding, width or horizontal margin of its own, and
+  neither do its children, since padding would be taken off a second time.
+  Vertical padding stays with the component (`padding-block`).
+- Full width is simply not using the class, for example the home page's
+  full-bleed bands. Do not wrap `<router-outlet>` in the app shell: a page
+  chooses its own width.
+- A new width is a new token and a new modifier, not a literal `min(...)` or
+  `max-width` in a component.

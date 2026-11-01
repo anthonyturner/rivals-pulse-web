@@ -6,18 +6,7 @@
 
 .win-rates-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-hero,
-.toolbar,
-.state-panel,
-.notice,
-.rates,
-.building,
-.method-note {
-  width: min(1220px, 100%);
-  margin-inline: auto;
+  padding-block: 32px;
 }
 
 .page-hero {
@@ -318,7 +307,7 @@ tbody th {
 
 @media (max-width: 760px) {
   .win-rates-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .page-hero {

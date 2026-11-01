@@ -1,5 +1,5 @@
 @if (guide(); as currentGuide) {
-  <article class="detail-page">
+  <article class="detail-page page-container">
     <nav class="breadcrumb" aria-label="Breadcrumb">
       <a routerLink="/strategist-guides">Strategist guides</a>
       <span aria-hidden="true">/</span>
@@ -147,7 +147,7 @@
     }
   </article>
 } @else {
-  <section class="not-found">
+  <section class="not-found page-container">
     <h1>This strategist lesson is not in the field manual.</h1>
     <a routerLink="/strategist-guides">Return to strategist guides</a>
   </section>

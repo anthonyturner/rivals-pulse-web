@@ -4,7 +4,7 @@
 
 .guides-page {
   min-height: 100%;
-  padding: 32px;
+  padding-block: 32px;
 }
 
 .guides-hero,
@@ -12,11 +12,6 @@
 .group-heading p {
   color: var(--text-soft);
   line-height: 1.52;
-}
-
-.guide-grid {
-  width: min(1220px, 100%);
-  margin: 0 auto;
 }
 
 .guides-hero {
@@ -120,6 +115,6 @@ h2 {
 
 @media (max-width: 600px) {
   .guides-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 }
