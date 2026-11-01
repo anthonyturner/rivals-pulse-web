@@ -718,8 +718,8 @@ action, never a broad table grant.
   `recorder_id` because the app has no website session (the website's `unlink_player()` is keyed on `auth.uid()`).
   Answers `200 { "linked": false, "unlinked": true }`, or `unlinked: false` when there was no link (unlinking is
   idempotent), and `429` past 10 calls an hour. Afterwards the website reads "not linked" for that account and the
-  header shows "Account". The website account itself is untouched, and a link code the app issued earlier and not yet
-  used stays valid until it expires.
+  header shows "Account". The website account itself is untouched. A link code the recorder issued and has not yet
+  used is deleted in the same call, so it cannot be typed afterwards.
 - Rate limiting is `take_link_app_call(kind, recorder, limit)`, the same counting as `issue_link_code` over
   `link_issue_window()` with one `link_attempt_log` kind per function (`refresh`, `status`, `unlink`). A refused call is not logged. The purge
   ages out every kind except `redeem_failed` by the hour window, so a new kind needs no purge change.

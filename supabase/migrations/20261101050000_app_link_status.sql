@@ -1,4 +1,4 @@
--- Lets the desktop app see and remove its website link (issue 343). Additive: it builds on
+-- Lets the desktop app see and remove its website link. Additive: it builds on
 -- 20261101020000_player_links.sql and 20261101040000_refresh_linked_player.sql and touches no object
 -- the overlay calls. Both functions are for the service role only; the `link-status` and
 -- `unlink-player-app` Edge Functions call them after confirming the Overwolf session, so
@@ -46,7 +46,8 @@ $$;
 
 -- Removes the link held by p_recorder_id. Returns {"status":"unlinked"}, {"status":"not_linked"}
 -- (nothing to remove) or {"status":"rate_limited","retryAfter":seconds}. Afterwards the website
--- reads "not linked" for that account, exactly as after unlink_player().
+-- reads "not linked" for that account, exactly as after unlink_player(). A code the recorder has
+-- issued and not yet used is deleted too, so it cannot be typed after the player chose to unlink.
 create or replace function public.unlink_player_for_recorder(
   p_recorder_id text,
   p_limit integer
@@ -65,6 +66,7 @@ begin
   -- The same lock redeem_link_code takes, so an unlink never lands halfway through a re-link.
   perform pg_advisory_xact_lock(hashtextextended('recorder:' || p_recorder_id, 0));
 
+  delete from public.link_codes where recorder_id = p_recorder_id;
   delete from public.player_links where recorder_id = p_recorder_id;
 
   if not found then

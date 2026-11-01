@@ -150,7 +150,7 @@ begin
   end if;
   raise notice 'ok: the purge sweeps refresh rows past the hour and keeps the rest';
 
-  -- Issue 343. The status names the player and the link date, and nothing about the account.
+  -- The status names the player and the link date, and nothing about the account.
   set local role service_role;
   answer := public.link_status_for_recorder('check-app-recorder-b', 10);
   reset role;
@@ -186,16 +186,22 @@ begin
   if seen <> 2 then
     raise exception 'check failed: % status rows are logged, expected 2', seen;
   end if;
+  -- Recorder B has one status row and one refresh row by now. A refresh limit of 2 allows the call
+  -- only if the two kinds are counted apart: counted together they would already be at the limit.
   set local role service_role;
-  perform public.link_status_for_recorder('check-app-recorder-b', 1);
-  answer := public.refresh_linked_player('check-app-recorder-b', 'Bram', null, 3);
+  answer := public.refresh_linked_player('check-app-recorder-b', 'Bram', null, 2);
   reset role;
   if answer ->> 'status' <> 'refreshed' then
     raise exception 'check failed: status calls used up the refresh limit (%)', answer;
   end if;
   raise notice 'ok: status calls are rate limited on their own';
 
-  -- Unlinking removes the recorder's link and only that one, and leaves the website account.
+  -- Unlinking removes the recorder's link and only that one, and leaves the website account. A code
+  -- the recorder had issued and not used goes with it; another recorder's code stays.
+  insert into public.link_codes (recorder_id, code_hash, player_uid, player_name, expires_at)
+  values
+    ('check-app-recorder-b', 'check-app-hash-b', 'uid-b', 'Bram', now() + interval '10 minutes'),
+    ('check-app-recorder-a', 'check-app-hash-a', 'uid-a', 'Aurora', now() + interval '10 minutes');
   set local role service_role;
   answer := public.unlink_player_for_recorder('check-app-recorder-b', 10);
   reset role;
@@ -211,7 +217,13 @@ begin
   if not exists (select 1 from auth.users where id = account_b) then
     raise exception 'check failed: unlinking deleted the website account';
   end if;
-  raise notice 'ok: unlinking removes only that recorder''s link and leaves the account';
+  if exists (select 1 from public.link_codes where recorder_id = 'check-app-recorder-b') then
+    raise exception 'check failed: the unused code survived the unlink';
+  end if;
+  if not exists (select 1 from public.link_codes where recorder_id = 'check-app-recorder-a') then
+    raise exception 'check failed: unlinking one recorder removed another''s code';
+  end if;
+  raise notice 'ok: unlinking removes only that recorder''s link and unused code and leaves the account';
 
   -- The account behind it now reads no link, as after the website's own unlink_player().
   perform set_config('request.jwt.claims', json_build_object('sub', account_b, 'role', 'authenticated')::text, true);
