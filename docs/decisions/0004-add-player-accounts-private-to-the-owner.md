@@ -5,7 +5,9 @@
 - **Deciders:** Anthony (maintainer). He settled the four decisions marked
   "settled" under **Decision** on 2026-11-01. Everything else here is proposed
   from the facts below and waits for his confirmation, which is why the status
-  is Proposed.
+  is Proposed. Decision 9 and the items marked "defaults" were adopted by the
+  orchestrator after the engineering refinement of #263 and can be overridden
+  by him.
 - **Related:** epic #151; this issue #262; children #263 (sign-up and account
   page), #264 (link code), #265 (privacy policy), #266 (dashboard), #267 (live
   status), #268 (guides). Also #122 (per-uid read function), #100 (frozen
@@ -76,6 +78,13 @@ to also be forgotten by the match database.
   who may read which row) stays strict on every table.
 - `npm run check:browser-bundle` fails the build if `@supabase/supabase-js`
   reaches the browser (`scripts/check-browser-bundle.mjs`).
+- Production renders in the browser: `vercel.json` sends every page to
+  `index.csr.html`, so `curl` of a page returns an empty `<app-root>`. (The
+  architecture and tech-stack docs say pages are server-rendered; #263a fixes
+  them.) The API accepts only GET today and caches answers for five minutes
+  (`s-maxage=300`), so a per-user answer must opt out of caching.
+- `releasedPageGuard` and `SHOW_UNRELEASED_PAGES` already hide unfinished pages
+  in production.
 
 **Why doing nothing is not an option.** The epic's goal is a way for a player
 to review their own play and follow a live match without the overlay open. That
@@ -131,6 +140,8 @@ us to store: never an opponent's ultimate data, never another player's damage,
 healing or accuracy. The server, not the overlay, enforces the opt-in: an
 update for an account whose setting is off is refused and not stored. The
 finished match still reaches the site through the normal after-match upload.
+The dashboard receives live status by polling, not by a browser Realtime
+connection (decision 9; default).
 
 **5. How the dashboard gets per-player data, and what that implies.** The
 dashboard reads the owner's matches from the existing upload stores, through a
@@ -185,8 +196,9 @@ behind a confirmation, after the player has signed in again recently.
   and stops later uploads storing them. This is not undoable without us removing
   the `do_not_store` entry by hand, and counts already frozen into past
   half-seasons keep their contribution. The wording must say both. The choice is
-  offered only to an account that is linked (an unlinked account has nothing to
-  forget).
+  for an account that is linked (an unlinked account has nothing to forget).
+  Until the link exists (#264) the button is shown disabled with "available once
+  you link the desktop app" (default).
 
 The forget step runs first and can safely be repeated. The account is deleted
 only after it succeeded, so a failure never leaves stored data with no way to
@@ -199,6 +211,25 @@ match ends, the owner switches it off, or a short expiry passes, whichever is
 first. The 5,000-match and six-month limits on linked history are the existing
 ones (decision 5); this ADR does not lengthen them.
 
+**9. Session model and release gate (adopted after the #263 refinement).**
+
+- The login session is held on our server, in an `HttpOnly; Secure;
+  SameSite=Lax; Path=/api` cookie. The browser calls `/api/auth/*` and
+  `/api/account/*` handlers, written once, runtime-neutral, and mounted in both
+  Express and the Vercel function. Each request builds its own Supabase client
+  from the publishable key with the user's session (PKCE sign-in flow), so RLS
+  is the real guard. The service-role key is used only for account deletion.
+- The browser gets no `@supabase/supabase-js`; `scripts/check-browser-bundle.mjs`
+  stays unchanged. Every auth and account answer carries `Cache-Control:
+  private, no-store`, and every POST checks the `Origin` header against forged
+  requests.
+- Live status uses polling, not Supabase Realtime in the browser (that would
+  need the browser client).
+- The auth UI ships behind the existing `SHOW_UNRELEASED_PAGES` /
+  `releasedPageGuard` gate until the privacy update (#265) lands.
+- Discord sign-in is allowed on production and localhost only; no wildcard for
+  preview deployments.
+
 ## Alternatives considered
 
 - **Build our own users table and passwords.** Rejected: we would hold password
@@ -210,6 +241,12 @@ ones (decision 5); this ADR does not lengthen them.
 - **Discord only, or email only.** Rejected by the maintainer's decision to
   offer both: Discord-only shuts out players without it, and email-only drops
   the one-click path.
+- **Browser `supabase-js` with the session in `localStorage`** (the path
+  Supabase documents). Rejected: it breaks the CI rule that keeps Supabase out of
+  the browser, and any script on the page can read the tokens.
+- **`@supabase/ssr` with a cookie scripts can read.** Rejected: a new
+  dependency (rule 6), the token stays readable by scripts, and production is
+  browser-rendered, so its main benefit does not apply.
 - **Identify the player by typing their in-game name.** Rejected: the name is an
   unverified claim (overlay issue 388), so anyone could take another player's
   history. Only the overlay holds a verified session, so only it can prove
@@ -279,9 +316,18 @@ ones (decision 5); this ADR does not lengthen them.
   months; older matches show the basic line only.
 - Friends-ready costs a little now: an owner id on every row and one read gate
   per data kind, even though only the owner reads.
-- Client-side Supabase Auth would put `@supabase/supabase-js` in the browser,
-  which `check:browser-bundle` forbids. #263 must either route auth through the
-  server or change that guard on purpose, with the secret-key checks kept.
+- The server session costs more server code: handlers, an Origin check on
+  every POST, and a session cookie that must stay under 4 KB. A cached answer
+  could serve one user's session to another, so every auth answer must be
+  `no-store` and that needs a test. Supabase Auth rate-limits by IP and our
+  server is the single caller. Browser Realtime is ruled out, so live status
+  polls and lags by the polling interval.
+- Preview deployments share the live Supabase project, so a sign-up on a
+  preview creates a real production user; this is why Discord sign-in is not
+  allowed on previews.
+- Supabase, Discord and Vercel settings (redirect URLs, the Discord OAuth app,
+  environment variables) live in dashboards outside the repo and need the
+  maintainer.
 
 **What now has to be true**
 
@@ -308,8 +354,8 @@ owns it, which is where it gets answered.
    settings so either answer is cheap.
 2. **History retention beyond six months** (#266 for the data, #265 for the
    wording). Today the depth is whatever the stores keep (decision 5).
-3. **Realtime or polling for live status** (#267), including what a heartbeat
-   stores and how it is purged.
+3. **What a live-status heartbeat stores and how it is purged** (#267).
+   Realtime versus polling is decided: polling (decision 9).
 4. **Whether the dashboard, or live status, depends on Premium** (#266, #267).
 5. **Avatar and level through Rivalstracker (`MarvelRivalsPlayerService`).**
    Deferred by the maintainer. No child owns it; it needs its own issue and, if
@@ -326,15 +372,16 @@ block (#263); code lifetime, attempt limits and a changed Overwolf identity
 
 **Found while writing this ADR.** Facts, not decisions, for the owning child:
 
-- a. `forget_player` and the upload path skip `tracked_matches` and `players`
-  (#263 ships the forget path and must cover them, or file a follow-up first).
+- a. `forget_player` and the upload path skip `tracked_matches` and `players`.
+  The forget button stays disabled until #264, which must cover them.
 - b. No store ties a recorder's own match to the verified `recorded_by`, so
   attribution needs an additive change; matches uploaded before it may only be
   attributable by weaker evidence (#264, #266).
 - c. The policy says match details are deleted within six months, but
   `tracked_matches` has no age limit (only the 5,000 cap), and the policy does
   not describe its public reads (#265).
-- d. Browser bundle guard versus client-side Auth (#263).
+- d. Browser bundle guard versus client-side Auth: answered by decision 9
+  (server-held session, guard unchanged).
 - e. Whether an account that is never used expires (#265).
 
 ## Compliance
@@ -352,5 +399,8 @@ A reviewer checks a change against this ADR by looking for:
 - Both deletion choices exist, each with its confirmation, and "forget me" calls
   `forget_player` before the account is deleted.
 - No avatar, level or Discord handle appears on the dashboard.
+- `@supabase/supabase-js` is absent from the browser build, the session cookie is
+  `HttpOnly`, and auth and account answers are `private, no-store`.
+- Auth pages stay behind `releasedPageGuard` until #265 has landed.
 - The privacy policy change (#265) is merged before or with the first link (#264).
 - No secret value appears in the repo; credentials are named only.
