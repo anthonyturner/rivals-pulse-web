@@ -41,12 +41,12 @@ export class TeamBuilderPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   private readonly teamHeading = viewChild.required<ElementRef<HTMLElement>>('teamHeading');
+  private readonly poolHeading = viewChild.required<ElementRef<HTMLElement>>('poolHeading');
   private readonly removeButtons = viewChildren<ElementRef<HTMLButtonElement>>('removeButton');
 
   /** The roster: `undefined` until it has loaded, empty when it could not be loaded. */
   private readonly heroes = signal<Hero[] | undefined>(undefined);
 
-  /** One entry per player slot; a slot holds a hero or is empty. */
   private readonly team = signal<(Hero | undefined)[]>(Array.from({ length: TEAM_SIZE }));
 
   protected readonly announcement = signal('');
@@ -91,7 +91,6 @@ export class TeamBuilderPageComponent implements OnInit {
     });
   });
 
-  /** The reading of the team, or null while it is empty. */
   protected readonly summary = computed(() => (this.isEmpty() ? null : this.engine.analyzeTeam(this.chosen())));
 
   protected readonly signalRows = computed(() => {
@@ -113,6 +112,7 @@ export class TeamBuilderPageComponent implements OnInit {
   protected reload(): void {
     this.heroes.set(undefined);
     this.loadHeroes();
+    afterNextRender(() => this.poolHeading().nativeElement.focus(), { injector: this.injector });
   }
 
   /** Adds the hero to the first empty slot, or takes it out of the team when it is already in. */
@@ -169,11 +169,16 @@ export class TeamBuilderPageComponent implements OnInit {
 
   /** Puts the hero in the slot, moving it there if it was already in the team. */
   private place(hero: Hero, slotIndex: number): void {
+    const replaced = this.team()[slotIndex];
+
     this.team.update((slots) =>
       slots.map((slot, index) => (index === slotIndex ? hero : slot?.id === hero.id ? undefined : slot)),
     );
+
+    const action = replaced && replaced.id !== hero.id ? `replaced ${replaced.name} in` : 'added to';
+
     this.announcement.set(
-      `${hero.name} added to P${slotIndex + 1}. ${this.chosenLabel()}.${this.isFull() ? ' Team is full. Remove a hero to add another.' : ''}`,
+      `${hero.name} ${action} P${slotIndex + 1}. ${this.chosenLabel()}.${this.isFull() ? ' Team is full. Remove a hero to add another.' : ''}`,
     );
   }
 

@@ -141,6 +141,7 @@ h2:focus-visible,
 
 .pick:disabled {
   opacity: 0.55;
+  cursor: default;
 }
 
 .pick[aria-pressed='true'] > app-hero-tile {

@@ -48,9 +48,9 @@
           <ul class="signals">
             @for (row of signalRows(); track row.type) {
               <li>
-                <span>{{ row.type }}</span>
+                <span aria-hidden="true">{{ row.type }}</span>
                 <meter min="0" [max]="signalMax" [value]="row.value" [attr.aria-label]="row.label"></meter>
-                <strong>{{ row.value }}</strong>
+                <strong aria-hidden="true">{{ row.value }}</strong>
               </li>
             }
           </ul>
@@ -80,7 +80,7 @@
 
   <section class="pool" aria-labelledby="pool-title">
     <div class="bar">
-      <h2 id="pool-title">Heroes</h2>
+      <h2 #poolHeading id="pool-title" tabindex="-1">Heroes</h2>
       @if (isFull()) {
         <app-notice>Team is full. Remove a hero to add another.</app-notice>
       }

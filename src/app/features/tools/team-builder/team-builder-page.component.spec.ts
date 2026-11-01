@@ -126,6 +126,7 @@ describe('TeamBuilderPageComponent', () => {
 
       await press(root.querySelector('.pool app-state-panel .action') as HTMLElement);
       expect(text('.pool app-state-panel')).toContain('Loading heroes');
+      expect(document.activeElement).toBe(root.querySelector('#pool-title'));
 
       http.expectOne('/api/heroes').flush(roster);
       await fixture.whenStable();
@@ -189,6 +190,7 @@ describe('TeamBuilderPageComponent', () => {
       const labels = [...root.querySelectorAll('meter')].map((meter) => meter.getAttribute('aria-label'));
       expect(labels.length).toBe(5);
       expect(labels[0]).toMatch(/^Utility \d+ of 60$/);
+      expect(root.querySelectorAll('.signals li > [aria-hidden="true"]').length).toBe(10);
       expect(text('.notes')).toContain('Strengths');
       expect(text('.notes')).toContain('Risks');
     });
@@ -302,6 +304,15 @@ describe('TeamBuilderPageComponent', () => {
 
       expect(names()).toEqual(['Black Cat', '', 'Mantis', '', '', '']);
       expect(tile('Angela').getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('announces a replaced hero by name', async () => {
+      await open();
+      await pick('Angela');
+      dragTo(tile('Black Cat'), slots()[0]);
+      await fixture.whenStable();
+
+      expect(announcement()).toBe('Black Cat replaced Angela in P1. 1 of 6 chosen.');
     });
   });
 });
