@@ -28,7 +28,7 @@
 
     <section class="account-section" aria-labelledby="account-link-title">
       <h2 id="account-link-title" #linkHeading tabindex="-1">Link the desktop app</h2>
-      <p class="account-sr-only" role="status">{{ linkNotice() }}</p>
+      <p class="visually-hidden" role="status">{{ linkNotice() }}</p>
       @if (player(); as linked) {
         <p class="account-player">
           <app-player-avatar [name]="linked.name" [avatarUrl]="linked.avatarUrl" />

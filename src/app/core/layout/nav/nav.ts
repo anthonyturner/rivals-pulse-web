@@ -31,7 +31,12 @@ export class Nav {
     switch (state.status) {
       case 'signedIn':
         return state.player
-          ? { label: state.player.name, path: '/account', ariaLabel: `Account, ${state.player.name}`, player: state.player }
+          ? {
+              label: state.player.name,
+              path: '/account',
+              ariaLabel: `Account, ${state.player.name}`,
+              player: state.player,
+            }
           : { label: 'Account', path: '/account', ariaLabel: null, player: null };
       case 'signedOut':
       case 'unavailable':

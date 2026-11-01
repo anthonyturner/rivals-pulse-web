@@ -116,7 +116,10 @@ export class AccountPageComponent {
     }
   }
 
-  /** The focused button leaves the page when the link changes, so focus goes to the section heading and the change is announced. */
+  /**
+   * The focused button leaves the page when the link changes, so focus goes to the section heading
+   * and the change is announced.
+   */
   private announceLinkChange(message: string): void {
     this.linkNotice.set(message);
     this.linkHeading()?.nativeElement.focus();

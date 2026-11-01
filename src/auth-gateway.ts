@@ -336,7 +336,9 @@ function failedLinkRead(reason: string | number): null {
 }
 
 function linkedPlayerOf(rows: unknown): LinkedPlayer | null {
-  const row = Array.isArray(rows) ? (rows[0] as { player_name?: unknown; avatar_url?: unknown } | undefined) : undefined;
+  const row = Array.isArray(rows)
+    ? (rows[0] as { player_name?: unknown; avatar_url?: unknown } | undefined)
+    : undefined;
 
   return typeof row?.player_name === 'string' && row.player_name
     ? { name: row.player_name, avatarUrl: typeof row.avatar_url === 'string' && row.avatar_url ? row.avatar_url : null }
