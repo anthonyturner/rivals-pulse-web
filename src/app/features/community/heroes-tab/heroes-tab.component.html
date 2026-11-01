@@ -28,3 +28,32 @@
     </p>
   }
 </app-community-summary>
+
+@let figuresCurrent = figuresView();
+
+<app-community-summary
+  class="heroes-tab__figures"
+  [kind]="figuresCurrent.kind"
+  heading="Community hero damage, healing and damage blocked"
+  subject="Community hero damage, healing and damage blocked per minute"
+  [summary]="figuresCurrent.kind === 'not-enough-data' ? figuresCurrent.summary : ''"
+  [halfSeasonLabel]="figuresCurrent.kind === 'ready' ? figuresCurrent.halfSeasonLabel : null"
+  [notice]="figuresCurrent.kind === 'ready' ? figuresCurrent.notice : null"
+>
+  @if (figuresCurrent.kind === 'ready') {
+    <div class="heroes-tab__lists">
+      @for (group of figuresCurrent.groups; track group.key) {
+        <section class="heroes-tab__list" [attr.aria-labelledby]="'heroes-tab-figure-' + group.key">
+          <h3 [id]="'heroes-tab-figure-' + group.key" class="heroes-tab__list-title">{{ group.title }}</h3>
+          <app-community-hero-list [heroes]="group.heroes" [figureLabel]="group.figureLabel" />
+        </section>
+      }
+    </div>
+    <p class="heroes-tab__sample">
+      Per minute played, to the nearest whole number, from Quick Match and Competitive. These are the
+      figures of the players who upload their matches with Rivals Pulse: each app only knows its own
+      player, so they describe those players, not everyone in a lobby. Only heroes with enough lines
+      are listed.
+    </p>
+  }
+</app-community-summary>

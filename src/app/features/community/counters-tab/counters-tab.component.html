@@ -29,3 +29,35 @@
     </p>
   }
 </app-community-summary>
+
+@let killFeed = killFeedView();
+
+<app-community-summary
+  class="counters-tab__kill-feed"
+  [kind]="killFeed.kind"
+  heading="Community kill feed: most seen kills"
+  subject="Community kill-feed counters"
+  [summary]="killFeed.kind === 'not-enough-data' ? killFeed.summary : ''"
+  [halfSeasonLabel]="killFeed.kind === 'ready' ? killFeed.halfSeasonLabel : null"
+  [notice]="killFeed.kind === 'ready' ? killFeed.notice : null"
+>
+  @if (killFeed.kind === 'ready') {
+    <ol class="counters-tab__records">
+      @for (pair of killFeed.pairs; track pair.key) {
+        <li class="counters-tab__record" [attr.title]="pair.description">
+          <span class="counters-tab__hero">
+            <img class="counters-tab__image" [src]="pair.killer.imageUrl" alt="" width="40" height="40" loading="lazy" (error)="onImageError($event)" />
+            <span class="counters-tab__name">{{ pair.killer.name }}</span>
+          </span>&ngsp;<span class="counters-tab__verb">was seen killing</span>&ngsp;<span class="counters-tab__hero">
+            <img class="counters-tab__image" [src]="pair.victim.imageUrl" alt="" width="40" height="40" loading="lazy" (error)="onImageError($event)" />
+            <span class="counters-tab__name">{{ pair.victim.name }}</span>
+          </span>&ngsp;<span class="counters-tab__figure">{{ pair.band }}</span>
+        </li>
+      }
+    </ol>
+    <p class="counters-tab__note">
+      A separate measure from the matchup records above. {{ killFeedCaveat }} Each hero's own best
+      pairs are on its page under Heroes.
+    </p>
+  }
+</app-community-summary>

@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import type { RoleStats, RoleStatsRole } from '../../../../contracts/role-stats.model';
+import { emptyFigures, figuresOf } from '../../insights/community-extended.fixtures';
 import { StatsTabComponent } from './stats-tab.component';
 
 function role(name: RoleStatsRole['role'], extra: Partial<RoleStatsRole> = {}): RoleStatsRole {
@@ -55,6 +56,13 @@ const READY: RoleStats = {
   ],
 };
 
+const FIGURES_READY = figuresOf(
+  { Vanguard: { damage: 1234, healing: 0, blocked: 4821 }, Duelist: { damage: 987 } },
+  [],
+  {},
+  { competitive: { roles: [{ role: 'Vanguard', damage: 1500, healing: null, blocked: null }], heroes: [] } },
+);
+
 const NOT_ENOUGH: RoleStats = {
   ...READY,
   status: 'not-enough-data',
@@ -68,10 +76,11 @@ describe('StatsTabComponent', () => {
   const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const text = (): string => host().textContent ?? '';
 
-  async function answer(body: unknown, status = 200): Promise<void> {
+  async function answer(body: unknown, status = 200, figures: unknown = FIGURES_READY): Promise<void> {
     http
       .expectOne('/api/community/stats')
       .flush(body as object, { status, statusText: status === 200 ? 'OK' : 'Server Error' });
+    http.expectOne('/api/community/figures').flush(figures as object);
     await fixture.whenStable();
     fixture.detectChanges();
   }
@@ -91,6 +100,7 @@ describe('StatsTabComponent', () => {
   it('says it is loading while the request runs', () => {
     expect(host().querySelector('[role="status"]')?.textContent).toContain('Loading');
     http.expectOne('/api/community/stats').flush(READY);
+    http.expectOne('/api/community/figures').flush(FIGURES_READY);
   });
 
   it("shows each role's figures for the blended modes first", async () => {
@@ -161,5 +171,63 @@ describe('StatsTabComponent', () => {
 
     expect(text()).toContain('cannot be loaded right now');
     expect(host().querySelector('.empty-state')).toBeNull();
+  });
+
+  describe('damage, healing and damage blocked per minute', () => {
+    const figuresPanel = (): HTMLElement => host().querySelector('app-community-role-figures') as HTMLElement;
+    const cells = (): string[] =>
+      Array.from(figuresPanel().querySelectorAll('tbody tr')).map((row) =>
+        Array.from(row.children)
+          .map((cell) => cell.textContent?.trim())
+          .join(' '),
+      );
+
+    it('shows a row per role with whole numbers, and "Not enough data" for a figure that is not shown', async () => {
+      await answer(READY);
+
+      expect(figuresPanel().textContent).toContain('Damage, healing and damage blocked per minute');
+      expect(cells()).toEqual([
+        'Vanguard 1,234 0 4,821',
+        'Duelist 987 Not enough data Not enough data',
+        'Strategist Not enough data Not enough data Not enough data',
+      ]);
+      expect(figuresPanel().querySelector('table caption')).toBeTruthy();
+      expect(figuresPanel().querySelectorAll('th[scope="col"]').length).toBe(4);
+      expect(figuresPanel().textContent).toContain('describes those players, not everyone in a lobby');
+      expect(figuresPanel().textContent).not.toMatch(/NaN|undefined|null/);
+    });
+
+    it('follows the mode chosen for the role figures above it', async () => {
+      await answer(READY);
+
+      host().querySelectorAll<HTMLButtonElement>('.stats-tab__mode')[1].click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(cells()[0]).toBe('Vanguard 1,500 Not enough data Not enough data');
+    });
+
+    it('shows its own designed empty state, naming the minimum, while the role benchmarks are ready', async () => {
+      await answer(READY, 200, emptyFigures());
+
+      expect(host().querySelectorAll('.stats-tab__role').length).toBe(3);
+      expect(figuresPanel().querySelector('.empty-state')).toBeTruthy();
+      expect(figuresPanel().textContent).toContain('Not enough data yet');
+      expect(figuresPanel().textContent).toContain('50 lines');
+      expect(figuresPanel().querySelector('table')).toBeNull();
+    });
+
+    it('shows its empty state under the role benchmarks empty state, each with its own minimum', async () => {
+      await answer(NOT_ENOUGH, 200, emptyFigures());
+
+      expect(host().querySelectorAll('.empty-state').length).toBe(2);
+    });
+
+    it('says only itself cannot be loaded when its request fails', async () => {
+      await answer(READY, 200, 'down');
+
+      expect(host().querySelectorAll('.stats-tab__role').length).toBe(3);
+      expect(figuresPanel().textContent).toContain('cannot be loaded right now');
+    });
   });
 });

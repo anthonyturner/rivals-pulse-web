@@ -70,6 +70,7 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
+| `20261031060000_extended_aggregates_gate.sql` | The recorder gate for the extended aggregates: recorder counts on `hero_figure_aggregates` (per figure) and `hero_kill_aggregates`, a restated `fill_extended_aggregates` that fills them, and `read_community_hero_figures()` and `read_community_kill_feed()` (service role only) |
 
 Link once per machine, check history, then apply:
 
@@ -337,9 +338,11 @@ What the numbers mean, so a reader does not over-read them:
   uploader's view is the one stored. `hero_kill_aggregates` counts those seen kills; `matches` is how
   many stored feeds had the pair and `hero_kill_totals.matches` is how many feeds there were.
 - **Per minute** is `sum * 60 / seconds` using the `*_seconds` beside each sum (the time in exactly
-  the segments that had that figure), never `seconds_sum`. Every `_n` is the count of segments with
-  that figure, so a figure absent from older apps is not averaged as zero. No minimum sample is
-  applied here; the code that shows a number applies its own.
+  the segments that had that figure and a time played above zero), never `seconds_sum`. Every `_n` is
+  the count of those segments, so a figure absent from older apps is not averaged as zero. Since
+  `20261031060000` a segment with a figure but no usable time is in none of the three; before, it
+  added to the sum and not to the seconds. No minimum sample is applied in the database; the code
+  that shows a number applies its own (see "Extended aggregates: the recorder gate" below).
 - `play_mode_id` is the match's mode, -1 when the game did not say, as in `hero_aggregates`.
 
 Recompute and freeze, like the hero aggregates: `recompute_extended_aggregates()` (hourly job
@@ -552,6 +555,53 @@ select md5(string_agg(r, '|' order by r)) as checksum from (
   union all select 'd' || to_jsonb(a)::text from public.community_day_aggregates a
 ) t;
 ```
+
+## Extended aggregates: the recorder gate (Community Stats, Heroes and Counters tabs)
+
+Issue 178. Per-minute figures and kill-feed counters describe the people who upload, so with a few
+uploaders a hero's damage per minute is one person's own stats. Epic 170's rule therefore applies:
+a bucket is public only with at least 3 distinct recorders and no recorder above 50% of it
+(`community_bucket_shown`, from the community match aggregates). The gate is applied in the
+database, so a hidden bucket never leaves it.
+
+- **Columns.** `hero_figure_aggregates` gains, per figure, `damage_recorders` and
+  `damage_top_recorder_n` (and the same for `healing` and `blocked`): the distinct recorders whose
+  segments carried that figure with a time played, and the segments of the busiest one.
+  `hero_kill_aggregates` gains `recorders` and `top_recorder_matches`. All are `not null default 0`, so
+  a row that existed before the migration, a frozen one included, reads as hidden.
+- **Whose figures a segment is.** The `uid` of the `participants` line it hangs off, not `recorded_by`
+  (which is whoever uploaded the match first). Counts only are stored.
+- **Whose kill feed a pair is.** A feed is stored once per match with no recorder on it. Its recorder
+  is the player whose hero figures were written in the same `record_match_extras` call (same
+  transaction, same `recorded_at`). A feed with no such figures has an unknown recorder, who may
+  already be counted, so it is never a recorder of its own: only attributed recorders are counted
+  and every unattributed feed is charged to the busiest one. The gate can only err toward hiding, and
+  a pair whose feeds are all unattributed has 0 recorders and stays hidden.
+- `fill_extended_aggregates(numeric)` is restated with the same signature; `purge_expired_participants`,
+  `record_match_participants` and `record_match_extras` are not touched.
+- **Reads.** `read_community_hero_figures()` returns each hero's figures per half-season and mode.
+  A figure whose own recorder gate fails is sent as zero lines, zero sum and zero seconds (the
+  website reads that as "not enough data"), and a hero with no figure passing is absent. Gating is
+  per hero and per figure; a role is the sum of its shown heroes, which keeps at least 3 recorders
+  and no recorder above half. `read_community_kill_feed()` returns the pairs that pass. Both are
+  `security definer`, granted to `service_role` only, and return no recorder count, uid, name or
+  per-player row.
+- **App side.** [`src/community-extended-read.ts`](../src/community-extended-read.ts) is the only
+  reader. A missing function or table (`PGRST202`, `42883`, `42P01`) gives the empty state with HTTP
+  200; every other failure keeps its error status. Rates are derived in
+  [`src/community-figures.ts`](../src/community-figures.ts) (per minute is `sum * 60 / seconds`, a
+  role pooled from its heroes' sums, lines without the figure left out) and the kill-feed lists in
+  [`src/community-kills.ts`](../src/community-kills.ts).
+- **No exact counts leave the server.** `GET /api/community/figures` returns whole per-minute
+  numbers per role and per hero and no line, second or player count; `GET /api/community/kills`
+  returns each pair as a volume band (`KILL_VOLUME_BANDS`, such as 25 for "25+ seen kills"), ordered by
+  seen kills, and only each hero's best five pairs as killer and as victim. Both take the optional
+  `halfSeason` query value. Minimums: 50 lines carrying the figure for a role, 10 for a hero, and a
+  pair in 10 stored feeds, each on top of the database's 3 recorders.
+- Kill-feed counters are "seen kills": the recorder's client only sees part of the feed, so they
+  are a descriptive measure apart from the matchup win rates.
+
+After applying the migration, check it with SELECT only (see the pull request that added it).
 
 ## Each half-season
 
