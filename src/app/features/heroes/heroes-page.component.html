@@ -1,23 +1,20 @@
-<section class="heroes-page">
+<section class="heroes-page page-container page-container--wide">
+  <app-hero-page-header></app-hero-page-header>
+
   <app-hero-grid
     [heroes]="filteredHeroes()"
     [roles]="roles"
     [selectedRole]="selectedRole()"
-    [selectedHeroId]="selectedHero()?.id ?? ''"
+    [selectedHeroId]="activeHeroId()"
     [searchTerm]="searchTerm()"
     [gridMode]="heroGridMode()"
+    [loading]="!isRosterLoaded()"
     (roleSelected)="selectRole($event)"
     (searchChanged)="updateSearchTerm($event)"
     (gridModeSelected)="selectHeroGridMode($event)"
     (heroSelected)="selectHero($event)"
     (filtersReset)="resetHeroFilters()"
   ></app-hero-grid>
-
-  <app-hero-page-header
-    [hero]="selectedHero()"
-    [visibleCount]="filteredHeroes().length"
-    [selectedRole]="selectedRole()"
-  ></app-hero-page-header>
 
   <app-hero-content
     [hero]="selectedHero()"
@@ -26,6 +23,7 @@
     [youtubeUrl]="selectedHeroYoutubeUrl()"
     [controller]="detailsController"
     (profileOpened)="openHeroDetailModal()"
+    (rosterReturned)="returnToRoster()"
   ></app-hero-content>
 
   @if (isHeroDetailModalOpen() && selectedHero(); as hero) {

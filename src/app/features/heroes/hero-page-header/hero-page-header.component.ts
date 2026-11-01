@@ -1,23 +1,9 @@
-import { Component, Input } from '@angular/core';
-
-import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
-import { HeroRoleFilter } from '../hero-grid/hero-grid.component';
-import { Hero } from '../hero.model';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'app-hero-page-header',
-  imports: [EyebrowComponent],
   templateUrl: './hero-page-header.component.html',
   styleUrl: './hero-page-header.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HeroPageHeaderComponent {
-  @Input() hero?: Hero;
-  @Input({ required: true }) visibleCount = 0;
-  @Input({ required: true }) selectedRole: HeroRoleFilter = 'All';
-
-  readonly difficultyPips = [1, 2, 3, 4, 5];
-
-  get countLabel(): string {
-    return this.selectedRole === 'All' ? 'heroes' : this.selectedRole;
-  }
-}
+export class HeroPageHeaderComponent {}

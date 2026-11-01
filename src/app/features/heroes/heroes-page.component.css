@@ -6,34 +6,5 @@
 
 .heroes-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-app-hero-grid {
-  margin-bottom: 1rem !important;
-}
-
-app-hero-page-header,
-app-hero-grid,
-app-hero-content {
-  width: 100%;
-  margin: 0 auto;
-}
-
-app-hero-grid,
-app-hero-content {
-  display: block;
-  min-width: 0;
-}
-
-@media (max-width: 920px) {
-  .heroes-page {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 560px) {
-  .heroes-page {
-    padding: var(--mobile-page-gutter);
-  }
+  padding-bottom: 40px;
 }
