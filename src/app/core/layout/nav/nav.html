@@ -16,8 +16,16 @@
     }
     }
     @if (accountLink(); as link) {
-    <a class="nav-link" [routerLink]="link.path" routerLinkActive="active" (click)="closeMenu()">
+    <a class="nav-link" [routerLink]="link.path" routerLinkActive="active" [attr.aria-label]="link.ariaLabel"
+        [attr.title]="link.player ? link.label : null" (click)="closeMenu()">
+        @if (link.player; as player) {
+        <span class="nav-player">
+            <app-player-avatar [name]="player.name" [avatarUrl]="player.avatarUrl" />
+            <span class="nav-player-name">{{ link.label }}</span>
+        </span>
+        } @else {
         {{ link.label }}
+        }
     </a>
     }
 </nav>

@@ -109,9 +109,17 @@ valued, in the repo. Discord community server: https://discord.gg/TtGh6btTr.
 - *The link* to an in-game identity, kept apart from the settings so the
   question of one or several identities (open question 1) stays cheap.
 
-An account stores no copy of match data, no avatar and no level (settled), and
-we do not read the Discord avatar or handle for display. The dashboard shows the
-in-game name only (settled).
+An account stores no copy of match data and no level (settled), and we do not
+read the Discord avatar or handle for display. The dashboard shows the in-game
+name only (settled).
+
+*Amended 2026-11-01 (maintainer decision, issue 264).* The link now also holds
+the in-game name, uid and the Overwolf account avatar address that the desktop
+app reports when it issues the code, and the site shows the name and avatar in
+the header and on the account page, to the owner only. The avatar is stored only
+if it is an `https` address on an allow-listed Overwolf host. Level is still not
+stored or shown: the overlay has no source for it. The Discord avatar and handle
+are still not read.
 
 **3. Ownership is proven, never typed.** A link is made only from the overlay's
 verified Overwolf session, through the one-time code in #264. A name or uid
@@ -404,7 +412,9 @@ A reviewer checks a change against this ADR by looking for:
   update with the setting off stores nothing.
 - Both deletion choices exist, each with its confirmation, and "forget me" calls
   `forget_player` before the account is deleted.
-- No avatar, level or Discord handle appears on the dashboard.
+- No level and no Discord avatar or handle appears anywhere on the site. The only
+  avatar is the Overwolf account avatar the desktop app reported, stored only when
+  it is an `https` address on the allow-list (amended 2026-11-01).
 - `@supabase/supabase-js` is absent from the browser build, the session cookie is
   `HttpOnly`, and auth and account answers are `private, no-store`.
 - The website privacy page describes accounts, the sign-in cookie and deletion
