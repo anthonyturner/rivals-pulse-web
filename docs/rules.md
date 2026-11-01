@@ -76,7 +76,7 @@ optional.
 
 ## Project rules
 
-Rules specific to Rivals Pulse Coach. They carried over from the repository's
+Rules specific to RivalsPulse. They carried over from the repository's
 own `AGENTS.md` and `.github/copilot-instructions.md` when the playbook was
 installed, and bind as hard as the ones above.
 
