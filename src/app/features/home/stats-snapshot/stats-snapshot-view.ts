@@ -104,7 +104,7 @@ export function buildStatsSnapshotView(stats: HeroStats | null, identities: Hero
       ? countLabel(stats.matchesCounted, 'match', 'matches')
       : null;
   const counted =
-    matches === null ? 'From matches recorded by Rivals Pulse players. ' : `From ${matches} by Rivals Pulse players. `;
+    matches === null ? 'From matches recorded by RivalsPulse players. ' : `From ${matches} by RivalsPulse players. `;
   const eyebrow = [halfSeasonLabel, matches].filter((part) => part !== null).join(' · ');
 
   return {

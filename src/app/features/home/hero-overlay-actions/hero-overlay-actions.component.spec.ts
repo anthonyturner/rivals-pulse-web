@@ -48,7 +48,7 @@ describe('HeroOverlayActionsComponent', () => {
     const button = element.querySelector('app-get-app-button') as HTMLElement;
 
     expect(button).toBeTruthy();
-    expect(text(button)).toContain('Get Rivals Pulse on Overwolf');
+    expect(text(button)).toContain('Get RivalsPulse on Overwolf');
     expect(button.nextElementSibling).toBe(element.querySelector('a.cta-ghost'));
   });
 
@@ -59,7 +59,7 @@ describe('HeroOverlayActionsComponent', () => {
     expect(link.getAttribute('href')).toBe('/community');
   });
 
-  describe('the overlay FAQ note', () => {
+  describe('the FAQ note', () => {
     const note = (): HTMLElement => element.querySelector('.safety-note') as HTMLElement;
     const link = (): HTMLAnchorElement => element.querySelector('a.safety-link') as HTMLAnchorElement;
 
@@ -72,7 +72,7 @@ describe('HeroOverlayActionsComponent', () => {
       expect(link().tabIndex).toBe(0);
     });
 
-    it('answers the question without claiming the overlay is safe or ban-proof', () => {
+    it('answers the question without claiming the app is safe or ban-proof', () => {
       expect(text(note())).not.toMatch(/safe|ban-proof|endorsed|partnered/i);
     });
   });
@@ -97,7 +97,7 @@ describe('HeroOverlayActionsComponent', () => {
     it('is neutral, with no number, when the stats cannot be read', async () => {
       await answer({ unexpected: true });
 
-      expect(text(trustLine())).toBe('Counted from Rivals Pulse player uploads');
+      expect(text(trustLine())).toBe('Counted from RivalsPulse player uploads');
       expect(element.textContent).not.toMatch(/NaN|\b0 matches/);
     });
   });
@@ -121,7 +121,7 @@ describe('HeroOverlayActionsComponent', () => {
     it('stays next to the neutral line shown when the stats cannot be read', async () => {
       await answer({ unexpected: true });
 
-      expect(text(trustLine())).toBe('Counted from Rivals Pulse player uploads');
+      expect(text(trustLine())).toBe('Counted from RivalsPulse player uploads');
       expect(link()?.getAttribute('href')).toBe('/how-we-count');
     });
 

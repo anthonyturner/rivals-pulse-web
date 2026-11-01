@@ -62,8 +62,8 @@ describe('HeroCommunityStatsComponent server render', () => {
     );
 
     expect(html).toContain('Not enough data yet');
-    expect(html).toContain('No match recorded by Rivals Pulse players has Storm yet.');
-    expect(html).toContain('Rivals Pulse players');
+    expect(html).toContain('No match recorded by RivalsPulse players has Storm yet.');
+    expect(html).toContain('RivalsPulse players');
     expect(html).not.toMatch(/NaN|Infinity|<dl/);
   });
 });

@@ -19,9 +19,9 @@ describe('ClosingCtaComponent', () => {
   const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
   const discord = (): HTMLAnchorElement | null => element.querySelector('a[href^="https://"]');
 
-  it('is a dark band named "Get Rivals Pulse" with the shared get-app button', () => {
+  it('is a dark band named "Get RivalsPulse" with the shared get-app button', () => {
     expect(element.querySelector('section')?.classList).toContain('band--dark');
-    expect(text(element.querySelector('h2'))).toBe('Get Rivals Pulse');
+    expect(text(element.querySelector('h2'))).toBe('Get RivalsPulse');
     expect(element.querySelector('app-get-app-button button[aria-disabled="true"]')).toBeTruthy();
   });
 

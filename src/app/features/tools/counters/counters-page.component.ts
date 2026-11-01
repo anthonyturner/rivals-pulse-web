@@ -29,7 +29,7 @@ export class CountersPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly heroes = signal<Hero[]>([]);
 
-  /** Rivals Pulse player matchups: `undefined` while loading, `null` when unreadable. */
+  /** RivalsPulse player matchups: `undefined` while loading, `null` when unreadable. */
   readonly matchups = signal<HeroMatchups | null | undefined>(undefined);
 
   readonly roles: RoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist', 'Multi-Role'];
@@ -85,16 +85,16 @@ export class CountersPageComponent implements OnInit {
 
     switch (this.matchupState()) {
       case 'loading':
-        return { heading: 'Loading', message: 'Loading Rivals Pulse player matchups...' };
+        return { heading: 'Loading', message: 'Loading RivalsPulse player matchups...' };
       case 'unavailable':
         return {
           heading: 'Matchups unavailable',
-          message: 'Rivals Pulse player matchups cannot be loaded right now. The rest of this page is not affected.',
+          message: 'RivalsPulse player matchups cannot be loaded right now. The rest of this page is not affected.',
         };
       case 'empty':
         return {
           heading: 'Not enough data yet',
-          message: `No two heroes have faced each other in ${matchups?.minimumMatches} recorded matches yet. Matchups appear here as Rivals Pulse players record more matches.`,
+          message: `No two heroes have faced each other in ${matchups?.minimumMatches} recorded matches yet. Matchups appear here as RivalsPulse players record more matches.`,
         };
       default:
         return null;
