@@ -23,7 +23,10 @@ export interface OwnFigureLine {
 /** One match the player recorded, as `read_own_dashboard()` returns it; a blank is null. */
 export interface OwnDashboardLine {
   playedAt: string;
-  /** The hero at the end of the match; the game does not say which heroes were played before. */
+  /**
+   * Assumed to be the hero at the end of the match (not yet confirmed from a real upload); the game
+   * does not say which heroes were played before.
+   */
   heroId: number | null;
   kills: number | null;
   deaths: number | null;
