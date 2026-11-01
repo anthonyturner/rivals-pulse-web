@@ -5,8 +5,10 @@ import {
   readSessionTokens,
   serializePkceCookie,
   serializeSessionCookie,
+  type SessionTokens,
 } from './auth-cookies.js';
 import { AuthUnavailableError, type AuthGateway } from './auth-gateway.js';
+import { normalizeLinkCode } from './link-code.js';
 import {
   DELETION_MODES,
   isDeletionConfirmed,
@@ -49,7 +51,10 @@ const MAX_NEXT_LENGTH = 200;
 const NEXT_BASE = new URL('https://site.invalid');
 /** How recently the player must have signed in to delete an account (ADR-0004, decision 7). */
 const RECENT_SIGN_IN_SECONDS = 10 * 60;
-const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
+/** One message for a wrong, used or expired code, so the answer never says which one it was. */
+const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from the desktop app.';
+const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
+const DELETE_FAILED ='The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 export async function handleAccountRequest(
   request: AccountRequest,
@@ -88,6 +93,10 @@ async function route(request: AccountRequest, gateway: () => AuthGateway): Promi
       return method === 'POST' ? signOut(request, gateway) : methodNotAllowed();
     case 'account/delete':
       return method === 'POST' ? deleteAccount(request, gateway) : methodNotAllowed();
+    case 'account/link':
+      return method === 'POST' ? linkPlayer(request, gateway) : methodNotAllowed();
+    case 'account/unlink':
+      return method === 'POST' ? unlinkPlayer(request, gateway) : methodNotAllowed();
     default:
       return json(404, { error: 'API route not found' });
   }
@@ -106,13 +115,92 @@ async function readSession(request: AccountRequest, gateway: () => AuthGateway):
     return { ...json(200, { signedIn: false }), cookies: [clearSessionCookie()] };
   }
 
-  const refreshed =
-    resolved.tokens.accessToken !== tokens.accessToken || resolved.tokens.refreshToken !== tokens.refreshToken;
-
   return {
-    ...json(200, { signedIn: true, account: resolved.account }),
-    cookies: refreshed ? [serializeSessionCookie({ ...resolved.tokens, signedInAt: tokens.signedInAt })] : [],
+    ...json(200, {
+      signedIn: true,
+      account: resolved.account,
+      player: await gateway().linkedPlayer(resolved.tokens),
+    }),
+    cookies: refreshedCookies(tokens, resolved.tokens),
   };
+}
+
+/** The cookie to set when Supabase handed back new tokens, keeping the original sign-in time. */
+function refreshedCookies(original: SessionTokens, current: SessionTokens): string[] {
+  const refreshed = current.accessToken !== original.accessToken || current.refreshToken !== original.refreshToken;
+
+  return refreshed ? [serializeSessionCookie({ ...current, signedInAt: original.signedInAt })] : [];
+}
+
+/**
+ * Runs `act` for a signed-in visitor, with tokens Supabase has just confirmed (refreshed if they had
+ * expired, in which case the new cookie rides on the answer). Linking is a convenience, so a Supabase
+ * that cannot be reached is a 503 here and never signs anyone out.
+ */
+async function withSession(
+  request: AccountRequest,
+  gateway: () => AuthGateway,
+  signedOutMessage: string,
+  act: (tokens: SessionTokens) => Promise<AccountResponse>,
+): Promise<AccountResponse> {
+  const tokens = readSessionTokens(request.cookieHeader);
+
+  if (!tokens) {
+    return json(401, { error: signedOutMessage });
+  }
+
+  try {
+    const resolved = await gateway().resolve(tokens);
+
+    if (!resolved) {
+      return { ...json(401, { error: signedOutMessage }), cookies: [clearSessionCookie()] };
+    }
+
+    const response = await act(resolved.tokens);
+
+    return { ...response, cookies: [...response.cookies, ...refreshedCookies(tokens, resolved.tokens)] };
+  } catch (error) {
+    if (!(error instanceof AuthUnavailableError)) {
+      throw error;
+    }
+
+    console.warn('Linking request failed:', error.message);
+
+    return json(503, { error: LINK_UNAVAILABLE });
+  }
+}
+
+async function linkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  return withSession(request, gateway, 'Sign in to link the desktop app.', async (tokens) => {
+    const code = normalizeLinkCode((request.body as { code?: unknown } | undefined)?.code);
+
+    // A string that cannot be a code is no guess at one, so it costs the account no attempt.
+    if (!code) {
+      return json(400, { error: LINK_CODE_REFUSED });
+    }
+
+    const result = await gateway().redeemLinkCode(tokens, code);
+
+    switch (result.status) {
+      case 'linked':
+        return json(200, { player: result.player });
+      case 'invalid':
+        return json(400, { error: LINK_CODE_REFUSED });
+      case 'rate-limited':
+        return json(429, {
+          error: `Too many wrong codes. Try again in ${Math.ceil(result.retryAfterSeconds / 60)} minutes.`,
+          retryAfterSeconds: result.retryAfterSeconds,
+        });
+    }
+  });
+}
+
+async function unlinkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  return withSession(request, gateway, 'Sign in to unlink the desktop app.', async (tokens) => {
+    await gateway().unlinkPlayer(tokens);
+
+    return json(200, { player: null });
+  });
 }
 
 async function startDiscord(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {

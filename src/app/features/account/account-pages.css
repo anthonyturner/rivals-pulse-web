@@ -52,6 +52,19 @@ p {
   overflow-wrap: anywhere;
 }
 
+.account-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  --player-avatar-size: 40px;
+}
+
+.account-player-name {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
 .account-button {
   display: inline-grid;
   min-height: 42px;

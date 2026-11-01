@@ -26,6 +26,71 @@
       </p>
     </section>
 
+    <section class="account-section" aria-labelledby="account-link-title">
+      <h2 id="account-link-title">Link the desktop app</h2>
+      @if (player(); as linked) {
+        <p class="account-player">
+          <app-player-avatar [name]="linked.name" [avatarUrl]="linked.avatarUrl" />
+          <span>
+            Linked to <strong class="account-player-name">{{ linked.name }}</strong>
+          </span>
+        </p>
+        <p class="account-note">
+          Your in-game name and Overwolf avatar show here and in the site header, to you only.
+          Unlinking removes the link. To link a different player, get a new code from the desktop
+          app on that account.
+        </p>
+        @if (unlinkError(); as message) {
+          <p class="account-error" role="alert">{{ message }}</p>
+        }
+        <p>
+          <button class="account-button" type="button" [disabled]="unlinking()" (click)="unlinkPlayer()">
+            @if (unlinking()) {
+              Unlinking...
+            } @else {
+              Unlink
+            }
+          </button>
+        </p>
+      } @else {
+        <p>
+          Open the RivalsPulse desktop app, ask it for a link code, and type the code here. A code
+          works once and for ten minutes. Linking connects this account to your in-game player; the
+          site then shows your in-game name and Overwolf avatar, to you only.
+        </p>
+        <form (submit)="linkPlayer($event)">
+          <p>
+            <label class="account-field" for="link-code">Link code</label>
+            <input
+              id="link-code"
+              class="account-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="16"
+              placeholder="XXXX-XXXX"
+              [value]="linkCode()"
+              [disabled]="linking()"
+              (input)="onLinkCodeInput($event)"
+            />
+          </p>
+          @if (linkError(); as message) {
+            <p class="account-error" role="alert">{{ message }}</p>
+          }
+          <p>
+            <button class="account-button" type="submit" [disabled]="!canLink()">
+              @if (linking()) {
+                Linking...
+              } @else {
+                Link
+              }
+            </button>
+          </p>
+        </form>
+      }
+    </section>
+
     <section class="account-section" aria-labelledby="account-data-title">
       <h2 id="account-data-title">What we keep</h2>
       <p>

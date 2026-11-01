@@ -144,6 +144,18 @@ describe('PrivacyPageComponent', () => {
     expect(accounts.querySelector('a[href^="https://discord.gg/"]')).toBeNull();
   });
 
+  it('says what linking the desktop app stores, how long a code lives and how to undo it', () => {
+    const text = (section('accounts').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('Linking the desktop app');
+    expect(text).toContain('in-game name and id');
+    expect(text).toContain('Overwolf account avatar');
+    expect(text).toContain('cannot be turned back into it');
+    expect(text).toContain('expires after ten minutes');
+    expect(text).toContain('You can unlink at any time');
+    expect(text).not.toContain('An account is not linked to your in-game name');
+  });
+
   it('discloses Google AdSense in the summary and its own section', () => {
     const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
     const advertising = section('advertising');
