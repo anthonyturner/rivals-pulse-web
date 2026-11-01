@@ -109,7 +109,6 @@ describe('the hero pair migration', () => {
     it('runs as its owner and shows a rank bucket only when the recorder gate passes', () => {
       assert.match(reader, /security definer/);
       assert.match(reader, /public\.community_bucket_shown\(/);
-      assert.match(reader, /t\.rank_bucket >= 0/);
       assert.match(reader, /x\.rank_bucket < 0\s+or exists/);
     });
 
@@ -118,10 +117,22 @@ describe('the hero pair migration', () => {
       assert.match(reader, /having sum\(x\.decided_matches\) >= public\.hero_pair_min_matches\(\)/);
     });
 
-    it('gates on bounds that hold across modes: most recorders of one mode, sum of the busiest ones', () => {
-      assert.match(reader, /max\(t\.recorders\)/);
-      assert.match(reader, /sum\(t\.top_recorder_matches\)/);
+    it('gates each bucket of each mode on its own totals before summing, never on a combined figure', () => {
+      assert.match(reader, /t\.half_season = x\.half_season\s+and t\.play_mode_id = x\.play_mode_id\s+and t\.rank_bucket = x\.rank_bucket\s+and public\.community_bucket_shown\(t\.matches, t\.recorders, t\.top_recorder_matches\)/);
+      assert.doesNotMatch(reader, /(max|sum)\(t\./);
+      assert.doesNotMatch(reader, /with shown/);
     });
+
+    it('keeps its order, so a caller can page through the rows', () => {
+      assert.match(reader, /order by x\.half_season, x\.rank_bucket, x\.kind, x\.hero_id, x\.other_hero_id/);
+    });
+  });
+
+  it('checks the gate when it runs: a hidden fixture must not come back, and the fixtures are rolled back', () => {
+    assert.match(sql, /assert not one_recorder_returned/);
+    assert.match(sql, /assert both_modes_matches = 10/);
+    assert.match(sql, /raise exception 'roll back the gate fixtures' using errcode = 'P0042'/);
+    assert.match(sql, /when sqlstate 'P0042' then null;\s+when others then\s+raise warning/);
   });
 
   it('leaves the latest purge freezing every family, this one included, before it deletes anything', () => {

@@ -347,8 +347,8 @@ Recompute and freeze, like the hero aggregates: `recompute_extended_aggregates()
 `recompute-extended-aggregates`) rebuilds every half-season that still has raw rows and is not
 frozen. `purge_expired_participants()` calls `freeze_extended_aggregates()` after the hero
 aggregates' freeze and before its first delete, so the counts are kept when the raw rows go. **Any
-later migration that restates `purge_expired_participants` must keep both calls**; a test reads the
-latest definition and fails if either is gone or comes after a delete.
+later migration that restates `purge_expired_participants` must keep calling every freeze** (see
+[Hero pair aggregates](#hero-pair-aggregates)).
 
 ## Hero pair aggregates
 
@@ -379,12 +379,19 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   is) returns `half_season, rank_bucket, kind, hero_id, other_hero_id, decided_matches, decided_lines,
   wins`, summed over the modes asked for (default Quick Match and Competitive), with the minimum
   applied again to the sum. Rank bucket -1 is returned without a recorder gate, as `hero_matchups` is
-  today; a bucket of 0 or more only when `community_bucket_shown` passes, using the most recorders of
-  any one chosen mode and the sum of the busiest recorders (bounds that stay true across modes).
-  Recorder counts are never returned. It returns a set of rows, so a caller that reads more than
+  today; a bucket of 0 or more only from the (half-season, mode, bucket) rows whose own totals pass
+  `community_bucket_shown`, checked before the modes are summed: gating a combined figure would let a
+  caller subtract one list of modes from another and recover a hidden mode. Recorder counts are never
+  returned. It returns a set of rows, so a caller that reads more than
   1000 of them pages through the (stable) order with a range.
 - Once a rank source exists, an all-ranks total built by adding buckets would include a bucket that
-  was hidden; whoever adds that must not publish it next to the visible ones.
+  was hidden; whoever adds that must not publish it next to the visible ones. `read_hero_matchups`
+  already publishes ungated all-ranks `vs` counts, so `vs` rank buckets of 0 or more cannot be
+  published while it stays ungated: a bucket could be recovered by subtracting the rest from its
+  all-ranks total.
+- The migration checks the gate when it runs, on fixtures in a half-season that does not exist (a
+  one-recorder bucket must not come back, a three-recorder bucket must, alone and with the other
+  mode asked for); the fixtures are rolled back.
 
 ## Backfilling participants from stored matches
 
@@ -609,11 +616,12 @@ policy's hard limit), but later than promised.
 
 - **Required:** `select jobname from cron.job where jobname in
   ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
-  'recompute-play-time-aggregates', 'recompute-hero-pair-aggregates');` must show all five jobs (the
-  daily purge and the four hourly aggregate rebuilds). If one is missing (the migrations warn when
+  'recompute-community-match-aggregates', 'recompute-play-time-aggregates',
+  'recompute-hero-pair-aggregates');` must show all six jobs (the daily purge and the five hourly
+  aggregate rebuilds). If one is missing (the migrations warn when
   `pg_cron` is unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();`
   daily, and `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
-  `select public.recompute_play_time_aggregates();` and `select public.recompute_hero_pair_aggregates();`
+  `select public.recompute_community_match_aggregates();`, `select public.recompute_play_time_aggregates();` and `select public.recompute_hero_pair_aggregates();`
   hourly by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
