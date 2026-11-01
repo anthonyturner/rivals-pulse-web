@@ -82,9 +82,7 @@ export class TierListPageComponent {
       return '';
     }
 
-    const scope = view.season === null ? view.matchesCountedLabel : `${view.season.label}, ${view.matchesCountedLabel}`;
-
-    return `Tier list updated: ${scope} counted`;
+    return `Tier list updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`;
   });
 
   chooseSeason(value: string): void {

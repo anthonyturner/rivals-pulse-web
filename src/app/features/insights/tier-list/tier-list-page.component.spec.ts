@@ -256,12 +256,15 @@ describe('TierListPageComponent', () => {
 
     expect(page.querySelector('.tier-row')).toBeNull();
     expect(page.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading the tier list');
+    expect(text(page, '[aria-live]')).toEqual(['']);
     expect(select.value).toBe('10');
 
     http.expectOne('/api/hero-stats?halfSeason=10').flush({ ...partial, halfSeason: previous });
     harness.detectChanges();
 
-    expect(text(page, '[aria-live]')).toEqual(['Tier list updated: Season 10, 146 matches counted']);
+    expect(text(page, '[aria-live]')).toEqual([
+      'Tier list updated in Quick Match and Competitive for Season 10: 146 matches counted',
+    ]);
     expect(select.value).toBe('10');
   });
 
@@ -339,7 +342,7 @@ describe('TierListPageComponent', () => {
       harness.detectChanges();
 
       expect(text(page, '.meta')[0]).toContain('28 matches counted');
-      expect(text(page, '[aria-live]')).toEqual(['Tier list updated: Season 10.5, 28 matches counted']);
+      expect(text(page, '[aria-live]')).toEqual(['Tier list updated in Competitive for Season 10.5: 28 matches counted']);
       expect(modeSelect(page).value).toBe('competitive');
     });
 
