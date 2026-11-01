@@ -7,6 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 
 import { routes } from './app.routes';
 import { WinRatesPageComponent } from './features/insights/win-rates/win-rates-page.component';
+import { OverlayFaqPageComponent } from './features/overlay-faq/overlay-faq-page.component';
 
 describe('win-rate routes', () => {
   let http: HttpTestingController;
@@ -82,6 +83,32 @@ describe('win-rate routes', () => {
       expect(finalUrl).toBe(shown);
       expect(element.textContent).toContain('Not enough data yet');
       expect(element.textContent).toContain('Season 10.5');
+    });
+  }
+});
+
+describe('FAQ routes', () => {
+  let router: Router;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter(routes)],
+    });
+    router = TestBed.inject(Router);
+  });
+
+  for (const [from, to] of [
+    ['/faq', '/faq'],
+    ['/faq#ban-risk', '/faq#ban-risk'],
+    ['/overlay-faq', '/faq'],
+    ['/overlay-faq?ref=x#ban-risk', '/faq?ref=x#ban-risk'],
+  ]) {
+    it(`serves the FAQ page when visiting ${from}`, async () => {
+      const harness = await RouterTestingHarness.create();
+      const component = await harness.navigateByUrl(from);
+
+      expect(component).toBeInstanceOf(OverlayFaqPageComponent);
+      expect(router.url).toBe(to);
     });
   }
 });

@@ -18,7 +18,7 @@ describe('TrustBlockComponent', () => {
 
   const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
-  it('asks the ban question in an h3 and answers it with the text shared with /overlay-faq', () => {
+  it('asks the ban question in an h3 and answers it with the text shared with /faq', () => {
     expect(text(element.querySelector('h3'))).toBe('Will it get me banned?');
     expect(text(element.querySelector('.trust__answer'))).toBe(buildBanAnswer(false));
   });
@@ -38,7 +38,7 @@ describe('TrustBlockComponent', () => {
   });
 
   it('links the FAQ for the rest', () => {
-    expect(element.querySelector('a[href="/overlay-faq#ban-risk"]')).toBeTruthy();
+    expect(element.querySelector('a[href="/faq#ban-risk"]')).toBeTruthy();
   });
 
   it('never calls the app safe or promises more than the FAQ does', () => {
