@@ -1,4 +1,4 @@
--- Checks the calls the desktop app makes about its own link (issue 320): a refresh changes the name
+-- Checks the calls the desktop app makes about its own link: a refresh changes the name
 -- and avatar of the verified recorder's link and nothing else, never creates a link, is rate limited
 -- per recorder, and is reachable only by the service role.
 --

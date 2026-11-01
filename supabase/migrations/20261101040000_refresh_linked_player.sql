@@ -1,4 +1,4 @@
--- Lets the desktop app refresh the name and avatar of the player it is linked to (issue 320).
+-- Lets the desktop app refresh the name and avatar of the player it is linked to.
 -- Additive: it builds on the tables of 20261101020000_player_links.sql and touches no object the
 -- overlay calls. Every function here is for the service role only; the `refresh-linked-player` Edge
 -- Function calls it after confirming the Overwolf session, so `p_recorder_id` is the verified
