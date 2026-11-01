@@ -29,7 +29,7 @@ import {
 } from './stats-snapshot-view';
 
 /**
- * The home page's hero numbers: the most-picked heroes from Rivals Pulse overlay matches, by role.
+ * The home page's hero numbers: the most-picked heroes from RivalsPulse app matches, by role.
  * The server renders the heading and the reserved loading panel; the browser fetches the numbers.
  */
 @Component({
@@ -48,7 +48,7 @@ export class StatsSnapshotComponent {
   private readonly selectedId = signal<SnapshotTabId>('all');
 
   protected readonly panelId = 'stats-snapshot-panel';
-  protected readonly invitation = 'Every match played with Rivals Pulse makes these stats sharper.';
+  protected readonly invitation = 'Every match played with RivalsPulse makes these stats sharper.';
   protected readonly skeletonRows = Array.from({ length: SNAPSHOT_SLOTS }, (_, index) => index);
   protected readonly skeletonHighlights = Array.from({ length: SNAPSHOT_HIGHLIGHTS }, (_, index) => index);
 

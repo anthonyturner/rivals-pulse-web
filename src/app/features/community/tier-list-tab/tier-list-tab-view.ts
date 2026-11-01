@@ -47,8 +47,8 @@ export function buildTierListTabView(
   if (stats.status !== 'ready' || placed.length === 0) {
     const counted =
       stats.matchesCounted > 0
-        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by Rivals Pulse players so far.`
-        : 'No match recorded by Rivals Pulse players is counted yet.';
+        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players so far.`
+        : 'No match recorded by RivalsPulse players is counted yet.';
 
     return {
       kind: 'not-enough-data',

@@ -4,7 +4,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
 
-/** The site's own `/api/hero-matchups`: Rivals Pulse match records, with no outside request. */
+/** The site's own `/api/hero-matchups`: RivalsPulse match records, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class HeroMatchupsService {
   private readonly http = inject(HttpClient);

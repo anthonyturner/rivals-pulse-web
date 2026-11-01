@@ -8,7 +8,7 @@ import { CommunityHeroListComponent } from '../community-hero-list/community-her
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { buildHeroesTabView } from './heroes-tab-view';
 
-/** The most-picked and best-winning heroes from Rivals Pulse uploads, or the reason there are none yet. */
+/** The most-picked and best-winning heroes from RivalsPulse uploads, or the reason there are none yet. */
 @Component({
   selector: 'app-community-heroes-tab',
   imports: [CommunitySummaryComponent, CommunityHeroListComponent],

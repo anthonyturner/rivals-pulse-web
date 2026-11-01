@@ -6,7 +6,7 @@ export interface HeroTrustLineView {
   text: string;
 }
 
-const NEUTRAL: HeroTrustLineView = { state: 'neutral', text: 'Counted from Rivals Pulse player uploads' };
+const NEUTRAL: HeroTrustLineView = { state: 'neutral', text: 'Counted from RivalsPulse player uploads' };
 
 /**
  * The line under the hero buttons. It names the half-season the count describes, which is the

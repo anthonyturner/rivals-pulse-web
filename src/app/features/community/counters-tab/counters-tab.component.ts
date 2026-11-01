@@ -7,7 +7,7 @@ import { heroIdentities } from '../../insights/hero-identity';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { buildCountersTabView } from './counters-tab-view';
 
-/** The winning records with the clearest edge, from Rivals Pulse uploads, or the reason there are none yet. */
+/** The winning records with the clearest edge, from RivalsPulse uploads, or the reason there are none yet. */
 @Component({
   selector: 'app-community-counters-tab',
   imports: [CommunitySummaryComponent],

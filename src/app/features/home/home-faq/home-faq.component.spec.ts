@@ -52,13 +52,13 @@ describe('HomeFaqComponent', () => {
   describe('the ban, data and counting answers', () => {
     const link = (id: string): HTMLAnchorElement => item(id).querySelector('a.more') as HTMLAnchorElement;
 
-    it('link the overlay FAQ, the privacy notes and How we count', () => {
+    it('link the FAQ, the privacy notes and How we count', () => {
       expect(link('ban').getAttribute('href')).toBe('/overlay-faq#ban-risk');
       expect(link('data').getAttribute('href')).toBe('/privacy');
       expect(link('counting').getAttribute('href')).toBe('/how-we-count');
     });
 
-    it('say the ban answer the overlay FAQ does, without promising safety beyond it', () => {
+    it('say the ban answer the FAQ page does, without promising safety beyond it', () => {
       const answer = text(item('ban').querySelector('.answer'));
 
       expect(answer).toMatch(/^No\./);
@@ -67,7 +67,7 @@ describe('HomeFaqComponent', () => {
       expect(answer).not.toMatch(/100%|guarantee|risk-free|ban-proof/i);
     });
 
-    it('say names and ids are uploaded and never published, as the overlay FAQ does', () => {
+    it('say names and ids are uploaded and never published, as the FAQ page does', () => {
       const answer = text(item('data').querySelector('.answer'));
 
       expect(answer).toContain('automatically');

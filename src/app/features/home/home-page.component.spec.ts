@@ -65,7 +65,7 @@ describe('HomePageComponent', () => {
         'How it works',
         "What's new in the game",
         'Frequently asked questions',
-        'Get Rivals Pulse',
+        'Get RivalsPulse',
       ]);
     });
 
@@ -77,6 +77,17 @@ describe('HomePageComponent', () => {
       expect(text(eyebrow)).toBe('Free Overwolf app for Marvel Rivals');
       expect(eyebrow.nextElementSibling?.tagName).toBe('H1');
       expect(text(eyebrow)).not.toMatch(/season|\d/i);
+    });
+
+    it('says what the product does in the h1 and one line, with no paragraph repeating the eyebrow', () => {
+      const hero = element.querySelector('.hero-copy') as HTMLElement;
+
+      expect(text(hero.querySelector('h1'))).toBe('Know every match before it starts.');
+      expect(text(hero.querySelector('.lede'))).toBe(
+        'RivalsPulse puts live stats on your screen and counters at your fingertips.',
+      );
+      expect(hero.querySelectorAll('p.lede').length).toBe(1);
+      expect(text(hero)).not.toContain('records each match you play');
     });
 
     it('puts the heading first in every band, which carries no decorative eyebrow of its own', () => {

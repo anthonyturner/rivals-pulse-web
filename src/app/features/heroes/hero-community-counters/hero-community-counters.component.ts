@@ -5,7 +5,7 @@ import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
 import type { RosterHero } from '../../insights/hero-matchup-records';
 import { buildHeroCommunityCountersView } from './hero-community-counters-view';
 
-/** How one hero fares against others in matches recorded by Rivals Pulse players, or why there is nothing to show yet. */
+/** How one hero fares against others in matches recorded by RivalsPulse players, or why there is nothing to show yet. */
 @Component({
   selector: 'app-hero-community-counters',
   imports: [RouterLink],

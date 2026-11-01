@@ -56,7 +56,7 @@ export interface HeroStatsBelowMinimum {
 }
 
 /**
- * Every hero number the site shows, from Rivals Pulse overlay matches only.
+ * Every hero number the site shows, from RivalsPulse app matches only.
  *
  * `ready` means at least one hero has reached `minimumMatches`; `not-enough-data` is a designed state,
  * not an error, and then `tiers` is empty.

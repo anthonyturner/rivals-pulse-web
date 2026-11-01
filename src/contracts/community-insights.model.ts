@@ -20,7 +20,7 @@ export interface CommunityInsightsDimension {
 }
 
 /**
- * When the community plays and wins, from matches recorded by Rivals Pulse players. Every time is UTC.
+ * When the community plays and wins, from matches recorded by RivalsPulse players. Every time is UTC.
  *
  * `ready` means at least one dimension has enough shown buckets; `not-enough-data` is a designed state,
  * not an error, and is also what the site answers while the aggregates do not exist yet. The database

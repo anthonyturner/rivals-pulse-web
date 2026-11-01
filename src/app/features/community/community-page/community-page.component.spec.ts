@@ -202,7 +202,7 @@ describe('CommunityPageComponent', () => {
 
       const text = panel().textContent ?? '';
       expect(text).toContain('Not enough data yet');
-      expect(text).toContain('Rivals Pulse app uploads');
+      expect(text).toContain('RivalsPulse app uploads');
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
       expect(panel().querySelector('.empty-state')).toBeTruthy();

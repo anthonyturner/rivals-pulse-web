@@ -34,8 +34,8 @@ describe('HowItWorksComponent', () => {
 
   it('has three numbered steps, each with an h3', () => {
     expect(steps().map((step) => text(step.querySelector('h3')))).toEqual([
-      'Install Rivals Pulse from Overwolf',
-      'Play Marvel Rivals with the overlay running',
+      'Install RivalsPulse from Overwolf',
+      'Play Marvel Rivals with RivalsPulse running',
       'Your matches are recorded and counted',
     ]);
     expect(steps().map((step) => text(step.querySelector('.step__num')))).toEqual(['01', '02', '03']);
