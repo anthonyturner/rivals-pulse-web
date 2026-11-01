@@ -633,7 +633,8 @@ service-role key stays unused until account deletion. Dashboard settings the mai
 Authentication, URL Configuration with the Site URL `https://rivalspulse.com` and Redirect URLs
 `https://rivalspulse.com/**`, `http://localhost:4200/**` and `http://localhost:4000/**`; and Discord
 enabled under Providers with the Discord application's client id and secret (its redirect is the
-project's `/auth/v1/callback`). `supabase/checks/profiles.sql` proves the RLS rules against the linked
+project's `/auth/v1/callback`). The session cookie is `Secure`: Chrome, Edge and Firefox accept it
+on `http://localhost`, but Safari may not, so test local sign-in in one of those. `supabase/checks/profiles.sql` proves the RLS rules against the linked
 project and rolls back: `npx supabase db query --linked -f supabase/checks/profiles.sql`.
 
 ## Tests

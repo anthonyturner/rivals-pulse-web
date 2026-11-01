@@ -10,9 +10,11 @@
       <li>
         This website has no analytics, and you never need an account to read it. You can
         <strong>sign in with Discord</strong> if you want an account; see
-        <a routerLink="." fragment="accounts">Accounts and signing in</a> below. If you never sign
-        in, the site sets no cookies of its own. Like any website, its host may keep short-lived
-        technical request logs.
+        <a routerLink="." fragment="accounts">Accounts and signing in</a> below. Reading the site
+        sets no cookies of its own; only starting to sign in does (a short-lived
+        <code>rp_pkce</code> cookie, then the <code>rp_session</code> sign-in cookie), and while you
+        sign in your browser talks to Discord and to Supabase, our database service, directly. Like
+        any website, its host may keep short-lived technical request logs.
       </li>
       <li>
         The community pages show <strong>anonymous totals</strong> only: no names, no player ids
@@ -155,6 +157,12 @@
         or use them. We add one row of our own: your account id and the date it was created.
       </li>
       <li>
+        <strong>Your IP address.</strong> While you sign in, your browser talks to Supabase
+        directly, not through this website. Supabase Auth records your IP address in its audit log
+        when you sign in, and Supabase's request logs also see your IP address and browser details.
+        We do not read or use them, and we have not set how long Supabase keeps them.
+      </li>
+      <li>
         <strong>What it is used for.</strong> Signing you in and showing you your own account
         page: how you signed in, your email address and when you joined. We send no email, and
         there is no marketing.
@@ -166,14 +174,15 @@
       </li>
       <li>
         <strong>The sign-in cookie.</strong> Signing in sets one cookie, <code>rp_session</code>.
-        It keeps you signed in for up to 30 days or until you sign out, and it is hidden from
-        page scripts and sent only to this site's own <code>/api</code> address. While you are in
+        It keeps you signed in until you sign out, or until 30 days pass without a visit: each
+        visit that renews your sign-in also renews the 30 days. It is hidden from page scripts and
+        sent only to this site's own <code>/api</code> address. While you are in
         the middle of signing in, a second cookie, <code>rp_pkce</code>, lasts at most ten
         minutes and is removed when the sign-in finishes. Neither is used for tracking.
       </li>
       <li>
         <strong>Who else sees it.</strong> Discord handles the sign-in and applies its own
-        privacy policy to it. Your account details are not shown to other visitors and are not
+        privacy policy to it, and Supabase stores the account. Your account details are not shown to other visitors and are not
         used in the community numbers.
       </li>
     </ul>

@@ -76,9 +76,12 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
     }
   };
 
-  /** A 4xx means the credentials were refused; a 5xx means Supabase is unwell. */
+  /**
+   * A 4xx means the credentials were refused. A 5xx, or a 429 (Supabase limits Auth calls per IP and
+   * every call comes from our few servers), means Supabase is unwell: nobody is signed out for it.
+   */
   const refused = (response: Response): boolean => {
-    if (response.status >= 500) {
+    if (response.status >= 500 || response.status === 429) {
       throw new AuthUnavailableError(`Supabase Auth answered ${response.status}`);
     }
 

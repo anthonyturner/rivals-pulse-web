@@ -145,6 +145,14 @@ describe('createSupabaseAuthGateway', () => {
       expect(calls[1].body).toEqual({ refresh_token: 'refresh' });
     });
 
+    it('keeps the visitor signed in when Supabase rate-limits the call', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 429 }));
+
+      await expectAsync(createSupabaseAuthGateway(ENV, fetcher).resolve(tokens)).toBeRejectedWithError(
+        AuthUnavailableError,
+      );
+    });
+
     it('returns nothing when the refresh token is refused too', async () => {
       const { fetcher } = fakeFetch(() => ({ status: 401 }));
 

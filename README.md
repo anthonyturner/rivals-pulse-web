@@ -22,7 +22,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 
 ## Tech Stack
 
-Angular 20 | TypeScript | Signals | RxJS | Angular | Express | Turso/libSQL | Vercel
+Angular 20 | TypeScript | Signals | RxJS | Express | Turso/libSQL | Vercel
 
 ## Local Development
 

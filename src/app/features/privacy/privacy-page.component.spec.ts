@@ -102,6 +102,23 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('Deleting your account');
   });
 
+  it('says how long the sign-in lasts as the code behaves, and that Supabase sees the IP address', () => {
+    const text = (section('accounts').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('until 30 days pass without a visit');
+    expect(text).not.toContain('up to 30 days');
+    expect(text).toContain('IP address');
+    expect(text).toContain('talks to Supabase directly');
+  });
+
+  it('summarises the cookies and the direct Supabase contact truthfully', () => {
+    const text = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('rp_pkce');
+    expect(text).toContain('talks to Discord and to Supabase');
+    expect(text).not.toContain('If you never sign in, the site sets no cookies');
+  });
+
   it('no longer claims there are no accounts, no login or no cookies', () => {
     const text = (page.textContent ?? '').toLowerCase();
 
