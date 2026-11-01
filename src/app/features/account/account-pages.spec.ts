@@ -3,19 +3,26 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-import { AuthService, SessionState } from '../../core/auth/auth.service';
+import { AuthService, DeleteAccountResult, SessionState } from '../../core/auth/auth.service';
 import { AccountPageComponent } from './account-page.component';
 import { SignInPageComponent } from './sign-in-page.component';
 
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
 const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT };
 
-function setup(session: SessionState) {
+function setup(session: SessionState, deletion: DeleteAccountResult = { status: 'deleted' }) {
   const state = signal<SessionState>(session);
   const auth = {
     state,
     load: jasmine.createSpy('load').and.callFake(() => Promise.resolve(state())),
     signOut: jasmine.createSpy('signOut').and.callFake(async () => state.set({ status: 'signedOut' })),
+    deleteAccount: jasmine.createSpy('deleteAccount').and.callFake(async () => {
+      if (deletion.status !== 'failed') {
+        state.set({ status: 'signedOut' });
+      }
+
+      return deletion;
+    }),
   };
 
   TestBed.configureTestingModule({
@@ -63,6 +70,87 @@ describe('AccountPageComponent', () => {
   });
 });
 
+describe('AccountPageComponent deletion', () => {
+  const deleteButton = (harness: RouterTestingHarness): HTMLButtonElement =>
+    page(harness).querySelector('.account-button--danger') as HTMLButtonElement;
+  const phraseInput = (harness: RouterTestingHarness): HTMLInputElement =>
+    page(harness).querySelector('#delete-confirmation') as HTMLInputElement;
+
+  async function type(harness: RouterTestingHarness, text: string): Promise<void> {
+    const input = phraseInput(harness);
+
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+  }
+
+  it('offers both choices, with "forget me" disabled until the desktop app is linked', async () => {
+    setup(SIGNED_IN);
+    const root = page(await RouterTestingHarness.create('/account'));
+    const [accountOnly, forgetMe] = Array.from(root.querySelectorAll<HTMLInputElement>('input[name="deletion-mode"]'));
+
+    expect(accountOnly.disabled).toBeFalse();
+    expect(accountOnly.checked).toBeTrue();
+    expect(forgetMe.disabled).toBeTrue();
+    expect(root.textContent).toContain('Remove account and forget me');
+    expect(root.querySelector('#forget-me-hint')?.textContent).toContain('available once you link the desktop app');
+    expect(forgetMe.getAttribute('aria-describedby')).toBe('forget-me-hint');
+  });
+
+  it('keeps the delete button off until the phrase is typed', async () => {
+    const { auth } = setup(SIGNED_IN);
+    const harness = await RouterTestingHarness.create('/account');
+
+    expect(deleteButton(harness).disabled).toBeTrue();
+
+    await type(harness, 'delete');
+    expect(deleteButton(harness).disabled).toBeTrue();
+
+    await type(harness, 'delete my account');
+    expect(deleteButton(harness).disabled).toBeFalse();
+    expect(auth.deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('deletes the account and shows the sign-in page with a notice', async () => {
+    const { auth } = setup(SIGNED_IN);
+    const harness = await RouterTestingHarness.create('/account');
+
+    await type(harness, 'delete my account');
+    deleteButton(harness).click();
+    await harness.fixture.whenStable();
+
+    expect(auth.deleteAccount).toHaveBeenCalledOnceWith({ mode: 'account', confirmation: 'delete my account' });
+    expect(TestBed.inject(Router).url).toBe('/sign-in?notice=deleted');
+  });
+
+  it('shows why it failed and lets the player try again', async () => {
+    const { auth } = setup(SIGNED_IN, { status: 'failed', message: 'Try again in a moment.' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    await type(harness, 'delete my account');
+    deleteButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('Try again in a moment.');
+    expect(TestBed.inject(Router).url).toBe('/account');
+    expect(deleteButton(harness).disabled).toBeFalse();
+    expect(auth.deleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends a player whose session had already ended to sign in', async () => {
+    setup(SIGNED_IN, { status: 'signedOut' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    await type(harness, 'delete my account');
+    deleteButton(harness).click();
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/sign-in?next=%2Faccount');
+  });
+});
+
 describe('SignInPageComponent', () => {
   const discordLink = (harness: RouterTestingHarness): HTMLAnchorElement =>
     page(harness).querySelector('a.account-button') as HTMLAnchorElement;
@@ -87,6 +175,20 @@ describe('SignInPageComponent', () => {
     const harness = await RouterTestingHarness.create('/sign-in?error=cancelled');
 
     expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('cancelled');
+  });
+
+  it('confirms that the account was deleted', async () => {
+    setup({ status: 'signedOut' });
+    const harness = await RouterTestingHarness.create('/sign-in?notice=deleted');
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('account has been deleted');
+  });
+
+  it('ignores a notice it does not know', async () => {
+    setup({ status: 'signedOut' });
+    const harness = await RouterTestingHarness.create('/sign-in?notice=anything');
+
+    expect(page(harness).querySelector('[role="status"]')).toBeNull();
   });
 
   it('sends a visitor who is already signed in on to where they were going', async () => {

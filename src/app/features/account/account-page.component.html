@@ -27,15 +27,75 @@
     </section>
 
     <section class="account-section" aria-labelledby="account-data-title">
-      <h2 id="account-data-title">What we keep and how to remove it</h2>
+      <h2 id="account-data-title">What we keep</h2>
       <p>
-        The privacy notes list exactly what an account stores and the one cookie it uses. Until
-        the delete button arrives on this page, you can ask for your account to be removed in the
-        community Discord.
+        The privacy notes list exactly what an account stores and the one cookie it uses.
       </p>
       <p>
         <a routerLink="/privacy" fragment="accounts">Read what the account stores</a>
       </p>
+    </section>
+
+    <section class="account-section" aria-labelledby="account-delete-title">
+      <h2 id="account-delete-title">Delete your account</h2>
+      <form (submit)="deleteAccount($event)">
+        <fieldset class="account-choices" [disabled]="deleting()">
+          <legend>What should be removed?</legend>
+          <label class="account-choice">
+            <input type="radio" name="deletion-mode" value="account" checked />
+            <span>
+              <strong>Remove account only</strong>
+              Deletes your sign-in details and our row for them, and signs you out. You can sign
+              in again later; that starts a new, empty account.
+            </span>
+          </label>
+          <label class="account-choice account-choice--unavailable">
+            <input
+              type="radio"
+              name="deletion-mode"
+              value="account-and-matches"
+              disabled
+              aria-describedby="forget-me-hint"
+            />
+            <span>
+              <strong>Remove account and forget me</strong>
+              Also removes the match data the desktop app uploaded about you.
+              <em id="forget-me-hint">This is available once you link the desktop app.</em>
+            </span>
+          </label>
+        </fieldset>
+
+        <p>
+          <label class="account-field" for="delete-confirmation">
+            Type <strong>{{ confirmationPhrase }}</strong> to confirm
+          </label>
+          <input
+            id="delete-confirmation"
+            class="account-input"
+            type="text"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            [value]="confirmation()"
+            [disabled]="deleting()"
+            (input)="onConfirmationInput($event)"
+          />
+        </p>
+
+        @if (deleteError(); as message) {
+          <p class="account-error" role="alert">{{ message }}</p>
+        }
+
+        <p>
+          <button class="account-button account-button--danger" type="submit" [disabled]="!canDelete()">
+            @if (deleting()) {
+              Deleting...
+            } @else {
+              Delete my account
+            }
+          </button>
+        </p>
+      </form>
     </section>
   }
 </main>

@@ -1,6 +1,8 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 
+import type { DeleteAccountRequest } from './account-deletion.types';
+
 /** What the account page shows. It matches what `GET /api/auth/session` returns. */
 export interface Account {
   email: string | null;
@@ -14,6 +16,14 @@ export type SessionState =
   | { status: 'signedIn'; account: Account }
   /** The session could not be read; the visitor is treated as signed out. */
   | { status: 'unavailable' };
+
+export type DeleteAccountResult =
+  | { status: 'deleted' }
+  /** There was no valid session to delete, so nothing was deleted. */
+  | { status: 'signedOut' }
+  | { status: 'failed'; message: string };
+
+const DELETE_FAILED = 'The account could not be deleted. Nothing was removed; try again in a moment.';
 
 /**
  * The visitor's sign-in state, read from the server. The session itself lives in an HttpOnly cookie
@@ -53,10 +63,52 @@ export class AuthService {
       return;
     }
 
+    this.markSignedOut();
+  }
+
+  /** Deletes the signed-in account on the server, which also ends the session. */
+  async deleteAccount(request: DeleteAccountRequest): Promise<DeleteAccountResult> {
+    try {
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+
+      if (response.ok) {
+        this.markSignedOut();
+
+        return { status: 'deleted' };
+      }
+
+      if (response.status === 401) {
+        this.markSignedOut();
+
+        return { status: 'signedOut' };
+      }
+
+      return { status: 'failed', message: await this.errorMessage(response) };
+    } catch {
+      return { status: 'failed', message: DELETE_FAILED };
+    }
+  }
+
+  private markSignedOut(): void {
     const signedOut: SessionState = { status: 'signedOut' };
 
     this.state.set(signedOut);
     this.pending = Promise.resolve(signedOut);
+  }
+
+  /** The server writes its own refusals in plain words; anything else gets the generic line. */
+  private async errorMessage(response: Response): Promise<string> {
+    try {
+      const body = (await response.json()) as { error?: unknown };
+
+      return typeof body.error === 'string' && body.error ? body.error : DELETE_FAILED;
+    } catch {
+      return DELETE_FAILED;
+    }
   }
 
   private async read(): Promise<SessionState> {

@@ -70,7 +70,11 @@ The session lives on the server side of the boundary:
 - The browser asks `GET /api/auth/session` through `AuthService`
   (`src/app/core/auth/`) and the `/account` route is guarded by `signedInGuard`.
 - `public.profiles` (one row per account, RLS on) is created at first sign-in.
-  Account deletion arrives with issue 271.
+- `POST /api/account/delete` verifies the session with Supabase (`auth.getUser`), requires the typed
+  phrase and the "account" mode, then deletes the auth user with the service-role key, which the server
+  uses for this call only. The profile row goes with it (`on delete cascade`) and the session cookie is
+  cleared. The "Remove account and forget me" mode is shown disabled and refused by the server until the
+  desktop app can be linked to an account.
 
 
 ## AI Integration

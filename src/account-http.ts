@@ -5,6 +5,8 @@ import { createSupabaseAuthGateway, type AuthGateway } from './auth-gateway.js';
 
 /** An answer about one visitor must never be stored by a shared cache. */
 const NO_STORE = 'private, no-store, max-age=0';
+/** The only body the account routes read is a mode and a short phrase. */
+const MAX_BODY_BYTES = 4096;
 
 /** True for the paths the account routes own: `auth/...` and `account/...`. */
 export function isAccountRoute(route: string): boolean {
@@ -21,7 +23,7 @@ export async function handleAccountHttp(
   route: string,
   getGateway: () => AuthGateway = () => createSupabaseAuthGateway(process.env),
 ): Promise<void> {
-  const response = await handleAccountRequest(toAccountRequest(req, route), getGateway);
+  const response = await handleAccountRequest(await toAccountRequest(req, route), getGateway);
   const hasBody = response.body !== undefined;
 
   res.writeHead(response.status, {
@@ -33,18 +35,55 @@ export async function handleAccountHttp(
   res.end(hasBody ? JSON.stringify(response.body) : undefined);
 }
 
-function toAccountRequest(req: IncomingMessage, route: string): AccountRequest {
+async function toAccountRequest(req: IncomingMessage, route: string): Promise<AccountRequest> {
   const url = new URL(req.url ?? '/', 'https://local.invalid');
+  const method = (req.method ?? 'GET').toUpperCase();
 
   return {
-    method: (req.method ?? 'GET').toUpperCase(),
+    method,
     route,
     query: url.searchParams,
     cookieHeader: firstOf(req.headers.cookie),
     originHeader: firstOf(req.headers.origin),
+    body: method === 'POST' ? await readJsonBody(req) : undefined,
     host: firstValue(firstOf(req.headers['x-forwarded-host']) ?? firstOf(req.headers.host)) ?? 'localhost',
     protocol: firstValue(firstOf(req.headers['x-forwarded-proto'])),
   };
+}
+
+/**
+ * The JSON a POST sent, or undefined when it was missing, too big or not JSON. Vercel has parsed
+ * `req.body` before the handler runs; Express has no body parser, so the stream is read here.
+ */
+async function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  try {
+    const parsed = (req as { body?: unknown }).body;
+
+    if (parsed !== undefined) {
+      return typeof parsed === 'string' || parsed instanceof Uint8Array
+        ? JSON.parse(typeof parsed === 'string' ? parsed : new TextDecoder().decode(parsed))
+        : parsed;
+    }
+
+    const decoder = new TextDecoder();
+    let text = '';
+    let size = 0;
+
+    for await (const chunk of req as AsyncIterable<string | Uint8Array>) {
+      const bytes = typeof chunk === 'string' ? new TextEncoder().encode(chunk) : chunk;
+
+      size += bytes.length;
+
+      // Keep reading to the end rather than leaving the loop: that would destroy the connection the answer goes out on.
+      if (size <= MAX_BODY_BYTES) {
+        text += decoder.decode(bytes, { stream: true });
+      }
+    }
+
+    return size > MAX_BODY_BYTES ? undefined : JSON.parse(text + decoder.decode());
+  } catch {
+    return undefined;
+  }
 }
 
 function firstOf(value: string | string[] | undefined): string | undefined {

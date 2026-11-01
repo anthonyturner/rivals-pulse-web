@@ -110,9 +110,15 @@ describe('PrivacyPageComponent', () => {
     expect(text).not.toContain('no cookies of its own and');
   });
 
-  it('links the Discord server for deletion requests', () => {
-    const link = section('accounts').querySelector('a[href^="https://discord.gg/"]');
+  it('explains self-service deletion on the account page, not a request in Discord', () => {
+    const accounts = section('accounts');
+    const text = accounts.textContent ?? '';
 
-    expect(link).withContext('the Discord invite link').toBeTruthy();
+    expect(accounts.querySelector('a[href="/account"]')).withContext('the link to the account page').toBeTruthy();
+    expect(text).toContain('Remove account and forget me');
+    expect(text).toContain('Signing in with Discord again');
+    expect(text).not.toContain('ask for your account to be deleted');
+    expect(text).not.toContain('does not have a delete button');
+    expect(accounts.querySelector('a[href^="https://discord.gg/"]')).toBeNull();
   });
 });

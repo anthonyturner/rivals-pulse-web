@@ -31,6 +31,11 @@ export interface AuthGateway {
   resolve(tokens: SessionTokens): Promise<ResolvedSession | undefined>;
   /** Ends this session at Supabase. Never throws: the caller clears its cookie either way. */
   signOut(tokens: SessionTokens): Promise<void>;
+  /**
+   * Deletes the signed-in account for good, and its `profiles` row with it. Returns `not-signed-in`
+   * when the session is not valid, so nobody can delete an account they do not hold a session for.
+   */
+  deleteAccount(tokens: SessionTokens): Promise<'deleted' | 'not-signed-in'>;
 }
 
 /** Supabase could not be asked: it is not configured, unreachable, or answered with a server error. */
@@ -47,7 +52,8 @@ const REQUEST_TIMEOUT_MS = 5000;
 
 /**
  * Talks to Supabase Auth and PostgREST over plain `fetch` with the publishable key and the user's own
- * token, so row-level security decides what each call may touch. The service-role key is not used.
+ * token, so row-level security decides what each call may touch. The service-role key is used for one
+ * call only: deleting the account, which Supabase offers to no other key.
  * PKCE (a one-time secret that proves the browser finishing a sign-in is the one that started it) is
  * done by hand, because the library keeps its secret in browser storage.
  */
@@ -122,6 +128,32 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
     }
   };
 
+  /** The user behind the tokens, refreshing an expired access token. Undefined when the session is invalid. */
+  const verify = async (
+    tokens: SessionTokens,
+  ): Promise<{ id: string; account: Account; tokens: SessionTokens } | undefined> => {
+    let current = tokens;
+    const userResponse = await call('/auth/v1/user', { method: 'GET' }, current.accessToken);
+    let user: unknown;
+
+    if (refused(userResponse)) {
+      const refreshed = await refresh(current.refreshToken);
+
+      if (!refreshed) {
+        return undefined;
+      }
+
+      current = refreshed.tokens;
+      user = refreshed.user;
+    } else {
+      user = await userResponse.json();
+    }
+
+    const found = accountOf(user);
+
+    return found && { ...found, tokens: current };
+  };
+
   return {
     async authorizeUrl(provider, redirectTo) {
       const verifier = randomToken();
@@ -157,30 +189,36 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
     },
 
     async resolve(tokens) {
-      let current = tokens;
-      const userResponse = await call('/auth/v1/user', { method: 'GET' }, current.accessToken);
-      let user: unknown;
+      const verified = await verify(tokens);
 
-      if (refused(userResponse)) {
-        const refreshed = await refresh(current.refreshToken);
+      return verified && { account: verified.account, tokens: verified.tokens };
+    },
 
-        if (!refreshed) {
-          return undefined;
-        }
+    async deleteAccount(tokens) {
+      const serviceRoleKey = env['SUPABASE_SERVICE_ROLE_KEY']?.trim();
 
-        current = refreshed.tokens;
-        user = refreshed.user;
-      } else {
-        user = await userResponse.json();
+      if (!serviceRoleKey) {
+        throw new AuthUnavailableError('Account deletion is not configured. Set SUPABASE_SERVICE_ROLE_KEY.');
       }
 
-      const found = accountOf(user);
+      const verified = await verify(tokens);
 
-      if (!found) {
-        return undefined;
+      if (!verified) {
+        return 'not-signed-in';
       }
 
-      return { account: found.account, tokens: current };
+      const response = await call(`/auth/v1/admin/users/${encodeURIComponent(verified.id)}`, {
+        method: 'DELETE',
+        headers: { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` },
+        body: JSON.stringify({ should_soft_delete: false }),
+      });
+
+      // 404 means the account is already gone, which is what the player asked for.
+      if (!response.ok && response.status !== 404) {
+        throw new AuthUnavailableError(`Supabase Auth refused the account deletion with ${response.status}`);
+      }
+
+      return 'deleted';
     },
 
     async signOut(tokens) {

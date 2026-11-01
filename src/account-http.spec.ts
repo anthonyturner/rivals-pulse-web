@@ -8,6 +8,7 @@ const GATEWAY: AuthGateway = {
   exchangeCode: async () => ({ accessToken: 'a', refreshToken: 'r' }),
   resolve: async (tokens) => ({ account: { email: 'a@b.c', provider: 'discord', createdAt: '2026-11-01T00:00:00Z' }, tokens }),
   signOut: async () => undefined,
+  deleteAccount: async () => 'deleted',
 };
 
 interface Sent {
@@ -23,9 +24,20 @@ async function send(
   route: string,
   headers: Record<string, string> = {},
   gateway: AuthGateway = GATEWAY,
+  body?: string | object,
 ): Promise<Sent> {
   const sent: Sent = { status: 0, headers: {} };
-  const req = { method, url, headers: { host: 'rivalspulse.com', ...headers } } as unknown as IncomingMessage;
+  const parsed = typeof body === 'object' ? { body } : {};
+  const chunks = typeof body === 'string' ? [new TextEncoder().encode(body)] : [];
+  const req = {
+    async *[Symbol.asyncIterator]() {
+      yield* chunks;
+    },
+    method,
+    url,
+    headers: { host: 'rivalspulse.com', ...headers },
+    ...parsed,
+  } as unknown as IncomingMessage;
   const res = {
     writeHead(status: number, responseHeaders: Record<string, unknown>) {
       sent.status = status;
@@ -85,6 +97,82 @@ describe('handleAccountHttp', () => {
     });
 
     expect(sent.status).toBe(200);
+  });
+});
+
+describe('handleAccountHttp account deletion', () => {
+  const headers = { origin: 'https://rivalspulse.com', cookie: 'rp_session=a~r' };
+  const asked = JSON.stringify({ mode: 'account', confirmation: 'delete my account' });
+
+  /** A gateway whose deleteAccount records that it ran. */
+  const watching = () => {
+    const state = { deleted: false };
+
+    return {
+      state,
+      gateway: {
+        ...GATEWAY,
+        deleteAccount: async () => {
+          state.deleted = true;
+
+          return 'deleted' as const;
+        },
+      },
+    };
+  };
+
+  it('reads the JSON body from the request stream, as Express hands it over', async () => {
+    const { state, gateway } = watching();
+    const sent = await send('POST', '/api/account/delete', 'account/delete', headers, gateway, asked);
+
+    expect(sent.status).toBe(200);
+    expect(state.deleted).toBeTrue();
+    expect(sent.headers['cache-control']).toBe('private, no-store, max-age=0');
+    expect((sent.headers['set-cookie'] as string[])[0]).toContain('Max-Age=0');
+  });
+
+  it('uses the body Vercel has already parsed', async () => {
+    const { state, gateway } = watching();
+    const sent = await send('POST', '/api/account/delete', 'account/delete', headers, gateway, {
+      mode: 'account',
+      confirmation: 'delete my account',
+    });
+
+    expect(sent.status).toBe(200);
+    expect(state.deleted).toBeTrue();
+  });
+
+  it('treats a body that is not JSON as no confirmation', async () => {
+    const { state, gateway } = watching();
+    const sent = await send('POST', '/api/account/delete', 'account/delete', headers, gateway, '{not json');
+
+    expect(sent.status).toBe(400);
+    expect(state.deleted).toBeFalse();
+  });
+
+  it('ignores a body bigger than the routes could need', async () => {
+    const { state, gateway } = watching();
+    const huge = JSON.stringify({ mode: 'account', confirmation: 'delete my account', pad: 'x'.repeat(10_000) });
+    const sent = await send('POST', '/api/account/delete', 'account/delete', headers, gateway, huge);
+
+    expect(sent.status).toBe(400);
+    expect(state.deleted).toBeFalse();
+  });
+
+  it('refuses a foreign Origin without deleting', async () => {
+    const { state, gateway } = watching();
+    const sent = await send(
+      'POST',
+      '/api/account/delete',
+      'account/delete',
+      { ...headers, origin: 'https://evil.example' },
+      gateway,
+      asked,
+    );
+
+    expect(sent.status).toBe(403);
+    expect(sent.headers['cache-control']).toBe('private, no-store, max-age=0');
+    expect(state.deleted).toBeFalse();
   });
 });
 

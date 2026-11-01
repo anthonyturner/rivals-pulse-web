@@ -13,6 +13,7 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     exchangeCode: async () => TOKENS,
     resolve: async (tokens) => ({ account: ACCOUNT, tokens }),
     signOut: async () => undefined,
+    deleteAccount: async () => 'deleted',
     ...overrides,
   };
 }
@@ -268,6 +269,127 @@ describe('POST auth/sign-out', () => {
     const response = await run(post({ host: 'localhost:4200', originHeader: 'http://localhost:4200', protocol: 'http' }));
 
     expect(response.status).toBe(200);
+  });
+});
+
+describe('POST account/delete', () => {
+  const ASKED = { mode: 'account', confirmation: 'delete my account' };
+  const post = (overrides: Partial<AccountRequest> = {}) =>
+    request('account/delete', {
+      method: 'POST',
+      originHeader: 'https://rivalspulse.com',
+      cookieHeader: SESSION_COOKIE,
+      body: ASKED,
+      ...overrides,
+    });
+  /** A gateway that records the sessions it was asked to delete. */
+  const recording = (result: 'deleted' | 'not-signed-in' = 'deleted') => {
+    const seen = { tokens: [] as unknown[] };
+
+    return {
+      seen,
+      gateway: gateway({
+        deleteAccount: async (tokens) => {
+          seen.tokens.push(tokens);
+
+          return result;
+        },
+      }),
+    };
+  };
+
+  it('deletes the account for the session in the cookie and signs the player out', async () => {
+    const { seen, gateway: gw } = recording();
+    const response = await run(post(), gw);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ deleted: true });
+    expect(seen.tokens).toEqual([TOKENS]);
+    expect(response.cookies.length).toBe(1);
+    expect(response.cookies[0]).toContain('rp_session=;');
+    expect(response.cookies[0]).toContain('Max-Age=0');
+  });
+
+  it('accepts the phrase in any case with spaces around it', async () => {
+    const { seen, gateway: gw } = recording();
+
+    expect((await run(post({ body: { ...ASKED, confirmation: '  Delete My Account ' } }), gw)).status).toBe(200);
+    expect(seen.tokens.length).toBe(1);
+  });
+
+  const unconfirmed: [string, unknown][] = [
+    ['no body', undefined],
+    ['a body that is not an object', 'delete my account'],
+    ['no confirmation', { mode: 'account' }],
+    ['a confirmation that is not text', { mode: 'account', confirmation: true }],
+    ['the wrong phrase', { mode: 'account', confirmation: 'yes' }],
+    ['an empty phrase', { mode: 'account', confirmation: '' }],
+    ['an unknown mode', { mode: 'everything', confirmation: 'delete my account' }],
+    ['no mode', { confirmation: 'delete my account' }],
+  ];
+
+  for (const [name, body] of unconfirmed) {
+    it(`deletes nothing and keeps the session with ${name}`, async () => {
+      const { seen, gateway: gw } = recording();
+      const response = await run(post({ body }), gw);
+
+      expect(response.status).toBe(400);
+      expect(seen.tokens).toEqual([]);
+      expect(response.cookies).toEqual([]);
+    });
+  }
+
+  it('refuses the forget-me mode for now, and deletes nothing', async () => {
+    const { seen, gateway: gw } = recording();
+    const response = await run(post({ body: { mode: 'account-and-matches', confirmation: 'delete my account' } }), gw);
+
+    expect(response.status).toBe(409);
+    expect(seen.tokens).toEqual([]);
+    expect(response.cookies).toEqual([]);
+  });
+
+  it('needs a session cookie', async () => {
+    const { seen, gateway: gw } = recording();
+    const response = await run(post({ cookieHeader: undefined }), gw);
+
+    expect(response.status).toBe(401);
+    expect(seen.tokens).toEqual([]);
+  });
+
+  it('answers 401 and clears the cookie when the session is no longer valid', async () => {
+    const response = await run(post(), recording('not-signed-in').gateway);
+
+    expect(response.status).toBe(401);
+    expect(response.cookies[0]).toContain('Max-Age=0');
+  });
+
+  it('refuses a POST from another origin, or with none, before doing anything', async () => {
+    const { seen, gateway: gw } = recording();
+
+    expect((await run(post({ originHeader: 'https://evil.example' }), gw)).status).toBe(403);
+    expect((await run(post({ originHeader: undefined }), gw)).status).toBe(403);
+    expect((await run(post({ originHeader: 'https://rivalspulse.com.evil.example' }), gw)).status).toBe(403);
+    expect(seen.tokens).toEqual([]);
+  });
+
+  it('is a POST route only', async () => {
+    expect((await run(post({ method: 'GET' }))).status).toBe(405);
+  });
+
+  it('keeps the session and says 503 when the deletion could not be made', async () => {
+    spyOn(console, 'warn');
+    const response = await run(
+      post(),
+      gateway({
+        deleteAccount: async () => {
+          throw new AuthUnavailableError('service key refused');
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.cookies).toEqual([]);
+    expect(JSON.stringify(response.body)).not.toContain('service key');
   });
 });
 

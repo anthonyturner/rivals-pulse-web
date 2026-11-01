@@ -11,6 +11,7 @@ GET /api/auth/session
 GET /api/auth/discord/start
 GET /api/auth/callback
 POST /api/auth/sign-out
+POST /api/account/delete
 
 Static reference data for other tools is published separately as Pulse Atlas; see [pulse-atlas.md](pulse-atlas.md).
 
@@ -29,4 +30,11 @@ Discord through Supabase (`rivalspulse.com` and `localhost` only; `next` must be
 and `GET /api/auth/callback` finishes it, sets the `rp_session` cookie and redirects to `next`, or to
 `/sign-in?error=cancelled|failed`. `POST /api/auth/sign-out` ends the session and clears the cookie. A
 POST whose `Origin` is missing or not this site's gets 403. Unreachable Supabase answers 503.
+
+`POST /api/account/delete` takes the JSON body `{ "mode": "account", "confirmation": "delete my account" }`
+and the `rp_session` cookie. It answers 401 with no valid session, 400 when the phrase or mode is wrong
+(nothing is deleted), 409 for the mode `account-and-matches` ("Remove account and forget me", not
+available until the desktop app is linked), 503 when Supabase or the service-role key is unavailable, and
+otherwise 200 `{ "deleted": true }` with the `rp_session` cookie cleared. The auth user is deleted for
+good, its `profiles` row with it.
 

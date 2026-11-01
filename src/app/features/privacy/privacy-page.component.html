@@ -178,16 +178,13 @@
       </li>
     </ul>
     <p>
-      <strong>Deleting your account.</strong> The account page does not have a delete button yet.
-      Until it does, ask for your account to be deleted in
-      @if (discordInviteUrl) {
-        <a [href]="discordInviteUrl" target="_blank" rel="noopener noreferrer"
-          >the Rivals Pulse Discord server</a
-        >
-      } @else {
-        the Rivals Pulse Discord server
-      }
-      and we will delete the sign-in details and our row for you. Deleted data can stay in our
+      <strong>Deleting your account.</strong> Sign in, open your
+      <a routerLink="/account">account page</a>, choose what to remove, type the confirmation
+      phrase and press the delete button. Removing the account deletes the sign-in details our
+      database service holds and our row for you straight away, and signs you out. Signing in with
+      Discord again afterwards starts a new, empty account. A second choice, "Remove account and
+      forget me", will also remove the match data the desktop app uploaded about you; it is
+      switched off until you link the desktop app to your account. Deleted data can stay in our
       database service's backups until they age out. Deleting the account here does not remove
       this site from your Discord settings; to do that, open Authorized Apps in your Discord
       settings and remove it there.
