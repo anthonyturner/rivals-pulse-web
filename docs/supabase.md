@@ -35,7 +35,8 @@ repo's build. This is a move, not a redesign.
   every newer overlay's extras; a signature change follows "Changing a database function's
   signature" below).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`). The aggregate tables are read by the website only.
+  `record_match_extras`) and `tracked_match_recorders` (written by `track-match-history` itself). The
+  aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
   must be optional in the same way.
@@ -70,6 +71,9 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
+| `20261101010000_profiles.sql` | `profiles`, one row per website account (RLS: the owner selects and inserts) |
+| `20261101020000_player_links.sql` | Linking an account to an in-game player: `player_links` (the owner selects), `link_codes` and `link_attempt_log` (service role and the functions only), and `link_code_hash`, `issue_link_code`, `redeem_link_code`, `unlink_player` |
+| `20261101030000_tracked_match_recorders.sql` | `tracked_match_recorders` (which verified recorder uploaded each `tracked_matches` row; service role only, deleted with the match) |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 
 Link once per machine, check history, then apply:
@@ -213,6 +217,7 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
 | `sync-match-history` | yes, but not used by the release overlay |
 | `sync-hero-stats` | yes, but not used by the release overlay |
 | `marvel-rivals-proxy` | yes, but its source is not in this repo yet (it lives on the overlay branch `fix/381-api-key-server-side`) |
+| `issue-link-code` | new (issue 264); deploy it after the `player_links` migration and with the secrets below. Additive: no shipped overlay calls it |
 
 The live deployments can be older than the source here. Check
 `npx supabase functions list` before assuming they match.
@@ -227,6 +232,16 @@ npx supabase functions deploy elevenlabs-agent-token
 participants backfill replays those rows, so lower the cap only after it has
 run.
 
+Each upload also writes a `tracked_match_recorders` row (`tracked_match_id`, `recorded_by`) naming the
+verified recorder, so a linked player's history can later be counted past the six-month
+`participants` window. It is a side table because `tracked_matches` is publicly readable: **never add
+`recorded_by` to `tracked_matches`**, since it is the hash that identifies a linked person. The table
+has RLS on and no grant to `anon` or `authenticated`; deleting a tracked match, which is how the cap
+above prunes, deletes its row. Rows exist only from the day the function carrying this write is
+deployed. The write is logged, never fatal, if it fails, so the upload's request and reply are
+unchanged. `supabase/checks/tracked_match_recorders.sql` proves the rules against the linked
+project and rolls back: `npx supabase db query --linked -f supabase/checks/tracked_match_recorders.sql`.
+
 ## Secrets
 
 Set with `npx supabase secrets set NAME=value`. Names only here.
@@ -234,15 +249,19 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | Secret | Used by | Note |
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | all | Supplied by Supabase itself |
-| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
-| `RECORDER_ID_SECRET` | `track-match-history` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. Changing it resets everyone's rate-limit history and nothing else. |
+| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token`, `issue-link-code` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
+| `RECORDER_ID_SECRET` | `track-match-history`, `issue-link-code` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. **Rotating it breaks every account link**: `player_links.recorder_id` holds the old hash, so no new code (made with the new key) can match it, and every linked player has to link again; it also resets everyone's rate-limit history and detaches the `recorded_by` already stored on matches. Do not rotate it without a plan for both. |
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
 | `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
 Deploy order for `track-match-history`: migration, then secrets, then
-function. A function deployed first fails closed (every upload is refused).
+function. A function deployed first fails closed (every upload is refused). The
+`tracked_match_recorders` migration must also run before the function that writes to it: the
+Supabase GitHub integration deploys the function on merge, so push the migration by hand first.
+Out of order, uploads still succeed but the recorder rows for that period are lost, because the
+failed write is only logged.
 
 ## Premium launch order
 
@@ -616,13 +635,16 @@ policy's hard limit), but later than promised.
 
 - **Required:** `select jobname from cron.job where jobname in
   ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
-  'recompute-community-match-aggregates', 'recompute-play-time-aggregates',
-  'recompute-hero-pair-aggregates');` must show all six jobs (the daily purge and the five hourly
-  aggregate rebuilds). If one is missing (the migrations warn when
-  `pg_cron` is unavailable), enable `pg_cron` and schedule `select public.purge_expired_participants();`
-  daily, and `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
-  `select public.recompute_community_match_aggregates();`, `select public.recompute_play_time_aggregates();` and `select public.recompute_hero_pair_aggregates();`
-  hourly by hand.
+  'recompute-play-time-aggregates', 'recompute-community-match-aggregates',
+  'recompute-hero-pair-aggregates', 'purge-link-data');` must show all seven jobs (the daily purge, the
+  five hourly aggregate rebuilds and the five-minute link purge). If one is missing (the migrations warn
+  when `pg_cron` is unavailable), enable `pg_cron` and schedule
+  `select public.purge_expired_participants();` daily,
+  `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
+  `select public.recompute_play_time_aggregates();`,
+  `select public.recompute_community_match_aggregates();` and
+  `select public.recompute_hero_pair_aggregates();` hourly, and `select public.purge_link_data();`
+  every five minutes, by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
@@ -668,10 +690,11 @@ called through `.rpc()` when several writes must succeed or fail together.
 
 Visitors sign in with Discord through Supabase Auth; the design is in
 [ADR-0004](decisions/0004-add-player-accounts-private-to-the-owner.md) and the web side in
-[architecture.md](architecture.md). The only table the web app adds for it is `public.profiles`
+[architecture.md](architecture.md). The first table the web app added for it is `public.profiles`
 (`user_id` references `auth.users` on delete cascade, `created_at`), with RLS on, no grant to `anon`,
 and `select` and `insert` for `authenticated` on the user's own row. The row is created at first
-sign-in, not by a trigger. It is additive and touches no object the overlay calls.
+sign-in, not by a trigger. Linking an in-game player adds `player_links` and its siblings (below). Both
+are additive and touch no object the overlay calls.
 
 The server reaches Auth and the table with the publishable key plus the visitor's own token
 (`src/auth-gateway.ts`), so `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` must be set; the
@@ -683,6 +706,48 @@ enabled under Providers with the Discord application's client id and secret (its
 project's `/auth/v1/callback`). The session cookie is `Secure`: Chrome, Edge and Firefox accept it
 on `http://localhost`, but Safari may not, so test local sign-in in one of those. `supabase/checks/profiles.sql` proves the RLS rules against the linked
 project and rolls back: `npx supabase db query --linked -f supabase/checks/profiles.sql`.
+
+### Linking an account to an in-game player (issue 264)
+
+A player proves an in-game identity to their account with a one-time code. The link rests on the verified
+Overwolf session, through the same `recorder_id` hash `track-match-history` stores as `recorded_by`; the uid,
+name and avatar the app sends with the code request are claims and are only shown back to the owner.
+
+- `issue-link-code` (Edge Function, `verify_jwt = false`, `x-overwolf-session` like `track-match-history`)
+  verifies the session, takes `{ playerUid, playerName, avatarUrl }` from the body and calls
+  `issue_link_code` (service role only). It answers `{ code: "XXXX-XXXX", expiresAt }`, 422 with
+  `reason: "no-player"` when the app has no uid or name yet, 429 when the recorder has had five codes in an
+  hour, and 401 or 503 from the session check. A code is 8 Crockford base32 characters (about 40 bits).
+  `link_codes` keeps only its SHA-256 hash, one row per recorder (a new code replaces the old), valid for 10
+  minutes, deleted when used. A hash collision between two recorders is retried.
+- The website calls `redeem_link_code(p_code)` and `unlink_player()` through PostgREST with the player's own
+  token (`src/auth-gateway.ts`), so `auth.uid()` is the owner and no service key or `RECORDER_ID_SECRET` is
+  needed there. `player_links` has `user_id` as its key and `recorder_id` unique, so an account has at most one
+  link and a recorder at most one account. `player_uid` is not unique on purpose: a uid is a claim, and a unique
+  one could be squatted. A fresh code redeemed by another account moves the link to it (latest proof wins).
+- Wrong, used and expired codes are one answer. Five wrong codes in 15 minutes lock an account out for the rest of
+  the window, even for a right code. The two windows (an hour for codes issued, 15 minutes for wrong codes) are
+  written once each, as `link_issue_window()` and `link_lockout_window()`, and the limits and the purge all read
+  them. `purge_link_data()` (service role only, scheduled every five minutes by a `purge-link-data` pg_cron job in
+  the migration) deletes attempt rows past their window and codes that expired unused, so those are kept for
+  their window plus up to five minutes; the issuing and redeeming functions
+  also sweep their own kind, so retention does not depend on the scheduler. Wrong-code rows carry the account id with
+  `on delete cascade`, so deleting the account deletes them. `redeem_link_code` refuses anonymous Supabase sessions.
+- `avatar_url` is stored only when it is an `https` address on an Overwolf host (`OVERWOLF_AVATAR_DOMAINS` in
+  `supabase/functions/issue-link-code/player-claim.ts`, the one place to change it); the tables also refuse anything
+  not starting `https://`. The real host has not been captured from a live overlay session yet, so the list is any
+  host under `overwolf.com` until it is. The header and account page fall back to the player's initial.
+- The overlay sends the request (issue `rivals_pulse` 1167): `POST` to `/functions/v1/issue-link-code` with the
+  header `x-overwolf-session` and the body `{ "playerUid": "...", "playerName": "...", "avatarUrl": "..." }`.
+- Not done here: refreshing the name and avatar after linking, and attributing matches to the link (issue 266).
+  Forgetting the *linked* uid must narrow to rows where `recorded_by` is the link's `recorder_id`.
+- Deploy order: the migration by hand (`npx supabase db push`, before the pull request merges), then
+  `npx supabase functions deploy issue-link-code`. The function needs `OVERWOLF_EXTENSION_ID`,
+  `RECORDER_ID_SECRET`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; the first two are already set for
+  `track-match-history`. Until the migration is applied, the website reads "not linked" and the link route
+  answers 503.
+- `supabase/checks/player_links.sql` proves the rules against the linked project and rolls back:
+  `npx supabase db query --linked -f supabase/checks/player_links.sql`. Run it after `db push`.
 
 ## Tests
 

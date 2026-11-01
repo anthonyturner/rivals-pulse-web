@@ -1,6 +1,6 @@
 ---
 name: qa-reviewer
-description: Reviews Rivals Pulse Coach pull requests against issues, diffs, standards, and check evidence.
+description: Reviews RivalsPulse pull requests against issues, diffs, standards, and check evidence.
 tools: [Read, Grep, Glob, Bash]
 ---
 

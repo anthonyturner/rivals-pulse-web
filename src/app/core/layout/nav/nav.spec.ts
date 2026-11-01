@@ -13,7 +13,11 @@ describe('Nav', () => {
   const accountLink = (): HTMLAnchorElement | undefined =>
     Array.from(
       fixture.nativeElement.querySelectorAll('#primary-navigation .nav-link') as NodeListOf<HTMLAnchorElement>,
-    ).find((anchor) => ['Sign in', 'Account'].includes(anchor.textContent?.trim() ?? ''));
+    ).find(
+      (anchor) =>
+        ['Sign in', 'Account'].includes(anchor.textContent?.trim() ?? '') ||
+        anchor.getAttribute('href') === '/account',
+    );
 
   beforeEach(async () => {
     sessionState.set({ status: 'signedOut' });
@@ -74,11 +78,75 @@ describe('Nav', () => {
     sessionState.set({
       status: 'signedIn',
       account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+      player: null,
     });
     fixture.detectChanges();
 
     expect(accountLink()?.textContent?.trim()).toBe('Account');
     expect(accountLink()?.getAttribute('href')).toBe('/account');
+  });
+
+  describe('when the account is linked to a player', () => {
+    const signInWithPlayer = (name: string, avatarUrl: string | null): void => {
+      sessionState.set({
+        status: 'signedIn',
+        account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+        player: { name, avatarUrl },
+      });
+      fixture.detectChanges();
+    };
+
+    it('shows the in-game name instead of Account, still pointing at the account page', () => {
+      signInWithPlayer('Aurora', null);
+
+      expect(accountLink()?.textContent).not.toContain('Account');
+      expect(accountLink()?.querySelector('.nav-player-name')?.textContent?.trim()).toBe('Aurora');
+      expect(accountLink()?.getAttribute('href')).toBe('/account');
+    });
+
+    it('keeps Account in the accessible name', () => {
+      signInWithPlayer('Aurora', null);
+
+      expect(accountLink()?.getAttribute('aria-label')).toBe('Account, Aurora');
+    });
+
+    it('shows the avatar when there is one, and the first letter when there is not', () => {
+      signInWithPlayer('Aurora', 'https://content.overwolf.com/a.png');
+
+      expect(accountLink()?.querySelector('img')?.getAttribute('src')).toBe('https://content.overwolf.com/a.png');
+
+      signInWithPlayer('Aurora', null);
+
+      expect(accountLink()?.querySelector('img')).toBeNull();
+      expect(accountLink()?.querySelector('.player-avatar--initial')?.textContent?.trim()).toBe('A');
+    });
+
+    it('cuts a long name short with CSS and keeps the whole name in the title', () => {
+      const longName = 'AVeryLongInGameNameThatWouldPushTheRowOut';
+      signInWithPlayer(longName, null);
+
+      const name = accountLink()?.querySelector('.nav-player-name') as HTMLElement;
+      const style = getComputedStyle(name);
+
+      expect(style.textOverflow).toBe('ellipsis');
+      expect(style.overflow).toBe('hidden');
+      expect(style.whiteSpace).toBe('nowrap');
+      expect(accountLink()?.getAttribute('title')).toBe(longName);
+      expect(name.textContent?.trim()).toBe(longName);
+    });
+
+    it('goes back to Account when the player is unlinked', () => {
+      signInWithPlayer('Aurora', null);
+      sessionState.set({
+        status: 'signedIn',
+        account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+        player: null,
+      });
+      fixture.detectChanges();
+
+      expect(accountLink()?.textContent?.trim()).toBe('Account');
+      expect(accountLink()?.getAttribute('aria-label')).toBeNull();
+    });
   });
 
   it('shows neither link while the session is still being read', () => {

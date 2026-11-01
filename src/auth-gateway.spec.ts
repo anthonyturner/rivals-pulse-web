@@ -170,6 +170,118 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('linkedPlayer', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+
+    it('reads the account\'s link with the user token, so row-level security picks the row', async () => {
+      const { fetcher, calls } = fakeFetch(() => ({
+        status: 200,
+        body: [{ player_name: 'Aurora', avatar_url: 'https://content.overwolf.com/a.png' }],
+      }));
+
+      const player = await createSupabaseAuthGateway(ENV, fetcher).linkedPlayer(tokens);
+
+      expect(player).toEqual({ name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/player_links?select=player_name,avatar_url&limit=1');
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('has no avatar when the row holds none', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 200, body: [{ player_name: 'Aurora', avatar_url: null }] }));
+
+      expect(await createSupabaseAuthGateway(ENV, fetcher).linkedPlayer(tokens)).toEqual({
+        name: 'Aurora',
+        avatarUrl: null,
+      });
+    });
+
+    it('is null for an account with no link', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 200, body: [] }));
+
+      expect(await createSupabaseAuthGateway(ENV, fetcher).linkedPlayer(tokens)).toBeNull();
+    });
+
+    it('is null, and does not throw, when the table is not there yet or Supabase is down', async () => {
+      spyOn(console, 'warn');
+      const missing = fakeFetch(() => ({ status: 404, body: { code: 'PGRST205' } }));
+      const offline = (async () => {
+        throw new TypeError('offline');
+      }) as typeof fetch;
+
+      expect(await createSupabaseAuthGateway(ENV, missing.fetcher).linkedPlayer(tokens)).toBeNull();
+      expect(await createSupabaseAuthGateway(ENV, offline).linkedPlayer(tokens)).toBeNull();
+    });
+  });
+
+  describe('redeemLinkCode', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const redeem = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).redeemLinkCode(tokens, 'ABCDEFGH') };
+    };
+
+    it('calls the redeem function with the code and the user token', async () => {
+      const { calls, result } = redeem({
+        status: 200,
+        body: { status: 'linked', name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+      });
+
+      expect(await result).toEqual({
+        status: 'linked',
+        player: { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+      });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/redeem_link_code');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({ p_code: 'ABCDEFGH' });
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reads an invalid code', async () => {
+      expect(await redeem({ status: 200, body: { status: 'invalid' } }).result).toEqual({ status: 'invalid' });
+    });
+
+    it('reads a rate limit', async () => {
+      expect(await redeem({ status: 200, body: { status: 'rate_limited', retryAfter: 540 } }).result).toEqual({
+        status: 'rate-limited',
+        retryAfterSeconds: 540,
+      });
+    });
+
+    it('reports a missing function, a refusal or an answer of an unknown shape as unavailable', async () => {
+      for (const answer of [
+        { status: 404, body: { code: 'PGRST202' } },
+        { status: 401 },
+        { status: 500 },
+        { status: 200, body: { status: 'surprise' } },
+        { status: 200, body: { status: 'linked' } },
+      ]) {
+        await expectAsync(redeem(answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
+  describe('unlinkPlayer', () => {
+    it('calls the unlink function with the user token', async () => {
+      const { fetcher, calls } = fakeFetch(() => ({ status: 204 }));
+
+      await createSupabaseAuthGateway(ENV, fetcher).unlinkPlayer({ accessToken: 'access', refreshToken: 'refresh' });
+
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/unlink_player');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reports a refusal as unavailable, so the link is not shown as removed', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 500 }));
+
+      await expectAsync(
+        createSupabaseAuthGateway(ENV, fetcher).unlinkPlayer({ accessToken: 'a', refreshToken: 'r' }),
+      ).toBeRejectedWithError(AuthUnavailableError);
+    });
+  });
+
   describe('signOut', () => {
     it('ends only this session and never throws', async () => {
       const { fetcher, calls } = fakeFetch(() => ({ status: 204 }));

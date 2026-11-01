@@ -50,10 +50,11 @@ to also be forgotten by the match database.
   | `do_not_store` | Uids and names of people who asked to be forgotten | The uid or name | Until removed by hand |
   | Aggregate tables | Anonymous counts only | None | Frozen when their raw rows are purged |
 
-- No store ties "the recorder's own match" to the verified `recorded_by`.
-  `participants` has the verified hash but does not say which of its lines is
+- `participants` has the verified hash but does not say which of its lines is
   the recorder's; `tracked_matches` names the recorder's own match but through
-  the claimed name.
+  the claimed name. Since #328, `tracked_match_recorders` (service role only)
+  ties each newly uploaded `tracked_matches` row to the verified `recorded_by`;
+  matches uploaded before it have no row.
 - `tracked_matches` and `players` grant `select` to `anon` and `authenticated`
   with a "using (true)" policy, so anyone holding the publishable key can read
   them (migrations `20260731000000` and `20260815000000`; not re-checked
@@ -109,9 +110,17 @@ valued, in the repo. Discord community server: https://discord.gg/TtGh6btTr.
 - *The link* to an in-game identity, kept apart from the settings so the
   question of one or several identities (open question 1) stays cheap.
 
-An account stores no copy of match data, no avatar and no level (settled), and
-we do not read the Discord avatar or handle for display. The dashboard shows the
-in-game name only (settled).
+An account stores no copy of match data and no level (settled), and we do not
+read the Discord avatar or handle for display. The dashboard shows the in-game
+name only (settled).
+
+*Amended 2026-11-01 (maintainer decision, issue 264).* The link now also holds
+the in-game name, uid and the Overwolf account avatar address that the desktop
+app reports when it issues the code, and the site shows the name and avatar in
+the header and on the account page, to the owner only. The avatar is stored only
+if it is an `https` address on an allow-listed Overwolf host. Level is still not
+stored or shown: the overlay has no source for it. The Discord avatar and handle
+are still not read.
 
 **3. Ownership is proven, never typed.** A link is made only from the overlay's
 verified Overwolf session, through the one-time code in #264. A name or uid
@@ -380,9 +389,9 @@ block (#263); code lifetime, attempt limits and a changed Overwolf identity
 
 - a. `forget_player` and the upload path skip `tracked_matches` and `players`.
   The forget button stays disabled until #264, which must cover them.
-- b. No store ties a recorder's own match to the verified `recorded_by`, so
-  attribution needs an additive change; matches uploaded before it may only be
-  attributable by weaker evidence (#264, #266).
+- b. #328 added `tracked_match_recorders`, which ties a recorder's own match to
+  the verified `recorded_by` from its deploy date; matches uploaded before it
+  may only be attributable by weaker evidence (#264, #266).
 - c. The policy says match details are deleted within six months, but
   `tracked_matches` has no age limit (only the 5,000 cap), and the policy does
   not describe its public reads (#265).
@@ -404,7 +413,9 @@ A reviewer checks a change against this ADR by looking for:
   update with the setting off stores nothing.
 - Both deletion choices exist, each with its confirmation, and "forget me" calls
   `forget_player` before the account is deleted.
-- No avatar, level or Discord handle appears on the dashboard.
+- No level and no Discord avatar or handle appears anywhere on the site. The only
+  avatar is the Overwolf account avatar the desktop app reported, stored only when
+  it is an `https` address on the allow-list (amended 2026-11-01).
 - `@supabase/supabase-js` is absent from the browser build, the session cookie is
   `HttpOnly`, and auth and account answers are `private, no-store`.
 - The website privacy page describes accounts, the sign-in cookie and deletion

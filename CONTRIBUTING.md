@@ -1,6 +1,6 @@
-# Contributing to Rivals Pulse Coach
+# Contributing to RivalsPulse
 
-Rivals Pulse Coach uses a lightweight, issue-first GitHub flow. Every code change
+RivalsPulse uses a lightweight, issue-first GitHub flow. Every code change
 starts with an issue, is developed on a short-lived branch, and reaches
 `master` through a pull request. People and AI agents follow
 the same flow; the agents' version, with the reasoning behind each step, is in

@@ -1,4 +1,4 @@
-<img [src]="imageUrl()" alt="" width="40" height="40" loading="lazy" (error)="onImageError($event)" />
+<img appHeroImageFallback [src]="imageUrl()" alt="" width="40" height="40" loading="lazy" />
 <span class="head">
   <span class="hero-name">
     @if (heroQuery(); as query) {
