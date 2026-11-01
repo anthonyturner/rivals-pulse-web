@@ -161,6 +161,8 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('Overwolf account avatar');
     expect(text).toContain('cannot be turned back into it');
     expect(text).toContain('expires after ten minutes');
+    expect(text).toContain('the new ones replace the ones we stored');
+    expect(text).toContain('name and avatar updates');
     expect(text).toContain('You can unlink at any time');
     expect(text).not.toContain('An account is not linked to your in-game name');
   });
