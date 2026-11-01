@@ -35,6 +35,15 @@ export async function handleAccountHttp(
   res.end(hasBody ? JSON.stringify(response.body) : undefined);
 }
 
+/**
+ * A Vercel function for one account route. Vercel only serves a file under `api/` at its own path
+ * (the `api/[...path].ts` catch-all is never invoked), so each route in `account-api.ts` needs its
+ * own file that exports this.
+ */
+export function accountRouteHandler(route: string) {
+  return (req: IncomingMessage, res: ServerResponse): Promise<void> => handleAccountHttp(req, res, route);
+}
+
 async function toAccountRequest(req: IncomingMessage, route: string): Promise<AccountRequest> {
   const url = new URL(req.url ?? '/', 'https://local.invalid');
   const method = (req.method ?? 'GET').toUpperCase();
