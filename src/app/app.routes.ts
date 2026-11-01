@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
+import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { HOME_TITLE } from './core/seo/site-meta';
 
 export const routes: Routes = [
@@ -116,6 +117,7 @@ export const routes: Routes = [
   },
   {
     path: 'learning-paths',
+    canMatch: [releasedPageGuard],
     loadComponent: () =>
       import('./features/learning/learning-paths/learning-paths-page.component').then(
         (module) => module.LearningPathsPageComponent,
@@ -186,6 +188,7 @@ export const routes: Routes = [
   },
   {
     path: 'watch-next',
+    canMatch: [releasedPageGuard],
     loadComponent: () =>
       import('./features/learning/watch-next/watch-next-page.component').then(
         (module) => module.WatchNextPageComponent,
