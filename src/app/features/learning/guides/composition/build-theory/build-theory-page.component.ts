@@ -1,16 +1,16 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../../shared/components/eyebrow/eyebrow.component';
+import { NoticeComponent } from '../../../../../shared/components/notice/notice.component';
+import { HeroImageFallbackDirective } from '../../../../../shared/directives/hero-image-fallback.directive';
 
 interface BuildType {
   name: string;
-  shortName: string;
   summary: string;
   priority: string;
   example: string;
   image: string;
-  accent: string;
 }
 
 interface UtilitySignal {
@@ -20,66 +20,57 @@ interface UtilitySignal {
 
 @Component({
   selector: 'app-build-theory-page',
-  imports: [CommonModule, EyebrowComponent],
+  imports: [EyebrowComponent, HeroImageFallbackDirective, NoticeComponent, RouterLink],
   templateUrl: './build-theory-page.component.html',
-  styleUrl: './build-theory-page.component.css',
+  styleUrl: '../../guide-article/guide-article.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuildTheoryPageComponent {
   readonly buildTypes: BuildType[] = [
     {
-      name: 'Utility Build',
-      shortName: 'Utility',
+      name: 'Utility build',
       summary:
         'A fight plan built around the tools that change enemy options: shields, walls, revives, crowd control, damage boosts, scouting, saves, and cooldown denial.',
       priority: 'Hold the tool until it answers the enemy win condition or creates a clean engage.',
       example:
         'Save a defensive cooldown for the dive, wall off the escape route, or scout the flank before your team commits.',
       image: '/images/heroes/invisible-woman.png',
-      accent: 'utility',
     },
     {
-      name: 'Damage Build',
-      shortName: 'Damage',
+      name: 'Damage build',
       summary:
         'A plan that maximizes pressure, burst windows, target focus, and finishing power.',
       priority: 'Create uptime without overexposing, then convert cooldown advantages into eliminations.',
       example:
         'Take an off-angle, force the support to look away, then burst when your Vanguard starts the fight.',
       image: '/images/heroes/star-lord.png',
-      accent: 'damage',
     },
     {
-      name: 'Sustain Build',
-      shortName: 'Sustain',
+      name: 'Sustain build',
       summary:
         'A plan that wins by surviving longer through healing, shields, armor, damage reduction, revives, and defensive resources.',
       priority: 'Absorb or stabilize pressure until the enemy runs out of resources.',
       example:
         'Play slower, rotate through cover, and trade defensive resources for enemy burst cooldowns.',
       image: '/images/heroes/adam-warlock.png',
-      accent: 'sustain',
     },
     {
-      name: 'Mobility Build',
-      shortName: 'Mobility',
+      name: 'Mobility build',
       summary:
         'A plan centered on movement tools, fast rotations, vertical access, chase routes, escape paths, and target swaps.',
       priority: 'Use movement to choose the fight location, not just to run after damage is taken.',
       example:
         'Stage on high ground, pressure the backline, then exit before the counter-engage arrives.',
       image: '/images/heroes/spider-man.png',
-      accent: 'mobility',
     },
     {
-      name: 'Ultimate Build',
-      shortName: 'Ultimate',
+      name: 'Ultimate build',
       summary:
         'A plan that protects, charges, and converts an ultimate into the fight-winning moment.',
       priority: 'Play around the ult condition instead of spending every resource early.',
       example:
         'Force mobility first, hide the ultimate timing, then combo after the enemy save is gone.',
       image: '/images/heroes/magneto.png',
-      accent: 'ultimate',
     },
   ];
 

@@ -1,0 +1,29 @@
+:host {
+  display: grid;
+}
+
+.guide-tile > .guide-text.practice {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: var(--type-small);
+}
+
+.tags {
+  margin-top: 6px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+}

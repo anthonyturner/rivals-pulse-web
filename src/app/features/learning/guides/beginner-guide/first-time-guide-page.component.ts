@@ -1,18 +1,21 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
 
 interface FirstTimeGuideSection {
   title: string;
   summary: string;
   points: string[];
+  sequence?: boolean;
 }
 
 @Component({
   selector: 'app-first-time-guide-page',
-  imports: [CommonModule, RouterLink],
+  imports: [HeroImageFallbackDirective, RouterLink],
   templateUrl: './first-time-guide-page.component.html',
-  styleUrl: './first-time-guide-page.component.css',
+  styleUrl: '../guide-article/guide-article.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FirstTimeGuidePageComponent {
   readonly sections: FirstTimeGuideSection[] = [
@@ -42,6 +45,7 @@ export class FirstTimeGuidePageComponent {
       title: 'Your first match plan',
       summary:
         'Do not try to master every system at once. Use a small loop that works on every map and every role.',
+      sequence: true,
       points: [
         'Before the fight starts, find your team and identify the path most players are taking.',
         'Choose cover before you shoot. If the enemy looks at you, you should already know where you will hide.',

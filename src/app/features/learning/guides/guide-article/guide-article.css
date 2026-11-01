@@ -57,6 +57,10 @@
   max-width: 68ch;
 }
 
+.guide-text + :is(ul, ol) {
+  margin-top: 8px;
+}
+
 .guide-caption {
   color: var(--text-soft);
   font-size: var(--type-caption);
@@ -68,9 +72,62 @@
   text-decoration: underline;
 }
 
-.guide-link:focus-visible {
+.guide-link:focus-visible,
+.guide-button:focus-visible,
+.guide-search input:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
+}
+
+.guide-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: var(--type-small);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.guide-button--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.guide-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 12px;
+}
+
+.guide-search {
+  flex: 1 1 280px;
+  max-width: 420px;
+}
+
+.guide-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.guide-search input::placeholder {
+  color: var(--text-soft);
+}
+
+.guide-count {
+  color: var(--text-soft);
+  font-size: var(--type-small);
 }
 
 .guide-section > h2 {
@@ -101,11 +158,45 @@
   background: var(--bg-elevated);
 }
 
-.guide-tile > :is(h2, h3) {
-  margin-bottom: 8px;
+.guide-grid > .guide-tile {
+  align-content: start;
+}
+
+.guide-tile > :is(h2, h3),
+.guide-tile-head h3 {
   font-size: var(--type-h3);
   font-weight: 800;
   line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.guide-tile > :is(h2, h3) {
+  margin-bottom: 8px;
+}
+
+.guide-tile > .guide-text + .guide-text {
+  margin-top: 6px;
+}
+
+.guide-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.guide-tile-head > div {
+  min-width: 0;
+}
+
+.guide-tile-head > img {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  object-fit: cover;
+  object-position: top center;
 }
 
 .guide-bullets {
