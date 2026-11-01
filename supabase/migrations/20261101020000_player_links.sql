@@ -247,13 +247,15 @@ begin
 end
 $$;
 
--- Postgres grants EXECUTE to everyone on a new function; restate who may call each.
+-- Postgres grants EXECUTE to everyone on a new function, and Supabase's default privileges give
+-- service_role its own grant too, so the two functions for signed-in accounts name it in the revoke;
+-- restate who may call each.
 revoke execute on function public.link_code_hash(text) from public, anon, authenticated;
 revoke execute on function public.link_issue_window() from public, anon, authenticated;
 revoke execute on function public.link_lockout_window() from public, anon, authenticated;
 revoke execute on function public.issue_link_code(text, text, text, text, text, interval, integer) from public, anon, authenticated;
-revoke execute on function public.redeem_link_code(text) from public, anon, authenticated;
-revoke execute on function public.unlink_player() from public, anon, authenticated;
+revoke execute on function public.redeem_link_code(text) from public, anon, authenticated, service_role;
+revoke execute on function public.unlink_player() from public, anon, authenticated, service_role;
 revoke execute on function public.purge_link_data() from public, anon, authenticated;
 grant execute on function public.link_code_hash(text) to service_role;
 grant execute on function public.link_issue_window() to service_role;

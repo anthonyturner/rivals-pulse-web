@@ -275,6 +275,26 @@ begin
     raise notice 'ok: a client cannot issue a code';
   end;
 
+  -- The service role is for issuing codes; it cannot redeem or unlink as an account.
+  reset role;
+  set local role service_role;
+
+  begin
+    perform public.redeem_link_code('ABCDEFGH');
+    raise exception 'check failed: the service role can redeem a code';
+  exception when insufficient_privilege then
+    raise notice 'ok: the service role cannot redeem a code';
+  end;
+
+  begin
+    perform public.unlink_player();
+    raise exception 'check failed: the service role can unlink';
+  exception when insufficient_privilege then
+    raise notice 'ok: the service role cannot unlink';
+  end;
+  reset role;
+  set local role authenticated;
+
   -- Unlinking removes the link.
   perform set_config('request.jwt.claims', claims_b, true);
   perform public.unlink_player();
