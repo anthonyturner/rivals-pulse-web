@@ -65,7 +65,7 @@ describe('InsightsTabComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(host.textContent).toContain('Not enough data yet');
+    expect(host.textContent).toContain('There is not enough data yet');
     expect(host.querySelector('table')).toBeNull();
   });
 
@@ -76,8 +76,8 @@ describe('InsightsTabComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(host.textContent).toContain('cannot be loaded');
-    expect(host.textContent).not.toContain('Not enough data yet');
+    expect(host.textContent).toContain('could not be loaded');
+    expect(host.textContent).not.toContain('not enough data yet');
   });
 
   it('shows shown rows with their share and win rate, and hidden rows as not enough data', async () => {

@@ -5,41 +5,37 @@
 }
 
 .community-page {
-  padding-block: 32px;
+  padding-block: 16px;
 }
 
 .community-page__header {
   display: grid;
-  gap: 12px;
-  padding: 24px 0 24px;
-}
-
-.community-page__header > * {
-  margin: 0;
+  gap: 4px;
+  padding-block: 8px 12px;
 }
 
 .community-page__title {
-  max-width: 850px;
-  color: var(--text);
   font-size: var(--type-page-title);
   font-weight: 850;
-  line-height: 1.04;
+  line-height: 1.1;
 }
 
-.community-page__lede,
-.community-page__note {
-  max-width: 790px;
+.community-page__intro {
+  max-width: 70ch;
   color: var(--text-soft);
-  line-height: 1.6;
+  font-size: var(--type-small);
+  line-height: 1.4;
 }
 
-.community-page__lede {
-  font-size: 1.04rem;
+.community-page__link {
+  color: #0e6a98;
+  font-weight: 700;
+  text-decoration: underline;
 }
 
-.community-page__note {
-  color: var(--text-muted);
-  font-size: 0.92rem;
+.community-page__link:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
 }
 
 .community-page__tabs {
@@ -47,15 +43,20 @@
   gap: 4px;
   overflow-x: auto;
   border-bottom: 1px solid var(--border-strong);
+  scrollbar-width: none;
 }
 
 .community-page__tab {
+  display: flex;
   flex: 0 0 auto;
-  padding: 12px 18px;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
   border: 1px solid transparent;
   border-bottom: 0;
   border-radius: 8px 8px 0 0;
   color: var(--text-soft);
+  font-size: var(--type-small);
   font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
@@ -68,16 +69,10 @@
 .community-page__tab[aria-selected='true'] {
   border-color: var(--border-strong);
   background: var(--bg-elevated);
-  box-shadow: inset 0 3px 0 var(--accent);
+  box-shadow: inset 0 3px 0 var(--accent-strong);
   color: var(--text);
 }
 
-.community-page__note-link {
-  color: var(--blue);
-  font-weight: 700;
-}
-
-.community-page__note-link:focus-visible,
 .community-page__tab:focus-visible,
 .community-page__panel:focus-visible {
   outline: 3px solid var(--blue);
@@ -85,20 +80,18 @@
 }
 
 .community-page__panel {
-  padding: 20px 0;
+  padding-top: 12px;
 }
 
-@media (max-width: 640px) {
+/* Tall enough that the footer does not jump when the numbers replace the loading panel. */
+@media (min-width: 768px) {
+  .community-page__panel {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 560px) {
   .community-page {
     padding-block: var(--mobile-page-gutter);
-  }
-
-  .community-page__tabs {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
-
-  .community-page__tab {
-    padding: 10px 14px;
   }
 }

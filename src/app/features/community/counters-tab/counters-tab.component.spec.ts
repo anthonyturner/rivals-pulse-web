@@ -65,7 +65,7 @@ describe('CountersTabComponent', () => {
   it('shows the designed empty state, with the minimum named, when no pairing has enough matches', async () => {
     await answer(matchupsOf([]));
 
-    expect(host().querySelector('.empty-state')).toBeTruthy();
+    expect(host().querySelector('app-state-panel')).toBeTruthy();
     expect(text()).toContain('10 recorded matches');
     expect(host().querySelector('a')?.getAttribute('href')).toBe('/counters');
   });
@@ -73,7 +73,7 @@ describe('CountersTabComponent', () => {
   it('says the matchups cannot be loaded when the request fails, and shows no empty state', async () => {
     await answer('down', 500);
 
-    expect(text()).toContain('cannot be loaded right now');
-    expect(host().querySelector('.empty-state')).toBeNull();
+    expect(text()).toContain('Counter matchups could not be loaded');
+    expect(host().querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
   });
 });

@@ -1,17 +1,12 @@
 <section class="community-page page-container page-container--wide">
   <header class="community-page__header">
-    <h1 class="community-page__title">See your RivalsPulse screens as the whole community plays them.</h1>
-    <p class="community-page__lede">
-      One tab for each screen of the RivalsPulse app, showing what it looks like across everyone who
-      uploads matches instead of only you.
-    </p>
-    <p class="community-page__note">
-      These are anonymous community totals: no names, no player ids and no individual
-      matches, and a number only appears once enough matches back it. See the <a class="community-page__note-link" routerLink="/privacy">privacy notes</a> for what the app uploads, and <a class="community-page__note-link" routerLink="/how-we-count">how we count</a> for what the numbers include.
+    <h1 class="community-page__title">Community totals</h1>
+    <p class="community-page__intro">
+      Anonymous totals from players' uploads: no names or ids, and a number shows only once enough matches back it. Read the <a class="community-page__link" routerLink="/privacy">privacy notes</a> or <a class="community-page__link" routerLink="/how-we-count">how we count</a>.
     </p>
   </header>
 
-  <div class="community-page__tabs" role="tablist" aria-label="Community totals by app screen">
+  <div #tabList class="community-page__tabs" role="tablist" aria-label="Community totals by app screen">
     @for (tab of tabs(); track tab.id; let index = $index) {
       <a
         #tabLink

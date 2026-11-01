@@ -109,7 +109,7 @@ describe('StatsTabComponent', () => {
   it('switches mode and marks the chosen one pressed', async () => {
     await answer(READY);
 
-    const buttons = Array.from(host().querySelectorAll<HTMLButtonElement>('.stats-tab__mode'));
+    const buttons = Array.from(host().querySelectorAll<HTMLButtonElement>('.mode'));
     expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual(['true', 'false']);
 
     buttons[1].click();
@@ -117,7 +117,7 @@ describe('StatsTabComponent', () => {
     fixture.detectChanges();
 
     expect(
-      Array.from(host().querySelectorAll<HTMLButtonElement>('.stats-tab__mode')).map((button) => button.getAttribute('aria-pressed')),
+      Array.from(host().querySelectorAll<HTMLButtonElement>('.mode')).map((button) => button.getAttribute('aria-pressed')),
     ).toEqual(['false', 'true']);
     expect(text()).toContain('40.0%');
     expect(text()).not.toContain('54.2%');
@@ -139,7 +139,7 @@ describe('StatsTabComponent', () => {
       ],
     });
 
-    const labels = Array.from(host().querySelectorAll('.stats-tab__mode')).map((button) => button.textContent?.trim());
+    const labels = Array.from(host().querySelectorAll('.mode')).map((button) => button.textContent?.trim());
 
     expect(labels).toEqual(['Quick Match and Competitive', 'Competitive']);
     expect(text()).not.toContain('Arcade');
@@ -149,17 +149,16 @@ describe('StatsTabComponent', () => {
   it('shows the designed empty state, with the minimum named, when no role has enough lines', async () => {
     await answer(NOT_ENOUGH);
 
-    expect(host().querySelector('.empty-state')).toBeTruthy();
-    expect(text()).toContain('Not enough data yet');
-    expect(text()).toContain('50 lines');
-    expect(host().querySelector('.stats-tab__mode')).toBeNull();
+    expect(host().querySelector('app-state-panel')).toBeTruthy();
+    expect(text()).toContain('appear once it has 50 lines');
+    expect(host().querySelector('.mode')).toBeNull();
     expect(text()).not.toMatch(/NaN|undefined|null/);
   });
 
   it('says the benchmarks cannot be loaded when the request fails, and nothing else', async () => {
     await answer('down', 500);
 
-    expect(text()).toContain('cannot be loaded right now');
-    expect(host().querySelector('.empty-state')).toBeNull();
+    expect(text()).toContain('Role benchmarks could not be loaded');
+    expect(host().querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
   });
 });

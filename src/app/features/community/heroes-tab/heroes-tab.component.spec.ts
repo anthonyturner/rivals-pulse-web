@@ -42,7 +42,8 @@ describe('HeroesTabComponent', () => {
   afterEach(() => http.verify());
 
   it('says it is loading while the requests run', async () => {
-    expect(host().querySelector('[role="status"]')?.textContent).toContain('Loading');
+    expect(host().querySelector('[role="status"]')?.textContent).toContain('Loading hero numbers');
+    expect(host().querySelector('[aria-busy="true"]')).toBeTruthy();
     await answer(READY);
   });
 
@@ -51,12 +52,13 @@ describe('HeroesTabComponent', () => {
 
     const lists = Array.from(host().querySelectorAll('ol'));
     const names = (list: Element): string[] =>
-      Array.from(list.querySelectorAll('.hero-list__name')).map((name) => name.textContent?.trim() ?? '');
+      Array.from(list.querySelectorAll('.name-link')).map((name) => name.textContent?.trim() ?? '');
 
     expect(lists.map(names)).toEqual([['Hela', 'Storm'], ['Storm', 'Hela']]);
     expect(text()).toContain('20.1%');
     expect(text()).toContain('70.0%');
     expect(text()).toContain('Season 10.5');
+    expect(text()).toContain('30 games');
     expect(text()).not.toMatch(/NaN|undefined|null/);
 
     const hrefs = Array.from(host().querySelectorAll('a')).map((anchor) => anchor.getAttribute('href'));
@@ -68,8 +70,7 @@ describe('HeroesTabComponent', () => {
   it('shows the designed empty state, with the minimum named and a link to the full page, when nothing clears the minimum', async () => {
     await answer(statsOf([], { matchesCounted: 12 }));
 
-    expect(host().querySelector('.empty-state')).toBeTruthy();
-    expect(text()).toContain('Not enough data yet');
+    expect(host().querySelector('app-state-panel')).toBeTruthy();
     expect(text()).toContain('10 appearances');
     expect(host().querySelector('a')?.getAttribute('href')).toBe('/heroes');
   });
@@ -77,7 +78,7 @@ describe('HeroesTabComponent', () => {
   it('says the numbers cannot be loaded when the request fails, and shows no empty state', async () => {
     await answer('down', 500);
 
-    expect(text()).toContain('cannot be loaded right now');
-    expect(host().querySelector('.empty-state')).toBeNull();
+    expect(text()).toContain('Hero numbers could not be loaded');
+    expect(host().querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
   });
 });

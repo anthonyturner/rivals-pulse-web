@@ -5,11 +5,14 @@ import { BehaviorSubject, switchMap, tap } from 'rxjs';
 
 import type { HeroStats, HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
+import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { DEFAULT_MODE_ID, heroStatsModeOptions, type ModeOption } from '../../../shared/utilities/play-modes';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { heroIdentities } from '../hero-identity';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
+import { TierRowsComponent } from '../tier-rows/tier-rows.component';
 import { buildTierListView, seasonOptions, type SeasonOption } from './tier-list-view';
 
 interface TierListRequest {
@@ -20,7 +23,14 @@ interface TierListRequest {
 /** The community tier list: RivalsPulse players' matches only, all ranks together. */
 @Component({
   selector: 'app-tier-list-page',
-  imports: [FilterSelectComponent, HeroProgressListComponent, RouterLink],
+  imports: [
+    FilterSelectComponent,
+    HeroProgressListComponent,
+    NoticeComponent,
+    RouterLink,
+    StatePanelComponent,
+    TierRowsComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './tier-list-page.component.html',
   styleUrl: './tier-list-page.component.css',
@@ -91,10 +101,6 @@ export class TierListPageComponent {
 
   chooseMode(value: string): void {
     this.request(this.chosenSeason(), value as HeroStatsModeId);
-  }
-
-  onImageError(event: Event): void {
-    (event.target as HTMLImageElement).src = '/images/heroes/default-hero.png';
   }
 
   private request(halfSeason: number | undefined, mode: HeroStatsModeId): void {

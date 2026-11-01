@@ -43,70 +43,26 @@
   }
 
   @if (failed()) {
-    <section class="state-panel">
-      <h2>The tier list could not be loaded</h2>
+    <app-state-panel kind="error" heading="The tier list could not be loaded">
       <p>The numbers are unavailable right now. Try again in a few minutes.</p>
-    </section>
+    </app-state-panel>
   } @else if (loading()) {
-    <section class="state-panel" role="status" aria-busy="true">
-      <h2>Loading the tier list</h2>
+    <app-state-panel kind="loading" heading="Loading the tier list">
       <p>Fetching the latest counted matches.</p>
-    </section>
+    </app-state-panel>
   } @else if (v !== null) {
     @if (v.modeCaveat; as caveat) {
-      <p class="notice" role="note">{{ caveat }}</p>
+      <app-notice>{{ caveat }}</app-notice>
     }
 
     @if (v.fallbackNotice; as notice) {
-      <p class="notice" role="note">{{ notice }}</p>
+      <app-notice>{{ notice }}</app-notice>
     }
 
     @if (v.state === 'ready') {
-      <ol class="tiers">
-        @for (tier of v.tiers; track tier.name) {
-          <li class="tier-row tier-{{ tier.name }}">
-            <h2 class="tier-label">
-              <span class="visually-hidden">Tier </span>
-              <span class="tier-letter">{{ tier.name }}</span>
-              <span class="visually-hidden">, </span>
-              <span class="tier-count">
-                {{ tier.heroes.length }}<span class="tier-unit">{{ tier.heroes.length === 1 ? ' hero' : ' heroes' }}</span>
-              </span>
-            </h2>
-
-            @if (tier.heroes.length > 0) {
-              <ul class="hero-grid">
-                @for (hero of tier.heroes; track hero.hero) {
-                  <li class="hero-tile">
-                    <img
-                      [src]="hero.imageUrl"
-                      alt=""
-                      width="40"
-                      height="40"
-                      loading="lazy"
-                      (error)="onImageError($event)"
-                    />
-                    <span class="hero-name">{{ hero.name }}</span>
-                    <span class="hero-figures">
-                      <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
-                      <span class="hero-caption">
-                        <span class="hero-pick"
-                          ><span class="visually-hidden">, pick rate </span>{{ hero.pickRateLabel }}<span aria-hidden="true"> pick &middot; </span></span
-                        ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
-                      </span>
-                    </span>
-                  </li>
-                }
-              </ul>
-            } @else {
-              <p class="empty-tier">No heroes in this tier yet.</p>
-            }
-          </li>
-        }
-      </ol>
+      <app-tier-rows [tiers]="v.tiers" />
     } @else {
-      <section class="state-panel">
-        <h2>Not enough data yet {{ v.scopeLabel }}</h2>
+      <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
         <p class="state-count">
           @if (v.state === 'building') {
             {{ v.matchesCountedLabel }}
@@ -119,7 +75,7 @@
           The tier list is built from matches that RivalsPulse players record, so it fills in as
           they play. A hero is placed once it has {{ v.minimumMatches }} appearances.
         </p>
-      </section>
+      </app-state-panel>
     }
 
     @if (v.building.length > 0) {

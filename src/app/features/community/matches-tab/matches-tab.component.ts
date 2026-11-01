@@ -1,17 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { CommunityEmptyStateComponent } from '../community-empty-state/community-empty-state.component';
+import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { CommunityMatchesService } from './community-matches.service';
 import { buildCommunityMatchesView } from './community-matches-view';
 
-const WHAT_THE_TAB_SHOWS =
-  'Win rate by map, the mix of game modes, average match length and matches per day across the community.';
+const WHAT_THE_TAB_SHOWS = 'Win rate by map, mode mix, average length and matches per day.';
 
 /** The community's match totals: anonymous, counted once per match, never anyone's own matches. */
 @Component({
   selector: 'app-community-matches-tab',
-  imports: [CommunityEmptyStateComponent],
+  imports: [CommunitySummaryComponent],
   templateUrl: './matches-tab.component.html',
   styleUrl: './matches-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

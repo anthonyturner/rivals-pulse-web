@@ -92,7 +92,7 @@ describe('buildCommunityMatchesView', () => {
     );
 
     expect(view.maps.rows).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
-    expect(view.maps.pending).toEqual(['Klyntar', 'Hydra Base']);
+    expect(view.maps.pendingNote).toBe('Not enough data yet for: Klyntar, Hydra Base.');
     expect(view.maps.note).toBeNull();
   });
 
@@ -100,7 +100,7 @@ describe('buildCommunityMatchesView', () => {
     const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY })));
 
     expect(view.maps.rows).toEqual([]);
-    expect(view.maps.pending).toEqual([]);
+    expect(view.maps.pendingNote).toBeNull();
     expect(view.maps.note).toBe(
       'Not enough data yet. A map needs 10 matches with a result from at least 3 players before its win rate shows.',
     );
