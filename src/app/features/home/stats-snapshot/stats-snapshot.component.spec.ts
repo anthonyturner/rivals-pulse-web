@@ -64,7 +64,20 @@ describe('StatsSnapshotComponent', () => {
     await settle();
   }
 
+  const cards = (): HTMLElement[] => Array.from(element.querySelectorAll<HTMLElement>('.highlight'));
+  /** A card's title, value and detail, in order, as separate words so no two run together. */
+  const cardText = (card: HTMLElement): string =>
+    Array.from(card.querySelectorAll('p, a')).map(text).filter((part) => part !== '').join(' | ');
+
   describe('while the numbers load', () => {
+    it('reserves three skeleton cards beside the panel, hidden from assistive technology, with no figures', () => {
+      expect(cards().length).toBe(3);
+      expect(cards().every((card) => card.classList.contains('highlight--skeleton') && card.textContent?.trim() === '')).toBeTrue();
+      expect(cards().every((card) => card.getAttribute('aria-hidden') === 'true')).toBeTrue();
+      http.expectOne('/api/heroes').flush(roster);
+      http.expectOne('/api/hero-stats').flush(populated);
+    });
+
     it('reserves the panel and marks it busy, with the heading already in place', () => {
       expect(text(element.querySelector('h2'))).toBe('Hero stats');
       expect(element.querySelector('[aria-busy="true"]')).toBeTruthy();
@@ -167,6 +180,22 @@ describe('StatsSnapshotComponent', () => {
       expect(element.querySelector('.empty__link')?.getAttribute('href')).toBe('/community');
     });
 
+    it('shows matches counted, the most picked hero and the highest win rate beside the table', () => {
+      expect(cards().map(cardText)).toEqual([
+        'Matches counted | 149 | Season 10.5',
+        'Most picked | Storm | 30.0% pick rate',
+        'Highest win rate | Hulk | 60.0% over 30 appearances',
+      ]);
+      expect(cards().some((card) => card.classList.contains('highlight--skeleton'))).toBeFalse();
+    });
+
+    it('links a hero card to the hero, with its portrait', () => {
+      const [, mostPicked] = cards();
+
+      expect(mostPicked.querySelector('a')?.getAttribute('href')).toBe('/heroes?hero=storm');
+      expect(mostPicked.querySelector('img')?.getAttribute('src')).toBe('/images/heroes/storm.png');
+    });
+
     it('says the sample behind the numbers under the table', () => {
       expect(text(element.querySelector('.snapshot__sample'))).toBe(
         'From 149 matches by Rivals Pulse players. Only heroes with at least 10 appearances are listed.',
@@ -201,6 +230,15 @@ describe('StatsSnapshotComponent', () => {
       expect(text(element.querySelector('.snapshot__invitation'))).toContain('sharper');
       expect(text(element.querySelector('[role="tabpanel"]'))).not.toMatch(/(^|\s)0(\.0)?%?(\s|$)/);
     });
+
+    it('keeps the match count and says "Not enough data yet" for the heroes, never a zero', () => {
+      expect(cards().map(cardText)).toEqual([
+        'Matches counted | 3 | Season 10.5',
+        'Most picked | Not enough data yet',
+        'Highest win rate | Not enough data yet',
+      ]);
+      expect(cards().some((card) => card.querySelector('a'))).toBeFalse();
+    });
   });
 
   describe('when the previous half-season stands in', () => {
@@ -214,6 +252,13 @@ describe('StatsSnapshotComponent', () => {
 
   describe('when the numbers cannot be read', () => {
     beforeEach(async () => answer(null));
+
+    it('says "Not enough data yet" on every card instead of a figure', () => {
+      expect(cards().map((card) => text(card.querySelector('.highlight__value')))).toEqual(
+        Array(3).fill('Not enough data yet'),
+      );
+      expect(element.textContent).not.toMatch(/NaN|Infinity|undefined/);
+    });
 
     it('shows one line and a retry button instead of a blank panel', () => {
       expect(text(element.querySelector('.snapshot__message p'))).toContain('cannot be loaded');
@@ -231,6 +276,7 @@ describe('StatsSnapshotComponent', () => {
       await settle();
 
       expect(rowNames()).toEqual(['Storm', 'Hulk']);
+      expect(cardText(cards()[1])).toBe('Most picked | Storm | 30.0% pick rate');
     });
   });
 

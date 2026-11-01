@@ -65,6 +65,8 @@ describe('StatsSnapshotComponent server render', () => {
 
     expect(html).toContain('Hero stats');
     expect(html).toContain('aria-busy="true"');
+    expect(html.match(/class="highlight highlight--skeleton"/g)).toHaveSize(3);
+    expect(html).not.toContain('Not enough data yet');
     expect(html).toContain('href="/tier-list"');
     expect(html).toContain('Every match played with Rivals Pulse makes these stats sharper.');
     expect(html.match(/NaN|Infinity|undefined|<table|role="tab"/)).toBeNull();

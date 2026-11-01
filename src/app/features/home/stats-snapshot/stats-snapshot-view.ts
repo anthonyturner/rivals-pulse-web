@@ -6,6 +6,9 @@ import { heroCell, type HeroCellView, type HeroIdentities } from '../../insights
 /** How many heroes a tab lists. A hero short of the minimum does not take one of these. */
 export const SNAPSHOT_SLOTS = 5;
 
+/** How many quick-stat cards sit beside the table, so the loading state can reserve them. */
+export const SNAPSHOT_HIGHLIGHTS = 3;
+
 export const SNAPSHOT_TABS = [
   { id: 'all', label: 'All', role: null },
   { id: 'vanguard', label: 'Vanguard', role: 'Vanguard' },
@@ -35,14 +38,33 @@ export interface SnapshotPanelView {
   emptyMessage: string;
 }
 
+/** Shown in place of a figure the stats cannot back, so a card never prints 0, NaN or 0%. */
+export const HIGHLIGHT_UNAVAILABLE = 'Not enough data yet';
+
+export type SnapshotHighlightId = 'matches' | 'most-picked' | 'highest-win-rate';
+
+/** One quick-stat card beside the table. */
+export interface SnapshotHighlightView {
+  id: SnapshotHighlightId;
+  title: string;
+  /** The figure or the hero's name, or `HIGHLIGHT_UNAVAILABLE`. */
+  value: string;
+  /** The line under the value; empty when the value is unavailable. */
+  detail: string;
+  /** The hero behind the card, for its portrait and link; null for a figure or an unavailable card. */
+  hero: HeroCellView | null;
+}
+
 export type StatsSnapshotView =
   | {
       /** The numbers could not be read. */
       kind: 'unavailable';
       message: string;
+      highlights: SnapshotHighlightView[];
     }
   | {
       kind: 'ready';
+      highlights: SnapshotHighlightView[];
       /** The half-season the stats describe, or null before any half-season exists. */
       halfSeasonLabel: string | null;
       /** The sample behind the figures, always shown under the table. */
@@ -58,7 +80,11 @@ export type StatsSnapshotView =
  */
 export function buildStatsSnapshotView(stats: HeroStats | null, identities: HeroIdentities): StatsSnapshotView {
   if (stats === null) {
-    return { kind: 'unavailable', message: 'Hero stats cannot be loaded right now. The rest of the page is not affected.' };
+    return {
+      kind: 'unavailable',
+      message: 'Hero stats cannot be loaded right now. The rest of the page is not affected.',
+      highlights: highlightsOf(null, []),
+    };
   }
 
   const listed = stats.tiers
@@ -80,6 +106,7 @@ export function buildStatsSnapshotView(stats: HeroStats | null, identities: Hero
 
   return {
     kind: 'ready',
+    highlights: highlightsOf(stats, listed),
     halfSeasonLabel,
     sample: `${counted}Only heroes with at least ${minimum} are listed.`,
     fallbackNotice:
@@ -98,6 +125,60 @@ export function buildStatsSnapshotView(stats: HeroStats | null, identities: Hero
       };
     }),
   };
+}
+
+interface ListedHero {
+  line: HeroStatsHero;
+  row: SnapshotRowView;
+}
+
+/**
+ * Matches counted, the most picked hero and the hero with the highest win rate. "Highest" goes by the
+ * shrunk win rate, as the tiers do, so a hero with a few lucky games does not top the card; the card
+ * still shows the raw rate and the appearances behind it. Ties fall to more appearances, then name,
+ * then id, so the same stats always give the same card.
+ */
+function highlightsOf(stats: HeroStats | null, listed: readonly ListedHero[]): SnapshotHighlightView[] {
+  const matches = stats !== null && Number.isFinite(stats.matchesCounted) && stats.matchesCounted > 0 ? stats : null;
+  const mostPicked = listed[0];
+  const highestWinRate = [...listed]
+    .filter(({ line }) => Number.isFinite(line.shrunkWinRate))
+    .sort(
+      (a, b) =>
+        b.line.shrunkWinRate - a.line.shrunkWinRate ||
+        b.line.appearances - a.line.appearances ||
+        a.row.name.localeCompare(b.row.name) ||
+        a.line.hero.localeCompare(b.line.hero),
+    )[0];
+
+  return [
+    {
+      id: 'matches',
+      title: 'Matches counted',
+      value: matches === null ? HIGHLIGHT_UNAVAILABLE : matches.matchesCounted.toLocaleString('en-US'),
+      detail: matches === null ? '' : (matches.halfSeason?.label ?? 'All recorded matches'),
+      hero: null,
+    },
+    heroHighlight('most-picked', 'Most picked', mostPicked, ({ row }) => `${row.pickRateLabel} pick rate`),
+    heroHighlight(
+      'highest-win-rate',
+      'Highest win rate',
+      highestWinRate,
+      ({ line, row }) =>
+        `${row.winRateLabel} over ${countLabel(line.appearances, 'appearance', 'appearances')}`,
+    ),
+  ];
+}
+
+function heroHighlight(
+  id: SnapshotHighlightId,
+  title: string,
+  hero: ListedHero | undefined,
+  detailOf: (hero: ListedHero) => string,
+): SnapshotHighlightView {
+  return hero === undefined
+    ? { id, title, value: HIGHLIGHT_UNAVAILABLE, detail: '', hero: null }
+    : { id, title, value: hero.row.name, detail: detailOf(hero), hero: hero.row };
 }
 
 function emptyMessageOf(role: string | null, minimum: string, rolesKnown: boolean): string {
