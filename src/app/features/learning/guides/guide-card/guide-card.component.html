@@ -1,0 +1,24 @@
+<img appHeroImageFallback class="portrait" [src]="imageUrl()" alt="" loading="lazy" />
+<div class="text">
+  @if (caption(); as text) {
+    <p class="caption">{{ text }}</p>
+  }
+  @switch (headingLevel()) {
+    @case (2) {
+      <h2 class="title"><ng-container *ngTemplateOutlet="link" /></h2>
+    }
+    @case (3) {
+      <h3 class="title"><ng-container *ngTemplateOutlet="link" /></h3>
+    }
+    @default {
+      <p class="title"><ng-container *ngTemplateOutlet="link" /></p>
+    }
+  }
+  @if (blurb(); as text) {
+    <p class="blurb">{{ text }}</p>
+  }
+</div>
+
+<ng-template #link>
+  <a class="link" [routerLink]="route()">{{ title() }}</a>
+</ng-template>

@@ -1,0 +1,87 @@
+:host {
+  --portrait: 48px;
+  --blurb-lines: 2;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--portrait) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+:host(.large) {
+  --portrait: 56px;
+  --blurb-lines: 3;
+}
+
+:host(:hover) {
+  border-color: #0e6a98;
+}
+
+.portrait {
+  width: var(--portrait);
+  height: var(--portrait);
+  border-radius: 6px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.caption,
+.blurb {
+  color: var(--text-soft);
+}
+
+.caption {
+  font-size: var(--type-caption);
+}
+
+.title {
+  font-size: var(--type-small);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.blurb {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--type-small);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--blurb-lines);
+}
+
+.link {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: #0e6a98;
+}
+
+/* The link covers the whole card, so the focus ring does too. */
+.link::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  content: '';
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.link:focus-visible::after {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}

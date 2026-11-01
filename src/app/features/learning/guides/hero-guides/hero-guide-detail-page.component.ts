@@ -1,88 +1,38 @@
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
-import { HERO_GUIDES, HeroGuide, HeroGuideImage } from './hero-guide-data';
+import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
+import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
+import { HERO_GUIDES } from './hero-guide-data';
 
 @Component({
   selector: 'app-hero-guide-detail-page',
-  imports: [CommonModule, EyebrowComponent, RouterLink],
+  imports: [EyebrowComponent, HeroImageFallbackDirective, RouterLink, StatePanelComponent],
   templateUrl: './hero-guide-detail-page.component.html',
-  styleUrl: './hero-guide-detail-page.component.css',
+  styleUrls: ['../guide-article/guide-article.css', './hero-guide-detail-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroGuideDetailPageComponent {
-  private readonly route = inject(ActivatedRoute);
   private readonly sanitizer = inject(DomSanitizer);
-  readonly guides = HERO_GUIDES;
+  private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap);
 
   readonly guide = computed(() => {
-    const heroId = this.route.snapshot.paramMap.get('heroId');
+    const heroId = this.routeParams()?.get('heroId');
 
-    return this.guides.find((guide) => guide.heroId === heroId) ?? this.guides[0];
+    return HERO_GUIDES.find((guide) => guide.heroId === heroId) ?? null;
   });
 
-  readonly sourceEmbedUrl = computed(() => this.youtubeEmbedUrl(this.guide().sourceUrl));
+  readonly sourceEmbedUrl = computed(() => this.youtubeEmbedUrl(this.guide()?.sourceUrl));
 
-  relatedImages(guide: HeroGuide): HeroGuideImage[] {
-    if (guide.relatedImages?.length) {
-      return guide.relatedImages;
-    }
+  private youtubeEmbedUrl(url?: string): SafeResourceUrl | null {
+    const parsedUrl = url ? new URL(url) : null;
+    const videoId = parsedUrl?.searchParams.get('v');
 
-    if (guide.category === 'hero') {
-      return [
-        { src: guide.image, alt: guide.heroName, label: guide.role },
-        ...this.roleImages(guide.role).slice(0, 3),
-      ];
-    }
-
-    return this.roleImages(guide.role);
-  }
-
-  private roleImages(role: HeroGuide['role']): HeroGuideImage[] {
-    switch (role) {
-      case 'Vanguard':
-        return [
-          { src: '/images/heroes/magneto.png', alt: 'Magneto', label: 'Frontline' },
-          { src: '/images/heroes/venom.png', alt: 'Venom', label: 'Dive tank' },
-          { src: '/images/heroes/doctor-strange.png', alt: 'Doctor Strange', label: 'Shield space' },
-          { src: '/images/heroes/captain-america.png', alt: 'Captain America', label: 'Disruption' },
-        ];
-      case 'Duelist':
-        return [
-          { src: '/images/heroes/psylocke.png', alt: 'Psylocke', label: 'Off-angle' },
-          { src: '/images/heroes/star-lord.png', alt: 'Star-Lord', label: 'Pressure' },
-          { src: '/images/heroes/black-panther.png', alt: 'Black Panther', label: 'Dive' },
-          { src: '/images/heroes/hawkeye.png', alt: 'Hawkeye', label: 'Range' },
-        ];
-      case 'Strategist':
-        return [
-          { src: '/images/heroes/luna-snow.png', alt: 'Luna Snow', label: 'Sustain' },
-          { src: '/images/heroes/mantis.png', alt: 'Mantis', label: 'Utility' },
-          { src: '/images/heroes/loki.png', alt: 'Loki', label: 'Tempo' },
-          { src: '/images/heroes/adam-warlock.png', alt: 'Adam Warlock', label: 'Revive' },
-        ];
-      default:
-        return [
-          { src: '/images/heroes/captain-america.png', alt: 'Captain America', label: 'Vanguard' },
-          { src: '/images/heroes/psylocke.png', alt: 'Psylocke', label: 'Duelist' },
-          { src: '/images/heroes/luna-snow.png', alt: 'Luna Snow', label: 'Strategist' },
-          { src: '/images/heroes/doctor-strange.png', alt: 'Doctor Strange', label: 'Space' },
-        ];
-    }
-  }
-
-  private youtubeEmbedUrl(url?: string): SafeResourceUrl | undefined {
-    if (!url) {
-      return undefined;
-    }
-
-    const parsedUrl = new URL(url);
-    const videoId = parsedUrl.searchParams.get('v') ?? '';
-
-    if (!videoId) {
-      return undefined;
+    if (!parsedUrl || !videoId) {
+      return null;
     }
 
     const embedParams = new URLSearchParams();
