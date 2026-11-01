@@ -4,16 +4,15 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { HeroStatsService } from '../../insights/hero-stats.service';
 import { heroIdentities } from '../../insights/hero-identity';
-import { CommunityHeroListComponent } from '../community-hero-list/community-hero-list.component';
+import { TierRowsComponent } from '../../insights/tier-rows/tier-rows.component';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { buildTierListTabView } from './tier-list-tab-view';
 
 /** The S and A tiers of the community tier list, or the reason there is no list yet. */
 @Component({
   selector: 'app-community-tier-list-tab',
-  imports: [CommunitySummaryComponent, CommunityHeroListComponent],
+  imports: [CommunitySummaryComponent, TierRowsComponent],
   templateUrl: './tier-list-tab.component.html',
-  styleUrl: './tier-list-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TierListTabComponent {

@@ -2,7 +2,7 @@
   display: block;
 }
 
-.counters-tab__records {
+.records {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -10,53 +10,102 @@
   list-style: none;
 }
 
-.counters-tab__record {
-  display: flex;
-  flex-wrap: wrap;
+.records > li {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'winner result'
+    'loser result';
+  gap: 2px 12px;
   align-items: center;
-  gap: 8px 14px;
-  padding: 8px 12px;
+  padding: 7px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-panel);
+  background: var(--bg-elevated);
 }
 
-.counters-tab__hero {
-  display: inline-flex;
-  align-items: center;
+.winner {
+  display: flex;
+  grid-area: winner;
   gap: 8px;
+  align-items: center;
+  min-width: 0;
 }
 
-.counters-tab__image {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+.hero {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.record > .hero {
+  grid-area: loser;
+}
+
+img {
+  --size: 32px;
+  flex: none;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 6px;
+  background: var(--surface-2);
   object-fit: cover;
 }
 
-.counters-tab__name {
-  color: var(--text);
+.name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--type-small);
   font-weight: 800;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.counters-tab__verb,
-.counters-tab__sample {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.verb,
+.sample {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  white-space: nowrap;
 }
 
-.counters-tab__figure {
-  margin-left: auto;
-  color: var(--text);
-  font-size: 1.15rem;
+.result {
+  display: grid;
+  grid-area: result;
+  justify-items: end;
+}
+
+.figure {
+  font-size: 1.125rem;
   font-weight: 800;
+  line-height: 1.2;
 }
 
-.counters-tab__note {
-  max-width: 70ch;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
+@container (min-width: 560px) {
+  .record {
+    display: flex;
+    gap: 14px;
+  }
+
+  img {
+    --size: 36px;
+  }
+
+  .result {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin-left: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .records {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

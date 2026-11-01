@@ -27,11 +27,12 @@ describe('buildTierListTabView', () => {
     }
 
     expect(view.tiers.map((tier) => tier.name)).toEqual(['S', 'A']);
-    expect(view.tiers[0].heroes.map((hero) => [hero.name, hero.figure])).toEqual([
+    expect(view.tiers[0].heroes.map((hero) => [hero.name, hero.winRateLabel])).toEqual([
       ['Storm', '82.5%'],
       ['Hela', '91.7%'],
     ]);
-    expect(view.tiers[0].heroes[0].sample).toBe('12.0% pick rate, 40 appearances');
+    expect(view.tiers[0].heroes[0].pickRateLabel).toBe('12.0%');
+    expect(view.tiers[0].heroes[0].appearancesLabel).toBe('40');
     expect(view.tiers[1].heroes.map((hero) => hero.name)).toEqual(['Hulk']);
     expect(JSON.stringify(view)).not.toContain('Thor');
   });

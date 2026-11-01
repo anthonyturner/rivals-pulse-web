@@ -1,16 +1,11 @@
-import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
+import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import type { TierName } from '../../../../contracts/tier-list.model';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
-import { heroCell, type HeroIdentities } from '../../insights/hero-identity';
-import type { CommunityHeroRow } from '../community-hero-list/community-hero-list.component';
+import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
+import type { HeroIdentities } from '../../insights/hero-identity';
+import { TIER_NAMES, tierRowsOf, type TierRowView } from '../../insights/tier-list/tier-list-view';
 
 /** The tiers the summary lists, best first. The full tier list shows the rest. */
 export const TIER_LIST_TAB_TIERS: readonly TierName[] = ['S', 'A'];
-
-export interface TierView {
-  name: TierName;
-  heroes: CommunityHeroRow[];
-}
 
 export type TierListTabView =
   | { kind: 'loading' }
@@ -21,8 +16,9 @@ export type TierListTabView =
       halfSeasonLabel: string | null;
       /** The shared fallback sentence, set when the previous half-season stands in for the current one. */
       notice: string | null;
-      matchesLabel: string;
-      tiers: TierView[];
+      /** The caveat under the tiers: the sample, and how a hero is placed. */
+      footnote: string;
+      tiers: TierRowView[];
     };
 
 /**
@@ -42,9 +38,9 @@ export function buildTierListTabView(
     return { kind: 'unavailable' };
   }
 
-  const placed = stats.tiers.flatMap((tier) => tier.heroes).filter(isReadable);
+  const placed = tierRowsOf(stats, TIER_NAMES, identities).some((row) => row.heroes.length > 0);
 
-  if (stats.status !== 'ready' || placed.length === 0) {
+  if (stats.status !== 'ready' || !placed) {
     const counted =
       stats.matchesCounted > 0
         ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by Rivals Pulse players so far.`
@@ -63,27 +59,7 @@ export function buildTierListTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    matchesLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
-    tiers: TIER_LIST_TAB_TIERS.map((name) => ({
-      name,
-      heroes: stats.tiers
-        .filter((tier) => tier.name === name)
-        .flatMap((tier) => tier.heroes)
-        .filter(isReadable)
-        .map((line) => ({
-          ...heroCell(line.hero, identities),
-          figure: percentLabel(line.winRate),
-          sample: `${percentLabel(line.pickRate)} pick rate, ${countLabel(line.appearances, 'appearance', 'appearances')}`,
-        })),
-    })),
+    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by Rivals Pulse players. A hero's tier comes from its win rate pulled toward 50%, so a short run cannot place it high. Heroes need enough appearances to be placed.`,
+    tiers: tierRowsOf(stats, TIER_LIST_TAB_TIERS, identities),
   };
-}
-
-function isReadable(line: HeroStatsHero): boolean {
-  return (
-    line.appearances > 0 &&
-    Number.isFinite(line.winRate) &&
-    Number.isFinite(line.pickRate) &&
-    Number.isFinite(line.shrunkWinRate)
-  );
 }

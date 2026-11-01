@@ -1,19 +1,22 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import {
-  CommunityEmptyStateComponent,
-  type CommunityEmptyStateLink,
-} from '../community-empty-state/community-empty-state.component';
+import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
+
+export interface CommunitySummaryLink {
+  label: string;
+  path: string;
+}
 
 /**
- * The frame every summary tab shares. It says the numbers are loading, says they cannot be loaded,
- * shows the designed "not enough data yet" state, or, once the numbers are ready, wraps them with
- * the half-season, the fallback notice and the links to the full pages.
+ * The frame every Community tab shares: the tab's heading and season, then either the loading,
+ * failure or "not enough data yet" panel, or, once the numbers are ready, the fallback notice, the
+ * tab's own content, a footnote and the links to the full pages.
  */
 @Component({
   selector: 'app-community-summary',
-  imports: [CommunityEmptyStateComponent, RouterLink],
+  imports: [NoticeComponent, RouterLink, StatePanelComponent],
   templateUrl: './community-summary.component.html',
   styleUrl: './community-summary.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,14 +24,22 @@ import {
 export class CommunitySummaryComponent {
   readonly kind = input.required<'loading' | 'unavailable' | 'not-enough-data' | 'ready'>();
   readonly heading = input.required<string>();
-  /** What the tab shows, as a capitalised noun phrase, for the loading and failure messages. */
+  /** What the tab shows, as a lower-case noun phrase, for the loading and failure headings. */
   readonly subject = input.required<string>();
   /** The reason there are no numbers yet, when `kind` is `not-enough-data`. */
   readonly summary = input('');
   readonly halfSeasonLabel = input<string | null>(null);
   readonly notice = input<string | null>(null);
+  readonly footnote = input<string | null>(null);
   /** The full page this tab summarises, or null while no full page shows the same numbers. */
-  readonly link = input<CommunityEmptyStateLink | null>(null);
+  readonly link = input<CommunitySummaryLink | null>(null);
   /** A second page that holds the full numbers, when one page does not. */
-  readonly secondLink = input<CommunityEmptyStateLink | null>(null);
+  readonly secondLink = input<CommunitySummaryLink | null>(null);
+
+  protected readonly loadingHeading = computed(() => `Loading ${this.subject()}`);
+  protected readonly unavailableHeading = computed(() => {
+    const subject = this.subject();
+
+    return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} could not be loaded`;
+  });
 }

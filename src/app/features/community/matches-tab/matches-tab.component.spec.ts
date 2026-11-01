@@ -38,7 +38,7 @@ describe('MatchesTabComponent', () => {
 
   const text = (): string => (fixture.nativeElement as HTMLElement).textContent ?? '';
   const headings = (): string[] =>
-    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('h2')).map((heading) => heading.textContent?.trim() ?? '');
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('h2, h3')).map((heading) => heading.textContent?.trim() ?? '');
 
   async function answer(body: CommunityMatches | null, status = 200): Promise<void> {
     const request = http.expectOne('/api/community/matches');
@@ -73,18 +73,18 @@ describe('MatchesTabComponent', () => {
   it('shows the designed not-enough-data state, with the sample so far', async () => {
     await answer(EMPTY);
 
-    expect(text()).toContain('Not enough data yet');
     expect(text()).toContain('Season 10.5 does not have enough data yet');
+    expect(text()).toContain('The first figures appear at 20 matches from at least 3 players');
     expect(headings()).toEqual(['Community matches']);
   });
 
   it('shows the four sections with the figures, and what the thin maps still need', async () => {
     await answer(READY);
 
-    expect(headings()).toEqual(['Win rate by map', 'Game modes played', 'Average match length', 'Matches per day']);
+    expect(headings()).toEqual(['Community matches', 'Win rate by map', 'Game modes played', 'Average match length', 'Matches per day']);
     expect(text()).toContain('Tokyo 2099');
     expect(text()).toContain('50%');
-    expect(text()).toContain('Klyntar');
+    expect(text()).toContain('Not enough data yet for: Klyntar.');
     expect(text()).toContain('20+ matches');
     expect(text()).toContain('Quick Match');
     expect(text()).toContain('10 min');
@@ -99,7 +99,7 @@ describe('MatchesTabComponent', () => {
       inPlaceOf: SEASON,
     });
 
-    expect(text()).toContain('Showing Season 10');
+    expect(text()).toContain('Season 10');
     expect(text()).toContain("Season 10.5 does not have enough data yet, so these are Season 10's numbers");
   });
 
@@ -115,7 +115,7 @@ describe('MatchesTabComponent', () => {
   it('says the totals cannot be loaded when the request fails', async () => {
     await answer(null, 500);
 
-    expect(text()).toContain('cannot be loaded right now');
+    expect(text()).toContain("The community's matches could not be loaded");
   });
 
   it('shows no player, only totals', async () => {

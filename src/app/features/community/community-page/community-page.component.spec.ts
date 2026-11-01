@@ -201,12 +201,11 @@ describe('CommunityPageComponent', () => {
       }
 
       const text = panel().textContent ?? '';
-      expect(text).toContain('Not enough data yet');
-      expect(text).toContain('Rivals Pulse app uploads');
+      expect(text).toMatch(/enough data yet|first figures appear/);
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
-      expect(panel().querySelector('.empty-state')).toBeTruthy();
-      expect(panel().querySelector('h2')).toBeTruthy();
+      expect(panel().querySelector('app-state-panel')).toBeTruthy();
+      expect(panel().querySelectorAll('h2').length).toBe(1);
       expect(panel().querySelector('h3')).toBeNull();
     });
   }
@@ -222,20 +221,31 @@ describe('CommunityPageComponent', () => {
   it('links the anonymity note to the privacy notes', async () => {
     await open('/heroes');
 
-    const link = host().querySelector<HTMLAnchorElement>('.community-page__note a');
+    const link = host().querySelector<HTMLAnchorElement>('.community-page__intro a');
     expect(link?.getAttribute('href')).toBe('/privacy');
   });
 
   it('links the anonymity note to the How we count explainer', async () => {
     await open('/heroes');
 
-    const links = host().querySelectorAll<HTMLAnchorElement>('.community-page__note a');
+    const links = host().querySelectorAll<HTMLAnchorElement>('.community-page__intro a');
     expect(links[1]?.getAttribute('href')).toBe('/how-we-count');
   });
 
-  it('says the numbers are anonymous community totals', async () => {
+  it('says the numbers are anonymous totals, under a one-line title', async () => {
     await open('/heroes');
 
-    expect(host().textContent).toContain('anonymous community totals');
+    expect(host().querySelector('h1')?.textContent?.trim()).toBe('Community totals');
+    expect(host().querySelector('.community-page__intro')?.textContent).toContain('Anonymous totals');
+  });
+
+  it('scrolls the tab bar so the selected tab is in view on a direct visit', async () => {
+    const scrollTo = spyOn(HTMLElement.prototype, 'scrollTo');
+
+    await open('/insights');
+    await harness.fixture.whenStable();
+
+    expect(scrollTo).toHaveBeenCalled();
+    expect(scrollTo.calls.mostRecent().object).toBe(host().querySelector('[role="tablist"]') as HTMLElement);
   });
 });
