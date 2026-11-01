@@ -1,6 +1,6 @@
 ---
 name: 'Engineering Refinement'
-description: 'Read-only engineering refinement of a drafted Rivals Pulse Coach feature before its issue is filed: feasibility, approach options, risk, unknowns, testability and relative size.'
+description: 'Read-only engineering refinement of a drafted RivalsPulse feature before its issue is filed: feasibility, approach options, risk, unknowns, testability and relative size.'
 tools: [search/codebase, read/readFile]
 ---
 

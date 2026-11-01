@@ -1,7 +1,7 @@
 {
   "version": "0.3.0",
   "project": {
-    "name": "Rivals Pulse Coach",
+    "name": "RivalsPulse",
     "summary": "An Angular SSR coaching companion for Marvel Rivals: hero encyclopedia, counters, team builder, tier lists, game stats and guided lessons, served from Turso-backed APIs on Vercel."
   },
   "commands": {

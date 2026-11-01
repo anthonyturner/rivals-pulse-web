@@ -1,6 +1,6 @@
 ---
 name: software-design
-description: Produces read-only designs for material Rivals Pulse Coach architecture decisions.
+description: Produces read-only designs for material RivalsPulse architecture decisions.
 tools: [Read, Grep, Glob]
 model: opus
 ---
