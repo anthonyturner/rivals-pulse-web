@@ -4,7 +4,7 @@ import { Hero, HeroVideo } from './app/features/heroes/hero.model.js';
 import { type CommunityHeroStatsStatus, readCommunityHeroStatsStatus } from './community-hero-stats-status.js';
 import { countGameStatSnapshotGames, countGameStatSnapshots } from './game-stats-sync.js';
 import { countGlossaryTerms, listGlossaryTerms } from './glossary-store.js';
-import { countHeroes, getHero, listHeroes } from './hero-store.js';
+import { countHeroes, listHeroes } from './hero-store.js';
 import { countHeroVideos, listHeroVideos } from './hero-video-store.js';
 import {
   countHomeContentBlocks,
@@ -43,10 +43,6 @@ type ContentStatus = {
 
 export function getHeroesFromDatabase(): Promise<Hero[]> {
   return listHeroes(getSupabaseClient());
-}
-
-export function getHeroFromDatabase(id: string): Promise<Hero | undefined> {
-  return getHero(getSupabaseClient(), id);
 }
 
 export function getHeroVideosFromDatabase(): Promise<HeroVideo[]> {

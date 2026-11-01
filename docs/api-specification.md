@@ -1,7 +1,6 @@
 # API Specification
 
 GET /api/heroes
-GET /api/heroes/{id}
 GET /api/meta
 GET /api/hero-stats
 GET /api/community/insights

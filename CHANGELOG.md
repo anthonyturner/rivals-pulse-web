@@ -39,6 +39,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 - The Community tier list and heroes tabs, and How we count, now say which game modes their numbers cover and how the new Mode picker works ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
 
+### Removed
+
+- The local development server no longer answers `GET /api/heroes/:id` (one hero by id). The website and the app never called it, and the live site never served it. The unused catch-all API file that duplicated every route is gone too ([#330](https://github.com/anthonyturner/rivals-pulse-web/pull/330)).
+
 ### Fixed
 
 - Signing in with Discord and deleting your account now work on rivalspulse.com. After they were released, every sign-in and account address answered "not found" on the live site, so the Sign in button did nothing ([#303](https://github.com/anthonyturner/rivals-pulse-web/pull/303)).
