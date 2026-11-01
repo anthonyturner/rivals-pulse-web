@@ -1,4 +1,4 @@
-import { json, rateLimited, unwrap, type EndpointSpec } from '../_shared/overwolf-endpoint.ts';
+import { json, rateLimited, unwrapStatus, type EndpointSpec } from '../_shared/overwolf-endpoint.ts';
 import { readPlayerClaim } from '../_shared/player-claim.ts';
 import { formatLinkCode, generateLinkCode } from './link-code.ts';
 
@@ -44,13 +44,14 @@ export const issueLinkCode: EndpointSpec = {
       });
 
       if (error?.code === UNIQUE_VIOLATION) continue;
-      const issued = unwrap({ data, error });
+      const issued = unwrapStatus({ data, error });
 
-      if (issued?.status === 'rate_limited') {
-        return rateLimited('Too many codes requested; try again later', issued.retryAfter);
+      if (issued.status === 'rate_limited') {
+        return rateLimited('Too many codes requested; try again later', issued.retryAfter());
       }
+      if (issued.status !== 'issued') throw new Error(`The database answered "${issued.status}" to a link code`);
 
-      return json({ code: formatLinkCode(code), expiresAt: issued.expiresAt });
+      return json({ code: formatLinkCode(code), expiresAt: issued.text('expiresAt') });
     }
 
     throw new Error('A link code could not be issued');

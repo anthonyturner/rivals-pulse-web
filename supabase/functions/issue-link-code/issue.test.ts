@@ -49,6 +49,25 @@ describe('issue-link-code', () => {
     assert.equal(response.headers.get('Retry-After'), '90');
   });
 
+  it('answers an unrecognised database answer with a plain 500 and no code', async () => {
+    const unrecognised = [
+      null,
+      'issued',
+      { status: 'surprise' },
+      { status: 'issued' },
+      { status: 'rate_limited' },
+      { status: 'rate_limited', retryAfter: '90' },
+    ];
+
+    for (const data of unrecognised) {
+      const { runtime } = testRuntime(() => ({ data, error: null }));
+      const response = await overwolfEndpoint(issueLinkCode, runtime)(appRequest('POST', { body }));
+
+      assert.equal(response.status, 500, JSON.stringify(data));
+      assert.deepEqual(await response.json(), { error: 'Unable to issue a link code' });
+    }
+  });
+
   it('draws another code when two recorders collide', async () => {
     let attempts = 0;
     const { runtime, calls } = testRuntime(() =>
