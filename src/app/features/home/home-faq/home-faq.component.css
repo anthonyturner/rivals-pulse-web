@@ -39,10 +39,12 @@
   font-weight: 700;
   line-height: 1;
   content: '+';
+  content: '+' / '';
 }
 
 .item[open] .question::after {
   content: '\2212';
+  content: '\2212' / '';
 }
 
 .question:focus-visible,
