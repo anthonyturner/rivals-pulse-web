@@ -28,3 +28,9 @@ verify_jwt = false
 
 [functions.refresh-linked-player]
 verify_jwt = false
+
+[functions.link-status]
+verify_jwt = false
+
+[functions.unlink-player-app]
+verify_jwt = false

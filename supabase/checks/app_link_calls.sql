@@ -106,7 +106,7 @@ begin
      or (answer ->> 'retryAfter')::integer not between 1 and 3600 then
     raise exception 'check failed: the call past the limit was not rate limited (%)', answer;
   end if;
-  if (select player_name from public.player_links where user_id = account_a) <> 'Aurora Prime' then
+  if (select player_name from public.player_links where user_id = account_a) is distinct from 'Aurora Prime' then
     raise exception 'check failed: a rate limited call still changed the link';
   end if;
   select count(*) into seen from public.link_attempt_log where kind = 'refresh' and subject = 'check-app-recorder-a';
@@ -150,6 +150,97 @@ begin
   end if;
   raise notice 'ok: the purge sweeps refresh rows past the hour and keeps the rest';
 
+  -- Issue 343. The status names the player and the link date, and nothing about the account.
+  set local role service_role;
+  answer := public.link_status_for_recorder('check-app-recorder-b', 10);
+  reset role;
+  if answer ->> 'status' <> 'linked' or answer ->> 'playerName' <> 'Bram' or answer -> 'linkedAt' is null then
+    raise exception 'check failed: a linked recorder did not get its name and link date (%)', answer;
+  end if;
+  if answer::text like '%' || account_b::text || '%'
+     or answer::text like '%app-calls-check-b@example.invalid%'
+     or exists (select 1 from jsonb_object_keys(answer) as k where k not in ('status', 'playerName', 'linkedAt')) then
+    raise exception 'check failed: the status carries more than the name and link date (%)', answer;
+  end if;
+  raise notice 'ok: the status gives the name and link date and nothing about the account';
+
+  set local role service_role;
+  answer := public.link_status_for_recorder('check-app-unlinked', 10);
+  reset role;
+  if answer ->> 'status' <> 'not_linked' or (select count(*) from jsonb_object_keys(answer)) <> 1 then
+    raise exception 'check failed: an unlinked recorder was not told so plainly (%)', answer;
+  end if;
+  raise notice 'ok: the status for an unlinked recorder says only that';
+
+  -- Status calls have a limit of their own: the call past it is told when to come back, and it
+  -- does not use up the refresh limit.
+  set local role service_role;
+  perform public.link_status_for_recorder('check-app-recorder-c', 2);
+  perform public.link_status_for_recorder('check-app-recorder-c', 2);
+  answer := public.link_status_for_recorder('check-app-recorder-c', 2);
+  reset role;
+  if answer ->> 'status' <> 'rate_limited' or (answer ->> 'retryAfter')::integer not between 1 and 3600 then
+    raise exception 'check failed: status calls past the limit were not rate limited (%)', answer;
+  end if;
+  select count(*) into seen from public.link_attempt_log where kind = 'status' and subject = 'check-app-recorder-c';
+  if seen <> 2 then
+    raise exception 'check failed: % status rows are logged, expected 2', seen;
+  end if;
+  set local role service_role;
+  perform public.link_status_for_recorder('check-app-recorder-b', 1);
+  answer := public.refresh_linked_player('check-app-recorder-b', 'Bram', null, 3);
+  reset role;
+  if answer ->> 'status' <> 'refreshed' then
+    raise exception 'check failed: status calls used up the refresh limit (%)', answer;
+  end if;
+  raise notice 'ok: status calls are rate limited on their own';
+
+  -- Unlinking removes the recorder's link and only that one, and leaves the website account.
+  set local role service_role;
+  answer := public.unlink_player_for_recorder('check-app-recorder-b', 10);
+  reset role;
+  if answer ->> 'status' <> 'unlinked' then
+    raise exception 'check failed: a linked recorder was not unlinked (%)', answer;
+  end if;
+  if exists (select 1 from public.player_links where recorder_id = 'check-app-recorder-b') then
+    raise exception 'check failed: the link is still there after unlinking';
+  end if;
+  if not exists (select 1 from public.player_links where recorder_id = 'check-app-recorder-a') then
+    raise exception 'check failed: unlinking one recorder removed another''s link';
+  end if;
+  if not exists (select 1 from auth.users where id = account_b) then
+    raise exception 'check failed: unlinking deleted the website account';
+  end if;
+  raise notice 'ok: unlinking removes only that recorder''s link and leaves the account';
+
+  -- The account behind it now reads no link, as after the website's own unlink_player().
+  perform set_config('request.jwt.claims', json_build_object('sub', account_b, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select count(*) into seen from public.player_links;
+  reset role;
+  if seen <> 0 then
+    raise exception 'check failed: the account still reads a link after the app unlinked';
+  end if;
+  raise notice 'ok: after the app unlinks, the account reads no link';
+
+  set local role service_role;
+  answer := public.unlink_player_for_recorder('check-app-recorder-b', 10);
+  reset role;
+  if answer ->> 'status' <> 'not_linked' then
+    raise exception 'check failed: unlinking twice was not a no-op (%)', answer;
+  end if;
+  raise notice 'ok: unlinking a recorder with no link is a no-op';
+
+  -- Unlinking is rate limited per recorder too, and a refused call does nothing.
+  set local role service_role;
+  perform public.unlink_player_for_recorder('check-app-recorder-d', 1);
+  answer := public.unlink_player_for_recorder('check-app-recorder-d', 1);
+  reset role;
+  if answer ->> 'status' <> 'rate_limited' then
+    raise exception 'check failed: unlink calls past the limit were not rate limited (%)', answer;
+  end if;
+  raise notice 'ok: unlinking is rate limited per recorder';
+
   -- Only the service role may call these.
   begin
     set local role authenticated;
@@ -178,8 +269,35 @@ begin
   end;
   reset role;
 
-  if (select player_name from public.player_links where user_id = account_a) <> 'Aurora Prime' then
-    raise exception 'check failed: a client changed the link';
+  begin
+    set local role authenticated;
+    perform public.link_status_for_recorder('check-app-recorder-a', 10);
+    raise exception 'check failed: a signed-in client can read a link by recorder';
+  exception when insufficient_privilege then
+    raise notice 'ok: a signed-in client cannot read a link by recorder';
+  end;
+  reset role;
+
+  begin
+    set local role anon;
+    perform public.unlink_player_for_recorder('check-app-recorder-a', 10);
+    raise exception 'check failed: an anonymous client can unlink by recorder';
+  exception when insufficient_privilege then
+    raise notice 'ok: an anonymous client cannot unlink by recorder';
+  end;
+  reset role;
+
+  begin
+    set local role authenticated;
+    perform public.unlink_player_for_recorder('check-app-recorder-a', 10);
+    raise exception 'check failed: a signed-in client can unlink by recorder';
+  exception when insufficient_privilege then
+    raise notice 'ok: a signed-in client cannot unlink by recorder';
+  end;
+  reset role;
+
+  if (select player_name from public.player_links where user_id = account_a) is distinct from 'Aurora Prime' then
+    raise exception 'check failed: a client changed or removed the link';
   end if;
 end
 $$;
