@@ -1,7 +1,7 @@
 .building-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
   margin: 0;
   padding: 0 16px 16px;
   list-style: none;
@@ -9,11 +9,11 @@
 
 .building-list li {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
-  gap: 4px 10px;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 4px 8px;
   align-items: center;
   min-width: 0;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
@@ -21,8 +21,8 @@
 
 .building-list img {
   grid-row: span 2;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   background: var(--surface-2);
   object-fit: cover;
@@ -31,15 +31,15 @@
 .building-name {
   overflow: hidden;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: var(--type-small);
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .building-count {
-  color: var(--text-muted);
-  font-size: 0.78rem;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
   font-weight: 800;
 }
 
@@ -47,20 +47,20 @@
   position: relative;
   display: block;
   grid-column: 2 / -1;
-  height: 6px;
+  height: 4px;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--surface-2);
 }
 
 .progress-fill {
   display: block;
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--teal);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 560px) {
   .building-list {
     grid-template-columns: 1fr;
     padding: 0 var(--mobile-panel-padding) var(--mobile-panel-padding);
