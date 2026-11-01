@@ -15,6 +15,9 @@
     <span class="disabled">{{ item.label }}</span>
     }
     }
+    @if (statsLink(); as path) {
+    <a class="nav-link" [routerLink]="path" routerLinkActive="active" (click)="closeMenu()">My stats</a>
+    }
     @if (accountLink(); as link) {
     <a class="nav-link" [routerLink]="link.path" routerLinkActive="active" [attr.aria-label]="link.ariaLabel"
         [attr.title]="link.player ? link.label : null" (click)="closeMenu()">

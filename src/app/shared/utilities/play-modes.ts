@@ -57,6 +57,13 @@ export function scopeLabel(modeLabel: string, halfSeasonLabel: string | null): s
   return `in ${modeLabel}${halfSeasonLabel === null ? '' : ` for ${halfSeasonLabel}`}`;
 }
 
+const PLAY_MODE_NAMES: Record<number, string> = { 0: 'Quick Match', 1: 'Competitive', 2: 'Arcade', 3: 'Practice' };
+
+/** The name of a game's own mode id (0 Quick Match, 1 Competitive, 2 Arcade, 3 Practice), or null when it is not one of them. */
+export function playModeName(playModeId: number | null): string | null {
+  return playModeId === null ? null : (PLAY_MODE_NAMES[playModeId] ?? null);
+}
+
 const MODE_CAVEATS: Partial<Record<HeroStatsModeId, string>> = {
   arcade:
     'Arcade has custom lobbies and matches with more than two teams, so its win rates may be wrong. Do not compare them with Quick Match or Competitive.',

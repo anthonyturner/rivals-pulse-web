@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { routes } from './app.routes';
+import { signedInGuard } from './core/auth/signed-in.guard';
 import { WinRatesPageComponent } from './features/insights/win-rates/win-rates-page.component';
 import { OverlayFaqPageComponent } from './features/overlay-faq/overlay-faq-page.component';
 
@@ -111,4 +112,16 @@ describe('FAQ routes', () => {
       expect(router.url).toBe(to);
     });
   }
+});
+
+describe('profile route', () => {
+  const profile = routes.find((route) => route.path === 'profile');
+
+  it('is behind the signed-in guard, since the stats are private to the visitor', () => {
+    expect(profile?.canActivate).toEqual([signedInGuard]);
+  });
+
+  it('has its own title', () => {
+    expect(profile?.title).toBe('Your stats | RivalsPulse');
+  });
 });

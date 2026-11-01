@@ -121,6 +121,11 @@ if it is an `https` address on an allow-listed Overwolf host. Level is still not
 stored or shown: the overlay has no source for it. The Discord avatar and handle
 are still not read.
 
+*Amended 2026-11-01 (maintainer decision, issue 266).* The dashboard page, `/profile`, shows
+the in-game name and that Overwolf avatar, to the owner only. "The dashboard shows
+the in-game name only" no longer holds; "no level" still does, and the page shows no rank and no
+Discord handle either.
+
 **3. Ownership is proven, never typed.** A link is made only from the overlay's
 verified Overwolf session, through the one-time code in #264. A name or uid
 typed on the website, or sent in an upload body, never establishes ownership,
@@ -172,6 +177,26 @@ What the dashboard can therefore show, and for how long:
 
 A player's history is therefore as deep as the stores already are. History
 beyond six months is a separate decision (open question 2).
+
+*Amended 2026-11-01 (issues 266 and 329).* The table above is superseded. The dashboard
+does not read `tracked_matches`: it has no recorder, so its rows cannot be tied to a verified
+identity, and it is publicly readable, so a recorder must never be added to it (a side table,
+issue 328, would carry it). It reads `participants` and `participant_hero_figures` instead,
+through `read_own_dashboard()`, a security-definer database function that finds the link
+through `auth.uid()` and returns only the lines where `recorded_by` is the link's recorder
+**and** `uid` is the link's player, newest 2,000 first. The website derives the figures from those
+lines (`src/own-dashboard.ts`) and sends the browser only the results.
+
+| Dashboard content | Source | Depth |
+| --- | --- | --- |
+| Matches, wins and losses, kills, deaths, assists, final hits, most-played heroes, records, latest matches | `participants` | Six months at most, newest 2,000 lines |
+| Damage, healing and blocked per minute | `participant_hero_figures` | Six months at most |
+
+The page says the depth is about six months. It also says a match may be missing when another
+overlay user in the lobby uploaded it first (a match is stored once, by its first uploader), when
+it was uploaded before 2026-10-09 (when `participants` began), or when it came from the backfill,
+whose lines carry no real recorder. A figure the desktop app did not record is shown as "not
+counted", never as 0.
 
 **6. Consent wording.** Wording is shown before the data is collected, in plain
 words, with no pre-ticked box, and links the privacy policy. The exact text is
@@ -405,16 +430,22 @@ A reviewer checks a change against this ADR by looking for:
 - Every new account table has RLS on and an `auth.uid()` policy, with no `anon`
   grant, and a test that a second user reads nothing of the first.
 - No read function or endpoint behind the dashboard or live card with a uid or
-  name parameter supplied by the caller.
+  name parameter supplied by the caller. The dashboard read takes no parameter at all
+  (`read_own_dashboard()`), is granted to `authenticated` only and refuses an anonymous session.
+- The dashboard reads no table the public can read (`tracked_matches`, `players`), and no
+  recorder id or uid reaches the browser.
+- The dashboard page shows a figure the app did not record as "not counted", states its
+  six-month depth, and is client-rendered behind the sign-in guard.
 - No new column, table or function that replaces or renames a frozen overlay
   object; migrations are additive.
 - The live-status write checks the opt-in on the server, and a test shows an
   update with the setting off stores nothing.
 - Both deletion choices exist, each with its confirmation, and "forget me" calls
   `forget_player` before the account is deleted.
-- No level and no Discord avatar or handle appears anywhere on the site. The only
+- No level, rank and no Discord avatar or handle appears anywhere on the site. The only
   avatar is the Overwolf account avatar the desktop app reported, stored only when
-  it is an `https` address on the allow-list (amended 2026-11-01).
+  it is an `https` address on the allow-list (amended 2026-11-01), shown in the header,
+  on the account page and on the dashboard page.
 - `@supabase/supabase-js` is absent from the browser build, the session cookie is
   `HttpOnly`, and auth and account answers are `private, no-store`.
 - The website privacy page describes accounts, the sign-in cookie and deletion

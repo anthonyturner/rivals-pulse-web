@@ -4,6 +4,7 @@ import {
   modeCaveat,
   modeLabelOf,
   nonDefaultModeLabel,
+  playModeName,
   scopeLabel,
   selectableModes,
   SHOW_PRACTICE_MODE,
@@ -91,6 +92,12 @@ describe('play modes', () => {
   it('names the mode and the half-season an empty state is about', () => {
     expect(scopeLabel('Competitive', 'Season 10.5')).toBe('in Competitive for Season 10.5');
     expect(scopeLabel('Competitive', null)).toBe('in Competitive');
+  });
+
+  it('names the mode ids a match records, and nothing for a missing or unknown one', () => {
+    expect([0, 1, 2, 3].map(playModeName)).toEqual(['Quick Match', 'Competitive', 'Arcade', 'Practice']);
+    expect(playModeName(null)).toBeNull();
+    expect(playModeName(9)).toBeNull();
   });
 
   it('warns about Arcade and Practice only', () => {

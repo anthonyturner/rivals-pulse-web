@@ -5,6 +5,8 @@ import { AuthService } from '../../auth/auth.service';
 import type { LinkedPlayer } from '../../auth/linked-player.types';
 import { PlayerAvatarComponent } from '../../../shared/components/player-avatar/player-avatar.component';
 
+const PROFILE_PATH = '/profile';
+
 interface AccountLink {
   label: string;
   path: string;
@@ -45,6 +47,9 @@ export class Nav {
         return null;
     }
   });
+
+  /** Only for a signed-in visitor: the page is theirs, and a signed-out visitor has nothing to open. */
+  readonly statsLink = computed(() => (this.auth.state().status === 'signedIn' ? PROFILE_PATH : null));
 
   readonly primaryNavItems = [
     { label: 'Home', path: '/', enabled: true },
