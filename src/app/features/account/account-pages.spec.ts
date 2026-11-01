@@ -252,6 +252,47 @@ describe('AccountPageComponent linking', () => {
     expect(codeInput(harness).value).toBe('abcd-efgh');
   });
 
+  it('ties the message for a refused code to the input', async () => {
+    setup(SIGNED_IN, undefined, { status: 'failed', message: 'That code is wrong or has expired. Get a new one from the desktop app.' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    expect(codeInput(harness).getAttribute('aria-describedby')).toBeNull();
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(codeInput(harness).getAttribute('aria-invalid')).toBe('true');
+    expect(codeInput(harness).getAttribute('aria-describedby')).toBe('link-code-error');
+    expect(page(harness).querySelector('#link-code-error')?.textContent).toContain('wrong or has expired');
+  });
+
+  it('announces a successful link and moves focus to the section heading, since the button is gone', async () => {
+    setup(SIGNED_IN, undefined, { status: 'done' }, AURORA);
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('linked to Aurora');
+    expect(document.activeElement).toBe(page(harness).querySelector('#account-link-title'));
+  });
+
+  it('announces an unlink and moves focus to the section heading', async () => {
+    setup(LINKED);
+    const harness = await RouterTestingHarness.create('/account');
+
+    unlinkButton(harness)?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('unlinked');
+    expect(document.activeElement).toBe(page(harness).querySelector('#account-link-title'));
+  });
+
   it('sends a visitor whose session ended to sign in', async () => {
     setup(SIGNED_IN, undefined, { status: 'signedOut' });
     const harness = await RouterTestingHarness.create('/account');

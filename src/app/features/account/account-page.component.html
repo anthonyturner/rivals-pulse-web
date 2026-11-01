@@ -27,7 +27,8 @@
     </section>
 
     <section class="account-section" aria-labelledby="account-link-title">
-      <h2 id="account-link-title">Link the desktop app</h2>
+      <h2 id="account-link-title" #linkHeading tabindex="-1">Link the desktop app</h2>
+      <p class="account-sr-only" role="status">{{ linkNotice() }}</p>
       @if (player(); as linked) {
         <p class="account-player">
           <app-player-avatar [name]="linked.name" [avatarUrl]="linked.avatarUrl" />
@@ -72,11 +73,13 @@
               placeholder="XXXX-XXXX"
               [value]="linkCode()"
               [disabled]="linking()"
+              [attr.aria-invalid]="linkError() ? 'true' : null"
+              [attr.aria-describedby]="linkError() ? 'link-code-error' : null"
               (input)="onLinkCodeInput($event)"
             />
           </p>
           @if (linkError(); as message) {
-            <p class="account-error" role="alert">{{ message }}</p>
+            <p id="link-code-error" class="account-error" role="alert">{{ message }}</p>
           }
           <p>
             <button class="account-button" type="submit" [disabled]="!canLink()">

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { DELETE_CONFIRMATION_PHRASE, isDeletionConfirmed } from '../../core/auth/account-deletion.types';
@@ -42,6 +42,9 @@ export class AccountPageComponent {
 
     return state.status === 'signedIn' ? state.player : null;
   });
+  readonly linkHeading = viewChild<ElementRef<HTMLElement>>('linkHeading');
+  /** Read out by screen readers when linking or unlinking succeeds, since the button pressed is gone by then. */
+  readonly linkNotice = signal('');
   readonly linkCode = signal('');
   readonly linking = signal(false);
   readonly linkError = signal<string | null>(null);
@@ -81,6 +84,7 @@ export class AccountPageComponent {
     switch (result.status) {
       case 'done':
         this.linkCode.set('');
+        this.announceLinkChange(`Desktop app linked to ${this.player()?.name ?? 'your player'}.`);
         break;
       case 'signedOut':
         await this.router.navigate(['/sign-in'], { queryParams: { next: '/account' } });
@@ -100,6 +104,9 @@ export class AccountPageComponent {
     this.unlinking.set(false);
 
     switch (result.status) {
+      case 'done':
+        this.announceLinkChange('Desktop app unlinked.');
+        break;
       case 'signedOut':
         await this.router.navigate(['/sign-in'], { queryParams: { next: '/account' } });
         break;
@@ -107,6 +114,12 @@ export class AccountPageComponent {
         this.unlinkError.set(result.message);
         break;
     }
+  }
+
+  /** The focused button leaves the page when the link changes, so focus goes to the section heading and the change is announced. */
+  private announceLinkChange(message: string): void {
+    this.linkNotice.set(message);
+    this.linkHeading()?.nativeElement.focus();
   }
 
   onConfirmationInput(event: Event): void {

@@ -52,6 +52,16 @@ p {
   overflow-wrap: anywhere;
 }
 
+.account-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .account-player {
   display: flex;
   align-items: center;
