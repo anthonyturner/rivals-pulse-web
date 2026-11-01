@@ -135,7 +135,7 @@ in `src/styles.css`, not from a width written in the page's own CSS.
   side (32px, falling to `--mobile-page-gutter` at 560px and below), capped at
   the token.
 - The wrapper takes no side padding, width or horizontal margin of its own, and
-  neither do its children, since padding would be taken off a second time.
+  its children do not re-apply a page width or gutter.
   Vertical padding stays with the component (`padding-block`).
 - Full width is simply not using the class, for example the home page's
   full-bleed bands. Do not wrap `<router-outlet>` in the app shell: a page

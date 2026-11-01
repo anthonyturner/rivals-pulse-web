@@ -46,7 +46,7 @@
   --shadow-soft: 0 18px 45px rgba(17, 35, 57, 0.12);
   --mobile-page-gutter: 8px;
   --mobile-panel-padding: 12px;
-  /* Container widths for .page-container, as content widths (the gutter sits outside them). At 1366px a narrow page's content is 768px, a default page's 1120px, a wide page's 1220px. */
+  /* Container widths for .page-container, as content widths (the gutter sits outside them). */
   --container-narrow: 768px;
   --container: 1120px;
   --container-wide: 1220px;
