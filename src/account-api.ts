@@ -43,9 +43,8 @@ export interface AccountResponse {
 /** Sign-in is open on the live site and on a developer's machine only; a preview gets none. */
 const SIGN_IN_HOSTNAMES: readonly string[] = ['rivalspulse.com', 'localhost'];
 const DEFAULT_NEXT = '/account';
-/** A path on this site: no scheme, no `//` host, no backslash, no control characters. */
-const SAFE_NEXT = /^\/(?![/\\])[A-Za-z0-9\-._~!$&'()*+,;=:@%/?#]*$/;
 const MAX_NEXT_LENGTH = 200;
+const NEXT_BASE = new URL('https://site.invalid');
 
 export async function handleAccountRequest(
   request: AccountRequest,
@@ -166,7 +165,16 @@ async function signOut(request: AccountRequest, gateway: () => AuthGateway): Pro
   const tokens = readSessionTokens(request.cookieHeader);
 
   if (tokens) {
-    await gateway().signOut(tokens);
+    try {
+      await gateway().signOut(tokens);
+    } catch (error) {
+      // The visitor asked to leave, so the cookie goes even when Supabase cannot be asked.
+      if (!(error instanceof AuthUnavailableError)) {
+        throw error;
+      }
+
+      console.warn('Sign-out could not reach Supabase:', error.message);
+    }
   }
 
   return { ...json(200, { signedIn: false }), cookies: [clearSessionCookie()] };
@@ -218,9 +226,27 @@ function redirectToSignIn(reason: 'cancelled' | 'failed'): AccountResponse {
   return { status: 302, location: `/sign-in?error=${reason}`, cookies: [clearPkceCookie()] };
 }
 
-/** Only a path on this site; anything else, such as `//evil.example`, becomes the account page. */
+/**
+ * Only a path on this site; anything else, such as `//evil.example`, becomes the account page. The
+ * address is resolved the way a browser would (which also drops tabs and newlines and reads `\` as
+ * `/`) and only the same-origin path and query are kept. A path that still begins `//` after that
+ * (`/.//evil.example`) would be read as another site by a redirect, so it is refused too.
+ */
 function safeNext(next: string | null): string {
-  return next && next.length <= MAX_NEXT_LENGTH && SAFE_NEXT.test(next) && !next.startsWith('/api') ? next : DEFAULT_NEXT;
+  if (!next || next.length > MAX_NEXT_LENGTH) {
+    return DEFAULT_NEXT;
+  }
+
+  try {
+    const url = new URL(next, NEXT_BASE);
+    const local = `${url.pathname}${url.search}`;
+
+    return url.origin === NEXT_BASE.origin && !local.startsWith('//') && !url.pathname.startsWith('/api')
+      ? local
+      : DEFAULT_NEXT;
+  } catch {
+    return DEFAULT_NEXT;
+  }
 }
 
 function hostnameOf(host: string): string {

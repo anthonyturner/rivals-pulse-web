@@ -120,13 +120,29 @@ describe('GET auth/discord/start', () => {
     expect(response.cookies).toEqual([]);
   });
 
-  for (const next of ['//evil.example', 'https://evil.example', '/\\evil.example', '/api/auth/sign-out', 'account']) {
+  for (const next of [
+    '//evil.example',
+    'https://evil.example',
+    '/\\evil.example',
+    '/.//evil.example',
+    '/\t/evil.example',
+    '/api/auth/sign-out',
+    '',
+  ]) {
     it(`falls back to the account page for the return address ${next}`, async () => {
       const response = await run(request('auth/discord/start', { query: new URLSearchParams({ next }) }));
 
       expect(storedNext(response)).toBe('/account');
     });
   }
+
+  it('reduces a return address to its path and query on this site', async () => {
+    const response = await run(
+      request('auth/discord/start', { query: new URLSearchParams({ next: '/heroes/../account?a=1#frag' }) }),
+    );
+
+    expect(storedNext(response)).toBe('/account?a=1');
+  });
 
   it('keeps a return address on this site', async () => {
     const response = await run(request('auth/discord/start', { query: new URLSearchParams({ next: '/account?a=1' }) }));
@@ -231,6 +247,27 @@ describe('POST auth/sign-out', () => {
     expect(response.body).toEqual({ signedIn: false });
     expect(response.cookies[0]).toContain('rp_session=;');
     expect(response.cookies[0]).toContain('Max-Age=0');
+  });
+
+  it('still clears the cookie when Supabase cannot be reached or is not configured', async () => {
+    spyOn(console, 'warn');
+    const unconfigured = await handleAccountRequest(post(), () => {
+      throw new AuthUnavailableError('not configured');
+    });
+    const unreachable = await run(
+      post(),
+      gateway({
+        signOut: async () => {
+          throw new AuthUnavailableError('down');
+        },
+      }),
+    );
+
+    for (const response of [unconfigured, unreachable]) {
+      expect(response.status).toBe(200);
+      expect(response.cookies[0]).toContain('rp_session=;');
+      expect(response.cookies[0]).toContain('Max-Age=0');
+    }
   });
 
   it('clears the cookie even when there was no session', async () => {
