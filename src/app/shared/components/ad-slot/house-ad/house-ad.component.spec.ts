@@ -14,13 +14,14 @@ describe('HouseAdComponent', () => {
     }).compileComponents();
 
     const fixture: ComponentFixture<HouseAdComponent> = TestBed.createComponent(HouseAdComponent);
-    fixture.componentRef.setInput('slot', AD_SLOT_SIZES.rectangle);
+    fixture.componentRef.setInput('slotId', 'rectangle');
+    fixture.componentRef.setInput('size', AD_SLOT_SIZES.rectangle);
     await fixture.whenStable();
     page = fixture.nativeElement as HTMLElement;
   });
 
-  it('promotes the overlay and says it is coming soon', () => {
-    expect(page.querySelector('h2')?.textContent).toContain('Rivals Pulse overlay');
+  it('promotes the app and says it is coming soon', () => {
+    expect(page.querySelector('h2')?.textContent).toContain('RivalsPulse');
     expect(page.textContent).toContain('Coming soon');
   });
 

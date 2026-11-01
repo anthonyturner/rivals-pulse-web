@@ -2,16 +2,18 @@ import { Component, input, provideZonelessChangeDetection } from '@angular/core'
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AdSlotComponent } from './ad-slot.component';
-import { AD_PROVIDER, AD_SLOT_SIZES, AdProvider, AdSlotSize, HOUSE_AD_PROVIDER } from './ad-slot.types';
+import { AD_PROVIDER, AD_SLOT_SIZES, AdProvider, AdSlotId, AdSlotSize, HOUSE_AD_PROVIDER } from './ad-slot.types';
 
-@Component({ selector: 'app-test-ad', template: `<p class="test-ad">{{ slot().width }} wide</p>` })
+@Component({ selector: 'app-test-ad', template: `<p class="test-ad">{{ slotId() }} {{ size().width }} wide</p>` })
 class TestAdComponent {
-  readonly slot = input.required<AdSlotSize>();
+  readonly slotId = input.required<AdSlotId>();
+  readonly size = input.required<AdSlotSize>();
 }
 
 @Component({ selector: 'app-empty-ad', template: '' })
 class EmptyAdComponent {
-  readonly slot = input.required<AdSlotSize>();
+  readonly slotId = input.required<AdSlotId>();
+  readonly size = input.required<AdSlotSize>();
 }
 
 @Component({
@@ -77,11 +79,11 @@ describe('AdSlotComponent', () => {
     }
   });
 
-  it('hands the provider the slot size, and shows which provider is behind it', async () => {
+  it('hands the provider the slot id and size, and shows which provider is behind it', async () => {
     const fixture = await render({ id: 'small', component: TestAdComponent, browserOnly: false });
     const page = fixture.nativeElement as HTMLElement;
 
-    expect(page.querySelector('.test-ad')?.textContent).toBe('300 wide');
+    expect(page.querySelector('.test-ad')?.textContent).toBe('rectangle 300 wide');
     expect(page.querySelector('app-ad-slot')?.getAttribute('data-provider')).toBe('small');
   });
 

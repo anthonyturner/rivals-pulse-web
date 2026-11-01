@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 
-import { AD_PROVIDER, AD_SLOT_SIZES, AdSlotId } from './ad-slot.types';
+import { AD_PROVIDER, AD_SLOT_SIZES, AdSlotId, AdSlotInputs } from './ad-slot.types';
 
 /**
  * A fixed-size box that an `AdProvider` fills. The box is sized by the slot id alone, so the
@@ -39,7 +39,7 @@ export class AdSlotComponent {
   protected readonly content = computed(() =>
     this.provider.browserOnly && !this.hydrated() ? null : this.provider.component,
   );
-  protected readonly contentInputs = computed(() => ({ slot: this.size() }));
+  protected readonly contentInputs = computed<AdSlotInputs>(() => ({ slotId: this.slot(), size: this.size() }));
 
   constructor() {
     // Checked explicitly: a browser-only provider must never render on the server, even where the

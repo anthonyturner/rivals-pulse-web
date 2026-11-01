@@ -58,6 +58,15 @@ describe('App sidebar', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
+  it('renders no sidebar before the first navigation resolves, so a full load of home cannot flash one', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('app-sidebar')).toBeNull();
+    expect(page.querySelector('.app-body--with-sidebar')).toBeNull();
+  });
+
   it('shows the house ad beside every page except home', async () => {
     expect((await show('/heroes')).querySelector('app-sidebar app-ad-slot')).not.toBeNull();
     expect((await show('/')).querySelector('app-sidebar')).toBeNull();

@@ -21,11 +21,17 @@ export interface AdSlotSize {
  */
 export interface AdProvider {
   readonly id: string;
-  /** Renders inside the slot and takes the slot's `AdSlotSize` as a required `slot` input. */
+  /** Renders inside the slot and takes the `AdSlotInputs` below as required inputs. */
   readonly component: Type<unknown>;
-  /** True when the content loads a script, so the slot renders it after hydration and never on the server. */
+  /** True when the content creates ad units or runs other browser-only code, so the slot renders it after hydration and never on the server. */
   readonly browserOnly: boolean;
 }
+
+/** The inputs the slot sets on a provider's component: which placement it is, and the box it must fill. */
+export type AdSlotInputs = {
+  readonly slotId: AdSlotId;
+  readonly size: AdSlotSize;
+};
 
 export const HOUSE_AD_PROVIDER: AdProvider = {
   id: 'house',

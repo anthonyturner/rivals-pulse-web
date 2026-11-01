@@ -164,5 +164,7 @@ gets a sidebar from the app shell, so a page does not add one itself. From
 - An ad is an `app-ad-slot` with a size id from `AD_SLOT_SIZES`. The slot
   reserves that size in CSS and knows no ad network; what fills it is the
   `AdProvider` behind the `AD_PROVIDER` token (the house ad by default). A
-  provider that loads a script sets `browserOnly: true`, and the slot then
-  renders it only after the page has rendered in the browser, never on the server.
+  provider that creates ad units or runs other browser-only code sets
+  `browserOnly: true`, and the slot then renders it only after the page has
+  rendered in the browser, never on the server. The ad network's own loader is
+  site-wide, in `index.html`, not in a provider.
