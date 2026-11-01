@@ -42,11 +42,19 @@ describe('20261101050000_app_link_status.sql', () => {
     assert.doesNotMatch(body, /jsonb_build_object\([^;]*(user|email|recorder)/i);
   });
 
-  it('deletes only the recorder\'s own row, under the lock a re-link takes', () => {
+  it('deletes only the recorder\'s own link and pending code, under the lock a re-link takes', () => {
     const body = functionBody('unlink_player_for_recorder');
     assert.equal(body.match(/delete from public\.player_links/g)?.length, 1);
+    assert.equal(body.match(/delete from public\.link_codes/g)?.length, 1);
     assert.match(body, /delete from public\.player_links where recorder_id = p_recorder_id;/);
+    assert.match(body, /delete from public\.link_codes where recorder_id = p_recorder_id;/);
     assert.match(body, /hashtextextended\('recorder:' \|\| p_recorder_id, 0\)/);
+  });
+
+  it('deletes the pending code before the link, so the answer still says whether a link was removed', () => {
+    const body = functionBody('unlink_player_for_recorder');
+    assert.ok(body.indexOf('delete from public.link_codes') < body.indexOf('delete from public.player_links'));
+    assert.ok(body.indexOf('delete from public.player_links') < body.indexOf('if not found'));
   });
 
   it('limits each by its own kind through the shared limiter, before doing anything', () => {

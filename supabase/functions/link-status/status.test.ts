@@ -64,6 +64,26 @@ describe('link-status', () => {
     assert.equal(response.headers.get('Retry-After'), '45');
   });
 
+  it('answers an unrecognised database answer with a plain 500, not as an unlinked session', async () => {
+    const unrecognised = [
+      null,
+      'linked',
+      { status: 'surprise' },
+      { status: 'linked' },
+      { status: 'linked', playerName: 'Aurora' },
+      { status: 'linked', playerName: 42, linkedAt: '2026-11-01T10:00:00+00:00' },
+      { status: 'linked', playerName: 'Aurora', linkedAt: { at: 'now' } },
+      { status: 'rate_limited' },
+    ];
+
+    for (const data of unrecognised) {
+      const response = await setup(data).handler(appRequest('GET'));
+
+      assert.equal(response.status, 500, JSON.stringify(data));
+      assert.deepEqual(await response.json(), { error: 'Unable to read the link status' });
+    }
+  });
+
   it('answers a database failure with a plain 500 that leaks nothing', async () => {
     const { runtime } = testRuntime(() => ({ data: null, error: { code: 'XX000', message: 'secret internals' } }));
     const response = await overwolfEndpoint(linkStatus, runtime)(appRequest('GET'));

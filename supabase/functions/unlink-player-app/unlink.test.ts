@@ -56,6 +56,17 @@ describe('unlink-player-app', () => {
     assert.equal(response.headers.get('Retry-After'), '300');
   });
 
+  it('answers an unrecognised database answer with a plain 500, not as a successful unlink', async () => {
+    const unrecognised = [null, 'unlinked', {}, { status: 'surprise' }, { status: 'rate_limited' }, { status: 'rate_limited', retryAfter: '300' }];
+
+    for (const data of unrecognised) {
+      const response = await setup(data).handler(appRequest('POST'));
+
+      assert.equal(response.status, 500, JSON.stringify(data));
+      assert.deepEqual(await response.json(), { error: 'Unable to unlink the player' });
+    }
+  });
+
   it('answers a database failure with a plain 500 that leaks nothing', async () => {
     const { runtime } = testRuntime(() => ({ data: null, error: { code: 'XX000', message: 'secret internals' } }));
     const response = await overwolfEndpoint(unlinkPlayerFromApp, runtime)(appRequest('POST'));
