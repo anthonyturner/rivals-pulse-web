@@ -36,7 +36,7 @@ ol {
 h1 {
   max-width: 840px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: var(--type-page-title);
   line-height: 1.06;
   font-weight: 800;
 }
@@ -179,7 +179,7 @@ h1 {
 .path-hero h2 {
   margin-top: 7px;
   color: var(--text);
-  font-size: 1.45rem;
+  font-size: var(--type-h3);
   line-height: 1.08;
 }
 
@@ -269,7 +269,7 @@ dd {
 
 .section-heading h2 {
   color: var(--text);
-  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  font-size: var(--type-h2);
 }
 
 .drill-grid {
@@ -286,7 +286,7 @@ dd {
 
 .drill-card h3 {
   color: var(--text);
-  font-size: 1.25rem;
+  font-size: var(--type-h3);
 }
 
 dl {

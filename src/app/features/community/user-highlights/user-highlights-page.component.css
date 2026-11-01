@@ -37,7 +37,7 @@ p {
 
 h1 {
   max-width: 800px;
-  font-size: clamp(2.2rem, 5vw, 4.4rem);
+  font-size: var(--type-page-title);
   font-weight: 850;
   letter-spacing: -0.045em;
   line-height: 0.96;
@@ -166,7 +166,7 @@ h1 {
 .review-card h2,
 .submit-panel h2 {
   color: var(--text);
-  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  font-size: var(--type-h2);
   line-height: 1.08;
 }
 

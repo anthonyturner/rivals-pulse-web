@@ -33,14 +33,14 @@ p {
 h1 {
   max-width: 760px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-size: var(--type-page-title);
   line-height: 1.04;
   font-weight: 850;
 }
 
 h2 {
   color: var(--text);
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  font-size: var(--type-h2);
   line-height: 1.08;
 }
 
@@ -266,7 +266,7 @@ small.multi-role {
 
 .score-card h2 {
   color: var(--text);
-  font-size: 1.15rem;
+  font-size: var(--type-h3);
 }
 
 .score-note {

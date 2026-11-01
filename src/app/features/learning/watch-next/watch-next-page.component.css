@@ -32,7 +32,7 @@ p {
 h1 {
   max-width: 840px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: var(--type-page-title);
   line-height: 1.06;
   font-weight: 800;
 }
@@ -107,7 +107,7 @@ h1 {
 }
 
 .question-card h2 {
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
 }
 
 .option-grid {
@@ -144,7 +144,7 @@ h1 {
 }
 
 .answer-panel h2 {
-  font-size: 1.65rem;
+  font-size: var(--type-h3);
   line-height: 1.05;
 }
 
@@ -186,7 +186,7 @@ h1 {
 }
 
 .section-heading h2 {
-  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  font-size: var(--type-h2);
 }
 
 .result-grid {
@@ -235,7 +235,7 @@ h1 {
 
 .result-body h3 {
   color: var(--text);
-  font-size: 1.25rem;
+  font-size: var(--type-h3);
   line-height: 1.12;
 }
 

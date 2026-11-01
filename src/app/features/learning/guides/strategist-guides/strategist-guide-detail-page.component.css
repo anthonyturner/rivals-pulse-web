@@ -68,7 +68,7 @@
 .detail-header h1 {
   max-width: 820px;
   color: var(--text);
-  font-size: clamp(2.3rem, 5vw, 4.3rem);
+  font-size: var(--type-page-title);
   line-height: 0.98;
 }
 
@@ -126,7 +126,7 @@
 .section-heading h2,
 .review-panel h2 {
   color: var(--text);
-  font-size: clamp(1.55rem, 3vw, 2.3rem);
+  font-size: var(--type-h2);
   line-height: 1.08;
 }
 
@@ -197,7 +197,7 @@
 .drill-grid h3 {
   margin-top: 12px;
   color: var(--text);
-  font-size: 1.2rem;
+  font-size: var(--type-h3);
 }
 
 .principle-grid p,
