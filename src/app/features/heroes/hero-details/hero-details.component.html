@@ -4,8 +4,8 @@
       <div class="detail-hero-media">
         <img class="hero-image large" [src]="hero.imageUrl" [alt]="hero.name" />
         <div>
+          <app-eyebrow>{{ controller.heroRoleLabel(hero) }}</app-eyebrow>
           <h2>{{ hero.name }}</h2>
-          <p class="hero-role">{{ controller.heroRoleLabel(hero) }}</p>
           <div class="difficulty" [attr.aria-label]="'Difficulty ' + hero.difficulty + ' out of 5'">
             @for (pip of [1, 2, 3, 4, 5]; track pip) {
             <span [class.filled]="pip <= hero.difficulty"></span>

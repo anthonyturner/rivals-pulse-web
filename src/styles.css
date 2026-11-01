@@ -34,6 +34,8 @@
   --ink-raised: #0d1d33;
   --cta-yellow: #ffd866;
   --accent-on-dark: #43d8cd;
+  /* The shared eyebrow's colour on a light surface; a dark surface sets --eyebrow-color to --accent-on-dark. */
+  --eyebrow: #0f6f7a;
   --teal-bright: #77eed7;
   /* Home page type scale: the hero headline, a band's h2 and a card's h3. At 1366px that is 60px, 32px and 18px. */
   --type-hero: clamp(2.25rem, 4.4vw, 3.75rem);

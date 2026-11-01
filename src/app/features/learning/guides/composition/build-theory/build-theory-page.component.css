@@ -31,6 +31,10 @@ p {
   margin: 0;
 }
 
+app-eyebrow {
+  margin-bottom: 8px;
+}
+
 h1 {
   max-width: 850px;
   color: var(--text);

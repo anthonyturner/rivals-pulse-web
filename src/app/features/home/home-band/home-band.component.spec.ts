@@ -9,6 +9,7 @@ import { HomeBandComponent, type HomeBandAlign, type HomeBandTone } from './home
     <app-home-band
       [tone]="tone"
       [headAlign]="headAlign"
+      [eyebrow]="eyebrow"
       heading="Hero stats"
       headingId="stats-title"
       [lede]="lede"
@@ -21,6 +22,7 @@ class HostComponent {
   tone: HomeBandTone = 'light';
   headAlign: HomeBandAlign = 'start';
   lede = 'Counted from real matches.';
+  eyebrow = '';
 }
 
 describe('HomeBandComponent', () => {
@@ -52,6 +54,25 @@ describe('HomeBandComponent', () => {
     expect(section().textContent?.trim().startsWith('Hero stats')).toBeTrue();
     expect(head.querySelector('.band__lede')?.textContent).toBe('Counted from real matches.');
     expect(head.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('puts a given eyebrow above the heading without changing the heading or its label', () => {
+    fixture.componentInstance.eyebrow = 'Season 10.5 · 149 matches';
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+
+    const head = element.querySelector('.band__head') as HTMLElement;
+    const heading = element.querySelector('h2') as HTMLElement;
+
+    expect(head.firstElementChild?.tagName).toBe('APP-EYEBROW');
+    expect(head.firstElementChild?.textContent?.trim()).toBe('Season 10.5 · 149 matches');
+    expect(head.firstElementChild?.nextElementSibling).toBe(heading);
+    expect(element.querySelectorAll('h1, h2, h3, h4, h5, h6').length).toBe(1);
+    expect(section().getAttribute('aria-labelledby')).toBe(heading.id);
+  });
+
+  it('shows no eyebrow when it has none', () => {
+    expect(element.querySelector('app-eyebrow')).toBeNull();
   });
 
   it('leaves out a lede it was not given', () => {

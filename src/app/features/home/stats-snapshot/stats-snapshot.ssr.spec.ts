@@ -69,7 +69,7 @@ describe('StatsSnapshotComponent server render', () => {
     expect(html).not.toContain('Not enough data yet');
     expect(html).toContain('href="/tier-list"');
     expect(html).toContain('Every match played with Rivals Pulse makes these stats sharper.');
-    expect(html.match(/NaN|Infinity|undefined|<table|role="tab"/)).toBeNull();
+    expect(html.match(/NaN|Infinity|undefined|<table|role="tab"|<app-eyebrow/)).toBeNull();
     expect(html.match(/(^|[^\d.])0(\.0)?%/)).toBeNull();
   });
 });

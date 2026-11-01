@@ -162,7 +162,7 @@ describe('buildStatsSnapshotView', () => {
     it('says the half-season of the stats themselves, and the matches behind them', () => {
       const view = ready(buildStatsSnapshotView(sample, identities));
 
-      expect(view.halfSeasonLabel).toBe('Season 10.5');
+      expect(view.eyebrow).toBe('Season 10.5 · 149 matches');
       expect(view.sample).toBe('From 149 matches by Rivals Pulse players. Only heroes with at least 10 appearances are listed.');
     });
 
@@ -171,7 +171,7 @@ describe('buildStatsSnapshotView', () => {
       const stats: HeroStats = { ...sample, halfSeason: previous, inPlaceOf: season(10.5) };
       const view = ready(buildStatsSnapshotView(stats, identities));
 
-      expect(view.halfSeasonLabel).toBe(previous.label);
+      expect(view.eyebrow).toBe(`${previous.label} · 149 matches`);
       expect(view.fallbackNotice).toContain('Season 10.5 does not have enough data yet');
     });
 
@@ -180,7 +180,7 @@ describe('buildStatsSnapshotView', () => {
         buildStatsSnapshotView(statsOf([], { halfSeason: null, halfSeasons: [], matchesCounted: 0 }), identities),
       );
 
-      expect(view.halfSeasonLabel).toBeNull();
+      expect(view.eyebrow).toBeNull();
       expect(view.sample).toBe('From matches recorded by Rivals Pulse players. Only heroes with at least 10 appearances are listed.');
     });
 
@@ -188,6 +188,15 @@ describe('buildStatsSnapshotView', () => {
       const view = ready(buildStatsSnapshotView(statsOf([], { matchesCounted: 1 }), identities));
 
       expect(view.sample).toContain('From 1 match by');
+      expect(view.eyebrow).toBe('Season 10.5 · 1 match');
+    });
+
+    it('never builds an eyebrow from a zero or a count that is not a number', () => {
+      for (const matchesCounted of [0, NaN, Infinity, -4]) {
+        const view = ready(buildStatsSnapshotView(statsOf([], { halfSeason: null, matchesCounted }), identities));
+
+        expect(view.eyebrow).toBeNull();
+      }
     });
   });
 

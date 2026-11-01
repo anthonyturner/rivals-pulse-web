@@ -101,6 +101,16 @@ describe('JarvisConsoleComponent', () => {
     expect(copy).not.toMatch(/\branks?\b|twelve|free|Grandmaster/i);
   });
 
+  it('keeps the Premium pill as a tag above the heading, not as a heading', () => {
+    const element: HTMLElement = fixture.nativeElement;
+    const copy = element.querySelector('.console-copy') as HTMLElement;
+    const heading = element.querySelector('#jarvis-console-title') as HTMLElement;
+
+    expect(copy.firstElementChild?.querySelector('.premium')?.textContent?.trim()).toBe('Premium');
+    expect(copy.firstElementChild?.nextElementSibling).toBe(heading);
+    expect(element.querySelectorAll('h1, h2, h3, h4, h5, h6').length).toBe(1);
+  });
+
   it('names Alt+V as the push-to-talk binding, matching the overlay', () => {
     const lead = fixture.nativeElement.querySelector('.lead').textContent.replace(/\s+/g, ' ');
 

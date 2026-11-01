@@ -41,6 +41,18 @@ describe('buildGameNewsView', () => {
     );
   });
 
+  it('gives each update its type before its date', () => {
+    expect(full.updates?.items.map((item) => item.meta)).toEqual([
+      'Patch Notes · Oct 1',
+      'Patch Notes · Oct 2',
+      'Patch Notes · Oct 3',
+    ]);
+  });
+
+  it('gives the spotlight its type and date', () => {
+    expect(full.spotlight?.eyebrow).toBe('Season Update · October 9, 2026');
+  });
+
   it('carries the season update spotlight, with its video', () => {
     expect(full.spotlight).toEqual(
       jasmine.objectContaining({ title: 'Step into Season 10 // Dev Vision Vol. 21', hasVideo: true }),

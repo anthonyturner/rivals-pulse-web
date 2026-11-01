@@ -3,11 +3,12 @@ import { Component, computed, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
 import { HERO_GUIDES, HeroGuide, HeroGuideImage } from './hero-guide-data';
 
 @Component({
   selector: 'app-hero-guide-detail-page',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, EyebrowComponent, RouterLink],
   templateUrl: './hero-guide-detail-page.component.html',
   styleUrl: './hero-guide-detail-page.component.css',
 })

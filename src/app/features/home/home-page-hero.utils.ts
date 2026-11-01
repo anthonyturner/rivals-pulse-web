@@ -10,7 +10,8 @@ export interface SeasonUpdateSpotlight {
   title: string;
   description: string;
   sourceUrl: string;
-  date: string;
+  /** The update's type and date, such as "Season Update · October 9, 2026"; empty when it has neither. */
+  eyebrow: string;
   hasVideo: boolean;
 }
 
@@ -47,7 +48,7 @@ export function buildSeasonUpdateSpotlight(
     title: seasonUpdate.title,
     description: seasonUpdate.description,
     sourceUrl: seasonUpdate.sourceUrl,
-    date: seasonUpdate.publishedAt ?? 'Official Marvel Rivals news',
+    eyebrow: [seasonUpdate.label, seasonUpdate.publishedAt].filter(Boolean).join(' · '),
     hasVideo: Boolean(seasonUpdate.videoUrl),
   };
 }

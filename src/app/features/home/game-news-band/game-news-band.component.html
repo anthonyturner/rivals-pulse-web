@@ -66,7 +66,7 @@
                 @for (item of updates.items; track item.url) {
                   <li>
                     <a class="list__link" [href]="item.url" target="_blank" rel="noopener noreferrer">
-                      <span class="list__meta">{{ item.meta }}</span>
+                      <app-eyebrow>{{ item.meta }}</app-eyebrow>
                       <span class="list__title">{{ item.title }}</span
                       ><span class="visually-hidden"> (opens in a new tab)</span>
                     </a>
@@ -81,10 +81,12 @@
           <div class="news__col">
             @if (current.spotlight; as spotlight) {
               <section class="block" aria-labelledby="game-news-spotlight">
+                @if (spotlight.eyebrow) {
+                  <app-eyebrow>{{ spotlight.eyebrow }}</app-eyebrow>
+                }
                 <h3 id="game-news-spotlight" class="block__heading block__heading--title">
                   {{ spotlight.title }}
                 </h3>
-                <p class="block__meta">{{ spotlight.date }}</p>
                 <p class="spotlight__blurb">{{ spotlight.description }}</p>
                 <div class="actions">
                   @if (spotlight.hasVideo) {
