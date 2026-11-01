@@ -1,3 +1,4 @@
+import { readStatusAnswer, type StatusAnswer } from './database-answer.ts';
 import { IdentityError, recorderId, verifyOverwolfSession } from './overwolf-identity.ts';
 
 /**
@@ -29,7 +30,7 @@ export function rateLimited(message: string, retryAfter: number): Response {
 
 /** What a call to a database function gives back, in the shape supabase-js uses. */
 export interface RpcResult {
-  data: any;
+  data: unknown;
   error: { code?: string; message?: string } | null;
 }
 
@@ -94,10 +95,13 @@ export function overwolfEndpoint(
   };
 }
 
-/** Throws the error of a failed database call, so the endpoint's handler answers 500. */
-export function unwrap(result: RpcResult): any {
+/**
+ * The answer of a database function that names its outcome. A failed call, or an answer that is not
+ * one this reader recognises, throws, so the endpoint answers 500.
+ */
+export function unwrapStatus(result: RpcResult): StatusAnswer {
   if (result.error) throw result.error;
-  return result.data;
+  return readStatusAnswer(result.data);
 }
 
 export function errorMessage(error: unknown): string {

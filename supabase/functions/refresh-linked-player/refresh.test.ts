@@ -85,6 +85,18 @@ describe('refresh-linked-player', () => {
     assert.equal((await response.json()).retryAfter, 120);
   });
 
+  it('answers an unrecognised database answer with a plain 500, not as an unlinked session', async () => {
+    const unrecognised = [null, 'refreshed', {}, { status: 'surprise' }, { status: 'rate_limited' }];
+
+    for (const data of unrecognised) {
+      const { runtime } = testRuntime(() => ({ data, error: null }));
+      const response = await overwolfEndpoint(refreshLinkedPlayer, runtime)(appRequest('POST', { body }));
+
+      assert.equal(response.status, 500, JSON.stringify(data));
+      assert.deepEqual(await response.json(), { error: 'Unable to refresh the linked player' });
+    }
+  });
+
   it('answers a database failure with a plain 500 that leaks nothing', async () => {
     const { runtime } = testRuntime(() => ({ data: null, error: { code: 'XX000', message: 'secret internals' } }));
     const response = await overwolfEndpoint(refreshLinkedPlayer, runtime)(appRequest('POST', { body }));
