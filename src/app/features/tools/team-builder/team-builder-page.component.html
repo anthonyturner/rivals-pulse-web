@@ -1,147 +1,126 @@
-<section class="team-builder-page page-container page-container--wide">
-  <header class="page-hero">
-    <div>
-      <h1>Draft six heroes and read the fight plan.</h1>
-      <p class="lede">
-        Select a hero thumbnail, then click any player slot to place it. Drag and drop still works
-        for nearby heroes, but click-to-place is better when the hero pool is farther down the page.
-      </p>
-    </div>
-
-    <button class="clear-button" type="button" (click)="clearTeam()">Clear Team</button>
+<main class="team-builder page-container page-container--wide">
+  <header>
+    <h1>Marvel Rivals team builder</h1>
+    <p class="lede">Press a hero to add it to your team, then read the role mix and fight plan.</p>
   </header>
 
-  <section class="draft-board" aria-label="Six player team slots">
-    @if (compSummary(); as summary) {
-      <h2>{{summary.title}}</h2>
-    }
-    <div class="team-slot-container">
-    @for (slot of teamSlots(); track $index; let index = $index) {
-      <article
-        class="team-slot"
-        [class.filled]="slot"
-        (click)="placeSelectedHero(index)"
-        (dragover)="allowDrop($event)"
-        (drop)="dropHero(index, $event)"
-      >
-        <span class="slot-number">P{{ index + 1 }}</span>
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
 
-        @if (slot) {
-          <button
-            class="remove-button"
-            type="button"
-            [attr.aria-label]="'Remove ' + slot.name"
-            (click)="removeHero(index); $event.stopPropagation()"
-          >
-            x
-          </button>
-          <img [src]="slot.imageUrl" [alt]="slot.name" />
-          <div>
-            <strong>{{ slot.name }}</strong>
-            <small [class]="roleClass(slot.role)">{{ slot.role }}</small>
-          </div>
-        } @else {
-          <div class="empty-slot">
-            <strong>{{ selectedDraftHero() ? 'Click to place' : 'Drop hero' }}</strong>
-            <small>{{ selectedDraftHero()?.name ?? 'Player slot' }}</small>
-          </div>
-        }
-      </article>
-    }
+  <div class="board">
+    <div class="bar">
+      <h2 #teamHeading tabindex="-1">Your team</h2>
+      <p class="caption count">{{ chosenLabel() }}</p>
+      <button type="button" class="action" [disabled]="isEmpty()" (click)="clearTeam()">Clear team</button>
     </div>
-  </section>
 
-  <section class="analysis-panel" aria-label="Team composition summary">
-    @if (compSummary(); as summary) {
-      <article class="summary-card">
-        <div class="summary-heading">
-          <h2>{{ summary.title }}</h2>
-          <span>{{ summary.grade }}</span>
-        </div>
-
-        <p>{{ summary.description }}</p>
-        <strong class="role-line">{{ summary.roleLine }}</strong>
-      </article>
-
-      <article class="score-card">
-        <h2>Build Theory Signals</h2>
-        <p class="score-note">
-          Coach ratings aggregate each hero's interpreted fight-plan value. These are not official Marvel Rivals stats.
-        </p>
-        <div class="score-list">
-          @for (signal of buildSignals; track signal.type) {
-            <div [class]="scoreTone(summary.buildScores[signal.type], 60)">
-              <span>{{ signal.type }}</span>
-              <meter min="0" max="60" [value]="summary.buildScores[signal.type]"></meter>
-              <strong>{{ summary.buildScores[signal.type] }}</strong>
-            </div>
+    <ol class="slots" aria-label="Your team">
+      @for (slot of slots(); track $index) {
+        <li class="slot" [class.empty]="!slot.hero" (dragover)="allowDrop($event)" (drop)="dropHero($event, $index)">
+          @if (slot.hero; as hero) {
+            <app-hero-tile [name]="hero.name" [imageUrl]="hero.imageUrl">
+              <span class="slot-line">
+                <span class="caption">{{ slot.caption }}</span>
+                <button #removeButton type="button" class="remove" [attr.aria-label]="slot.removeLabel" (click)="removeFromSlot($index)">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </span>
+            </app-hero-tile>
+          } @else {
+            <span class="caption">{{ slot.caption }}</span>
           }
-        </div>
-      </article>
+        </li>
+      }
+    </ol>
+  </div>
 
-      <article class="notes-card">
-        <section>
+  <section aria-label="Team analysis">
+    @if (summary(); as summary) {
+      <div class="panels">
+        <div class="panel">
+          <h2>{{ summary.title }}</h2>
+          <p><strong>Grade: {{ summary.grade }} · {{ summary.roleLine }}</strong></p>
+          <p>{{ summary.description }}</p>
+        </div>
+
+        <div class="panel">
+          <h3>Build signals</h3>
+          <p class="caption">Coach ratings from each hero's fight plan, not official stats.</p>
+          <ul class="signals">
+            @for (row of signalRows(); track row.type) {
+              <li>
+                <span>{{ row.type }}</span>
+                <meter min="0" [max]="signalMax" [value]="row.value" [attr.aria-label]="row.label"></meter>
+                <strong>{{ row.value }}</strong>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="panel notes">
           <h3>Strengths</h3>
           <ul>
             @for (strength of summary.strengths; track strength) {
               <li>{{ strength }}</li>
             }
           </ul>
-        </section>
-
-        <section>
           <h3>Risks</h3>
           <ul>
             @for (risk of summary.risks; track risk) {
               <li>{{ risk }}</li>
             }
           </ul>
-        </section>
-      </article>
+        </div>
+      </div>
+    } @else {
+      <app-state-panel heading="Pick up to six heroes">
+        Add heroes to see the role mix, build signals, strengths and risks.
+      </app-state-panel>
     }
   </section>
 
-  <main class="hero-pool" aria-label="Available heroes">
-    <div class="pool-heading">
-      <div>
-        <h2>Select a hero, then click a slot</h2>
-      </div>
-
-      @if (selectedDraftHero(); as hero) {
-        <p class="selected-helper">
-          Selected: <strong>{{ hero.name }}</strong>
-        </p>
-      } @else {
-        <p class="selected-helper">Drag nearby heroes or click one to place it into any slot above.</p>
+  <section class="pool" aria-labelledby="pool-title">
+    <div class="bar">
+      <h2 id="pool-title">Heroes</h2>
+      @if (isFull()) {
+        <app-notice>Team is full. Remove a hero to add another.</app-notice>
       }
     </div>
 
-    <div class="hero-grid">
-      @for (hero of availableHeroes(); track hero.id) {
-        <button
-          class="hero-thumb"
-          type="button"
-          draggable="true"
-          [class.selected]="selectedDraftHero()?.id === hero.id"
-          (dragstart)="startHeroDrag(hero)"
-          (click)="selectDraftHero(hero)"
-        >
-          <img [src]="hero.imageUrl" [alt]="hero.name" loading="lazy" />
-          <span>
-            <strong>{{ hero.name }}</strong>
-            <small [class]="roleClass(hero.role)">{{ hero.role }}</small>
-          </span>
-          <div class="mini-build-signals" aria-label="Hero build profile values">
-            @for (type of buildTypes; track type) {
-              <div [class]="scoreTone(heroBuildValue(hero, type))">
-                <span>{{ type }}</span>
-                <meter min="0" max="10" [value]="heroBuildValue(hero, type)"></meter>
-                <strong>{{ heroBuildValue(hero, type) }}</strong>
-              </div>
-            }
-          </div>
-        </button>
+    @switch (poolState()) {
+      @case ('loading') {
+        <app-state-panel kind="loading" heading="Loading heroes" [headingLevel]="3">Fetching the hero list.</app-state-panel>
       }
-    </div>
-  </main>
-</section>
+      @case ('error') {
+        <app-state-panel kind="error" heading="Heroes could not be loaded" [headingLevel]="3">
+          Try again in a few minutes.
+          <button type="button" class="action" (click)="reload()">Try again</button>
+        </app-state-panel>
+      }
+      @default {
+        <ul class="grid">
+          @for (row of pool(); track row.hero.id) {
+            <li>
+              <button
+                type="button"
+                class="pick"
+                draggable="true"
+                [attr.aria-pressed]="row.picked"
+                [attr.aria-label]="row.label"
+                [disabled]="row.disabled"
+                (dragstart)="startHeroDrag($event, row.hero)"
+                (click)="toggleHero(row.hero)"
+              >
+                <app-hero-tile [selectable]="!row.disabled" [name]="row.hero.name" [imageUrl]="row.hero.imageUrl">
+                  @if (row.picked) {
+                    <strong tileFigure aria-hidden="true">✓</strong>
+                  }
+                  <span class="caption">{{ row.hero.role }}</span>
+                </app-hero-tile>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </section>
+</main>
