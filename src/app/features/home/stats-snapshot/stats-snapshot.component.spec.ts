@@ -80,6 +80,7 @@ describe('StatsSnapshotComponent', () => {
 
     it('reserves the panel and marks it busy, with the heading already in place', () => {
       expect(text(element.querySelector('h2'))).toBe('Hero stats');
+      expect(element.querySelector('app-eyebrow')).toBeNull();
       expect(element.querySelector('[aria-busy="true"]')).toBeTruthy();
       expect(element.querySelector('[role="tablist"]')).toBeNull();
       http.expectOne('/api/heroes').flush(roster);
@@ -90,8 +91,12 @@ describe('StatsSnapshotComponent', () => {
   describe('with numbers', () => {
     beforeEach(async () => answer(populated));
 
-    it('puts the half-season of the stats in the heading', () => {
-      expect(text(element.querySelector('h2'))).toBe('Hero stats · Season 10.5');
+    it('puts the half-season and the matches counted above the heading, which stays plain', () => {
+      const head = element.querySelector('.band__head') as HTMLElement;
+
+      expect(text(head.firstElementChild)).toBe('Season 10.5 · 149 matches');
+      expect(head.firstElementChild?.nextElementSibling).toBe(element.querySelector('h2'));
+      expect(text(element.querySelector('h2'))).toBe('Hero stats');
       expect(element.querySelector('section')?.getAttribute('aria-labelledby')).toBe(element.querySelector('h2')?.id);
     });
 
@@ -245,13 +250,18 @@ describe('StatsSnapshotComponent', () => {
     it('says so above the tabs', async () => {
       await answer({ ...populated, halfSeason: { ...populated.halfSeason!, id: 10, label: 'Season 10' }, inPlaceOf: populated.halfSeason });
 
-      expect(text(element.querySelector('h2'))).toBe('Hero stats · Season 10');
+      expect(text(element.querySelector('app-eyebrow'))).toBe('Season 10 · 149 matches');
       expect(text(element.querySelector('.snapshot__notice'))).toContain('Season 10.5 does not have enough data yet');
     });
   });
 
   describe('when the numbers cannot be read', () => {
     beforeEach(async () => answer(null));
+
+    it('shows no eyebrow, rather than a zero or a blank label', () => {
+      expect(element.querySelector('app-eyebrow')).toBeNull();
+      expect(text(element.querySelector('h2'))).toBe('Hero stats');
+    });
 
     it('says "Not enough data yet" on every card instead of a figure', () => {
       expect(cards().map((card) => text(card.querySelector('.highlight__value')))).toEqual(
@@ -277,6 +287,20 @@ describe('StatsSnapshotComponent', () => {
 
       expect(rowNames()).toEqual(['Storm', 'Hulk']);
       expect(cardText(cards()[1])).toBe('Most picked | Storm | 30.0% pick rate');
+    });
+  });
+
+  describe('with no matches counted yet', () => {
+    it('shows no eyebrow, never "0 matches"', async () => {
+      await answer(statsOf([], { halfSeason: null, halfSeasons: [], matchesCounted: 0 }));
+
+      expect(element.querySelector('app-eyebrow')).toBeNull();
+    });
+
+    it('shows only the matches when no half-season exists', async () => {
+      await answer(statsOf([], { halfSeason: null, halfSeasons: [], matchesCounted: 3 }));
+
+      expect(text(element.querySelector('app-eyebrow'))).toBe('3 matches');
     });
   });
 

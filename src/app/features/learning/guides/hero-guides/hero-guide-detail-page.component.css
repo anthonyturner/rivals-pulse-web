@@ -52,10 +52,8 @@ h1 {
   font-weight: 850;
 }
 
-.role {
-  margin-top: 8px;
-  color: var(--accent-strong);
-  font-weight: 750;
+app-eyebrow {
+  margin-bottom: 8px;
 }
 
 .lede {

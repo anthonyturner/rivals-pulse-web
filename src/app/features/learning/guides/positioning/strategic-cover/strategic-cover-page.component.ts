@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
+import { EyebrowComponent } from '../../../../../shared/components/eyebrow/eyebrow.component';
+
 interface GuideSection {
   title: string;
   summary: string;
@@ -14,7 +16,7 @@ interface ChecklistItem {
 
 @Component({
   selector: 'app-strategic-cover-page',
-  imports: [CommonModule],
+  imports: [CommonModule, EyebrowComponent],
   templateUrl: './strategic-cover-page.component.html',
   styleUrl: './strategic-cover-page.component.css',
 })

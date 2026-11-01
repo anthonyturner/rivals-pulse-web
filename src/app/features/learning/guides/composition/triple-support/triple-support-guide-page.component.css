@@ -27,6 +27,10 @@ p {
   margin: 0;
 }
 
+app-eyebrow {
+  margin-bottom: 8px;
+}
+
 h1 {
   max-width: 800px;
   font-size: clamp(2.3rem, 5vw, 4.5rem);

@@ -65,8 +65,8 @@ export type StatsSnapshotView =
   | {
       kind: 'ready';
       highlights: SnapshotHighlightView[];
-      /** The half-season the stats describe, or null before any half-season exists. */
-      halfSeasonLabel: string | null;
+      /** The half-season the stats describe and the matches counted, or null when neither is known. */
+      eyebrow: string | null;
       /** The sample behind the figures, always shown under the table. */
       sample: string;
       fallbackNotice: string | null;
@@ -99,15 +99,18 @@ export function buildStatsSnapshotView(stats: HeroStats | null, identities: Hero
     );
   const minimum = countLabel(stats.minimumMatches, 'appearance', 'appearances');
   const halfSeasonLabel = stats.halfSeason?.label ?? null;
-  const counted =
+  const matches =
     Number.isFinite(stats.matchesCounted) && stats.matchesCounted > 0
-      ? `From ${countLabel(stats.matchesCounted, 'match', 'matches')} by Rivals Pulse players. `
-      : 'From matches recorded by Rivals Pulse players. ';
+      ? countLabel(stats.matchesCounted, 'match', 'matches')
+      : null;
+  const counted =
+    matches === null ? 'From matches recorded by Rivals Pulse players. ' : `From ${matches} by Rivals Pulse players. `;
+  const eyebrow = [halfSeasonLabel, matches].filter((part) => part !== null).join(' · ');
 
   return {
     kind: 'ready',
     highlights: highlightsOf(stats, listed),
-    halfSeasonLabel,
+    eyebrow: eyebrow === '' ? null : eyebrow,
     sample: `${counted}Only heroes with at least ${minimum} are listed.`,
     fallbackNotice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),

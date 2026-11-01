@@ -87,6 +87,33 @@ describe('GameNewsBandComponent', () => {
       expect(text(element.querySelector('.block'))).toContain('October 9, 2026 – ongoing');
     });
 
+    it('puts the type and date of each update above its title', () => {
+      const items = Array.from(element.querySelectorAll('.list__link'));
+
+      expect(items.map((item) => text(item.querySelector('app-eyebrow')))).toEqual([
+        'Patch Notes · Oct 1',
+        'Patch Notes · Oct 2',
+        'Patch Notes · Oct 3',
+      ]);
+      expect(items.every((item) => item.firstElementChild?.tagName === 'APP-EYEBROW')).toBeTrue();
+      expect(items.every((item) => item.querySelector('.list__title') !== null)).toBeTrue();
+    });
+
+    it('puts the type and date of the season update above the spotlight heading, with the heading unchanged', () => {
+      const spotlight = element.querySelector('section[aria-labelledby="game-news-spotlight"]') as HTMLElement;
+      const heading = spotlight.querySelector('h3') as HTMLElement;
+
+      expect(text(spotlight.firstElementChild)).toBe('Season Update · October 9, 2026');
+      expect(spotlight.firstElementChild?.nextElementSibling).toBe(heading);
+      expect(spotlight.firstElementChild?.tagName).toBe('APP-EYEBROW');
+      expect(text(heading)).toBe('Step into Season 10 // Dev Vision Vol. 21');
+    });
+
+    it('labels no block heading, and not the band, with an eyebrow', () => {
+      expect(element.querySelector('.band__head app-eyebrow')).toBeNull();
+      expect(element.querySelectorAll('section.block > app-eyebrow').length).toBe(1);
+    });
+
     it('links the updates and the tuning post to the official site in a new tab', () => {
       const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a'));
 
@@ -111,6 +138,14 @@ describe('GameNewsBandComponent', () => {
       expect(text(link)).toContain('Read season update');
       expect(link?.getAttribute('href')).toBe('https://example.com/season');
     });
+  });
+
+  it('shows the spotlight type alone when the season update has no date', async () => {
+    const [update] = fullHomeContent.latestNews;
+
+    await render({ ...fullHomeContent, latestNews: [{ ...update, publishedAt: undefined }] });
+
+    expect(text(element.querySelector('section[aria-labelledby="game-news-spotlight"] app-eyebrow'))).toBe('Season Update');
   });
 
   it('has no watch button, but still the link, when the season update has no video', async () => {

@@ -78,7 +78,7 @@ export function buildGameNewsView(content: HomeContent, seasonDateRange: string)
   const updateItems = content.seasonUpdates.slice(0, NEWS_LIST_SLOTS).map(
     (update): GameNewsLink => ({
       title: update.title,
-      meta: `${update.date} · ${update.category}`,
+      meta: `${update.category} · ${update.date}`,
       url: update.sourceUrl,
     }),
   );

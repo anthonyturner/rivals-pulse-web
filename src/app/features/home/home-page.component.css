@@ -139,6 +139,7 @@
 }
 
 .hero-copy {
+  --eyebrow-color: var(--accent-on-dark);
   display: grid;
   align-content: start;
   max-width: 810px;

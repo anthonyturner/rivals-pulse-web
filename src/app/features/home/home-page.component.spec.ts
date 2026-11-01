@@ -69,11 +69,20 @@ describe('HomePageComponent', () => {
       ]);
     });
 
-    it('puts the heading first in the hero and in every band, with no label above it', () => {
+    it('puts the hero eyebrow, which names the product and no season, above the h1', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
+      const eyebrow = hero.firstElementChild as HTMLElement;
+
+      expect(eyebrow.tagName).toBe('APP-EYEBROW');
+      expect(text(eyebrow)).toBe('Free Overwolf app for Marvel Rivals');
+      expect(eyebrow.nextElementSibling?.tagName).toBe('H1');
+      expect(text(eyebrow)).not.toMatch(/season|\d/i);
+    });
+
+    it('puts the heading first in every band, which carries no decorative eyebrow of its own', () => {
       const bands = Array.from(element.querySelectorAll<HTMLElement>('main section.band'));
 
-      expect(hero.firstElementChild?.tagName).toBe('H1');
+      expect(element.querySelectorAll('main .band__head app-eyebrow').length).toBe(0);
       expect(bands.length).toBe(7);
       for (const band of bands) {
         const heading = band.querySelector('h2') as HTMLElement;
@@ -126,8 +135,8 @@ describe('HomePageComponent', () => {
       expect(element.querySelector('#jarvis-console')).toBeTruthy();
     });
 
-    it('makes no Jarvis or player-rank claim in the hero', () => {
-      const hero = text(element.querySelector('header.season-hero'));
+    it('makes no Jarvis or player-rank claim in the hero, and calls only the app free', () => {
+      const hero = text(element.querySelector('header.season-hero')).replace('Free Overwolf app for Marvel Rivals', '');
 
       expect(hero).not.toMatch(/jarvis|twelve|\branks?\b|voice|free/i);
     });

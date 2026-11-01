@@ -1,10 +1,12 @@
 import { Component, Input } from '@angular/core';
 
+import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
 import { HeroRoleFilter } from '../hero-grid/hero-grid.component';
 import { Hero } from '../hero.model';
 
 @Component({
   selector: 'app-hero-page-header',
+  imports: [EyebrowComponent],
   templateUrl: './hero-page-header.component.html',
   styleUrl: './hero-page-header.component.css',
 })

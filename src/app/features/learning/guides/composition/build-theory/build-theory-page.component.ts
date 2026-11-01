@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
+import { EyebrowComponent } from '../../../../../shared/components/eyebrow/eyebrow.component';
+
 interface BuildType {
   name: string;
   shortName: string;
@@ -18,7 +20,7 @@ interface UtilitySignal {
 
 @Component({
   selector: 'app-build-theory-page',
-  imports: [CommonModule],
+  imports: [CommonModule, EyebrowComponent],
   templateUrl: './build-theory-page.component.html',
   styleUrl: './build-theory-page.component.css',
 })

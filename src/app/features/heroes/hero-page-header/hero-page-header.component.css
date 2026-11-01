@@ -37,12 +37,10 @@
   content: '';
 }
 .header-copy {
+  --eyebrow-color: var(--accent-on-dark);
   display: grid;
   max-width: 720px;
   gap: 12px;
-}
-.hero-role {
-  color: #f8d36b;
 }
 h1,
 p {

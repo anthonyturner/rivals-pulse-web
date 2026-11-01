@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 
+import { EyebrowComponent } from '../../../../../shared/components/eyebrow/eyebrow.component';
+
 interface HeroPick {
   name: string;
   image: string;
@@ -16,6 +18,7 @@ interface CounterPlan {
 
 @Component({
   selector: 'app-triple-support-guide-page',
+  imports: [EyebrowComponent],
   templateUrl: './triple-support-guide-page.component.html',
   styleUrl: './triple-support-guide-page.component.css',
 })

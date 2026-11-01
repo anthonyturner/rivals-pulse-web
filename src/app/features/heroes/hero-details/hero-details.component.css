@@ -91,6 +91,10 @@
   min-width: 0;
 }
 
+app-eyebrow {
+  margin-bottom: 4px;
+}
+
 h2 {
   color: var(--text);
   font-size: 1.55rem;
@@ -111,17 +115,6 @@ h3 {
 :host-context(.hero-detail-modal) h3 {
   color: var(--modal-gold);
   letter-spacing: 0.08em;
-}
-
-.hero-role {
-  margin: 4px 0 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-:host-context(.hero-detail-modal) .hero-role {
-  color: var(--modal-text-soft);
 }
 
 .difficulty {

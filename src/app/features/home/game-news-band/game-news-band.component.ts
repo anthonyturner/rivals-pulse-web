@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
 import { HomeBandComponent } from '../home-band/home-band.component';
 import type { HomeContent } from '../home-content.model';
 import { HomeHeroStatsService } from '../home-hero-stats.service';
@@ -25,7 +26,7 @@ import { seasonDateRange } from './season-date-range';
  */
 @Component({
   selector: 'app-game-news-band',
-  imports: [HomeBandComponent],
+  imports: [EyebrowComponent, HomeBandComponent],
   templateUrl: './game-news-band.component.html',
   styleUrl: './game-news-band.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -91,7 +91,7 @@ describe('homePageHeroUtils', () => {
       title: 'Step into Season 9.5 // Dev Vision Vol. 20',
       description: 'Latest season reveal.',
       sourceUrl: 'https://example.com/season',
-      date: '2026/08/05',
+      eyebrow: 'Season Update · 2026/08/05',
       hasVideo: true,
     });
   });

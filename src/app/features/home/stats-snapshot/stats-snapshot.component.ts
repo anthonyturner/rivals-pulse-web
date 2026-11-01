@@ -52,11 +52,11 @@ export class StatsSnapshotComponent {
   protected readonly skeletonRows = Array.from({ length: SNAPSHOT_SLOTS }, (_, index) => index);
   protected readonly skeletonHighlights = Array.from({ length: SNAPSHOT_HIGHLIGHTS }, (_, index) => index);
 
-  protected readonly heading = computed(() => {
+  /** Empty while loading and when the numbers are unavailable, so the band shows no label then. */
+  protected readonly eyebrow = computed(() => {
     const view = this.view();
-    const label = view?.kind === 'ready' ? view.halfSeasonLabel : null;
 
-    return label === null ? 'Hero stats' : `Hero stats · ${label}`;
+    return view?.kind === 'ready' ? (view.eyebrow ?? '') : '';
   });
   protected readonly tabs = computed(() =>
     SNAPSHOT_TABS.map((tab) => ({
