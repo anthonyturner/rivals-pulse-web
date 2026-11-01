@@ -41,28 +41,47 @@ describe('OverlayFaqPageComponent', () => {
     expect(page.querySelectorAll('h2').length).toBe(3);
   });
 
-  it('keeps each answer to three sentences', () => {
-    for (const id of ['ban-risk', 'data', 'overwolf']) {
+  it('keeps the data and Overwolf answers to three sentences, and the ban answer to a "No." and three', () => {
+    expect(sentences('ban-risk')).toBe(4);
+    for (const id of ['data', 'overwolf']) {
       expect(sentences(id)).withContext(id).toBe(3);
     }
   });
 
   describe('ban risk', () => {
-    it('promises nothing and says NetEase has urged players to avoid third-party plugins', () => {
-      const answer = flat(section('ban-risk'));
-
-      expect(answer).toContain('We cannot promise it will not.');
-      expect(answer).toContain('NetEase decides what Marvel Rivals allows');
-      expect(answer).toContain('prohibit unauthorized third-party software');
-      expect(answer).toContain('urged players to avoid third-party plugins');
-      expect(answer).toContain('no overlay can guarantee your account is risk-free');
+    it('asks about Rivals Pulse and answers No', () => {
+      expect(page.querySelector('#ban-risk-title')?.textContent).toBe('Will Rivals Pulse get me banned?');
+      expect(flat(section('ban-risk').querySelector('p'))).toMatch(/^No\. /);
     });
 
-    it('links the NetEase sources it rests on', () => {
+    it('rests on Overwolf game events and its statement about the apps it hosts', () => {
+      const answer = flat(section('ban-risk'));
+
+      expect(answer).toContain("only through Overwolf's official Marvel Rivals game events");
+      expect(answer).toContain("doesn't modify the game, inject into it, or automate anything");
+      expect(answer).toContain('follow the Marvel Rivals Terms of Service');
+      expect(answer).toContain("Overwolf states that apps on its platform comply with each game's terms");
+      expect(answer).toContain("using them won't get you banned");
+    });
+
+    it('says the app is not on the Overwolf store yet while there is no store URL', () => {
+      expect(flat(section('ban-risk').querySelector('p'))).toContain(
+        "banned, though Rivals Pulse isn't listed on the Overwolf store yet.",
+      );
+    });
+
+    it('drops the hedging about NetEase and third-party plugins', () => {
+      expect(flat(section('ban-risk'))).not.toMatch(
+        /cannot promise|urged players|third-party plugins|risk-free|unauthorized/i,
+      );
+    });
+
+    it('leads with the Overwolf sources and keeps the NetEase terms last', () => {
       expect(hrefs('ban-risk')).toEqual([
+        'https://www.overwolf.com/our-commitment',
+        'https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/marvel-rivals',
+        'https://dev.overwolf.com/ow-native/guides/game-compliance/overview',
         'https://store.steampowered.com/eula/2767030_eula_0',
-        'https://web.archive.org/web/20250420014247/https://www.marvelrivals.com/announcements/20250220/40955_1213199.html',
-        'https://www.marvelrivals.com/guide/20250226/41348_1214569.html',
       ]);
     });
   });

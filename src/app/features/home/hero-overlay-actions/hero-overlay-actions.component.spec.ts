@@ -88,15 +88,15 @@ describe('HeroOverlayActionsComponent', () => {
 
     it('sits under the buttons and opens the FAQ, from the first render', () => {
       expect(link().getAttribute('href')).toBe('/overlay-faq');
-      expect(text(link())).toBe('Read the overlay FAQ');
-      expect(text(note())).toBe('Worried about a ban? Read the overlay FAQ');
+      expect(text(link())).toBe("No — here's why");
+      expect(text(note())).toBe("Will it get me banned? No — here's why");
       expect(note().previousElementSibling).toBe(element.querySelector('.hero-actions'));
       expect(note().nextElementSibling).toBe(element.querySelector('.trust-row'));
       expect(link().tabIndex).toBe(0);
     });
 
-    it('makes no promise about safety', () => {
-      expect(text(note())).not.toMatch(/safe|ban-proof|won't get banned/i);
+    it('answers the question without claiming the overlay is safe or ban-proof', () => {
+      expect(text(note())).not.toMatch(/safe|ban-proof|endorsed|partnered/i);
     });
   });
 
