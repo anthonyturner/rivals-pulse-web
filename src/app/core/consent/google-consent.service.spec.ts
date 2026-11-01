@@ -1,7 +1,12 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import { CONSENT_WAIT_MS, GoogleConsentService } from './google-consent.service';
+import {
+  CONSENT_LATE_POLL_MS,
+  CONSENT_WAIT_MS,
+  CONSENT_WATCH_MS,
+  GoogleConsentService,
+} from './google-consent.service';
 
 type TcfCallback = (data: unknown, success: boolean) => void;
 
@@ -86,6 +91,41 @@ describe('GoogleConsentService', () => {
     jasmine.clock().tick(100);
     expect(consent.status()).toBe('granted');
     expect(consent.canChangeChoice()).toBeFalse();
+  });
+
+  it('reads a consent message that arrives after the wait, and a decline then brings the house ad back', () => {
+    const consent = create();
+    jasmine.clock().tick(CONSENT_WAIT_MS);
+    expect(consent.status()).toBe('granted');
+    expect(consent.canChangeChoice()).toBeFalse();
+
+    installTcfApi();
+    jasmine.clock().tick(CONSENT_LATE_POLL_MS);
+    listener?.({ ...granted, purpose: { consents: {} }, vendor: { consents: {} } }, true);
+
+    expect(consent.status()).toBe('declined');
+    expect(consent.canChangeChoice()).toBeTrue();
+  });
+
+  it('takes the ad away again if a late message shows it has not been answered yet', () => {
+    const consent = create();
+    jasmine.clock().tick(CONSENT_WAIT_MS);
+
+    installTcfApi();
+    jasmine.clock().tick(CONSENT_LATE_POLL_MS);
+    listener?.({ ...granted, eventStatus: 'cmpuishown' }, true);
+
+    expect(consent.status()).toBe('pending');
+  });
+
+  it('stops looking once the consent script has had far longer than any load should take', () => {
+    create();
+    jasmine.clock().tick(CONSENT_WATCH_MS + CONSENT_LATE_POLL_MS);
+
+    installTcfApi();
+    jasmine.clock().tick(CONSENT_WATCH_MS);
+
+    expect(tcfApi).not.toHaveBeenCalled();
   });
 
   it('declines when the consent API fails', () => {

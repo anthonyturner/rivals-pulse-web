@@ -10,7 +10,8 @@ export interface AdSenseConfig {
 
 /**
  * The one place AdSense is configured. The publisher id is public and must match the loader in
- * `src/index.html` and the line in `public/ads.txt`; nothing checks that, so change all three together.
+ * `src/index.html` and the line in `public/ads.txt`; change all three together, and
+ * `scripts/adsense-publisher-id.test.ts` (run in CI) fails if they differ.
  *
  * To go live, paste the ad unit id (the digits from AdSense, Ads, By ad unit, "data-ad-slot") into
  * `rectangle`, the sidebar placement. Left empty, the sidebar shows the house ad and asks Google for

@@ -8,12 +8,19 @@ const TCF_VERSION = 2;
 const POLL_MS = 100;
 
 /**
- * How long to wait for Google's consent message to appear before deciding that none applies. Google
+ * How long to wait for Google's consent message to appear before assuming none applies. Google
  * serves it only to visitors in the EEA, the UK and Switzerland, so for everyone else it never
- * appears. Google's own AdSense loader gives it 500ms; this allows more because the cost of waiting
- * is only that the house ad shows a little longer.
+ * appears. Waiting costs only that the house ad shows a little longer for visitors outside those
+ * regions, while giving up too early lets a slow EEA visitor be shown an ad before they have
+ * answered, so this errs long. The ad box keeps its size, so nothing moves when the ad replaces
+ * the house ad.
  */
-export const CONSENT_WAIT_MS = 3000;
+export const CONSENT_WAIT_MS = 5000;
+
+/** After giving up, the message is still looked for this often, so a slow one is read when it arrives. */
+export const CONSENT_LATE_POLL_MS = 1000;
+/** The longest to keep looking. A consent script that has not appeared by now has failed to load. */
+export const CONSENT_WATCH_MS = 60_000;
 
 /**
  * Google's own consent message (Privacy & messaging in the AdSense account), seen from the app. The
@@ -53,6 +60,7 @@ export class GoogleConsentService {
 
   private waitForMessage(view: Window, destroyRef: DestroyRef): void {
     let waited = 0;
+    let gaveUp = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const look = (): void => {
@@ -60,13 +68,18 @@ export class GoogleConsentService {
         return;
       }
 
-      if (waited >= CONSENT_WAIT_MS) {
+      if (!gaveUp && waited >= CONSENT_WAIT_MS) {
+        gaveUp = true;
         this.reading.set(CONSENT_NOT_REQUIRED);
+      }
+
+      if (waited >= CONSENT_WATCH_MS) {
         return;
       }
 
-      waited += POLL_MS;
-      timer = setTimeout(look, POLL_MS);
+      const step = gaveUp ? CONSENT_LATE_POLL_MS : POLL_MS;
+      waited += step;
+      timer = setTimeout(look, step);
     };
 
     destroyRef.onDestroy(() => clearTimeout(timer));
