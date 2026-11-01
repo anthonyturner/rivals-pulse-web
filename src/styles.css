@@ -29,6 +29,12 @@
   --ally: #3cf2a6;
   --enemy: #ff5d73;
   --gold: #ffc94d;
+  /* Home page bands and the hero over the video: the dark ink, its raised surface, and the accents on them. */
+  --ink: #07111f;
+  --ink-raised: #0d1d33;
+  --cta-yellow: #ffd866;
+  --kicker: #43d8cd;
+  --teal-bright: #77eed7;
   --focus-ring: rgba(3, 159, 159, 0.2);
   --shadow-soft: 0 18px 45px rgba(17, 35, 57, 0.12);
   --mobile-page-gutter: 8px;

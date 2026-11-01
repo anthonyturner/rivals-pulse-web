@@ -21,13 +21,14 @@ describe('OverlaySectionComponent', () => {
 
   const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
-  it('is a labelled section whose h2 is "What the overlay does"', () => {
-    const section = element.querySelector('section.overlay-section');
+  it('is a dark band labelled by its h2, "What the overlay does"', () => {
+    const section = element.querySelector('section.band');
     const heading = element.querySelector('h2');
 
     expect(heading?.id).toBeTruthy();
     expect(section?.getAttribute('aria-labelledby')).toBe(heading?.id);
     expect(text(heading)).toBe('What the overlay does');
+    expect(section?.classList).toContain('band--dark');
     expect(element.querySelectorAll('h2').length).toBe(1);
   });
 

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
+import { HomeBandComponent } from '../home-band/home-band.component';
 import { JarvisConsoleComponent } from '../jarvis-console/jarvis-console.component';
 
 export interface OverlayFeature {
@@ -36,7 +37,7 @@ export const OVERLAY_FEATURES: readonly OverlayFeature[] = [
 /** What the overlay does: the scripted Jarvis demo, then three plain statements of what it offers. */
 @Component({
   selector: 'app-overlay-section',
-  imports: [JarvisConsoleComponent],
+  imports: [HomeBandComponent, JarvisConsoleComponent],
   templateUrl: './overlay-section.component.html',
   styleUrl: './overlay-section.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

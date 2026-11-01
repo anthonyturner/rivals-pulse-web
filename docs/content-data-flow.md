@@ -245,7 +245,7 @@ Already database-backed:
 - Heroes page
 - Glossary page
 - Home page official updates, latest tuning, and events/rewards
-- Tier list, the home hero stats snapshot and the Game News rail's season dates, from Rivals Pulse players' matches
+- Tier list, the home hero stats snapshot and the Game News band's season dates, from Rivals Pulse players' matches
 
 ```mermaid
 flowchart LR
@@ -263,11 +263,13 @@ The home page renders only content returned by `/api/home/content` and `/api/her
 it has a local content fallback. Every hero number on the site is a Rivals Pulse number: no
 third-party source is read, and below the minimum sample a page shows "not enough data yet".
 
-`HomePageComponent` composes the sections and owns the hero video. It reads the cached official
-content through `HomeContentService` (one `/api/home/content` request, shared) and passes it, as a
-plain input, to the Game News rail:
+`HomePageComponent` stacks the sections as full-width bands inside one `<main>` and owns the hero
+video. Each section wraps itself in the shared `HomeBandComponent`, which renders the band's
+`<section>`, eyebrow, h2 and lede, so heading order lives in one place. The page reads the cached
+official content through `HomeContentService` (one `/api/home/content` request, shared) and passes
+it, as a plain input, to the Game News band:
 
-- `GameNewsRailComponent` is the one labelled `<aside>` that holds every news block: the season at a
+- `GameNewsBandComponent` is the band that holds every news block, in three columns: the season at a
   glance (with the latest tuning post), the newest hero, the official updates as the patch-notes
   block, the season update spotlight and events. `buildGameNewsView` turns the content into those
   blocks, caps each list at three and collapses a block with nothing to show. The half-season dates
@@ -276,7 +278,7 @@ plain input, to the Game News rail:
   page, which owns the video, opens its player.
 - `StatsSnapshotComponent` reads the hero stats and the hero list (roles and portraits) in the
   browser only. `HomeHeroStatsService` fetches `/api/hero-stats` once for the hero trust line, the
-  snapshot and the rail's dates, and can reload it for a retry.
+  snapshot and the news band's dates, and can reload it for a retry.
 
 That would make the home page use the same database-backed flow as the rest of the site.
 

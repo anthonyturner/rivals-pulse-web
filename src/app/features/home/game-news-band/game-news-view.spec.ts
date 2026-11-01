@@ -1,5 +1,5 @@
 import { emptyHomeContent, fullHomeContent } from '../home-content.fixtures';
-import { buildGameNewsView, RAIL_LIST_SLOTS } from './game-news-view';
+import { buildGameNewsView, NEWS_LIST_SLOTS } from './game-news-view';
 
 describe('buildGameNewsView', () => {
   const full = buildGameNewsView(fullHomeContent, 'October 9, 2026 – ongoing');
@@ -31,7 +31,7 @@ describe('buildGameNewsView', () => {
   it('lists at most three updates and three events', () => {
     expect(full.updates?.items.map((item) => item.title)).toEqual(['Update 1', 'Update 2', 'Update 3']);
     expect(full.events?.items.map((item) => item.title)).toEqual(['Event title 1', 'Event title 2', 'Event title 3']);
-    expect(full.updates?.items.length).toBe(RAIL_LIST_SLOTS);
+    expect(full.updates?.items.length).toBe(NEWS_LIST_SLOTS);
   });
 
   it('takes the block headings and the events source from the dashboard content', () => {

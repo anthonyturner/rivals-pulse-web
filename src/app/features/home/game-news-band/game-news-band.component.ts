@@ -12,23 +12,25 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { HomeBandComponent } from '../home-band/home-band.component';
 import type { HomeContent } from '../home-content.model';
 import { HomeHeroStatsService } from '../home-hero-stats.service';
 import { buildGameNewsView } from './game-news-view';
 import { seasonDateRange } from './season-date-range';
 
 /**
- * Every news block of the home page in one labelled aside: the season at a glance, the newest hero,
- * official updates, the season update spotlight and events. The page owns the video, so the
- * spotlight's button only reports that a visitor asked to watch it.
+ * Every news block of the home page in one band of up to three columns: the season at a glance and
+ * the newest hero, official updates, then the season update spotlight and events. The page owns the
+ * video, so the spotlight's button only reports that a visitor asked to watch it.
  */
 @Component({
-  selector: 'app-game-news-rail',
-  templateUrl: './game-news-rail.component.html',
-  styleUrl: './game-news-rail.component.css',
+  selector: 'app-game-news-band',
+  imports: [HomeBandComponent],
+  templateUrl: './game-news-band.component.html',
+  styleUrl: './game-news-band.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GameNewsRailComponent {
+export class GameNewsBandComponent {
   readonly content = input.required<HomeContent>();
   readonly watchVideo = output<void>();
 

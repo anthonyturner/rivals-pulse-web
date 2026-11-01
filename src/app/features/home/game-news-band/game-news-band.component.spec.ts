@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import type { HomeContent } from '../home-content.model';
 import { emptyHomeContent, fullHomeContent } from '../home-content.fixtures';
-import { GameNewsRailComponent } from './game-news-rail.component';
+import { GameNewsBandComponent } from './game-news-band.component';
 
 const season = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
 const stats = {
@@ -19,8 +19,8 @@ const stats = {
   belowMinimum: [],
 };
 
-describe('GameNewsRailComponent', () => {
-  let fixture: ComponentFixture<GameNewsRailComponent>;
+describe('GameNewsBandComponent', () => {
+  let fixture: ComponentFixture<GameNewsBandComponent>;
   let http: HttpTestingController;
   let element: HTMLElement;
 
@@ -35,7 +35,7 @@ describe('GameNewsRailComponent', () => {
   afterEach(() => http.verify());
 
   async function render(content: HomeContent, answer: object | 'fail' = stats): Promise<void> {
-    fixture = TestBed.createComponent(GameNewsRailComponent);
+    fixture = TestBed.createComponent(GameNewsBandComponent);
     element = fixture.nativeElement;
     fixture.componentRef.setInput('content', content);
     fixture.detectChanges();
@@ -55,15 +55,22 @@ describe('GameNewsRailComponent', () => {
   describe('with all the news', () => {
     beforeEach(async () => render(fullHomeContent));
 
-    it('is one aside labelled "Game News" with an h2, holding every block', () => {
-      const aside = element.querySelector('aside');
+    it('is one band labelled by its h2, holding every block, and no aside', () => {
+      const band = element.querySelector('section.band');
       const heading = element.querySelector('h2');
 
-      expect(element.querySelectorAll('aside').length).toBe(1);
-      expect(text(heading)).toBe('Game News');
-      expect(aside?.getAttribute('aria-labelledby')).toBe(heading?.id);
-      expect(aside?.querySelectorAll('h3').length).toBe(5);
+      expect(text(heading)).toBe("What's new in the game");
+      expect(band?.getAttribute('aria-labelledby')).toBe(heading?.id);
+      expect(band?.querySelectorAll('h3').length).toBe(5);
       expect(element.querySelectorAll('h1, h2').length).toBe(1);
+      expect(element.querySelector('aside')).toBeNull();
+    });
+
+    it('sets the blocks in three columns: season and hero, updates, then the spotlight and events', () => {
+      const columns = Array.from(element.querySelectorAll('.news__col'));
+
+      expect(columns.map((column) => column.querySelectorAll('h3').length)).toEqual([2, 1, 2]);
+      expect(columns[2].querySelector('.actions__watch')).toBeTruthy();
     });
 
     it('lists the blocks in order: season, newest hero, updates, spotlight, events', () => {
@@ -115,13 +122,20 @@ describe('GameNewsRailComponent', () => {
     expect(text(element.querySelector('.actions a'))).toContain('Read season update');
   });
 
-  it('collapses the blocks it has nothing for and says there is no news when all are empty', async () => {
+  it('says there is no news, under the same heading, when every block is empty', async () => {
     await render(emptyHomeContent);
 
-    expect(element.querySelector('aside')).toBeTruthy();
     expect(element.querySelectorAll('h3').length).toBe(0);
-    expect(text(element.querySelector('.rail__title'))).toBe('Game News');
-    expect(text(element.querySelector('aside > p'))).toBe('No news yet.');
+    expect(element.querySelector('.news__col')).toBeNull();
+    expect(text(element.querySelector('h2'))).toBe("What's new in the game");
+    expect(text(element.querySelector('.empty'))).toBe('No news yet.');
+  });
+
+  it('drops a column whose blocks are all missing instead of leaving an empty card', async () => {
+    await render({ ...fullHomeContent, seasonUpdates: [] });
+
+    expect(element.querySelectorAll('.news__col').length).toBe(2);
+    expect(element.querySelector('#game-news-updates')).toBeNull();
   });
 
   it('keeps the season block without a date when the hero stats cannot be read', async () => {

@@ -11,6 +11,7 @@
   align-items: center;
   padding: clamp(20px, 3.5vw, 40px);
   border-radius: 18px;
+  border: 1px solid rgba(119, 238, 215, 0.25);
   color: #fff;
   background:
     radial-gradient(ellipse 50% 90% at 22% 50%, rgba(92, 60, 190, 0.35), transparent 70%),

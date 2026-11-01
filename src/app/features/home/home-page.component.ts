@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { GameNewsRailComponent } from './game-news-rail/game-news-rail.component';
+import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
 import { HomeContentService } from './home-content.service';
 import { buildHomeHeroMedia } from './home-page-hero.utils';
@@ -25,7 +25,7 @@ import { ToolsRowComponent } from './tools-row/tools-row.component';
 @Component({
   selector: 'app-home-page',
   imports: [
-    GameNewsRailComponent,
+    GameNewsBandComponent,
     HeroOverlayActionsComponent,
     OverlaySectionComponent,
     StatsSnapshotComponent,

@@ -56,38 +56,66 @@ describe('HomePageComponent', () => {
   const closeButton = (): HTMLButtonElement | null => element.querySelector('.home-page-video-close');
 
   describe('the page structure', () => {
-    it('has one h1, then an h2 for each section', () => {
+    it('has one h1, then an h2 for each band in visual order', () => {
       expect(element.querySelectorAll('h1').length).toBe(1);
       expect(Array.from(element.querySelectorAll('h2')).map(text)).toEqual([
-        'Hero stats',
         'What the overlay does',
+        'Hero stats',
         'Tools',
-        'Game News',
+        "What's new in the game",
       ]);
     });
 
-    it('puts the sections in <main> and the news rail after it, in one labelled aside', () => {
+    it('holds every band in the one <main>, each a section labelled by its own h2, and has no aside', () => {
       const main = element.querySelector('main') as HTMLElement;
-      const asides = element.querySelectorAll('aside');
+      const bands = Array.from(main.querySelectorAll<HTMLElement>('section.band'));
 
       expect(element.querySelectorAll('main').length).toBe(1);
-      expect(asides.length).toBe(1);
-      expect(asides[0].getAttribute('aria-labelledby')).toBe('game-news-title');
-      expect(main.compareDocumentPosition(asides[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(main.contains(asides[0])).toBeFalse();
+      expect(bands.length).toBe(4);
+      expect(bands.every((band) => main.contains(band))).toBeTrue();
+      expect(bands.map((band) => band.getAttribute('aria-labelledby'))).toEqual(
+        bands.map((band) => band.querySelector('h2')?.id ?? null),
+      );
+      expect(element.querySelector('aside')).toBeNull();
     });
 
-    it('keeps every news block inside the rail, and none in the hero', () => {
+    it('alternates dark, light, white and light bands', () => {
+      const tones = Array.from(element.querySelectorAll('main section.band')).map((band) =>
+        band.classList.contains('band--dark') ? 'dark' : band.classList.contains('band--white') ? 'white' : 'light',
+      );
+
+      expect(tones).toEqual(['dark', 'light', 'white', 'light']);
+    });
+
+    it('keeps every news block in the news band, and none in the hero', () => {
       const hero = element.querySelector('header.season-hero') as HTMLElement;
 
       expect(hero.querySelector('aside, section, a[target="_blank"]')).toBeNull();
       expect(element.querySelector('app-season-glance, app-season-dashboard, .hero-sidecar')).toBeNull();
-      expect(text(element.querySelector('aside'))).toContain('Step into Season 10');
+      expect(text(element.querySelector('app-game-news-band'))).toContain('Step into Season 10');
+    });
+
+    it('keeps the Jarvis console reachable at #jarvis-console, which the header orb links to', () => {
+      expect(element.querySelector('#jarvis-console')).toBeTruthy();
+    });
+
+    it('makes no Jarvis or player-rank claim in the hero', () => {
+      const hero = text(element.querySelector('header.season-hero'));
+
+      expect(hero).not.toMatch(/jarvis|twelve|\branks?\b|voice|free/i);
+    });
+
+    it('sizes the video background to the hero, in a wrapper of its own', () => {
+      const stage = element.querySelector('.hero-stage') as HTMLElement;
+
+      expect(stage.contains(player())).toBeTrue();
+      expect(stage.contains(element.querySelector('header.season-hero'))).toBeTrue();
+      expect(stage.contains(element.querySelector('main'))).toBeFalse();
     });
   });
 
   describe('the update video', () => {
-    it('opens in the foreground from "Watch update video" in the rail, and focus moves to Close', async () => {
+    it('opens in the foreground from "Watch update video" in the news band, and focus moves to Close', async () => {
       watchButton().click();
       await settle();
 

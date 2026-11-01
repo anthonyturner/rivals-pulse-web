@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The home page is now a stack of full-width bands (the overlay, live hero stats, tools and game news) in alternating dark, light and white, with the hero video sized to the hero alone; Game News is a three-column band instead of a sticky side column, and the hero copy now leads with the Overwolf app ([#248](https://github.com/anthonyturner/rivals-pulse-web/pull/248)).
 - Typing the address of Learning Paths or Watch Next Quiz now opens the Tools page, where both show as Coming soon, until each page is released ([#232](https://github.com/anthonyturner/rivals-pulse-web/pull/232)).
 - The Community Stats tab no longer shows Arcade and Practice buttons that only said "not enough data": a mode's button appears once it has data, and an empty role names its mode ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - The Community tier list and heroes tabs, and How we count, now say which game modes their numbers cover and how the new Mode picker works ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).

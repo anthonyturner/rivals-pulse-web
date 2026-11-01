@@ -1,6 +1,10 @@
-<section class="tools-row" aria-labelledby="home-tools-title">
-  <h2 id="home-tools-title">Tools</h2>
-
+<app-home-band
+  tone="white"
+  eyebrow="On the web"
+  heading="Tools"
+  headingId="home-tools-title"
+  lede="Open them right here in your browser. No install needed."
+>
   <ul class="tools">
     @for (tool of tools; track tool.path) {
       <li>
@@ -28,4 +32,4 @@
       </li>
     }
   </ul>
-</section>
+</app-home-band>
