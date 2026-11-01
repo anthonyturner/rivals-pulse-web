@@ -91,6 +91,10 @@
   min-width: 0;
 }
 
+app-eyebrow {
+  margin-bottom: 4px;
+}
+
 h2 {
   color: var(--text);
   font-size: 1.55rem;
