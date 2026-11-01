@@ -92,11 +92,14 @@ Whatever the styling approach, keep styles component-scoped: no global style
 overrides, and avoid `::ng-deep`, which leaks a component's styles into every
 component below it.
 
-### Type scale
+## Type scale
 
-Heading sizes come from four tokens in `src/styles.css`; a component never
-sets a literal size on a heading. Choose the token by the heading's visual role,
-not its tag (many cards use an `<h2>`).
+This section always applies, whatever the styling conventions above.
+
+Heading sizes come from four tokens in `src/styles.css`. No heading is larger
+than its role's token; a heading at or below `--type-h3` may keep a smaller
+literal size. Choose the token by the heading's visual role, not its tag (many
+cards use an `<h2>`).
 
 | Token | At 1366px | Use for |
 | --- | --- | --- |
