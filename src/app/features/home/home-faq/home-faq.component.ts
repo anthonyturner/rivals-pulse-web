@@ -12,7 +12,7 @@ export interface HomeFaqItem {
 }
 
 /**
- * Short forms of what /overlay-faq, /privacy and /how-we-count say, so the three never disagree: a
+ * Short forms of what /faq, /privacy and /how-we-count say, so the three never disagree: a
  * sentence here changes when its page does. The ban answer is the FAQ's, shortened; the
  * data answer says the same thing about names and ids that the FAQ and the privacy notes do. No
  * number from the stats payload (a minimum, a season, a match count) is written out here.
@@ -30,7 +30,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     question: 'Will it get me banned?',
     answer:
       "No. RivalsPulse reads match information only through Overwolf's official Marvel Rivals game events, and it doesn't modify the game, inject into it or automate anything. What the game allows is still NetEase's decision.",
-    more: { label: 'Read the FAQ', path: '/overlay-faq', fragment: 'ban-risk' },
+    more: { label: 'Read the FAQ', path: '/faq', fragment: 'ban-risk' },
   },
   {
     id: 'data',
@@ -58,7 +58,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     question: 'Is it made by NetEase, Marvel or Overwolf?',
     answer:
       'No. RivalsPulse is an independent project, not affiliated with NetEase, Marvel or Overwolf. It is an app that runs on the Overwolf platform.',
-    more: { label: 'Read the FAQ', path: '/overlay-faq', fragment: 'overwolf' },
+    more: { label: 'Read the FAQ', path: '/faq', fragment: 'overwolf' },
   },
 ];
 

@@ -53,7 +53,7 @@ describe('HomeFaqComponent', () => {
     const link = (id: string): HTMLAnchorElement => item(id).querySelector('a.more') as HTMLAnchorElement;
 
     it('link the FAQ, the privacy notes and How we count', () => {
-      expect(link('ban').getAttribute('href')).toBe('/overlay-faq#ban-risk');
+      expect(link('ban').getAttribute('href')).toBe('/faq#ban-risk');
       expect(link('data').getAttribute('href')).toBe('/privacy');
       expect(link('counting').getAttribute('href')).toBe('/how-we-count');
     });

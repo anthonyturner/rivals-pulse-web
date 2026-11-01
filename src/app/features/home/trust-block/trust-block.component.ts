@@ -5,7 +5,7 @@ import { BAN_ANSWER_SOURCES, buildBanAnswer } from '../../../shared/ban-answer';
 import { OVERWOLF_APP_URL } from '../../../shared/overwolf-app';
 
 /**
- * The ban question answered on the home page, with the same words and sources as /overlay-faq, which
+ * The ban question answered on the home page, with the same words and sources as /faq, which
  * is linked for the rest. The heading asks the question rather than calling the app safe, as that
  * page never does.
  */

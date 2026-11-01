@@ -64,7 +64,7 @@ describe('HeroOverlayActionsComponent', () => {
     const link = (): HTMLAnchorElement => element.querySelector('a.safety-link') as HTMLAnchorElement;
 
     it('sits under the buttons and opens the FAQ, from the first render', () => {
-      expect(link().getAttribute('href')).toBe('/overlay-faq');
+      expect(link().getAttribute('href')).toBe('/faq');
       expect(text(link())).toBe("No — here's why");
       expect(text(note())).toBe("Will it get me banned? No — here's why");
       expect(note().previousElementSibling).toBe(element.querySelector('.hero-actions'));
