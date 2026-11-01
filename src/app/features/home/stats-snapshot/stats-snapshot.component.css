@@ -2,6 +2,108 @@
   display: block;
 }
 
+.snapshot-layout {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.highlight {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 108px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-panel);
+  color: var(--text);
+}
+
+.highlight--skeleton {
+  background: var(--surface);
+}
+
+.highlight__title,
+.highlight__value,
+.highlight__detail {
+  margin: 0;
+}
+
+.highlight__title {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.highlight__value {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.highlight__value--unavailable {
+  color: var(--text-soft);
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.highlight__detail {
+  color: var(--text-soft);
+  font-size: 0.875rem;
+}
+
+.highlight__hero {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.highlight__image {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--ink);
+  object-fit: contain;
+}
+
+.highlight__text {
+  display: grid;
+  min-width: 0;
+}
+
+.highlight__text .highlight__value {
+  color: var(--text);
+  font-size: 1.15rem;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.highlight__text .highlight__value:hover {
+  text-decoration: underline;
+}
+
+.highlight__text .highlight__value:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
 .snapshot {
   padding: 24px;
   border: 1px solid var(--border);
@@ -265,7 +367,21 @@
   white-space: nowrap;
 }
 
+@media (min-width: 960px) {
+  .snapshot-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .highlights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 720px) {
+  .highlights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .snapshot {
     padding: 16px;
   }

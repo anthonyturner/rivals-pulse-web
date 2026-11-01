@@ -1,7 +1,13 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import type { HeroIdentities } from '../../insights/hero-identity';
 import { season, statsHero, statsOf } from '../../insights/hero-stats.fixtures';
-import { buildStatsSnapshotView, SNAPSHOT_SLOTS, type SnapshotPanelView, type StatsSnapshotView } from './stats-snapshot-view';
+import {
+  buildStatsSnapshotView,
+  SNAPSHOT_SLOTS,
+  type SnapshotHighlightView,
+  type SnapshotPanelView,
+  type StatsSnapshotView,
+} from './stats-snapshot-view';
 
 const identities: HeroIdentities = new Map([
   ['hulk', { name: 'Hulk', role: 'Vanguard', imageUrl: '/images/heroes/hulk.png' }],
@@ -188,7 +194,107 @@ describe('buildStatsSnapshotView', () => {
   it('is unavailable, with a notice instead of a blank panel, when the numbers could not be read', () => {
     const view = buildStatsSnapshotView(null, identities);
 
-    expect(view).toEqual({ kind: 'unavailable', message: jasmine.stringContaining('cannot be loaded') });
+    expect(view).toEqual({
+      kind: 'unavailable',
+      message: jasmine.stringContaining('cannot be loaded'),
+      highlights: jasmine.any(Array),
+    });
+  });
+
+  describe('the quick-stat cards', () => {
+    const highlight = (view: StatsSnapshotView, id: string): SnapshotHighlightView => {
+      const found = view.highlights.find((candidate) => candidate.id === id);
+
+      if (found === undefined) {
+        throw new Error(`no ${id} card`);
+      }
+
+      return found;
+    };
+
+    it('has the three cards, in order: matches counted, most picked, highest win rate', () => {
+      const view = buildStatsSnapshotView(sample, identities);
+
+      expect(view.highlights.map((card) => card.id)).toEqual(['matches', 'most-picked', 'highest-win-rate']);
+    });
+
+    it('counts the matches, under the half-season they belong to', () => {
+      const card = highlight(buildStatsSnapshotView(statsOf(sample.tiers, { matchesCounted: 1482 }), identities), 'matches');
+
+      expect(card.value).toBe('1,482');
+      expect(card.detail).toBe('Season 10.5');
+      expect(card.hero).toBeNull();
+    });
+
+    it('names the most picked hero with its pick rate', () => {
+      const card = highlight(buildStatsSnapshotView(sample, identities), 'most-picked');
+
+      expect(card.value).toBe('Thor');
+      expect(card.detail).toBe('55.0% pick rate');
+      expect(card.hero?.hero).toBe('thor');
+    });
+
+    it('chooses the highest win rate by the shrunk rate but shows the raw rate and the appearances', () => {
+      // 4 wins in 4 is 100% raw, but shrunk toward 50% it is about 64%, below Hulk's 73%.
+      const stats = statsOf([
+        { name: 'S', heroes: [statsHero('hulk', 120, 90, 20, 'S'), statsHero('storm', 4, 4, 10, 'S')] },
+      ]);
+      const card = highlight(buildStatsSnapshotView(stats, identities), 'highest-win-rate');
+
+      expect(card.hero?.hero).toBe('hulk');
+      expect(card.value).toBe('Hulk');
+      expect(card.detail).toBe('75.0% over 120 appearances');
+    });
+
+    it('breaks a tie in the shrunk rate by appearances, then by name, the same way every time', () => {
+      const stats = statsOf([
+        {
+          name: 'A',
+          heroes: [statsHero('thor', 20, 12, 10), statsHero('hulk', 20, 12, 10), statsHero('storm', 50, 29, 10)],
+        },
+      ]);
+      const reversed = statsOf([{ name: 'A', heroes: [...stats.tiers[0].heroes].reverse() }]);
+
+      expect(highlight(buildStatsSnapshotView(stats, identities), 'highest-win-rate').hero?.hero).toBe('storm');
+      expect(highlight(buildStatsSnapshotView(reversed, identities), 'highest-win-rate').hero?.hero).toBe('storm');
+
+      const twins = statsOf([{ name: 'A', heroes: [statsHero('thor', 20, 12, 10), statsHero('hulk', 20, 12, 10)] }]);
+
+      expect(highlight(buildStatsSnapshotView(twins, identities), 'highest-win-rate').hero?.hero).toBe('hulk');
+    });
+
+    it('says "Not enough data yet" on every card, never a zero, when no match is counted', () => {
+      const view = buildStatsSnapshotView(statsOf([], { matchesCounted: 0 }), identities);
+
+      expect(view.highlights.map((card) => card.value)).toEqual(Array(3).fill('Not enough data yet'));
+      expect(view.highlights.every((card) => card.detail === '' && card.hero === null)).toBeTrue();
+      expect(JSON.stringify(view.highlights)).not.toMatch(/NaN|Infinity|(^|[^\d.])0(\.0)?%/);
+    });
+
+    it('keeps the match count but says "Not enough data yet" for the heroes when none has enough games', () => {
+      const view = buildStatsSnapshotView(statsOf([], { matchesCounted: 12 }), identities);
+
+      expect(highlight(view, 'matches').value).toBe('12');
+      expect(highlight(view, 'most-picked').value).toBe('Not enough data yet');
+      expect(highlight(view, 'highest-win-rate').value).toBe('Not enough data yet');
+    });
+
+    it('says "Not enough data yet" on every card when the numbers could not be read', () => {
+      const view = buildStatsSnapshotView(null, identities);
+
+      expect(view.highlights.map((card) => card.value)).toEqual(Array(3).fill('Not enough data yet'));
+    });
+
+    it('never prints NaN or Infinity when a count or a rate is not a finite number', () => {
+      const broken = { ...statsHero('storm', 20, 10, 12), shrunkWinRate: Number.NaN };
+      const stats = statsOf([{ name: 'C', heroes: [broken] }], { matchesCounted: Number.NaN });
+      const view = buildStatsSnapshotView(stats, identities);
+
+      expect(highlight(view, 'matches').value).toBe('Not enough data yet');
+      expect(highlight(view, 'highest-win-rate').value).toBe('Not enough data yet');
+      expect(highlight(view, 'most-picked').value).toBe('Storm');
+      expect(JSON.stringify(view.highlights)).not.toMatch(/NaN|Infinity/);
+    });
   });
 
   it('leaves out a hero whose figures are not finite instead of printing NaN or Infinity', () => {

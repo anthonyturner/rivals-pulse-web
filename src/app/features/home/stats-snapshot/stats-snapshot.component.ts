@@ -21,6 +21,7 @@ import { HomeBandComponent } from '../home-band/home-band.component';
 import { HomeHeroStatsService } from '../home-hero-stats.service';
 import {
   buildStatsSnapshotView,
+  SNAPSHOT_HIGHLIGHTS,
   SNAPSHOT_SLOTS,
   SNAPSHOT_TABS,
   type SnapshotTabId,
@@ -49,6 +50,7 @@ export class StatsSnapshotComponent {
   protected readonly panelId = 'stats-snapshot-panel';
   protected readonly invitation = 'Every match played with Rivals Pulse makes these stats sharper.';
   protected readonly skeletonRows = Array.from({ length: SNAPSHOT_SLOTS }, (_, index) => index);
+  protected readonly skeletonHighlights = Array.from({ length: SNAPSHOT_HIGHLIGHTS }, (_, index) => index);
 
   protected readonly heading = computed(() => {
     const view = this.view();
@@ -65,6 +67,8 @@ export class StatsSnapshotComponent {
     })),
   );
   protected readonly selectedTab = computed(() => this.tabs().find((tab) => tab.selected) ?? this.tabs()[0]);
+  /** The quick-stat cards, or `null` while the numbers load. */
+  protected readonly highlights = computed(() => this.view()?.highlights ?? null);
   protected readonly panel = computed(() => {
     const view = this.view();
 
