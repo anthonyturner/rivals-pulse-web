@@ -26,8 +26,8 @@ describe('the cron run history cleanup migration', () => {
     assert.match(sql, /cron\.schedule\(\s*'purge-cron-run-history',\s*'\d+ \d+ \* \* \*'/);
   });
 
-  it('deletes only finished runs older than seven days', () => {
-    assert.match(sql, /delete from cron\.job_run_details where end_time < now\(\) - interval '7 days'/);
+  it('deletes only runs that ended, or began if they never ended, more than seven days ago', () => {
+    assert.match(sql, /delete from cron\.job_run_details where coalesce\(end_time, start_time\) < now\(\) - interval '7 days'/);
   });
 
   it('creates no table or function, so there is nothing to grant', () => {

@@ -70,7 +70,7 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
-| `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
+| `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
 
 Link once per machine, check history, then apply:
 
@@ -578,7 +578,7 @@ policy's hard limit), but later than promised.
   and the run history cleanup, and the four hourly aggregate rebuilds). If one is missing (the
   migrations warn when `pg_cron` is unavailable), enable `pg_cron` and schedule by hand
   `select public.purge_expired_participants();` daily,
-  `delete from cron.job_run_details where end_time < now() - interval '7 days'` daily, and
+  `delete from cron.job_run_details where coalesce(end_time, start_time) < now() - interval '7 days'` daily, and
   `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
   `select public.recompute_community_match_aggregates();` and
   `select public.recompute_play_time_aggregates();` hourly. `supabase/checks/cron-run-history.sql`
