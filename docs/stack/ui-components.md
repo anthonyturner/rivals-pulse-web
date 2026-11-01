@@ -1,7 +1,7 @@
 # UI components
 
 Read this file before building or changing an Angular component in
-Rivals Pulse Coach. [angular.md](angular.md) covers architecture; this file
+RivalsPulse. [angular.md](angular.md) covers architecture; this file
 covers components, templates and accessibility.
 
 ## Reuse before building

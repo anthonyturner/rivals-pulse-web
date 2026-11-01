@@ -1,6 +1,6 @@
 # Angular architecture
 
-Read this file before writing Angular code in Rivals Pulse Coach. It defines the
+Read this file before writing Angular code in RivalsPulse. It defines the
 structural conventions components and services follow. It does not list where
 things live in the codebase: infer that from the repository tree, so this file
 cannot drift out of step with it.

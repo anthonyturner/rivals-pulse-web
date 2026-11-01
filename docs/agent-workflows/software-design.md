@@ -1,6 +1,6 @@
 # Software design workflow
 
-Use this workflow to produce a read-only design for a material Rivals Pulse Coach
+Use this workflow to produce a read-only design for a material RivalsPulse
 architecture or implementation decision. Software design does not manage
 requirements and does not write application code.
 

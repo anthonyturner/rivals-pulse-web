@@ -28,8 +28,8 @@ by hand. There is no sign-up route to it.
   login, JWT, or OAuth"). #270 builds it, and `admin` appears nowhere in code,
   migrations or docs. What #270 will deliver is taken from ADR-0004 decision 9
   and is an assumption until #270 merges: a server-held session cookie, handlers
-  mounted once in both Express (`src/server.ts`) and the Vercel function
-  (`api/[...path].ts`), Supabase calls made per request with the publishable
+  mounted once in both Express (`src/server.ts`) and the Vercel functions (one
+  file per route under `api/`), Supabase calls made per request with the publishable
   key plus the user's own token (so row-level security, RLS, which are database
   rules about who may read which row, is the real guard), an `Origin` check on
   every POST, and `private, no-store` on every answer.
@@ -38,13 +38,13 @@ by hand. There is no sign-up route to it.
   site ... no new grant may assume otherwise"). A check that only asks "is this
   user signed in?" would admit every stranger who registers.
 - The API accepts only GET today and answers anything else with 405
-  (`api/[...path].ts:37-40`, `src/vercel-api.ts:36-39`). Admin changes need
+  (`src/vercel-api.ts:36-39`). Admin changes need
   POST, which #270 is expected to add.
 - Default API answers are cached by the CDN (the shared web cache) for five
   minutes, and a stale copy may be served for up to an hour
-  (`api/[...path].ts:29`, `src/vercel-api.ts:5`). A route that forgets to
+  (`src/vercel-api.ts:5`). A route that forgets to
   override that would hand one visitor's answer to the next. A `no-store`
-  variant exists today for a single route (`api/[...path].ts:31-34`).
+  variant exists today for a single route (`api/home/content.ts:11`).
 - The database already has a posture for data the website alone may touch: RLS
   on, no policy, and all rights revoked from `anon` and `authenticated`
   (`supabase/migrations/20261030000000_hero_aggregates.sql:84-91`). Functions

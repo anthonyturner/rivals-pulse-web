@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Rivals Pulse Coach are recorded in this file.
+All notable changes to RivalsPulse are recorded in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -18,6 +18,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Privacy notes browser tab is now titled "Privacy notes | RivalsPulse", matching every other page, and the project's README and documentation say RivalsPulse instead of Rivals Pulse Coach ([#332](https://github.com/anthonyturner/rivals-pulse-web/pull/332)).
 - The Guides pages are compact. The guides library (`/hero-guides`) is titled "Guides" and lists 26 small cards in five flat groups (it was 25 large cards in seven panels, 3,559px tall at 1366px, and is now about 1,600px), with a new "Strategist lessons" card that opens the strategist guides, which were not linked from it, and the two "How To Play The Game" cards now have different names. The strategist guides page has no 51px "10" figure, number badges or repeated "Open field guide" links: it shows a "10 guides" count that follows your search, a Category drop-down instead of six buttons, and four full guides on the first screen (it showed none). On a hero guide the video is smaller and sits beside the quick read, every section is a plain card with ordinary bullets, and the first section is on the first screen at 1366x900 (it started 1,400px down); an address with no guide now says "Guide not found" instead of silently showing Captain America's guide. On a strategist guide the patch note is the shared amber note, the decision rules are a table, and checkpoint links say they open YouTube in a new tab. Small labels above headings and above filters are no longer capitalised anywhere on the site ([#323](https://github.com/anthonyturner/rivals-pulse-web/pull/323)).
 - The home page banner is shorter on a desktop screen. It had about 200px of empty background below its text, which pushed "What the overlay does" off the first screen at 1366x900; that heading and its first line now show without scrolling. Phones are unchanged ([#317](https://github.com/anthonyturner/rivals-pulse-web/pull/317)).
 - The FAQ page now lives at `/faq` (it was `/overlay-faq`), and the links to it on the home page point there. Old `/overlay-faq` links, including ones that jump to a question such as `#ban-risk`, still work: they redirect permanently to `/faq` ([#316](https://github.com/anthonyturner/rivals-pulse-web/pull/316)).
@@ -39,6 +40,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 - The Community Stats tab no longer shows Arcade and Practice buttons that only said "not enough data": a mode's button appears once it has data, and an empty role names its mode ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - The Community tier list and heroes tabs, and How we count, now say which game modes their numbers cover and how the new Mode picker works ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
+
+### Removed
+
+- The local development server no longer answers `GET /api/heroes/:id` (one hero by id). The website and the app never called it, and the live site never served it. The unused catch-all API file that duplicated every route is gone too ([#330](https://github.com/anthonyturner/rivals-pulse-web/pull/330)).
 
 ### Fixed
 
