@@ -131,10 +131,6 @@ export class TeamCompositionEngineService {
     };
   }
 
-  heroBuildValue(hero: Hero, type: HeroBuildType): number {
-    return (hero.buildProfile ?? computeHeroBuildProfile(hero))[type];
-  }
-
   private roleCounts(heroes: Hero[]): Record<CoreHeroRole, number> {
     return heroes.reduce(
       (counts, hero) => {
