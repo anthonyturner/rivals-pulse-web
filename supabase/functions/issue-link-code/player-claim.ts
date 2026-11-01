@@ -54,8 +54,15 @@ export function readPlayerClaim(body: unknown): PlayerClaim | null {
   return { uid, name, avatarUrl: allowedAvatarUrl(avatarUrl) };
 }
 
-/** A string, or a whole number (the game's uid is numeric), with control characters removed. */
+/**
+ * Control characters, plus the invisible ones that reorder or hide text (zero-width and bidi marks,
+ * embeddings and isolates): a name shown in the header must not be able to flip the text around it.
+ */
+const UNSAFE_TEXT = /[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g;
+
+/** A string, or a whole number (the game's uid is numeric), cleaned and cut to `maxLength` code points, so no surrogate pair is split. */
 function cleanText(value: unknown, maxLength: number): string {
   const text = typeof value === 'number' && Number.isSafeInteger(value) ? String(value) : value;
-  return typeof text === 'string' ? text.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, maxLength) : '';
+  if (typeof text !== 'string') return '';
+  return Array.from(text.replace(UNSAFE_TEXT, '').trim()).slice(0, maxLength).join('').trim();
 }

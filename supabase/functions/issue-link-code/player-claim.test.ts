@@ -75,6 +75,17 @@ describe('readPlayerClaim', () => {
     for (const body of [null, undefined, 'text', 42, true]) assert.equal(readPlayerClaim(body), null);
   });
 
+  it('strips zero-width and bidi characters that could reorder a name', () => {
+    const claim = readPlayerClaim({ playerUid: '1', playerName: 'Au​ro‮ra⁦x‏' });
+    assert.equal(claim?.name, 'Aurorax');
+  });
+
+  it('cuts by whole characters, never through a surrogate pair', () => {
+    const claim = readPlayerClaim({ playerUid: '1', playerName: '\u{1F600}'.repeat(100) });
+    assert.equal(Array.from(claim?.name ?? '').length, 64);
+    assert.doesNotMatch(claim?.name ?? '', /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/);
+  });
+
   it('strips control characters and caps the lengths', () => {
     const claim = readPlayerClaim({ playerUid: '1\n2', playerName: `Au\u0000ro\u001fra${'x'.repeat(100)}` });
     assert.equal(claim?.uid, '12');
