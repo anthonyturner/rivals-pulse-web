@@ -8,7 +8,7 @@ import { columnsOf, createdFunctions, createdTables, escapeRegExp, MIGRATIONS, r
  * are easy to break and expensive to find in production: the posture of every new object, the
  * anonymity of the counts, the shape of the reader, and that the purge still freezes every family.
  */
-const PAIRS = '20261101020000_hero_pair_aggregates.sql';
+const PAIRS = '20261101070000_hero_pair_aggregates.sql';
 const READER = 'public.read_hero_pairs(smallint[])';
 
 const sql = withoutComments(read(PAIRS));
@@ -130,9 +130,16 @@ describe('the hero pair migration', () => {
 
   it('checks the gate when it runs: a hidden fixture must not come back, and the fixtures are rolled back', () => {
     assert.match(sql, /assert not one_recorder_returned/);
+    assert.match(sql, /assert three_recorders_matches = 10/);
     assert.match(sql, /assert both_modes_matches = 10/);
     assert.match(sql, /raise exception 'roll back the gate fixtures' using errcode = 'P0042'/);
-    assert.match(sql, /when sqlstate 'P0042' then null;\s+when others then\s+raise warning/);
+    assert.match(sql, /exception when sqlstate 'P0042' then\s+null;/);
+  });
+
+  it('lets only the fixture inserts be skipped: an error from the reader itself fails the push', () => {
+    const handlers = [...sql.matchAll(/exception when others then\s+raise warning 'hero pair gate check skipped/g)];
+    assert.equal(handlers.length, 1);
+    assert.ok(handlers[0].index < sql.indexOf('read_hero_pairs(array[0]::smallint[])'));
   });
 
   it('leaves the latest purge freezing every family, this one included, before it deletes anything', () => {
