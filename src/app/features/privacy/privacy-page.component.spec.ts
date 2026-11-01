@@ -91,4 +91,45 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('uploaded automatically');
     expect(text).not.toContain('choose to upload');
   });
+
+  it('describes Discord sign-in, what is stored, the sign-in cookie and deletion', () => {
+    const text = section('accounts').textContent ?? '';
+
+    expect(text).toContain('Discord');
+    expect(text).toContain('Discord user id');
+    expect(text).toContain('email address');
+    expect(text).toContain('rp_session');
+    expect(text).toContain('Deleting your account');
+  });
+
+  it('says how long the sign-in lasts as the code behaves, and that Supabase sees the IP address', () => {
+    const text = (section('accounts').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('until 30 days pass without a visit');
+    expect(text).not.toContain('up to 30 days');
+    expect(text).toContain('IP address');
+    expect(text).toContain('talks to Supabase directly');
+  });
+
+  it('summarises the cookies and the direct Supabase contact truthfully', () => {
+    const text = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('rp_pkce');
+    expect(text).toContain('talks to Discord and to Supabase');
+    expect(text).not.toContain('If you never sign in, the site sets no cookies');
+  });
+
+  it('no longer claims there are no accounts, no login or no cookies', () => {
+    const text = (page.textContent ?? '').toLowerCase();
+
+    expect(text).not.toContain('no accounts');
+    expect(text).not.toContain('no login');
+    expect(text).not.toContain('no cookies of its own and');
+  });
+
+  it('links the Discord server for deletion requests', () => {
+    const link = section('accounts').querySelector('a[href^="https://discord.gg/"]');
+
+    expect(link).withContext('the Discord invite link').toBeTruthy();
+  });
 });

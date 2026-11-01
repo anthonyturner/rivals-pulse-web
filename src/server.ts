@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 
+import { handleAccountHttp } from './account-http';
 import {
   getContentStatusFromDatabase,
   getExternalSourceFromDatabase,
@@ -129,6 +130,10 @@ app.get('/api/external-sources/:sourceKey', (req, res) => {
 
     return source;
   });
+});
+
+app.all(['/api/auth/*splat', '/api/account/*splat'], (req, res, next) => {
+  handleAccountHttp(req, res, req.path.replace(/^\/api\//, '')).catch(next);
 });
 
 /**

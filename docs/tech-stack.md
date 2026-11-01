@@ -9,14 +9,16 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 ## Frontend
 
-- Angular 20 (SSR via `@angular/ssr`)
+- Angular 20, rendered in the browser in production (`vercel.json` serves
+  `index.csr.html`); `@angular/ssr` serves only local dev and
+  `npm run serve:ssr:rivals-pulse-coach`
 - TypeScript
 - Angular Signals
 - RxJS
 
 ## Server / API
 
-- Express (`src/server.ts`), used for local dev and SSR
+- Express (`src/server.ts`), used for local dev and the local server render
 - Vercel serverless functions (`api/`), used in production
 - No separate backend framework/service (no ASP.NET, no Rails, etc.)
 
@@ -28,7 +30,10 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 ## Authentication
 
-- None implemented
+- Supabase Auth, Discord sign-in only, with the session in an `HttpOnly` cookie
+  held by our own `/api/auth/*` handlers (no Supabase code in the browser); see
+  [architecture.md](architecture.md) and
+  [ADR-0004](decisions/0004-add-player-accounts-private-to-the-owner.md)
 
 ## AI
 

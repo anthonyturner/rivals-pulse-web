@@ -1,0 +1,31 @@
+<main class="account-page">
+  <app-page-header
+    title="Sign in"
+    description="Sign in with Discord to have an account on Rivals Pulse Coach."
+  />
+
+  <section class="account-section" aria-labelledby="sign-in-title">
+    <h2 id="sign-in-title">Continue with Discord</h2>
+
+    @if (error(); as message) {
+      <p class="account-error" role="alert">{{ message }}</p>
+    }
+
+    @if (state().status === 'unavailable') {
+      <p class="account-error" role="alert">
+        Sign-in is unavailable right now. Try again in a moment.
+      </p>
+    }
+
+    <p>
+      <a class="account-button" [href]="discordHref">Sign in with Discord</a>
+    </p>
+
+    <p class="account-note">
+      Signing in creates an account that exists only so you can sign in. It holds your Discord id,
+      username and email (if Discord shares one) and the date it was created, and we send no
+      marketing email. No game data is tied to it yet. Read
+      <a routerLink="/privacy" fragment="accounts">what the account stores</a> first if you like.
+    </p>
+  </section>
+</main>

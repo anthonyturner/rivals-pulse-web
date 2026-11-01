@@ -618,6 +618,25 @@ PostgREST (the REST layer the client calls) returns at most 1000 rows per
 request, so bulk reads must page with `.range()`. Use a Postgres function
 called through `.rpc()` when several writes must succeed or fail together.
 
+## Website accounts (profiles)
+
+Visitors sign in with Discord through Supabase Auth; the design is in
+[ADR-0004](decisions/0004-add-player-accounts-private-to-the-owner.md) and the web side in
+[architecture.md](architecture.md). The only table the web app adds for it is `public.profiles`
+(`user_id` references `auth.users` on delete cascade, `created_at`), with RLS on, no grant to `anon`,
+and `select` and `insert` for `authenticated` on the user's own row. The row is created at first
+sign-in, not by a trigger. It is additive and touches no object the overlay calls.
+
+The server reaches Auth and the table with the publishable key plus the visitor's own token
+(`src/auth-gateway.ts`), so `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` must be set; the
+service-role key stays unused until account deletion. Dashboard settings the maintainer makes by hand:
+Authentication, URL Configuration with the Site URL `https://rivalspulse.com` and Redirect URLs
+`https://rivalspulse.com/**`, `http://localhost:4200/**` and `http://localhost:4000/**`; and Discord
+enabled under Providers with the Discord application's client id and secret (its redirect is the
+project's `/auth/v1/callback`). The session cookie is `Secure`: Chrome, Edge and Firefox accept it
+on `http://localhost`, but Safari may not, so test local sign-in in one of those. `supabase/checks/profiles.sql` proves the RLS rules against the linked
+project and rolls back: `npx supabase db query --linked -f supabase/checks/profiles.sql`.
+
 ## Tests
 
 `npm run test:functions` runs the function tests with Node's built-in test

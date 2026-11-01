@@ -15,6 +15,11 @@
     <span class="disabled">{{ item.label }}</span>
     }
     }
+    @if (accountLink(); as link) {
+    <a class="nav-link" [routerLink]="link.path" routerLinkActive="active" (click)="closeMenu()">
+        {{ link.label }}
+    </a>
+    }
 </nav>
 
 <a class="core-orb" routerLink="/" fragment="jarvis-console" (click)="closeMenu()"

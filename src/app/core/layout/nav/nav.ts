@@ -1,5 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-nav',
@@ -8,7 +10,22 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './nav.css',
 })
 export class Nav {
+  private readonly auth = inject(AuthService);
+
   readonly isMenuOpen = signal(false);
+
+  /** Hidden until the server has answered, so a signed-in visitor never sees "Sign in" flash by. */
+  readonly accountLink = computed(() => {
+    switch (this.auth.state().status) {
+      case 'signedIn':
+        return { label: 'Account', path: '/account' };
+      case 'signedOut':
+      case 'unavailable':
+        return { label: 'Sign in', path: '/sign-in' };
+      default:
+        return null;
+    }
+  });
 
   readonly primaryNavItems = [
     { label: 'Home', path: '/', enabled: true },
@@ -18,6 +35,10 @@ export class Nav {
     { label: 'Resources', path: '/resources', enabled: true },
     { label: 'Community', path: '/community', enabled: true },
   ];
+
+  constructor() {
+    void this.auth.load();
+  }
 
   toggleMenu(): void {
     this.isMenuOpen.update((isOpen) => !isOpen);
