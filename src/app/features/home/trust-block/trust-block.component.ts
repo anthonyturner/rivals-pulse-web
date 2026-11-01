@@ -6,7 +6,7 @@ import { OVERWOLF_APP_URL } from '../../../shared/overwolf-app';
 
 /**
  * The ban question answered on the home page, with the same words and sources as /overlay-faq, which
- * is linked for the rest. The heading asks the question rather than calling the overlay safe, as that
+ * is linked for the rest. The heading asks the question rather than calling the app safe, as that
  * page never does.
  */
 @Component({

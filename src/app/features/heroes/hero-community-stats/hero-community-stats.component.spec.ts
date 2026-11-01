@@ -55,16 +55,16 @@ describe('HeroCommunityStatsComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('shows every figure and the sample size, labelled as Rivals Pulse players, for a hero with enough data', async () => {
+  it('shows every figure and the sample size, labelled as RivalsPulse players, for a hero with enough data', async () => {
     const root = await show('storm', 'Storm', readyStats);
     const text = root.textContent ?? '';
     const terms = [...root.querySelectorAll('dt')].map((term) => term.textContent?.trim());
     const values = [...root.querySelectorAll('dd')].map((value) => value.textContent?.trim());
 
-    expect(text).toContain('Rivals Pulse players');
+    expect(text).toContain('RivalsPulse players');
     expect(terms).toEqual(['Win rate', 'Pick rate', 'KDA', 'Final hits per match']);
     expect(values).toEqual(['54.2%', '16.0%', '3.46', '9.0']);
-    expect(text).toContain('From 24 appearances in 150 matches recorded by Rivals Pulse players');
+    expect(text).toContain('From 24 appearances in 150 matches recorded by RivalsPulse players');
     expect(text).toContain('Half-season: Season 10.5');
     expect(text).not.toContain('Not enough data yet');
   });
@@ -92,7 +92,7 @@ describe('HeroCommunityStatsComponent', () => {
     const text = root.textContent ?? '';
 
     expect(text).toContain('Not enough data yet');
-    expect(text).toContain('No match recorded by Rivals Pulse players has Rocket Raccoon yet');
+    expect(text).toContain('No match recorded by RivalsPulse players has Rocket Raccoon yet');
     expect(text).not.toMatch(/NaN|\b0\.0%|Infinity/);
   });
 

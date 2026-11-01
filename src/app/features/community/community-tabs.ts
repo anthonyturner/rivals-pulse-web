@@ -14,7 +14,7 @@ export interface CommunityTab {
   component: Type<unknown>;
 }
 
-/** The order mirrors the Rivals Pulse desktop app's screens. */
+/** The order mirrors the RivalsPulse desktop app's screens. */
 export const COMMUNITY_TABS: readonly CommunityTab[] = [
   { id: 'heroes', label: 'Heroes', component: HeroesTabComponent },
   { id: 'matches', label: 'Matches', component: MatchesTabComponent },

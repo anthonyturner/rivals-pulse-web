@@ -10,7 +10,7 @@ import type { TierName } from './contracts/tier-list.model.js';
 
 /**
  * Every hero number on the site is derived here and nowhere else, from the counts in
- * `hero_aggregates`. The rule is the Rivals Pulse overlay's personal tier list
+ * `hero_aggregates`. The rule is the RivalsPulse overlay's personal tier list
  * (`personal-tier-list.ts`, overlay commit 97ff7eeb885acd91531370c6f6f262e5c839eaca), so the site
  * and the overlay place the same heroes in the same tiers; `hero-stats.spec.ts` carries the
  * overlay's fixtures.

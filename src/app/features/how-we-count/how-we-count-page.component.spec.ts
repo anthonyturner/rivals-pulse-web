@@ -39,8 +39,8 @@ describe('HowWeCountPageComponent', () => {
     }
   });
 
-  it('says the numbers come only from Rivals Pulse overlay uploads', () => {
-    expect(section('source')).toContain('Only from matches that Rivals Pulse players record with the overlay');
+  it('says the numbers come only from RivalsPulse app uploads', () => {
+    expect(section('source')).toContain('Only from matches that RivalsPulse players record with the app');
   });
 
   it('explains that a hero on both teams counts twice', () => {

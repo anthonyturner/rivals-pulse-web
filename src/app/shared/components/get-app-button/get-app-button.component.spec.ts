@@ -26,7 +26,7 @@ describe('GetAppButtonComponent', () => {
     expect(button.type).toBe('button');
     expect(button.getAttribute('aria-disabled')).toBe('true');
     expect(button.disabled).toBeFalse();
-    expect(text(button)).toContain('Get Rivals Pulse on Overwolf');
+    expect(text(button)).toContain('Get RivalsPulse on Overwolf');
     expect(text(button.querySelector('.pill'))).toBe('Coming soon');
     expect(text(button.querySelector('.visually-hidden'))).toContain('not available yet');
     expect(element.querySelector('a')).toBeNull();
@@ -41,7 +41,7 @@ describe('GetAppButtonComponent', () => {
     expect(link.getAttribute('href')).toBe('https://www.overwolf.com/app/rivals-pulse');
     expect(link.target).toBe('_blank');
     expect(link.rel).toBe('noopener noreferrer');
-    expect(text(link)).toBe('Get Rivals Pulse on Overwolf (opens in a new tab)');
+    expect(text(link)).toBe('Get RivalsPulse on Overwolf (opens in a new tab)');
     expect(element.querySelector('button')).toBeNull();
     expect(element.querySelector('.pill')).toBeNull();
   });

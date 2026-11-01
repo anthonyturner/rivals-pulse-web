@@ -43,14 +43,14 @@ describe('buildHeroTrustLine', () => {
   });
 
   it('shows no number when the stats could not be read', () => {
-    expect(buildHeroTrustLine(null)).toEqual({ state: 'neutral', text: 'Counted from Rivals Pulse player uploads' });
+    expect(buildHeroTrustLine(null)).toEqual({ state: 'neutral', text: 'Counted from RivalsPulse player uploads' });
   });
 
   it('shows no zero or NaN when nothing has been counted', () => {
     for (const matchesCounted of [0, Number.NaN, Number.POSITIVE_INFINITY, -3]) {
       const line = buildHeroTrustLine(statsOf({ status: 'not-enough-data', matchesCounted }));
 
-      expect(line).toEqual({ state: 'neutral', text: 'Counted from Rivals Pulse player uploads' });
+      expect(line).toEqual({ state: 'neutral', text: 'Counted from RivalsPulse player uploads' });
     }
   });
 });

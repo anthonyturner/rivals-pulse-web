@@ -15,7 +15,7 @@ export class HomeContentService {
     latestNews: [],
     featuredGuides: [],
     quickLinks: [],
-    currentFocusTitle: 'Rivals Pulse Coach',
+    currentFocusTitle: 'RivalsPulse',
     currentFocusDescription:
       'Connect the content database to load the latest site content.',
     lastChecked: 'Not loaded',

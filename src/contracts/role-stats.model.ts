@@ -39,7 +39,7 @@ export interface RoleStatsMode {
 }
 
 /**
- * The Community Stats tab's numbers, from Rivals Pulse overlay matches only. `not-enough-data` is a
+ * The Community Stats tab's numbers, from RivalsPulse app matches only. `not-enough-data` is a
  * designed state, not an error: it means no role in any mode has reached `minimumLines`.
  */
 export interface RoleStats {

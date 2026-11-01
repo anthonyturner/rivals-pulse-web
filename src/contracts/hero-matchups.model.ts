@@ -1,7 +1,7 @@
 import type { HeroStatsHalfSeason } from './hero-stats.model.js';
 
 /**
- * How one hero fares when an enemy plays another hero, from the matches Rivals Pulse players
+ * How one hero fares when an enemy plays another hero, from the matches RivalsPulse players
  * recorded. It describes a record; it does not say who to pick or ban. Every rate is a percentage
  * from 0 to 100.
  */
@@ -21,7 +21,7 @@ export interface HeroMatchup {
 }
 
 /**
- * Every hero-against-hero record the site shows, from Rivals Pulse overlay matches only.
+ * Every hero-against-hero record the site shows, from RivalsPulse app matches only.
  *
  * `ready` means at least one matchup has reached `minimumMatches`; `not-enough-data` is a designed
  * state, not an error, and then `matchups` is empty. Matchups below the minimum are never listed.
