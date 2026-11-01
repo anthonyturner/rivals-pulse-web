@@ -21,17 +21,17 @@ export const BAN_ANSWER_SOURCES: readonly AnswerSource[] = [
 ];
 
 /**
- * The answer to "will Rivals Pulse get me banned?", written once for the overlay FAQ and the home
- * page. Overwolf's review is only a fact about Rivals Pulse once the listing exists, so the last
+ * The answer to "will RivalsPulse get me banned?", written once for the FAQ page and the home
+ * page. Overwolf's review is only a fact about RivalsPulse once the listing exists, so the last
  * clause follows `listed`.
  */
 export function buildBanAnswer(listed: boolean): string {
   const tail = listed
-    ? ', and Rivals Pulse is an official Overwolf app'
-    : ", though Rivals Pulse isn't listed on the Overwolf store yet";
+    ? ', and RivalsPulse is an official Overwolf app'
+    : ", though RivalsPulse isn't listed on the Overwolf store yet";
 
   return (
-    "No. Rivals Pulse is built on Overwolf and reads match information only through Overwolf's official Marvel Rivals game events, the same approved data other Overwolf apps for the game use. " +
+    "No. RivalsPulse is built on Overwolf and reads match information only through Overwolf's official Marvel Rivals game events, the same approved data other Overwolf apps for the game use. " +
     "It doesn't modify the game, inject into it, or automate anything, and it's built to follow the Marvel Rivals Terms of Service. " +
     `Overwolf states that apps on its platform comply with each game's terms and that using them won't get you banned${tail}.`
   );

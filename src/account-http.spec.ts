@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { handleAccountHttp, isAccountRoute } from './account-http';
+import { accountRouteHandler, handleAccountHttp, isAccountRoute } from './account-http';
 import type { AuthGateway } from './auth-gateway';
 
 const GATEWAY: AuthGateway = {
@@ -182,5 +182,26 @@ describe('isAccountRoute', () => {
     expect(isAccountRoute('account/delete')).toBeTrue();
     expect(isAccountRoute('heroes')).toBeFalse();
     expect(isAccountRoute('authors')).toBeFalse();
+  });
+});
+
+describe('accountRouteHandler', () => {
+  it('answers its own route whatever the request path says', async () => {
+    let status = 0;
+    let body: string | undefined;
+    const req = { method: 'GET', url: '/somewhere/else', headers: { host: 'rivalspulse.com' } } as unknown as IncomingMessage;
+    const res = {
+      writeHead: (code: number) => {
+        status = code;
+      },
+      end: (text?: string) => {
+        body = text;
+      },
+    } as unknown as ServerResponse;
+
+    await accountRouteHandler('auth/session')(req, res);
+
+    expect(status).toBe(200);
+    expect(JSON.parse(body ?? '')).toEqual({ signedIn: false });
   });
 });

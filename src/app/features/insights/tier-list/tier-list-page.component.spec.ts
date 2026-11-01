@@ -131,11 +131,11 @@ describe('TierListPageComponent', () => {
     http.expectOne('/api/hero-stats').flush(empty);
   });
 
-  it('labels the page as based on Rivals Pulse players and offers no rank picker or ban column', async () => {
+  it('labels the page as based on RivalsPulse players and offers no rank picker or ban column', async () => {
     const { page } = await open(partial);
 
     expect(page.querySelector('.tier-hero')?.firstElementChild?.tagName).toBe('H1');
-    expect(text(page, '.lede')[0]).toContain('Rivals Pulse players');
+    expect(text(page, '.lede')[0]).toContain('RivalsPulse players');
     expect(page.querySelector('select')).toBeNull();
     expect(page.textContent).not.toContain('Ban');
     expect(page.querySelector('a[target="_blank"]')).toBeNull();
@@ -211,7 +211,7 @@ describe('TierListPageComponent', () => {
     expect(text(page, '.state-count')[0]).toBe(
       '3 matches counted in Quick Match and Competitive for Season 10.5 so far.',
     );
-    expect(text(page, '.state-panel p')[1]).toContain('built from matches that Rivals Pulse players record');
+    expect(text(page, '.state-panel p')[1]).toContain('built from matches that RivalsPulse players record');
     expect(page.querySelector('.tier-row')).toBeNull();
     expect(text(page, '.building-count')).toEqual(['4 of 10', '2 of 10']);
   });

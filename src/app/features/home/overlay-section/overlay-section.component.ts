@@ -73,14 +73,14 @@ export const OVERLAY_SCREENSHOTS: readonly OverlayScreenshot[] = [
     src: '/images/home/in-game-overlay-victory.jpg',
     width: 1280,
     height: 709,
-    alt: 'The Rivals Pulse overlay on the Marvel Rivals victory screen: both teams’ rosters across the top, a match bar at the top centre, and the session record, disconnects and a stats bar down the sides.',
+    alt: 'The RivalsPulse in-game overlay on the Marvel Rivals victory screen: both teams’ rosters across the top, a match bar at the top centre, and the session record, disconnects and a stats bar down the sides.',
     caption: 'On the victory screen',
   },
   {
     src: '/images/home/in-game-overlay-domination.jpg',
     width: 1280,
     height: 709,
-    alt: 'The Rivals Pulse overlay during a Domination match: both teams’ rosters across the top, a match bar at the top centre, and the session record, disconnects and a stats bar down the sides.',
+    alt: 'The RivalsPulse in-game overlay during a Domination match: both teams’ rosters across the top, a match bar at the top centre, and the session record, disconnects and a stats bar down the sides.',
     caption: 'In a Domination match',
   },
 ];

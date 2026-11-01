@@ -203,7 +203,7 @@ describe('StatsSnapshotComponent', () => {
 
     it('says the sample behind the numbers under the table', () => {
       expect(text(element.querySelector('.snapshot__sample'))).toBe(
-        'From 149 matches by Rivals Pulse players. Only heroes with at least 10 appearances are listed.',
+        'From 149 matches by RivalsPulse players. Only heroes with at least 10 appearances are listed.',
       );
     });
 
@@ -219,7 +219,7 @@ describe('StatsSnapshotComponent', () => {
     it('invites visitors to add to the data, as plain text while there is no store listing', () => {
       const invitation = element.querySelector('.snapshot__invitation');
 
-      expect(text(invitation)).toBe('Every match played with Rivals Pulse makes these stats sharper.');
+      expect(text(invitation)).toBe('Every match played with RivalsPulse makes these stats sharper.');
       expect(invitation?.querySelector('a')).toBeNull();
     });
   });

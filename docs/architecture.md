@@ -55,7 +55,7 @@ The session lives on the server side of the boundary:
 - The browser never holds a Supabase token or loads `@supabase/supabase-js`
   (`npm run check:browser-bundle` enforces it). It calls `/api/auth/*` and
   `/api/account/*`, which are written once in `src/account-api.ts` and mounted by
-  both Express (`src/server.ts`) and the Vercel function (`api/[...path].ts`)
+  both Express (`src/server.ts`) and the Vercel functions (one file per route under `api/auth/` and `api/account/`)
   through `src/account-http.ts`.
 - The session is the `rp_session` cookie (`HttpOnly; Secure; SameSite=Lax;
   Path=/api`), holding the access and refresh tokens. Sign-in is a PKCE

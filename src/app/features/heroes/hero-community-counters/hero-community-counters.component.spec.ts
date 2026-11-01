@@ -50,7 +50,7 @@ describe('HeroCommunityCountersComponent', () => {
     const root = await show('thor', 'Thor', readyMatchups);
     const text = root.textContent ?? '';
 
-    expect(text).toContain('Rivals Pulse players');
+    expect(text).toContain('RivalsPulse players');
     expect(text).toContain('Half-season: Season 10.5');
     expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
     expect(names(root, 1)).toEqual([]);
@@ -81,7 +81,7 @@ describe('HeroCommunityCountersComponent', () => {
     const text = root.textContent ?? '';
 
     expect(text).toContain('Not enough data yet');
-    expect(text).toContain('No two heroes have faced each other in enough matches recorded by Rivals Pulse players yet.');
+    expect(text).toContain('No two heroes have faced each other in enough matches recorded by RivalsPulse players yet.');
     expect(text).toContain('once two heroes have faced each other in 10 recorded matches');
     expect(root.querySelector('ul')).toBeNull();
     expect(text).not.toMatch(/NaN|\b0\.0%|Infinity|undefined/);

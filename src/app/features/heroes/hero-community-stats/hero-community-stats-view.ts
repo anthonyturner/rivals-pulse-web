@@ -62,7 +62,7 @@ export function buildHeroCommunityStatsView(
       fallbackFor,
       notice:
         stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-      sample: `From ${countLabel(line.appearances, 'appearance', 'appearances')} in ${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by Rivals Pulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.`,
+      sample: `From ${countLabel(line.appearances, 'appearance', 'appearances')} in ${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.`,
       figures: [
         { label: 'Win rate', value: percentLabel(line.winRate) },
         { label: 'Pick rate', value: percentLabel(line.pickRate) },
@@ -85,8 +85,8 @@ export function buildHeroCommunityStatsView(
     fallbackFor,
     summary:
       appearances > 0
-        ? `${heroName} has ${countLabel(appearances, 'appearance', 'appearances')} so far${where}, from matches recorded by Rivals Pulse players. ${needed}`
-        : `No match recorded by Rivals Pulse players has ${heroName} yet${where}. ${needed}`,
+        ? `${heroName} has ${countLabel(appearances, 'appearance', 'appearances')} so far${where}, from matches recorded by RivalsPulse players. ${needed}`
+        : `No match recorded by RivalsPulse players has ${heroName} yet${where}. ${needed}`,
   };
 }
 

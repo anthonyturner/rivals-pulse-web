@@ -1,15 +1,15 @@
 <section class="community-stats" [attr.aria-labelledby]="'community-stats-title-' + heroId()">
   <div class="community-stats__heading">
-    <h3 [id]="'community-stats-title-' + heroId()">{{ heroName() }} in matches recorded by Rivals Pulse players</h3>
+    <h3 [id]="'community-stats-title-' + heroId()">{{ heroName() }} in matches recorded by RivalsPulse players</h3>
   </div>
 
   @let current = view();
 
   @if (current.kind === 'loading') {
-  <p class="community-stats__message" role="status">Loading Rivals Pulse player stats...</p>
+  <p class="community-stats__message" role="status">Loading RivalsPulse player stats...</p>
   } @else if (current.kind === 'unavailable') {
   <p class="community-stats__message">
-    Rivals Pulse player stats cannot be loaded right now. The rest of this page is not affected.
+    RivalsPulse player stats cannot be loaded right now. The rest of this page is not affected.
   </p>
   } @else {
   @if (current.halfSeasonLabel) {

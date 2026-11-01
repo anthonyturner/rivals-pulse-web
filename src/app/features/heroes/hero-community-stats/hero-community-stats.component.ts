@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { buildHeroCommunityStatsView } from './hero-community-stats-view';
 
-/** One hero's numbers from Rivals Pulse overlay matches, or the reason there are none to show yet. */
+/** One hero's numbers from RivalsPulse app matches, or the reason there are none to show yet. */
 @Component({
   selector: 'app-hero-community-stats',
   templateUrl: './hero-community-stats.component.html',

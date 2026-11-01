@@ -1,6 +1,6 @@
 <section class="community-counters" [attr.aria-labelledby]="'community-counters-title-' + heroId()">
   <div class="community-counters__heading">
-    <h3 [id]="'community-counters-title-' + heroId()">{{ heroName() }} against other heroes, per Rivals Pulse players</h3>
+    <h3 [id]="'community-counters-title-' + heroId()">{{ heroName() }} against other heroes, per RivalsPulse players</h3>
     <a routerLink="/counters" [queryParams]="{ hero: heroId() }">Counter lab</a>
   </div>
 
@@ -8,10 +8,10 @@
     @let current = view();
 
     @if (current.kind === 'loading') {
-    <p class="community-counters__message">Loading Rivals Pulse player matchups...</p>
+    <p class="community-counters__message">Loading RivalsPulse player matchups...</p>
     } @else if (current.kind === 'unavailable') {
     <p class="community-counters__message">
-      Rivals Pulse player matchups cannot be loaded right now. The rest of this page is not affected.
+      RivalsPulse player matchups cannot be loaded right now. The rest of this page is not affected.
     </p>
     } @else {
     @if (current.halfSeasonLabel) {
@@ -59,7 +59,7 @@
       </section>
     </div>
     <p class="community-counters__sample">
-      Win rates come from matches recorded by Rivals Pulse players, with a short run pulled toward even. They describe
+      Win rates come from matches recorded by RivalsPulse players, with a short run pulled toward even. They describe
       how a hero fares against another hero.
     </p>
     } @else {

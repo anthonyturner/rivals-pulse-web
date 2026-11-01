@@ -5,7 +5,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 import type { HeroStats, HeroStatsMode, HeroStatsModeId } from '../../../contracts/hero-stats.model';
 import { DEFAULT_MODE_ID } from '../../shared/utilities/play-modes';
 
-/** The site's own `/api/hero-stats`: Rivals Pulse match numbers, with no outside request. */
+/** The site's own `/api/hero-stats`: RivalsPulse match numbers, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class HeroStatsService {
   private readonly http = inject(HttpClient);

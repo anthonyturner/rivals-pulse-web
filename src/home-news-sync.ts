@@ -578,5 +578,5 @@ function focusTitle(newsItems: NewsItem[]): string {
 function focusDescription(newsItems: NewsItem[]): string {
   const lead = newsItems.find((item) => item.label !== 'Battle Pass');
 
-  return lead?.description ?? 'Latest news is refreshed from the official Marvel Rivals site and cached by Rivals Pulse.';
+  return lead?.description ?? 'Latest news is refreshed from the official Marvel Rivals site and cached by RivalsPulse.';
 }

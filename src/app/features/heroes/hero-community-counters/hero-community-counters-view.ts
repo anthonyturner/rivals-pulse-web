@@ -60,8 +60,8 @@ export function buildHeroCommunityCountersView(
       fallbackFor,
       summary:
         matchups.matchups.length === 0
-          ? `No two heroes have faced each other in enough matches recorded by Rivals Pulse players yet${where}. ${needed}`
-          : `${heroName} has not faced another hero in enough matches recorded by Rivals Pulse players yet${where}. ${needed}`,
+          ? `No two heroes have faced each other in enough matches recorded by RivalsPulse players yet${where}. ${needed}`
+          : `${heroName} has not faced another hero in enough matches recorded by RivalsPulse players yet${where}. ${needed}`,
     };
   }
 
