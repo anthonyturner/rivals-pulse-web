@@ -70,7 +70,7 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
-| `20261101020000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
+| `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 
 Link once per machine, check history, then apply:
 

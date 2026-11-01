@@ -367,38 +367,47 @@ $$;
 -- The gate is the privacy rule, so it is exercised on fixtures in a half-season that does not exist:
 -- a bucket of one recorder (mode 0) and a bucket of three (mode 1), each with one 10-match pair. Only
 -- the second may come back, alone and in a list of both modes. The fixtures are rolled back by the
--- sentinel exception (P0042). Nothing but a failed assertion can fail the push: if the fixtures
--- cannot be written for any other reason, the check is skipped with a warning.
+-- sentinel exception (P0042). If the fixtures cannot be written, the check is skipped with a warning;
+-- an error from the reader itself, or a failed assertion, fails the push.
 do $$
 declare
-  checked boolean := false;
+  written boolean := false;
   one_recorder_returned boolean;
+  three_recorders_matches integer;
   both_modes_matches integer;
 begin
   begin
-    insert into public.hero_pair_aggregates
-      (half_season, play_mode_id, rank_bucket, kind, hero_id, other_hero_id, matches, decided_matches, decided_lines, wins)
-    values (99.0, 0, 0, 'vs', 1, 2, 10, 10, 10, 5), (99.0, 1, 0, 'vs', 1, 2, 10, 10, 10, 5);
-    insert into public.hero_pair_totals
-      (half_season, play_mode_id, rank_bucket, matches, decided_matches, recorders, top_recorder_matches)
-    values (99.0, 0, 0, 10, 10, 1, 10), (99.0, 1, 0, 10, 10, 3, 5);
-
-    select exists (select 1 from public.read_hero_pairs(array[0]::smallint[]) r where r.half_season = 99.0)
-      into one_recorder_returned;
-    select coalesce(sum(r.decided_matches), 0) into both_modes_matches
-      from public.read_hero_pairs(array[0, 1]::smallint[]) r
-      where r.half_season = 99.0;
-    checked := true;
-
-    raise exception 'roll back the gate fixtures' using errcode = 'P0042';
-  exception
-    when sqlstate 'P0042' then null;
-    when others then
+    begin
+      insert into public.hero_pair_aggregates
+        (half_season, play_mode_id, rank_bucket, kind, hero_id, other_hero_id, matches, decided_matches, decided_lines, wins)
+      values (99.0, 0, 0, 'vs', 1, 2, 10, 10, 10, 5), (99.0, 1, 0, 'vs', 1, 2, 10, 10, 10, 5);
+      insert into public.hero_pair_totals
+        (half_season, play_mode_id, rank_bucket, matches, decided_matches, recorders, top_recorder_matches)
+      values (99.0, 0, 0, 10, 10, 1, 10), (99.0, 1, 0, 10, 10, 3, 5);
+      written := true;
+    exception when others then
       raise warning 'hero pair gate check skipped (%)', sqlerrm;
+    end;
+
+    if written then
+      select exists (select 1 from public.read_hero_pairs(array[0]::smallint[]) r where r.half_season = 99.0)
+        into one_recorder_returned;
+      select coalesce(sum(r.decided_matches), 0) into three_recorders_matches
+        from public.read_hero_pairs(array[1]::smallint[]) r
+        where r.half_season = 99.0;
+      select coalesce(sum(r.decided_matches), 0) into both_modes_matches
+        from public.read_hero_pairs(array[0, 1]::smallint[]) r
+        where r.half_season = 99.0;
+
+      raise exception 'roll back the gate fixtures' using errcode = 'P0042';
+    end if;
+  exception when sqlstate 'P0042' then
+    null;
   end;
 
-  if checked then
+  if written then
     assert not one_recorder_returned, 'a one-recorder rank bucket must be hidden';
+    assert three_recorders_matches = 10, 'a bucket that passes must be returned';
     assert both_modes_matches = 10, 'only the bucket that passes may be returned, whatever modes are asked for';
   end if;
 end
