@@ -33,7 +33,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
-- Signing in with Discord and deleting your account now work on rivalspulse.com. After they were released, every sign-in and account address answered "not found" on the live site, so the Sign in button did nothing ([#298](https://github.com/anthonyturner/rivals-pulse-web/pull/298)).
+- Signing in with Discord and deleting your account now work on rivalspulse.com. After they were released, every sign-in and account address answered "not found" on the live site, so the Sign in button did nothing ([#303](https://github.com/anthonyturner/rivals-pulse-web/pull/303)).
 
 ### Added
 
