@@ -26,10 +26,11 @@ describe('EyebrowComponent', () => {
     expect(element.querySelectorAll('h1, h2, h3, h4, h5, h6').length).toBe(1);
   });
 
-  it('is small uppercase text', () => {
+  it('is small text shown in the case it was written', () => {
     const style = getComputedStyle(element.querySelector('app-eyebrow p') as HTMLElement);
 
-    expect(style.textTransform).toBe('uppercase');
+    expect(style.textTransform).toBe('none');
+    expect(style.letterSpacing).toBe('normal');
     expect(parseFloat(style.fontSize)).toBeLessThan(14);
   });
 });
