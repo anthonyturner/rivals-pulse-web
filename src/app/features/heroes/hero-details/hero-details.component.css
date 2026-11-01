@@ -296,7 +296,7 @@ h3 {
   box-shadow: inset 4px 0 var(--modal-gold);
 }
 
-:host-context(.hero-detail-modal) .section-note,
+:host-context(.hero-detail-modal) .hero-build-profile .section-heading p,
 :host-context(.hero-detail-modal) .build-profile-bars span,
 :host-context(.hero-detail-modal) .build-profile-bars strong,
 :host-context(.hero-detail-modal) .build-profile-note,
@@ -1208,7 +1208,7 @@ details.collapsible {
   line-height: 1.6;
 }
 
-:host-context(.hero-detail-modal) .section-note,
+:host-context(.hero-detail-modal) .hero-build-profile .section-heading p,
 :host-context(.hero-detail-modal) .ultimate-paths .section-heading p,
 :host-context(.hero-detail-modal) .deadpool-upgrades .section-heading p,
 :host-context(.hero-detail-modal) .build-profile-note,

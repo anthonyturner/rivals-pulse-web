@@ -48,13 +48,19 @@ describe('HeroDetailsComponent', () => {
     expect(sections.map((section) => section.querySelector('summary h3')?.textContent?.trim())).toContain('Build Profile');
   });
 
-  it('keeps every section open in the profile window, which does not ask for the compact panel', () => {
-    const sections = Array.from(render().querySelectorAll<HTMLDetailsElement>('details.collapsible'));
+  it('renders the profile window as plain sections: no collapsible details, subtitle inside the heading, "Overview" label kept', () => {
+    const element = render();
 
-    expect(sections.every((section) => section.open)).toBeTrue();
+    expect(element.querySelector('details')).toBeNull();
+    expect(element.querySelector('section.hero-build-profile > .section-heading > p')?.textContent?.trim()).toBe(
+      '0-10 coach rating by fight-plan value, not official stats',
+    );
+    expect(element.querySelector('.section-note')).toBeNull();
+    expect(element.querySelector('.overview-section strong')?.textContent?.trim()).toBe('Overview');
+    expect(element.querySelector('.detail-hero-container--compact')).toBeNull();
   });
 
-  it('does not repeat "Overview" under the overview heading, and makes the hero name focusable', () => {
+  it('drops the repeated "Overview" label under the overview heading in the compact panel, and makes the hero name focusable', () => {
     const element = render(true);
 
     expect(element.querySelector('.overview-panel h3')?.textContent?.trim()).toBe('Fandom Overview');

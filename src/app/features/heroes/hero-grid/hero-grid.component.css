@@ -63,9 +63,9 @@
   color: var(--accent-ink);
 }
 .chip--clear {
-  border-color: rgba(3, 159, 159, 0.22);
-  background: rgba(3, 159, 159, 0.08);
-  color: var(--accent-strong);
+  border-color: var(--border-strong);
+  background: #ffffff;
+  color: var(--text);
 }
 .count {
   margin: 0;
@@ -196,7 +196,7 @@
 }
 
 .archetype-label {
-  color: var(--accent-strong);
+  color: color-mix(in srgb, var(--accent-strong), #000000 25%);
   font-size: var(--type-caption);
   font-weight: 700;
   text-transform: uppercase;
@@ -271,6 +271,10 @@
     min-height: 40px;
   }
   .view-toggle {
+    display: none;
+  }
+  .hero-card-summary,
+  .archetype-label {
     display: none;
   }
 }
