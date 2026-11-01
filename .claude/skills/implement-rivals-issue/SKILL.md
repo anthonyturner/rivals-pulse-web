@@ -1,9 +1,9 @@
 ---
 name: implement-rivals-issue
-description: Implement a tracked Rivals Pulse Coach GitHub issue via the `software-engineer-agent` subagent through a verified draft pull request. Use when the user explicitly invokes `$implement-rivals-issue` in Claude Code, or asks to implement a filed Rivals Pulse Coach issue without switching to Codex. Do not use for filing an issue or producing a design (`$run-rivals-pipeline` covers those) or for reviewing a pull request — QA review is a separate, explicitly requested step.
+description: Implement a tracked RivalsPulse GitHub issue via the `software-engineer-agent` subagent through a verified draft pull request. Use when the user explicitly invokes `$implement-rivals-issue` in Claude Code, or asks to implement a filed RivalsPulse issue without switching to Codex. Do not use for filing an issue or producing a design (`$run-rivals-pipeline` covers those) or for reviewing a pull request — QA review is a separate, explicitly requested step.
 ---
 
-# Implement a Rivals Pulse Coach issue (Claude Code)
+# Implement a RivalsPulse issue (Claude Code)
 
 This skill covers the Implementation stage of the named pipeline in
 `AGENTS.md`, entirely inside Claude Code, using the `software-engineer-agent`
