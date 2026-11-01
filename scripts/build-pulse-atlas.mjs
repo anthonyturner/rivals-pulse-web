@@ -13,6 +13,7 @@ import {
   PULSE_ATLAS_HERO_GAME_IDS,
   PULSE_ATLAS_MANIFEST_PATH,
   parseManifest,
+  resolveCommunityStats,
   tierListSeasonPath,
   verifyPulseAtlas,
 } from '../src/pulse-atlas.ts';
@@ -81,11 +82,26 @@ const live = [
   },
 ];
 
+const published = samplesDir ? [] : await fetchPublished();
+
+// Never holds up the publish: if the endpoint or its database function is not deployed yet, or
+// fails, the last published file stays (or the dataset is left out if none ever was), with a warning.
+const communityStats = await resolveCommunityStats({
+  read: () => fetchJson(`${apiBase}/hero-pairs`),
+  published,
+  source: HERO_STATS_SOURCE_LABEL,
+  warn,
+});
+
+if (communityStats) {
+  live.push(communityStats);
+}
+
 const now = new Date().toISOString();
 // A sample keeps two heroes, so most of its tier-list heroes would warn; its warnings are dropped.
 const files = samplesDir
   ? buildPulseAtlas(live.map(sampler(live)), now, sha256, [], () => undefined)
-  : buildPulseAtlas(live, now, sha256, await fetchPublished(), warn);
+  : buildPulseAtlas(live, now, sha256, published, warn);
 
 // Samples sit in one folder without the version prefix (`tier-list/seasons/21.json`
 // stays under its own folder); the live feed keeps its versioned folders.
@@ -222,6 +238,8 @@ function toSample(input, sampleHeroIds) {
       case 'hero-stats':
         // The same two seasons as the tier list, with two heroes each.
         return trimHeroStats(data);
+      case 'community-stats':
+        return trimCommunityStats(data);
       case 'tier-list': {
         // The current season and the one before it, so the sample shows the index
         // entry with ranks next to one without.
@@ -267,6 +285,21 @@ function trimHeroStats(data) {
     seasons: data.seasons.slice(Math.max(0, current - 1), current + 1).map((season) => ({
       ...season,
       heroes: sampleCells(season.heroes),
+    })),
+  };
+}
+
+// Two heroes and two pairs of each kind per band, so the sample shows the shape without the volume.
+function trimCommunityStats(data) {
+  const firstTwo = (rows) => rows.slice(0, 2);
+
+  return {
+    ...data,
+    bands: data.bands.map((band) => ({
+      ...band,
+      heroes: firstTwo(band.heroes),
+      counters: firstTwo(band.counters),
+      synergies: firstTwo(band.synergies),
     })),
   };
 }

@@ -2,6 +2,7 @@ import curatedHeroGameIds from '../data/pulse-atlas/hero-game-ids.json';
 import curatedHeroStyles from '../data/pulse-atlas/hero-styles.json';
 import {
   assembleCommunityHeroStats,
+  assembleCommunityStats,
   buildPulseAtlas,
   findHeroGameIdProblems,
   findHeroStyleProblems,
@@ -10,6 +11,7 @@ import {
   PulseAtlasInput,
   assembleCommunityTierList,
   communityHalfSeasonRequests,
+  resolveCommunityStats,
   verifyPulseAtlas,
 } from './pulse-atlas';
 
@@ -104,6 +106,37 @@ function heroStatsTable(seasonOverrides: Record<string, unknown> = {}): Record<s
   };
 }
 
+const LOKI_GAME_ID = 1016;
+
+/** The community-stats dataset as `assembleCommunityStats` returns it: a counter and a synergy at the minimum. */
+function communityStatsData(overrides: Record<string, unknown> = {}, band: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    provenance: PROVENANCE,
+    minimumMatches: 10,
+    priorMatches: 10,
+    currentSeasonId: 2,
+    season: { id: 2, label: 'Season 2' },
+    bands: [
+      {
+        key: 'all',
+        label: 'All Ranks',
+        decidedMatches: 80,
+        heroes: [
+          { heroId: LOKI_GAME_ID, appearances: 30, wins: 14 },
+          { heroId: THOR_GAME_ID, appearances: 40, wins: 22 },
+        ],
+        counters: [{ heroId: THOR_GAME_ID, enemyHeroId: LOKI_GAME_ID, matches: 12, appearances: 14, wins: 9 }],
+        synergies: [{ heroId: LOKI_GAME_ID, allyHeroId: THOR_GAME_ID, matches: 11, appearances: 11, wins: 6 }],
+        ...band,
+      },
+    ],
+    ...overrides,
+  };
+}
+
+// The valid inputs' community stats pair two heroes that heroes.json does not list, which warns.
+const notAboutCommunityStats = (warning: string): boolean => !warning.startsWith('community-stats:');
+
 function validInputs(): PulseAtlasInput[] {
   return [
     { dataset: 'heroes', source: 'test', data: [{ id: 'thor', name: 'Thor' }] },
@@ -116,6 +149,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'maps', source: 'test', data: [{ id: 1032, name: 'Yggdrasill Path' }] },
     { dataset: 'hero-styles', source: 'test', data: [{ heroId: 'thor', poke: 10, dive: 20, brawl: 70 }] },
     { dataset: 'hero-stats', source: 'test', data: heroStatsTable() },
+    { dataset: 'community-stats', source: 'test', data: communityStatsData() },
     { dataset: 'hero-game-ids', source: 'test', data: [thorEntry] },
   ];
 }
@@ -142,6 +176,7 @@ describe('buildPulseAtlas', () => {
       'pulse-atlas/v1/maps.json',
       'pulse-atlas/v1/hero-styles.json',
       'pulse-atlas/v1/hero-stats.json',
+      'pulse-atlas/v1/community-stats.json',
       'pulse-atlas/v1/tier-list/seasons/1.json',
       'pulse-atlas/v1/tier-list/seasons/2.json',
       'pulse-atlas/v1/manifest.json',
@@ -264,7 +299,7 @@ describe('tier-list coverage', () => {
       (warning) => warnings.push(warning),
     );
 
-    expect(warnings).toEqual(['tier-list: season 2 lists no hero yet, so it is published with empty tiers']);
+    expect(warnings.filter(notAboutCommunityStats)).toEqual(['tier-list: season 2 lists no hero yet, so it is published with empty tiers']);
     expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
   });
 
@@ -1482,7 +1517,7 @@ describe('the hero-stats dataset', () => {
 
     buildPulseAtlas(withHeroStats(table), GENERATED_AT, fakeSha256, [], (warning) => warnings.push(warning));
 
-    expect(warnings).toEqual([
+    expect(warnings.filter(notAboutCommunityStats)).toEqual([
       'hero-stats: heroId 1016 is the gameId of no hero in heroes.json, so it is published without one to join to',
     ]);
   });
@@ -1657,5 +1692,397 @@ describe('assembleCommunityHeroStats', () => {
 
   it('fails when the API lists no half-season yet', () => {
     expect(() => assemble(answer(null, { halfSeasons: [] }), [])).toThrowError(/no half-season yet/);
+  });
+});
+
+describe('the community-stats dataset', () => {
+  const PATH = 'pulse-atlas/v1/community-stats.json';
+  const published = (inputs = validInputs()): PulseAtlasFile[] => buildPulseAtlas(inputs, GENERATED_AT, fakeSha256);
+  const without = (inputs: PulseAtlasInput[]): PulseAtlasInput[] => inputs.filter((input) => input.dataset !== 'community-stats');
+  const withStats = (data: unknown): PulseAtlasInput[] => withData('community-stats', data);
+  const statsOf = (files: PulseAtlasFile[]) => JSON.parse(files.find((file) => file.path === PATH)?.content ?? 'null');
+  const bandWith = (band: Record<string, unknown>): unknown => communityStatsData({}, band);
+  const PAIR = { matches: 12, appearances: 12, wins: 6 };
+
+  it('is one file in the manifest, in the standard envelope, with the provenance at the top of data', () => {
+    const files = published();
+    const manifest = JSON.parse(files[files.length - 1].content);
+    const envelope = statsOf(files);
+
+    expect(manifest.files.map((entry: { dataset: string }) => entry.dataset)).toContain('community-stats');
+    expect(envelope.schemaVersion).toBe(1);
+    expect(envelope.source).toBe('test');
+    expect(Object.keys(envelope.data)).toEqual([
+      'provenance',
+      'minimumMatches',
+      'priorMatches',
+      'currentSeasonId',
+      'season',
+      'bands',
+    ]);
+    expect(envelope.data.provenance).toBe(PROVENANCE);
+  });
+
+  it('keeps its counters, which no other dataset may carry', () => {
+    expect(statsOf(published()).data.bands[0].counters.length).toBe(1);
+    expect(() =>
+      buildPulseAtlas(withData('glossary', [{ id: 'dive', term: 'Dive', counters: ['x'] }]), GENERATED_AT, fakeSha256),
+    ).toThrowError(/counters: key is private or counter data/);
+  });
+
+  it('orders the rows by hero id and publishes only the allow-listed keys of each', () => {
+    const data = communityStatsData(
+      {},
+      {
+        heroes: [
+          { heroId: 1039, appearances: 40, wins: 22 },
+          { heroId: 1016, appearances: 30, wins: 14 },
+        ],
+        counters: [
+          { heroId: 1039, enemyHeroId: 1016, ...PAIR },
+          { heroId: 1016, enemyHeroId: 1039, ...PAIR },
+        ],
+      },
+    );
+
+    const [band] = statsOf(published(withStats(data))).data.bands;
+
+    expect(band.heroes.map((hero: { heroId: number }) => hero.heroId)).toEqual([1016, 1039]);
+    expect(band.counters.map((row: { heroId: number }) => row.heroId)).toEqual([1016, 1039]);
+    expect(Object.keys(band.counters[0])).toEqual(['heroId', 'enemyHeroId', 'matches', 'appearances', 'wins']);
+    expect(Object.keys(band.synergies[0])).toEqual(['heroId', 'allyHeroId', 'matches', 'appearances', 'wins']);
+  });
+
+  it('names the current season when the previous one stands in for it', () => {
+    const data = communityStatsData({ currentSeasonId: 3, inPlaceOfSeasonId: 3, season: { id: 2, label: 'Season 2' } });
+
+    expect(statsOf(published(withStats(data))).data).toEqual(
+      jasmine.objectContaining({ currentSeasonId: 3, inPlaceOfSeasonId: 3, season: { id: 2, label: 'Season 2' } }),
+    );
+  });
+
+  it('is valid with no pair at all', () => {
+    const files = published(withStats(bandWith({ heroes: [], counters: [], synergies: [], decidedMatches: 0 })));
+
+    expect(statsOf(files).data.bands[0].counters).toEqual([]);
+    expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
+  });
+
+  describe('as an optional dataset', () => {
+    it('can be left out of a run: no file, no manifest entry, and the feed still verifies', () => {
+      const files = published(without(validInputs()));
+      const manifest = JSON.parse(files[files.length - 1].content);
+
+      expect(files.map((file) => file.path)).not.toContain(PATH);
+      expect(manifest.files.map((entry: { dataset: string }) => entry.dataset)).not.toContain('community-stats');
+      expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
+    });
+
+    it('fails verification when the manifest lists it and the file is missing, or the reverse', () => {
+      const files = published();
+      const noFile = files.filter((file) => file.path !== PATH);
+      const manifestFile = files[files.length - 1];
+      const manifest = JSON.parse(manifestFile.content);
+      manifest.files = manifest.files.filter((entry: { dataset: string }) => entry.dataset !== 'community-stats');
+      const noEntry = [...files.slice(0, -1), { ...manifestFile, content: JSON.stringify(manifest) }];
+
+      expect(() => verifyPulseAtlas(noFile, fakeSha256)).toThrowError(/community-stats: missing from the manifest or the published files/);
+      expect(() => verifyPulseAtlas(noEntry, fakeSha256)).toThrowError(/community-stats: missing from the manifest or the published files/);
+    });
+
+    it('still requires every other dataset', () => {
+      expect(() =>
+        buildPulseAtlas(validInputs().filter((input) => input.dataset !== 'maps'), GENERATED_AT, fakeSha256),
+      ).toThrowError(/maps: expected exactly one input, got 0/);
+    });
+  });
+
+  describe('the allow-list and the privacy check', () => {
+    it('refuses a key the file does not publish, at the top, on a season, a band and a row', () => {
+      expect(() => published(withStats({ ...communityStatsData(), source: 'x' }))).toThrowError(
+        /the file has a key outside the allow-list: source/,
+      );
+      expect(() => published(withStats(communityStatsData({ season: { id: 2, label: 'S', start: 'x' } })))).toThrowError(
+        /season has a key outside the allow-list: start/,
+      );
+      expect(() => published(withStats(bandWith({ minScore: 0 })))).toThrowError(/band all has a key outside the allow-list: minScore/);
+      expect(() => published(withStats(bandWith({ heroes: [{ heroId: 1039, appearances: 3, wins: 1, winRate: 33 }] })))).toThrowError(
+        /band all heroes item 0 has a key outside the allow-list: winRate/,
+      );
+    });
+
+    it('refuses player-level keys, however they are spelled', () => {
+      for (const key of ['player', 'playerName', 'account_id', 'uid_token', 'email', 'sessionId']) {
+        const counter = { heroId: 1039, enemyHeroId: 1016, ...PAIR, [key]: 'x' };
+
+        expect(() => published(withStats(bandWith({ counters: [counter] })))).toThrowError(/community-stats/);
+      }
+    });
+
+    it('refuses a value that looks like a credential', () => {
+      expect(() => published(withStats(bandWith({ label: 'sb_secret_abc' })))).toThrowError(/looks like a credential/);
+    });
+
+    it('publishes nothing but whole numbers, the labels and the provenance', () => {
+      const keys = new Set<string>();
+      const walk = (value: unknown): void => {
+        if (Array.isArray(value)) {
+          value.forEach(walk);
+        } else if (value !== null && typeof value === 'object') {
+          Object.entries(value).forEach(([key, child]) => {
+            keys.add(key);
+            walk(child);
+          });
+        }
+      };
+      const data = statsOf(published()).data;
+      walk(data);
+
+      expect([...keys].sort()).toEqual(
+        [
+          'allyHeroId', 'appearances', 'bands', 'counters', 'currentSeasonId', 'decidedMatches', 'enemyHeroId', 'heroId',
+          'heroes', 'id', 'key', 'label', 'matches', 'minimumMatches', 'priorMatches', 'provenance', 'season', 'synergies', 'wins',
+        ].sort(),
+      );
+      expect(JSON.stringify(data)).not.toMatch(/player|account|session|steam|email|token|secret|uid|rivalsmeta/i);
+    });
+  });
+
+  describe('a malformed file', () => {
+    it('refuses a file without the community provenance, or with another one', () => {
+      const { provenance: _provenance, ...missing } = communityStatsData();
+
+      expect(() => published(withStats(missing))).toThrowError(/community-stats: provenance must be "rivals-pulse-community"/);
+      expect(() => published(withStats(communityStatsData({ provenance: 'rivalsmeta' })))).toThrowError(/provenance must be/);
+    });
+
+    it('refuses no band, a band listed twice and a file without the all band', () => {
+      const [band] = (communityStatsData() as { bands: Record<string, unknown>[] }).bands;
+
+      expect(() => published(withStats(communityStatsData({ bands: [] })))).toThrowError(/non-empty bands list/);
+      expect(() => published(withStats(communityStatsData({ bands: [band, band] })))).toThrowError(/band all is listed more than once/);
+      expect(() => published(withStats(communityStatsData({ bands: [{ ...band, key: 'gold' }] })))).toThrowError(/there is no "all" band/);
+    });
+
+    it('refuses a minimum or a prior that is not a whole number above 0, and a season id that is not whole', () => {
+      expect(() => published(withStats(communityStatsData({ minimumMatches: 0 })))).toThrowError(/minimumMatches must be a whole number above 0/);
+      expect(() => published(withStats(communityStatsData({ priorMatches: 0.5 })))).toThrowError(/priorMatches must be a whole number above 0/);
+      expect(() => published(withStats(communityStatsData({ currentSeasonId: 2.5 })))).toThrowError(/currentSeasonId must be a whole number/);
+    });
+
+    it('refuses a season that does not agree with inPlaceOfSeasonId', () => {
+      expect(() => published(withStats(communityStatsData({ season: { id: 1, label: 'Season 1' } })))).toThrowError(
+        /season must be the current season/,
+      );
+      expect(() => published(withStats(communityStatsData({ inPlaceOfSeasonId: 2 })))).toThrowError(
+        /season must be the current season, or another one/,
+      );
+      expect(() => published(withStats(communityStatsData({ inPlaceOfSeasonId: 9 })))).toThrowError(
+        /inPlaceOfSeasonId must be the currentSeasonId/,
+      );
+    });
+
+    it('refuses a pair below the minimum, a hero paired with itself and a synergy in the wrong order', () => {
+      expect(() => published(withStats(bandWith({ counters: [{ heroId: 1039, enemyHeroId: 1016, ...PAIR, matches: 9 }] })))).toThrowError(
+        /with 9 matches, below the minimum of 10/,
+      );
+      expect(() => published(withStats(bandWith({ counters: [{ heroId: 1039, enemyHeroId: 1039, ...PAIR }] })))).toThrowError(
+        /pairs hero 1039 with itself/,
+      );
+      expect(() => published(withStats(bandWith({ synergies: [{ heroId: 1039, allyHeroId: 1016, ...PAIR }] })))).toThrowError(
+        /not once with the lower id first/,
+      );
+    });
+
+    it('refuses a row listed twice, more wins than appearances and a count that is not a whole number', () => {
+      const pair = { heroId: 1039, enemyHeroId: 1016, ...PAIR };
+
+      expect(() => published(withStats(bandWith({ counters: [pair, pair] })))).toThrowError(/lists 1039 and 1016 more than once/);
+      expect(() => published(withStats(bandWith({ counters: [{ ...pair, wins: 13 }] })))).toThrowError(/more wins than appearances/);
+      expect(() => published(withStats(bandWith({ counters: [{ ...pair, matches: 12.5 }] })))).toThrowError(
+        /matches to be a non-negative whole number/,
+      );
+      expect(() => published(withStats(bandWith({ heroes: [{ heroId: 'thor', appearances: 3, wins: 1 }] })))).toThrowError(
+        /heroId to be a non-negative whole number/,
+      );
+    });
+  });
+
+  it('publishes a hero id that no hero in heroes.json has, with a warning', () => {
+    const warnings: string[] = [];
+
+    buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256, [], (warning) => warnings.push(warning));
+
+    expect(warnings).toEqual([
+      'community-stats: heroId 1016 is the gameId of no hero in heroes.json, so it is published without one to join to',
+    ]);
+  });
+
+  it('keeps the published bytes, and so the hash, when the data has not changed', () => {
+    const first = published();
+    const again = buildPulseAtlas(validInputs(), '2026-10-27T00:00:00.000Z', fakeSha256, first);
+
+    expect(again.find((file) => file.path === PATH)).toEqual(first.find((file) => file.path === PATH));
+  });
+
+  it('fails verification when the written file lost its provenance', () => {
+    const files = published().map((file) =>
+      file.path === PATH ? { ...file, content: file.content.replace('"provenance":"rivals-pulse-community",', '') } : file,
+    );
+
+    expect(() => verifyPulseAtlas(files, fakeSha256)).toThrowError(/community-stats/);
+  });
+});
+
+describe('assembleCommunityStats', () => {
+  const NEW = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
+  const OLD = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
+  const bands = [{ key: 'all', label: 'All Ranks', decidedMatches: 0, heroes: [], counters: [], synergies: [] }];
+  const answer = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    status: 'ready',
+    minimumMatches: 10,
+    priorMatches: 10,
+    halfSeason: NEW,
+    inPlaceOf: null,
+    bands,
+    ...overrides,
+  });
+
+  it('turns the half-season into a season id (twice its number) and carries the bands as they are', () => {
+    expect(assembleCommunityStats(answer())).toEqual({
+      provenance: PROVENANCE,
+      minimumMatches: 10,
+      priorMatches: 10,
+      currentSeasonId: 21,
+      season: { id: 21, label: 'Season 10.5' },
+      bands,
+    });
+  });
+
+  it('names the current season in inPlaceOfSeasonId when the previous half-season stands in for it', () => {
+    expect(assembleCommunityStats(answer({ halfSeason: OLD, inPlaceOf: NEW }))).toEqual(
+      jasmine.objectContaining({ currentSeasonId: 21, season: { id: 20, label: 'Season 10' }, inPlaceOfSeasonId: 21 }),
+    );
+  });
+
+  it('has no inPlaceOfSeasonId when the current half-season is shown', () => {
+    expect(Object.keys(assembleCommunityStats(answer()) as object)).not.toContain('inPlaceOfSeasonId');
+  });
+
+  it('throws when the API names no half-season yet, so the caller can fall back', () => {
+    expect(() => assembleCommunityStats(answer({ halfSeason: null, bands: [] }))).toThrowError(/no half-season yet/);
+  });
+
+  it('throws, asking whether the web app is deployed, when the answer is not the hero-pairs shape', () => {
+    expect(() => assembleCommunityStats({ error: 'x' })).toThrowError(/not the hero-pairs shape.*Has the web app been deployed/);
+    expect(() => assembleCommunityStats(answer({ halfSeason: { id: 'x', label: 'y' } }))).toThrowError(
+      /a half-season needs an id and a label/,
+    );
+    expect(() => assembleCommunityStats(answer({ halfSeason: { id: 10.25, label: 'Season 10.25' } }))).toThrowError(
+      /has no season id/,
+    );
+  });
+});
+
+describe('resolveCommunityStats', () => {
+  const PATH = 'pulse-atlas/v1/community-stats.json';
+  const liveAnswer = (): Record<string, unknown> => ({
+    minimumMatches: 10,
+    priorMatches: 10,
+    halfSeason: { id: 1, label: 'Season 1', startsAt: null, endsAt: null },
+    inPlaceOf: null,
+    bands: (communityStatsData() as { bands: unknown[] }).bands,
+  });
+  const failing = (message: string) => () => Promise.reject(new Error(message));
+  const publishedFiles = (): PulseAtlasFile[] => buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+
+  async function resolve(read: () => Promise<unknown>, previous: PulseAtlasFile[] = []) {
+    const warnings: string[] = [];
+    const input = await resolveCommunityStats({ read, published: previous, source: 'live', warn: (warning) => warnings.push(warning) });
+
+    return { input, warnings };
+  }
+
+  it('builds the dataset from the live answer, with no warning', async () => {
+    const { input, warnings } = await resolve(async () => liveAnswer());
+
+    expect(input).toEqual({
+      dataset: 'community-stats',
+      source: 'live',
+      data: jasmine.objectContaining({ currentSeasonId: 2, season: { id: 2, label: 'Season 1' } }),
+    });
+    expect(warnings).toEqual([]);
+  });
+
+  it('leaves the dataset out, with a warning, when the endpoint is not there (404) and none was ever published', async () => {
+    const { input, warnings } = await resolve(failing('Could not fetch https://x/api/hero-pairs: Error: HTTP 404'));
+
+    expect(input).toBeUndefined();
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toMatch(/HTTP 404.*none was ever published.*left out of this publish/);
+  });
+
+  it('reuses the last published file, as it is, when the endpoint fails (500)', async () => {
+    const previous = publishedFiles();
+    const { input, warnings } = await resolve(failing('Could not fetch https://x/api/hero-pairs: Error: HTTP 500'), previous);
+
+    expect(input).toEqual({ dataset: 'community-stats', source: 'test', data: communityStatsData() });
+    expect(warnings[0]).toMatch(/HTTP 500.*last published file is kept/);
+
+    const rebuilt = buildPulseAtlas(
+      [...validInputs().filter((candidate) => candidate.dataset !== 'community-stats'), input as PulseAtlasInput],
+      '2026-10-27T00:00:00.000Z',
+      fakeSha256,
+      previous,
+    );
+
+    expect(rebuilt.find((file) => file.path === PATH)).toEqual(previous.find((file) => file.path === PATH));
+  });
+
+  it('reuses the published file when the answer names no half-season or is not the hero-pairs shape', async () => {
+    const previous = publishedFiles();
+    const noSeason = await resolve(async () => ({ ...liveAnswer(), halfSeason: null, bands: [] }), previous);
+    const wrongShape = await resolve(async () => ({ message: 'not found' }), previous);
+
+    expect(noSeason.input?.source).toBe('test');
+    expect(wrongShape.input?.source).toBe('test');
+  });
+
+  it('reuses the published file when the live answer fails the gate, such as a pair below the minimum', async () => {
+    const thin = {
+      ...liveAnswer(),
+      bands: [
+        {
+          key: 'all',
+          label: 'All Ranks',
+          decidedMatches: 5,
+          heroes: [],
+          counters: [{ heroId: 1039, enemyHeroId: 1016, matches: 3, appearances: 3, wins: 1 }],
+          synergies: [],
+        },
+      ],
+    };
+
+    const { input, warnings } = await resolve(async () => thin, publishedFiles());
+
+    expect(input?.source).toBe('test');
+    expect(warnings[0]).toMatch(/below the minimum of 10/);
+  });
+
+  it('leaves the dataset out when the published file no longer passes the gate', async () => {
+    const stale: PulseAtlasFile = {
+      path: PATH,
+      content: `${JSON.stringify({ schemaVersion: 1, generatedAt: GENERATED_AT, source: 'test', data: { provenance: 'rivalsmeta' } })}\n`,
+    };
+
+    const { input, warnings } = await resolve(failing('HTTP 500'), [stale]);
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/the published file is unusable/);
+  });
+
+  it('never throws, whatever the read does', async () => {
+    await expectAsync(resolve(() => Promise.reject('a string'))).toBeResolved();
+    await expectAsync(resolve(async () => null)).toBeResolved();
   });
 });

@@ -1,6 +1,21 @@
 export const PULSE_ATLAS_SCHEMA_VERSION = 1;
 export const PULSE_ATLAS_BASE_PATH = 'pulse-atlas/v1';
-export const PULSE_ATLAS_DATASETS = ['heroes', 'tier-list', 'glossary', 'maps', 'hero-styles', 'hero-stats'] as const;
+export const PULSE_ATLAS_DATASETS = [
+  'heroes',
+  'tier-list',
+  'glossary',
+  'maps',
+  'hero-styles',
+  'hero-stats',
+  'community-stats',
+] as const;
+
+/**
+ * Datasets a run may leave out: the feed is valid without them, in the manifest and on disk alike.
+ * `community-stats` depends on an endpoint and a database function that are deployed separately, so
+ * the publish must not be held up by it (see `resolveCommunityStats`).
+ */
+export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats'];
 
 /**
  * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
@@ -62,10 +77,13 @@ export function tierListSeasonPath(seasonId: number): string {
 }
 
 // Reference data never needs these words in a key, so a hit is treated as a
-// leak of something private rather than as a false alarm. `counters` are
-// matchup picks derived from a third-party site and are never published.
-const UNSAFE_KEY =
-  /secret|password|passwd|token|api[-_]?key|authorization|credential|email|puuid|player|steam|account|session|^counters?$/i;
+// leak of something private rather than as a false alarm.
+const PRIVATE_KEY =
+  /secret|password|passwd|token|api[-_]?key|authorization|credential|email|puuid|player|steam|account|session/i;
+
+// `counters` are matchup picks derived from a third-party site and are never published, so the key
+// is unsafe everywhere except in community-stats, whose counters are the site's own counts.
+const UNSAFE_KEY = new RegExp(`${PRIVATE_KEY.source}|^counters?$`, 'i');
 
 // Credential shapes, plus the third-party sources the feed must never name or
 // link: the scraped counter source, and Rivals Meta (the overlay ships these
@@ -149,8 +167,11 @@ export function buildPulseAtlas(
   const counted = withPublishableHeroStats(split.inputs);
   counted.warnings.forEach((warning) => warn(`hero-stats: ${warning}`));
 
+  const community = withPublishableCommunityStats(counted.inputs);
+  community.warnings.forEach((warning) => warn(`community-stats: ${warning}`));
+
   const built = PULSE_ATLAS_DATASETS.flatMap((dataset): BuiltDataset[] => {
-    const input = counted.inputs.find((candidate) => candidate.dataset === dataset);
+    const input = community.inputs.find((candidate) => candidate.dataset === dataset);
 
     return input ? [{ dataset, ...buildEnvelopeFile(datasetPath(dataset), input, generatedAt, previous) }] : [];
   });
@@ -195,6 +216,10 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
     const entry = manifest.files.find((candidate) => candidate.dataset === dataset);
     const file = files.find((candidate) => candidate.path === datasetPath(dataset));
 
+    if (!entry && !file && PULSE_ATLAS_OPTIONAL_DATASETS.includes(dataset)) {
+      continue;
+    }
+
     if (!entry || !file) {
       problems.push(`${dataset}: missing from the manifest or the published files`);
     } else if (entry.path !== file.path) {
@@ -208,6 +233,7 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
 
   problems.push(...findSeasonFileProblems(files, sha256));
   problems.push(...findHeroStatsFileProblems(files));
+  problems.push(...findCommunityStatsFileProblems(files));
 
   if (problems.length > 0) {
     throw new Error(`Pulse Atlas failed verification:\n- ${problems.join('\n- ')}`);
@@ -706,6 +732,10 @@ function findProblems(inputs: readonly PulseAtlasInput[]): string[] {
   for (const dataset of PULSE_ATLAS_DATASETS) {
     const matches = inputs.filter((input) => input.dataset === dataset);
 
+    if (matches.length === 0 && PULSE_ATLAS_OPTIONAL_DATASETS.includes(dataset)) {
+      continue;
+    }
+
     if (matches.length !== 1) {
       problems.push(`${dataset}: expected exactly one input, got ${matches.length}`);
       continue;
@@ -721,7 +751,7 @@ function findProblems(inputs: readonly PulseAtlasInput[]): string[] {
     if (shapeProblem) {
       problems.push(`${dataset}: ${shapeProblem}`);
     } else {
-      problems.push(...findUnsafeContent(input.data, dataset));
+      problems.push(...findUnsafeContent(input.data, dataset, dataset === 'community-stats' ? PRIVATE_KEY : UNSAFE_KEY));
     }
   }
 
@@ -755,6 +785,8 @@ function describeShapeProblem(
       return describeHeroStylesProblem(data, publishedHeroIds(inputs));
     case 'hero-stats':
       return describeHeroStatsProblem(data);
+    case 'community-stats':
+      return describeCommunityStatsProblem(data);
   }
 }
 
@@ -1599,6 +1631,395 @@ function findHeroStatsFileProblems(files: readonly PulseAtlasFile[]): string[] {
     : [`hero-stats: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
 }
 
+/** The keys a community-stats file, season, band and row may carry: the allow-list. Anything else refuses the build. */
+const COMMUNITY_STATS_KEYS: readonly string[] = [
+  'provenance',
+  'minimumMatches',
+  'priorMatches',
+  'currentSeasonId',
+  'season',
+  'inPlaceOfSeasonId',
+  'bands',
+];
+const COMMUNITY_STATS_SEASON_KEYS: readonly string[] = ['id', 'label'];
+const COMMUNITY_STATS_BAND_KEYS: readonly string[] = ['key', 'label', 'decidedMatches', 'heroes', 'counters', 'synergies'];
+const COMMUNITY_STATS_HERO_KEYS = ['heroId', 'appearances', 'wins'] as const;
+const COMMUNITY_STATS_COUNTER_KEYS = ['heroId', 'enemyHeroId', 'matches', 'appearances', 'wins'] as const;
+const COMMUNITY_STATS_SYNERGY_KEYS = ['heroId', 'allyHeroId', 'matches', 'appearances', 'wins'] as const;
+
+/** The band every reader needs: all ranks together. Rank bands may follow it; this one is always there. */
+const COMMUNITY_STATS_ALL_BAND = 'all';
+
+type CommunityRow = Record<string, number>;
+type CheckKeys = (record: Record<string, unknown>, allowed: readonly string[], where: string) => void;
+
+interface ReadCommunityStats {
+  /** Faults in the data; empty when `table` is set. */
+  problems: string[];
+  /** The data as it is published: only allow-listed keys, rows ordered by hero id. */
+  table?: Record<string, unknown>;
+  /** Every hero id that has a row anywhere. */
+  heroes?: Set<number>;
+}
+
+/**
+ * Folds the `/api/hero-pairs` answer into the `community-stats` dataset the gate checks. The API
+ * already speaks game hero ids (Deadpool under his base id) and counts only; what changes here is
+ * the season: ids become twice the half-season number, as in the tier list, and `inPlaceOfSeasonId`
+ * names the current half-season when the previous one stands in for it. Throws when the answer is
+ * not that shape, or names no half-season yet, so the caller can fall back to the last published file.
+ */
+export function assembleCommunityStats(answer: unknown): unknown {
+  const problem = (detail: string): Error =>
+    new Error(`/api/hero-pairs is not the hero-pairs shape (${detail}). Has the web app been deployed with it?`);
+  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => {
+    if (value === null) {
+      return null;
+    }
+
+    if (!isRecord(value) || !isFiniteNumber(value['id']) || !isNonEmptyString(value['label'])) {
+      throw problem('a half-season needs an id and a label');
+    }
+
+    return { id: value['id'], label: value['label'] };
+  };
+
+  if (
+    !isRecord(answer) ||
+    !isFiniteNumber(answer['minimumMatches']) ||
+    !isFiniteNumber(answer['priorMatches']) ||
+    !Array.isArray(answer['bands'])
+  ) {
+    throw problem('no minimumMatches, priorMatches and bands');
+  }
+
+  const shown = halfSeasonOf(answer['halfSeason']);
+  const inPlaceOf = halfSeasonOf(answer['inPlaceOf']);
+  const current = inPlaceOf ?? shown;
+
+  if (!current) {
+    throw new Error('The hero-pairs API has no half-season yet, so there is nothing to publish.');
+  }
+
+  return {
+    provenance: COMMUNITY_PROVENANCE,
+    minimumMatches: answer['minimumMatches'],
+    priorMatches: answer['priorMatches'],
+    currentSeasonId: seasonIdOf(current.id),
+    season: shown === null ? null : { id: seasonIdOf(shown.id), label: shown.label },
+    ...(inPlaceOf === null ? {} : { inPlaceOfSeasonId: seasonIdOf(inPlaceOf.id) }),
+    bands: answer['bands'],
+  };
+}
+
+/**
+ * Checks the community-stats dataset and, when it is sound, returns it cut down to what is
+ * published. Faults are reported together so one run names them all. It refuses a file that is not
+ * the community's, a key outside the allow-list (so nothing can reach a row by accident), a pair
+ * below `minimumMatches`, a hero paired with itself, a synergy not listed once with the lower hero
+ * id first, and a missing `all` band. A band with no pair at all is valid.
+ */
+function readCommunityStats(data: unknown): ReadCommunityStats {
+  if (isRecord(data) && data['provenance'] !== COMMUNITY_PROVENANCE) {
+    return { problems: [`provenance must be "${COMMUNITY_PROVENANCE}"`] };
+  }
+
+  if (!isRecord(data) || !Array.isArray(data['bands']) || data['bands'].length === 0) {
+    return { problems: ['expected an object with a non-empty bands list'] };
+  }
+
+  const problems: string[] = [];
+  const checkKeys: CheckKeys = (record, allowed, where) => {
+    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
+
+    if (stray.length > 0) {
+      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
+    }
+  };
+
+  checkKeys(data, COMMUNITY_STATS_KEYS, 'the file');
+
+  const { minimumMatches, priorMatches, currentSeasonId, season, inPlaceOfSeasonId } = data;
+
+  if (!isPositiveInteger(minimumMatches)) {
+    problems.push('minimumMatches must be a whole number above 0');
+  }
+
+  if (!isPositiveInteger(priorMatches)) {
+    problems.push('priorMatches must be a whole number above 0');
+  }
+
+  if (!isInteger(currentSeasonId)) {
+    problems.push('currentSeasonId must be a whole number');
+  }
+
+  if (inPlaceOfSeasonId !== undefined && inPlaceOfSeasonId !== currentSeasonId) {
+    problems.push('inPlaceOfSeasonId must be the currentSeasonId when present');
+  }
+
+  const shownSeason = readCommunityStatsSeason(season, currentSeasonId, inPlaceOfSeasonId !== undefined, checkKeys, problems);
+  const heroes = new Set<number>();
+  const keys = new Set<string>();
+  const bands = data['bands'].flatMap((band: unknown, index: number): Record<string, unknown>[] => {
+    if (!isRecord(band) || !isNonEmptyString(band['key']) || !isNonEmptyString(band['label'])) {
+      problems.push(`band ${index} needs a key and a label`);
+      return [];
+    }
+
+    const where = `band ${band['key']}`;
+
+    if (keys.has(band['key'])) {
+      problems.push(`${where} is listed more than once`);
+    }
+    keys.add(band['key']);
+    checkKeys(band, COMMUNITY_STATS_BAND_KEYS, where);
+
+    if (!isInteger(band['decidedMatches']) || Number(band['decidedMatches']) < 0) {
+      problems.push(`${where} needs decidedMatches to be a non-negative whole number`);
+    }
+
+    const read = (list: unknown, rowKeys: readonly string[], name: string, otherKey?: string): CommunityRow[] => {
+      const rows = readCommunityRows(list, rowKeys, `${where} ${name}`, checkKeys, problems);
+
+      for (const row of rows) {
+        rowKeys.slice(0, otherKey === undefined ? 1 : 2).forEach((key) => heroes.add(row[key]));
+
+        if (otherKey !== undefined) {
+          checkCommunityPair(row, otherKey, minimumMatches, `${where} ${name}`, name === 'synergies', problems);
+        }
+      }
+
+      return rows;
+    };
+
+    return [
+      {
+        key: band['key'],
+        label: band['label'],
+        decidedMatches: band['decidedMatches'],
+        heroes: read(band['heroes'], COMMUNITY_STATS_HERO_KEYS, 'heroes'),
+        counters: read(band['counters'], COMMUNITY_STATS_COUNTER_KEYS, 'counters', 'enemyHeroId'),
+        synergies: read(band['synergies'], COMMUNITY_STATS_SYNERGY_KEYS, 'synergies', 'allyHeroId'),
+      },
+    ];
+  });
+
+  if (!keys.has(COMMUNITY_STATS_ALL_BAND)) {
+    problems.push(`there is no "${COMMUNITY_STATS_ALL_BAND}" band`);
+  }
+
+  if (problems.length > 0 || !isPositiveInteger(minimumMatches) || !isPositiveInteger(priorMatches) || !isInteger(currentSeasonId)) {
+    return { problems };
+  }
+
+  return {
+    problems,
+    heroes,
+    table: {
+      provenance: COMMUNITY_PROVENANCE,
+      minimumMatches,
+      priorMatches,
+      currentSeasonId,
+      season: shownSeason,
+      ...(inPlaceOfSeasonId === undefined ? {} : { inPlaceOfSeasonId }),
+      bands,
+    },
+  };
+}
+
+// The season the counts come from, or null when the file names none. It is the current season,
+// unless the file says another one stands in for it.
+function readCommunityStatsSeason(
+  season: unknown,
+  currentSeasonId: unknown,
+  standsIn: boolean,
+  checkKeys: CheckKeys,
+  problems: string[],
+): { id: number; label: string } | null {
+  if (season === null) {
+    return null;
+  }
+
+  if (!isRecord(season) || !isInteger(season['id']) || !isNonEmptyString(season['label'])) {
+    problems.push('season must be null or hold an integer id and a label');
+    return null;
+  }
+
+  checkKeys(season, COMMUNITY_STATS_SEASON_KEYS, 'season');
+
+  if (standsIn ? season['id'] === currentSeasonId : season['id'] !== currentSeasonId) {
+    problems.push('season must be the current season, or another one when inPlaceOfSeasonId is set');
+  }
+
+  return { id: season['id'], label: season['label'] };
+}
+
+// The rows of one list, cut to the allow-listed keys and ordered by their first two keys (the hero
+// ids); a fault goes to `problems`. A row listed twice is reported and kept once.
+function readCommunityRows(
+  list: unknown,
+  keys: readonly string[],
+  where: string,
+  checkKeys: CheckKeys,
+  problems: string[],
+): CommunityRow[] {
+  if (!Array.isArray(list)) {
+    problems.push(`${where} needs a list`);
+    return [];
+  }
+
+  const ids = keys.filter((key) => key.endsWith('HeroId') || key === 'heroId');
+  const seen = new Set<string>();
+  const rows = list.flatMap((item: unknown, position: number): CommunityRow[] => {
+    if (!isRecord(item)) {
+      problems.push(`${where} item ${position} is not an object`);
+      return [];
+    }
+
+    checkKeys(item, keys, `${where} item ${position}`);
+
+    const row: CommunityRow = {};
+
+    for (const key of keys) {
+      const value = item[key];
+
+      if (!isInteger(value) || Number(value) < 0) {
+        problems.push(`${where} item ${position} needs ${key} to be a non-negative whole number`);
+        return [];
+      }
+
+      row[key] = Number(value);
+    }
+
+    const id = ids.map((key) => row[key]).join(' and ');
+
+    if (seen.has(id)) {
+      problems.push(`${where} lists ${id} more than once`);
+      return [];
+    }
+    seen.add(id);
+
+    if (row['wins'] > row['appearances']) {
+      problems.push(`${where} item ${position} has more wins than appearances`);
+    }
+
+    return [row];
+  });
+
+  return rows.sort((a, b) => ids.reduce((order, key) => order || a[key] - b[key], 0));
+}
+
+// A pair is two different heroes with at least the minimum number of matches; a synergy is listed
+// once, with the lower hero id first.
+function checkCommunityPair(
+  row: CommunityRow,
+  otherKey: string,
+  minimumMatches: unknown,
+  where: string,
+  isSynergy: boolean,
+  problems: string[],
+): void {
+  if (row['heroId'] === row[otherKey]) {
+    problems.push(`${where} pairs hero ${row['heroId']} with itself`);
+  }
+
+  if (isPositiveInteger(minimumMatches) && row['matches'] < minimumMatches) {
+    problems.push(`${where} lists ${row['heroId']} and ${row[otherKey]} with ${row['matches']} matches, below the minimum of ${minimumMatches}`);
+  }
+
+  if (isSynergy && row['heroId'] > row[otherKey]) {
+    problems.push(`${where} lists ${row['heroId']} with ${row[otherKey]}, not once with the lower id first`);
+  }
+}
+
+function describeCommunityStatsProblem(data: unknown): string | undefined {
+  const { problems } = readCommunityStats(data);
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
+}
+
+/**
+ * The inputs with community-stats replaced by its published form (allow-listed keys, rows by hero
+ * id), plus a warning for each hero id that no hero in heroes.json has as its `gameId`: it is
+ * published all the same, because a new hero reaches the counts before its id reaches the map. A
+ * run without the dataset has nothing to replace. Expects inputs that already passed `findProblems`.
+ */
+function withPublishableCommunityStats(inputs: readonly PulseAtlasInput[]): { inputs: PulseAtlasInput[]; warnings: string[] } {
+  const input = inputs.find((candidate) => candidate.dataset === 'community-stats');
+  const { table, heroes } = input ? readCommunityStats(input.data) : { table: undefined, heroes: undefined };
+
+  if (!input || !table || !heroes) {
+    return { inputs: [...inputs], warnings: [] };
+  }
+
+  return {
+    inputs: inputs.map((candidate) => (candidate === input ? { ...candidate, data: table } : candidate)),
+    warnings: describeUnknownHeroes(heroes, inputs.find((candidate) => candidate.dataset === 'heroes')?.data),
+  };
+}
+
+// Read-back check of the written file: it keeps the marker the overlay needs.
+function findCommunityStatsFileProblems(files: readonly PulseAtlasFile[]): string[] {
+  const file = files.find((candidate) => candidate.path === datasetPath('community-stats'));
+
+  if (!file) {
+    return [];
+  }
+
+  const data = parseEnvelope(file.content)?.data;
+
+  return isRecord(data) && data['provenance'] === COMMUNITY_PROVENANCE
+    ? []
+    : [`community-stats: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
+}
+
+export interface ResolveCommunityStatsOptions {
+  /** Reads the `/api/hero-pairs` answer. A failure to do so, or an unusable answer, takes the fallback. */
+  read: () => Promise<unknown>;
+  /** What is published right now. */
+  published: readonly PulseAtlasFile[];
+  /** The envelope's provenance label for a freshly built file. */
+  source: string;
+  warn: (warning: string) => void;
+}
+
+/**
+ * The community-stats input for a run, which can never fail the publish: the data from the API when
+ * it answers with something that passes the gate; otherwise the last published file, as it is
+ * (bytes and hash unchanged); and only when none was ever published, or the published one no longer
+ * passes the gate, no input at all, so the run leaves the dataset out. Each fallback is reported
+ * through `warn`. The dataset depends on an endpoint and a database function that are deployed apart
+ * from this repository's push to the default branch, so a run can come before them.
+ */
+export async function resolveCommunityStats(options: ResolveCommunityStatsOptions): Promise<PulseAtlasInput | undefined> {
+  const { read, published, source, warn } = options;
+
+  try {
+    const data = assembleCommunityStats(await read());
+    const problem = describeCommunityStatsProblem(data);
+
+    if (problem === undefined) {
+      return { dataset: 'community-stats', source, data };
+    }
+
+    throw new Error(problem);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    const file = published.find((candidate) => candidate.path === datasetPath('community-stats'));
+    const envelope = file ? parseEnvelope(file.content) : undefined;
+
+    if (envelope && describeCommunityStatsProblem(envelope.data) === undefined) {
+      warn(`community-stats could not be built (${reason}); the last published file is kept as it is`);
+      return { dataset: 'community-stats', source: envelope.source, data: envelope.data };
+    }
+
+    warn(
+      `community-stats could not be built (${reason}) and ${file ? 'the published file is unusable' : 'none was ever published'}; it is left out of this publish`,
+    );
+    return undefined;
+  }
+}
+
 function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256Hex): string[] {
   const tierListFile = files.find((file) => file.path === datasetPath('tier-list'));
 
@@ -1661,18 +2082,18 @@ function listsAnyHero(snapshot: unknown): boolean {
   );
 }
 
-function findUnsafeContent(value: unknown, path: string): string[] {
+function findUnsafeContent(value: unknown, path: string, unsafeKey: RegExp = UNSAFE_KEY): string[] {
   const found: string[] = [];
 
   if (Array.isArray(value)) {
-    value.forEach((item, index) => found.push(...findUnsafeContent(item, `${path}[${index}]`)));
+    value.forEach((item, index) => found.push(...findUnsafeContent(item, `${path}[${index}]`, unsafeKey)));
   } else if (isRecord(value)) {
     for (const [key, child] of Object.entries(value)) {
-      if (UNSAFE_KEY.test(key)) {
+      if (unsafeKey.test(key)) {
         found.push(`${path}.${key}: key is private or counter data`);
       }
 
-      found.push(...findUnsafeContent(child, `${path}.${key}`));
+      found.push(...findUnsafeContent(child, `${path}.${key}`, unsafeKey));
     }
   } else if (typeof value === 'string' && (UNSAFE_VALUE.test(value) || RIVALS_META_NAME.test(value))) {
     found.push(`${path}: value looks like a credential or names a source that must stay private`);
