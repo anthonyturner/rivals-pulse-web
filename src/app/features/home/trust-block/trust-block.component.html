@@ -1,0 +1,32 @@
+<div class="trust">
+  <span class="shield" aria-hidden="true">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  </span>
+
+  <div class="trust__body">
+    <h3 class="trust__title">Will it get me banned?</h3>
+    <p class="trust__answer">{{ answer() }}</p>
+    <ul class="sources" aria-label="Sources for this answer">
+      @for (source of sources; track source.url) {
+        <li>
+          <a class="link" [href]="source.url" target="_blank" rel="noopener noreferrer">
+            {{ source.label }}<span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
+        </li>
+      }
+    </ul>
+    <a class="link" routerLink="/overlay-faq" fragment="ban-risk">Read the overlay FAQ</a>
+  </div>
+</div>

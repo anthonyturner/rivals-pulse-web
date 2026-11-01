@@ -7,30 +7,11 @@
 
   <section class="faq-section" id="ban-risk" aria-labelledby="ban-risk-title">
     <h2 id="ban-risk-title">Will Rivals Pulse get me banned?</h2>
-    <p>
-      No. Rivals Pulse is built on Overwolf and reads match information only through Overwolf's
-      official Marvel Rivals game events, the same approved data other Overwolf apps for the game
-      use. It doesn't modify the game, inject into it, or automate anything, and it's built to
-      follow the Marvel Rivals Terms of Service. Overwolf states that apps on its platform comply
-      with each game's terms and that using them won't get you banned@if (listed) {, and Rivals Pulse is an official Overwolf app} @else {, though Rivals Pulse isn't listed on the Overwolf store yet}.
-    </p>
+    <p>{{ banAnswer }}</p>
     <ul class="sources" aria-label="Sources for this answer">
-      <li><a href="https://www.overwolf.com/our-commitment">Overwolf: our commitment</a></li>
-      <li>
-        <a href="https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/marvel-rivals">
-          Overwolf: Marvel Rivals game events
-        </a>
-      </li>
-      <li>
-        <a href="https://dev.overwolf.com/ow-native/guides/game-compliance/overview">
-          Overwolf: game compliance guide
-        </a>
-      </li>
-      <li>
-        <a href="https://store.steampowered.com/eula/2767030_eula_0">
-          NetEase terms of use, updated 15 December 2024
-        </a>
-      </li>
+      @for (source of banSources; track source.url) {
+        <li><a [href]="source.url">{{ source.label }}</a></li>
+      }
     </ul>
   </section>
 

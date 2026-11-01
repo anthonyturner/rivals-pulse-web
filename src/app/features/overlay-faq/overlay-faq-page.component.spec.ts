@@ -2,6 +2,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { buildBanAnswer } from '../../shared/ban-answer';
 import { OverlayFaqPageComponent } from './overlay-faq-page.component';
 
 describe('OverlayFaqPageComponent', () => {
@@ -52,6 +53,10 @@ describe('OverlayFaqPageComponent', () => {
     it('asks about Rivals Pulse and answers No', () => {
       expect(page.querySelector('#ban-risk-title')?.textContent).toBe('Will Rivals Pulse get me banned?');
       expect(flat(section('ban-risk').querySelector('p'))).toMatch(/^No\. /);
+    });
+
+    it('shows the answer shared with the home page, word for word', () => {
+      expect(flat(section('ban-risk').querySelector('p'))).toBe(buildBanAnswer(false));
     });
 
     it('rests on Overwolf game events and its statement about the apps it hosts', () => {
