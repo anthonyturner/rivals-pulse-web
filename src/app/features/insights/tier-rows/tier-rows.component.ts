@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { HeroTileComponent } from '../hero-tile/hero-tile.component';
@@ -6,7 +7,7 @@ import type { TierRowView } from '../tier-list/tier-list-view';
 /** Tier rows as the tier list draws them: a coloured letter strip, then a grid of hero tiles. */
 @Component({
   selector: 'app-tier-rows',
-  imports: [HeroTileComponent],
+  imports: [HeroTileComponent, NgTemplateOutlet],
   templateUrl: './tier-rows.component.html',
   styleUrl: './tier-rows.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -99,7 +99,7 @@ describe('MatchesTabComponent', () => {
       inPlaceOf: SEASON,
     });
 
-    expect(text()).toContain('Season 10');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.tab-scope')?.textContent?.trim()).toBe('Season 10');
     expect(text()).toContain("Season 10.5 does not have enough data yet, so these are Season 10's numbers");
   });
 

@@ -39,7 +39,6 @@
 }
 
 .community-page__tabs {
-  position: relative;
   display: flex;
   gap: 4px;
   overflow-x: auto;

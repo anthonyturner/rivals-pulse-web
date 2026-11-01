@@ -239,13 +239,33 @@ describe('CommunityPageComponent', () => {
     expect(host().querySelector('.community-page__intro')?.textContent).toContain('Anonymous totals');
   });
 
-  it('scrolls the tab bar so the selected tab is in view on a direct visit', async () => {
-    const scrollTo = spyOn(HTMLElement.prototype, 'scrollTo');
+  describe('on a narrow screen', () => {
+    beforeEach(() => {
+      (harness.fixture.nativeElement as HTMLElement).style.width = '384px';
+    });
 
-    await open('/insights');
-    await harness.fixture.whenStable();
+    it('scrolls the tab bar so the selected tab is fully in view on a direct visit', async () => {
+      await open('/insights');
+      await harness.fixture.whenStable();
 
-    expect(scrollTo).toHaveBeenCalled();
-    expect(scrollTo.calls.mostRecent().object).toBe(host().querySelector('[role="tablist"]') as HTMLElement);
+      const bar = host().querySelector('[role="tablist"]') as HTMLElement;
+      const tab = selectedTab()?.getBoundingClientRect() as DOMRect;
+      const range = bar.getBoundingClientRect();
+
+      expect(bar.scrollWidth).toBeGreaterThan(bar.clientWidth);
+      expect(bar.scrollLeft).toBeGreaterThan(0);
+      expect(tab.left).toBeGreaterThanOrEqual(range.left - 1);
+      expect(tab.right).toBeLessThanOrEqual(range.right + 1);
+    });
+
+    it('leaves the bar where it is when the selected tab is already in view', async () => {
+      const scrollTo = spyOn(HTMLElement.prototype, 'scrollTo').and.callThrough();
+
+      await open('/heroes');
+      await harness.fixture.whenStable();
+
+      expect(scrollTo).not.toHaveBeenCalled();
+      expect((host().querySelector('[role="tablist"]') as HTMLElement).scrollLeft).toBe(0);
+    });
   });
 });

@@ -24,7 +24,7 @@
 }
 
 .footnote {
-  max-width: 100ch;
+  max-width: 70ch;
   color: var(--text-soft);
   font-size: var(--type-caption);
 }

@@ -1,14 +1,19 @@
 <ol class="tiers">
   @for (tier of tiers(); track tier.name) {
     <li class="tier-row tier-{{ tier.name }}">
-      <div class="tier-label" role="heading" [attr.aria-level]="headingLevel()">
+      <ng-template #label>
         <span class="visually-hidden">Tier </span>
         <span class="tier-letter">{{ tier.name }}</span>
         <span class="visually-hidden">, </span>
         <span class="tier-count">
           {{ tier.heroes.length }}<span class="tier-unit visually-hidden">{{ tier.heroes.length === 1 ? ' hero' : ' heroes' }}</span>
         </span>
-      </div>
+      </ng-template>
+      @if (headingLevel() === 3) {
+        <h3 class="tier-label"><ng-container [ngTemplateOutlet]="label" /></h3>
+      } @else {
+        <h2 class="tier-label"><ng-container [ngTemplateOutlet]="label" /></h2>
+      }
 
       @if (tier.heroes.length > 0) {
         <ul class="hero-grid">

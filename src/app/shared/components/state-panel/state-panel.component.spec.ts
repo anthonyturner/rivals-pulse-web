@@ -36,12 +36,12 @@ describe('StatePanelComponent', () => {
 
   it('does not announce an empty panel', () => {
     expect(panel('empty').hasAttribute('role')).toBeFalse();
-    expect(panel('empty').querySelector('[role="heading"]')).toBeNull();
+    expect(panel('empty').querySelector('h2, h3')).toBeNull();
     expect(panel('empty').textContent).toContain('Nothing yet.');
   });
 
   it('draws the heading at the level the page asks for', () => {
-    expect(panel('loading').querySelector('[role="heading"]')?.getAttribute('aria-level')).toBe('2');
-    expect(panel('error').querySelector('[role="heading"]')?.getAttribute('aria-level')).toBe('3');
+    expect(panel('loading').querySelector('h2')?.textContent).toBe('Loading the tier list');
+    expect(panel('error').querySelector('h3')?.textContent).toBe('Could not be loaded');
   });
 });

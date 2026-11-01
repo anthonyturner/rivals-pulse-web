@@ -22,6 +22,7 @@
 }
 
 .sample {
+  display: block;
   overflow: hidden;
   color: var(--text-soft);
   font-size: var(--type-caption);

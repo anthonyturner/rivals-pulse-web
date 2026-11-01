@@ -19,5 +19,6 @@
 
 .heading {
   color: var(--text);
+  font-size: inherit;
   font-weight: 800;
 }

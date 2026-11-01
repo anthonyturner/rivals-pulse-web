@@ -53,7 +53,7 @@ describe('TierListTabComponent', () => {
     const rows = Array.from(host().querySelectorAll('.tier-row'));
 
     expect(rows.map((row) => row.querySelector('.tier-letter')?.textContent?.trim())).toEqual(['S', 'A']);
-    expect(rows.map((row) => row.querySelector('[role="heading"]')?.getAttribute('aria-level'))).toEqual(['3', '3']);
+    expect(rows.map((row) => row.querySelector('h3.tier-label') !== null)).toEqual([true, true]);
     expect(text()).toContain('Storm');
     expect(text()).toContain('82.5%');
     expect(text()).toContain('Hela');

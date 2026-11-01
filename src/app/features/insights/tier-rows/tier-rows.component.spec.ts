@@ -66,7 +66,9 @@ describe('TierRowsComponent', () => {
   });
 
   it('draws each row heading at the level the page asks for', () => {
-    expect(rows('plain').querySelector('[role="heading"]')?.getAttribute('aria-level')).toBe('2');
-    expect(rows('linked').querySelector('[role="heading"]')?.getAttribute('aria-level')).toBe('3');
+    expect(rows('plain').querySelector('h2.tier-label')).toBeTruthy();
+    expect(rows('plain').querySelector('h3')).toBeNull();
+    expect(rows('linked').querySelector('h3.tier-label')).toBeTruthy();
+    expect(rows('linked').querySelector('h2')).toBeNull();
   });
 });

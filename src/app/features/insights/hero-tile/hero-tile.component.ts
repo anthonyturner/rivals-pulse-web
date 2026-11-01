@@ -4,8 +4,8 @@ import { RouterLink } from '@angular/router';
 /**
  * A hero's portrait and name, with the page's own figures beside or under it.
  *
- * Pass one element for the lines under the name, and mark an element `tileFigure` to put it at the
- * right of the name. Give `heroId` to make the whole tile a link to that hero on the Heroes page.
+ * Pass the lines under the name as content, and mark an element `tileFigure` to put it at the right
+ * of the name. Give `heroId` to make the whole tile a link to that hero on the Heroes page.
  */
 @Component({
   selector: 'app-hero-tile',

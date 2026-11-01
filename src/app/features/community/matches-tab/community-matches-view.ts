@@ -40,9 +40,7 @@ export type CommunityMatchesView =
       notice: string | null;
       sample: string;
       maps: CommunitySectionView<CommunityMapRowView> & {
-        /** Maps with a result but under the minimum: only their names. */
-        pending: string[];
-        /** Those names as one sentence, or null when every map with a result is shown. */
+        /** The maps with a result but under the minimum, as one sentence of names; null when every one is shown. */
         pendingNote: string | null;
       };
       modeMix: CommunitySectionView<CommunityModeRowView>;
@@ -93,7 +91,6 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         winRateLabel: percentLabel(record.winRate),
         barPercent: record.winRate,
       })),
-      pending: data.mapsBelowMinimum,
       pendingNote:
         data.mapsBelowMinimum.length === 0 ? null : `Not enough data yet for: ${data.mapsBelowMinimum.join(', ')}.`,
       note:

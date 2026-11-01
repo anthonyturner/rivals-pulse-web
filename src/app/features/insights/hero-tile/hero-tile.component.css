@@ -21,6 +21,11 @@ img {
   object-fit: cover;
 }
 
+.details {
+  grid-column: 2;
+  min-width: 0;
+}
+
 .head {
   display: flex;
   gap: 8px;

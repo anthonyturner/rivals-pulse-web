@@ -207,7 +207,7 @@ describe('TierListPageComponent', () => {
   it('draws no tier rows while no hero has enough data, and says how many matches are counted', async () => {
     const { page } = await open(building);
 
-    expect(text(page, 'app-state-panel [role="heading"]')).toEqual(['Not enough data yet in Quick Match and Competitive for Season 10.5']);
+    expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive for Season 10.5']);
     expect(text(page, '.state-count')[0]).toBe(
       '3 matches counted in Quick Match and Competitive for Season 10.5 so far.',
     );
@@ -219,7 +219,7 @@ describe('TierListPageComponent', () => {
   it('draws a designed empty state when nothing is counted', async () => {
     const { page } = await open(empty);
 
-    expect(text(page, 'app-state-panel [role="heading"]')).toEqual(['Not enough data yet in Quick Match and Competitive']);
+    expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive']);
     expect(text(page, '.state-count')[0]).toBe('No matches counted in Quick Match and Competitive so far.');
     expect(page.querySelector('.tier-row')).toBeNull();
     expect(page.querySelector('.building')).toBeNull();
@@ -229,7 +229,7 @@ describe('TierListPageComponent', () => {
   it('says the numbers could not be loaded when the request fails', async () => {
     const { page } = await open('failure');
 
-    expect(text(page, 'app-state-panel [role="heading"]')).toEqual(['The tier list could not be loaded']);
+    expect(text(page, 'app-state-panel h2')).toEqual(['The tier list could not be loaded']);
     expect(page.querySelector('.tier-row')).toBeNull();
   });
 
@@ -388,7 +388,7 @@ describe('TierListPageComponent', () => {
       });
       harness.detectChanges();
 
-      expect(text(page, 'app-state-panel [role="heading"]')).toEqual(['Not enough data yet in Competitive for Season 10.5']);
+      expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Competitive for Season 10.5']);
       expect(text(page, '.state-count')[0]).toBe('No matches counted in Competitive for Season 10.5 so far.');
       expect(Array.from(modeSelect(page).options).map((option) => option.value)).toEqual([
         'all',
@@ -421,7 +421,7 @@ describe('TierListPageComponent', () => {
       http.expectOne('/api/hero-stats?mode=competitive').flush('down', { status: 500, statusText: 'Server Error' });
       harness.detectChanges();
 
-      expect(text(page, 'app-state-panel [role="heading"]')).toEqual(['The tier list could not be loaded']);
+      expect(text(page, 'app-state-panel h2')).toEqual(['The tier list could not be loaded']);
       expect(modeSelect(page).options.length).toBe(3);
     });
 

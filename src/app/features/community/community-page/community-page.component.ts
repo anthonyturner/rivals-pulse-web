@@ -52,8 +52,15 @@ export class CommunityPageComponent {
       const selected = this.tabElements()[Math.max(index, 0)]?.nativeElement;
       const list = this.tabList().nativeElement;
 
-      if (selected !== undefined) {
-        list.scrollTo({ left: selected.offsetLeft - (list.clientWidth - selected.offsetWidth) / 2 });
+      if (selected === undefined) {
+        return;
+      }
+
+      const bar = list.getBoundingClientRect();
+      const tab = selected.getBoundingClientRect();
+
+      if (tab.left < bar.left || tab.right > bar.right) {
+        list.scrollTo({ left: list.scrollLeft + tab.left - bar.left - (bar.width - tab.width) / 2 });
       }
     });
   }

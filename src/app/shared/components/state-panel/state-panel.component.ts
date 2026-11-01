@@ -15,7 +15,14 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   template: `
     <div class="body">
       @if (heading(); as text) {
-        <div class="heading" role="heading" [attr.aria-level]="headingLevel()">{{ text }}</div>
+        @switch (headingLevel()) {
+          @case (3) {
+            <h3 class="heading">{{ text }}</h3>
+          }
+          @default {
+            <h2 class="heading">{{ text }}</h2>
+          }
+        }
       }
       <ng-content />
     </div>

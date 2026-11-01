@@ -12,16 +12,8 @@
 
 h1,
 h2,
-p,
-ol,
-ul {
+p {
   margin: 0;
-}
-
-ol,
-ul {
-  padding: 0;
-  list-style: none;
 }
 
 .tier-hero {
