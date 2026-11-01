@@ -12,7 +12,7 @@ describe('normalizeLinkCode', () => {
   it('ignores case, spaces, underscores and dashes of any length', () => {
     expect(normalizeLinkCode('  abcd efgh ')).toBe('ABCDEFGH');
     expect(normalizeLinkCode('abcd_efgh')).toBe('ABCDEFGH');
-    expect(normalizeLinkCode('abcd–efgh')).toBe('ABCDEFGH');
+    expect(normalizeLinkCode('abcd\u2013efgh')).toBe('ABCDEFGH');
   });
 
   it('reads the letters that look like digits as digits', () => {

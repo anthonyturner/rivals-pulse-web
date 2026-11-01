@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { allowedAvatarUrl, OVERWOLF_AVATAR_DOMAINS, readPlayerClaim } from './player-claim.ts';
 
@@ -76,7 +77,7 @@ describe('readPlayerClaim', () => {
   });
 
   it('strips zero-width and bidi characters that could reorder a name', () => {
-    const claim = readPlayerClaim({ playerUid: '1', playerName: 'Au​ro‮ra⁦x‏' });
+    const claim = readPlayerClaim({ playerUid: '1', playerName: 'Au\u200Bro\u202Era\u2066x\u200F' });
     assert.equal(claim?.name, 'Aurorax');
   });
 
@@ -91,5 +92,13 @@ describe('readPlayerClaim', () => {
     assert.equal(claim?.uid, '12');
     assert.ok(claim?.name.startsWith('Aurora'));
     assert.equal(claim?.name.length, 64);
+  });
+});
+
+describe('the sources that handle invisible characters', () => {
+  it('spell them as escapes, so a reviewer can see what the code strips', () => {
+    for (const name of ['player-claim.ts', 'player-claim.test.ts']) {
+      assert.doesNotMatch(readFileSync(new URL(name, import.meta.url), 'utf8'), /[^\x00-\x7f]/, name);
+    }
   });
 });

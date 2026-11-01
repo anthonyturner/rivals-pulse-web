@@ -6,7 +6,7 @@
  * The desktop app makes the codes (`supabase/functions/issue-link-code/link-code.ts`); a test there
  * keeps the two alphabets in step. This file imports nothing so both sides can load it.
  */
-const SEPARATORS = /[\s\-_‐-―]/g;
+const SEPARATORS = /[\s\-_\u2010-\u2015]/g;
 const CANONICAL = /^[0-9A-HJKMNP-TV-Z]{8}$/;
 
 /** The eight canonical characters of a typed code, or null when it cannot be one. */

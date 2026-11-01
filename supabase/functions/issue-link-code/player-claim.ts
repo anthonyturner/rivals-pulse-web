@@ -58,9 +58,12 @@ export function readPlayerClaim(body: unknown): PlayerClaim | null {
  * Control characters, plus the invisible ones that reorder or hide text (zero-width and bidi marks,
  * embeddings and isolates): a name shown in the header must not be able to flip the text around it.
  */
-const UNSAFE_TEXT = /[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/g;
+const UNSAFE_TEXT = /[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g;
 
-/** A string, or a whole number (the game's uid is numeric), cleaned and cut to `maxLength` code points, so no surrogate pair is split. */
+/**
+ * A string, or a whole number (the game's uid is numeric), cleaned and cut to `maxLength` code
+ * points, so no surrogate pair is split.
+ */
 function cleanText(value: unknown, maxLength: number): string {
   const text = typeof value === 'number' && Number.isSafeInteger(value) ? String(value) : value;
   if (typeof text !== 'string') return '';
