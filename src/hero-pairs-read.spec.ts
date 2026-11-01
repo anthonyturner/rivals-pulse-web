@@ -185,7 +185,9 @@ describe('fetchHeroPairRows', () => {
 
     await fetchHeroPairRows(ENV, answering({ read_hero_pairs: { body: [] } }, seen));
 
-    expect(seen[0].url).toBe('https://example.supabase.co/rest/v1/rpc/read_hero_pairs?limit=1000&offset=0');
+    expect(seen[0].url).toBe(
+      'https://example.supabase.co/rest/v1/rpc/read_hero_pairs?limit=1000&offset=0&order=half_season,rank_bucket,kind,hero_id,other_hero_id',
+    );
     expect(seen[0].init?.method).toBe('POST');
     expect(JSON.parse(String(seen[0].init?.body))).toEqual({ p_play_mode_ids: [0, 1] });
     expect((seen[0].init?.headers as Record<string, string>)['apikey']).toBe(ENV.SUPABASE_PUBLISHABLE_KEY);
@@ -200,6 +202,7 @@ describe('fetchHeroPairRows', () => {
     expect(rows.length).toBe(2500);
     expect(rows.map((row) => row.gameHeroId)).toEqual(all.map((row) => row.hero_id));
     expect(seen.map((call) => new URL(call.url).searchParams.get('offset'))).toEqual(['0', '1000', '2000', '2500']);
+    expect(seen.every((call) => new URL(call.url).searchParams.get('order') === 'half_season,rank_bucket,kind,hero_id,other_hero_id')).toBeTrue();
   });
 
   it('keeps reading when the server cuts pages shorter than asked for', async () => {

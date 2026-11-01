@@ -260,9 +260,10 @@ file** for the half-season shown, listed in the manifest:
   two (10 is 20, 10.5 is 21). `currentSeasonId` is the latest half-season whose
   start has passed. `season` is the half-season the counts come from.
   `inPlaceOfSeasonId` is present only when the current half-season has no pair at
-  the minimum yet and `season` is the previous half-season's counts, standing in
-  for the one it names (the same rule as `GET /api/hero-matchups`); then
-  `heroes` and `decidedMatches` are the previous half-season's too.
+  the minimum yet and `season` is the previous half-season's counts. It names the
+  **current** half-season that is being replaced (it always equals
+  `currentSeasonId`), not the previous one; the previous one is `season.id`. This is the same rule as
+  `GET /api/hero-matchups`. Then `heroes` and `decidedMatches` are the previous half-season's too.
 - **`bands`** holds one band today, `all` (All Ranks). Rank bands are not
   published yet; a reader must take the band it wants by `key` and ignore keys
   it does not know. The `all` band is built from the matches with **no rank**,

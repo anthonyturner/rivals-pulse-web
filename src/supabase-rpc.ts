@@ -4,6 +4,8 @@ export const SUPABASE_READ_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KE
 export interface SupabasePage {
   offset: number;
   limit: number;
+  /** Columns to sort by before the range is cut, so pages never overlap or skip on the function's own order. */
+  order?: readonly string[];
 }
 
 export type SupabaseReadEnv = Readonly<Record<string, string | undefined>>;
@@ -80,7 +82,7 @@ export async function callSupabaseFunction(
     throw new Error(`${what} are not configured. Set ${missing.join(' and ')}.`);
   }
 
-  const query = page === undefined ? '' : `?limit=${page.limit}&offset=${page.offset}`;
+  const query = page === undefined ? '' : pageQuery(page);
   const response = await fetcher(`${url.replace(/\/+$/, '')}/rest/v1/rpc/${functionName}${query}`, {
     method: 'POST',
     headers: { apikey: key, 'content-type': 'application/json' },
@@ -93,6 +95,12 @@ export async function callSupabaseFunction(
   }
 
   return response.json();
+}
+
+function pageQuery(page: SupabasePage): string {
+  const order = page.order?.length ? `&order=${page.order.join(',')}` : '';
+
+  return `?limit=${page.limit}&offset=${page.offset}${order}`;
 }
 
 async function errorCodeOf(response: Response): Promise<string | undefined> {

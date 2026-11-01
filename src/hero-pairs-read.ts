@@ -16,14 +16,18 @@ const { recordsOf, numberOf, stringOf } = answerReader(READ_FUNCTION);
 /** PostgREST's `max-rows` on Supabase: a page of this many rows may be cut short. */
 const PAGE_SIZE = 1000;
 
+/** Every row is unique on these columns, so sorting by them makes a range cut the same way on every page. */
+const PAGE_ORDER = ['half_season', 'rank_bucket', 'kind', 'hero_id', 'other_hero_id'] as const;
+
 /** Stops a function that ignores `offset` from being read forever; far above any real count of pairs. */
 const MAX_PAGES = 200;
 
 /**
  * Reads the pair counts through `public.read_hero_pairs(smallint[])`, summed over the modes asked
- * for. The function returns a set of rows in a stable order, which PostgREST cuts at `max-rows`, so
- * this pages through it with `offset` until a page comes back empty. Stopping on an empty page, not
- * a short one, keeps it right if the project's `max-rows` is ever set below the page size.
+ * for. The function returns a set of rows, which PostgREST cuts at `max-rows`, so this pages
+ * through it with `offset`, sorted by an explicit `order` instead of trusting the function's return
+ * order, until a page comes back empty. Stopping on an empty page, not a short one, keeps it right
+ * if the project's `max-rows` is ever set below the page size.
  */
 export async function fetchHeroPairRows(
   env: SupabaseReadEnv,
@@ -39,7 +43,7 @@ export async function fetchHeroPairRows(
       { p_play_mode_ids: playModeIds },
       env,
       fetcher,
-      { offset: rows.length, limit: PAGE_SIZE },
+      { offset: rows.length, limit: PAGE_SIZE, order: PAGE_ORDER },
     );
     const received = parseHeroPairRows(body);
 
