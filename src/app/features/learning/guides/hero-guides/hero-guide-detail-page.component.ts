@@ -17,10 +17,10 @@ import { HERO_GUIDES } from './hero-guide-data';
 })
 export class HeroGuideDetailPageComponent {
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap);
+  private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
   readonly guide = computed(() => {
-    const heroId = this.routeParams()?.get('heroId');
+    const heroId = this.routeParams().get('heroId');
 
     return HERO_GUIDES.find((guide) => guide.heroId === heroId) ?? null;
   });

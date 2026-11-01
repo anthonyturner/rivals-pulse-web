@@ -55,6 +55,14 @@ describe('HeroGuideDetailPageComponent', () => {
     expect(element.querySelectorAll('ul.guide-bullets > li').length).toBeGreaterThan(20);
   });
 
+  it('makes only the first bullet of a section semibold, not the first matchup chip', () => {
+    const weight = (selector: string) => getComputedStyle(element.querySelector(selector) as HTMLElement).fontWeight;
+
+    expect(weight('.guide-bullets > li:first-child')).toBe('700');
+    expect(weight('.guide-bullets > li:nth-child(2)')).toBe('400');
+    expect(weight('.chips > li:first-child')).toBe('400');
+  });
+
   it('lists pool job and pick when as a definition list', () => {
     const terms = Array.from(element.querySelectorAll('dl dt'), (term) => term.textContent?.trim());
 

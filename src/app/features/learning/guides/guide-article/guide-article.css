@@ -114,6 +114,10 @@
   line-height: 1.55;
 }
 
+.guide-bullets > li:first-child {
+  font-weight: 700;
+}
+
 .guide-bullets li + li {
   margin-top: 6px;
 }

@@ -42,10 +42,6 @@ iframe {
   gap: 4px;
 }
 
-.guide-tile li:first-child {
-  font-weight: 700;
-}
-
 .matchup-label {
   margin-top: 12px;
 }

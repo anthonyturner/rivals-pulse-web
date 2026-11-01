@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { FilterOption, FilterSelectComponent } from '../../../../shared/components/filter-select/filter-select.component';
@@ -26,6 +26,7 @@ export class StrategistGuidesPageComponent {
   ];
   readonly category = signal(ALL_CATEGORIES);
   readonly searchTerm = signal('');
+  private readonly searchInput = viewChild.required<ElementRef<HTMLInputElement>>('search');
 
   readonly cards = computed(() => {
     const category = this.category();
@@ -67,5 +68,7 @@ export class StrategistGuidesPageComponent {
   clearFilters(): void {
     this.searchTerm.set('');
     this.category.set(ALL_CATEGORIES);
+    // The button that was pressed leaves with the empty-state panel, so focus would drop to the page.
+    this.searchInput().nativeElement.focus();
   }
 }

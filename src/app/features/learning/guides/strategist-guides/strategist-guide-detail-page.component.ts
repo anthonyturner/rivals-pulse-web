@@ -28,10 +28,10 @@ const RELATED_GUIDE_LIMIT = 3;
 })
 export class StrategistGuideDetailPageComponent {
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap);
+  private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
   readonly guide = computed(() => {
-    const guideId = this.routeParams()?.get('guideId');
+    const guideId = this.routeParams().get('guideId');
 
     return STRATEGIST_GUIDES.find((guide) => guide.id === guideId) ?? null;
   });

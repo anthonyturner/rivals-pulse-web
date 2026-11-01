@@ -60,6 +60,7 @@ describe('StrategistGuidesPageComponent', () => {
 
     expect(count()).toBe('10 guides');
     expect((element.querySelector('input') as HTMLInputElement).value).toBe('');
+    expect(document.activeElement).toBe(element.querySelector('input'));
   });
 
   it('narrows the list by category', async () => {

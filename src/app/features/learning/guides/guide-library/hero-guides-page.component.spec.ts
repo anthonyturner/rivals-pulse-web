@@ -30,7 +30,7 @@ describe('HeroGuidesPageComponent', () => {
   it('gives every guide link its own name', () => {
     const names = links().map((link) => link.textContent?.trim());
 
-    expect(names.length).toBeGreaterThan(20);
+    expect(names.length).toBe(26);
     expect(new Set(names).size).toBe(names.length);
   });
 

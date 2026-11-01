@@ -25,10 +25,12 @@ describe('HeroImageFallbackDirective', () => {
     expect(image.getAttribute('src')).toBe(DEFAULT_HERO_IMAGE);
   });
 
-  it('does not loop when the default portrait itself fails', () => {
+  it('does not set the source again when the default portrait itself fails, which would fire error again', () => {
     image.dispatchEvent(new Event('error'));
+    const setSource = spyOnProperty(HTMLImageElement.prototype, 'src', 'set');
+
     image.dispatchEvent(new Event('error'));
 
-    expect(image.getAttribute('src')).toBe(DEFAULT_HERO_IMAGE);
+    expect(setSource).not.toHaveBeenCalled();
   });
 });

@@ -42,10 +42,6 @@ iframe {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
 }
 
-.guide-tile > p {
-  margin: 0;
-}
-
 .success {
   margin-top: 8px;
   padding-top: 8px;
