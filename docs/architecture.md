@@ -24,7 +24,9 @@ same data-access code (`src/content-database.ts`):
 
 - **Vercel serverless functions** in `api/` (e.g. `api/heroes.ts`,
   `api/hero-stats.ts`, `api/glossary.ts`) — the production path, each a thin
-  handler around `src/vercel-api.ts` + `content-database.ts`.
+  handler around `src/vercel-api.ts` + `content-database.ts`. Vercel serves a
+  file under `api/` only at its own path, so every route needs its own file;
+  there is no catch-all.
 - **Express**, in `src/server.ts` — serves the same `/api/*` routes for
   local dev and the local server render (`npm start`,
   `npm run serve:ssr:rivals-pulse-coach`), backed by `@angular/ssr/node`.

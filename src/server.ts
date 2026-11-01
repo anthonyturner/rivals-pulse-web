@@ -12,7 +12,6 @@ import {
   getContentStatusFromDatabase,
   getExternalSourceFromDatabase,
   getGlossaryTermsFromDatabase,
-  getHeroFromDatabase,
   getHeroVideosFromDatabase,
   getHeroesFromDatabase,
   getHomeContentBlocksFromDatabase,
@@ -64,20 +63,6 @@ app.get('/api/community/stats', (req, res) => {
 
 app.get('/api/heroes', (_req, res) => {
   handleApiResponse(res, () => getHeroesFromDatabase());
-});
-
-app.get('/api/heroes/:id', (req, res) => {
-  handleApiResponse(res, () => {
-    const hero = getHeroFromDatabase(req.params.id);
-
-    if (!hero) {
-      res.status(404);
-
-      return { message: `Hero not found: ${req.params.id}` };
-    }
-
-    return hero;
-  });
 });
 
 app.get('/api/hero-videos', (_req, res) => {
