@@ -382,7 +382,11 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   today; a bucket of 0 or more only when `community_bucket_shown` passes, using the most recorders of
   any one chosen mode and the sum of the busiest recorders (bounds that stay true across modes).
   Recorder counts are never returned. It returns a set of rows, so a caller that reads more than
-  1000 of them pages through the (stable) order with a range.
+  1000 of them pages through the (stable) order with a range. The website reads it through
+  `GET /api/hero-pairs` ([`src/hero-pairs-read.ts`](../src/hero-pairs-read.ts)), which pages with
+  `limit` and `offset` until a page comes back empty, for Competitive and Quick Match, and builds the
+  "all" band from rank bucket -1 alone; Pulse Atlas publishes that answer as `community-stats`
+  ([pulse-atlas.md](pulse-atlas.md)).
 - Once a rank source exists, an all-ranks total built by adding buckets would include a bucket that
   was hidden; whoever adds that must not publish it next to the visible ones.
 

@@ -20,6 +20,7 @@ import {
 import { getCommunityInsights } from './community-insights-read';
 import { getCommunityMatches } from './community-matches-read';
 import { getHeroMatchups } from './hero-matchups-read';
+import { getHeroPairs } from './hero-pairs-read';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
 import { runGameStatsSync, syncGameStats } from './game-stats-sync';
@@ -53,6 +54,10 @@ app.get('/api/community/insights', (_req, res) => {
 
 app.get('/api/hero-matchups', (_req, res) => {
   handleApiResponse(res, () => getHeroMatchups());
+});
+
+app.get('/api/hero-pairs', (_req, res) => {
+  handleApiResponse(res, () => getHeroPairs());
 });
 
 app.get('/api/community/stats', (req, res) => {
