@@ -13,7 +13,7 @@ export const SITE_NAME = 'RivalsPulse';
 export const HOME_TITLE = 'RivalsPulse | Know every match before it starts';
 
 export const SITE_DESCRIPTION =
-  'A free Overwolf app for Marvel Rivals: live stats on your screen and counters at your fingertips. Hero win rates, counters and tier lists counted from real matches players recorded, plus hero guides and a team builder.';
+  'RivalsPulse is a free Marvel Rivals stats app: live stats on your screen and counters at your fingertips, with win rates and tier lists from real matches.';
 
 /** Interim 1200x630 text card; the maintainer may replace this file with a gameplay screenshot. */
 export const PREVIEW_IMAGE_PATH = '/images/site/og-preview.png';
