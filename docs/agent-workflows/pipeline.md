@@ -4,7 +4,7 @@ Read this before starting any substantial piece of work, and before deciding
 whether a piece of work is substantial. It defines the stages, who hands what
 to whom, and how far an agent may go without asking.
 
-Rivals Pulse Coach has one platform-neutral workflow with thin adapters for each
+RivalsPulse has one platform-neutral workflow with thin adapters for each
 agent tool. The adapters are entry points, not separate pipeline definitions.
 
 ## Canonical stages

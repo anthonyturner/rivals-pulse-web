@@ -1,6 +1,6 @@
-# Rivals Pulse Coach
+# RivalsPulse
 
-Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals heroes, matchups, team composition, positioning, and practice habits. It combines live data with curated lessons and interactive tools instead of acting as a static wiki.
+RivalsPulse is an Angular coaching companion for learning Marvel Rivals heroes, matchups, team composition, positioning, and practice habits. It combines live data with curated lessons and interactive tools instead of acting as a static wiki.
 
 ## Highlights
 
