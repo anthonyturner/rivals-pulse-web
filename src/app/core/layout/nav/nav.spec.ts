@@ -1,18 +1,31 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { AuthService, SessionState } from '../../auth/auth.service';
 import { Nav } from './nav';
 
 describe('Nav', () => {
   let component: Nav;
   let fixture: ComponentFixture<Nav>;
+  const sessionState = signal<SessionState>({ status: 'signedOut' });
+
+  const accountLink = (): HTMLAnchorElement | undefined =>
+    Array.from(
+      fixture.nativeElement.querySelectorAll('#primary-navigation .nav-link') as NodeListOf<HTMLAnchorElement>,
+    ).find((anchor) => ['Sign in', 'Account'].includes(anchor.textContent?.trim() ?? ''));
 
   beforeEach(async () => {
+    sessionState.set({ status: 'signedOut' });
+
     await TestBed.configureTestingModule({
       imports: [Nav],
       // The app runs zoneless, and the core orb is a router link.
-      providers: [provideZonelessChangeDetection(), provideRouter([])],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        { provide: AuthService, useValue: { state: sessionState, load: () => Promise.resolve(sessionState()) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Nav);
@@ -50,5 +63,28 @@ describe('Nav', () => {
     orb.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
     expect(component.isMenuOpen()).toBeFalse();
+  });
+
+  it('offers Sign in to a signed-out visitor', () => {
+    expect(accountLink()?.textContent?.trim()).toBe('Sign in');
+    expect(accountLink()?.getAttribute('href')).toBe('/sign-in');
+  });
+
+  it('offers Account to a signed-in visitor', () => {
+    sessionState.set({
+      status: 'signedIn',
+      account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+    });
+    fixture.detectChanges();
+
+    expect(accountLink()?.textContent?.trim()).toBe('Account');
+    expect(accountLink()?.getAttribute('href')).toBe('/account');
+  });
+
+  it('shows neither link while the session is still being read', () => {
+    sessionState.set({ status: 'loading' });
+    fixture.detectChanges();
+
+    expect(accountLink()).toBeUndefined();
   });
 });

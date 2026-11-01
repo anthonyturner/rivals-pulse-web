@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { signedInGuard } from './core/auth/signed-in.guard';
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { HOME_TITLE } from './core/seo/site-meta';
@@ -230,6 +231,23 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/privacy/privacy-page.component').then(
         (module) => module.PrivacyPageComponent,
+      ),
+  },
+  {
+    path: 'sign-in',
+    title: 'Sign in | Rivals Pulse Coach',
+    loadComponent: () =>
+      import('./features/account/sign-in-page.component').then(
+        (module) => module.SignInPageComponent,
+      ),
+  },
+  {
+    path: 'account',
+    title: 'Your account | Rivals Pulse Coach',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./features/account/account-page.component').then(
+        (module) => module.AccountPageComponent,
       ),
   },
   {

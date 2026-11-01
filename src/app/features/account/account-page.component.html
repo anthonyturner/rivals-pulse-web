@@ -1,0 +1,41 @@
+<main class="account-page">
+  <app-page-header
+    title="Your account"
+    description="The details Rivals Pulse Coach holds about your sign-in. Nothing here is shown to anyone else."
+  />
+
+  @if (account(); as details) {
+    <section class="account-section" aria-labelledby="account-details-title">
+      <h2 id="account-details-title">Sign-in details</h2>
+      <dl class="account-details">
+        <div>
+          <dt>Signed in with</dt>
+          <dd>{{ method() }}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ details.email ?? 'None shared with us' }}</dd>
+        </div>
+        <div>
+          <dt>Account created</dt>
+          <dd>{{ details.createdAt | date: 'longDate' }}</dd>
+        </div>
+      </dl>
+      <p>
+        <button class="account-button" type="button" (click)="signOut()">Sign out</button>
+      </p>
+    </section>
+
+    <section class="account-section" aria-labelledby="account-data-title">
+      <h2 id="account-data-title">What we keep and how to remove it</h2>
+      <p>
+        The privacy notes list exactly what an account stores and the one cookie it uses. Until
+        the delete button arrives on this page, you can ask for your account to be removed in the
+        community Discord.
+      </p>
+      <p>
+        <a routerLink="/privacy" fragment="accounts">Read what the account stores</a>
+      </p>
+    </section>
+  }
+</main>

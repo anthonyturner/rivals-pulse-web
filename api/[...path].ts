@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
+import { handleAccountHttp, isAccountRoute } from '../src/account-http.js';
 import {
   getContentStatusFromDatabase,
   getExternalSourceFromDatabase,
@@ -34,12 +35,17 @@ const noStoreJsonHeaders = {
 };
 
 export default async function handler(req: VercelRequest, res: ServerResponse) {
+  const route = getApiRoute(req);
+
+  if (isAccountRoute(route)) {
+    await handleAccountHttp(req, res, route);
+    return;
+  }
+
   if (req.method && req.method !== 'GET') {
     sendJson(res, 405, { error: 'Method not allowed' });
     return;
   }
-
-  const route = getApiRoute(req);
 
   try {
     if (route === 'content/status') {

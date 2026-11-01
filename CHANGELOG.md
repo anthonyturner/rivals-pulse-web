@@ -8,7 +8,13 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Added
+
+- You can sign in with Discord. A Sign in link in the header opens a sign-in page, and once you are signed in an Account link opens a page showing how you signed in, your email and when the account was created, with a Sign out button. Signing in sets one `HttpOnly` cookie and stores your Discord id, username, email (if Discord shares it) and the creation date; the Privacy notes now say so and how to ask for deletion, which is by request in the Discord server until a delete button arrives. Discord sign-in works on rivalspulse.com and localhost only ([#275](https://github.com/anthonyturner/rivals-pulse-web/pull/275)).
+
 ### Changed
+
+- The Privacy notes no longer say the website has no accounts, no login and no cookies: a new "Accounts and signing in" section covers what an account stores, the sign-in cookie and deleting an account ([#275](https://github.com/anthonyturner/rivals-pulse-web/pull/275)).
 
 - A small label above a heading is back, but only where it states something the heading does not, and every one looks the same: "Free Overwolf app for Marvel Rivals" on the home hero, the half-season and match count above Hero stats (hidden until the numbers load), the series on guide pages (such as "Strategist guide" or "Positioning"), the role above a hero's name on the hero page and the hero detail window, and the type and date of each news item and the season update. The hero role and season update date that sat under their headings moved up to the label, and the Premium tag now sits above the Jarvis demo heading ([#261](https://github.com/anthonyturner/rivals-pulse-web/pull/261)).
 - No page puts a small label above its heading any more: the labels above page titles and section headings (such as "Player stats overlay for Marvel Rivals", "In the game" and the Jarvis demo's "RivalsPulse overlay · Jarvis" line) are gone, and where one carried something needed it now sits in the heading or in the line below it, such as the hero role under a hero's name and the Premium tag under the Jarvis demo heading ([#259](https://github.com/anthonyturner/rivals-pulse-web/pull/259)).

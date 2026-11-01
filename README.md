@@ -22,7 +22,7 @@ Rivals Pulse Coach is an Angular coaching companion for learning Marvel Rivals h
 
 ## Tech Stack
 
-Angular 20 | TypeScript | Signals | RxJS | Angular SSR | Express | Turso/libSQL | Vercel
+Angular 20 | TypeScript | Signals | RxJS | Angular | Express | Turso/libSQL | Vercel
 
 ## Local Development
 
@@ -133,7 +133,7 @@ SYNC_SECRET
 ```
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (a secret `sb_secret_...` key) let server code reach
-Supabase; see [docs/supabase.md](docs/supabase.md). `CRON_SECRET` authenticates scheduled Vercel cron requests. `SYNC_SECRET` protects manual
+Supabase; `SUPABASE_PUBLISHABLE_KEY` is also needed for the aggregate reads and Discord sign-in; see [docs/supabase.md](docs/supabase.md). `CRON_SECRET` authenticates scheduled Vercel cron requests. `SYNC_SECRET` protects manual
 production sync requests. Scheduled jobs refresh home news and game statistics; deployments do
 not run the full database seed.
 

@@ -8,8 +8,11 @@
     <h2 id="summary-title">The short version</h2>
     <ul>
       <li>
-        This website has no accounts, no login, no cookies of its own and no analytics. Like any
-        website, its host may keep short-lived technical request logs.
+        This website has no analytics, and you never need an account to read it. You can
+        <strong>sign in with Discord</strong> if you want an account; see
+        <a routerLink="." fragment="accounts">Accounts and signing in</a> below. If you never sign
+        in, the site sets no cookies of its own. Like any website, its host may keep short-lived
+        technical request logs.
       </li>
       <li>
         The community pages show <strong>anonymous totals</strong> only: no names, no player ids
@@ -134,6 +137,61 @@
         above.
       </li>
     </ul>
+  </section>
+
+  <section class="privacy-section" id="accounts" aria-labelledby="accounts-title">
+    <h2 id="accounts-title">Accounts and signing in</h2>
+    <p>
+      Signing in is optional and works with Discord only. Nothing on the community pages needs an
+      account.
+    </p>
+    <ul>
+      <li>
+        <strong>What is stored.</strong> When you sign in, Supabase, the database service this
+        website runs on, creates an account for you. It keeps your Discord user id, your Discord
+        username, the email address on your Discord account if Discord shares one, the time you
+        signed in, and the date the account was created. Discord also sends a few profile details
+        with these, such as an avatar link; Supabase keeps them, and this website does not show
+        or use them. We add one row of our own: your account id and the date it was created.
+      </li>
+      <li>
+        <strong>What it is used for.</strong> Signing you in and showing you your own account
+        page: how you signed in, your email address and when you joined. We send no email, and
+        there is no marketing.
+      </li>
+      <li>
+        <strong>Not connected to your matches.</strong> An account is not linked to your in-game
+        name or to any match the desktop app uploaded, and the account page shows no game data.
+        If that ever changes, this page will say so first.
+      </li>
+      <li>
+        <strong>The sign-in cookie.</strong> Signing in sets one cookie, <code>rp_session</code>.
+        It keeps you signed in for up to 30 days or until you sign out, and it is hidden from
+        page scripts and sent only to this site's own <code>/api</code> address. While you are in
+        the middle of signing in, a second cookie, <code>rp_pkce</code>, lasts at most ten
+        minutes and is removed when the sign-in finishes. Neither is used for tracking.
+      </li>
+      <li>
+        <strong>Who else sees it.</strong> Discord handles the sign-in and applies its own
+        privacy policy to it. Your account details are not shown to other visitors and are not
+        used in the community numbers.
+      </li>
+    </ul>
+    <p>
+      <strong>Deleting your account.</strong> The account page does not have a delete button yet.
+      Until it does, ask for your account to be deleted in
+      @if (discordInviteUrl) {
+        <a [href]="discordInviteUrl" target="_blank" rel="noopener noreferrer"
+          >the Rivals Pulse Discord server</a
+        >
+      } @else {
+        the Rivals Pulse Discord server
+      }
+      and we will delete the sign-in details and our row for you. Deleted data can stay in our
+      database service's backups until they age out. Deleting the account here does not remove
+      this site from your Discord settings; to do that, open Authorized Apps in your Discord
+      settings and remove it there.
+    </p>
   </section>
 
   <section class="privacy-section" id="more" aria-labelledby="more-title">
