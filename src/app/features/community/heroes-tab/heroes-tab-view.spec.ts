@@ -36,8 +36,8 @@ describe('buildHeroesTabView', () => {
       ['Hela', '50.0%'],
       ['Mantis', '33.3%'],
     ]);
-    expect(view.mostPicked[0].sample).toBe('30 appearances');
-    expect(view.matchesLabel).toBe('149 matches');
+    expect(view.mostPicked[0].sample).toBe('30 games');
+    expect(view.footnote).toContain('From 149 matches of Quick Match and Competitive');
     expect(view.halfSeasonLabel).toBe('Season 10.5');
     expect(view.notice).toBeNull();
   });

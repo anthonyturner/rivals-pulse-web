@@ -43,17 +43,17 @@ describe('TierListTabComponent', () => {
   afterEach(() => http.verify());
 
   it('says it is loading while the requests run', async () => {
-    expect(host().querySelector('[role="status"]')?.textContent).toContain('Loading');
+    expect(host().querySelector('[role="status"]')?.textContent).toContain('Loading the tier list');
     await answer(READY);
   });
 
   it('lists the S and A tiers only and links to the full tier list', async () => {
     await answer(READY);
 
-    expect(Array.from(host().querySelectorAll('h3')).map((heading) => heading.textContent?.trim())).toEqual([
-      'S tier',
-      'A tier',
-    ]);
+    const rows = Array.from(host().querySelectorAll('.tier-row'));
+
+    expect(rows.map((row) => row.querySelector('.tier-letter')?.textContent?.trim())).toEqual(['S', 'A']);
+    expect(rows.map((row) => row.querySelector('h3.tier-label') !== null)).toEqual([true, true]);
     expect(text()).toContain('Storm');
     expect(text()).toContain('82.5%');
     expect(text()).toContain('Hela');
@@ -65,7 +65,7 @@ describe('TierListTabComponent', () => {
   it('shows the designed empty state, with the minimum named, when no hero is placed', async () => {
     await answer(statsOf([], { matchesCounted: 12 }));
 
-    expect(host().querySelector('.empty-state')).toBeTruthy();
+    expect(host().querySelector('app-state-panel')).toBeTruthy();
     expect(text()).toContain('10 appearances');
     expect(host().querySelector('a')?.getAttribute('href')).toBe('/tier-list');
   });
@@ -73,7 +73,7 @@ describe('TierListTabComponent', () => {
   it('says the tier list cannot be loaded when the request fails, and shows no empty state', async () => {
     await answer('down', 500);
 
-    expect(text()).toContain('cannot be loaded right now');
-    expect(host().querySelector('.empty-state')).toBeNull();
+    expect(text()).toContain('The tier list could not be loaded');
+    expect(host().querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
   });
 });

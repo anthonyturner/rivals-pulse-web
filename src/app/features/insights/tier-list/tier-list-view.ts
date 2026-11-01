@@ -63,16 +63,7 @@ export function seasonOptions(halfSeasons: readonly HeroStatsHalfSeason[]): Seas
  */
 export function buildTierListView(stats: HeroStats, identities: HeroIdentities): TierListView {
   const season = stats.halfSeason === null ? null : seasonView(stats.halfSeason);
-  const rows = TIER_NAMES.map(
-    (name): TierRowView => ({
-      name,
-      heroes: stats.tiers
-        .filter((tier) => tier.name === name)
-        .flatMap((tier) => tier.heroes)
-        .filter(isReadable)
-        .map((hero) => tierHero(hero, identities)),
-    }),
-  );
+  const rows = tierRowsOf(stats, TIER_NAMES, identities);
   const placed = rows.some((row) => row.heroes.length > 0);
   const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
   const modeLabel = modeLabelOf(stats);
@@ -94,6 +85,22 @@ export function buildTierListView(stats: HeroStats, identities: HeroIdentities):
   };
 }
 
+/** One row per named tier, in the order given, holding the heroes that have a readable record. */
+export function tierRowsOf(
+  stats: HeroStats,
+  names: readonly TierName[],
+  identities: HeroIdentities,
+): TierRowView[] {
+  return names.map((name) => ({
+    name,
+    heroes: stats.tiers
+      .filter((tier) => tier.name === name)
+      .flatMap((tier) => tier.heroes)
+      .filter(isReadable)
+      .map((hero) => tierHero(hero, identities)),
+  }));
+}
+
 function tierHero(hero: HeroStatsHero, identities: HeroIdentities): TierHeroView {
   return {
     ...heroCell(hero.hero, identities),
@@ -109,6 +116,7 @@ function isReadable(hero: HeroStatsHero): boolean {
     hero.appearances > 0 &&
     Number.isFinite(hero.appearances) &&
     Number.isFinite(hero.winRate) &&
-    Number.isFinite(hero.pickRate)
+    Number.isFinite(hero.pickRate) &&
+    Number.isFinite(hero.shrunkWinRate)
   );
 }

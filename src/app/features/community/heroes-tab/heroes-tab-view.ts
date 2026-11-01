@@ -15,7 +15,8 @@ export type HeroesTabView =
       halfSeasonLabel: string | null;
       /** The shared fallback sentence, set when the previous half-season stands in for the current one. */
       notice: string | null;
-      matchesLabel: string;
+      /** The caveat under the lists: the sample, and how the figures are counted. */
+      footnote: string;
       mostPicked: CommunityHeroRow[];
       highestWinRate: CommunityHeroRow[];
     };
@@ -59,7 +60,7 @@ export function buildHeroesTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    matchesLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
+    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero on both teams of one match counts twice. Only heroes with enough appearances are listed.`,
     mostPicked: leaders(placed, 'pickRate', identities),
     highestWinRate: leaders(placed, 'winRate', identities),
   };
@@ -82,7 +83,7 @@ function leaders(
     .map(({ line, cell }) => ({
       ...cell,
       figure: percentLabel(line[rate]),
-      sample: countLabel(line.appearances, 'appearance', 'appearances'),
+      sample: countLabel(line.appearances, 'game', 'games'),
     }));
 }
 

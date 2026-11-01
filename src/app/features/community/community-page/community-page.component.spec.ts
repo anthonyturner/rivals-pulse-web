@@ -201,12 +201,11 @@ describe('CommunityPageComponent', () => {
       }
 
       const text = panel().textContent ?? '';
-      expect(text).toContain('Not enough data yet');
-      expect(text).toContain('RivalsPulse app uploads');
+      expect(text).toMatch(/enough data yet|first figures appear/);
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
-      expect(panel().querySelector('.empty-state')).toBeTruthy();
-      expect(panel().querySelector('h2')).toBeTruthy();
+      expect(panel().querySelector('app-state-panel')).toBeTruthy();
+      expect(panel().querySelectorAll('h2').length).toBe(1);
       expect(panel().querySelector('h3')).toBeNull();
     });
   }
@@ -222,20 +221,51 @@ describe('CommunityPageComponent', () => {
   it('links the anonymity note to the privacy notes', async () => {
     await open('/heroes');
 
-    const link = host().querySelector<HTMLAnchorElement>('.community-page__note a');
+    const link = host().querySelector<HTMLAnchorElement>('.community-page__intro a');
     expect(link?.getAttribute('href')).toBe('/privacy');
   });
 
   it('links the anonymity note to the How we count explainer', async () => {
     await open('/heroes');
 
-    const links = host().querySelectorAll<HTMLAnchorElement>('.community-page__note a');
+    const links = host().querySelectorAll<HTMLAnchorElement>('.community-page__intro a');
     expect(links[1]?.getAttribute('href')).toBe('/how-we-count');
   });
 
-  it('says the numbers are anonymous community totals', async () => {
+  it('says the numbers are anonymous totals, under a one-line title', async () => {
     await open('/heroes');
 
-    expect(host().textContent).toContain('anonymous community totals');
+    expect(host().querySelector('h1')?.textContent?.trim()).toBe('Community totals');
+    expect(host().querySelector('.community-page__intro')?.textContent).toContain('Anonymous totals');
+  });
+
+  describe('on a narrow screen', () => {
+    beforeEach(() => {
+      (harness.fixture.nativeElement as HTMLElement).style.width = '384px';
+    });
+
+    it('scrolls the tab bar so the selected tab is fully in view on a direct visit', async () => {
+      await open('/insights');
+      await harness.fixture.whenStable();
+
+      const bar = host().querySelector('[role="tablist"]') as HTMLElement;
+      const tab = selectedTab()?.getBoundingClientRect() as DOMRect;
+      const range = bar.getBoundingClientRect();
+
+      expect(bar.scrollWidth).toBeGreaterThan(bar.clientWidth);
+      expect(bar.scrollLeft).toBeGreaterThan(0);
+      expect(tab.left).toBeGreaterThanOrEqual(range.left - 1);
+      expect(tab.right).toBeLessThanOrEqual(range.right + 1);
+    });
+
+    it('leaves the bar where it is when the selected tab is already in view', async () => {
+      const scrollTo = spyOn(HTMLElement.prototype, 'scrollTo').and.callThrough();
+
+      await open('/heroes');
+      await harness.fixture.whenStable();
+
+      expect(scrollTo).not.toHaveBeenCalled();
+      expect((host().querySelector('[role="tablist"]') as HTMLElement).scrollLeft).toBe(0);
+    });
   });
 });

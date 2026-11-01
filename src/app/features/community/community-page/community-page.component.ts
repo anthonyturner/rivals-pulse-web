@@ -1,5 +1,13 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, viewChildren } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
 import type { ElementRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -19,6 +27,7 @@ export class CommunityPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  private readonly tabList = viewChild.required<ElementRef<HTMLElement>>('tabList');
   private readonly tabElements = viewChildren<ElementRef<HTMLElement>>('tabLink');
   private readonly selectedId = toSignal(
     this.route.paramMap.pipe(map((params) => params.get('tab') ?? DEFAULT_COMMUNITY_TAB_ID)),
@@ -35,6 +44,26 @@ export class CommunityPageComponent {
   protected readonly selectedTab = computed(
     () => this.tabs().find((tab) => tab.selected) ?? this.tabs()[0],
   );
+
+  constructor() {
+    // The bar scrolls sideways on a narrow screen, so a tab reached from a link or the keyboard may start off screen.
+    afterRenderEffect(() => {
+      const index = this.tabs().findIndex((tab) => tab.selected);
+      const selected = this.tabElements()[Math.max(index, 0)]?.nativeElement;
+      const list = this.tabList().nativeElement;
+
+      if (selected === undefined) {
+        return;
+      }
+
+      const bar = list.getBoundingClientRect();
+      const tab = selected.getBoundingClientRect();
+
+      if (tab.left < bar.left || tab.right > bar.right) {
+        list.scrollTo({ left: list.scrollLeft + tab.left - bar.left - (bar.width - tab.width) / 2 });
+      }
+    });
+  }
 
   protected onTabKeydown(event: KeyboardEvent, index: number): void {
     if (event.altKey || event.ctrlKey || event.metaKey) {
