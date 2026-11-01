@@ -50,10 +50,11 @@ to also be forgotten by the match database.
   | `do_not_store` | Uids and names of people who asked to be forgotten | The uid or name | Until removed by hand |
   | Aggregate tables | Anonymous counts only | None | Frozen when their raw rows are purged |
 
-- No store ties "the recorder's own match" to the verified `recorded_by`.
-  `participants` has the verified hash but does not say which of its lines is
+- `participants` has the verified hash but does not say which of its lines is
   the recorder's; `tracked_matches` names the recorder's own match but through
-  the claimed name.
+  the claimed name. Since #328, `tracked_match_recorders` (service role only)
+  ties each newly uploaded `tracked_matches` row to the verified `recorded_by`;
+  matches uploaded before it have no row.
 - `tracked_matches` and `players` grant `select` to `anon` and `authenticated`
   with a "using (true)" policy, so anyone holding the publishable key can read
   them (migrations `20260731000000` and `20260815000000`; not re-checked
@@ -388,9 +389,9 @@ block (#263); code lifetime, attempt limits and a changed Overwolf identity
 
 - a. `forget_player` and the upload path skip `tracked_matches` and `players`.
   The forget button stays disabled until #264, which must cover them.
-- b. No store ties a recorder's own match to the verified `recorded_by`, so
-  attribution needs an additive change; matches uploaded before it may only be
-  attributable by weaker evidence (#264, #266).
+- b. #328 added `tracked_match_recorders`, which ties a recorder's own match to
+  the verified `recorded_by` from its deploy date; matches uploaded before it
+  may only be attributable by weaker evidence (#264, #266).
 - c. The policy says match details are deleted within six months, but
   `tracked_matches` has no age limit (only the 5,000 cap), and the policy does
   not describe its public reads (#265).
