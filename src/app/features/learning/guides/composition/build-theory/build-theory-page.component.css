@@ -4,16 +4,7 @@
 
 .build-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.build-hero,
-.comparison,
-.build-grid,
-.utility-lab,
-.decision-panel {
-  width: min(1220px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .build-hero {
@@ -38,7 +29,7 @@ app-eyebrow {
 h1 {
   max-width: 850px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: var(--type-page-title);
   line-height: 1.04;
   font-weight: 850;
 }
@@ -137,7 +128,7 @@ dd {
 .section-heading h2 {
   margin-bottom: 10px;
   color: var(--text);
-  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-size: var(--type-h2);
   line-height: 1.12;
 }
 
@@ -307,7 +298,7 @@ dd {
 
 .build-card h2 {
   color: var(--text);
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
   line-height: 1.1;
 }
 
@@ -379,7 +370,7 @@ dd {
 
 .decision-panel h2 {
   color: var(--text);
-  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  font-size: var(--type-h2);
   line-height: 1.12;
 }
 
@@ -397,7 +388,7 @@ dd {
 
 @media (max-width: 940px) {
   .build-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .build-hero,
@@ -413,7 +404,7 @@ dd {
 
 @media (max-width: 600px) {
   .build-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .build-card {

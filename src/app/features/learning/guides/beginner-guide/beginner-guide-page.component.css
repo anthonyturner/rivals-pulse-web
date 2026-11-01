@@ -4,16 +4,7 @@
 
 .beginner-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-header,
-.role-panel,
-.lesson-layout,
-.module-tabs,
-.practice-section {
-  width: min(1220px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .page-header {
@@ -36,7 +27,7 @@ dd {
 h1 {
   max-width: 860px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: var(--type-page-title);
   line-height: 1.06;
   font-weight: 800;
 }
@@ -140,7 +131,7 @@ h1 {
 }
 
 .role-panel h2 {
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
   line-height: 1.12;
 }
 
@@ -197,7 +188,7 @@ h1 {
 }
 
 .lesson-heading h2 {
-  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  font-size: var(--type-h2);
   line-height: 1.05;
 }
 
@@ -233,7 +224,7 @@ dd {
 .scenario-card h3,
 .practice-card h3 {
   color: var(--text);
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
   line-height: 1.12;
 }
 
@@ -285,7 +276,7 @@ dt {
 }
 
 .feedback-panel h2 {
-  font-size: 1.65rem;
+  font-size: var(--type-h3);
   line-height: 1.05;
 }
 
@@ -368,7 +359,7 @@ dt {
 }
 
 .section-heading h2 {
-  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  font-size: var(--type-h2);
 }
 
 .practice-card {
@@ -400,7 +391,7 @@ dl div {
 
 @media (max-width: 980px) {
   .beginner-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .page-header,
@@ -422,7 +413,7 @@ dl div {
 
 @media (max-width: 560px) {
   .beginner-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .role-panel,

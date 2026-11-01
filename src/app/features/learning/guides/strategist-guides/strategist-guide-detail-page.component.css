@@ -4,9 +4,7 @@
 
 .detail-page,
 .not-found {
-  width: min(1120px, calc(100% - 64px));
-  margin: 0 auto;
-  padding: 30px 0 56px;
+  padding-block: 30px 56px;
 }
 
 .breadcrumb {
@@ -68,7 +66,7 @@
 .detail-header h1 {
   max-width: 820px;
   color: var(--text);
-  font-size: clamp(2.3rem, 5vw, 4.3rem);
+  font-size: var(--type-page-title);
   line-height: 0.98;
 }
 
@@ -126,7 +124,7 @@
 .section-heading h2,
 .review-panel h2 {
   color: var(--text);
-  font-size: clamp(1.55rem, 3vw, 2.3rem);
+  font-size: var(--type-h2);
   line-height: 1.08;
 }
 
@@ -197,7 +195,7 @@
 .drill-grid h3 {
   margin-top: 12px;
   color: var(--text);
-  font-size: 1.2rem;
+  font-size: var(--type-h3);
 }
 
 .principle-grid p,
@@ -414,11 +412,6 @@
 }
 
 @media (max-width: 620px) {
-  .detail-page,
-  .not-found {
-    width: calc(100% - (var(--mobile-page-gutter) * 2));
-  }
-
   .principle-grid,
   .decision-row,
   .patch-note {

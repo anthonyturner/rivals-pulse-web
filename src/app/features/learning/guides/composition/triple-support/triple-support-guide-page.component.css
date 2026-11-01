@@ -4,13 +4,7 @@
 
 .triple-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.page-header,
-main {
-  width: min(1220px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .page-header {
@@ -33,7 +27,7 @@ app-eyebrow {
 
 h1 {
   max-width: 800px;
-  font-size: clamp(2.3rem, 5vw, 4.5rem);
+  font-size: var(--type-page-title);
   font-weight: 850;
   letter-spacing: -0.045em;
   line-height: 0.96;
@@ -102,7 +96,7 @@ h1 {
 .execution-grid h2,
 .source-note h2 {
   color: var(--text);
-  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  font-size: var(--type-h2);
   line-height: 1.06;
 }
 
@@ -340,7 +334,7 @@ h1 {
 
 @media (max-width: 900px) {
   .triple-page {
-    padding: 20px;
+    padding-block: 20px;
   }
 
   .page-header,
@@ -358,7 +352,7 @@ h1 {
 
 @media (max-width: 560px) {
   .triple-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .read-the-comp,
