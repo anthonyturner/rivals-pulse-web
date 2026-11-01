@@ -60,6 +60,44 @@
   font-size: 0.9375rem;
 }
 
+.tool .tool-overlay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.tool-overlay__tag {
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--ink);
+  color: var(--cta-yellow);
+  font-size: 0.6875rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+kbd {
+  padding: 1px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--bg-panel);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+@media (max-width: 1080px) {
+  .tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 720px) {
   .tools {
     grid-template-columns: minmax(0, 1fr);
