@@ -93,6 +93,7 @@ begin
 end
 $$;
 
--- Postgres grants EXECUTE to everyone on a new function; restate who may call it.
-revoke execute on function public.read_own_dashboard() from public, anon, authenticated;
+-- Postgres grants EXECUTE to everyone on a new function, and Supabase's default privileges give
+-- service_role its own grant too, so it is named here; restate who may call it.
+revoke execute on function public.read_own_dashboard() from public, anon, authenticated, service_role;
 grant execute on function public.read_own_dashboard() to authenticated;

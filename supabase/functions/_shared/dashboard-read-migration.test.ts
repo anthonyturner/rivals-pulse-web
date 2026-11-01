@@ -28,7 +28,8 @@ describe('20261101060000_dashboard_read.sql', () => {
   });
 
   it('is granted to signed-in accounts only', () => {
-    assert.match(sql, /revoke execute on function public\.read_own_dashboard\(\) from public, anon, authenticated/);
+    const revoked = sql.match(/revoke execute on function public\.read_own_dashboard\(\) from ([^;]*);/)?.[1] ?? '';
+    assert.deepEqual(revoked.split(',').map(role => role.trim()).sort(), ['anon', 'authenticated', 'public', 'service_role']);
     assert.deepEqual([...sql.matchAll(/grant execute on function public\.read_own_dashboard\(\) to (\w+)/g)].map(match => match[1]), ['authenticated']);
     assert.doesNotMatch(sql, /grant [^;]* to [^;]*\b(anon|public|service_role)\b/i);
   });
