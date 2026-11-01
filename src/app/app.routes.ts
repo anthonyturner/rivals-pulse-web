@@ -220,12 +220,17 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'overlay-faq',
+    path: 'faq',
     title: 'FAQ | RivalsPulse',
     loadComponent: () =>
       import('./features/overlay-faq/overlay-faq-page.component').then(
         (module) => module.OverlayFaqPageComponent,
       ),
+  },
+  {
+    path: 'overlay-faq',
+    redirectTo: 'faq',
+    pathMatch: 'full',
   },
   {
     path: 'privacy',
