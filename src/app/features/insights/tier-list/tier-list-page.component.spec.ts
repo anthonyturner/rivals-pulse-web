@@ -134,7 +134,7 @@ describe('TierListPageComponent', () => {
   it('labels the page as based on Rivals Pulse players and offers no rank picker or ban column', async () => {
     const { page } = await open(partial);
 
-    expect(page.querySelector('.tier-hero > div')?.firstElementChild?.tagName).toBe('H1');
+    expect(page.querySelector('.tier-hero')?.firstElementChild?.tagName).toBe('H1');
     expect(text(page, '.lede')[0]).toContain('Rivals Pulse players');
     expect(page.querySelector('select')).toBeNull();
     expect(page.textContent).not.toContain('Ban');
@@ -150,11 +150,46 @@ describe('TierListPageComponent', () => {
   it('draws the six tier rows with the placed heroes, their sample and the matches counted', async () => {
     const { page } = await open(partial);
 
-    expect(text(page, '.tier-label strong')).toEqual(['S', 'A', 'B', 'C', 'D', 'F']);
-    expect(text(page, '.hero-card strong')).toEqual(['Storm', 'Hela']);
-    expect(text(page, '.hero-card dd')).toEqual(['66.7%', '10.0%', '12', '70.0%', '10.0%', '20']);
-    expect(text(page, '.season-card small')).toContain('146 matches');
+    expect(text(page, '.tier-letter')).toEqual(['S', 'A', 'B', 'C', 'D', 'F']);
+    expect(text(page, '.hero-name')).toEqual(['Storm', 'Hela']);
+    expect(text(page, '.hero-rate')).toEqual([', win rate 66.7%', ', win rate 70.0%']);
+    expect(text(page, '.hero-caption')).toEqual([
+      ', pick rate 10.0% pick · , 12 games',
+      ', pick rate 10.0% pick · , 20 games',
+    ]);
+    expect(text(page, '.meta')).toEqual([
+      'Started Oct 9, 2026 · 146 matches counted · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
+    ]);
     expect(text(page, '.empty-tier').length).toBe(5);
+  });
+
+  it('lists the tiers and heroes as lists, and announces each tier with its letter and count', async () => {
+    const { page } = await open(partial);
+
+    expect(page.querySelectorAll('ol.tiers > li').length).toBe(6);
+    expect(page.querySelectorAll('ul.hero-grid > li').length).toBe(2);
+    expect(text(page, '.tier-label')).toEqual([
+      'Tier S, 0 heroes',
+      'Tier A, 2 heroes',
+      'Tier B, 0 heroes',
+      'Tier C, 0 heroes',
+      'Tier D, 0 heroes',
+      'Tier F, 0 heroes',
+    ]);
+    expect(page.querySelector('dl, abbr, table')).toBeNull();
+    expect(page.querySelectorAll('.hero-tile img[alt=""]').length).toBe(2);
+  });
+
+  it('says "1 hero" for a tier of one', async () => {
+    const { page } = await open({ ...partial, tiers: [{ name: 'S', heroes: [hero('storm', 12, 8, 'S')] }] });
+
+    expect(text(page, '.tier-label')[0]).toBe('Tier S, 1 hero');
+  });
+
+  it('keeps the meta line off the page while no hero is placed', async () => {
+    const { page } = await open(building);
+
+    expect(page.querySelector('.meta')).toBeNull();
   });
 
   it('shows a partial dataset as placed heroes plus the rest as not enough data yet, in the same structure', async () => {
@@ -163,7 +198,9 @@ describe('TierListPageComponent', () => {
     expect(text(page, '.building h2')).toEqual(['Progress toward 10 appearances']);
     expect(text(page, '.building-name')).toEqual(['Thor']);
     expect(text(page, '.building-count')).toEqual(['2 of 10']);
-    expect(text(page, '.building .section-heading p')[0]).toContain('Not enough data yet');
+    expect(text(page, '.building .section-heading p')).toEqual([
+      'Heroes need 10 appearances before they are placed in a tier.',
+    ]);
     expect(page.querySelectorAll('.tier-row').length).toBe(6);
   });
 
@@ -186,7 +223,6 @@ describe('TierListPageComponent', () => {
     expect(text(page, '.state-count')[0]).toBe('No matches counted in Quick Match and Competitive so far.');
     expect(page.querySelector('.tier-row')).toBeNull();
     expect(page.querySelector('.building')).toBeNull();
-    expect(page.querySelector('.season-card')).toBeNull();
     expect(text(page, 'h1')).toEqual(['Marvel Rivals tier list']);
   });
 
@@ -201,7 +237,7 @@ describe('TierListPageComponent', () => {
     const { page } = await open({ ...partial, halfSeason: previous, inPlaceOf: current, halfSeasons: [previous, current] });
 
     expect(text(page, '.notice')[0]).toContain('Season 10.5 does not have enough data yet');
-    expect(text(page, '.season-card strong')).toEqual(['Season 10']);
+    expect(text(page, '.meta')[0]).toContain('Sep 11, 2026 to Oct 9, 2026');
   });
 
   it('offers a season picker only when there is more than one half-season, and asks for the one chosen', async () => {
@@ -225,8 +261,14 @@ describe('TierListPageComponent', () => {
     http.expectOne('/api/hero-stats?halfSeason=10').flush({ ...partial, halfSeason: previous });
     harness.detectChanges();
 
-    expect(text(page, '.season-card strong')).toEqual(['Season 10']);
+    expect(text(page, '[aria-live]')).toEqual(['Tier list updated: Season 10, 146 matches counted']);
     expect(select.value).toBe('10');
+  });
+
+  it('announces nothing on the first load', async () => {
+    const { page } = await open({ ...partial, halfSeasons: [previous, current] });
+
+    expect(text(page, '[aria-live]')).toEqual(['']);
   });
 
   describe('the mode picker', () => {
@@ -265,16 +307,17 @@ describe('TierListPageComponent', () => {
       expect(select.value).toBe('all');
     });
 
-    it('sits beside the season picker in one toolbar', async () => {
+    it('sits beside the season picker and the meta line in one toolbar', async () => {
       const { page } = await open(withModes);
 
       expect(text(page, '.toolbar .filter-select__label')).toEqual(['Mode', 'Season']);
+      expect(page.querySelector('.toolbar .meta')).not.toBeNull();
     });
 
     it('draws no picker when only the default blend holds matches', async () => {
       const { page } = await open({ ...withModes, halfSeasons: [current], modes: [MODES[0]] });
 
-      expect(page.querySelector('.toolbar')).toBeNull();
+      expect(page.querySelector('select')).toBeNull();
     });
 
     it('draws no mode picker for an answer cached before modes existed', async () => {
@@ -295,8 +338,8 @@ describe('TierListPageComponent', () => {
       http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
       harness.detectChanges();
 
-      expect(text(page, '.season-card small')).toContain('Competitive');
-      expect(text(page, '.season-card small')).toContain('28 matches');
+      expect(text(page, '.meta')[0]).toContain('28 matches counted');
+      expect(text(page, '[aria-live]')).toEqual(['Tier list updated: Season 10.5, 28 matches counted']);
       expect(modeSelect(page).value).toBe('competitive');
     });
 

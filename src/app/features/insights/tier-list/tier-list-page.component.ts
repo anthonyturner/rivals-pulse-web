@@ -31,6 +31,7 @@ export class TierListPageComponent {
   private readonly chosenMode = signal<HeroStatsModeId>(DEFAULT_MODE_ID);
   /** True from choosing another half-season or mode until its numbers arrive, so the last one's are not shown under the new label. */
   private readonly pending = signal(false);
+  private readonly choiceMade = signal(false);
   /** Kept from the last answer, so the pickers stay when a request for one half-season or mode fails. */
   readonly seasons = signal<SeasonOption[]>([]);
   readonly modes = signal<ModeOption[]>([]);
@@ -73,6 +74,18 @@ export class TierListPageComponent {
     return id === undefined ? undefined : String(id);
   });
   readonly selectedMode = this.chosenMode.asReadonly();
+  /** Spoken once the numbers for a picked mode or half-season arrive; empty on the first load, which needs no announcement. */
+  readonly announcement = computed(() => {
+    const view = this.view();
+
+    if (!this.choiceMade() || view === null) {
+      return '';
+    }
+
+    const scope = view.season === null ? view.matchesCountedLabel : `${view.season.label}, ${view.matchesCountedLabel}`;
+
+    return `Tier list updated: ${scope} counted`;
+  });
 
   chooseSeason(value: string): void {
     this.request(Number(value), this.chosenMode());
@@ -90,6 +103,7 @@ export class TierListPageComponent {
     this.chosenSeason.set(halfSeason);
     this.chosenMode.set(mode);
     this.pending.set(true);
+    this.choiceMade.set(true);
     this.requested.next({ halfSeason, mode });
   }
 

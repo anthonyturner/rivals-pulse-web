@@ -1,32 +1,19 @@
 <section class="tier-page page-container page-container--wide">
   <header class="tier-hero">
-    <div>
-      <h1>Marvel Rivals tier list</h1>
-      <p class="lede">
-        Heroes are placed by their win rate in matches that Rivals Pulse players recorded: every
-        player on the scoreboard, all ranks together. Quick Match and Competitive are counted
-        together unless you pick a single mode.
-        <a class="lede-link" routerLink="/how-we-count">How we count</a>
-      </p>
-    </div>
-
-    @if (view(); as v) {
-      @if (v.season; as season) {
-        <div class="season-card">
-          <span>Showing</span>
-          <strong>{{ season.label }}</strong>
-          @if (season.dateRange; as range) {
-            <small>{{ range }}</small>
-          }
-          <small>{{ v.modeLabel }}</small>
-          <small>{{ v.matchesCountedLabel }}</small>
-        </div>
-      }
-    }
+    <h1>Marvel Rivals tier list</h1>
+    <p class="lede">
+      Heroes ranked by win rate in matches Rivals Pulse players recorded, all ranks together.
+      <a class="lede-link" routerLink="/how-we-count">How we count</a>
+    </p>
   </header>
 
-  @if (showSeasonPicker() || showModePicker()) {
-    <section class="toolbar" aria-label="Tier list filters">
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+  @let v = view();
+  @let showMeta = v !== null && v.state === 'ready';
+
+  @if (showSeasonPicker() || showModePicker() || showMeta) {
+    <div class="toolbar">
       @if (showModePicker()) {
         <app-filter-select
           label="Mode"
@@ -43,7 +30,16 @@
           (valueChange)="chooseSeason($event)"
         />
       }
-    </section>
+      @if (v !== null && showMeta) {
+        <p class="meta">
+          @if (v.season?.dateRange; as range) {
+            {{ range }} &middot;
+          }
+          {{ v.matchesCountedLabel }} counted &middot; Heroes need {{ v.minimumMatches }}
+          appearances to be placed &middot; Each tile: win rate, then pick rate and games.
+        </p>
+      }
+    </div>
   }
 
   @if (failed()) {
@@ -56,7 +52,7 @@
       <h2>Loading the tier list</h2>
       <p>Fetching the latest counted matches.</p>
     </section>
-  } @else if (view(); as v) {
+  } @else if (v !== null) {
     @if (v.modeCaveat; as caveat) {
       <p class="notice" role="note">{{ caveat }}</p>
     }
@@ -66,63 +62,46 @@
     }
 
     @if (v.state === 'ready') {
-      <section class="meta-strip" aria-label="Tier list metadata">
-        @if (v.season; as season) {
-          @if (season.dateRange; as range) {
-            <span>{{ range }}</span>
-          }
-        }
-        <span>{{ v.matchesCountedLabel }} counted</span>
-        <span>Heroes need {{ v.minimumMatches }} appearances to be placed</span>
-      </section>
-
-      <section class="tiers" aria-label="Hero tiers">
+      <ol class="tiers">
         @for (tier of v.tiers; track tier.name) {
-          <article class="tier-row tier-{{ tier.name }}">
-            <div class="tier-label">
-              <strong>{{ tier.name }}</strong>
-              <span>{{ tier.heroes.length }}</span>
-            </div>
+          <li class="tier-row tier-{{ tier.name }}">
+            <h2 class="tier-label">
+              <span class="visually-hidden">Tier </span>
+              <span class="tier-letter">{{ tier.name }}</span>
+              <span class="visually-hidden">, </span>
+              <span class="tier-count">
+                {{ tier.heroes.length }}<span class="tier-unit">{{ tier.heroes.length === 1 ? ' hero' : ' heroes' }}</span>
+              </span>
+            </h2>
 
-            <div class="hero-grid">
-              @for (hero of tier.heroes; track hero.hero) {
-                <article class="hero-card">
-                  <img
-                    [src]="hero.imageUrl"
-                    [alt]="hero.name"
-                    width="64"
-                    height="64"
-                    loading="lazy"
-                    (error)="onImageError($event)"
-                  />
-                  <div>
-                    <strong>{{ hero.name }}</strong>
-                    @if (hero.role) {
-                      <span>{{ hero.role }}</span>
-                    }
-                  </div>
-                  <dl>
-                    <div>
-                      <dt><abbr title="Win rate">WR</abbr></dt>
-                      <dd>{{ hero.winRateLabel }}</dd>
-                    </div>
-                    <div>
-                      <dt>Pick</dt>
-                      <dd>{{ hero.pickRateLabel }}</dd>
-                    </div>
-                    <div>
-                      <dt>Games</dt>
-                      <dd>{{ hero.appearancesLabel }}</dd>
-                    </div>
-                  </dl>
-                </article>
-              } @empty {
-                <p class="empty-tier">No heroes in this tier yet.</p>
-              }
-            </div>
-          </article>
+            @if (tier.heroes.length > 0) {
+              <ul class="hero-grid">
+                @for (hero of tier.heroes; track hero.hero) {
+                  <li class="hero-tile">
+                    <img
+                      [src]="hero.imageUrl"
+                      alt=""
+                      width="40"
+                      height="40"
+                      loading="lazy"
+                      (error)="onImageError($event)"
+                    />
+                    <span class="hero-name">{{ hero.name }}</span>
+                    <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
+                    <span class="hero-caption">
+                      <span class="hero-pick"
+                        ><span class="visually-hidden">, pick rate </span>{{ hero.pickRateLabel }}<span aria-hidden="true"> pick &middot; </span></span
+                      ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="empty-tier">No heroes in this tier yet.</p>
+            }
+          </li>
         }
-      </section>
+      </ol>
     } @else {
       <section class="state-panel">
         <h2>Not enough data yet {{ v.scopeLabel }}</h2>
@@ -145,10 +124,7 @@
       <section class="building" aria-labelledby="building-title">
         <div class="section-heading">
           <h2 id="building-title">Progress toward {{ v.minimumMatches }} appearances</h2>
-          <p>
-            Not enough data yet: these heroes need {{ v.minimumMatches }} appearances before they
-            are placed in a tier.
-          </p>
+          <p>Heroes need {{ v.minimumMatches }} appearances before they are placed in a tier.</p>
         </div>
 
         <app-hero-progress-list [rows]="v.building" />
@@ -156,9 +132,10 @@
     }
 
     <p class="method-note">
-      Rivals Pulse has no rank breakdown, so every figure covers all ranks together. A hero on both
-      teams of one match is counted twice. Matches without a win or a loss, and matches where the
-      game did not say which mode they were, are left out.
+      Rivals Pulse has no rank breakdown, so every figure covers all ranks together. Quick Match and
+      Competitive are counted together unless you pick a single mode. A hero on both teams of one
+      match is counted twice. Matches without a win or a loss, and matches where the game did not
+      say which mode they were, are left out.
     </p>
   }
 </section>
