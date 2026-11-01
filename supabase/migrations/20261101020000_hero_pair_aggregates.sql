@@ -2,7 +2,7 @@
 -- half-season, game mode and rank bucket, kept as anonymous counts that outlive the raw rows. No uid,
 -- name, fingerprint or per-player row is stored here. Nothing is published by this migration.
 --
--- A separate family, as the extended aggregates (issue 176) are: it owns its rebuild and freeze and
+-- A separate family, as the extended aggregates are: it owns its rebuild and freeze and
 -- does not touch `fill_hero_aggregates`. `recompute_hero_pair_aggregates` rebuilds every half-season
 -- that still has raw rows and is not frozen, from scratch, so a late result or a `forget_player`
 -- shows up on the next run and running it twice changes nothing. `purge_expired_participants` calls
@@ -16,8 +16,12 @@
 -- Recorder diversity. The totals table records, per half-season, mode and rank bucket, how many
 -- distinct recorders contributed and how many matches the busiest one did (counts only, never who).
 -- `read_hero_pairs` returns a rank bucket of 0 or more only when `community_bucket_shown` passes for
--- it. Unknown rank (-1) is returned without that gate, as `hero_matchups` is read today: with one
--- uploader the gate would publish nothing.
+-- that mode's own totals. Unknown rank (-1) is returned without that gate, as `hero_matchups` is read
+-- today: with one uploader the gate would publish nothing.
+--
+-- `read_hero_matchups` already publishes ungated all-ranks 'vs' counts. Once buckets of 0 or more
+-- exist, 'vs' rank buckets cannot be published while that reader stays ungated, because a bucket
+-- could be recovered by subtracting the rest from its all-ranks total.
 --
 -- Additive: no existing table is touched. `purge_expired_participants` is restated with the same
 -- signature (a body change) and calls the new freeze after the other families' own.
@@ -276,8 +280,8 @@ begin
 end
 $$;
 
--- The purge of issue 176 with one step added: the hero pairs are frozen too, ahead of the delete. It
--- must keep calling every freeze there is. Returns the scoreboard rows deleted, as before.
+-- Freezes every aggregate family before deleting; a later restatement must keep calling every freeze.
+-- Returns the scoreboard rows deleted.
 create or replace function public.purge_expired_participants() returns integer
 language plpgsql
 set search_path = ''
@@ -311,11 +315,10 @@ $$;
 --  * `hero_pair_aggregates` keeps a pair only when its decided matches over every mode and bucket
 --    reach `hero_pair_min_matches()`, so a subset of modes can leave a pair below the minimum; the
 --    minimum is applied again here to the row's own sum.
---  * A rank bucket of 0 or more is returned only when `community_bucket_shown` passes for its totals.
---    Distinct recorders cannot be added across modes, so the gate reads the most recorders of any
---    one chosen mode (a lower bound on the distinct recorders) and the sum of every mode's busiest
---    recorder (an upper bound on the busiest one): when it passes here it passes for the real figures.
---    No figure returned is a total that includes a hidden bucket. Recorder counts are not returned.
+--  * A rank bucket of 0 or more is returned only from the (half-season, mode, bucket) rows whose own
+--    totals pass `community_bucket_shown`, checked before anything is summed. Distinct recorders
+--    cannot be added across modes, and a gate on a combined figure would let a caller subtract one
+--    list of modes from another and recover a hidden mode. Recorder counts are not returned.
 --  * Rank bucket -1 (unknown) is returned ungated.
 -- The rows come back in a stable order so a caller can page through them (PostgREST cuts a page at
 -- 1000 rows).
@@ -336,14 +339,6 @@ stable
 security definer
 set search_path = ''
 as $$
-  with shown as (
-    select t.half_season, t.rank_bucket
-    from public.hero_pair_totals t
-    where t.rank_bucket >= 0 and t.play_mode_id = any (p_play_mode_ids)
-    group by t.half_season, t.rank_bucket
-    having public.community_bucket_shown(
-             sum(t.matches)::integer, max(t.recorders), sum(t.top_recorder_matches)::integer)
-  )
   select x.half_season, x.rank_bucket, x.kind, x.hero_id, x.other_hero_id,
          sum(x.decided_matches)::integer,
          sum(x.decided_lines)::integer,
@@ -351,16 +346,61 @@ as $$
   from public.hero_pair_aggregates x
   where x.play_mode_id = any (p_play_mode_ids)
     and (x.rank_bucket < 0
-         or exists (select 1 from shown s where s.half_season = x.half_season and s.rank_bucket = x.rank_bucket))
+         or exists (
+           select 1 from public.hero_pair_totals t
+           where t.half_season = x.half_season
+             and t.play_mode_id = x.play_mode_id
+             and t.rank_bucket = x.rank_bucket
+             and public.community_bucket_shown(t.matches, t.recorders, t.top_recorder_matches)))
   group by x.half_season, x.rank_bucket, x.kind, x.hero_id, x.other_hero_id
   having sum(x.decided_matches) >= public.hero_pair_min_matches()
   order by x.half_season, x.rank_bucket, x.kind, x.hero_id, x.other_hero_id
 $$;
 
--- Checked when the migration runs, so a wrong constant fails the push.
+-- Checked when the migration runs, so a wrong constant or a leaking gate fails the push.
 do $$
 begin
   assert public.hero_pair_min_matches() > 0, 'a pair must need at least one decided match';
+end
+$$;
+
+-- The gate is the privacy rule, so it is exercised on fixtures in a half-season that does not exist:
+-- a bucket of one recorder (mode 0) and a bucket of three (mode 1), each with one 10-match pair. Only
+-- the second may come back, alone and in a list of both modes. The fixtures are rolled back by the
+-- sentinel exception (P0042). Nothing but a failed assertion can fail the push: if the fixtures
+-- cannot be written for any other reason, the check is skipped with a warning.
+do $$
+declare
+  checked boolean := false;
+  one_recorder_returned boolean;
+  both_modes_matches integer;
+begin
+  begin
+    insert into public.hero_pair_aggregates
+      (half_season, play_mode_id, rank_bucket, kind, hero_id, other_hero_id, matches, decided_matches, decided_lines, wins)
+    values (99.0, 0, 0, 'vs', 1, 2, 10, 10, 10, 5), (99.0, 1, 0, 'vs', 1, 2, 10, 10, 10, 5);
+    insert into public.hero_pair_totals
+      (half_season, play_mode_id, rank_bucket, matches, decided_matches, recorders, top_recorder_matches)
+    values (99.0, 0, 0, 10, 10, 1, 10), (99.0, 1, 0, 10, 10, 3, 5);
+
+    select exists (select 1 from public.read_hero_pairs(array[0]::smallint[]) r where r.half_season = 99.0)
+      into one_recorder_returned;
+    select coalesce(sum(r.decided_matches), 0) into both_modes_matches
+      from public.read_hero_pairs(array[0, 1]::smallint[]) r
+      where r.half_season = 99.0;
+    checked := true;
+
+    raise exception 'roll back the gate fixtures' using errcode = 'P0042';
+  exception
+    when sqlstate 'P0042' then null;
+    when others then
+      raise warning 'hero pair gate check skipped (%)', sqlerrm;
+  end;
+
+  if checked then
+    assert not one_recorder_returned, 'a one-recorder rank bucket must be hidden';
+    assert both_modes_matches = 10, 'only the bucket that passes may be returned, whatever modes are asked for';
+  end if;
 end
 $$;
 
