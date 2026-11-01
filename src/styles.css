@@ -37,8 +37,9 @@
   /* The shared eyebrow's colour on a light surface; a dark surface sets --eyebrow-color to --accent-on-dark. */
   --eyebrow: #0f6f7a;
   --teal-bright: #77eed7;
-  /* Home page type scale: the hero headline, a band's h2 and a card's h3. At 1366px that is 60px, 32px and 18px. */
+  /* Type scale, chosen by a heading's visual role rather than its tag. At 1366px: the home hero 60px, a page title 40px, a section heading 32px, a card or panel heading 18px. */
   --type-hero: clamp(2.25rem, 4.4vw, 3.75rem);
+  --type-page-title: clamp(1.75rem, 3vw, 2.5rem);
   --type-h2: clamp(1.5rem, 2.4vw, 2rem);
   --type-h3: 1.125rem;
   --focus-ring: rgba(3, 159, 159, 0.2);

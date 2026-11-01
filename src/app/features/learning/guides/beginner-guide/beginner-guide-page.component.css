@@ -36,7 +36,7 @@ dd {
 h1 {
   max-width: 860px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: var(--type-page-title);
   line-height: 1.06;
   font-weight: 800;
 }
@@ -140,7 +140,7 @@ h1 {
 }
 
 .role-panel h2 {
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
   line-height: 1.12;
 }
 
@@ -197,7 +197,7 @@ h1 {
 }
 
 .lesson-heading h2 {
-  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  font-size: var(--type-h2);
   line-height: 1.05;
 }
 
@@ -233,7 +233,7 @@ dd {
 .scenario-card h3,
 .practice-card h3 {
   color: var(--text);
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
   line-height: 1.12;
 }
 
@@ -285,7 +285,7 @@ dt {
 }
 
 .feedback-panel h2 {
-  font-size: 1.65rem;
+  font-size: var(--type-h3);
   line-height: 1.05;
 }
 
@@ -368,7 +368,7 @@ dt {
 }
 
 .section-heading h2 {
-  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  font-size: var(--type-h2);
 }
 
 .practice-card {

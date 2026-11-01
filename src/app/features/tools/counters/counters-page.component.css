@@ -49,7 +49,7 @@ p {
 
 h1 {
   color: #ffffff;
-  font-size: clamp(2.2rem, 4.5vw, 4.2rem);
+  font-size: var(--type-page-title);
   line-height: 0.96;
   text-shadow: 0 14px 26px rgba(0, 0, 0, 0.34);
 }
@@ -124,7 +124,7 @@ h1 {
 
 .dive-lab-heading h2 {
   color: #102a31;
-  font-size: clamp(1.65rem, 3vw, 2.65rem);
+  font-size: var(--type-h2);
   line-height: 1;
 }
 
@@ -617,7 +617,7 @@ h1 {
 .selected-profile h2 {
   margin-top: 4px;
   color: var(--text);
-  font-size: clamp(1.8rem, 3vw, 2.9rem);
+  font-size: var(--type-h2);
   line-height: 1;
 }
 

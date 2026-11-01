@@ -37,7 +37,7 @@ app-eyebrow {
 h1 {
   max-width: 820px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: var(--type-page-title);
   line-height: 1.06;
   font-weight: 800;
 }
@@ -181,7 +181,7 @@ h1 {
 .quick-check h2,
 .support-card > h2 {
   color: var(--text);
-  font-size: 1.15rem;
+  font-size: var(--type-h3);
 }
 
 .quick-check article {
@@ -223,7 +223,7 @@ li,
 }
 
 .guide-section h2 {
-  font-size: 1.45rem;
+  font-size: var(--type-h3);
 }
 
 ul {

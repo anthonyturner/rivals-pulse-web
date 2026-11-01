@@ -23,7 +23,7 @@
 .community-page__title {
   max-width: 850px;
   color: var(--text);
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: var(--type-page-title);
   font-weight: 850;
   line-height: 1.04;
 }

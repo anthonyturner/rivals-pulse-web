@@ -21,7 +21,7 @@
 h2 {
   margin: 0 0 10px;
   color: var(--text);
-  font-size: 1.25rem;
+  font-size: var(--type-h3);
 }
 
 p,

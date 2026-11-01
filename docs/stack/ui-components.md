@@ -91,3 +91,23 @@ in `docs/tech-stack.md`; if it has not, skip this section.
 Whatever the styling approach, keep styles component-scoped: no global style
 overrides, and avoid `::ng-deep`, which leaks a component's styles into every
 component below it.
+
+### Type scale
+
+Heading sizes come from four tokens in `src/styles.css`; a component never
+sets a literal size on a heading. Choose the token by the heading's visual role,
+not its tag (many cards use an `<h2>`).
+
+| Token | At 1366px | Use for |
+| --- | --- | --- |
+| `--type-hero` | 60px | The home hero headline only. |
+| `--type-page-title` | 40px | The page `<h1>`, including the shared `app-page-header`. |
+| `--type-h2` | 32px | A section heading that opens a band or a page section. |
+| `--type-h3` | 18px | A card, panel or list-item heading. |
+
+- Set only `font-size: var(--type-...)`. Weight, line height and letter spacing
+  stay with the component.
+- A new heading takes the nearest token; do not make a heading larger than its
+  role. Changing a size for the whole site is one edit in `styles.css`.
+- Numeric readouts (stat figures, tier letters, step numerals) and body text are
+  not headings and keep their own sizes.
