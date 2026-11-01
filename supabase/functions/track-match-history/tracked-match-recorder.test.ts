@@ -19,12 +19,18 @@ function fakeClient(outcome: { error: { message: string } | null } | Error) {
 describe('recordTrackedMatchRecorder', () => {
   it('stores the recorder against the tracked match, replacing an earlier one', async () => {
     const { client, calls } = fakeClient({ error: null });
+    const before = Date.now();
     await recordTrackedMatchRecorder(client, 42, 'abc123');
-    assert.deepEqual(calls, [[
-      'tracked_match_recorders',
-      { tracked_match_id: 42, recorded_by: 'abc123' },
-      { onConflict: 'tracked_match_id' },
-    ]]);
+    const after = Date.now();
+    assert.equal(calls.length, 1);
+    const [table, row, options] = calls[0] as [string, Record<string, unknown>, unknown];
+    assert.equal(table, 'tracked_match_recorders');
+    assert.deepEqual(options, { onConflict: 'tracked_match_id' });
+    assert.deepEqual(Object.keys(row).sort(), ['recorded_at', 'recorded_by', 'tracked_match_id']);
+    assert.equal(row.tracked_match_id, 42);
+    assert.equal(row.recorded_by, 'abc123');
+    const recordedAt = Date.parse(String(row.recorded_at));
+    assert.ok(recordedAt >= before && recordedAt <= after, 'recorded_at is the time of this write');
   });
 
   for (const [name, outcome] of [
