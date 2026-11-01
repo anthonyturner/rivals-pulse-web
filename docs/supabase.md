@@ -401,8 +401,12 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   today; a bucket of 0 or more only from the (half-season, mode, bucket) rows whose own totals pass
   `community_bucket_shown`, checked before the modes are summed: gating a combined figure would let a
   caller subtract one list of modes from another and recover a hidden mode. Recorder counts are never
-  returned. It returns a set of rows, so a caller that reads more than
-  1000 of them pages through the (stable) order with a range.
+  returned. It returns a set of rows, so a caller that reads more than 1000 of them pages through it
+  with a range and an explicit `order`, not the function's return order. The website reads it through
+  `GET /api/hero-pairs` ([`src/hero-pairs-read.ts`](../src/hero-pairs-read.ts)), which pages with
+  `limit`, `offset` and `order=half_season,rank_bucket,kind,hero_id,other_hero_id` until a page comes
+  back empty, for Competitive and Quick Match, and builds the "all" band from rank bucket -1 alone;
+  Pulse Atlas publishes that answer as `community-stats` ([pulse-atlas.md](pulse-atlas.md)).
 - Once a rank source exists, an all-ranks total built by adding buckets would include a bucket that
   was hidden; whoever adds that must not publish it next to the visible ones. `read_hero_matchups`
   already publishes ungated all-ranks `vs` counts, so `vs` rank buckets of 0 or more cannot be
