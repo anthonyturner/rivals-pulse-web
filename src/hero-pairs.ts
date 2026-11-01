@@ -7,6 +7,7 @@ import type {
 } from './contracts/hero-pairs.model.js';
 import {
   BLENDED_PLAY_MODE_IDS,
+  chooseHalfSeason,
   halfSeasonTimeline,
   WIN_RATE_PRIOR_MATCHES,
   type HeroStatsSource,
@@ -91,50 +92,38 @@ export function deriveHeroPairs(
   source: HeroStatsSource,
   options: DeriveHeroPairsOptions,
 ): HeroPairsDerivation {
-  const { current, describe, previousOf } = halfSeasonTimeline(
+  const timeline = halfSeasonTimeline(
     source.halfSeasons,
     [...rows.map((row) => row.halfSeason), ...source.heroes.map((row) => row.halfSeason)],
     options.now,
   );
   const excludedGameIds = new Set<number>();
+  const snapshots = new Map<number, HalfSeasonSnapshot>();
   const snapshot = (id: number): HalfSeasonSnapshot => {
-    const result = snapshotOf(rows, source, id, options.baseGameIdByGameId);
-    result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
+    let result = snapshots.get(id);
+
+    if (result === undefined) {
+      result = snapshotOf(rows, source, id, options.baseGameIdByGameId);
+      result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
+      snapshots.set(id, result);
+    }
 
     return result;
   };
-  const finish = (
-    shown: number | undefined,
-    inPlaceOf: number | undefined,
-    band: HeroPairsBand | undefined,
-  ): HeroPairsDerivation => ({
+  const { shown, inPlaceOf } = chooseHalfSeason(timeline, undefined, (id) => hasPairs(snapshot(id).band));
+  const band = shown === undefined ? undefined : snapshot(shown).band;
+
+  return {
     pairs: {
       status: band !== undefined && hasPairs(band) ? 'ready' : 'not-enough-data',
       minimumMatches: HERO_PAIR_MIN_MATCHES,
       priorMatches: WIN_RATE_PRIOR_MATCHES,
-      halfSeason: shown === undefined ? null : describe(shown),
-      inPlaceOf: inPlaceOf === undefined ? null : describe(inPlaceOf),
+      halfSeason: shown === undefined ? null : timeline.describe(shown),
+      inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
       bands: band === undefined ? [] : [band],
     },
     excludedGameIds: [...excludedGameIds].sort((a, b) => a - b),
-  });
-
-  if (current === undefined) {
-    return finish(undefined, undefined, undefined);
-  }
-
-  const now = snapshot(current);
-  const previous = previousOf(current);
-
-  if (!hasPairs(now.band) && previous !== undefined) {
-    const before = snapshot(previous);
-
-    if (hasPairs(before.band)) {
-      return finish(previous, current, before.band);
-    }
-  }
-
-  return finish(current, undefined, now.band);
+  };
 }
 
 function hasPairs(band: HeroPairsBand): boolean {
@@ -225,6 +214,8 @@ function pairsOf(
     const other = baseIdOf(row.otherGameHeroId);
 
     // A hero with itself (also Deadpool with another form of Deadpool) says nothing about a pair.
+    // Merging forms adds the rows' matches, so the rare match in which the two teams field different
+    // Deadpool forms against the same hero counts once per form: `matches` can overcount slightly.
     if (hero === undefined || other === undefined || hero === other || row.decidedLines <= 0) {
       continue;
     }

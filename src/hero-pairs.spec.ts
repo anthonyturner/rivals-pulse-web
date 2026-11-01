@@ -155,7 +155,10 @@ describe('deriveHeroPairs', () => {
       expect(band.heroes).toEqual([{ heroId: DEADPOOL, appearances: 20, wins: 10 }]);
     });
 
-    it('applies the minimum again after the merge, so forms that are each thin and together enough count', () => {
+    // A guard, not today's data: the database drops every game-id pair below the minimum before this
+    // code sees it, so thin rows like these do not arrive. It pins that the minimum is checked on the
+    // merged count, so the answer stays right if that database function ever lets thinner rows through.
+    it('guards the minimum on the merged count if thin rows ever reach the merge', () => {
       const thin = HERO_PAIR_MIN_MATCHES - 1;
       const { pairs } = derive([
         row('vs', DEADPOOL_VANGUARD, THOR, thin, 4),

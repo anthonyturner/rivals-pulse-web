@@ -1,6 +1,12 @@
 import type { HeroPairs } from './contracts/hero-pairs.model.js';
 import { baseGameIdByGameId } from './hero-game-ids.js';
-import { deriveHeroPairs, HERO_PAIR_PLAY_MODE_IDS, type HeroPairKind, type HeroPairRow } from './hero-pairs.js';
+import {
+  deriveHeroPairs,
+  HERO_PAIR_PLAY_MODE_IDS,
+  UNKNOWN_RANK_BUCKET,
+  type HeroPairKind,
+  type HeroPairRow,
+} from './hero-pairs.js';
 import { readHeroStatsSource } from './hero-stats-read.js';
 import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from './supabase-rpc.js';
 
@@ -19,6 +25,9 @@ const PAGE_SIZE = 1000;
 /** Every row is unique on these columns, so sorting by them makes a range cut the same way on every page. */
 const PAGE_ORDER = ['half_season', 'rank_bucket', 'kind', 'hero_id', 'other_hero_id'] as const;
 
+/** Only the rows the `all` band is built from, so the database never has to send the others. */
+const PAGE_FILTERS = { rank_bucket: `eq.${UNKNOWN_RANK_BUCKET}` } as const;
+
 /** Stops a function that ignores `offset` from being read forever; far above any real count of pairs. */
 const MAX_PAGES = 200;
 
@@ -35,6 +44,7 @@ export async function fetchHeroPairRows(
   playModeIds: readonly number[] = HERO_PAIR_PLAY_MODE_IDS,
 ): Promise<HeroPairRow[]> {
   const rows: HeroPairRow[] = [];
+  const seen = new Set<string>();
 
   for (let page = 0; page < MAX_PAGES; page += 1) {
     const body = await callSupabaseFunction(
@@ -43,7 +53,7 @@ export async function fetchHeroPairRows(
       { p_play_mode_ids: playModeIds },
       env,
       fetcher,
-      { offset: rows.length, limit: PAGE_SIZE, order: PAGE_ORDER },
+      { offset: rows.length, limit: PAGE_SIZE, order: PAGE_ORDER, filters: PAGE_FILTERS },
     );
     const received = parseHeroPairRows(body);
 
@@ -51,7 +61,17 @@ export async function fetchHeroPairRows(
       return rows;
     }
 
-    rows.push(...received);
+    for (const row of received) {
+      const key = [row.halfSeason, row.rankBucket, row.kind, row.gameHeroId, row.otherGameHeroId].join('|');
+
+      // A row twice means the counts were rebuilt between two pages, so the pages do not fit together.
+      if (seen.has(key)) {
+        throw new Error(`${READ_FUNCTION}: the counts changed while they were being read; try again`);
+      }
+
+      seen.add(key);
+      rows.push(row);
+    }
   }
 
   throw new Error(`${READ_FUNCTION}: more than ${MAX_PAGES} pages of rows`);

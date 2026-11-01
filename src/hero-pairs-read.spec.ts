@@ -186,7 +186,7 @@ describe('fetchHeroPairRows', () => {
     await fetchHeroPairRows(ENV, answering({ read_hero_pairs: { body: [] } }, seen));
 
     expect(seen[0].url).toBe(
-      'https://example.supabase.co/rest/v1/rpc/read_hero_pairs?limit=1000&offset=0&order=half_season,rank_bucket,kind,hero_id,other_hero_id',
+      'https://example.supabase.co/rest/v1/rpc/read_hero_pairs?limit=1000&offset=0&order=half_season,rank_bucket,kind,hero_id,other_hero_id&rank_bucket=eq.-1',
     );
     expect(seen[0].init?.method).toBe('POST');
     expect(JSON.parse(String(seen[0].init?.body))).toEqual({ p_play_mode_ids: [0, 1] });
@@ -205,6 +205,25 @@ describe('fetchHeroPairRows', () => {
     expect(seen.every((call) => new URL(call.url).searchParams.get('order') === 'half_season,rank_bucket,kind,hero_id,other_hero_id')).toBeTrue();
   });
 
+  it('asks only for rows with no rank, whatever page it reads', async () => {
+    const all = Array.from({ length: 1200 }, (_, index) => pairRow('with', 1000 + index, 5000, 10));
+    const seen: Seen[] = [];
+
+    await fetchHeroPairRows(ENV, answering({ read_hero_pairs: { body: all } }, seen));
+
+    expect(seen.length).toBe(3);
+    expect(seen.every((call) => new URL(call.url).searchParams.get('rank_bucket') === 'eq.-1')).toBeTrue();
+  });
+
+  it('throws when a row comes twice, which means the counts were rebuilt between two pages', async () => {
+    const first = Array.from({ length: 1000 }, (_, index) => pairRow('with', 1000 + index, 5000, 10));
+    const rebuilt = [...first.slice(0, 999), pairRow('with', 1999, 5000, 10), first[0]];
+
+    await expectAsync(fetchHeroPairRows(ENV, answering({ read_hero_pairs: { body: rebuilt } }))).toBeRejectedWithError(
+      /counts changed while they were being read/,
+    );
+  });
+
   it('keeps reading when the server cuts pages shorter than asked for', async () => {
     const all = Array.from({ length: 700 }, (_, index) => pairRow('with', 1000 + index, 5000, 10));
 
@@ -213,10 +232,21 @@ describe('fetchHeroPairRows', () => {
     expect(rows.length).toBe(700);
   });
 
-  it('gives up on a server that keeps answering the same full page', async () => {
-    const stuck: typeof fetch = async () => new Response(JSON.stringify([pairRow('vs', 1011, 1022, 10)]), { status: 200 });
+  it('gives up on a server that never runs out of new rows', async () => {
+    let calls = 0;
+    const stuck: typeof fetch = async () => {
+      calls += 1;
+
+      return new Response(JSON.stringify([pairRow('vs', 1000 + calls, 1022, 10)]), { status: 200 });
+    };
 
     await expectAsync(fetchHeroPairRows(ENV, stuck)).toBeRejectedWithError(/more than 200 pages/);
+  });
+
+  it('reports a server that keeps answering the same page as rows that changed under it', async () => {
+    const same: typeof fetch = async () => new Response(JSON.stringify([pairRow('vs', 1011, 1022, 10)]), { status: 200 });
+
+    await expectAsync(fetchHeroPairRows(ENV, same)).toBeRejectedWithError(/counts changed while they were being read/);
   });
 
   it('names every missing variable and never a key value', async () => {

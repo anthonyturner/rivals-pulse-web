@@ -2081,6 +2081,41 @@ describe('resolveCommunityStats', () => {
     expect(warnings[0]).toMatch(/the published file is unusable/);
   });
 
+  it('takes the fallback when the live answer holds a credential-like value, as the build would refuse it', async () => {
+    const leaky = { ...liveAnswer(), halfSeason: { id: 1, label: 'Bearer abc123', startsAt: null, endsAt: null } };
+
+    const { input, warnings } = await resolve(async () => leaky, publishedFiles());
+
+    expect(input?.source).toBe('test');
+    expect(warnings[0]).toMatch(/credential/);
+  });
+
+  it('leaves the dataset out when the published file holds a credential-like value', async () => {
+    const data = communityStatsData({ season: { id: 2, label: 'sb_secret_abc' } });
+    const unsafe: PulseAtlasFile = {
+      path: PATH,
+      content: `${JSON.stringify({ schemaVersion: 1, generatedAt: GENERATED_AT, source: 'test', data })}
+`,
+    };
+
+    const { input, warnings } = await resolve(failing('HTTP 500'), [unsafe]);
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/the published file is unusable/);
+  });
+
+  it('publishes, with no warning, a current half-season that has no pair at the minimum yet', async () => {
+    const bare = {
+      ...liveAnswer(),
+      bands: [{ key: 'all', label: 'All Ranks', decidedMatches: 3, heroes: [], counters: [], synergies: [] }],
+    };
+
+    const { input, warnings } = await resolve(async () => bare, publishedFiles());
+
+    expect(input?.source).toBe('live');
+    expect(warnings).toEqual([]);
+  });
+
   it('never throws, whatever the read does', async () => {
     await expectAsync(resolve(() => Promise.reject('a string'))).toBeResolved();
     await expectAsync(resolve(async () => null)).toBeResolved();

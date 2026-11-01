@@ -196,20 +196,33 @@ async function fetchPublished() {
   ];
   const results = await Promise.all(
     paths.map(async (path) => {
-      try {
-        const response = await fetch(`${publishedBase}/${path}`, {
-          signal: AbortSignal.timeout(PUBLISHED_TIMEOUT_MS),
-        });
+      // community-stats is the one file the run cannot rebuild if the read fails, so it is tried
+      // again unless the answer is a plain 404 (never published).
+      const attempts = path === `${PULSE_ATLAS_BASE_PATH}/community-stats.json` ? FETCH_ATTEMPTS : 1;
+      let lastError;
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+      for (let attempt = 1; attempt <= attempts; attempt += 1) {
+        try {
+          const response = await fetch(`${publishedBase}/${path}`, {
+            signal: AbortSignal.timeout(PUBLISHED_TIMEOUT_MS),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          return { path, content: await response.text() };
+        } catch (error) {
+          lastError = error;
+
+          if (String(error).includes('HTTP 404')) {
+            break;
+          }
         }
-
-        return { path, content: await response.text() };
-      } catch (error) {
-        console.warn(`No published ${path} to compare with (${error}); building it fresh.`);
-        return undefined;
       }
+
+      console.warn(`No published ${path} to compare with (${lastError}); building it fresh.`);
+      return undefined;
     }),
   );
 

@@ -6,6 +6,8 @@ export interface SupabasePage {
   limit: number;
   /** Columns to sort by before the range is cut, so pages never overlap or skip on the function's own order. */
   order?: readonly string[];
+  /** PostgREST column filters, such as `{ rank_bucket: 'eq.-1' }`, applied before the range is cut. */
+  filters?: Readonly<Record<string, string>>;
 }
 
 export type SupabaseReadEnv = Readonly<Record<string, string | undefined>>;
@@ -100,7 +102,9 @@ export async function callSupabaseFunction(
 function pageQuery(page: SupabasePage): string {
   const order = page.order?.length ? `&order=${page.order.join(',')}` : '';
 
-  return `?limit=${page.limit}&offset=${page.offset}${order}`;
+  const filters = Object.entries(page.filters ?? {}).map(([column, filter]) => `&${column}=${filter}`);
+
+  return `?limit=${page.limit}&offset=${page.offset}${order}${filters.join('')}`;
 }
 
 async function errorCodeOf(response: Response): Promise<string | undefined> {

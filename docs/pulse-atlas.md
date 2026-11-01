@@ -291,9 +291,13 @@ file** for the half-season shown, listed in the manifest:
   hero is never paired with itself (also not Deadpool with another form of
   Deadpool).
 - **Hero ids** are the game's numeric ids, as in the tier list; join them to
-  `heroes.json`. Deadpool's three role forms are merged under his base id, 1057,
-  and the minimum is applied again after the merge, so forms that are each thin
-  and together enough count as one pair. A game id that no hero in
+  `heroes.json`. Deadpool's three role forms are merged under his base id, 1057.
+  The database drops every pair of game ids below the minimum before the API
+  sees it, so each form needs the minimum on its own, and the merged count can
+  understate Deadpool's real total. The minimum is applied again after the merge,
+  as a guard if the database function ever lets thinner pairs through. The merge
+  adds the forms' match counts, so in the rare match where the two teams field
+  different Deadpool forms, `matches` can count it once per form. A game id that no hero in
   `hero-game-ids.json` has (hero id 0 is "no hero recorded") is left out of the
   file; a `heroId` that no hero in `heroes.json` has as its `gameId` is
   published, with a warning, as in the tier list.
@@ -308,11 +312,23 @@ file** for the half-season shown, listed in the manifest:
 - **It never holds up the feed.** The endpoint and the database function behind
   it are deployed apart from this repository, so a run can come before them, and
   a failure must not stop heroes, the tier list and the rest from refreshing. When
-  fetching `/api/hero-pairs` fails (not deployed yet, an error, an answer that
-  is not the expected shape or fails the checks above), the generator keeps the
-  last published `community-stats.json` exactly as it is (same bytes, same hash)
-  and warns; only when none was ever published does it leave the dataset out of
-  that run, with a warning. A reader must treat the file as absent until it exists.
+  fetching `/api/hero-pairs` fails (not deployed yet, an error, an answer with no
+  half-season yet, an answer that is not the expected shape or fails the checks
+  above, including the private-key and credential-value checks), the generator
+  keeps the last published `community-stats.json` exactly as it is (same bytes,
+  same hash) and warns. It leaves the dataset out of that run, with a warning,
+  in three cases:
+  - none was ever published (the published file answers 404);
+  - the published copy no longer passes the same checks;
+  - the published copy could not be read at all, for example because the Pages
+    site was unreachable (that one read is tried three times, unless it is a 404).
+
+  A run that leaves the file out removes it from the next deployment until a run
+  builds it again. A current half-season that has no pair at the minimum yet is
+  not a failure: the file is published with empty `counters` and `synergies`
+  (or the previous half-season's, see `inPlaceOfSeasonId`) and the run does not
+  warn. Only an answer with no half-season at all warns. A reader must treat the
+  file as absent until it exists.
 - The envelope's `source` is `rivals-pulse-web:hero-stats-api`.
 
 ### The hero `gameId`

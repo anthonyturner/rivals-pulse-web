@@ -1939,6 +1939,20 @@ function describeCommunityStatsProblem(data: unknown): string | undefined {
 }
 
 /**
+ * The gate a community-stats input must pass to be published: its shape and, as `findProblems` does
+ * for every dataset, nothing private in a key and no credential-like value in a string. Checked
+ * here as well so a fallback is chosen before the build, not by the build failing.
+ */
+function describeCommunityStatsInputProblem(data: unknown): string | undefined {
+  const problems = [
+    ...(describeCommunityStatsProblem(data)?.split('; ') ?? []),
+    ...findUnsafeContent(data, 'community-stats', PRIVATE_KEY),
+  ];
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
+}
+
+/**
  * The inputs with community-stats replaced by its published form (allow-listed keys, rows by hero
  * id), plus a warning for each hero id that no hero in heroes.json has as its `gameId`: it is
  * published all the same, because a new hero reaches the counts before its id reaches the map. A
@@ -1988,7 +2002,7 @@ export interface ResolveCommunityStatsOptions {
  * it answers with something that passes the gate; otherwise the last published file, as it is
  * (bytes and hash unchanged); and only when none was ever published, or the published one no longer
  * passes the gate, no input at all, so the run leaves the dataset out. Each fallback is reported
- * through `warn`. The dataset depends on an endpoint and a database function that are deployed apart
+ * through `warn`. The gate is the shape check plus the private-key and credential-value checks. The dataset depends on an endpoint and a database function that are deployed apart
  * from this repository's push to the default branch, so a run can come before them.
  */
 export async function resolveCommunityStats(options: ResolveCommunityStatsOptions): Promise<PulseAtlasInput | undefined> {
@@ -1996,7 +2010,7 @@ export async function resolveCommunityStats(options: ResolveCommunityStatsOption
 
   try {
     const data = assembleCommunityStats(await read());
-    const problem = describeCommunityStatsProblem(data);
+    const problem = describeCommunityStatsInputProblem(data);
 
     if (problem === undefined) {
       return { dataset: 'community-stats', source, data };
@@ -2008,7 +2022,7 @@ export async function resolveCommunityStats(options: ResolveCommunityStatsOption
     const file = published.find((candidate) => candidate.path === datasetPath('community-stats'));
     const envelope = file ? parseEnvelope(file.content) : undefined;
 
-    if (envelope && describeCommunityStatsProblem(envelope.data) === undefined) {
+    if (envelope && describeCommunityStatsInputProblem(envelope.data) === undefined) {
       warn(`community-stats could not be built (${reason}); the last published file is kept as it is`);
       return { dataset: 'community-stats', source: envelope.source, data: envelope.data };
     }
