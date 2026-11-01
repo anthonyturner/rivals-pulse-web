@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
@@ -16,4 +16,7 @@ import { Hero } from '../hero.model';
 export class HeroDetailsComponent {
   @Input({ required: true }) hero!: Hero;
   @Input({ required: true }) controller!: any;
+
+  /** The page's detail panel: long sections start collapsed, headings and reading lines are smaller. The profile window leaves it off. */
+  readonly compact = input(false);
 }

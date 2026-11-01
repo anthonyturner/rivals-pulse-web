@@ -91,3 +91,62 @@ in `docs/tech-stack.md`; if it has not, skip this section.
 Whatever the styling approach, keep styles component-scoped: no global style
 overrides, and avoid `::ng-deep`, which leaks a component's styles into every
 component below it.
+
+## Type scale
+
+This section always applies, whatever the styling conventions above.
+
+Heading sizes come from four tokens in `src/styles.css`. No heading is larger
+than its role's token; a heading at or below `--type-h3` may keep a smaller
+literal size. Choose the token by the heading's visual role, not its tag (many
+cards use an `<h2>`).
+
+| Token | At 1366px | Use for |
+| --- | --- | --- |
+| `--type-hero` | 60px | The home hero headline only. |
+| `--type-page-title` | 40px | The page `<h1>`, including the shared `app-page-header`. |
+| `--type-h2` | 32px | A section heading that opens a band or a page section. |
+| `--type-h3` | 18px | A card, panel or list-item heading. |
+
+- Set only `font-size: var(--type-...)`. Weight, line height and letter spacing
+  stay with the component.
+- A new heading takes the nearest token; do not make a heading larger than its
+  role. Changing a size for the whole site is one edit in `styles.css`.
+- Numeric readouts (stat figures, tier letters, step numerals) and body text are
+  not headings and keep their own sizes.
+
+Three more tokens size text that is not a heading. Body text is 1rem.
+
+| Token | At 1366px | Use for |
+| --- | --- | --- |
+| `--type-title` | 24px | The name of a selected item in a panel (the selected hero's name). |
+| `--type-small` | 14px | Card names, ledes, summaries, chips and buttons. |
+| `--type-caption` | 12px | Role pills, labels, source links. No text is smaller. |
+
+## Page containers
+
+This section always applies, whatever the styling conventions above. It is a
+layout utility, not a global style override: the classes set a width and side
+margins and nothing visual, so they do not restyle anything inside them.
+
+A page's content width comes from the `.page-container` class and three tokens
+in `src/styles.css`, not from a width written in the page's own CSS.
+
+| Class | Token | Content width at 1366px | Use for |
+| --- | --- | --- | --- |
+| `page-container page-container--narrow` | `--container-narrow` | 768px | Reading pages: prose and FAQ-style sections. |
+| `page-container` | `--container` | 1120px | A single guide or article. |
+| `page-container page-container--wide` | `--container-wide` | 1220px | Listings, tools and dashboards. |
+
+- Put the class on the page's outermost wrapper element in the template. The
+  width is the *content* width: the viewport minus `--page-gutter` on each
+  side (32px, falling to `--mobile-page-gutter` at 560px and below), capped at
+  the token.
+- The wrapper takes no side padding, width or horizontal margin of its own, and
+  its children do not re-apply a page width or gutter.
+  Vertical padding stays with the component (`padding-block`).
+- Full width is simply not using the class, for example the home page's
+  full-bleed bands. Do not wrap `<router-outlet>` in the app shell: a page
+  chooses its own width.
+- A new width is a new token and a new modifier, not a literal `min(...)` or
+  `max-width` in a component.

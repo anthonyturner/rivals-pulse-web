@@ -4,18 +4,7 @@
 
 .guide-detail-page {
   min-height: 100%;
-  padding: 32px;
-}
-
-.back-link,
-.detail-hero,
-.quick-read,
-.source-panel,
-.video-embed,
-.guide-sections,
-.ultimate-section {
-  width: min(1180px, 100%);
-  margin: 0 auto;
+  padding-block: 32px;
 }
 
 .back-link {
@@ -47,7 +36,7 @@ p {
 
 h1 {
   color: var(--text);
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: var(--type-page-title);
   line-height: 1;
   font-weight: 850;
 }
@@ -84,8 +73,7 @@ app-eyebrow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 12px;
-  width: min(1180px, 100%);
-  margin: 14px auto 0;
+  margin-top: 14px;
 }
 
 .related-image-strip article {
@@ -260,7 +248,7 @@ app-eyebrow {
 .guide-sections h2,
 .ultimate-section h2 {
   color: var(--text);
-  font-size: 1.35rem;
+  font-size: var(--type-h3);
 }
 
 .section-points {
@@ -360,7 +348,7 @@ app-eyebrow {
 
 @media (max-width: 780px) {
   .guide-detail-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .detail-hero,

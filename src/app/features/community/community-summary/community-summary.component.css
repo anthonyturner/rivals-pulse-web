@@ -26,7 +26,7 @@
 
 .summary__title {
   color: var(--text);
-  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-size: var(--type-h3);
   line-height: 1.2;
 }
 

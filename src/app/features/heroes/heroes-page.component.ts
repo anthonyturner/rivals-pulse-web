@@ -1,5 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, HostListener, inject, OnInit, signal } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  HostListener,
+  inject,
+  Injector,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -97,6 +108,10 @@ export class HeroesPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
+  private readonly injector = inject(Injector);
+  private readonly grid = viewChild(HeroGridComponent);
+  private readonly content = viewChild(HeroContentComponent);
+  private scrollBeforeModal: number | null = null;
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
 
@@ -110,6 +125,7 @@ export class HeroesPageComponent implements OnInit {
   readonly selectedRole = signal<HeroRoleFilter>('All');
   readonly heroGridMode = signal<HeroGridMode>('thumbs');
   readonly searchTerm = signal('');
+  readonly isRosterLoaded = signal(false);
   readonly selectedHeroId = signal(this.heroes()[0]?.id ?? '');
   readonly selectedAbilityKitRole = signal<HeroRole>('Vanguard');
   readonly isHeroDetailModalOpen = signal(false);
@@ -435,8 +451,10 @@ export class HeroesPageComponent implements OnInit {
     const selectedHero = visibleHeroes.find((hero) => hero.id === this.selectedHeroId());
 
     // Keep the detail panel populated when filters hide the previously selected hero.
-    return selectedHero ?? visibleHeroes[0] ?? this.heroes()[0];
+    return selectedHero ?? visibleHeroes[0];
   });
+
+  readonly activeHeroId = computed(() => this.selectedHero()?.id ?? '');
 
   readonly selectedHeroVideos = computed<HeroVideoSearch[]>(() => {
     const hero = this.selectedHero();
@@ -481,6 +499,7 @@ export class HeroesPageComponent implements OnInit {
       this.heroes.set(hydratedHeroes);
       this.heroVideos.set(heroVideos);
       this.selectedHeroId.set(initialHero?.id ?? '');
+      this.isRosterLoaded.set(true);
     });
   }
 
@@ -510,7 +529,11 @@ export class HeroesPageComponent implements OnInit {
     if (role !== 'All') {
       this.selectedAbilityKitRole.set(role);
     }
-    this.openHeroDetailModal();
+    afterNextRender(() => this.content()?.focusHeading(), { injector: this.injector });
+  }
+
+  returnToRoster(): void {
+    this.grid()?.focusHero(this.activeHeroId());
   }
 
   updateSearch(event: Event): void {
@@ -552,12 +575,26 @@ export class HeroesPageComponent implements OnInit {
 
   openHeroDetailModal(): void {
     if (this.selectedHero()) {
+      this.scrollBeforeModal = window.scrollY;
       this.isHeroDetailModalOpen.set(true);
     }
   }
 
   closeHeroDetailModal(): void {
+    const scrollTop = this.scrollBeforeModal;
+    this.scrollBeforeModal = null;
     this.isHeroDetailModalOpen.set(false);
+
+    // The detail panel is removed while the window is open, which shortens the page; put the reader back.
+    if (scrollTop !== null) {
+      afterNextRender(
+        () => {
+          window.scrollTo({ top: scrollTop, behavior: 'instant' });
+          this.content()?.focusProfileButton();
+        },
+        { injector: this.injector },
+      );
+    }
   }
 
   @HostListener('document:keydown.escape')

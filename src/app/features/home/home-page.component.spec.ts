@@ -149,11 +149,18 @@ describe('HomePageComponent', () => {
 
         return parseFloat(getComputedStyle(probe).fontSize);
       };
-      const sizes = { hero: size('--type-hero'), h2: size('--type-h2'), h3: size('--type-h3') };
+      const sizes = {
+        hero: size('--type-hero'),
+        pageTitle: size('--type-page-title'),
+        h2: size('--type-h2'),
+        h3: size('--type-h3'),
+      };
       probe.remove();
 
       expect(sizes.hero).toBeGreaterThanOrEqual(36);
       expect(sizes.hero).toBeLessThanOrEqual(60);
+      expect(sizes.pageTitle).toBeGreaterThanOrEqual(28);
+      expect(sizes.pageTitle).toBeLessThanOrEqual(40);
       expect(sizes.h2).toBeGreaterThanOrEqual(24);
       expect(sizes.h2).toBeLessThanOrEqual(32);
       expect(sizes.h3).toBe(18);

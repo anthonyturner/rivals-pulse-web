@@ -811,6 +811,94 @@ ul {
   color: var(--accent-strong);
 }
 
+details.collapsible {
+  display: block;
+}
+
+.collapsible > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible > summary::after {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  content: '';
+}
+
+.collapsible[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.collapsible > summary:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+.collapsible:not([open]) > summary {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.collapsible-body {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.section-note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.detail-hero-container--compact h2 {
+  font-size: var(--type-title);
+}
+
+.detail-hero-container--compact h3 {
+  font-size: var(--type-h3);
+  font-weight: 700;
+  text-transform: none;
+}
+
+.detail-hero-container--compact .hero-image.large {
+  width: 64px;
+  height: 64px;
+}
+
+.detail-hero-container--compact .overview-section p,
+.detail-hero-container--compact .strategy-playstyle p {
+  max-width: 70ch;
+}
+
+.detail-hero-container--compact .section-heading a,
+.detail-hero-container--compact .section-note {
+  font-size: var(--type-caption);
+  text-transform: none;
+}
+
+.detail-hero-container--compact .technical-details dt,
+.detail-hero-container--compact .build-profile-source strong,
+.detail-hero-container--compact .ultimate-strategies article span,
+.detail-hero-container--compact .abilities article span,
+.detail-hero-container--compact .abilities article h4,
+.detail-hero-container--compact .ultimate-path-grid h4,
+.detail-hero-container--compact .archetype-grid span,
+.detail-hero-container--compact .archetype-grid a,
+.detail-hero-container--compact .ability-tabs button span {
+  font-size: var(--type-caption);
+}
+
 .abilities article {
   position: relative;
   display: grid;

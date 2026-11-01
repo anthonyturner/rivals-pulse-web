@@ -4,10 +4,8 @@
 
 .faq-page {
   display: grid;
-  width: min(900px, 100%);
   gap: 20px;
-  margin: 0 auto;
-  padding: 32px;
+  padding-block: 32px;
 }
 
 .faq-section {
@@ -21,7 +19,7 @@
 h2 {
   margin: 0 0 10px;
   color: var(--text);
-  font-size: 1.25rem;
+  font-size: var(--type-h3);
 }
 
 p,
@@ -60,7 +58,7 @@ a:focus-visible {
 
 @media (max-width: 760px) {
   .faq-page {
-    padding: var(--mobile-page-gutter);
+    padding-block: var(--mobile-page-gutter);
   }
 
   .faq-section {

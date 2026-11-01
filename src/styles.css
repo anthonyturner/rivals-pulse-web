@@ -37,14 +37,30 @@
   /* The shared eyebrow's colour on a light surface; a dark surface sets --eyebrow-color to --accent-on-dark. */
   --eyebrow: #0f6f7a;
   --teal-bright: #77eed7;
-  /* Home page type scale: the hero headline, a band's h2 and a card's h3. At 1366px that is 60px, 32px and 18px. */
+  /* Type scale, chosen by a heading's visual role rather than its tag. At 1366px: the home hero 60px, a page title 40px, a section heading 32px, a card or panel heading 18px. */
   --type-hero: clamp(2.25rem, 4.4vw, 3.75rem);
+  --type-page-title: clamp(1.75rem, 3vw, 2.5rem);
   --type-h2: clamp(1.5rem, 2.4vw, 2rem);
   --type-h3: 1.125rem;
+  /* Text sizes below the headings: a panel title, supporting text, and the smallest size any text may take. */
+  --type-title: 1.5rem;
+  --type-small: 0.875rem;
+  --type-caption: 0.75rem;
   --focus-ring: rgba(3, 159, 159, 0.2);
   --shadow-soft: 0 18px 45px rgba(17, 35, 57, 0.12);
   --mobile-page-gutter: 8px;
   --mobile-panel-padding: 12px;
+  /* Container widths for .page-container, as content widths (the gutter sits outside them). */
+  --container-narrow: 768px;
+  --container: 1120px;
+  --container-wide: 1220px;
+  --page-gutter: 32px;
+}
+
+@media (max-width: 560px) {
+  :root {
+    --page-gutter: var(--mobile-page-gutter);
+  }
 }
 
 html,
@@ -147,6 +163,21 @@ h2,
 h3,
 p {
   margin-block: 0;
+}
+
+/* The width is the content width, so the element takes no side padding of its own: padding would be taken off a second time. */
+.page-container {
+  --container-max: var(--container);
+  width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+  margin-inline: auto;
+}
+
+.page-container--narrow {
+  --container-max: var(--container-narrow);
+}
+
+.page-container--wide {
+  --container-max: var(--container-wide);
 }
 
 .score-low {
