@@ -28,6 +28,12 @@
           </span>
           <h3>{{ tool.title }}</h3>
           <p>{{ tool.promise }}</p>
+          @if (tool.inOverlay; as overlay) {
+            <p class="tool-overlay">
+              <span class="tool-overlay__tag">In the overlay</span>
+              {{ overlay.feature }} <kbd>{{ overlay.key }}</kbd>
+            </p>
+          }
         </a>
       </li>
     }
