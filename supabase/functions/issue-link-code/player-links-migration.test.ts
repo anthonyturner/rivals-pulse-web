@@ -49,7 +49,8 @@ describe('20261101020000_player_links.sql', () => {
     assert.deepEqual(grants('link_code_hash'), ['service_role']);
     assert.deepEqual(grants('redeem_link_code'), ['authenticated']);
     assert.deepEqual(grants('unlink_player'), ['authenticated']);
-    for (const name of ['issue_link_code', 'link_code_hash', 'redeem_link_code', 'unlink_player']) {
+    assert.deepEqual(grants('purge_link_data'), ['service_role']);
+    for (const name of ['issue_link_code', 'link_code_hash', 'redeem_link_code', 'unlink_player', 'purge_link_data']) {
       assert.match(sql, new RegExp(`revoke execute on function public\\.${name}\\([^)]*\\) from public, anon, authenticated`), name);
     }
   });
@@ -62,6 +63,19 @@ describe('20261101020000_player_links.sql', () => {
       assert.match(body, /\(select auth\.uid\(\)\)/, name);
       assert.doesNotMatch(body, /p_user|p_account/, name);
     }
+  });
+
+  it('schedules the purge that enforces the retention the privacy notes promise', () => {
+    assert.match(sql, /cron\.schedule\('purge-link-data', '\*\/5 \* \* \* \*', 'select public\.purge_link_data\(\)'\)/);
+    const purge = sql.match(/create or replace function public\.purge_link_data\([\s\S]*?\n\$\$;/)?.[0] ?? '';
+    assert.match(purge, /delete from public\.link_attempt_log/);
+    assert.match(purge, /delete from public\.link_codes where expires_at < now\(\)/);
+  });
+
+  it('deletes a wrong-code attempt with its account, and refuses anonymous sessions', () => {
+    assert.match(sql, /user_id uuid references auth\.users \(id\) on delete cascade/);
+    assert.match(sql, /values \('redeem_failed', account::text, account\)/);
+    assert.match(sql, /auth\.jwt\(\)\) ->> 'is_anonymous'/);
   });
 
   it('declares every function once, so a later restatement cannot add an overload', () => {

@@ -31,8 +31,10 @@ begin
   claims_c := json_build_object('sub', account_c, 'role', 'authenticated')::text;
 
   -- Issuing: the code is stored as a hash, never as itself.
+  set local role service_role;
   answer := public.issue_link_code('check-recorder-a', 'ABCDEFGH', 'uid-a', 'Aurora',
     'https://content.overwolf.com/a.png', interval '10 minutes', 5, interval '1 hour');
+  reset role;
   if answer ->> 'status' <> 'issued' then
     raise exception 'check failed: a first code was not issued (%)', answer;
   end if;
@@ -51,8 +53,10 @@ begin
   raise notice 'ok: a code is stored as its hash only';
 
   -- A new code cancels the old one.
+  set local role service_role;
   answer := public.issue_link_code('check-recorder-a', 'JKMNPQRS', 'uid-a', 'Aurora',
     'https://content.overwolf.com/a.png', interval '10 minutes', 5, interval '1 hour');
+  reset role;
 
   select count(*) into seen from public.link_codes where recorder_id = 'check-recorder-a';
   if seen <> 1 then
@@ -97,8 +101,10 @@ begin
 
   -- An expired code is refused (the row is backdated; no waiting).
   reset role;
+  set local role service_role;
   perform public.issue_link_code('check-recorder-b', 'MNPQRSTV', 'uid-b', 'Borealis', null,
     interval '10 minutes', 5, interval '1 hour');
+  reset role;
   update public.link_codes set expires_at = now() - interval '1 second' where recorder_id = 'check-recorder-b';
 
   perform set_config('request.jwt.claims', claims_b, true);
@@ -123,8 +129,10 @@ begin
 
   -- Five wrong codes in 15 minutes lock the account out, even for a right code.
   reset role;
+  set local role service_role;
   perform public.issue_link_code('check-recorder-c', 'QRSTVWXY', 'uid-c', 'Corona', null,
     interval '10 minutes', 5, interval '1 hour');
+  reset role;
 
   perform set_config('request.jwt.claims', claims_c, true);
   set local role authenticated;
@@ -163,8 +171,10 @@ begin
 
   -- Latest proof wins: a fresh code for recorder A, redeemed by account B, moves the link.
   reset role;
+  set local role service_role;
   perform public.issue_link_code('check-recorder-a', 'ABCDEFGH', 'uid-a', 'Aurora', null,
     interval '10 minutes', 5, interval '1 hour');
+  reset role;
 
   perform set_config('request.jwt.claims', claims_b, true);
   set local role authenticated;
@@ -189,8 +199,10 @@ begin
 
   -- An account holds at most one link: redeeming another player replaces its first.
   reset role;
+  set local role service_role;
   perform public.issue_link_code('check-recorder-d', 'TVWXYZ01', 'uid-d', 'Dawn', null,
     interval '10 minutes', 5, interval '1 hour');
+  reset role;
 
   perform set_config('request.jwt.claims', claims_b, true);
   set local role authenticated;
@@ -283,17 +295,32 @@ begin
     raise notice 'ok: a caller with no account cannot redeem a code';
   end;
 
+  -- An anonymous Supabase session is refused, even though it has an account id.
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', account_c, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+
+  begin
+    perform public.redeem_link_code('ABCDEFGH');
+    raise exception 'check failed: an anonymous session redeemed a code';
+  exception when insufficient_privilege then
+    raise notice 'ok: an anonymous session cannot redeem a code';
+  end;
+
   -- A code is issued at most 5 times an hour per recorder.
   reset role;
+  set local role service_role;
   perform public.issue_link_code('check-recorder-e', 'AAAAAAA1', 'uid-e', 'Eclipse', null, interval '10 minutes', 2, interval '1 hour');
   perform public.issue_link_code('check-recorder-e', 'AAAAAAA2', 'uid-e', 'Eclipse', null, interval '10 minutes', 2, interval '1 hour');
   answer := public.issue_link_code('check-recorder-e', 'AAAAAAA3', 'uid-e', 'Eclipse', null, interval '10 minutes', 2, interval '1 hour');
+  reset role;
   if answer ->> 'status' <> 'rate_limited' or (answer ->> 'retryAfter')::integer <= 0 then
     raise exception 'check failed: issuing is not rate limited (%)', answer;
   end if;
   raise notice 'ok: issuing codes is rate limited per recorder';
 
   -- An avatar that is not https is refused by the table itself.
+  set local role service_role;
+
   begin
     perform public.issue_link_code('check-recorder-f', 'BBBBBBB1', 'uid-f', 'Flare', 'http://content.overwolf.com/a.png',
       interval '10 minutes', 5, interval '1 hour');
@@ -302,14 +329,69 @@ begin
     raise notice 'ok: only an https avatar is stored';
   end;
 
-  -- Deleting the Auth user deletes the link.
+  reset role;
+
+  -- The purge deletes expired codes and attempt rows past their window, and nothing newer.
+  insert into public.link_codes (recorder_id, code_hash, player_uid, player_name, expires_at)
+  values ('check-old', 'hash-old', 'uid-o', 'Old', now() - interval '1 minute'),
+         ('check-fresh', 'hash-fresh', 'uid-n', 'Fresh', now() + interval '5 minutes');
+  insert into public.link_attempt_log (kind, subject, attempted_at)
+  values ('issue', 'check-old-recorder', now() - interval '61 minutes'),
+         ('issue', 'check-new-recorder', now() - interval '59 minutes');
+  insert into public.link_attempt_log (kind, subject, user_id, attempted_at)
+  values ('redeem_failed', account_a::text, account_a, now() - interval '16 minutes'),
+         ('redeem_failed', account_a::text, account_a, now() - interval '14 minutes');
+
+  set local role service_role;
+  perform public.purge_link_data();
+  reset role;
+
+  select count(*) into seen from public.link_codes where recorder_id = 'check-old';
+  if seen <> 0 then
+    raise exception 'check failed: the purge kept a code that expired unused';
+  end if;
+  select count(*) into seen from public.link_codes where recorder_id = 'check-fresh';
+  if seen <> 1 then
+    raise exception 'check failed: the purge deleted a code that is still valid';
+  end if;
+  select count(*) into seen from public.link_attempt_log where subject in ('check-old-recorder', 'check-new-recorder');
+  if seen <> 1 then
+    raise exception 'check failed: the purge left % issue rows, not only the one inside the hour', seen;
+  end if;
+  select count(*) into seen from public.link_attempt_log
+  where user_id = account_a and attempted_at in (now() - interval '16 minutes', now() - interval '14 minutes');
+  if seen <> 1 then
+    raise exception 'check failed: the purge left % wrong-code rows, not only the one inside 15 minutes', seen;
+  end if;
+  raise notice 'ok: the purge deletes expired codes and old attempts and keeps the rest';
+
+  begin
+    set local role authenticated;
+    perform public.purge_link_data();
+    raise exception 'check failed: a client can run the purge';
+  exception when insufficient_privilege then
+    raise notice 'ok: a client cannot run the purge';
+  end;
+  reset role;
+
+  -- Deleting the Auth user deletes the link and its wrong-code attempts.
+  select count(*) into seen from public.link_attempt_log where user_id = account_b;
+  if seen = 0 then
+    raise exception 'check failed: account B has no wrong-code rows to delete, so this check proves nothing';
+  end if;
+
   delete from auth.users where id = account_b;
+
+  select count(*) into seen from public.link_attempt_log where user_id = account_b;
+  if seen <> 0 then
+    raise exception 'check failed: deleting the Auth user left its wrong-code attempts';
+  end if;
 
   select count(*) into seen from public.player_links where user_id = account_b;
   if seen <> 0 then
     raise exception 'check failed: deleting the Auth user left the link';
   end if;
-  raise notice 'ok: deleting the Auth user deletes the link';
+  raise notice 'ok: deleting the Auth user deletes the link and its attempts';
 end
 $$;
 
