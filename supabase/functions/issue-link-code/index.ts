@@ -12,9 +12,12 @@ const corsHeaders = {
 
 /** A code works for ten minutes and once; the issuing function enforces both. */
 const CODE_TTL = '10 minutes';
-/** A player asks for a code a few times at most; five an hour covers retries without letting a script farm them. */
+/**
+ * A player asks for a code a few times at most; five covers retries without letting a script farm
+ * them. The window they are counted over is `link_issue_window()` in the database, which the purge
+ * shares.
+ */
 const ISSUE_LIMIT = 5;
-const ISSUE_WINDOW = '1 hour';
 /** Two recorders drawing the same code is a 1 in 2^40 event; a retry makes it invisible. */
 const CODE_ATTEMPTS = 3;
 const UNIQUE_VIOLATION = '23505';
@@ -64,7 +67,6 @@ Deno.serve(async request => {
         p_avatar_url: player.avatarUrl,
         p_ttl: CODE_TTL,
         p_limit: ISSUE_LIMIT,
-        p_window: ISSUE_WINDOW,
       });
 
       if (error?.code === UNIQUE_VIOLATION) continue;

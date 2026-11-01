@@ -66,6 +66,22 @@ create index if not exists link_attempt_log_subject_idx
 alter table public.link_attempt_log enable row level security;
 revoke all on public.link_attempt_log from anon, authenticated;
 
+-- The two windows the rate limits and the purge share, so each number is written once: codes issued
+-- per recorder are counted over an hour, and wrong codes per account over 15 minutes.
+create or replace function public.link_issue_window()
+returns interval
+language sql
+immutable
+set search_path = ''
+as $$ select interval '1 hour' $$;
+
+create or replace function public.link_lockout_window()
+returns interval
+language sql
+immutable
+set search_path = ''
+as $$ select interval '15 minutes' $$;
+
 -- The stored form of a code: SHA-256 of its eight canonical characters, in hex. The website
 -- canonicalises what the player typed before it gets here.
 create or replace function public.link_code_hash(p_code text)
@@ -79,7 +95,7 @@ $$;
 
 -- Stores a new code for a recorder, cancelling their old one. Returns
 -- {"status":"issued","expiresAt":...}, or {"status":"rate_limited","retryAfter":seconds} once the
--- recorder has had p_limit codes inside p_window. The advisory lock makes count-then-insert exact.
+-- recorder has had p_limit codes inside link_issue_window(). The advisory lock makes count-then-insert exact.
 create or replace function public.issue_link_code(
   p_recorder_id text,
   p_code text,
@@ -87,8 +103,7 @@ create or replace function public.issue_link_code(
   p_player_name text,
   p_avatar_url text,
   p_ttl interval,
-  p_limit integer,
-  p_window interval
+  p_limit integer
 ) returns jsonb
 language plpgsql
 set search_path = ''
@@ -100,17 +115,17 @@ declare
 begin
   perform pg_advisory_xact_lock(hashtextextended('issue:' || p_recorder_id, 0));
 
-  delete from public.link_attempt_log where kind = 'issue' and attempted_at < now() - p_window;
+  delete from public.link_attempt_log where kind = 'issue' and attempted_at < now() - public.link_issue_window();
   delete from public.link_codes where expires_at < now();
 
   select count(*), min(attempted_at) into used, oldest
   from public.link_attempt_log
-  where kind = 'issue' and subject = p_recorder_id and attempted_at > now() - p_window;
+  where kind = 'issue' and subject = p_recorder_id and attempted_at > now() - public.link_issue_window();
 
   if used >= p_limit then
     return jsonb_build_object(
       'status', 'rate_limited',
-      'retryAfter', greatest(1, ceil(extract(epoch from (oldest + p_window - now())))::integer)
+      'retryAfter', greatest(1, ceil(extract(epoch from (oldest + public.link_issue_window() - now())))::integer)
     );
   end if;
 
@@ -160,16 +175,17 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended('redeem:' || account::text, 0));
 
-  delete from public.link_attempt_log where kind = 'redeem_failed' and attempted_at < now() - interval '15 minutes';
+  delete from public.link_attempt_log
+  where kind = 'redeem_failed' and attempted_at < now() - public.link_lockout_window();
 
   select count(*), min(attempted_at) into failures, oldest
   from public.link_attempt_log
-  where kind = 'redeem_failed' and subject = account::text and attempted_at > now() - interval '15 minutes';
+  where kind = 'redeem_failed' and subject = account::text and attempted_at > now() - public.link_lockout_window();
 
   if failures >= 5 then
     return jsonb_build_object(
       'status', 'rate_limited',
-      'retryAfter', greatest(1, ceil(extract(epoch from (oldest + interval '15 minutes' - now())))::integer)
+      'retryAfter', greatest(1, ceil(extract(epoch from (oldest + public.link_lockout_window() - now())))::integer)
     );
   end if;
 
@@ -224,8 +240,8 @@ set search_path = ''
 as $$
 begin
   delete from public.link_attempt_log
-  where (kind = 'issue' and attempted_at < now() - interval '1 hour')
-     or (kind = 'redeem_failed' and attempted_at < now() - interval '15 minutes');
+  where (kind = 'issue' and attempted_at < now() - public.link_issue_window())
+     or (kind = 'redeem_failed' and attempted_at < now() - public.link_lockout_window());
 
   delete from public.link_codes where expires_at < now();
 end
@@ -233,12 +249,16 @@ $$;
 
 -- Postgres grants EXECUTE to everyone on a new function; restate who may call each.
 revoke execute on function public.link_code_hash(text) from public, anon, authenticated;
-revoke execute on function public.issue_link_code(text, text, text, text, text, interval, integer, interval) from public, anon, authenticated;
+revoke execute on function public.link_issue_window() from public, anon, authenticated;
+revoke execute on function public.link_lockout_window() from public, anon, authenticated;
+revoke execute on function public.issue_link_code(text, text, text, text, text, interval, integer) from public, anon, authenticated;
 revoke execute on function public.redeem_link_code(text) from public, anon, authenticated;
 revoke execute on function public.unlink_player() from public, anon, authenticated;
 revoke execute on function public.purge_link_data() from public, anon, authenticated;
 grant execute on function public.link_code_hash(text) to service_role;
-grant execute on function public.issue_link_code(text, text, text, text, text, interval, integer, interval) to service_role;
+grant execute on function public.link_issue_window() to service_role;
+grant execute on function public.link_lockout_window() to service_role;
+grant execute on function public.issue_link_code(text, text, text, text, text, interval, integer) to service_role;
 grant execute on function public.redeem_link_code(text) to authenticated;
 grant execute on function public.unlink_player() to authenticated;
 grant execute on function public.purge_link_data() to service_role;

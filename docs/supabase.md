@@ -575,11 +575,14 @@ policy's hard limit), but later than promised.
 
 - **Required:** `select jobname from cron.job where jobname in
   ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
-  'recompute-play-time-aggregates', 'purge-link-data');` must show all five jobs (the daily purge, the three hourly
-  aggregate rebuilds and the five-minute link purge). If one is missing (the migrations warn when `pg_cron` is unavailable), enable
-  `pg_cron` and schedule `select public.purge_expired_participants();` daily, and
-  `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();` and
-  `select public.recompute_play_time_aggregates();` hourly, and `select public.purge_link_data();` every five minutes, by hand.
+  'recompute-play-time-aggregates', 'recompute-community-match-aggregates', 'purge-link-data');` must show all
+  six jobs (the daily purge, the four hourly aggregate rebuilds and the five-minute link purge). If one is
+  missing (the migrations warn when `pg_cron` is unavailable), enable `pg_cron` and schedule
+  `select public.purge_expired_participants();` daily,
+  `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
+  `select public.recompute_play_time_aggregates();` and
+  `select public.recompute_community_match_aggregates();` hourly, and `select public.purge_link_data();`
+  every five minutes, by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
@@ -661,9 +664,11 @@ name and avatar the app sends with the code request are claims and are only show
   link and a recorder at most one account. `player_uid` is not unique on purpose: a uid is a claim, and a unique
   one could be squatted. A fresh code redeemed by another account moves the link to it (latest proof wins).
 - Wrong, used and expired codes are one answer. Five wrong codes in 15 minutes lock an account out for the rest of
-  the window, even for a right code. `purge_link_data()` (service role only, scheduled every five minutes by a `purge-link-data` pg_cron job in the
-  migration) deletes attempt rows past their window (an hour for codes issued, 15 minutes for wrong codes) and codes
-  that expired unused, so those are kept for their window plus up to five minutes; the issuing and redeeming functions
+  the window, even for a right code. The two windows (an hour for codes issued, 15 minutes for wrong codes) are
+  written once each, as `link_issue_window()` and `link_lockout_window()`, and the limits and the purge all read
+  them. `purge_link_data()` (service role only, scheduled every five minutes by a `purge-link-data` pg_cron job in
+  the migration) deletes attempt rows past their window and codes that expired unused, so those are kept for
+  their window plus up to five minutes; the issuing and redeeming functions
   also sweep their own kind, so retention does not depend on the scheduler. Wrong-code rows carry the account id with
   `on delete cascade`, so deleting the account deletes them. `redeem_link_code` refuses anonymous Supabase sessions.
 - `avatar_url` is stored only when it is an `https` address on an Overwolf host (`OVERWOLF_AVATAR_DOMAINS` in

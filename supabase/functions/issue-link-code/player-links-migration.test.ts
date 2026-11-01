@@ -50,7 +50,9 @@ describe('20261101020000_player_links.sql', () => {
     assert.deepEqual(grants('redeem_link_code'), ['authenticated']);
     assert.deepEqual(grants('unlink_player'), ['authenticated']);
     assert.deepEqual(grants('purge_link_data'), ['service_role']);
-    for (const name of ['issue_link_code', 'link_code_hash', 'redeem_link_code', 'unlink_player', 'purge_link_data']) {
+    assert.deepEqual(grants('link_issue_window'), ['service_role']);
+    assert.deepEqual(grants('link_lockout_window'), ['service_role']);
+    for (const name of ['issue_link_code', 'link_code_hash', 'redeem_link_code', 'unlink_player', 'purge_link_data', 'link_issue_window', 'link_lockout_window']) {
       assert.match(sql, new RegExp(`revoke execute on function public\\.${name}\\([^)]*\\) from public, anon, authenticated`), name);
     }
   });

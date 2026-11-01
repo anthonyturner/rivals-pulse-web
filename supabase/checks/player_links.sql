@@ -33,7 +33,7 @@ begin
   -- Issuing: the code is stored as a hash, never as itself.
   set local role service_role;
   answer := public.issue_link_code('check-recorder-a', 'ABCDEFGH', 'uid-a', 'Aurora',
-    'https://content.overwolf.com/a.png', interval '10 minutes', 5, interval '1 hour');
+    'https://content.overwolf.com/a.png', interval '10 minutes', 5);
   reset role;
   if answer ->> 'status' <> 'issued' then
     raise exception 'check failed: a first code was not issued (%)', answer;
@@ -55,7 +55,7 @@ begin
   -- A new code cancels the old one.
   set local role service_role;
   answer := public.issue_link_code('check-recorder-a', 'JKMNPQRS', 'uid-a', 'Aurora',
-    'https://content.overwolf.com/a.png', interval '10 minutes', 5, interval '1 hour');
+    'https://content.overwolf.com/a.png', interval '10 minutes', 5);
   reset role;
 
   select count(*) into seen from public.link_codes where recorder_id = 'check-recorder-a';
@@ -103,7 +103,7 @@ begin
   reset role;
   set local role service_role;
   perform public.issue_link_code('check-recorder-b', 'MNPQRSTV', 'uid-b', 'Borealis', null,
-    interval '10 minutes', 5, interval '1 hour');
+    interval '10 minutes', 5);
   reset role;
   update public.link_codes set expires_at = now() - interval '1 second' where recorder_id = 'check-recorder-b';
 
@@ -131,7 +131,7 @@ begin
   reset role;
   set local role service_role;
   perform public.issue_link_code('check-recorder-c', 'QRSTVWXY', 'uid-c', 'Corona', null,
-    interval '10 minutes', 5, interval '1 hour');
+    interval '10 minutes', 5);
   reset role;
 
   perform set_config('request.jwt.claims', claims_c, true);
@@ -173,7 +173,7 @@ begin
   reset role;
   set local role service_role;
   perform public.issue_link_code('check-recorder-a', 'ABCDEFGH', 'uid-a', 'Aurora', null,
-    interval '10 minutes', 5, interval '1 hour');
+    interval '10 minutes', 5);
   reset role;
 
   perform set_config('request.jwt.claims', claims_b, true);
@@ -201,7 +201,7 @@ begin
   reset role;
   set local role service_role;
   perform public.issue_link_code('check-recorder-d', 'TVWXYZ01', 'uid-d', 'Dawn', null,
-    interval '10 minutes', 5, interval '1 hour');
+    interval '10 minutes', 5);
   reset role;
 
   perform set_config('request.jwt.claims', claims_b, true);
@@ -269,7 +269,7 @@ begin
 
   begin
     perform public.issue_link_code('check-recorder-a', 'ZZZZZZZZ', 'uid-a', 'Aurora', null,
-      interval '10 minutes', 5, interval '1 hour');
+      interval '10 minutes', 5);
     raise exception 'check failed: a client can issue a code';
   exception when insufficient_privilege then
     raise notice 'ok: a client cannot issue a code';
@@ -309,9 +309,9 @@ begin
   -- A code is issued at most 5 times an hour per recorder.
   reset role;
   set local role service_role;
-  perform public.issue_link_code('check-recorder-e', 'AAAAAAA1', 'uid-e', 'Eclipse', null, interval '10 minutes', 2, interval '1 hour');
-  perform public.issue_link_code('check-recorder-e', 'AAAAAAA2', 'uid-e', 'Eclipse', null, interval '10 minutes', 2, interval '1 hour');
-  answer := public.issue_link_code('check-recorder-e', 'AAAAAAA3', 'uid-e', 'Eclipse', null, interval '10 minutes', 2, interval '1 hour');
+  perform public.issue_link_code('check-recorder-e', 'AAAAAAA1', 'uid-e', 'Eclipse', null, interval '10 minutes', 2);
+  perform public.issue_link_code('check-recorder-e', 'AAAAAAA2', 'uid-e', 'Eclipse', null, interval '10 minutes', 2);
+  answer := public.issue_link_code('check-recorder-e', 'AAAAAAA3', 'uid-e', 'Eclipse', null, interval '10 minutes', 2);
   reset role;
   if answer ->> 'status' <> 'rate_limited' or (answer ->> 'retryAfter')::integer <= 0 then
     raise exception 'check failed: issuing is not rate limited (%)', answer;
@@ -323,7 +323,7 @@ begin
 
   begin
     perform public.issue_link_code('check-recorder-f', 'BBBBBBB1', 'uid-f', 'Flare', 'http://content.overwolf.com/a.png',
-      interval '10 minutes', 5, interval '1 hour');
+      interval '10 minutes', 5);
     raise exception 'check failed: a non-https avatar was stored';
   exception when check_violation then
     raise notice 'ok: only an https avatar is stored';
@@ -374,24 +374,30 @@ begin
   end;
   reset role;
 
-  -- Deleting the Auth user deletes the link and its wrong-code attempts.
+  -- Deleting the Auth user deletes its link (account C is still linked) and its wrong-code
+  -- attempts (account B has some). Each is asserted to exist first, so neither check is vacuous.
+  select count(*) into seen from public.player_links where user_id = account_c;
+  if seen <> 1 then
+    raise exception 'check failed: account C holds no link to delete, so the link check proves nothing';
+  end if;
   select count(*) into seen from public.link_attempt_log where user_id = account_b;
   if seen = 0 then
-    raise exception 'check failed: account B has no wrong-code rows to delete, so this check proves nothing';
+    raise exception 'check failed: account B has no wrong-code rows to delete, so the attempts check proves nothing';
   end if;
 
-  delete from auth.users where id = account_b;
+  delete from auth.users where id in (account_b, account_c);
+
+  select count(*) into seen from public.player_links where user_id = account_c;
+  if seen <> 0 then
+    raise exception 'check failed: deleting the Auth user left the link';
+  end if;
+  raise notice 'ok: deleting the Auth user deletes the link';
 
   select count(*) into seen from public.link_attempt_log where user_id = account_b;
   if seen <> 0 then
     raise exception 'check failed: deleting the Auth user left its wrong-code attempts';
   end if;
-
-  select count(*) into seen from public.player_links where user_id = account_b;
-  if seen <> 0 then
-    raise exception 'check failed: deleting the Auth user left the link';
-  end if;
-  raise notice 'ok: deleting the Auth user deletes the link and its attempts';
+  raise notice 'ok: deleting the Auth user deletes its wrong-code attempts';
 end
 $$;
 
