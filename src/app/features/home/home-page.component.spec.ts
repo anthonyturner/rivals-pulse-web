@@ -63,6 +63,8 @@ describe('HomePageComponent', () => {
         'Hero stats',
         'Tools',
         "What's new in the game",
+        'Frequently asked questions',
+        'Get Rivals Pulse',
       ]);
     });
 
@@ -71,7 +73,7 @@ describe('HomePageComponent', () => {
       const bands = Array.from(main.querySelectorAll<HTMLElement>('section.band'));
 
       expect(element.querySelectorAll('main').length).toBe(1);
-      expect(bands.length).toBe(4);
+      expect(bands.length).toBe(6);
       expect(bands.every((band) => main.contains(band))).toBeTrue();
       expect(bands.map((band) => band.getAttribute('aria-labelledby'))).toEqual(
         bands.map((band) => band.querySelector('h2')?.id ?? null),
@@ -79,12 +81,23 @@ describe('HomePageComponent', () => {
       expect(element.querySelector('aside')).toBeNull();
     });
 
-    it('alternates dark, light, white and light bands', () => {
+    it('alternates dark, light, white, light, white and dark bands', () => {
       const tones = Array.from(element.querySelectorAll('main section.band')).map((band) =>
         band.classList.contains('band--dark') ? 'dark' : band.classList.contains('band--white') ? 'white' : 'light',
       );
 
-      expect(tones).toEqual(['dark', 'light', 'white', 'light']);
+      expect(tones).toEqual(['dark', 'light', 'white', 'light', 'white', 'dark']);
+    });
+
+    it('uses the one shared get-app button in the hero, the Jarvis console and the closing band', () => {
+      const buttons = Array.from(element.querySelectorAll('app-get-app-button'));
+
+      expect(buttons.length).toBe(3);
+      expect(buttons.map((button) => button.parentElement?.closest('app-hero-overlay-actions, app-jarvis-console, app-closing-cta')?.tagName.toLowerCase())).toEqual([
+        'app-hero-overlay-actions',
+        'app-jarvis-console',
+        'app-closing-cta',
+      ]);
     });
 
     it('keeps every news block in the news band, and none in the hero', () => {

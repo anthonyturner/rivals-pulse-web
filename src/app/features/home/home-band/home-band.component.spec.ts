@@ -1,13 +1,14 @@
 import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HomeBandComponent, type HomeBandTone } from './home-band.component';
+import { HomeBandComponent, type HomeBandAlign, type HomeBandTone } from './home-band.component';
 
 @Component({
   imports: [HomeBandComponent],
   template: `
     <app-home-band
       [tone]="tone"
+      [headAlign]="headAlign"
       [eyebrow]="eyebrow"
       heading="Hero stats"
       headingId="stats-title"
@@ -19,6 +20,7 @@ import { HomeBandComponent, type HomeBandTone } from './home-band.component';
 })
 class HostComponent {
   tone: HomeBandTone = 'light';
+  headAlign: HomeBandAlign = 'start';
   eyebrow = 'Live';
   lede = 'Counted from real matches.';
 }
@@ -74,5 +76,17 @@ describe('HomeBandComponent', () => {
 
       expect(section().classList).toContain(`band--${tone}`);
     }
+  });
+
+  it('centres its head on request and starts it at the left otherwise', () => {
+    expect(section().classList).not.toContain('band--center');
+
+    fixture.componentInstance.headAlign = 'center';
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+
+    expect(section().classList).toContain('band--center');
+    expect(getComputedStyle(element.querySelector('.band__title') as HTMLElement).textAlign).toBe('center');
+    expect(getComputedStyle(element.querySelector('.body') as HTMLElement).textAlign).not.toBe('center');
   });
 });

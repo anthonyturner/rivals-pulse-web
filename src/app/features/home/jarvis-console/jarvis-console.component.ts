@@ -12,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { OVERWOLF_APP_URL } from '../../../shared/overwolf-app';
+import { GetAppButtonComponent } from '../../../shared/components/get-app-button/get-app-button.component';
 import { JARVIS_EXCHANGES, JARVIS_STATES, type JarvisState } from './jarvis-console.data';
 import { JarvisCoreRenderer } from './jarvis-core.renderer';
 
@@ -32,6 +32,7 @@ const CAPTION_WINDOW = 14;
 
 @Component({
   selector: 'app-jarvis-console',
+  imports: [GetAppButtonComponent],
   templateUrl: './jarvis-console.component.html',
   styleUrl: './jarvis-console.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,13 +55,6 @@ export class JarvisConsoleComponent implements AfterViewInit {
   readonly askedQuestion = signal('');
   readonly spokenWords = signal<readonly string[]>([]);
   readonly currentWord = signal('');
-
-  /**
-   * Empty until the overlay has an Overwolf listing. The template renders an
-   * unlinked "coming soon" state rather than pointing at a URL that does not exist.
-   */
-  readonly appUrl = OVERWOLF_APP_URL;
-  readonly hasAppUrl = OVERWOLF_APP_URL.length > 0;
 
   readonly coreHint = computed(() => (this.state() === 'idle' ? 'Tap to ask' : this.state()));
   readonly hasTranscript = computed(

@@ -62,16 +62,6 @@
       }
     </ul>
 
-    @if (hasAppUrl) {
-      <p class="console-actions">
-        <a class="get-app" [href]="appUrl" target="_blank" rel="noopener noreferrer">
-          Get the Overwolf app
-        </a>
-      </p>
-    } @else {
-      <p class="console-actions">
-        <span class="get-app is-pending">Coming soon to the Overwolf store</span>
-      </p>
-    }
+    <p class="console-actions"><app-get-app-button /></p>
   </div>
 </section>

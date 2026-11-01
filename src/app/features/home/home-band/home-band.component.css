@@ -30,6 +30,12 @@
   max-width: 720px;
 }
 
+.band--center .band__head {
+  justify-items: center;
+  margin-inline: auto;
+  text-align: center;
+}
+
 .band__eyebrow,
 .band__title,
 .band__lede {

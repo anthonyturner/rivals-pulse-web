@@ -1,14 +1,5 @@
 <div class="hero-actions">
-  @if (hasAppUrl()) {
-    <a class="cta cta-primary" [href]="appUrl()" target="_blank" rel="noopener noreferrer">
-      Get Rivals Pulse on Overwolf
-    </a>
-  } @else {
-    <button class="cta cta-primary is-pending" type="button" aria-disabled="true">
-      Get Rivals Pulse on Overwolf
-      <span class="pill">Coming soon</span><span class="visually-hidden">, not available yet</span>
-    </button>
-  }
+  <app-get-app-button />
 
   <a class="cta cta-ghost" routerLink="/community">See stats</a>
 </div>

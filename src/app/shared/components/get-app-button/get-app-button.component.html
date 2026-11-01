@@ -1,0 +1,10 @@
+@if (hasAppUrl()) {
+  <a class="get-app" [href]="appUrl()" target="_blank" rel="noopener noreferrer">
+    Get Rivals Pulse on Overwolf<span class="visually-hidden"> (opens in a new tab)</span>
+  </a>
+} @else {
+  <button class="get-app is-pending" type="button" aria-disabled="true">
+    Get Rivals Pulse on Overwolf
+    <span class="pill">Coming soon</span><span class="visually-hidden">, not available yet</span>
+  </button>
+}

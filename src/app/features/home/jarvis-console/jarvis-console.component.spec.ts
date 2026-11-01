@@ -1,7 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { OVERWOLF_APP_URL } from '../../../shared/overwolf-app';
 import { JarvisConsoleComponent } from './jarvis-console.component';
 import { JARVIS_EXCHANGES, JARVIS_STATES } from './jarvis-console.data';
 
@@ -79,15 +78,12 @@ describe('JarvisConsoleComponent', () => {
     expect(component.state()).toBe('listening');
   });
 
-  it('does not offer a store link until the overlay has a listing', () => {
-    const pending = fixture.nativeElement.querySelector('.get-app.is-pending');
+  it('offers the shared get-app button, which is unavailable until the overlay has a listing', () => {
+    const button = fixture.nativeElement.querySelector('.console-actions app-get-app-button');
 
-    // Guards against a placeholder URL reaching the page.
-    expect(OVERWOLF_APP_URL).toBe('');
-    expect(component.hasAppUrl).toBeFalse();
-    expect(pending).toBeTruthy();
-    expect(pending.textContent).toContain('Coming soon');
-    expect(fixture.nativeElement.querySelector('a.get-app')).toBeNull();
+    expect(button).toBeTruthy();
+    expect(button.querySelector('button[aria-disabled="true"]')?.textContent).toContain('Coming soon');
+    expect(button.querySelector('a')).toBeNull();
   });
 
   it('names Alt+V as the push-to-talk binding, matching the overlay', () => {
