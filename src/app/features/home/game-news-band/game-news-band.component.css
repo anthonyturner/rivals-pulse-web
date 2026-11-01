@@ -51,7 +51,7 @@
 
 .block__heading--title {
   color: var(--text);
-  font-size: 1.125rem;
+  font-size: var(--type-h3);
   letter-spacing: 0;
   line-height: 1.25;
   text-transform: none;

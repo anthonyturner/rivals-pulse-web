@@ -119,6 +119,24 @@ describe('HomePageComponent', () => {
       expect(hero).not.toMatch(/jarvis|twelve|\branks?\b|voice|free/i);
     });
 
+    it('sets every heading from the shared type-scale tokens, in a modest size', () => {
+      const probe = document.createElement('div');
+      document.body.appendChild(probe);
+      const size = (token: string): number => {
+        probe.style.fontSize = `var(${token})`;
+
+        return parseFloat(getComputedStyle(probe).fontSize);
+      };
+      const sizes = { hero: size('--type-hero'), h2: size('--type-h2'), h3: size('--type-h3') };
+      probe.remove();
+
+      expect(sizes.hero).toBeGreaterThanOrEqual(36);
+      expect(sizes.hero).toBeLessThanOrEqual(60);
+      expect(sizes.h2).toBeGreaterThanOrEqual(24);
+      expect(sizes.h2).toBeLessThanOrEqual(32);
+      expect(sizes.h3).toBe(18);
+    });
+
     it('sizes the video background to the hero, in a wrapper of its own', () => {
       const stage = element.querySelector('.hero-stage') as HTMLElement;
 

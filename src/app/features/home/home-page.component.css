@@ -162,12 +162,13 @@ p {
 }
 
 h1 {
-  max-width: 800px;
+  max-width: 760px;
   margin-top: 14px;
-  font-size: clamp(3.2rem, 7vw, 6.8rem);
-  font-weight: 880;
-  line-height: 0.88;
-  letter-spacing: -0.055em;
+  font-size: var(--type-hero);
+  font-weight: 750;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
   text-shadow: 0 20px 50px rgba(0, 0, 0, 0.48);
 }
 
@@ -206,9 +207,6 @@ h1 {
     padding-top: 0;
   }
 
-  h1 {
-    font-size: clamp(3rem, 15vw, 4.6rem);
-  }
   .home-page-background.is-popout:not(.is-foreground) {
     right: var(--mobile-page-gutter);
     bottom: var(--mobile-page-gutter);
