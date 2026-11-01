@@ -1,128 +1,207 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-
 import {
-  computeHeroBuildProfile,
-  heroBuildTypes,
-  HeroBuildType,
-} from '../../heroes/hero-build-profile';
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injector,
+  OnInit,
+  signal,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { HeroDataService } from '../../heroes/hero-data.service';
-import { Hero, HeroRole } from '../../heroes/hero.model';
+import { Hero } from '../../heroes/hero.model';
+import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 import { TeamCompositionEngineService } from './team-composition-engine.service';
+
+const TEAM_SIZE = 6;
+
+/** A hero scores up to 10 on each build signal, so a full team's total tops out at 60. */
+const MAX_SIGNAL = 10 * TEAM_SIZE;
+
+const removeLabel = (hero: Hero): string => `Remove ${hero.name} from team`;
 
 @Component({
   selector: 'app-team-builder-page',
-  imports: [CommonModule],
+  imports: [HeroTileComponent, NoticeComponent, StatePanelComponent],
   templateUrl: './team-builder-page.component.html',
   styleUrl: './team-builder-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeamBuilderPageComponent implements OnInit {
-  private readonly teamCompositionEngine = inject(TeamCompositionEngineService);
+  private readonly engine = inject(TeamCompositionEngineService);
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroes = signal<Hero[]>([]);
-  readonly teamSlots = signal<(Hero | undefined)[]>(Array.from({ length: 6 }));
-  readonly draggedHeroId = signal('');
-  readonly selectedHeroId = signal('');
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private readonly teamHeading = viewChild.required<ElementRef<HTMLElement>>('teamHeading');
+  private readonly poolHeading = viewChild.required<ElementRef<HTMLElement>>('poolHeading');
+  private readonly removeButtons = viewChildren<ElementRef<HTMLButtonElement>>('removeButton');
 
-  readonly buildSignals = this.teamCompositionEngine.buildSignals;
-  readonly buildTypes = heroBuildTypes();
+  /** The roster: `undefined` until it has loaded, empty when it could not be loaded. */
+  private readonly heroes = signal<Hero[] | undefined>(undefined);
 
-  readonly selectedHeroes = computed(() => this.teamSlots().filter((hero): hero is Hero => Boolean(hero)));
+  private readonly team = signal<(Hero | undefined)[]>(Array.from({ length: TEAM_SIZE }));
 
-  readonly availableHeroes = computed(() => {
-    const selectedIds = new Set(this.selectedHeroes().map((hero) => hero.id));
+  protected readonly announcement = signal('');
+  protected readonly signalMax = MAX_SIGNAL;
 
-    return this.heroes().filter((hero) => !selectedIds.has(hero.id));
-  });
+  private readonly chosen = computed(() => this.team().filter((hero): hero is Hero => hero !== undefined));
+  protected readonly isEmpty = computed(() => this.chosen().length === 0);
+  protected readonly isFull = computed(() => this.chosen().length === TEAM_SIZE);
+  protected readonly chosenLabel = computed(() => `${this.chosen().length} of ${TEAM_SIZE} chosen`);
 
-  readonly selectedDraftHero = computed(() =>
-    this.heroes().find((hero) => hero.id === this.selectedHeroId()),
+  protected readonly slots = computed(() =>
+    this.team().map((hero, index) => ({
+      hero,
+      caption: `P${index + 1} · ${hero?.role ?? 'Empty'}`,
+      removeLabel: hero && removeLabel(hero),
+    })),
   );
 
-  readonly compSummary = computed(() => this.teamCompositionEngine.analyzeTeam(this.selectedHeroes()));
+  protected readonly poolState = computed(() => {
+    const heroes = this.heroes();
+
+    if (heroes === undefined) {
+      return 'loading';
+    }
+
+    return heroes.length === 0 ? 'error' : 'ready';
+  });
+
+  protected readonly pool = computed(() => {
+    const chosenIds = new Set(this.chosen().map((hero) => hero.id));
+    const full = this.isFull();
+
+    return (this.heroes() ?? []).map((hero) => {
+      const picked = chosenIds.has(hero.id);
+
+      return {
+        hero,
+        picked,
+        disabled: full && !picked,
+        label: picked ? removeLabel(hero) : `Add ${hero.name}, ${hero.role} to team`,
+      };
+    });
+  });
+
+  protected readonly summary = computed(() => (this.isEmpty() ? null : this.engine.analyzeTeam(this.chosen())));
+
+  protected readonly signalRows = computed(() => {
+    const scores = this.summary()?.buildScores;
+
+    return scores
+      ? this.engine.buildSignals.map(({ type }) => ({
+          type,
+          value: scores[type],
+          label: `${type} ${scores[type]} of ${MAX_SIGNAL}`,
+        }))
+      : [];
+  });
 
   ngOnInit(): void {
-    this.heroDataService.getHeroes().subscribe((heroes) => {
-      this.heroes.set(heroes.map((hero) => ({
-        ...hero,
-        buildProfile: hero.buildProfile ?? computeHeroBuildProfile(hero),
-      })));
-    });
+    this.loadHeroes();
   }
 
-  startHeroDrag(hero: Hero): void {
-    this.draggedHeroId.set(hero.id);
-    this.selectedHeroId.set(hero.id);
+  protected reload(): void {
+    this.heroes.set(undefined);
+    this.loadHeroes();
+    afterNextRender(() => this.poolHeading().nativeElement.focus(), { injector: this.injector });
   }
 
-  allowDrop(event: DragEvent): void {
+  /** Adds the hero to the first empty slot, or takes it out of the team when it is already in. */
+  protected toggleHero(hero: Hero): void {
+    const taken = this.team().findIndex((member) => member?.id === hero.id);
+    const empty = this.team().indexOf(undefined);
+
+    if (taken >= 0) {
+      this.vacate(taken);
+    } else if (empty >= 0) {
+      this.place(hero, empty);
+    }
+  }
+
+  /** Takes a hero out of a slot, then puts focus on the nearest remaining remove button, or the heading. */
+  protected removeFromSlot(index: number): void {
+    this.vacate(index);
+    this.focusAfterRemoving(index);
+  }
+
+  protected clearTeam(): void {
+    this.team.set(Array.from({ length: TEAM_SIZE }));
+    this.announcement.set('Team cleared.');
+    this.teamHeading().nativeElement.focus();
+  }
+
+  protected startHeroDrag(event: DragEvent, hero: Hero): void {
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', hero.id);
+    }
+  }
+
+  protected allowDrop(event: DragEvent): void {
     event.preventDefault();
   }
 
-  dropHero(slotIndex: number, event: DragEvent): void {
+  protected dropHero(event: DragEvent, slotIndex: number): void {
     event.preventDefault();
-    const heroId = this.draggedHeroId();
-    const hero = this.heroes().find((item) => item.id === heroId);
+    const heroId = event.dataTransfer?.getData('text/plain');
+    const hero = this.heroes()?.find((candidate) => candidate.id === heroId);
 
-    if (!hero) {
-      return;
-    }
-
-    this.placeHero(hero, slotIndex);
-    this.draggedHeroId.set('');
-    this.selectedHeroId.set('');
-  }
-
-  selectDraftHero(hero: Hero): void {
-    this.selectedHeroId.set(hero.id);
-  }
-
-  placeSelectedHero(slotIndex: number): void {
-    const selectedHero = this.selectedDraftHero();
-
-    if (selectedHero) {
-      this.placeHero(selectedHero, slotIndex);
-      this.selectedHeroId.set('');
+    if (hero) {
+      this.place(hero, slotIndex);
     }
   }
 
-  removeHero(slotIndex: number): void {
-    this.teamSlots.update((slots) => slots.map((slot, index) => index === slotIndex ? undefined : slot));
+  private loadHeroes(): void {
+    this.heroDataService
+      .getHeroes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((heroes) => this.heroes.set(heroes));
   }
 
-  clearTeam(): void {
-    this.teamSlots.set(Array.from({ length: 6 }));
-    this.selectedHeroId.set('');
+  /** Puts the hero in the slot, moving it there if it was already in the team. */
+  private place(hero: Hero, slotIndex: number): void {
+    const replaced = this.team()[slotIndex];
+
+    this.team.update((slots) =>
+      slots.map((slot, index) => (index === slotIndex ? hero : slot?.id === hero.id ? undefined : slot)),
+    );
+
+    const action = replaced && replaced.id !== hero.id ? `replaced ${replaced.name} in` : 'added to';
+
+    this.announcement.set(
+      `${hero.name} ${action} P${slotIndex + 1}. ${this.chosenLabel()}.${this.isFull() ? ' Team is full. Remove a hero to add another.' : ''}`,
+    );
   }
 
-  roleClass(role: HeroRole): string {
-    return role.toLowerCase().replace(/\s+/g, '-');
-  }
+  private vacate(slotIndex: number): void {
+    const hero = this.team()[slotIndex];
 
-  heroBuildValue(hero: Hero, type: HeroBuildType): number {
-    return this.teamCompositionEngine.heroBuildValue(hero, type);
-  }
-
-  scoreTone(value: number, max = 10): string {
-    const ratio = max > 0 ? value / max : 0;
-
-    if (ratio >= 0.7) {
-      return 'score-high';
+    this.team.update((slots) => slots.map((slot, index) => (index === slotIndex ? undefined : slot)));
+    if (hero) {
+      this.announcement.set(`${hero.name} removed. ${this.chosenLabel()}.`);
     }
-
-    if (ratio >= 0.4) {
-      return 'score-mid';
-    }
-
-    return 'score-low';
   }
 
-  private placeHero(hero: Hero, slotIndex: number): void {
-    this.teamSlots.update((slots) => {
-      const withoutDuplicate = slots.map((slot) => slot?.id === hero.id ? undefined : slot);
+  private focusAfterRemoving(removedIndex: number): void {
+    const filled = this.team().flatMap((hero, index) => (hero ? [index] : []));
+    const nextFilled = filled.find((index) => index > removedIndex) ?? filled.at(-1);
 
-      return withoutDuplicate.map((slot, index) => index === slotIndex ? hero : slot);
-    });
+    afterNextRender(
+      () => {
+        const target = nextFilled === undefined ? undefined : this.removeButtons()[filled.indexOf(nextFilled)];
+
+        (target ?? this.teamHeading()).nativeElement.focus();
+      },
+      { injector: this.injector },
+    );
   }
-
 }

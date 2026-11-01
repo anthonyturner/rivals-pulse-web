@@ -8,6 +8,7 @@ import { HeroTileComponent } from './hero-tile.component';
   imports: [HeroTileComponent],
   template: `
     <app-hero-tile id="plain" name="Storm" imageUrl="/images/heroes/storm.png"><span class="under">3 games</span></app-hero-tile>
+    <app-hero-tile id="picked" name="Thor" imageUrl="/images/heroes/thor.png" selectable selected />
     <app-hero-tile id="linked" name="Hela" imageUrl="/images/heroes/hela.png" heroId="hela">
       <span tileFigure class="aside">70.0%</span>
       <span class="under">20 games</span>
@@ -44,5 +45,19 @@ describe('HeroTileComponent', () => {
     expect(tile('linked').querySelector('.head .aside')?.textContent).toBe('70.0%');
     expect(tile('linked').querySelector('.head .under')).toBeNull();
     expect(tile('linked').querySelector('.under')?.textContent).toBe('20 games');
+  });
+
+  it('marks a selectable tile and the selected one for styling, and a plain tile as neither', () => {
+    expect(tile('plain').classList).not.toContain('selectable');
+    expect(tile('picked').classList).toContain('selectable');
+    expect(tile('picked').classList).toContain('selected');
+  });
+
+  it('swaps a portrait that fails to load for the default hero portrait', () => {
+    const image = tile('plain').querySelector('img') as HTMLImageElement;
+
+    image.dispatchEvent(new Event('error'));
+
+    expect(image.src).toContain('/images/heroes/default-hero.png');
   });
 });

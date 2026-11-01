@@ -1,6 +1,6 @@
 ---
 name: 'UX Design'
-description: 'Produces read-only wireframes, layouts, interaction flows and accessibility notes for material Rivals Pulse Coach user-facing decisions. Not architecture.'
+description: 'Produces read-only wireframes, layouts, interaction flows and accessibility notes for material RivalsPulse user-facing decisions. Not architecture.'
 tools: [search/codebase, read/readFile]
 ---
 
