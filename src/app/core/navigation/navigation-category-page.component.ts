@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -9,6 +9,7 @@ import { NavigationCategory } from './navigation-category.data';
   imports: [PageHeaderComponent, RouterLink],
   templateUrl: './navigation-category-page.component.html',
   styleUrl: './navigation-category-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavigationCategoryPageComponent {
   private readonly route = inject(ActivatedRoute);
