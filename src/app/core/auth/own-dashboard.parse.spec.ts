@@ -1,3 +1,4 @@
+import { deriveOwnDashboard, type OwnDashboardLine } from '../../../own-dashboard';
 import { emptyDashboard, linkedDashboard } from './own-dashboard.fixtures';
 import { parseOwnDashboard } from './own-dashboard.parse';
 
@@ -22,6 +23,53 @@ describe('parseOwnDashboard', () => {
     for (const body of [null, undefined, 'linked', [], {}, { linked: 'yes' }, { linked: true }]) {
       expect(parseOwnDashboard(body)).withContext(JSON.stringify(body)).toBeNull();
     }
+  });
+
+  describe('the server derivation', () => {
+    const HULK = 1011;
+    const answerFor = (lines: OwnDashboardLine[]): unknown =>
+      JSON.parse(
+        JSON.stringify({
+          linked: true,
+          player: { name: 'Aurora', avatarUrl: null },
+          truncated: false,
+          stats: deriveOwnDashboard(lines),
+        }),
+      );
+    const line = (day: number, overrides: Partial<OwnDashboardLine> = {}): OwnDashboardLine => ({
+      playedAt: new Date(Date.UTC(2026, 9, day, 12)).toISOString(),
+      heroId: HULK,
+      kills: 10,
+      deaths: 4,
+      assists: 6,
+      finalHits: 3,
+      isWin: true,
+      playModeId: 1,
+      mapName: 'Tokyo 2099',
+      figures: [{ heroId: HULK, seconds: 600, damage: 9000, healing: null, blocked: 2000 }],
+      ...overrides,
+    });
+
+    it('is accepted for a full set of matches, so the browser and the API cannot drift apart', () => {
+      expect(parseOwnDashboard(answerFor([line(1), line(2, { isWin: false }), line(3, { isWin: null })]))).not.toBeNull();
+    });
+
+    it('is accepted when every figure is a blank, and when there are no matches', () => {
+      const blank = line(4, {
+        heroId: null,
+        kills: null,
+        deaths: null,
+        assists: null,
+        finalHits: null,
+        isWin: null,
+        playModeId: null,
+        mapName: null,
+        figures: [],
+      });
+
+      expect(parseOwnDashboard(answerFor([blank]))).not.toBeNull();
+      expect(parseOwnDashboard(answerFor([]))).not.toBeNull();
+    });
   });
 
   describe('refuses a linked answer with', () => {
