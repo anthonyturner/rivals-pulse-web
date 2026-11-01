@@ -34,6 +34,12 @@ describe('JarvisConsoleComponent', () => {
     );
   });
 
+  it('keeps a space between the two coloured halves of the heading', () => {
+    const heading: HTMLElement = fixture.nativeElement.querySelector('#jarvis-console-title');
+
+    expect(heading.textContent?.trim()).toBe("Ask your match how it's going.");
+  });
+
   it('renders a chip for every core state and marks the active one', () => {
     const chips = fixture.nativeElement.querySelectorAll('.state-chip');
 
