@@ -35,7 +35,8 @@ repo's build. This is a move, not a redesign.
   every newer overlay's extras; a signature change follows "Changing a database function's
   signature" below).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`). The aggregate tables are read by the website only.
+  `record_match_extras`) and `tracked_match_recorders` (written by `track-match-history` itself). The
+  aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
   must be optional in the same way.
@@ -70,6 +71,7 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
+| `20261101030000_tracked_match_recorders.sql` | `tracked_match_recorders` (which verified recorder uploaded each `tracked_matches` row; service role only, deleted with the match) |
 
 Link once per machine, check history, then apply:
 
@@ -226,6 +228,16 @@ npx supabase functions deploy elevenlabs-agent-token
 participants backfill replays those rows, so lower the cap only after it has
 run.
 
+Each upload also writes a `tracked_match_recorders` row (`tracked_match_id`, `recorded_by`) naming the
+verified recorder, so a linked player's history can later be counted past the six-month
+`participants` window. It is a side table because `tracked_matches` is publicly readable: **never add
+`recorded_by` to `tracked_matches`**, since it is the hash that identifies a linked person. The table
+has RLS on and no grant to `anon` or `authenticated`; deleting a tracked match, which is how the cap
+above prunes, deletes its row. Rows exist only from the day the function carrying this write is
+deployed. The write is logged, never fatal, if it fails, so the upload's request and reply are
+unchanged. `supabase/checks/tracked_match_recorders.sql` proves the rules against the linked
+project and rolls back: `npx supabase db query --linked -f supabase/checks/tracked_match_recorders.sql`.
+
 ## Secrets
 
 Set with `npx supabase secrets set NAME=value`. Names only here.
@@ -241,7 +253,11 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
 Deploy order for `track-match-history`: migration, then secrets, then
-function. A function deployed first fails closed (every upload is refused).
+function. A function deployed first fails closed (every upload is refused). The
+`tracked_match_recorders` migration must also run before the function that writes to it: the
+Supabase GitHub integration deploys the function on merge, so push the migration by hand first.
+Out of order, uploads still succeed but the recorder rows for that period are lost, because the
+failed write is only logged.
 
 ## Premium launch order
 
