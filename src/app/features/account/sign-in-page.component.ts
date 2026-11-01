@@ -11,6 +11,7 @@ const SIGN_IN_ERRORS: Record<string, string> = {
 
 const SIGN_IN_NOTICES: Record<string, string> = {
   deleted: 'Your account has been deleted and you are signed out.',
+  reauth: 'For your safety, sign in again to delete your account. After that, go back to the delete section and try again.',
 };
 
 /** A path on this site. The server applies the same rule again before it redirects anywhere. */
@@ -40,7 +41,7 @@ export class SignInPageComponent {
     void this.auth.load();
 
     effect(() => {
-      if (this.state().status === 'signedIn') {
+      if (this.state().status === 'signedIn' && this.query.get('notice') !== 'reauth') {
         void this.router.navigateByUrl(this.next);
       }
     });

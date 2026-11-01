@@ -6,6 +6,12 @@ import { DELETE_CONFIRMATION_PHRASE, isDeletionConfirmed } from '../../core/auth
 import { AuthService } from '../../core/auth/auth.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 
+const SIGN_IN_AFTER_DELETE = {
+  deleted: { notice: 'deleted' },
+  signedOut: { next: '/account' },
+  signInAgain: { next: '/account', notice: 'reauth' },
+} as const;
+
 const PROVIDER_LABELS: Record<string, string> = { discord: 'Discord', email: 'Email and password' };
 
 @Component({
@@ -64,8 +70,6 @@ export class AccountPageComponent {
       return;
     }
 
-    await this.router.navigate(['/sign-in'], {
-      queryParams: result.status === 'deleted' ? { notice: 'deleted' } : { next: '/account' },
-    });
+    await this.router.navigate(['/sign-in'], { queryParams: SIGN_IN_AFTER_DELETE[result.status] });
   }
 }

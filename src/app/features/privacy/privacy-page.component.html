@@ -189,14 +189,18 @@
     <p>
       <strong>Deleting your account.</strong> Sign in, open your
       <a routerLink="/account">account page</a>, choose what to remove, type the confirmation
-      phrase and press the delete button. Removing the account deletes the sign-in details our
-      database service holds and our row for you straight away, and signs you out. Signing in with
-      Discord again afterwards starts a new, empty account. A second choice, "Remove account and
-      forget me", will also remove the match data the desktop app uploaded about you; it is
-      switched off until you link the desktop app to your account. Deleted data can stay in our
-      database service's backups until they age out. Deleting the account here does not remove
-      this site from your Discord settings; to do that, open Authorized Apps in your Discord
-      settings and remove it there.
+      phrase and press the delete button. Deleting needs a sign-in from the last ten minutes, so
+      you may be asked to sign in again first. Removing the account deletes your sign-in details
+      from our database service and our own row for you at once, and signs you out. Signing in
+      with Discord again afterwards starts a new, empty account. It does not erase everything:
+      Supabase keeps sign-in and request log entries for its own retention period, which we have
+      not set, and those can include your account id, email address and IP address. Backups can
+      also hold the account until they age out. Deleting the account here does not remove this
+      site from your Discord settings; to do that, open Authorized Apps in your Discord settings
+      and remove it there. A second choice, "Remove account and forget me", will also ask us to
+      forget the matches the desktop app uploaded about you; it cannot be undone, and anonymous
+      totals already published keep their counts. It is switched off until you link the desktop
+      app to your account.
     </p>
   </section>
 

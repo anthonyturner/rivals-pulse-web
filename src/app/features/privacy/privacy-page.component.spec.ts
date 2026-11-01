@@ -129,13 +129,18 @@ describe('PrivacyPageComponent', () => {
 
   it('explains self-service deletion on the account page, not a request in Discord', () => {
     const accounts = section('accounts');
-    const text = accounts.textContent ?? '';
+    const text = (accounts.textContent ?? '').replace(/\s+/g, ' ');
 
     expect(accounts.querySelector('a[href="/account"]')).withContext('the link to the account page').toBeTruthy();
     expect(text).toContain('Remove account and forget me');
     expect(text).toContain('Signing in with Discord again');
     expect(text).not.toContain('ask for your account to be deleted');
     expect(text).not.toContain('does not have a delete button');
+    expect(text).not.toContain('straight away');
+    expect(text).toContain('last ten minutes');
+    expect(text).toContain('Supabase keeps sign-in and request log entries');
+    expect(text).toContain('IP address');
+    expect(text).toContain('cannot be undone');
     expect(accounts.querySelector('a[href^="https://discord.gg/"]')).toBeNull();
   });
 });

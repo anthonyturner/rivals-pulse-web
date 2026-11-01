@@ -21,9 +21,11 @@ export type DeleteAccountResult =
   | { status: 'deleted' }
   /** There was no valid session to delete, so nothing was deleted. */
   | { status: 'signedOut' }
+  /** The session is fine but the last sign-in is too old; nothing was deleted. */
+  | { status: 'signInAgain' }
   | { status: 'failed'; message: string };
 
-const DELETE_FAILED = 'The account could not be deleted. Nothing was removed; try again in a moment.';
+const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 /**
  * The visitor's sign-in state, read from the server. The session itself lives in an HttpOnly cookie
@@ -82,6 +84,10 @@ export class AuthService {
       }
 
       if (response.status === 401) {
+        if ((await this.reasonOf(response)) === 'recent-sign-in-required') {
+          return { status: 'signInAgain' };
+        }
+
         this.markSignedOut();
 
         return { status: 'signedOut' };
@@ -98,6 +104,14 @@ export class AuthService {
 
     this.state.set(signedOut);
     this.pending = Promise.resolve(signedOut);
+  }
+
+  private async reasonOf(response: Response): Promise<unknown> {
+    try {
+      return ((await response.json()) as { reason?: unknown } | null)?.reason;
+    } catch {
+      return undefined;
+    }
   }
 
   /** The server writes its own refusals in plain words; anything else gets the generic line. */

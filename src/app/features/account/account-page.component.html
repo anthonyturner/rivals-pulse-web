@@ -38,6 +38,10 @@
 
     <section class="account-section" aria-labelledby="account-delete-title">
       <h2 id="account-delete-title">Delete your account</h2>
+      <p class="account-note">
+        Deleting needs a sign-in from the last ten minutes; if yours is older you will be asked to
+        sign in again first.
+      </p>
       <form (submit)="deleteAccount($event)">
         <fieldset class="account-choices" [disabled]="deleting()">
           <legend>What should be removed?</legend>
@@ -59,7 +63,8 @@
             />
             <span>
               <strong>Remove account and forget me</strong>
-              Also removes the match data the desktop app uploaded about you.
+              Also asks us to forget the matches the desktop app uploaded about you. This cannot be
+              undone, and anonymous totals already counted keep their counts.
               <em id="forget-me-hint">This is available once you link the desktop app.</em>
             </span>
           </label>

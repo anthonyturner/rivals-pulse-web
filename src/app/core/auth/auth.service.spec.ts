@@ -102,6 +102,17 @@ describe('AuthService', () => {
       expect(service.state()).toEqual({ status: 'signedOut' });
     });
 
+    it('asks for a fresh sign-in, keeping the visitor signed in, when the last one is too old', async () => {
+      create(
+        answer(200, { signedIn: true, account: ACCOUNT }),
+        answer(401, { error: 'Sign in again.', reason: 'recent-sign-in-required' }),
+      );
+      await service.load();
+
+      expect(await service.deleteAccount(asked)).toEqual({ status: 'signInAgain' });
+      expect(service.state().status).toBe('signedIn');
+    });
+
     it('keeps the visitor signed in and passes on the server message when it refuses', async () => {
       create(answer(200, { signedIn: true, account: ACCOUNT }), answer(503, { error: 'Try again in a moment.' }));
       await service.load();
@@ -116,7 +127,7 @@ describe('AuthService', () => {
       const result = await service.deleteAccount(asked);
 
       expect(result.status).toBe('failed');
-      expect(result.status === 'failed' && result.message).toContain('Nothing was removed');
+      expect(result.status === 'failed' && result.message).toContain('did not go through');
     });
 
     it('fails without signing the visitor out when the network is down', async () => {

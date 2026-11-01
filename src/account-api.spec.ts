@@ -4,6 +4,8 @@ import { AuthUnavailableError, type AuthGateway } from './auth-gateway';
 const TOKENS = { accessToken: 'access.jwt.value', refreshToken: 'refresh-value' };
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
 const SESSION_COOKIE = `rp_session=${TOKENS.accessToken}~${TOKENS.refreshToken}`;
+const NOW_MS = 1_800_000_000_000;
+const signedInCookie = (secondsAgo: number): string => `${SESSION_COOKIE}~${NOW_MS / 1000 - secondsAgo}`;
 const PKCE_COOKIE = `rp_pkce=${encodeURIComponent(JSON.stringify({ verifier: 'the-verifier', next: '/account' }))}`;
 const AUTHORIZE_URL = 'https://project.supabase.co/auth/v1/authorize?x=1';
 
@@ -71,6 +73,17 @@ describe('GET auth/session', () => {
 
     expect(response.cookies.length).toBe(1);
     expect(response.cookies[0]).toContain('rp_session=new.jwt~new-refresh');
+  });
+
+  it('keeps the original sign-in time when the tokens are refreshed', async () => {
+    const response = await run(
+      request('auth/session', { cookieHeader: signedInCookie(120) }),
+      gateway({
+        resolve: async () => ({ account: ACCOUNT, tokens: { accessToken: 'new.jwt', refreshToken: 'new-refresh' } }),
+      }),
+    );
+
+    expect(response.cookies[0]).toContain(`rp_session=new.jwt~new-refresh~${NOW_MS / 1000 - 120};`);
   });
 });
 
@@ -174,6 +187,12 @@ describe('GET auth/callback', () => {
     expect(response.cookies[0]).toContain(SESSION_COOKIE);
     expect(response.cookies[0]).toContain('HttpOnly; Secure; SameSite=Lax');
     expect(response.cookies[1]).toContain('rp_pkce=;');
+  });
+
+  it('records when the player signed in, from the request clock', async () => {
+    const response = await run({ ...callback({ code: 'abc' }), nowMs: NOW_MS });
+
+    expect(response.cookies[0]).toContain(`${SESSION_COOKIE}~${NOW_MS / 1000};`);
   });
 
   it('goes back to sign-in when Supabase refuses the code', async () => {
@@ -315,8 +334,9 @@ describe('POST account/delete', () => {
     request('account/delete', {
       method: 'POST',
       originHeader: 'https://rivalspulse.com',
-      cookieHeader: SESSION_COOKIE,
+      cookieHeader: signedInCookie(60),
       body: ASKED,
+      nowMs: NOW_MS,
       ...overrides,
     });
   /** A gateway that records the sessions it was asked to delete. */
@@ -341,7 +361,7 @@ describe('POST account/delete', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ deleted: true });
-    expect(seen.tokens).toEqual([TOKENS]);
+    expect(seen.tokens).toEqual([{ ...TOKENS, signedInAt: NOW_MS / 1000 - 60 }]);
     expect(response.cookies.length).toBe(1);
     expect(response.cookies[0]).toContain('rp_session=;');
     expect(response.cookies[0]).toContain('Max-Age=0');
@@ -383,6 +403,44 @@ describe('POST account/delete', () => {
     expect(response.status).toBe(409);
     expect(seen.tokens).toEqual([]);
     expect(response.cookies).toEqual([]);
+  });
+
+  describe('recent sign-in', () => {
+    it('accepts a sign-in exactly ten minutes old', async () => {
+      const { seen, gateway: gw } = recording();
+
+      expect((await run(post({ cookieHeader: signedInCookie(600) }), gw)).status).toBe(200);
+      expect(seen.tokens.length).toBe(1);
+    });
+
+    const tooOld: [string, string][] = [
+      ['older than ten minutes', signedInCookie(601)],
+      ['a session from before the time was recorded', SESSION_COOKIE],
+      ['a sign-in time in the future', signedInCookie(-5)],
+    ];
+
+    for (const [name, cookieHeader] of tooOld) {
+      it(`asks the player to sign in again, and deletes nothing, with ${name}`, async () => {
+        const { seen, gateway: gw } = recording();
+        const response = await run(post({ cookieHeader }), gw);
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+          error: jasmine.any(String),
+          reason: 'recent-sign-in-required',
+        });
+        expect(seen.tokens).toEqual([]);
+        expect(response.cookies).toEqual([]);
+      });
+    }
+
+    it('checks the phrase first, so a bad request is not sent to sign in', async () => {
+      const response = await run(
+        post({ cookieHeader: signedInCookie(3600), body: { mode: 'account', confirmation: 'no' } }),
+      );
+
+      expect(response.status).toBe(400);
+    });
   });
 
   it('needs a session cookie', async () => {
@@ -427,6 +485,8 @@ describe('POST account/delete', () => {
     expect(response.status).toBe(503);
     expect(response.cookies).toEqual([]);
     expect(JSON.stringify(response.body)).not.toContain('service key');
+    expect(JSON.stringify(response.body)).toContain('deletion did not go through');
+    expect(JSON.stringify(response.body)).not.toContain('Sign-in');
   });
 });
 

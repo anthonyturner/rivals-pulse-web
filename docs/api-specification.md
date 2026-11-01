@@ -32,7 +32,7 @@ and `GET /api/auth/callback` finishes it, sets the `rp_session` cookie and redir
 POST whose `Origin` is missing or not this site's gets 403. Unreachable Supabase answers 503.
 
 `POST /api/account/delete` takes the JSON body `{ "mode": "account", "confirmation": "delete my account" }`
-and the `rp_session` cookie. It answers 401 with no valid session, 400 when the phrase or mode is wrong
+and the `rp_session` cookie. It answers 401 with no valid session, 401 with `"reason": "recent-sign-in-required"` when the Discord sign-in recorded in the session cookie is more than ten minutes old (the page then sends the player to `/sign-in?next=/account`), 400 when the phrase or mode is wrong
 (nothing is deleted), 409 for the mode `account-and-matches` ("Remove account and forget me", not
 available until the desktop app is linked), 503 when Supabase or the service-role key is unavailable, and
 otherwise 200 `{ "deleted": true }` with the `rp_session` cookie cleared. The auth user is deleted for

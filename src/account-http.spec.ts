@@ -101,7 +101,7 @@ describe('handleAccountHttp', () => {
 });
 
 describe('handleAccountHttp account deletion', () => {
-  const headers = { origin: 'https://rivalspulse.com', cookie: 'rp_session=a~r' };
+  const headers = { origin: 'https://rivalspulse.com', cookie: `rp_session=a~r~${Math.floor(Date.now() / 1000)}` };
   const asked = JSON.stringify({ mode: 'account', confirmation: 'delete my account' });
 
   /** A gateway whose deleteAccount records that it ran. */

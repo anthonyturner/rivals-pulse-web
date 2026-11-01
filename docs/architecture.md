@@ -70,6 +70,9 @@ The session lives on the server side of the boundary:
 - The browser asks `GET /api/auth/session` through `AuthService`
   (`src/app/core/auth/`) and the `/account` route is guarded by `signedInGuard`.
 - `public.profiles` (one row per account, RLS on) is created at first sign-in.
+- The session cookie also carries the time of the Discord sign-in (Supabase moves its own
+  `last_sign_in_at` on every token refresh, so it cannot be used). `POST /api/account/delete` needs that
+  sign-in to be under ten minutes old (ADR-0004, decision 7) and answers 401 with a reason otherwise.
 - `POST /api/account/delete` verifies the session with Supabase (`auth.getUser`), requires the typed
   phrase and the "account" mode, then deletes the auth user with the service-role key, which the server
   uses for this call only. The profile row goes with it (`on delete cascade`) and the session cookie is

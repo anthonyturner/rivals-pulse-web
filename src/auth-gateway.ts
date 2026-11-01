@@ -216,8 +216,8 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
         body: JSON.stringify({ should_soft_delete: false }),
       });
 
-      // 404 means the account is already gone, which is what the player asked for.
-      if (!response.ok && response.status !== 404) {
+      // Only Supabase's own "no such user" counts as already gone; a 404 from a wrong address does not.
+      if (!response.ok && !(response.status === 404 && (await errorCodeOf(response)) === 'user_not_found')) {
         throw new AuthUnavailableError(`Supabase Auth refused the account deletion with ${response.status}`);
       }
 
@@ -232,6 +232,14 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
       }
     },
   };
+}
+
+async function errorCodeOf(response: Response): Promise<unknown> {
+  try {
+    return ((await response.json()) as { error_code?: unknown } | null)?.error_code;
+  } catch {
+    return undefined;
+  }
 }
 
 function tokensOf(body: Record<string, unknown>): SessionTokens | undefined {

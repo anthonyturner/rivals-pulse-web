@@ -252,9 +252,19 @@ describe('createSupabaseAuthGateway', () => {
     });
 
     it('counts an account that is already gone as deleted', async () => {
-      const { fetcher } = fakeFetch((call) => (call.method === 'DELETE' ? { status: 404 } : { status: 200, body: USER }));
+      const { fetcher } = fakeFetch((call) =>
+        call.method === 'DELETE' ? { status: 404, body: { error_code: 'user_not_found' } } : { status: 200, body: USER },
+      );
 
       expect(await createSupabaseAuthGateway(ENV_WITH_SERVICE_KEY, fetcher).deleteAccount(tokens)).toBe('deleted');
+    });
+
+    it('does not count a 404 from the wrong address as a deletion', async () => {
+      const { fetcher } = fakeFetch((call) => (call.method === 'DELETE' ? { status: 404 } : { status: 200, body: USER }));
+
+      await expectAsync(
+        createSupabaseAuthGateway(ENV_WITH_SERVICE_KEY, fetcher).deleteAccount(tokens),
+      ).toBeRejectedWithError(AuthUnavailableError);
     });
 
     it('reports a refused or failed deletion as unavailable, without leaking the key', async () => {

@@ -139,6 +139,18 @@ describe('AccountPageComponent deletion', () => {
     expect(auth.deleteAccount).toHaveBeenCalledTimes(1);
   });
 
+  it('sends a player whose last sign-in is too old to sign in again, with a reason', async () => {
+    const { auth } = setup(SIGNED_IN, { status: 'signInAgain' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    await type(harness, 'delete my account');
+    deleteButton(harness).click();
+    await harness.fixture.whenStable();
+
+    expect(auth.deleteAccount).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(Router).url).toBe('/sign-in?next=%2Faccount&notice=reauth');
+  });
+
   it('sends a player whose session had already ended to sign in', async () => {
     setup(SIGNED_IN, { status: 'signedOut' });
     const harness = await RouterTestingHarness.create('/account');
@@ -182,6 +194,17 @@ describe('SignInPageComponent', () => {
     const harness = await RouterTestingHarness.create('/sign-in?notice=deleted');
 
     expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('account has been deleted');
+  });
+
+  it('explains why to sign in again, and stays put although the visitor is signed in', async () => {
+    setup(SIGNED_IN);
+    const harness = await RouterTestingHarness.create('/sign-in?next=%2Faccount&notice=reauth');
+
+    await harness.fixture.whenStable();
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('sign in again to delete');
+    expect(TestBed.inject(Router).url).toBe('/sign-in?next=%2Faccount&notice=reauth');
+    expect(discordLink(harness).getAttribute('href')).toBe('/api/auth/discord/start?next=%2Faccount');
   });
 
   it('ignores a notice it does not know', async () => {
