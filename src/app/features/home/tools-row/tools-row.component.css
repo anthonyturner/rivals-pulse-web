@@ -1,16 +1,5 @@
 :host {
-  position: relative;
-  z-index: 1;
   display: block;
-}
-
-h2 {
-  margin: 0 0 16px;
-  padding-inline: clamp(4px, 2vw, 24px);
-  font-size: 1.5rem;
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
 }
 
 .tools {
@@ -30,7 +19,7 @@ h2 {
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--bg-panel);
+  background: var(--bg);
   color: inherit;
   text-decoration: none;
   transition:

@@ -26,8 +26,8 @@
 }
 
 .cta-primary {
-  border-color: #ffd866;
-  background: #ffd866;
+  border-color: var(--cta-yellow);
+  background: var(--cta-yellow);
   color: #111827;
 }
 
@@ -41,7 +41,7 @@ a.cta-primary:hover {
 }
 
 .cta-ghost:hover {
-  border-color: #ffd866;
+  border-color: var(--cta-yellow);
   background: rgba(7, 17, 31, 0.74);
 }
 
@@ -53,7 +53,7 @@ a.cta-primary:hover {
   padding: 3px 9px;
   border-radius: 999px;
   background: #111827;
-  color: #ffd866;
+  color: var(--cta-yellow);
   font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.04em;
@@ -61,7 +61,7 @@ a.cta-primary:hover {
 }
 
 .cta:focus-visible {
-  outline: 3px solid #ffd866;
+  outline: 3px solid var(--cta-yellow);
   outline-offset: 3px;
 }
 
@@ -81,11 +81,11 @@ a.cta-primary:hover {
 }
 
 .safety-link:hover {
-  color: #ffd866;
+  color: var(--cta-yellow);
 }
 
 .safety-link:focus-visible {
-  outline: 3px solid #ffd866;
+  outline: 3px solid var(--cta-yellow);
   outline-offset: 3px;
 }
 
@@ -116,11 +116,11 @@ a.cta-primary:hover {
 }
 
 .how-we-count:hover {
-  color: #ffd866;
+  color: var(--cta-yellow);
 }
 
 .how-we-count:focus-visible {
-  outline: 3px solid #ffd866;
+  outline: 3px solid var(--cta-yellow);
   outline-offset: 3px;
 }
 

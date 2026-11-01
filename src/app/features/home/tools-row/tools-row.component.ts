@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { HomeBandComponent } from '../home-band/home-band.component';
+
 export interface HomeTool {
   title: string;
   /** One line on what the tool answers for the visitor. */
@@ -44,7 +46,7 @@ export const HOME_TOOLS: readonly HomeTool[] = [
 
 @Component({
   selector: 'app-tools-row',
-  imports: [RouterLink],
+  imports: [HomeBandComponent, RouterLink],
   templateUrl: './tools-row.component.html',
   styleUrl: './tools-row.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

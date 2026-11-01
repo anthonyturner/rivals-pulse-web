@@ -1,28 +1,34 @@
-<section class="overlay-section" aria-labelledby="overlay-section-title">
-  <h2 id="overlay-section-title">What the overlay does</h2>
+<app-home-band
+  tone="dark"
+  eyebrow="In the game"
+  heading="What the overlay does"
+  headingId="overlay-section-title"
+  lede="Rivals Pulse runs beside Marvel Rivals through Overwolf. Try the Jarvis demo, then see what else it offers."
+>
+  <div class="overlay-section">
+    <app-jarvis-console />
 
-  <app-jarvis-console />
-
-  <ul class="features">
-    @for (feature of features; track feature.title) {
-      <li class="feature">
-        <span class="feature-icon" aria-hidden="true">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path [attr.d]="feature.iconPath" />
-          </svg>
-        </span>
-        <h3>{{ feature.title }}</h3>
-        <p>{{ feature.description }}</p>
-      </li>
-    }
-  </ul>
-</section>
+    <ul class="features">
+      @for (feature of features; track feature.title) {
+        <li class="feature">
+          <span class="feature-icon" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path [attr.d]="feature.iconPath" />
+            </svg>
+          </span>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+        </li>
+      }
+    </ul>
+  </div>
+</app-home-band>

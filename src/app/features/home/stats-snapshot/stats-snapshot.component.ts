@@ -17,6 +17,7 @@ import { combineLatest } from 'rxjs';
 import { tabTargetIndex } from '../../../shared/utilities/tab-keys';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { heroIdentities } from '../../insights/hero-identity';
+import { HomeBandComponent } from '../home-band/home-band.component';
 import { HomeHeroStatsService } from '../home-hero-stats.service';
 import {
   buildStatsSnapshotView,
@@ -32,7 +33,7 @@ import {
  */
 @Component({
   selector: 'app-stats-snapshot',
-  imports: [RouterLink],
+  imports: [HomeBandComponent, RouterLink],
   templateUrl: './stats-snapshot.component.html',
   styleUrl: './stats-snapshot.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

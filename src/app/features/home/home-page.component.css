@@ -3,22 +3,23 @@
 }
 
 .home-page {
-  position: relative;
+  /* The popout and the foreground player are fixed at z-index 50 and 1000: this keeps them above the bands. */
   isolation: isolate;
   min-height: 100%;
-  /* clip, unlike hidden, leaves the page as the scroller, so the news rail can stick. */
-  overflow: clip;
-  padding: 24px 32px 96px;
   background: var(--bg);
+}
+
+/* Sizes the video to the hero alone, so it ends where the first band begins. */
+.hero-stage {
+  position: relative;
 }
 
 .home-page-background {
   position: absolute;
   z-index: 0;
-  inset: 0 0 auto;
-  height: 760px;
+  inset: 0;
   overflow: hidden;
-  background: #07111f url('/images/site/heroes-banner.jpg') center / cover no-repeat;
+  background: var(--ink) url('/images/site/heroes-banner.jpg') center / cover no-repeat;
   cursor: zoom-in;
 }
 
@@ -28,7 +29,7 @@
   content: '';
   background:
     linear-gradient(90deg, rgba(7, 17, 31, 0.76), rgba(7, 17, 31, 0.28) 60%, rgba(7, 17, 31, 0.7)),
-    linear-gradient(180deg, rgba(7, 17, 31, 0.08), rgba(7, 17, 31, 0.48) 72%, var(--bg) 100%);
+    linear-gradient(180deg, rgba(7, 17, 31, 0.08), rgba(7, 17, 31, 0.48) 72%, var(--ink-raised) 100%);
 }
 
 .home-page-background-video {
@@ -75,7 +76,7 @@
   aspect-ratio: 16 / 9;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px;
-  background: #07111f;
+  background: var(--ink);
   box-shadow: 0 24px 70px rgba(3, 7, 18, 0.48);
   animation: video-popout-in 220ms ease-out both;
 }
@@ -109,21 +110,21 @@
 .home-page-sound-toggle {
   position: absolute;
   z-index: 3;
-  top: 40px;
-  right: 48px;
+  top: 24px;
+  right: 32px;
   min-height: 40px;
   padding: 0 14px;
 }
 
 .home-page-video-close:hover,
 .home-page-sound-toggle:hover {
-  border-color: rgba(255, 216, 102, 0.72);
+  border-color: var(--cta-yellow);
   background: rgba(7, 17, 31, 0.94);
 }
 
 .home-page-video-close:focus-visible,
 .home-page-sound-toggle:focus-visible {
-  outline: 3px solid #ffd866;
+  outline: 3px solid var(--cta-yellow);
   outline-offset: 3px;
 }
 
@@ -131,10 +132,9 @@
   position: relative;
   z-index: 1;
   display: grid;
-  width: min(1320px, 100%);
-  margin-inline: auto;
   min-height: min(680px, calc(100dvh - 80px));
-  padding: clamp(70px, 4vw, 144px) clamp(10px, 3vw, 40px) 88px;
+  /* The side padding lines the copy up with the 1320px column of the bands below. */
+  padding: clamp(70px, 4vw, 144px) max(32px, calc((100% - 1320px) / 2)) 88px;
   color: #fff;
 }
 
@@ -147,7 +147,7 @@
 
 .eyebrow {
   margin: 0;
-  color: #43d8cd;
+  color: var(--kicker);
   font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -179,21 +179,6 @@ h1 {
   line-height: 1.68;
 }
 
-.home-body {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 28px;
-  width: min(1320px, 100%);
-  margin-inline: auto;
-}
-
-.home-main {
-  display: grid;
-  gap: 32px;
-  min-width: 0;
-}
-
 @keyframes video-popout-in {
   from {
     opacity: 0;
@@ -206,27 +191,15 @@ h1 {
   }
 }
 
-@media (min-width: 1081px) {
-  .home-body {
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 32px;
-    align-items: start;
-  }
-}
-
 @media (max-width: 720px) {
-  .home-page {
-    padding: 20px var(--mobile-page-gutter) 56px;
-  }
-
   .home-page-sound-toggle {
-    top: 28px;
-    right: calc(var(--mobile-page-gutter) + 8px);
+    top: 16px;
+    right: 16px;
   }
 
   .season-hero {
     min-height: auto;
-    padding: 110px 0 64px;
+    padding: 110px 16px 64px;
   }
 
   .hero-copy {

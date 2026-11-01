@@ -7,15 +7,6 @@
   gap: 16px;
 }
 
-h2 {
-  margin: 0;
-  padding-inline: clamp(4px, 2vw, 24px);
-  font-size: 1.5rem;
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
 .features {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -30,9 +21,9 @@ h2 {
   gap: 8px;
   align-content: start;
   padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .feature-icon {
@@ -41,8 +32,8 @@ h2 {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--bg-panel-soft);
-  color: #067d7a;
+  background: rgba(119, 238, 215, 0.14);
+  color: var(--teal-bright);
 }
 
 .feature h3 {
@@ -54,7 +45,7 @@ h2 {
 
 .feature p {
   margin: 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 0.9375rem;
 }
 

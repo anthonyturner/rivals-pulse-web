@@ -3,21 +3,30 @@
   min-width: 0;
 }
 
-.rail {
+/* The news arrives after hydration, so the space it fills is held until then and the page does not jump. */
+.news-region {
+  min-height: 360px;
+}
+
+.news {
   display: grid;
-  padding: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.news__col {
+  display: grid;
+  padding: 8px 20px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--bg-panel);
   color: var(--text);
 }
 
-.rail__title {
-  margin: 0 0 4px;
-  font-size: 1.5rem;
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+.empty {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 .block {
@@ -27,14 +36,14 @@
   border-top: 1px solid var(--border);
 }
 
-.rail__title + .block {
+.block:first-child {
   border-top: 0;
 }
 
 .block__heading {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -50,7 +59,7 @@
 
 .block__kicker {
   margin: 0;
-  color: #067d7a;
+  color: #0f6f7a;
   font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.06em;
@@ -94,7 +103,7 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #0b1525;
+  background: var(--ink);
   object-fit: contain;
 }
 
@@ -158,10 +167,10 @@
 .actions__watch {
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid #77eed7;
+  border: 1px solid var(--teal-bright);
   border-radius: 999px;
-  background: #77eed7;
-  color: #07111f;
+  background: var(--teal-bright);
+  color: var(--ink);
   font: inherit;
   font-size: 0.875rem;
   font-weight: 820;
@@ -194,12 +203,26 @@
   white-space: nowrap;
 }
 
-@media (min-width: 1081px) {
-  :host {
-    position: sticky;
-    top: 16px;
-    align-self: start;
-    max-height: calc(100dvh - 32px);
-    overflow-y: auto;
+@media (max-width: 1080px) {
+  .news-region {
+    min-height: 600px;
+  }
+
+  .news {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .news__col:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .news-region {
+    min-height: 840px;
+  }
+
+  .news {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
