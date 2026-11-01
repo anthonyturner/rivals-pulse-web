@@ -20,7 +20,7 @@ summary {
 }
 
 summary:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid #0e6a98;
   outline-offset: -3px;
 }
 
