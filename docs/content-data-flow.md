@@ -156,7 +156,6 @@ The Express server exposes database data through routes:
 
 ```text
 GET /api/heroes
-GET /api/heroes/:id
 GET /api/hero-videos
 GET /api/home/content
 GET /api/home/portals

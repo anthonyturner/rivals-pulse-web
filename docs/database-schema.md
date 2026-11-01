@@ -99,7 +99,6 @@ The Express SSR server exposes read-only routes:
 
 - `GET /api/content/status`
 - `GET /api/heroes`
-- `GET /api/heroes/:id`
 - `GET /api/hero-videos`
 - `GET /api/home/content`
 - `GET /api/home/portals`
