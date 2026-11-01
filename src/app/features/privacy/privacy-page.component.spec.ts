@@ -162,8 +162,10 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('cannot be turned back into it');
     expect(text).toContain('expires after ten minutes');
     expect(text).toContain('the new ones replace the ones we stored');
-    expect(text).toContain('name and avatar updates');
-    expect(text).toContain('You can unlink at any time');
+    expect(text).toContain('name and avatar updates, link checks, unlinks and wrong guesses');
+    expect(text).toContain('You can unlink at any time, on your account page or in the desktop app');
+    expect(text).toContain('any code you asked for and have not used');
+    expect(text).toContain('never your email or account id');
     expect(text).not.toContain('An account is not linked to your in-game name');
   });
 
