@@ -72,7 +72,7 @@ repo's build. This is a move, not a redesign.
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 | `20261101010000_profiles.sql` | `profiles`, one row per website account (RLS: the owner selects and inserts) |
 | `20261101020000_player_links.sql` | Linking an account to an in-game player: `player_links` (the owner selects), `link_codes` and `link_attempt_log` (service role and the functions only), and `link_code_hash`, `issue_link_code`, `redeem_link_code`, `unlink_player` |
-| `20261101040000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
+| `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 
 Link once per machine, check history, then apply:
 
@@ -690,7 +690,7 @@ name and avatar the app sends with the code request are claims and are only show
 
 ### Reading a linked player's own dashboard (issue 329)
 
-`read_own_dashboard()` (`20261101040000_dashboard_read.sql`) is the only door to a player's own history. It
+`read_own_dashboard()` (`20261101060000_dashboard_read.sql`) is the only door to a player's own history. It
 takes no parameters, runs as definer with an empty `search_path`, is granted to `authenticated` only, and
 refuses a caller with no account (`28000`) and an anonymous Supabase session (`42501`), as `redeem_link_code`
 does. It finds the caller's link through `auth.uid()` and returns the newest 2,000 `participants` lines where

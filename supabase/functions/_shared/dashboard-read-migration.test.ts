@@ -8,12 +8,12 @@ import { describe, it } from 'node:test';
  * that is easy to break and expensive to find in production: who may call the function, whose lines
  * it may return, and that it opens nothing else.
  */
-const sql = readFileSync(new URL('../../migrations/20261101040000_dashboard_read.sql', import.meta.url), 'utf8')
+const sql = readFileSync(new URL('../../migrations/20261101060000_dashboard_read.sql', import.meta.url), 'utf8')
   .replace(/--.*$/gm, '');
 
 const body = sql.match(/create or replace function public\.read_own_dashboard\(\)[\s\S]*?\n\$\$;/)?.[0] ?? '';
 
-describe('20261101040000_dashboard_read.sql', () => {
+describe('20261101060000_dashboard_read.sql', () => {
   it('declares the one function, once, with no parameters', () => {
     assert.deepEqual([...sql.matchAll(/create (?:or replace )?function (public\.\w+)\(([^)]*)\)/g)].map(match => [match[1], match[2]]), [
       ['public.read_own_dashboard', ''],
