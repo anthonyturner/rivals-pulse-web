@@ -5,8 +5,8 @@
 
 .quick-read {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-  gap: 12px 24px;
+  gap: 12px;
+  align-content: start;
   margin: 0;
 }
 
@@ -23,7 +23,7 @@ dd {
 }
 
 .video {
-  width: min(100%, 720px);
+  width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 8px;
@@ -38,6 +38,7 @@ iframe {
 
 .source {
   display: grid;
+  max-width: 720px;
   gap: 4px;
 }
 
@@ -63,4 +64,15 @@ iframe {
   border-radius: 6px;
   background: var(--surface);
   font-size: var(--type-small);
+}
+
+@media (min-width: 1000px) {
+  .intro {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+    gap: 16px 24px;
+  }
+
+  .intro > .guide-header {
+    grid-column: 1 / -1;
+  }
 }

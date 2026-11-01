@@ -5,7 +5,7 @@
 
 .library {
   display: grid;
-  gap: 24px;
+  gap: 16px;
   padding-block: 16px 32px;
 }
 
