@@ -78,6 +78,11 @@ The session lives on the server side of the boundary:
   or uid, which are the app's claims and are only displayed. `GET /api/auth/session` returns
   `player: { name, avatarUrl } | null`, and `Nav` shows the name and Overwolf avatar instead of
   "Account" when it is set. The website holds no service key and no `RECORDER_ID_SECRET` for this.
+- `GET /api/account/dashboard` (issue 329) calls the `read_own_dashboard` database function with the player's
+  own token. The database picks the lines (those whose recorder and uid are the link's own, newest 2,000);
+  `src/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
+  records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
+  service key and no per-account copy of the data.
 - The session cookie also carries the time of the Discord sign-in (Supabase moves its own
   `last_sign_in_at` on every token refresh, so it cannot be used). `POST /api/account/delete` needs that
   sign-in to be under ten minutes old (ADR-0004, decision 7) and answers 401 with a reason otherwise.

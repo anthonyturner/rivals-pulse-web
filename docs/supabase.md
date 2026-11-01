@@ -72,6 +72,7 @@ repo's build. This is a move, not a redesign.
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 | `20261101010000_profiles.sql` | `profiles`, one row per website account (RLS: the owner selects and inserts) |
 | `20261101020000_player_links.sql` | Linking an account to an in-game player: `player_links` (the owner selects), `link_codes` and `link_attempt_log` (service role and the functions only), and `link_code_hash`, `issue_link_code`, `redeem_link_code`, `unlink_player` |
+| `20261101040000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 
 Link once per machine, check history, then apply:
 
@@ -686,6 +687,42 @@ name and avatar the app sends with the code request are claims and are only show
   answers 503.
 - `supabase/checks/player_links.sql` proves the rules against the linked project and rolls back:
   `npx supabase db query --linked -f supabase/checks/player_links.sql`. Run it after `db push`.
+
+### Reading a linked player's own dashboard (issue 329)
+
+`read_own_dashboard()` (`20261101040000_dashboard_read.sql`) is the only door to a player's own history. It
+takes no parameters, runs as definer with an empty `search_path`, is granted to `authenticated` only, and
+refuses a caller with no account (`28000`) and an anonymous Supabase session (`42501`), as `redeem_link_code`
+does. It finds the caller's link through `auth.uid()` and returns the newest 2,000 `participants` lines where
+`recorded_by = link.recorder_id AND uid = link.player_uid`, both taken from the link and never from the
+caller, each with its `participant_hero_figures`. `participants` stays closed (RLS on, no grant), and no
+service key is involved.
+
+- The answer is `{ "linked": false }`, or `{ "linked": true, "name", "avatarUrl", "truncated", "lines": [...] }`
+  newest first. A line has `playedAt`, `heroId`, `kills`, `deaths`, `assists`, `finalHits`, `isWin`,
+  `playModeId`, `mapName` and `figures` (`heroId`, `seconds`, `damage`, `healing`, `blocked`). A blank is JSON
+  `null`, never 0. `truncated` is true when more than 2,000 lines existed. The recorder and the uid are never in it.
+- The website (`GET /api/account/dashboard`, `src/auth-gateway.ts` `readOwnDashboard`) derives the figures from
+  those lines in `src/own-dashboard.ts` and sends the browser only the derived stats.
+- Which lines are the player's: a match is stored once, by its **first** uploader, so a match first uploaded by
+  another overlay user in the same lobby is not here; lines from the backfill (`backfill-143`) carry no real
+  recorder and never are; another recorder's line with the same uid is not (a uid is a claim); and
+  `participants` is purged after at most six months, so that is the depth. `hero_id` is the hero at the end of
+  the match (assumed, not yet confirmed from a real upload).
+- Figures on `participant_hero_figures` are attached by `record_match_extras` to the line whose `uid` equals the
+  uid its caller claims, without checking the line's recorder. A different recorder could therefore attach
+  figures to a line it did not record; the read cannot tell, because it filters the line and not the figure.
+  Closing that is a change to `record_match_extras`, which shipped overlays call.
+- `tracked_matches` is not read: it has no recorder column and is publicly readable, so the recorder must never
+  be added to it (issue 328 adds a side table). When that history is read, match on the side table's recorder
+  and treat a row whose recorder changed as not the player's own.
+- Before the read merges, resolve one open question with a read-only query after the first real link:
+  `select count(*) from participants where uid = '<link.player_uid>' and recorded_by = '<link.recorder_id>'`
+  must be above zero, or the link's `player_uid` does not match the uploads' uid format.
+- `supabase/checks/dashboard.sql` proves the rules against the linked project and rolls back:
+  `npx supabase db query --linked -f supabase/checks/dashboard.sql`. Run it after `db push`. The migration is
+  pushed by hand before the pull request merges, after the player-links migration it depends on; until then the
+  route answers 503.
 
 ## Tests
 
