@@ -31,6 +31,24 @@ nav .disabled {
   text-decoration: none;
 }
 
+/* A long name is cut with an ellipsis rather than pushing the other links off the row. */
+.nav-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  --player-avatar-size: 24px;
+}
+
+.nav-player-name {
+  min-width: 0;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 nav a.active,
 nav a:hover {
   border-color: rgba(224, 169, 0, 0.45);

@@ -3,14 +3,20 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-import { AuthService, DeleteAccountResult, SessionState } from '../../core/auth/auth.service';
+import { AuthService, DeleteAccountResult, LinkChangeResult, SessionState } from '../../core/auth/auth.service';
+import type { LinkedPlayer } from '../../core/auth/linked-player.types';
 import { AccountPageComponent } from './account-page.component';
 import { SignInPageComponent } from './sign-in-page.component';
 
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
-const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT };
+const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT, player: null };
 
-function setup(session: SessionState, deletion: DeleteAccountResult = { status: 'deleted' }) {
+function setup(
+  session: SessionState,
+  deletion: DeleteAccountResult = { status: 'deleted' },
+  linkChange: LinkChangeResult = { status: 'done' },
+  linkedAfter: LinkedPlayer | null = null,
+) {
   const state = signal<SessionState>(session);
   const auth = {
     state,
@@ -23,7 +29,20 @@ function setup(session: SessionState, deletion: DeleteAccountResult = { status: 
 
       return deletion;
     }),
+    linkPlayer: jasmine.createSpy('linkPlayer').and.callFake(async () => changeLink(linkedAfter)),
+    unlinkPlayer: jasmine.createSpy('unlinkPlayer').and.callFake(async () => changeLink(null)),
   };
+
+  /** What the real service does to its state once the server has answered a link change. */
+  function changeLink(player: LinkedPlayer | null): LinkChangeResult {
+    if (linkChange.status === 'done' && session.status === 'signedIn') {
+      state.set({ ...session, player });
+    } else if (linkChange.status === 'signedOut') {
+      state.set({ status: 'signedOut' });
+    }
+
+    return linkChange;
+  }
 
   TestBed.configureTestingModule({
     providers: [
@@ -53,7 +72,7 @@ describe('AccountPageComponent', () => {
   });
 
   it('says so when no email was shared', async () => {
-    setup({ status: 'signedIn', account: { ...ACCOUNT, email: null } });
+    setup({ status: 'signedIn', account: { ...ACCOUNT, email: null }, player: null });
 
     expect(page(await RouterTestingHarness.create('/account')).textContent).toContain('None shared with us');
   });
@@ -160,6 +179,156 @@ describe('AccountPageComponent deletion', () => {
     await harness.fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/sign-in?next=%2Faccount');
+  });
+});
+
+describe('AccountPageComponent linking', () => {
+  const AURORA = { name: 'Aurora', avatarUrl: null };
+  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA };
+  const codeInput = (harness: RouterTestingHarness): HTMLInputElement =>
+    page(harness).querySelector('#link-code') as HTMLInputElement;
+  const linkButton = (harness: RouterTestingHarness): HTMLButtonElement =>
+    page(harness).querySelector('form button[type="submit"]') as HTMLButtonElement;
+  const unlinkButton = (harness: RouterTestingHarness): HTMLButtonElement | undefined =>
+    Array.from(page(harness).querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Unlink');
+
+  async function typeCode(harness: RouterTestingHarness, text: string): Promise<void> {
+    const input = codeInput(harness);
+
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+  }
+
+  it('asks an unlinked account for a code', async () => {
+    setup(SIGNED_IN);
+    const harness = await RouterTestingHarness.create('/account');
+
+    expect(page(harness).textContent).toContain('Link the desktop app');
+    expect(codeInput(harness)).toBeTruthy();
+    expect(unlinkButton(harness)).toBeUndefined();
+  });
+
+  it('keeps Link off until something is typed, and sends the code as typed', async () => {
+    const { auth } = setup(SIGNED_IN);
+    const harness = await RouterTestingHarness.create('/account');
+
+    expect(linkButton(harness).disabled).toBeTrue();
+
+    await typeCode(harness, 'abcd-efgh');
+    expect(linkButton(harness).disabled).toBeFalse();
+
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+
+    expect(auth.linkPlayer).toHaveBeenCalledOnceWith('abcd-efgh');
+  });
+
+  it('shows the linked name and an Unlink button once linked', async () => {
+    setup(SIGNED_IN, undefined, { status: 'done' }, AURORA);
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('.account-player-name')?.textContent).toBe('Aurora');
+    expect(codeInput(harness)).toBeNull();
+    expect(unlinkButton(harness)).toBeTruthy();
+  });
+
+  it('shows the message from the server for a refused code and keeps the code typed', async () => {
+    setup(SIGNED_IN, undefined, { status: 'failed', message: 'That code is wrong or has expired. Get a new one from the desktop app.' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('wrong or has expired');
+    expect(codeInput(harness).value).toBe('abcd-efgh');
+  });
+
+  it('ties the message for a refused code to the input', async () => {
+    setup(SIGNED_IN, undefined, { status: 'failed', message: 'That code is wrong or has expired. Get a new one from the desktop app.' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    expect(codeInput(harness).getAttribute('aria-describedby')).toBeNull();
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(codeInput(harness).getAttribute('aria-invalid')).toBe('true');
+    expect(codeInput(harness).getAttribute('aria-describedby')).toBe('link-code-error');
+    expect(page(harness).querySelector('#link-code-error')?.textContent).toContain('wrong or has expired');
+  });
+
+  it('announces a successful link and moves focus to the section heading, since the button is gone', async () => {
+    setup(SIGNED_IN, undefined, { status: 'done' }, AURORA);
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('linked to Aurora');
+    expect(document.activeElement).toBe(page(harness).querySelector('#account-link-title'));
+  });
+
+  it('announces an unlink and moves focus to the section heading', async () => {
+    setup(LINKED);
+    const harness = await RouterTestingHarness.create('/account');
+
+    unlinkButton(harness)?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('unlinked');
+    expect(document.activeElement).toBe(page(harness).querySelector('#account-link-title'));
+  });
+
+  it('sends a visitor whose session ended to sign in', async () => {
+    setup(SIGNED_IN, undefined, { status: 'signedOut' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/sign-in?next=%2Faccount');
+  });
+
+  it('unlinks, and offers a code again', async () => {
+    const { auth } = setup(LINKED);
+    const harness = await RouterTestingHarness.create('/account');
+
+    expect(page(harness).querySelector('.account-player-name')?.textContent).toBe('Aurora');
+
+    unlinkButton(harness)?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(auth.unlinkPlayer).toHaveBeenCalledTimes(1);
+    expect(codeInput(harness)).toBeTruthy();
+    expect(unlinkButton(harness)).toBeUndefined();
+  });
+
+  it('keeps the link shown and says why when unlinking fails', async () => {
+    setup(LINKED, undefined, { status: 'failed', message: 'Linking is unavailable right now.' });
+    const harness = await RouterTestingHarness.create('/account');
+
+    unlinkButton(harness)?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('unavailable');
+    expect(page(harness).querySelector('.account-player-name')?.textContent).toBe('Aurora');
   });
 });
 

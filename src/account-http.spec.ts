@@ -9,6 +9,9 @@ const GATEWAY: AuthGateway = {
   resolve: async (tokens) => ({ account: { email: 'a@b.c', provider: 'discord', createdAt: '2026-11-01T00:00:00Z' }, tokens }),
   signOut: async () => undefined,
   deleteAccount: async () => 'deleted',
+  linkedPlayer: async () => null,
+  redeemLinkCode: async () => ({ status: 'invalid' }),
+  unlinkPlayer: async () => undefined,
 };
 
 interface Sent {
