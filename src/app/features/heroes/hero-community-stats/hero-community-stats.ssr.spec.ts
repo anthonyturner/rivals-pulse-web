@@ -1,9 +1,6 @@
-import { Component, destroyPlatform, provideZonelessChangeDetection } from '@angular/core';
-import { getTestBed } from '@angular/core/testing';
-import { bootstrapApplication } from '@angular/platform-browser';
-import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { renderApplication } from '@angular/platform-server';
+import { Component } from '@angular/core';
 
+import { renderOnServer, serverRenderSandbox } from '../../../testing/server-render';
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { HeroCommunityStatsComponent } from './hero-community-stats.component';
 
@@ -28,38 +25,13 @@ class SsrHostComponent {
 }
 
 describe('HeroCommunityStatsComponent server render', () => {
-  // Two things leak out of a server render, so both are put back for the specs that run after it.
-  // Angular allows one platform at a time and the test runner holds the browser one; and the server
-  // platform overwrites the browser's globals (Event, Node, Element...) with its own DOM classes.
-  let globalsBefore: Map<PropertyKey, PropertyDescriptor>;
+  const sandbox = serverRenderSandbox();
 
-  beforeEach(() => {
-    globalsBefore = new Map(
-      Reflect.ownKeys(globalThis).flatMap((key): [PropertyKey, PropertyDescriptor][] => {
-        const descriptor = Object.getOwnPropertyDescriptor(globalThis, key);
-
-        return descriptor === undefined ? [] : [[key, descriptor]];
-      }),
-    );
-    getTestBed().resetTestEnvironment();
-    destroyPlatform();
-  });
-
-  afterEach(() => {
-    destroyPlatform();
-    restoreGlobals(globalsBefore);
-    getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting(), {
-      errorOnUnknownElements: true,
-      errorOnUnknownProperties: true,
-    });
-  });
+  beforeEach(() => sandbox.enter());
+  afterEach(() => sandbox.leave());
 
   it('renders the designed empty state, with no zeros or NaN, from an empty dataset', async () => {
-    const html = await renderApplication(
-      (context) =>
-        bootstrapApplication(SsrHostComponent, { providers: [provideZonelessChangeDetection()] }, context),
-      { document: '<html><body><app-root></app-root></body></html>' },
-    );
+    const html = await renderOnServer(SsrHostComponent);
 
     expect(html).toContain('Not enough data yet');
     expect(html).toContain('No match recorded by RivalsPulse players has Storm yet.');
@@ -67,19 +39,3 @@ describe('HeroCommunityStatsComponent server render', () => {
     expect(html).not.toMatch(/NaN|Infinity|<dl/);
   });
 });
-
-function restoreGlobals(before: ReadonlyMap<PropertyKey, PropertyDescriptor>): void {
-  for (const key of Reflect.ownKeys(globalThis)) {
-    const original = before.get(key);
-
-    if (original === undefined) {
-      Reflect.deleteProperty(globalThis, key);
-    } else if (!sameDescriptor(Object.getOwnPropertyDescriptor(globalThis, key), original)) {
-      Object.defineProperty(globalThis, key, original);
-    }
-  }
-}
-
-function sameDescriptor(a: PropertyDescriptor | undefined, b: PropertyDescriptor): boolean {
-  return a !== undefined && a.value === b.value && a.get === b.get && a.set === b.set && a.writable === b.writable;
-}
