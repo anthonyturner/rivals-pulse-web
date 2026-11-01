@@ -54,7 +54,7 @@ const RECENT_SIGN_IN_SECONDS = 10 * 60;
 /** One message for a wrong, used or expired code, so the answer never says which one it was. */
 const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from the desktop app.';
 const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
-const DELETE_FAILED ='The deletion did not go through, as far as we can tell. Try again in a moment.';
+const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 export async function handleAccountRequest(
   request: AccountRequest,
@@ -188,11 +188,18 @@ async function linkPlayer(request: AccountRequest, gateway: () => AuthGateway): 
         return json(400, { error: LINK_CODE_REFUSED });
       case 'rate-limited':
         return json(429, {
-          error: `Too many wrong codes. Try again in ${Math.ceil(result.retryAfterSeconds / 60)} minutes.`,
+          error: `Too many wrong codes. Try again in ${minutesFrom(result.retryAfterSeconds)}.`,
           retryAfterSeconds: result.retryAfterSeconds,
         });
     }
   });
+}
+
+/** "1 minute", "11 minutes": whole minutes, rounded up so the wait is never understated. */
+function minutesFrom(seconds: number): string {
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+
+  return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
 }
 
 async function unlinkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {

@@ -607,6 +607,17 @@ describe('POST account/link', () => {
     });
   });
 
+  it('says "1 minute", not "1 minutes", for a wait of a minute or less', async () => {
+    for (const retryAfterSeconds of [1, 60]) {
+      const { gateway: gw } = redeeming({ status: 'rate-limited', retryAfterSeconds });
+
+      expect((await run(post(), gw)).body).toEqual({
+        error: 'Too many wrong codes. Try again in 1 minute.',
+        retryAfterSeconds,
+      });
+    }
+  });
+
   it('needs a session cookie, and redeems nothing without one', async () => {
     const { seen, gateway: gw } = redeeming({ status: 'linked', player: PLAYER });
     const response = await run(post({ cookieHeader: undefined }), gw);

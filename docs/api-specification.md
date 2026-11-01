@@ -24,7 +24,7 @@ Static reference data for other tools is published separately as Pulse Atlas; se
 
 `/api/community/stats` serves the Community Stats tab's role benchmarks (average K/D/A, KDA, final hits and win rate per role and mode) from the same matches; see "Role benchmarks" in [supabase.md](supabase.md). It takes the same optional `halfSeason` query value.
 
-The `/api/auth/*` routes (and the reserved `/api/account/*`) belong to the Discord sign-in. They are
+The `/api/auth/*` and `/api/account/*` routes belong to the Discord sign-in and the account. They are
 never cached: every answer carries `Cache-Control: private, no-store, max-age=0`. `GET /api/auth/session`
 answers `{ "signedIn": false }` with no session, or `{ "signedIn": true, "account": { email, provider,
 createdAt }, "player": { name, avatarUrl } | null }` (`player` is the linked in-game player, null when
