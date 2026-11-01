@@ -168,3 +168,16 @@ gets a sidebar from the app shell, so a page does not add one itself. From
   `browserOnly: true`, and the slot then renders it only after the page has
   rendered in the browser, never on the server. The ad network's own loader is
   site-wide, in `index.html`, not in a provider.
+- **AdSense.** `provideAdSense()` in `app.config.ts` makes the AdSense provider the
+  `AD_PROVIDER` once an ad unit id is set, and leaves the house ad otherwise. The ad
+  unit id and the publisher id are set in one place,
+  `shared/components/ad-slot/adsense/adsense.config.ts` (`slotIds.rectangle` for the
+  sidebar). The provider shows an AdSense unit only when that id is set and Google's
+  own consent message (Privacy & messaging, served by the loader) reports the visitor
+  agreed or that no consent is needed; the answer is read by `GoogleConsentService`
+  in `core/consent/`. In every other case the slot shows the house ad. It creates a
+  fresh `<ins class="adsbygoogle">` for each new page path, because the sidebar stays
+  mounted between pages. Do not add a second consent banner; the footer's "Privacy and
+  cookie settings" button reopens Google's message and shows only where it applies.
+- **Affiliate links.** Put `app-affiliate-disclosure` next to any affiliate link. There
+  are none today.

@@ -1,23 +1,32 @@
 import { provideZonelessChangeDetection } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { ADSENSE_CONFIG, AdSenseConfig } from '../../shared/components/ad-slot/adsense/adsense.config';
 import { PrivacyPageComponent } from './privacy-page.component';
 import { EXTENDED_UPLOAD_FIELDS, EXTENDED_UPLOAD_STATUS, TODAY_UPLOAD_FIELDS } from './privacy-notes.data';
 
 describe('PrivacyPageComponent', () => {
-  let fixture: ComponentFixture<PrivacyPageComponent>;
   let page: HTMLElement;
 
-  beforeEach(async () => {
+  async function render(config?: AdSenseConfig): Promise<HTMLElement> {
+    TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [PrivacyPageComponent],
-      providers: [provideZonelessChangeDetection(), provideRouter([])],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        ...(config ? [{ provide: ADSENSE_CONFIG, useValue: config }] : []),
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(PrivacyPageComponent);
+    const fixture = TestBed.createComponent(PrivacyPageComponent);
     fixture.detectChanges();
-    page = fixture.nativeElement as HTMLElement;
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  beforeEach(async () => {
+    page = await render();
   });
 
   const section = (id: string): HTMLElement => {
@@ -156,6 +165,27 @@ describe('PrivacyPageComponent', () => {
     expect(advertising.querySelector('a[href="https://policies.google.com/technologies/partner-sites"]'))
       .withContext("the link to Google's partner-sites policy")
       .toBeTruthy();
+  });
+
+  it('explains the consent choice and how to change it, and says no ads are shown while none are configured', () => {
+    const text = (section('advertising').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('Do not consent');
+    expect(text).toContain('Manage options');
+    expect(text).toContain('European Economic Area, the United Kingdom or Switzerland');
+    expect(text).toContain('Privacy and cookie settings');
+    expect(text).toContain('appears only where the message applies');
+    expect(text).toContain('No ads are shown yet');
+    expect(text).not.toContain('personalised or non-personalised');
+  });
+
+  it('says where ads appear and what a visitor who has not agreed sees once an ad unit is configured', async () => {
+    page = await render({ publisherId: 'ca-pub-1', slotIds: { rectangle: '1234567890' } });
+    const text = (section('advertising').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('Google ads appear in one box in the sidebar, on every page except the home page');
+    expect(text).toContain('shows a RivalsPulse advert instead');
+    expect(text).not.toContain('No ads are shown yet');
   });
 
   it('no longer says the website has no advertising', () => {

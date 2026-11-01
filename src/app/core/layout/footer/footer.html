@@ -2,5 +2,10 @@
   <p>RivalsPulse is an independent project, not affiliated with NetEase, Marvel or Overwolf.</p>
   <nav aria-label="Site information">
     <a routerLink="/privacy">Privacy notes</a>
+    @if (consent.canChangeChoice()) {
+      <button type="button" class="site-footer__link" (click)="consent.reopenChoices()">
+        Privacy and cookie settings
+      </button>
+    }
   </nav>
 </footer>
