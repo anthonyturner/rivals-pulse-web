@@ -1,0 +1,19 @@
+<app-home-band
+  tone="light"
+  headAlign="center"
+  eyebrow="Getting started"
+  heading="How it works"
+  headingId="home-how-title"
+>
+  <ol class="steps">
+    @for (step of steps(); track step.title; let index = $index) {
+      <li class="step">
+        <span class="step__num" aria-hidden="true">{{ '0' + (index + 1) }}</span>
+        <h3 class="step__title">{{ step.title }}</h3>
+        <p class="step__text">{{ step.text }}</p>
+      </li>
+    }
+  </ol>
+
+  <app-trust-block [listed]="listed()" />
+</app-home-band>
