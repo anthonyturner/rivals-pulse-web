@@ -134,7 +134,7 @@ describe('TierListPageComponent', () => {
   it('labels the page as based on Rivals Pulse players and offers no rank picker or ban column', async () => {
     const { page } = await open(partial);
 
-    expect(text(page, '.kicker')).toEqual(['Based on Rivals Pulse players']);
+    expect(page.querySelector('.tier-hero > div')?.firstElementChild?.tagName).toBe('H1');
     expect(text(page, '.lede')[0]).toContain('Rivals Pulse players');
     expect(page.querySelector('select')).toBeNull();
     expect(page.textContent).not.toContain('Ban');

@@ -20,13 +20,6 @@
   margin: 0;
 }
 
-.community-page__kicker {
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
 .community-page__title {
   max-width: 850px;
   color: var(--text);

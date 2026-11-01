@@ -96,7 +96,7 @@ describe('JarvisConsoleComponent', () => {
     const element: HTMLElement = fixture.nativeElement;
     const copy = (element.querySelector('.console-copy') as HTMLElement).textContent?.replace(/\s+/g, ' ') ?? '';
 
-    expect(element.querySelector('.eyebrow .premium')?.textContent?.trim()).toBe('Premium');
+    expect(element.querySelector('.plan .premium')?.textContent?.trim()).toBe('Premium');
     expect(element.querySelector('.lead')?.textContent).toContain('Premium');
     expect(copy).not.toMatch(/\branks?\b|twelve|free|Grandmaster/i);
   });

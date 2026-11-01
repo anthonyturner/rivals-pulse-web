@@ -24,20 +24,11 @@
   padding: 24px 0 28px;
 }
 
-.kicker,
 h1,
 h2,
 h3,
 p {
   margin: 0;
-}
-
-.kicker {
-  margin-bottom: 8px;
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 850;
-  text-transform: uppercase;
 }
 
 h1 {

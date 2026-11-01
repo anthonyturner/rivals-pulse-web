@@ -9,6 +9,11 @@
 
 .guides-hero,
 .guide-groups,
+.group-heading p {
+  color: var(--text-soft);
+  line-height: 1.52;
+}
+
 .guide-grid {
   width: min(1220px, 100%);
   margin: 0 auto;
@@ -20,14 +25,6 @@
 
 p {
   margin: 0;
-}
-
-.kicker {
-  margin-bottom: 8px;
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 850;
-  text-transform: uppercase;
 }
 
 h2 {
@@ -55,15 +52,6 @@ h2 {
   display: grid;
   gap: 7px;
   max-width: 820px;
-}
-
-.group-heading .kicker {
-  margin: 0;
-}
-
-.group-heading p:not(.kicker) {
-  color: var(--text-soft);
-  line-height: 1.52;
 }
 
 .guide-grid {

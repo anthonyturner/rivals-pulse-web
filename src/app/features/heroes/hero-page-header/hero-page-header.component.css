@@ -41,23 +41,8 @@
   max-width: 720px;
   gap: 12px;
 }
-.hero-kicker {
-  display: inline-flex;
-  flex-wrap: wrap;
-  width: fit-content;
-  gap: 8px;
-  align-items: center;
-}
-.hero-kicker span,
-.hero-kicker small {
+.hero-role {
   color: #f8d36b;
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.hero-kicker small {
-  color: rgba(255, 255, 255, 0.72);
 }
 h1,
 p {

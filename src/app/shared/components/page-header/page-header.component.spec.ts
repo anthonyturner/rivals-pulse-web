@@ -13,7 +13,6 @@ describe('PageHeaderComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(PageHeaderComponent);
-    fixture.componentRef.setInput('eyebrow', 'Guide Library');
     fixture.componentRef.setInput('title', 'Choose a guide');
     fixture.componentRef.setInput('description', 'Open a focused coaching guide.');
     fixture.detectChanges();
@@ -22,10 +21,16 @@ describe('PageHeaderComponent', () => {
   it('renders the shared page heading content', () => {
     const element = fixture.nativeElement as HTMLElement;
 
-    expect(element.querySelector('.eyebrow')?.textContent).toContain('Guide Library');
     expect(element.querySelector('h1')?.textContent).toContain('Choose a guide');
     expect(element.querySelector('.description')?.textContent).toContain(
       'Open a focused coaching guide.',
     );
+  });
+
+  it('starts with the heading, with no label above it', () => {
+    const header = (fixture.nativeElement as HTMLElement).querySelector('header') as HTMLElement;
+
+    expect(header.firstElementChild?.tagName).toBe('H1');
+    expect(header.textContent?.trim().startsWith('Choose a guide')).toBeTrue();
   });
 });

@@ -41,26 +41,9 @@
   content: '';
 }
 
-.eyebrow,
 h1,
 .description {
   margin: 0;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  margin-bottom: 14px;
-  padding: 4px 10px;
-  border: 1px solid rgba(154, 106, 0, 0.24);
-  border-radius: 999px;
-  background: rgba(255, 248, 203, 0.7);
-  color: var(--accent-strong);
-  font-size: 0.74rem;
-  font-weight: 850;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 h1 {

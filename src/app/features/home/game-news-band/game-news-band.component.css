@@ -57,15 +57,6 @@
   text-transform: none;
 }
 
-.block__kicker {
-  margin: 0;
-  color: #0f6f7a;
-  font-size: 0.75rem;
-  font-weight: 850;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 .block__strong,
 .block__meta,
 .spotlight__blurb {

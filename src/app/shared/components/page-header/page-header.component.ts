@@ -6,7 +6,6 @@ import { Component, input } from '@angular/core';
   styleUrl: './page-header.component.css',
 })
 export class PageHeaderComponent {
-  readonly eyebrow = input.required<string>();
   readonly title = input.required<string>();
   readonly description = input.required<string>();
 }

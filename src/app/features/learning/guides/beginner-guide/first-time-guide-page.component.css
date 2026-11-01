@@ -36,20 +36,11 @@
   padding: 22px 0 26px;
 }
 
-.kicker,
 h1,
 h2,
 p,
 ul {
   margin: 0;
-}
-
-.kicker {
-  margin-bottom: 8px;
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 850;
-  text-transform: uppercase;
 }
 
 h1 {

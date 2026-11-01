@@ -15,13 +15,6 @@
   margin: 0;
 }
 
-.empty-state__kicker {
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
 .empty-state__heading {
   color: var(--text);
   font-size: clamp(1.15rem, 2vw, 1.5rem);

@@ -1,7 +1,6 @@
 <section class="guides-page">
   <app-page-header
     class="guides-hero"
-    eyebrow="Guide Library"
     title="Choose a guide and open the full coaching page."
     description="Open hero-specific, composition, or fundamentals guides, with role jobs, playstyle priorities, matchup notes, and embedded source videos."
   />
@@ -9,7 +8,6 @@
   <main class="guide-groups" aria-label="Guide library">
     <section class="guide-group" aria-labelledby="hero-guides-title">
       <div class="group-heading">
-        <p class="kicker">Hero Guides</p>
         <h2 id="hero-guides-title">Character-specific coaching</h2>
         <p>Hero kits, matchup notes, upgrade discipline, and role-specific game plans.</p>
       </div>
@@ -30,7 +28,6 @@
 
     <section class="guide-group" aria-labelledby="start-here-guides-title">
       <div class="group-heading">
-        <p class="kicker">Start Here</p>
         <h2 id="start-here-guides-title">New player fundamentals</h2>
         <p>Guides for your first matches before you dive into role-specific lessons.</p>
       </div>
@@ -68,7 +65,6 @@
 
     <section class="guide-group" aria-labelledby="gameplay-guides-title">
       <div class="group-heading">
-        <p class="kicker">Fundamentals & Positioning</p>
         <h2 id="gameplay-guides-title">Build habits you can use in every match</h2>
         <p>Practical libraries for mechanics, strong positions, and safer use of the map.</p>
       </div>
@@ -111,7 +107,6 @@
 
     <section class="guide-group" aria-labelledby="composition-guides-title">
       <div class="group-heading">
-        <p class="kicker">Composition Guides</p>
         <h2 id="composition-guides-title">Read the team, then break the setup</h2>
         <p>Counter plans for common team structures and the win conditions that hold them together.</p>
       </div>
@@ -136,11 +131,10 @@
       </div>
     </section>
 
-    @for (group of fundamentalsGuideGroups; track group.kicker) {
-      <section class="guide-group" [attr.aria-labelledby]="group.kicker + '-title'">
+    @for (group of fundamentalsGuideGroups; track group.label) {
+      <section class="guide-group" [attr.aria-labelledby]="group.label + '-title'">
         <div class="group-heading">
-          <p class="kicker">{{ group.kicker }}</p>
-          <h2 [id]="group.kicker + '-title'">{{ group.title }}</h2>
+          <h2 [id]="group.label + '-title'">{{ group.title }}</h2>
           <p>{{ group.description }}</p>
         </div>
 
@@ -149,7 +143,7 @@
             <a class="guide-card" [routerLink]="['/hero-guides', guide.heroId]">
               <img [src]="guide.image" [alt]="guide.heroName" loading="lazy" />
               <span>
-                <small>{{ group.kicker }}</small>
+                <small>{{ group.label }}</small>
                 <strong>{{ guide.heroName }}</strong>
                 <em>{{ guide.poolJob }}</em>
               </span>

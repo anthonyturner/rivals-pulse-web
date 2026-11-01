@@ -113,10 +113,15 @@ h3 {
   letter-spacing: 0.08em;
 }
 
-:host-context(.hero-detail-modal) .eyebrow {
+.hero-role {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+:host-context(.hero-detail-modal) .hero-role {
   color: var(--modal-text-soft);
-  font-weight: 850;
-  letter-spacing: 0.12em;
 }
 
 .difficulty {
@@ -1016,13 +1021,6 @@ ul {
   gap: 3px;
 }
 
-.gameplay-archetypes .eyebrow {
-  color: var(--accent-strong);
-  font-size: 0.65rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
 .archetype-grid {
   display: grid;
   gap: 8px;
@@ -1141,7 +1139,6 @@ ul {
   line-height: 1.55;
 }
 
-:host-context(.hero-detail-modal) .eyebrow,
 :host-context(.hero-detail-modal) .overview-section strong,
 :host-context(.hero-detail-modal) .build-profile-source strong,
 :host-context(.hero-detail-modal) .ultimate-strategies article span,
@@ -1149,7 +1146,6 @@ ul {
 :host-context(.hero-detail-modal) .ability-tabs button span,
 :host-context(.hero-detail-modal) .abilities article span,
 :host-context(.hero-detail-modal) .abilities article h4,
-:host-context(.hero-detail-modal) .gameplay-archetypes .eyebrow,
 :host-context(.hero-detail-modal) .archetype-grid span,
 :host-context(.hero-detail-modal) .technical-details dt {
   font-size: var(--lookup-label-size);

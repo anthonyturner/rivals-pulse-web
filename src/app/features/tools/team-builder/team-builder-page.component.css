@@ -23,20 +23,11 @@
   padding: 24px 0 22px;
 }
 
-.kicker,
 h1,
 h2,
 h3,
 p {
   margin: 0;
-}
-
-.kicker {
-  margin-bottom: 8px;
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 850;
-  text-transform: uppercase;
 }
 
 h1 {
@@ -271,6 +262,11 @@ small.multi-role {
   display: grid;
   gap: 12px;
   padding: 18px;
+}
+
+.score-card h2 {
+  color: var(--text);
+  font-size: 1.15rem;
 }
 
 .score-note {

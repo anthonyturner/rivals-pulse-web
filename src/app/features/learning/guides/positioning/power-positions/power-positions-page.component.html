@@ -1,7 +1,6 @@
 <section class="power-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Guide Notes</p>
       <h1>Power Positions</h1>
       <p class="lede">
         Cleaned-up notes from the masterclass guide: what power positions are, how to find
@@ -24,7 +23,7 @@
     </div>
 
     <div class="quick-check">
-      <p class="eyebrow">Five-Question Test</p>
+      <h2>Five-Question Test</h2>
       @for (item of checklist; track item.label) {
         <article>
           <strong>{{ item.label }}</strong>
@@ -50,7 +49,7 @@
 
   <section class="support-grid" aria-label="Role notes and practice drills">
     <article class="support-card">
-      <p class="eyebrow">Role Notes</p>
+      <h2>Role Notes</h2>
       @for (note of roleNotes; track note.label) {
         <div>
           <h3>{{ note.label }}</h3>
@@ -60,7 +59,7 @@
     </article>
 
     <article class="support-card">
-      <p class="eyebrow">Practice Drills</p>
+      <h2>Practice Drills</h2>
       @for (drill of drills; track drill.label) {
         <div>
           <h3>{{ drill.label }}</h3>
@@ -70,7 +69,7 @@
     </article>
 
     <article class="support-card">
-      <p class="eyebrow">Guide Map</p>
+      <h2>Guide Map</h2>
       @for (timestamp of timestamps; track timestamp.label) {
         <div class="timestamp-row">
           <h3>{{ timestamp.label }}</h3>

@@ -33,7 +33,6 @@
       </div>
 
       <div class="watch-copy">
-        <p class="eyebrow">Guide outcome</p>
         <h2>{{ currentGuide.outcome }}</h2>
         <a [href]="videoUrl()" target="_blank" rel="noopener">Open source video</a>
       </div>
@@ -46,7 +45,6 @@
 
     <section class="content-section">
       <div class="section-heading">
-        <p class="eyebrow">Core model</p>
         <h2>What to carry into your next match</h2>
       </div>
 
@@ -63,7 +61,6 @@
 
     <section class="content-section decision-section">
       <div class="section-heading">
-        <p class="eyebrow">Decision rules</p>
         <h2>Read the state, then take the action.</h2>
       </div>
 
@@ -85,7 +82,6 @@
 
     <section class="content-section">
       <div class="section-heading">
-        <p class="eyebrow">Timestamp study</p>
         <h2>Jump to the decisions that teach the lesson.</h2>
       </div>
 
@@ -105,7 +101,6 @@
 
     <section class="content-section">
       <div class="section-heading">
-        <p class="eyebrow">Practice block</p>
         <h2>Convert the transcript into a habit.</h2>
       </div>
 
@@ -125,7 +120,6 @@
 
     <section class="review-panel">
       <div>
-        <p class="eyebrow">VOD review</p>
         <h2>Questions for your next replay</h2>
       </div>
       <ol>
@@ -138,7 +132,6 @@
     @if (relatedGuides().length > 0) {
       <section class="related-section">
         <div class="section-heading">
-          <p class="eyebrow">Keep learning</p>
           <h2>Related guides</h2>
         </div>
         <div class="related-list">
@@ -155,7 +148,6 @@
   </article>
 } @else {
   <section class="not-found">
-    <p class="eyebrow">Guide not found</p>
     <h1>This strategist lesson is not in the field manual.</h1>
     <a routerLink="/strategist-guides">Return to strategist guides</a>
   </section>

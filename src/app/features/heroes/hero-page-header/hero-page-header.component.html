@@ -1,9 +1,5 @@
 <header class="page-header">
   <div class="header-copy">
-    <div class="hero-kicker">
-      <span>{{ hero?.role ?? 'Hero' }}</span>
-      <small>Roster intelligence</small>
-    </div>
     <h1>{{ hero?.name ?? 'Roster Lab' }}</h1>
     <p class="lede">
       {{
@@ -12,6 +8,9 @@
       }}
     </p>
     <div class="hero-meta-row" aria-label="Selected hero quick stats">
+      @if (hero) {
+        <span class="hero-role">{{ hero.role }}</span>
+      }
       <span
         class="hero-rating"
         [attr.aria-label]="'Difficulty ' + (hero?.difficulty ?? 0) + ' out of 5'"

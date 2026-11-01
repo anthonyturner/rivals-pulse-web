@@ -39,7 +39,6 @@ export interface QuickLink {
 }
 
 export interface SeasonDashboardSection {
-  eyebrow: string;
   title: string;
   description: string;
 }

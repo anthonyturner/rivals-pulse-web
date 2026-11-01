@@ -122,14 +122,6 @@
   align-content: center;
 }
 
-.eyebrow {
-  color: var(--accent);
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .watch-copy h2,
 .section-heading h2,
 .review-panel h2 {

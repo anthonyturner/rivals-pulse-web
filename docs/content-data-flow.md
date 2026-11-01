@@ -265,7 +265,7 @@ third-party source is read, and below the minimum sample a page shows "not enoug
 
 `HomePageComponent` stacks the sections as full-width bands inside one `<main>` and owns the hero
 video. Each section wraps itself in the shared `HomeBandComponent`, which renders the band's
-`<section>`, eyebrow, h2 and lede, so heading order lives in one place. The page reads the cached
+`<section>`, h2 and lede, so heading order lives in one place. The page reads the cached
 official content through `HomeContentService` (one `/api/home/content` request, shared) and passes
 it, as a plain input, to the Game News band:
 
