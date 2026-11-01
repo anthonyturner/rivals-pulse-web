@@ -29,7 +29,7 @@ by hand. There is no sign-up route to it.
   migrations or docs. What #270 will deliver is taken from ADR-0004 decision 9
   and is an assumption until #270 merges: a server-held session cookie, handlers
   mounted once in both Express (`src/server.ts`) and the Vercel function
-  (`api/[...path].ts`), a Supabase client built per request from the publishable
+  (`api/[...path].ts`), Supabase calls made per request with the publishable
   key plus the user's own token (so row-level security, RLS, which are database
   rules about who may read which row, is the real guard), an `Origin` check on
   every POST, and `private, no-store` on every answer.
@@ -76,7 +76,9 @@ except the check below.
 **2. One database check.** We will add `public.is_admin()`, a security-definer
 function (runs with its owner's rights, with `search_path` set to empty as the
 existing read functions do) that returns whether `auth.uid()` is in
-`public.admins`. It is granted to `authenticated` and to nobody else. Every
+`public.admins`. It is granted to `authenticated` and to nobody else: the
+migration revokes execute from `public` and `anon` first, because Postgres lets
+`public` run a new function by default. Every
 admin-only table and every admin-only function reaches its data only after
 `is_admin()` returns true; a function that skips it is a defect. The database is
 the only layer every path goes through, so this is the real gate. Everything in
@@ -209,9 +211,10 @@ owns it.
 A reviewer checks a change against this ADR by looking for:
 
 - Every table and function declared in an admin migration has RLS on (tables),
-  no `anon` grant, and no `authenticated` grant on a table. A static test over
-  the admin migrations asserts this, and asserts that every function they
-  declare calls `is_admin()`. With database tests in CI (open question 2),
+  execute revoked from `public` and `anon` (functions), and no `authenticated`
+  grant on a table. A static test over the admin migrations asserts this, and
+  asserts that every function they declare, other than `is_admin()` itself,
+  calls `is_admin()`. With database tests in CI (open question 2),
   a test signs in as a non-admin and gets no rows or a permission error from
   every admin table and function.
 - Every `/api/admin/*` endpoint answers 401 signed out and 403 for a signed-in
