@@ -20,7 +20,7 @@
 }
 
 .link {
-  color: var(--kicker);
+  color: var(--accent-on-dark);
   font-weight: 700;
   text-underline-offset: 3px;
 }

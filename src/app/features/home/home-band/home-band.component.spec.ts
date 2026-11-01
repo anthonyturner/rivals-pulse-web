@@ -9,7 +9,6 @@ import { HomeBandComponent, type HomeBandAlign, type HomeBandTone } from './home
     <app-home-band
       [tone]="tone"
       [headAlign]="headAlign"
-      [eyebrow]="eyebrow"
       heading="Hero stats"
       headingId="stats-title"
       [lede]="lede"
@@ -21,7 +20,6 @@ import { HomeBandComponent, type HomeBandAlign, type HomeBandTone } from './home
 class HostComponent {
   tone: HomeBandTone = 'light';
   headAlign: HomeBandAlign = 'start';
-  eyebrow = 'Live';
   lede = 'Counted from real matches.';
 }
 
@@ -46,22 +44,21 @@ describe('HomeBandComponent', () => {
     expect(section().getAttribute('aria-labelledby')).toBe('stats-title');
   });
 
-  it('shows the eyebrow and lede above the projected content', () => {
+  it('starts with the heading, then the lede, above the projected content', () => {
     const head = element.querySelector('.band__head') as HTMLElement;
     const body = element.querySelector('.body') as HTMLElement;
 
-    expect(head.querySelector('.band__eyebrow')?.textContent).toBe('Live');
+    expect(head.firstElementChild?.tagName).toBe('H2');
+    expect(section().textContent?.trim().startsWith('Hero stats')).toBeTrue();
     expect(head.querySelector('.band__lede')?.textContent).toBe('Counted from real matches.');
     expect(head.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('leaves out an eyebrow and a lede it was not given', () => {
-    fixture.componentInstance.eyebrow = '';
+  it('leaves out a lede it was not given', () => {
     fixture.componentInstance.lede = '';
     fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();
 
-    expect(element.querySelector('.band__eyebrow')).toBeNull();
     expect(element.querySelector('.band__lede')).toBeNull();
   });
 

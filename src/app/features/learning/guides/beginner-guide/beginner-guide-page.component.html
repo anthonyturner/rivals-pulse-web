@@ -1,7 +1,6 @@
 <section class="beginner-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Beginner Guide</p>
       <h1>Learn how hero shooter fights actually work.</h1>
       <p class="lede">
         Pick your role, walk through four match scenarios, and leave with a simple practice plan
@@ -25,8 +24,7 @@
 
   <section class="role-panel" aria-label="Choose your role">
     <div>
-      <p class="eyebrow">Step 1</p>
-      <h2>Choose the job you want to practice</h2>
+      <h2>Step 1: choose the job you want to practice</h2>
     </div>
 
     <div class="role-grid">
@@ -46,8 +44,7 @@
     <section class="lesson-panel" aria-labelledby="lesson-title">
       <div class="lesson-heading">
         <div>
-          <p class="eyebrow">Module {{ currentModuleIndex() + 1 }}</p>
-          <h2 id="lesson-title">{{ currentModule().title }}</h2>
+          <h2 id="lesson-title">Module {{ currentModuleIndex() + 1 }}: {{ currentModule().title }}</h2>
           <p>{{ currentModule().shortGoal }}</p>
         </div>
         <img [src]="currentModule().heroImage" [alt]="currentModule().title + ' hero image'" />
@@ -89,7 +86,6 @@
     </section>
 
     <aside class="feedback-panel" aria-live="polite" aria-label="Scenario feedback">
-      <p class="eyebrow">Instant Feedback</p>
       @if (selectedChoice(); as choice) {
         <h2>{{ choice.feedbackTitle }}</h2>
         <span class="quality" [class]="choice.quality">{{ choice.quality }}</span>
@@ -138,7 +134,6 @@
 
   <section class="practice-section" aria-labelledby="practice-title">
     <div class="section-heading">
-      <p class="eyebrow">Final Plan</p>
       <h2 id="practice-title">
         {{ guideComplete() ? 'Take this into your next match' : 'Finish the scenarios to lock the plan' }}
       </h2>

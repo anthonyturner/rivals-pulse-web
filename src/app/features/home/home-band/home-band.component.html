@@ -7,9 +7,6 @@
 >
   <div class="band__inner">
     <header class="band__head">
-      @if (eyebrow(); as text) {
-        <p class="band__eyebrow">{{ text }}</p>
-      }
       <h2 class="band__title" [id]="headingId()">{{ heading() }}</h2>
       @if (lede(); as text) {
         <p class="band__lede">{{ text }}</p>

@@ -4,8 +4,8 @@
 
     <header class="detail-hero">
       <div>
-        <p class="kicker">{{ guide.role }} Guide</p>
         <h1>{{ guide.heroName }}</h1>
+        <p class="role">{{ guide.role }} guide</p>
         <p class="lede">{{ guide.summary }}</p>
       </div>
 
@@ -76,8 +76,7 @@
     @if (guide.ultimates.length > 0) {
     <section class="ultimate-section" aria-labelledby="ultimate-title">
       <div class="ultimate-heading">
-        <p class="kicker">Ultimate And Key Matchups</p>
-        <h2 id="ultimate-title">Who to use them against</h2>
+        <h2 id="ultimate-title">Ultimate and key matchups: who to use them against</h2>
       </div>
 
       @for (ultimate of guide.ultimates; track ultimate.name) {

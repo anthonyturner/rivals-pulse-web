@@ -1,6 +1,5 @@
 <app-home-band
   tone="white"
-  eyebrow="Marvel Rivals news"
   heading="What's new in the game"
   headingId="game-news-title"
 >
@@ -82,10 +81,10 @@
           <div class="news__col">
             @if (current.spotlight; as spotlight) {
               <section class="block" aria-labelledby="game-news-spotlight">
-                <p class="block__kicker">{{ spotlight.eyebrow }} · {{ spotlight.date }}</p>
                 <h3 id="game-news-spotlight" class="block__heading block__heading--title">
                   {{ spotlight.title }}
                 </h3>
+                <p class="block__meta">{{ spotlight.date }}</p>
                 <p class="spotlight__blurb">{{ spotlight.description }}</p>
                 <div class="actions">
                   @if (spotlight.hasVideo) {

@@ -25,20 +25,11 @@
   padding: 24px 0 26px;
 }
 
-.eyebrow,
 h1,
 h2,
 h3,
 p {
   margin: 0;
-}
-
-.eyebrow {
-  margin-bottom: 8px;
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 750;
-  text-transform: uppercase;
 }
 
 h1 {
@@ -476,7 +467,4 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
-
-
-
 

@@ -69,6 +69,19 @@ describe('HomePageComponent', () => {
       ]);
     });
 
+    it('puts the heading first in the hero and in every band, with no label above it', () => {
+      const hero = element.querySelector('.hero-copy') as HTMLElement;
+      const bands = Array.from(element.querySelectorAll<HTMLElement>('main section.band'));
+
+      expect(hero.firstElementChild?.tagName).toBe('H1');
+      expect(bands.length).toBe(7);
+      for (const band of bands) {
+        const heading = band.querySelector('h2') as HTMLElement;
+
+        expect(text(band).startsWith(text(heading))).toBeTrue();
+      }
+    });
+
     it('holds every band in the one <main>, each a section labelled by its own h2, and has no aside', () => {
       const main = element.querySelector('main') as HTMLElement;
       const bands = Array.from(main.querySelectorAll<HTMLElement>('section.band'));

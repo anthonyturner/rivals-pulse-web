@@ -7,7 +7,7 @@ import { HERO_GUIDES, HeroGuide } from '../hero-guides/hero-guide-data';
 
 interface FundamentalsGuideGroup {
   title: string;
-  kicker: string;
+  label: string;
   description: string;
   guides: HeroGuide[];
 }
@@ -26,7 +26,7 @@ export class HeroGuidesPageComponent {
 
   readonly fundamentalsGuideGroups: FundamentalsGuideGroup[] = [
     {
-      kicker: 'Core Fundamentals',
+      label: 'Core Fundamentals',
       title: 'Universal habits for every role',
       description:
         'Survival, engagement timing, presence, and fight discipline that apply no matter who you pick.',
@@ -41,7 +41,7 @@ export class HeroGuidesPageComponent {
       ),
     },
     {
-      kicker: 'Vanguard Fundamentals',
+      label: 'Vanguard Fundamentals',
       title: 'Turns, space control, and solo tanking',
       description:
         'Tank-specific decision guides for walking forward with purpose, giving space safely, and protecting the team without feeding.',
@@ -52,7 +52,7 @@ export class HeroGuidesPageComponent {
       ),
     },
     {
-      kicker: 'Duelist Fundamentals',
+      label: 'Duelist Fundamentals',
       title: 'Pressure, angles, target priority, and resets',
       description:
         'Duelist-specific decision guides for creating threat without turning every flank into a death.',

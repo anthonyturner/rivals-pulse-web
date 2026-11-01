@@ -36,22 +36,9 @@
   text-align: center;
 }
 
-.band__eyebrow,
 .band__title,
 .band__lede {
   margin: 0;
-}
-
-.band__eyebrow {
-  color: #0f6f7a;
-  font-size: 0.78rem;
-  font-weight: 850;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.band--dark .band__eyebrow {
-  color: var(--kicker);
 }
 
 .band__title {

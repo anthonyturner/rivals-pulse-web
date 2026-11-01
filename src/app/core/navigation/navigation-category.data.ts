@@ -1,7 +1,6 @@
 export interface NavigationCategory {
   label: string;
   path: string;
-  eyebrow: string;
   title: string;
   description: string;
   items: Array<{
@@ -16,7 +15,6 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
   {
     label: 'Resources',
     path: '/resources',
-    eyebrow: 'Reference Desk',
     title: 'Keep the useful information within reach.',
     description:
       'Quick references for concepts, current numbers, and lessons you can watch when you need an example.',
@@ -33,7 +31,6 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
   {
     label: 'Tools',
     path: '/tools',
-    eyebrow: 'Practice Tools',
     title: 'Turn a confusing match into a clear next step.',
     description:
       'Use these tools before you queue, after a tough fight, or when you want a more deliberate practice session.',

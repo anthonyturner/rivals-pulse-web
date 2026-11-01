@@ -1,7 +1,6 @@
 <section class="team-builder-page">
   <header class="page-hero">
     <div>
-      <p class="kicker">Team Composition</p>
       <h1>Draft six heroes and read the fight plan.</h1>
       <p class="lede">
         Select a hero thumbnail, then click any player slot to place it. Drag and drop still works
@@ -56,7 +55,6 @@
     @if (compSummary(); as summary) {
       <article class="summary-card">
         <div class="summary-heading">
-          <p class="kicker">Comp Read</p>
           <h2>{{ summary.title }}</h2>
           <span>{{ summary.grade }}</span>
         </div>
@@ -66,7 +64,7 @@
       </article>
 
       <article class="score-card">
-        <p class="kicker">Build Theory Signals</p>
+        <h2>Build Theory Signals</h2>
         <p class="score-note">
           Coach ratings aggregate each hero's interpreted fight-plan value. These are not official Marvel Rivals stats.
         </p>
@@ -106,7 +104,6 @@
   <main class="hero-pool" aria-label="Available heroes">
     <div class="pool-heading">
       <div>
-        <p class="kicker">Hero Pool</p>
         <h2>Select a hero, then click a slot</h2>
       </div>
 

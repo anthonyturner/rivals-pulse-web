@@ -31,7 +31,6 @@
   gap: 12px;
 }
 
-.kicker,
 .section-heading span {
   color: #000000;
   text-decoration: un;
@@ -112,7 +111,6 @@ h1 {
   gap: 8px;
 }
 
-.dive-lab .kicker,
 .lab-section-heading > span,
 .jubilee-callout span,
 .team-lineup span,
@@ -477,8 +475,6 @@ h1 {
     flex-direction: column;
 }
 
-
-
 .hero-picker,
 .counter-board,
 .counter-sidebar {
@@ -486,7 +482,6 @@ h1 {
     gap: 12px;
     padding: 12px;
 }
-
 
 .counter-board {
     justify-content: center;

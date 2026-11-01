@@ -56,9 +56,8 @@ export const fullHomeContent: HomeContent = {
     description: `Event ${index} description`,
   })),
   seasonDashboard: {
-    officialUpdates: { eyebrow: 'Official updates', title: 'Latest news and patch notes', description: 'x' },
+    officialUpdates: { title: 'Latest news and patch notes', description: 'x' },
     events: {
-      eyebrow: 'In season now',
       title: 'Events and rewards',
       description: 'x',
       sourceLabel: 'Official patch notes',

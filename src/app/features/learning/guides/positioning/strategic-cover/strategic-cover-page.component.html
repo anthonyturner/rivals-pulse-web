@@ -1,7 +1,6 @@
 <section class="cover-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Guide Notes</p>
       <h1>Strategic Cover Usage</h1>
       <p class="lede">
         Cleaned-up notes from the cover masterclass: minimize your hitbox, expose enemies more
@@ -26,7 +25,7 @@
     </div>
 
     <div class="quick-check">
-      <p class="eyebrow">Five-Question Test</p>
+      <h2>Five-Question Test</h2>
       @for (item of checklist; track item.label) {
         <article>
           <strong>{{ item.label }}</strong>
@@ -52,7 +51,7 @@
 
   <section class="support-grid" aria-label="Cover mistakes and practice drills">
     <article class="support-card">
-      <p class="eyebrow">Common Mistakes</p>
+      <h2>Common Mistakes</h2>
       @for (mistake of mistakes; track mistake.label) {
         <div>
           <h3>{{ mistake.label }}</h3>
@@ -62,7 +61,7 @@
     </article>
 
     <article class="support-card">
-      <p class="eyebrow">Practice Drills</p>
+      <h2>Practice Drills</h2>
       @for (drill of drills; track drill.label) {
         <div>
           <h3>{{ drill.label }}</h3>
@@ -72,7 +71,7 @@
     </article>
 
     <article class="support-card">
-      <p class="eyebrow">Guide Map</p>
+      <h2>Guide Map</h2>
       @for (timestamp of timestamps; track timestamp.label) {
         <div class="timestamp-row">
           <h3>{{ timestamp.label }}</h3>

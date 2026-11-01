@@ -7,7 +7,6 @@ export interface HomeHeroMedia {
 }
 
 export interface SeasonUpdateSpotlight {
-  eyebrow: string;
   title: string;
   description: string;
   sourceUrl: string;
@@ -45,7 +44,6 @@ export function buildSeasonUpdateSpotlight(
   }
 
   return {
-    eyebrow: seasonUpdate.videoUrl ? 'Season update spotlight' : 'Latest season update',
     title: seasonUpdate.title,
     description: seasonUpdate.description,
     sourceUrl: seasonUpdate.sourceUrl,

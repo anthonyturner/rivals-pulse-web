@@ -22,20 +22,10 @@
   padding: 34px 0 30px;
 }
 
-.eyebrow,
 h1,
 h2,
 p {
   margin: 0;
-}
-
-.eyebrow {
-  margin-bottom: 10px;
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 h1 {

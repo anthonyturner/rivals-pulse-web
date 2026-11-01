@@ -55,27 +55,24 @@
   pointer-events: none;
 }
 
-.eyebrow {
-  margin: 0;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #5fe0d6;
+.plan {
+  margin: 0 0 0.75rem;
 }
 
 .premium {
   display: inline-block;
-  margin-left: 0.5rem;
   padding: 2px 9px;
   border-radius: 999px;
   background: var(--cta-yellow);
   color: #111827;
+  font-size: 0.6875rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 h3 {
-  margin: 0.75rem 0;
+  margin: 0 0 0.5rem;
   font-size: var(--type-h2);
   font-weight: 850;
   line-height: 1.1;

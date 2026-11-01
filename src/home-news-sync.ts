@@ -37,7 +37,6 @@ type SeasonHighlight = {
 };
 
 type DashboardSection = {
-  eyebrow: string;
   title: string;
   description: string;
 };
@@ -280,13 +279,11 @@ function buildSeasonDashboardContent(
 
   return {
     officialUpdates: {
-      eyebrow: 'Official updates',
       title: 'Latest news and patch notes',
       description:
         `The most relevant announcements for the current season, newest first. Official site checked ${checkedDate}.`,
     },
     events: {
-      eyebrow: 'In season now',
       title: 'Events and rewards',
       description:
         `Current objectives and unlocks from the latest official patch notes. Official site checked ${checkedDate}.`,

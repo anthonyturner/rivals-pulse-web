@@ -27,9 +27,7 @@ p {
   margin: 0;
 }
 
-.eyebrow,
-.label,
-.kicker {
+.label {
   color: var(--accent-strong);
   font-size: 0.75rem;
   font-weight: 850;
@@ -174,6 +172,12 @@ h1 {
 
 .highlight-summary h2 {
   margin-top: 8px;
+}
+
+.clip-meta {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .summary-copy,

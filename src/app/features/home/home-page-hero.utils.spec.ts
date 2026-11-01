@@ -88,7 +88,6 @@ describe('homePageHeroUtils', () => {
         ],
       }),
     ).toEqual({
-      eyebrow: 'Season update spotlight',
       title: 'Step into Season 9.5 // Dev Vision Vol. 20',
       description: 'Latest season reveal.',
       sourceUrl: 'https://example.com/season',

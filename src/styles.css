@@ -33,7 +33,7 @@
   --ink: #07111f;
   --ink-raised: #0d1d33;
   --cta-yellow: #ffd866;
-  --kicker: #43d8cd;
+  --accent-on-dark: #43d8cd;
   --teal-bright: #77eed7;
   /* Home page type scale: the hero headline, a band's h2 and a card's h3. At 1366px that is 60px, 32px and 18px. */
   --type-hero: clamp(2.25rem, 4.4vw, 3.75rem);
