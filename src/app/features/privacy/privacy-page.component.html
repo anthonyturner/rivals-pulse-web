@@ -231,8 +231,34 @@
         target="_blank"
         >how Google uses information from sites that use its services</a
       >. We see only aggregate reports, such as ad views, clicks and earnings by page, country or
-      device, never data about you. No ads are shown yet; this page will say where they appear,
-      and how to choose personalised or non-personalised ads, before they are.
+      device, never data about you.
+    </p>
+    @if (adsLive) {
+      <p>
+        <strong>Where ads appear.</strong> Google ads appear in one box in the sidebar, on every
+        page except the home page. Where Google's consent message applies, the box shows a Google
+        ad only if you agreed. If you did not agree, or have not answered yet, it shows a
+        RivalsPulse advert instead and the page asks Google for no ad.
+      </p>
+    } @else {
+      <p>
+        <strong>Where ads appear.</strong> No ads are shown yet. When they are, they will appear in
+        one box in the sidebar, on every page except the home page, and only where Google's
+        consent message (below) allows it.
+      </p>
+    }
+    <p>
+      <strong>Your choice.</strong> If you are in the European Economic Area, the United Kingdom
+      or Switzerland, Google shows a consent message on your first visit with three choices:
+      Consent, Do not consent, and Manage options, where you pick which uses of your data you
+      agree to, including whether ads are personalised. Google keeps your answer in your browser.
+      Elsewhere Google shows no message, and its own policy decides what ads you see.
+    </p>
+    <p>
+      <strong>Changing your choice.</strong> Use the
+      <strong>Privacy and cookie settings</strong> button at the bottom of any page to see the
+      message again and change your answer. The button appears only where the message applies to
+      you.
     </p>
   </section>
 

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { GoogleConsentService } from '../../consent/google-consent.service';
 
 @Component({
   selector: 'app-footer',
@@ -8,4 +10,6 @@ import { RouterLink } from '@angular/router';
   styleUrl: './footer.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Footer {}
+export class Footer {
+  protected readonly consent = inject(GoogleConsentService);
+}
