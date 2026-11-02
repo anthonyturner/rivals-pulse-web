@@ -913,3 +913,106 @@ describe('GET account/dashboard', () => {
     expect(read).not.toHaveBeenCalled();
   });
 });
+
+describe('a session that was refreshed during the request', () => {
+  const REFRESHED = { accessToken: 'new.jwt', refreshToken: 'new-refresh' };
+  const NEW_COOKIE = 'rp_session=new.jwt~new-refresh';
+  const refreshing = (overrides: Partial<AuthGateway>): AuthGateway =>
+    gateway({ resolve: async () => ({ account: ACCOUNT, tokens: REFRESHED }), ...overrides });
+  const down = async (): Promise<never> => {
+    throw new AuthUnavailableError('down');
+  };
+  const broken = async (): Promise<never> => {
+    throw new Error('secret detail');
+  };
+  const post = (route: string) =>
+    request(route, { method: 'POST', originHeader: 'https://rivalspulse.com', cookieHeader: SESSION_COOKIE, body: { code: 'abcd-efgh' } });
+  const get = () => request('account/dashboard', { cookieHeader: SESSION_COOKIE });
+
+  /** Each route that runs behind the session, with a way to make its Supabase call fail. */
+  const routes: {
+    name: string;
+    req: AccountRequest;
+    unavailable: string;
+    failing: (fail: () => Promise<never>) => Partial<AuthGateway>;
+  }[] = [
+    { name: 'link', req: post('account/link'), unavailable: 'Linking is unavailable', failing: (fail) => ({ redeemLinkCode: fail }) },
+    { name: 'unlink', req: post('account/unlink'), unavailable: 'Linking is unavailable', failing: (fail) => ({ unlinkPlayer: fail }) },
+    { name: 'dashboard', req: get(), unavailable: 'Your dashboard is unavailable', failing: (fail) => ({ readOwnDashboard: fail }) },
+  ];
+
+  /** The refreshed tokens belong only in the Set-Cookie value, never in a body or a log line. */
+  const expectNoTokenLeak = (response: AccountResponse, log: jasmine.Spy): void => {
+    const exposed = JSON.stringify([response.body, log.calls.allArgs().map(String)]);
+    expect(exposed).not.toContain(REFRESHED.accessToken);
+    expect(exposed).not.toContain(REFRESHED.refreshToken);
+  };
+
+  for (const { name, req, unavailable, failing } of routes) {
+    it(`keeps the new cookie on a 503 from ${name}`, async () => {
+      const warn = spyOn(console, 'warn');
+      const response = await run(req, refreshing(failing(down)));
+
+      expect(response.status).toBe(503);
+      expect(response.cookies.length).toBe(1);
+      expect(response.cookies[0]).toContain(NEW_COOKIE);
+      expect(JSON.stringify(response.body)).not.toContain('down');
+      expect((response.body as { error: string }).error).toContain(unavailable);
+      expectNoTokenLeak(response, warn);
+    });
+
+    it(`keeps the new cookie on a 500 from ${name}`, async () => {
+      const error = spyOn(console, 'error');
+      const response = await run(req, refreshing(failing(broken)));
+
+      expect(response.status).toBe(500);
+      expect(response.cookies.length).toBe(1);
+      expect(response.cookies[0]).toContain(NEW_COOKIE);
+      expect(JSON.stringify(response.body)).not.toContain('secret');
+      expectNoTokenLeak(response, error);
+    });
+
+    it(`keeps the original sign-in time on the cookie of a failed ${name}`, async () => {
+      spyOn(console, 'warn');
+      const response = await run(
+        { ...req, cookieHeader: signedInCookie(120) },
+        refreshing(failing(down)),
+      );
+
+      expect(response.cookies[0]).toContain(`${NEW_COOKIE}~${NOW_MS / 1000 - 120};`);
+    });
+
+    it(`sets no cookie on a 503 from ${name} when nothing was refreshed`, async () => {
+      spyOn(console, 'warn');
+      const response = await run(req, gateway(failing(down)));
+
+      expect(response.status).toBe(503);
+      expect(response.cookies).toEqual([]);
+    });
+  }
+
+  it('keeps the new cookie when the code is refused', async () => {
+    const response = await run(post('account/link'), refreshing({ redeemLinkCode: async () => ({ status: 'invalid' }) }));
+
+    expect(response.status).toBe(400);
+    expect(response.cookies[0]).toContain(NEW_COOKIE);
+  });
+
+  it('keeps the new cookie when the account has made too many wrong tries', async () => {
+    const response = await run(
+      post('account/link'),
+      refreshing({ redeemLinkCode: async () => ({ status: 'rate-limited', retryAfterSeconds: 600 }) }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.cookies[0]).toContain(NEW_COOKIE);
+  });
+
+  it('sets nothing when the refresh itself could not be made', async () => {
+    spyOn(console, 'warn');
+    const response = await run(get(), gateway({ resolve: down }));
+
+    expect(response.status).toBe(503);
+    expect(response.cookies).toEqual([]);
+  });
+});

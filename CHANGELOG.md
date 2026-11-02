@@ -56,6 +56,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- Linking your account, unlinking it and the My stats page no longer risk signing you out when your sign-in was renewed during a request and the database then failed to answer. The renewed sign-in is now kept even when the page says it is unavailable ([#371](https://github.com/anthonyturner/rivals-pulse-web/pull/371)).
 - Signing in with Discord and deleting your account now work on rivalspulse.com. After they were released, every sign-in and account address answered "not found" on the live site, so the Sign in button did nothing ([#303](https://github.com/anthonyturner/rivals-pulse-web/pull/303)).
 
 ### Added

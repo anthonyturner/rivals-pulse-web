@@ -7,7 +7,7 @@ import {
   serializeSessionCookie,
   type SessionTokens,
 } from './auth-cookies.js';
-import { AuthUnavailableError, type AuthGateway } from './auth-gateway.js';
+import { AuthUnavailableError, type AuthGateway, type ResolvedSession } from './auth-gateway.js';
 import { normalizeLinkCode } from './link-code.js';
 import { deriveOwnDashboard } from './own-dashboard.js';
 import {
@@ -55,6 +55,7 @@ const NEXT_BASE = new URL('https://site.invalid');
 const RECENT_SIGN_IN_SECONDS = 10 * 60;
 /** One message for a wrong, used or expired code, so the answer never says which one it was. */
 const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from the desktop app.';
+const SIGN_IN_UNAVAILABLE = 'Sign-in is unavailable right now. Try again in a moment.';
 const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
 const DASHBOARD_UNAVAILABLE = 'Your dashboard is unavailable right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
@@ -66,16 +67,24 @@ export async function handleAccountRequest(
   try {
     return await route(request, getGateway);
   } catch (error) {
-    if (error instanceof AuthUnavailableError) {
-      console.warn('Account request failed:', error.message);
-
-      return json(503, { error: 'Sign-in is unavailable right now. Try again in a moment.' });
-    }
-
-    console.error('Account request failed', error);
-
-    return json(500, { error: 'Something went wrong.' });
+    return failureResponse(error);
   }
+}
+
+/**
+ * The answer for a request that threw: 503 when Supabase could not be asked, otherwise a 500 that
+ * says nothing of the cause. It carries no cookies; a route that has refreshed the session adds its own.
+ */
+function failureResponse(error: unknown, unavailableMessage = SIGN_IN_UNAVAILABLE): AccountResponse {
+  if (error instanceof AuthUnavailableError) {
+    console.warn('Account request failed:', error.message);
+
+    return json(503, { error: unavailableMessage });
+  }
+
+  console.error('Account request failed', error);
+
+  return json(500, { error: 'Something went wrong.' });
 }
 
 async function route(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
@@ -138,9 +147,13 @@ function refreshedCookies(original: SessionTokens, current: SessionTokens): stri
 }
 
 /**
- * Runs `act` for a signed-in visitor, with tokens Supabase has just confirmed (refreshed if they had
- * expired, in which case the new cookie rides on the answer). Linking and the dashboard are
- * conveniences, so a Supabase that cannot be reached is a 503 here and never signs anyone out.
+ * Runs `act` for a signed-in visitor, with tokens Supabase has just confirmed. Linking and the
+ * dashboard are conveniences, so a Supabase that cannot be reached is a 503 here and never signs
+ * anyone out.
+ *
+ * When the tokens had expired and were refreshed, the new cookie rides on every answer from that
+ * point on, failures included. Supabase rotates refresh tokens, so an answer that dropped it would
+ * leave the browser holding a used one and sign the player out on the next request.
  */
 async function withSession(
   request: AccountRequest,
@@ -154,25 +167,21 @@ async function withSession(
     return json(401, { error: signedOutMessage });
   }
 
+  let resolved: ResolvedSession | undefined;
+
   try {
-    const resolved = await gateway().resolve(tokens);
-
-    if (!resolved) {
-      return { ...json(401, { error: signedOutMessage }), cookies: [clearSessionCookie()] };
-    }
-
-    const response = await act(resolved.tokens);
-
-    return { ...response, cookies: [...response.cookies, ...refreshedCookies(tokens, resolved.tokens)] };
+    resolved = await gateway().resolve(tokens);
   } catch (error) {
-    if (!(error instanceof AuthUnavailableError)) {
-      throw error;
-    }
-
-    console.warn('Account request failed:', error.message);
-
-    return json(503, { error: unavailableMessage });
+    return failureResponse(error, unavailableMessage);
   }
+
+  if (!resolved) {
+    return { ...json(401, { error: signedOutMessage }), cookies: [clearSessionCookie()] };
+  }
+
+  const response = await act(resolved.tokens).catch((error: unknown) => failureResponse(error, unavailableMessage));
+
+  return { ...response, cookies: [...response.cookies, ...refreshedCookies(tokens, resolved.tokens)] };
 }
 
 async function linkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
