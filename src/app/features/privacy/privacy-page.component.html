@@ -59,8 +59,10 @@
     <p>
       For the uploading player we also keep a record of their own match history: the match facts
       and their own whole scoreboard line (player id, hero, team, kills, deaths, assists, final
-      hits and result), under the name they play with. That history has no time limit; it is
-      capped per player (currently the most recent 5,000 matches).
+      hits and result), under the name they play with. The same one-way code described above is
+      also kept next to each match in that history, so that the history can be shown to the
+      player once they link a website account. That history, and the code kept with it, has no
+      time limit; it is capped per player (currently the most recent 5,000 matches).
     </p>
     <p>
       Names and player ids are stored so that players can be looked up inside the desktop app.
@@ -129,7 +131,8 @@
       </li>
       <li>
         The uploading player's own match history (their name, whole scoreboard line and the match
-        facts) is <strong>not</strong> deleted on that schedule. It has no time limit and is
+        facts), and the one-way recorder code kept next to each of its matches, is
+        <strong>not</strong> deleted on that schedule. It has no time limit and is
         removed only when a player passes the cap of 5,000 matches and the oldest are pushed out.
       </li>
       <li>
@@ -177,16 +180,21 @@
         the desktop app for a one-time code and type it on your account page. The app sends us,
         with the code request, your in-game name and id and the address of your Overwolf account
         avatar, and we keep them with a code made from your Overwolf username that cannot be turned
-        back into it (the same code that limits how many matches one player can upload). The
+        back into it (the same code that limits how many matches one player can upload). Once you
+        are linked, the app sends your name and avatar address again from time to time, and the
+        new ones replace the ones we stored; the id never changes. The
         link holds those, the date you linked and your account id; the site shows you your name and
         avatar in the page header and on your account page, to you only, and the link is not
-        used in the community numbers. A code is kept only as a scrambled value, works once, expires
+        used in the community numbers. The desktop app can also ask us whether you are linked, and
+        we answer with your in-game name and the date you linked, never your email or account id.
+        A code is kept only as a scrambled value, works once, expires
         after ten minutes (a code nobody used is deleted within minutes of that), and a list of
-        recent code requests and wrong guesses is kept for about an hour at most to limit abuse;
+        recent code requests, name and avatar updates, link checks, unlinks and wrong guesses is kept
+        for about an hour at most to limit abuse;
         deleting your account deletes your wrong guesses at once. You can unlink at any time on
-        your account page, which deletes
-        the link; deleting the account deletes it too. The desktop app's uploaded matches are
-        not removed by either.
+        your account page, which deletes the link, or in the desktop app, which deletes the link
+        and any code you asked for and have not used; deleting the account deletes the link too.
+        The desktop app's uploaded matches are not removed by any of these.
       </li>
       <li>
         <strong>The sign-in cookie.</strong> Signing in sets one cookie, <code>rp_session</code>.

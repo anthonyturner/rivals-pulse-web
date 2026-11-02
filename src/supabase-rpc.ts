@@ -1,5 +1,15 @@
 export const SUPABASE_READ_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'] as const;
 
+/** One page of a function that returns a set of rows; see `callSupabaseFunction`. */
+export interface SupabasePage {
+  offset: number;
+  limit: number;
+  /** Columns to sort by before the range is cut, so pages never overlap or skip on the function's own order. */
+  order?: readonly string[];
+  /** PostgREST column filters, such as `{ rank_bucket: 'eq.-1' }`, applied before the range is cut. */
+  filters?: Readonly<Record<string, string>>;
+}
+
 export type SupabaseReadEnv = Readonly<Record<string, string | undefined>>;
 
 const READ_TIMEOUT_MS = 5000;
@@ -55,7 +65,8 @@ export async function orWhenNotDeployed<T>(read: Promise<T>, functionName: strin
  * aggregate tables themselves have no grant, so a leaked key reads nothing it should not.
  *
  * `what` names the feature in the not-configured message ("Hero stats"). An error never carries the
- * key or the response body.
+ * key or the response body. A function that returns a set of rows is cut by PostgREST at its
+ * `max-rows` (1000 on Supabase), so such a caller asks for one `page` at a time.
  */
 export async function callSupabaseFunction(
   what: string,
@@ -63,6 +74,7 @@ export async function callSupabaseFunction(
   args: Record<string, unknown>,
   env: SupabaseReadEnv,
   fetcher: typeof fetch = fetch,
+  page?: SupabasePage,
 ): Promise<unknown> {
   const url = env['SUPABASE_URL']?.trim();
   const key = env['SUPABASE_PUBLISHABLE_KEY']?.trim();
@@ -72,7 +84,8 @@ export async function callSupabaseFunction(
     throw new Error(`${what} are not configured. Set ${missing.join(' and ')}.`);
   }
 
-  const response = await fetcher(`${url.replace(/\/+$/, '')}/rest/v1/rpc/${functionName}`, {
+  const query = page === undefined ? '' : pageQuery(page);
+  const response = await fetcher(`${url.replace(/\/+$/, '')}/rest/v1/rpc/${functionName}${query}`, {
     method: 'POST',
     headers: { apikey: key, 'content-type': 'application/json' },
     body: JSON.stringify(args),
@@ -84,6 +97,14 @@ export async function callSupabaseFunction(
   }
 
   return response.json();
+}
+
+function pageQuery(page: SupabasePage): string {
+  const order = page.order?.length ? `&order=${page.order.join(',')}` : '';
+
+  const filters = Object.entries(page.filters ?? {}).map(([column, filter]) => `&${column}=${filter}`);
+
+  return `?limit=${page.limit}&offset=${page.offset}${order}${filters.join('')}`;
 }
 
 async function errorCodeOf(response: Response): Promise<string | undefined> {

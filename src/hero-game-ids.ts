@@ -20,9 +20,24 @@ export function buildHeroSlugByGameId(entries: readonly HeroGameIdEntry[]): Read
   );
 }
 
+/**
+ * Game hero id to the hero's base game id: a hero the game splits by role (Deadpool) answers to its
+ * base id from every variant id, as the published tier list does. A game id with no entry is absent.
+ */
+export function buildBaseGameIdByGameId(entries: readonly HeroGameIdEntry[]): ReadonlyMap<number, number> {
+  return new Map(
+    entries.flatMap((entry): [number, number][] => [
+      [entry.gameId, entry.gameId],
+      ...(entry.gameIdVariants ?? []).map((variant): [number, number] => [variant.gameId, entry.gameId]),
+    ]),
+  );
+}
+
 export const heroGameIdEntries: readonly HeroGameIdEntry[] = curatedHeroGameIds;
 
 export const heroSlugByGameId: ReadonlyMap<number, string> = buildHeroSlugByGameId(heroGameIdEntries);
+
+export const baseGameIdByGameId: ReadonlyMap<number, number> = buildBaseGameIdByGameId(heroGameIdEntries);
 
 /**
  * Game hero id to the hero's role. A hero the game splits by role (Deadpool) has a role on each

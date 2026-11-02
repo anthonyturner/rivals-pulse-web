@@ -1,8 +1,3 @@
-:host {
-  display: block;
-  min-width: 0;
-}
-
 .hub {
   display: grid;
   gap: 16px;
@@ -28,65 +23,10 @@ h1 {
   line-height: 1.5;
 }
 
-.actions,
-.toolbar {
+.actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
-}
-
-.toolbar {
-  align-items: end;
-}
-
-.button {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  padding: 0 16px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-elevated);
-  color: var(--text);
-  font-size: var(--type-small);
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.button--primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.button:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--blue);
-  outline-offset: 2px;
-}
-
-.search {
-  flex: 1 1 280px;
-  max-width: 420px;
-}
-
-input {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 7px;
-  background: var(--bg-elevated);
-  color: var(--text);
-}
-
-input::placeholder {
-  color: var(--text-soft);
-}
-
-.count {
-  color: var(--text-soft);
-  font-size: var(--type-small);
 }
 
 .grid {

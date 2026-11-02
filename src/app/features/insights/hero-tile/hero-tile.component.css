@@ -12,6 +12,17 @@
   background: var(--bg-elevated);
 }
 
+:host(.selectable:hover) {
+  border-color: var(--border-strong);
+  background: var(--bg-panel-soft);
+}
+
+:host(.selected) {
+  border-color: var(--teal);
+  background: var(--bg-panel-soft);
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+
 img {
   grid-row: 1 / span 2;
   width: var(--portrait);

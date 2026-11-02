@@ -10,11 +10,15 @@ const MAX_AVATAR_URL_LENGTH = 500;
 const MAX_UID_LENGTH = 64;
 const MAX_NAME_LENGTH = 64;
 
-/** What the app says about its player. Shown on the website, never used to decide who owns what. */
-export interface PlayerClaim {
-  uid: string;
+/** What the app says a player looks like: the part of a claim that can change after linking. */
+export interface PlayerProfile {
   name: string;
   avatarUrl: string | null;
+}
+
+/** What the app says about its player. Shown on the website, never used to decide who owns what. */
+export interface PlayerClaim extends PlayerProfile {
+  uid: string;
 }
 
 /**
@@ -40,18 +44,25 @@ export function allowedAvatarUrl(raw: unknown): string | null {
 }
 
 /**
+ * The name and avatar the app sent, or `null` when there is no name. Control characters are
+ * stripped and the name capped; an avatar that is not allowed becomes `null`.
+ */
+export function readPlayerProfile(body: unknown): PlayerProfile | null {
+  if (typeof body !== 'object' || body === null) return null;
+  const { playerName, avatarUrl } = body as Record<string, unknown>;
+
+  const name = cleanText(playerName, MAX_NAME_LENGTH);
+  return name ? { name, avatarUrl: allowedAvatarUrl(avatarUrl) } : null;
+}
+
+/**
  * The player the app named, or `null` when it has no uid or name yet (no match was played with the
  * app open). Control characters are stripped and lengths capped.
  */
 export function readPlayerClaim(body: unknown): PlayerClaim | null {
-  if (typeof body !== 'object' || body === null) return null;
-  const { playerUid, playerName, avatarUrl } = body as Record<string, unknown>;
-
-  const uid = cleanText(playerUid, MAX_UID_LENGTH);
-  const name = cleanText(playerName, MAX_NAME_LENGTH);
-  if (!uid || !name) return null;
-
-  return { uid, name, avatarUrl: allowedAvatarUrl(avatarUrl) };
+  const profile = readPlayerProfile(body);
+  const uid = cleanText((body as Record<string, unknown> | null)?.playerUid, MAX_UID_LENGTH);
+  return profile && uid ? { uid, ...profile } : null;
 }
 
 /**

@@ -125,3 +125,11 @@ describe('profile route', () => {
     expect(profile?.title).toBe('Your stats | RivalsPulse');
   });
 });
+
+describe('route titles', () => {
+  it('ends the Privacy notes tab title in the site name, like the other pages', () => {
+    const privacy = routes.find((route) => route.path === 'privacy');
+
+    expect(privacy?.title).toBe('Privacy notes | RivalsPulse');
+  });
+});

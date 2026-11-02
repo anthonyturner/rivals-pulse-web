@@ -1,6 +1,6 @@
 ---
 name: 'Product Manager'
-description: 'Turns Rivals Pulse Coach requests into scoped, testable GitHub issues.'
+description: 'Turns RivalsPulse requests into scoped, testable GitHub issues.'
 tools: [search/codebase, read/readFile, web/githubRepo, execute/runInTerminal, execute/getTerminalOutput]
 ---
 

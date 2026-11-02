@@ -1,145 +1,83 @@
-<section class="techniques-page page-container page-container--wide">
-  <header class="guide-hero">
-    <div class="hero-copy">
-      <h1>Marvel Rivals fundamentals from Gefest's workbook.</h1>
-      <p class="lede">
-        A curated training guide for cover, high ground, lane control, roles, mindset, VOD review,
-        and hero-specific coaching material.
-      </p>
-    </div>
-
-    <div class="hero-panel" aria-label="Guide source stats">
-      <span>{{ guides.length }}</span>
-      <small>Guide cards</small>
-      <span>{{ sourceCount() }}</span>
-      <small>Source links</small>
-    </div>
+<main class="guide-article page-container page-container--wide">
+  <header class="guide-header">
+    <nav class="guide-nav" aria-label="Breadcrumb">
+      <a class="guide-link" routerLink="/hero-guides">Guides</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Techniques</span>
+    </nav>
+    <h1>Marvel Rivals fundamentals from Gefest's workbook.</h1>
+    <p class="guide-lede">
+      A curated training guide for cover, high ground, lane control, roles, mindset, VOD review, and
+      hero-specific coaching material.
+    </p>
   </header>
 
-  <section class="training-map" aria-label="Fight flow illustration">
-    <div class="map-visual" aria-hidden="true">
-      <span class="team spawn">Team</span>
-      <span class="cover cover-a"></span>
-      <span class="cover cover-b"></span>
-      <span class="lane lane-main"></span>
-      <span class="lane lane-off"></span>
-      <span class="killbox">Killbox</span>
-      <span class="enemy">Enemy</span>
-    </div>
-
-    <div class="flow-steps">
-      @for (step of diagrams; track step.label) {
-        <article>
-          <strong>{{ step.label }}</strong>
-          <p>{{ step.note }}</p>
-        </article>
-      }
-    </div>
-  </section>
-
-  <section class="toolbar" aria-label="Technique filters">
-    <label class="search-field">
-      <span>Search guide</span>
-      <input
-        type="search"
-        placeholder="Cover, timing, Strategist, VOD review..."
-        [value]="searchTerm()"
-        (input)="updateSearch($event)"
+  <section class="library">
+    <div class="guide-toolbar">
+      <label class="guide-search">
+        <span class="visually-hidden">Search technique guides</span>
+        <input
+          #search
+          type="search"
+          placeholder="Cover, timing, Strategist, VOD review..."
+          [value]="searchTerm()"
+          (input)="updateSearch($event)"
+        />
+      </label>
+      <app-filter-select
+        label="Category"
+        [options]="categoryOptions"
+        [value]="category()"
+        (valueChange)="category.set($event)"
       />
-    </label>
-
-    <div class="category-tabs" aria-label="Category filter">
-      @for (category of categories; track category) {
-        <button
-          type="button"
-          [class.active]="selectedCategory() === category"
-          (click)="selectCategory(category)"
-        >
-          {{ category }}
-        </button>
-      }
     </div>
-  </section>
 
-  <main class="guide-grid" aria-label="Technique guide cards">
-    @for (guide of filteredGuides(); track guide.id) {
-      <article class="guide-card">
-        <img [src]="guide.image" [alt]="guide.title + ' illustration'" loading="lazy" />
+    <p class="guide-count" role="status">{{ countLabel() }}</p>
 
-        <div class="guide-body">
-          <div class="guide-heading">
-            <span>{{ guide.category }}</span>
-            <h2>{{ guide.title }}</h2>
-          </div>
-
-          <p class="takeaway">{{ guide.takeaway }}</p>
-
-          <section class="practice-note">
-            <h3>Practice focus</h3>
-            <p>{{ guide.practice }}</p>
-          </section>
-
-          <div class="tag-list" aria-label="Guide tags">
-            @for (tag of guide.tags; track tag) {
-              <span>{{ tag }}</span>
-            }
-          </div>
-
-          <div class="link-list" aria-label="Source links">
-            @for (link of guide.links; track link.url) {
-              <a [href]="link.url" target="_blank" rel="noopener">{{ link.label }}</a>
-            }
-          </div>
-        </div>
-      </article>
-    } @empty {
-      <div class="empty-state">
-        <strong>No guide cards found</strong>
-        <span>Try a different search or category.</span>
-      </div>
+    <h2 class="visually-hidden">Technique guides</h2>
+    @if (tiles().length > 0) {
+      <ul class="guide-grid">
+        @for (tile of tiles(); track tile.title) {
+          <li><app-technique-tile [tile]="tile" /></li>
+        }
+      </ul>
+    } @else {
+      <app-state-panel heading="No guides match" [headingLevel]="3">
+        <p>Try another word or topic, or pick All.</p>
+        <button type="button" class="guide-button" (click)="clearFilters()">Clear search and category</button>
+      </app-state-panel>
     }
-  </main>
-
-  <section class="workshops" aria-labelledby="hero-workshops-title">
-    <div class="section-heading">
-      <h2 id="hero-workshops-title">Character examples from the workbook</h2>
-    </div>
-
-    <div class="workshop-grid">
-      @for (workshop of heroWorkshops; track workshop.hero) {
-        <article class="workshop-card">
-          <img [src]="workshop.image" [alt]="workshop.hero" loading="lazy" />
-          <div>
-            <span [class]="'role ' + workshop.role.toLowerCase()">{{ workshop.role }}</span>
-            <h3>{{ workshop.hero }}</h3>
-            <p>{{ workshop.focus }}</p>
-            <div class="link-list compact">
-              @for (link of workshop.links; track link.url) {
-                <a [href]="link.url" target="_blank" rel="noopener">{{ link.label }}</a>
-              }
-            </div>
-          </div>
-        </article>
-      }
-    </div>
   </section>
 
-  <section class="role-index" aria-labelledby="vod-index-title">
-    <div class="section-heading">
-      <h2 id="vod-index-title">Workbook hero coverage by role</h2>
-    </div>
+  <section class="guide-section">
+    <h2>How a fight flows</h2>
+    <ol class="guide-steps">
+      @for (step of fightFlow; track step.label) {
+        <li>
+          <span class="guide-text"><strong>{{ step.label }}.</strong> {{ step.note }}</span>
+        </li>
+      }
+    </ol>
+  </section>
 
-    <div class="role-columns">
-      @for (role of roleLibrary; track role.role) {
-        <article>
+  <section class="guide-section">
+    <h2>Character examples from the workbook</h2>
+    <ul class="guide-grid">
+      @for (workshop of workshops; track workshop.title) {
+        <li><app-technique-tile [tile]="workshop" /></li>
+      }
+    </ul>
+  </section>
+
+  <section class="guide-section">
+    <h2>Workbook hero coverage by role</h2>
+    <ul class="guide-grid">
+      @for (role of roles; track role.role) {
+        <li class="guide-tile">
           <h3>{{ role.role }}</h3>
-          <div>
-            @for (hero of role.heroes; track hero) {
-              <span>{{ hero }}</span>
-            }
-          </div>
-        </article>
+          <p class="guide-text">{{ role.heroes }}</p>
+        </li>
       }
-    </div>
+    </ul>
   </section>
-</section>
+</main>
