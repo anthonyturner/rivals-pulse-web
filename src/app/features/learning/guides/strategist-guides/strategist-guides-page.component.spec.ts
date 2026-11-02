@@ -38,7 +38,7 @@ describe('StrategistGuidesPageComponent', () => {
   });
 
   it('labels the search input without showing the label', () => {
-    expect(element.querySelector('label.search .visually-hidden')?.textContent?.trim()).toBe('Search guides');
+    expect(element.querySelector('label.guide-search .visually-hidden')?.textContent?.trim()).toBe('Search guides');
   });
 
   it('says how many of the guides match a search', async () => {
