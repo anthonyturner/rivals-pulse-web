@@ -1,4 +1,4 @@
-import { buildHeroRoleByGameId, heroGameIdEntries, type HeroGameIdEntry } from './hero-game-ids';
+import { buildBaseGameIdByGameId, buildHeroRoleByGameId, heroGameIdEntries, type HeroGameIdEntry } from './hero-game-ids';
 
 const ENTRIES: HeroGameIdEntry[] = [
   { id: 'hulk', gameId: 1011 },
@@ -21,6 +21,20 @@ const ROLES = new Map([
   ['deadpool', 'Strategist'],
   ['odd', 'Healer'],
 ]);
+
+describe('buildBaseGameIdByGameId', () => {
+  const bases = buildBaseGameIdByGameId(ENTRIES);
+
+  it('maps a hero to its own id and every role form of Deadpool to his base id', () => {
+    expect(bases.get(1011)).toBe(1011);
+    expect(bases.get(1057)).toBe(1057);
+    expect([10571, 10572, 10573].map((gameId) => bases.get(gameId))).toEqual([1057, 1057, 1057]);
+  });
+
+  it('has no entry for a game id that belongs to no hero', () => {
+    expect(bases.has(0)).toBeFalse();
+  });
+});
 
 describe('buildHeroRoleByGameId', () => {
   const roles = buildHeroRoleByGameId(ENTRIES, ROLES);

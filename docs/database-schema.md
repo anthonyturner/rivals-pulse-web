@@ -8,6 +8,9 @@
 > with Turso (issue 110). `hero_videos`, `glossary_terms` and `external_sources` followed in issue
 > 106 ([supabase.md](supabase.md#website-reference-content)), and the game stat tables in issue 109
 > ([supabase.md](supabase.md#website-game-stats)).
+>
+> The anonymous hero counts that outlive the purge (hero pairs against and with each other, among them) are
+> Supabase tables too: see [supabase.md](supabase.md#hero-pair-aggregates).
 
 The app uses one shared Turso/libSQL database for curated content and cached external API payloads.
 The mock JSON files under `data/seeds` are seed inputs only; runtime pages read from the Express API backed by Turso.
@@ -99,7 +102,6 @@ The Express SSR server exposes read-only routes:
 
 - `GET /api/content/status`
 - `GET /api/heroes`
-- `GET /api/heroes/:id`
 - `GET /api/hero-videos`
 - `GET /api/home/content`
 - `GET /api/home/portals`

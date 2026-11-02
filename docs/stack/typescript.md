@@ -1,6 +1,6 @@
 # TypeScript and npm
 
-Read this file before writing TypeScript in Rivals Pulse Coach or running any npm
+Read this file before writing TypeScript in RivalsPulse or running any npm
 command. It holds the stack rules the Node/TypeScript pack adds on top of
 [../rules.md](../rules.md). Those rules still apply in full; this file only
 adds to them.

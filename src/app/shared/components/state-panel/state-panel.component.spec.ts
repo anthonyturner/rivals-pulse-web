@@ -8,6 +8,7 @@ import { StatePanelComponent } from './state-panel.component';
   template: `
     <app-state-panel id="loading" kind="loading" heading="Loading the tier list">Fetching.</app-state-panel>
     <app-state-panel id="error" kind="error" heading="Could not be loaded" [headingLevel]="3">Try later.</app-state-panel>
+    <app-state-panel id="quiet" kind="error" [announce]="false">Said elsewhere.</app-state-panel>
     <app-state-panel id="empty"><p>Nothing yet.</p></app-state-panel>
   `,
 })
@@ -32,6 +33,10 @@ describe('StatePanelComponent', () => {
   it('announces an error panel politely without marking it busy', () => {
     expect(panel('error').getAttribute('role')).toBe('status');
     expect(panel('error').hasAttribute('aria-busy')).toBeFalse();
+  });
+
+  it('stays quiet when the page says it is said elsewhere, and keeps its busy mark', () => {
+    expect(panel('quiet').hasAttribute('role')).toBeFalse();
   });
 
   it('does not announce an empty panel', () => {

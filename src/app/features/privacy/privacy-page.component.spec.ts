@@ -94,6 +94,15 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('5,000');
   });
 
+  it('says the one-way recorder code is also kept with the own match history', () => {
+    const uploads = (section('uploaded-today').textContent ?? '').replace(/\s+/g, ' ');
+    const retention = (section('retention').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(uploads).toContain('also kept next to each match in that history');
+    expect(uploads).toContain('link a website account');
+    expect(retention).toContain('one-way recorder code kept next to each of its matches');
+  });
+
   it('says uploads are automatic rather than chosen', () => {
     const text = page.textContent ?? '';
 
@@ -161,7 +170,10 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('Overwolf account avatar');
     expect(text).toContain('cannot be turned back into it');
     expect(text).toContain('expires after ten minutes');
-    expect(text).toContain('You can unlink at any time');
+    expect(text).toContain('the new ones replace the ones we stored');
+    expect(text).toContain('name and avatar updates, link checks, unlinks and wrong guesses');
+    expect(text).toContain('You can unlink at any time on your account page, which deletes the link, or in the desktop app, which deletes the link and any code you asked for and have not used');
+    expect(text).toContain('never your email or account id');
     expect(text).not.toContain('An account is not linked to your in-game name');
   });
 

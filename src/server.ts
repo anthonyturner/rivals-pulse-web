@@ -12,7 +12,6 @@ import {
   getContentStatusFromDatabase,
   getExternalSourceFromDatabase,
   getGlossaryTermsFromDatabase,
-  getHeroFromDatabase,
   getHeroVideosFromDatabase,
   getHeroesFromDatabase,
   getHomeContentBlocksFromDatabase,
@@ -21,6 +20,7 @@ import {
 import { getCommunityInsights } from './community-insights-read';
 import { getCommunityMatches } from './community-matches-read';
 import { getHeroMatchups } from './hero-matchups-read';
+import { getHeroPairs } from './hero-pairs-read';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './hero-stats-read';
 import { syncHomeNews } from './home-news-sync';
 import { runGameStatsSync, syncGameStats } from './game-stats-sync';
@@ -56,6 +56,10 @@ app.get('/api/hero-matchups', (_req, res) => {
   handleApiResponse(res, () => getHeroMatchups());
 });
 
+app.get('/api/hero-pairs', (_req, res) => {
+  handleApiResponse(res, () => getHeroPairs());
+});
+
 app.get('/api/community/stats', (req, res) => {
   const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
@@ -64,20 +68,6 @@ app.get('/api/community/stats', (req, res) => {
 
 app.get('/api/heroes', (_req, res) => {
   handleApiResponse(res, () => getHeroesFromDatabase());
-});
-
-app.get('/api/heroes/:id', (req, res) => {
-  handleApiResponse(res, () => {
-    const hero = getHeroFromDatabase(req.params.id);
-
-    if (!hero) {
-      res.status(404);
-
-      return { message: `Hero not found: ${req.params.id}` };
-    }
-
-    return hero;
-  });
 });
 
 app.get('/api/hero-videos', (_req, res) => {

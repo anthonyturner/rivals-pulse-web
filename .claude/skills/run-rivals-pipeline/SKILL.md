@@ -1,9 +1,9 @@
 ---
 name: run-rivals-pipeline
-description: Run the Rivals Pulse Coach planning stages (Product Manager, then optional Software Design) for a substantial feature. Use when the user explicitly invokes `$run-rivals-pipeline` in Claude Code or asks to take a substantial Rivals Pulse Coach feature from request to a filed issue with design ready for implementation. Do not use for small fixes, standalone issue drafting, or implementation/QA work — use `$implement-rivals-issue` (Claude Code) or Codex for those.
+description: Run the RivalsPulse planning stages (Product Manager, then optional Software Design) for a substantial feature. Use when the user explicitly invokes `$run-rivals-pipeline` in Claude Code or asks to take a substantial RivalsPulse feature from request to a filed issue with design ready for implementation. Do not use for small fixes, standalone issue drafting, or implementation/QA work — use `$implement-rivals-issue` (Claude Code) or Codex for those.
 ---
 
-# Run the Rivals Pulse Coach planning pipeline (Claude Code)
+# Run the RivalsPulse planning pipeline (Claude Code)
 
 Claude Code runs the planning half of the named pipeline in `AGENTS.md`:
 Product Manager and, when warranted, Software Design. Implementation and QA

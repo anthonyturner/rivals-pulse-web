@@ -24,7 +24,9 @@ same data-access code (`src/content-database.ts`):
 
 - **Vercel serverless functions** in `api/` (e.g. `api/heroes.ts`,
   `api/hero-stats.ts`, `api/glossary.ts`) — the production path, each a thin
-  handler around `src/vercel-api.ts` + `content-database.ts`.
+  handler around `src/vercel-api.ts` + `content-database.ts`. Vercel serves a
+  file under `api/` only at its own path, so every route needs its own file;
+  there is no catch-all.
 - **Express**, in `src/server.ts` — serves the same `/api/*` routes for
   local dev and the local server render (`npm start`,
   `npm run serve:ssr:rivals-pulse-coach`), backed by `@angular/ssr/node`.
@@ -83,6 +85,10 @@ The session lives on the server side of the boundary:
   `src/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
   records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
   service key and no per-account copy of the data.
+- The desktop app also has its own link calls, each an Edge Function that confirms the Overwolf session:
+  `refresh-linked-player` (refresh the name and avatar), `link-status` (am I linked, and as whom) and
+  `unlink-player-app` (remove the link). They act only on the verified session's own link and never return the
+  website account's email or id; see "The app's own calls about its link" in [supabase.md](supabase.md).
 - The session cookie also carries the time of the Discord sign-in (Supabase moves its own
   `last_sign_in_at` on every token refresh, so it cannot be used). `POST /api/account/delete` needs that
   sign-in to be under ten minutes old (ADR-0004, decision 7) and answers 401 with a reason otherwise.

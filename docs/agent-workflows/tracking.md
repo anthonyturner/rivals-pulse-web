@@ -1,6 +1,6 @@
 # Tracking workflow (GitHub)
 
-Rivals Pulse Coach tracks work in **GitHub only**. A GitHub issue is the work
+RivalsPulse tracks work in **GitHub only**. A GitHub issue is the work
 item, its pull request is the change, and the two together are the complete
 record. There is no second tracker, and no stage writes to one.
 

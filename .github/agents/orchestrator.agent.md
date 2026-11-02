@@ -1,6 +1,6 @@
 ---
 name: 'Orchestrator'
-description: 'Routes Rivals Pulse Coach work through the shared product manager, engineering refinement, optional UX design, engineering and QA stages.'
+description: 'Routes RivalsPulse work through the shared product manager, engineering refinement, optional UX design, engineering and QA stages.'
 tools: [agent, search/codebase, read/readFile]
 agents: ['Product Manager', 'Engineering Refinement', 'UX Design', 'Software Engineer', 'QA Reviewer']
 ---
