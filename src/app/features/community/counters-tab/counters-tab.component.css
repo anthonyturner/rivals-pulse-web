@@ -49,10 +49,9 @@
 }
 
 img {
-  --size: 32px;
   flex: none;
-  width: var(--size);
-  height: var(--size);
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
   border-radius: 6px;
   background: var(--surface-2);
   object-fit: cover;
@@ -90,10 +89,6 @@ img {
   .record {
     display: flex;
     gap: 14px;
-  }
-
-  img {
-    --size: 36px;
   }
 
   .result {

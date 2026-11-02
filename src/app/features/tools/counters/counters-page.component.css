@@ -231,8 +231,8 @@ app-filter-select,
 }
 
 .chip img {
-  width: 40px;
-  height: 40px;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
   border-radius: 6px;
 }
 

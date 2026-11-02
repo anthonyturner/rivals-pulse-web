@@ -55,6 +55,8 @@
   --container: 1120px;
   --container-wide: 1220px;
   --page-gutter: 32px;
+  /* The one size for a hero portrait in a list, tile or chip; large art (detail headers, guide portraits) keeps its own. */
+  --hero-thumb: 40px;
   --nav-height: 56px;
   --link: #0e6a98;
 }
@@ -62,6 +64,7 @@
 @media (max-width: 560px) {
   :root {
     --page-gutter: var(--mobile-page-gutter);
+    --hero-thumb: 36px;
   }
 }
 
@@ -94,11 +97,11 @@ body {
 
 .tag-list .hero-matchup-chip {
   display: grid;
-  width: 46px;
+  width: var(--hero-thumb);
   aspect-ratio: 1;
   place-items: center;
   padding: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: rgba(255, 248, 203, 0.82);
   cursor: help;
 }
