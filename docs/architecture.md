@@ -11,7 +11,7 @@ Rendering: production pages render in the browser. `vercel.json` rewrites every
 non-API path to `index.csr.html`, so a `curl` of a page returns an empty
 `<app-root>`. The server render (`@angular/ssr`, `src/server.ts`) runs only for
 local dev and `npm run serve:ssr:rivals-pulse-coach`, so a feature must work
-without it. Routes that need the visitor's own session (`/sign-in`, `/account`)
+without it. Routes that need the visitor's own session (`/sign-in`, `/account`, `/profile`)
 are declared `RenderMode.Client` in `src/app/app.routes.server.ts`.
 
 Hosting:
@@ -70,7 +70,7 @@ The session lives on the server side of the boundary:
   `rivalspulse.com` and `localhost` only (a Vercel preview shares the live
   Supabase project, so it gets none).
 - The browser asks `GET /api/auth/session` through `AuthService`
-  (`src/app/core/auth/`) and the `/account` route is guarded by `signedInGuard`.
+  (`src/app/core/auth/`) and the `/account` and `/profile` routes are guarded by `signedInGuard`.
 - `public.profiles` (one row per account, RLS on) is created at first sign-in.
 - An account can be linked to an in-game player with a one-time code (issue 264). The desktop app asks
   the Edge Function `issue-link-code` for a code, proving who it is with its Overwolf session; the
@@ -84,7 +84,9 @@ The session lives on the server side of the boundary:
   own token. The database picks the lines (those whose recorder and uid are the link's own, newest 2,000);
   `src/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
   records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
-  service key and no per-account copy of the data.
+  service key and no per-account copy of the data. The `/profile` page (`src/app/features/profile/`) asks it
+  through `AuthService.loadDashboard()`, which validates the answer, and `buildProfileView` turns it into the
+  states the page draws (not linked, no matches, unavailable, ready).
 - The desktop app also has its own link calls, each an Edge Function that confirms the Overwolf session:
   `refresh-linked-player` (refresh the name and avatar), `link-status` (am I linked, and as whom) and
   `unlink-player-app` (remove the link). They act only on the verified session's own link and never return the

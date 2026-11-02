@@ -2,6 +2,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { AuthService } from './auth.service';
+import { linkedDashboard } from './own-dashboard.fixtures';
 
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
 
@@ -225,5 +226,64 @@ describe('AuthService', () => {
       expect((await service.deleteAccount(asked)).status).toBe('failed');
       expect(service.state()).toEqual({ status: 'loading' });
     });
+  });
+});
+
+describe('AuthService.loadDashboard', () => {
+  let service: AuthService;
+
+  const create = (response: Response | Error): jasmine.Spy => {
+    const spy = spyOn(window, 'fetch');
+
+    if (response instanceof Error) {
+      spy.and.rejectWith(response);
+    } else {
+      spy.and.resolveTo(response);
+    }
+
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    service = TestBed.inject(AuthService);
+
+    return spy;
+  };
+
+  it('reads the signed-in player from the dashboard route', async () => {
+    const body = linkedDashboard();
+    const fetchSpy = create(answer(200, body));
+
+    expect(await service.loadDashboard()).toEqual({ status: 'ready', dashboard: body });
+    expect(fetchSpy).toHaveBeenCalledOnceWith('/api/account/dashboard');
+  });
+
+  it('passes on an account with no link', async () => {
+    create(answer(200, { linked: false }));
+
+    expect(await service.loadDashboard()).toEqual({ status: 'ready', dashboard: { linked: false } });
+  });
+
+  it('reports an ended session as signed out and remembers it', async () => {
+    create(answer(401, { error: 'Your session has ended.' }));
+
+    expect(await service.loadDashboard()).toEqual({ status: 'signedOut' });
+    expect(service.state()).toEqual({ status: 'signedOut' });
+  });
+
+  it('is unavailable, keeping the visitor signed in, when the server cannot read the stats', async () => {
+    create(answer(503, { error: 'down' }));
+
+    expect(await service.loadDashboard()).toEqual({ status: 'unavailable' });
+    expect(service.state()).toEqual({ status: 'loading' });
+  });
+
+  it('is unavailable for an answer that is not a dashboard', async () => {
+    create(answer(200, { unexpected: true }));
+
+    expect(await service.loadDashboard()).toEqual({ status: 'unavailable' });
+  });
+
+  it('is unavailable when the network is down', async () => {
+    create(new TypeError('offline'));
+
+    expect(await service.loadDashboard()).toEqual({ status: 'unavailable' });
   });
 });

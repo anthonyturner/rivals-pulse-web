@@ -3,7 +3,7 @@ import { RenderMode } from '@angular/ssr';
 import { serverRoutes } from './app.routes.server';
 
 describe('serverRoutes', () => {
-  for (const path of ['sign-in', 'account']) {
+  for (const path of ['sign-in', 'account', 'profile']) {
     it(`renders ${path} in the browser only`, () => {
       expect(serverRoutes.find((route) => route.path === path)?.renderMode).toBe(RenderMode.Client);
     });

@@ -149,6 +149,29 @@ describe('Nav', () => {
     });
   });
 
+  it('offers My stats to a signed-in visitor only', () => {
+    const statsLink = (): HTMLAnchorElement | undefined =>
+      Array.from(
+        fixture.nativeElement.querySelectorAll('#primary-navigation .nav-link') as NodeListOf<HTMLAnchorElement>,
+      ).find((anchor) => anchor.textContent?.trim() === 'My stats');
+
+    expect(statsLink()).toBeUndefined();
+
+    sessionState.set({
+      status: 'signedIn',
+      account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+      player: null,
+    });
+    fixture.detectChanges();
+
+    expect(statsLink()?.getAttribute('href')).toBe('/profile');
+
+    sessionState.set({ status: 'signedOut' });
+    fixture.detectChanges();
+
+    expect(statsLink()).toBeUndefined();
+  });
+
   it('shows neither link while the session is still being read', () => {
     sessionState.set({ status: 'loading' });
     fixture.detectChanges();

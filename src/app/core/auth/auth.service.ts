@@ -3,6 +3,8 @@ import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 
 import type { DeleteAccountRequest } from './account-deletion.types';
 import type { LinkedPlayer } from './linked-player.types';
+import { parseOwnDashboard } from './own-dashboard.parse';
+import type { OwnDashboardResponse } from './own-dashboard.types';
 
 /** What the account page shows. It matches what `GET /api/auth/session` returns. */
 export interface Account {
@@ -32,6 +34,13 @@ export type LinkChangeResult =
   | { status: 'signedOut' }
   /** The server's own words for why it refused (a wrong code, too many tries), or a generic line. */
   | { status: 'failed'; message: string };
+
+export type DashboardResult =
+  | { status: 'ready'; dashboard: OwnDashboardResponse }
+  /** There was no valid session, so there is nothing to show. */
+  | { status: 'signedOut' }
+  /** The stats could not be read right now; the visitor is still signed in. */
+  | { status: 'unavailable' };
 
 const LINK_FAILED = 'The desktop app could not be linked right now. Try again in a moment.';
 const UNLINK_FAILED = 'The desktop app could not be unlinked right now. Try again in a moment.';
@@ -117,6 +126,25 @@ export class AuthService {
   /** Removes the link between the signed-in account and its player. */
   async unlinkPlayer(): Promise<LinkChangeResult> {
     return this.changeLink('/api/account/unlink', {}, UNLINK_FAILED);
+  }
+
+  /** Reads the signed-in player's own stats, worked out on the server from the matches their link proves are theirs. */
+  async loadDashboard(): Promise<DashboardResult> {
+    try {
+      const response = await fetch('/api/account/dashboard');
+
+      if (response.status === 401) {
+        this.markSignedOut();
+
+        return { status: 'signedOut' };
+      }
+
+      const dashboard = response.ok ? parseOwnDashboard(await response.json()) : null;
+
+      return dashboard ? { status: 'ready', dashboard } : { status: 'unavailable' };
+    } catch {
+      return { status: 'unavailable' };
+    }
   }
 
   private async changeLink(path: string, body: object, fallback: string): Promise<LinkChangeResult> {

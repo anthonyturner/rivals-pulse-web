@@ -5,6 +5,7 @@ import type {
   CommunityMatchesMinimums,
   CommunityModeShare,
 } from './contracts/community-matches.model.js';
+import { PLAY_MODE_NAMES } from './contracts/play-modes.js';
 import {
   BLENDED_PLAY_MODE_IDS,
   PLAY_MODE_IDS,
@@ -76,16 +77,9 @@ export interface DeriveCommunityMatchesOptions {
   halfSeason?: number;
 }
 
-const MODE_NAMES: ReadonlyMap<number, string> = new Map([
-  [PLAY_MODE_IDS.quickMatch, 'Quick Match'],
-  [PLAY_MODE_IDS.competitive, 'Competitive'],
-  [PLAY_MODE_IDS.arcade, 'Arcade'],
-  [PLAY_MODE_IDS.practice, 'Practice'],
-]);
-
 /** A mode the game reports under an id this site does not know yet is shown as "Other". */
 export function playModeName(playModeId: number): string {
-  return MODE_NAMES.get(playModeId) ?? 'Other';
+  return PLAY_MODE_NAMES.get(playModeId) ?? 'Other';
 }
 
 /**

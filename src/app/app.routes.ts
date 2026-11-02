@@ -258,6 +258,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'profile',
+    title: 'Your stats | RivalsPulse',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./features/profile/profile-page.component').then(
+        (module) => module.ProfilePageComponent,
+      ),
+  },
+  {
     path: '**',
     redirectTo: 'heroes',
   },
