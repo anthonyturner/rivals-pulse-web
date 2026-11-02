@@ -116,6 +116,18 @@ describe('App shell', () => {
     expect(document.activeElement).toBe(main());
   });
 
+  it('leaves focus to the router when a link goes to a fragment of another page', async () => {
+    const other = document.createElement('input');
+    page.appendChild(other);
+    other.focus();
+
+    await goTo('/counters#abilities');
+
+    expect(document.activeElement).not.toBe(main());
+    expect(document.activeElement).toBe(other);
+    other.remove();
+  });
+
   it('leaves focus alone for a query or fragment change on the same page', async () => {
     const other = document.createElement('input');
     page.appendChild(other);

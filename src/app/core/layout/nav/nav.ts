@@ -17,7 +17,7 @@ import { filter, map } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import type { LinkedPlayer } from '../../auth/linked-player.types';
 import { PlayerAvatarComponent } from '../../../shared/components/player-avatar/player-avatar.component';
-import { HOME_NAV_ITEM, PRIMARY_NAV_ITEMS, activeNavPath } from './primary-nav';
+import { HOME_NAV_ITEM, PRIMARY_NAV_ITEMS, PROFILE_PATH, activeNav } from './primary-nav';
 
 interface AccountLink {
   label: string;
@@ -28,7 +28,7 @@ interface AccountLink {
 }
 
 /** Where the links stop fitting on one row and become a menu. `nav.css` uses the same width. */
-const WIDE_NAV_QUERY = '(min-width: 800px)';
+const WIDE_NAV_QUERY = '(min-width: 920px)';
 
 @Component({
   selector: 'app-nav',
@@ -60,8 +60,15 @@ export class Nav {
     { initialValue: this.router.url },
   );
 
-  /** The path of the link to mark as the current page. */
-  readonly activePath = computed(() => activeNavPath(this.url()));
+  /** The `aria-current` value of each link that belongs to the current URL, by link path. */
+  readonly current = computed<Partial<Record<string, 'page' | 'true'>>>(() => {
+    const active = activeNav(this.url());
+
+    return active ? { [active.path]: active.exact ? 'page' : 'true' } : {};
+  });
+
+  /** Only for a signed-in visitor: the page is theirs, and a signed-out visitor has nothing to open. */
+  readonly statsLink = computed(() => (this.auth.state().status === 'signedIn' ? PROFILE_PATH : null));
 
   /** Null until the server has answered, so a signed-in visitor never sees "Sign in" flash by. */
   readonly accountLink = computed<AccountLink | null>(() => {

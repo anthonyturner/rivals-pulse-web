@@ -165,15 +165,18 @@ describe('Nav', () => {
       expect(current()).toEqual(['page:Heroes']);
     });
 
-    it('marks a page under Heroes, Tools or Resources with the link it belongs to', async () => {
+    it('marks a page under Heroes, Tools or Resources as part of the link it belongs to, not as the page', async () => {
       await go('/heroes/spider-man');
-      expect(current()).toEqual(['page:Heroes']);
+      expect(current()).toEqual(['true:Heroes']);
 
       await go('/counters?hero=1');
-      expect(current()).toEqual(['page:Tools']);
+      expect(current()).toEqual(['true:Tools']);
 
       await go('/glossary#a');
-      expect(current()).toEqual(['page:Resources']);
+      expect(current()).toEqual(['true:Resources']);
+
+      await go('/tools');
+      expect(current()).toEqual(['page:Tools']);
     });
 
     it('marks Home on the home page only, and nothing on a page with no nav item', async () => {
@@ -182,6 +185,18 @@ describe('Nav', () => {
 
       await go('/privacy');
       expect(current()).toEqual([]);
+    });
+
+    it('marks My stats on the profile page', async () => {
+      sessionState.set({
+        status: 'signedIn',
+        account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+        player: null,
+      });
+      fixture.detectChanges();
+      await go('/profile');
+
+      expect(current()).toEqual(['page:My stats']);
     });
 
     it('marks the account link on the sign-in and account pages', async () => {
@@ -271,6 +286,34 @@ describe('Nav', () => {
     });
   });
 
+  it('offers My stats to a signed-in visitor only, between Community and the account link', () => {
+    const labels = (): (string | undefined)[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>).map(
+        (anchor) => anchor.textContent?.trim(),
+      );
+    const statsLink = (): HTMLAnchorElement | undefined =>
+      Array.from(
+        fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
+      ).find((anchor) => anchor.textContent?.trim() === 'My stats');
+
+    expect(statsLink()).toBeUndefined();
+
+    sessionState.set({
+      status: 'signedIn',
+      account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
+      player: null,
+    });
+    fixture.detectChanges();
+
+    expect(statsLink()?.getAttribute('href')).toBe('/profile');
+    expect(labels().slice(-3)).toEqual(['Community', 'My stats', 'Account']);
+
+    sessionState.set({ status: 'signedOut' });
+    fixture.detectChanges();
+
+    expect(statsLink()).toBeUndefined();
+  });
+
   it('shows neither link while the session is still being read, but keeps its place', () => {
     sessionState.set({ status: 'loading' });
     fixture.detectChanges();
@@ -280,5 +323,56 @@ describe('Nav', () => {
     expect(accountLink()).toBeUndefined();
     expect(placeholder.getAttribute('aria-hidden')).toBe('true');
     expect(getComputedStyle(placeholder).visibility).toBe('hidden');
+  });
+});
+
+describe('Nav when the viewport widens', () => {
+  let query: { addEventListener: jasmine.Spy; removeEventListener: jasmine.Spy };
+  let fixture: ComponentFixture<Nav>;
+
+  beforeEach(async () => {
+    query = { addEventListener: jasmine.createSpy('add'), removeEventListener: jasmine.createSpy('remove') };
+    spyOn(window, 'matchMedia').and.returnValue(query as unknown as MediaQueryList);
+
+    await TestBed.configureTestingModule({
+      imports: [Nav],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        {
+          provide: AuthService,
+          useValue: { state: signal<SessionState>({ status: 'signedOut' }), load: () => Promise.resolve() },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(Nav);
+    fixture.detectChanges();
+  });
+
+  const fire = (matches: boolean): void => {
+    const listener = query.addEventListener.calls.mostRecent().args[1] as (event: MediaQueryListEvent) => void;
+    listener({ matches } as MediaQueryListEvent);
+  };
+
+  it('watches the 920px width the stylesheet switches at', () => {
+    expect(window.matchMedia).toHaveBeenCalledWith('(min-width: 920px)');
+    expect(query.addEventListener).toHaveBeenCalledOnceWith('change', jasmine.any(Function));
+  });
+
+  it('closes an open menu when the viewport becomes wide, and ignores it becoming narrow', () => {
+    fixture.componentInstance.toggleMenu();
+
+    fire(false);
+    expect(fixture.componentInstance.isMenuOpen()).toBeTrue();
+
+    fire(true);
+    expect(fixture.componentInstance.isMenuOpen()).toBeFalse();
+  });
+
+  it('stops listening when the nav is destroyed', () => {
+    fixture.destroy();
+
+    expect(query.removeEventListener).toHaveBeenCalledOnceWith('change', query.addEventListener.calls.mostRecent().args[1]);
   });
 });

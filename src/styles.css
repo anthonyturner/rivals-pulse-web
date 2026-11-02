@@ -71,7 +71,7 @@ body {
   margin: 0;
 }
 
-/* Keeps a skip-link or fragment target from landing under the sticky header. */
+/* Keeps focus scrolling and `scrollIntoView` targets clear of the sticky header. The shell sets the router's own fragment scrolling offset. */
 html {
   scroll-padding-top: var(--nav-height);
 }

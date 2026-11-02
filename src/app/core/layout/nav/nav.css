@@ -59,7 +59,7 @@ nav {
 }
 
 /* Below the width in WIDE_NAV_QUERY (nav.ts) the links become a menu under the header. */
-@media (max-width: 799px) {
+@media (max-width: 919px) {
   .menu-toggle,
   .nav-home {
     display: inline-flex;

@@ -14,6 +14,7 @@ POST /api/auth/sign-out
 POST /api/account/delete
 POST /api/account/link
 POST /api/account/unlink
+GET /api/account/dashboard
 
 Static reference data for other tools is published separately as Pulse Atlas; see [pulse-atlas.md](pulse-atlas.md).
 
@@ -53,3 +54,26 @@ never told apart); 429 `{ error, retryAfterSeconds }` after five wrong codes in 
 valid session; 503 when Supabase is unavailable. `POST /api/account/unlink` takes no body and answers 200
 `{ "player": null }`, with the same 401 and 503. Both obey the Origin check and `no-store` of the other
 account routes.
+
+`GET /api/account/dashboard` takes the `rp_session` cookie and answers the signed-in player's own stats,
+derived on the server from the lines the database can prove are theirs (the recorder and uid of their link;
+see "Reading a linked player's own dashboard" in [supabase.md](supabase.md)). It answers 200 `{ "linked":
+false }` for an account with no link, otherwise `{ "linked": true, "player": { name, avatarUrl }, "truncated",
+"stats" }`. `truncated` is true when more lines existed than the 2,000 read. A figure that was not recorded is
+`null`, never 0. `stats` (the type is `OwnDashboardStats` in `src/app/core/auth/own-dashboard.types.ts`):
+
+- `matches`, `wins`, `losses`, `unknownResults` and `winRate` (0 to 1 over known results, null with none);
+- `kda`: `{ matches, kills, deaths, assists, killsPerMatch, deathsPerMatch, assistsPerMatch, ratio }` over the
+  matches that recorded all three, or null;
+- `finalHits`: `{ matches, total, perMatch }` over the matches that counted them, or null;
+- `topHeroes`: up to five `{ hero, matches, wins, losses, winRate, kda }`, most played first, `hero` being the id in
+  `heroes.json` (a hero the site cannot name is left out);
+- `perMinute`: `damage`, `healing` and `blocked`, each `{ perMinute, samples }` or null;
+- `records`: `mostKills`, `mostAssists` and `mostFinalHits` as `{ value, playedAt, hero }` or null, and
+  `longestWinStreak` (a match with no result ends a streak);
+- `recent`: the newest ten `{ playedAt, hero, result: "win" | "loss" | null, kills, deaths, assists, finalHits,
+  playModeId, mapName }`;
+- `firstPlayedAt` and `lastPlayedAt`.
+
+No line, uid or recorder id is in the answer. It answers 401 with no valid session (clearing the cookie when the
+session has ended) and 503 when Supabase is unavailable, without signing the player out; a POST gets 405.

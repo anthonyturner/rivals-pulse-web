@@ -1,3 +1,4 @@
+import { ViewportScroller } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -17,21 +18,26 @@ import { SidebarVisibility } from './core/layout/sidebar/sidebar-visibility';
 export class App {
   protected readonly hasSidebar = inject(SidebarVisibility).visible;
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
+  private readonly header = viewChild.required<ElementRef<HTMLElement>>('header');
+  private readonly router = inject(Router);
   private lastPath: string | null = null;
 
   constructor() {
-    inject(Router)
-      .events.pipe(
+    // The router scrolls to a fragment with `scrollTo`, which ignores `scroll-padding`.
+    inject(ViewportScroller).setOffset(() => [0, this.header().nativeElement.offsetHeight]);
+
+    this.router.events
+      .pipe(
         filter((event) => event instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
       .subscribe(({ urlAfterRedirects }) => {
-        // A query or fragment change stays on the page, so focus stays where the visitor put it.
+        // A query change stays on the page, and a fragment link leaves focus to the router's scroll to its target.
         const path = urlAfterRedirects.split(/[?#]/)[0];
         const movedPage = this.lastPath !== null && path !== this.lastPath;
         this.lastPath = path;
 
-        if (movedPage) {
+        if (movedPage && this.router.parseUrl(urlAfterRedirects).fragment === null) {
           this.focusMain();
         }
       });

@@ -1,21 +1,22 @@
 import { NAVIGATION_CATEGORIES } from '../../navigation/navigation-category.data';
-import { PRIMARY_NAV_ITEMS, activeNavPath } from './primary-nav';
+import { PRIMARY_NAV_ITEMS, activeNav } from './primary-nav';
 
-describe('activeNavPath', () => {
-  it('matches a nav item and the pages below it, and ignores the query and fragment', () => {
-    expect(activeNavPath('/heroes')).toBe('/heroes');
-    expect(activeNavPath('/heroes/spider-man?tab=1#abilities')).toBe('/heroes');
-    expect(activeNavPath('/hero-guides/first-time')).toBe('/hero-guides');
+describe('activeNav', () => {
+  it('matches a nav item exactly, and a page below it as a section, ignoring the query and fragment', () => {
+    expect(activeNav('/heroes')).toEqual({ path: '/heroes', exact: true });
+    expect(activeNav('/heroes?tab=1#abilities')).toEqual({ path: '/heroes', exact: true });
+    expect(activeNav('/heroes/spider-man')).toEqual({ path: '/heroes', exact: false });
+    expect(activeNav('/hero-guides/first-time')).toEqual({ path: '/hero-guides', exact: false });
   });
 
   it('matches Home on the home page only', () => {
-    expect(activeNavPath('/')).toBe('/');
-    expect(activeNavPath('/?x=1')).toBe('/');
-    expect(activeNavPath('/privacy')).toBeNull();
+    expect(activeNav('/')).toEqual({ path: '/', exact: true });
+    expect(activeNav('/?x=1')).toEqual({ path: '/', exact: true });
+    expect(activeNav('/privacy')).toBeNull();
   });
 
   it('does not match a path that only starts with the same letters', () => {
-    expect(activeNavPath('/heroesque')).toBeNull();
+    expect(activeNav('/heroesque')).toBeNull();
   });
 
   it('puts every page of a category under that category, from the category data itself', () => {
@@ -23,13 +24,14 @@ describe('activeNavPath', () => {
       expect(PRIMARY_NAV_ITEMS.map((item) => item.path)).toContain(category.path);
 
       for (const item of category.items) {
-        expect(activeNavPath(item.path)).withContext(item.path).toBe(category.path);
+        expect(activeNav(item.path)).withContext(item.path).toEqual({ path: category.path, exact: false });
       }
     }
   });
 
-  it('matches the account and sign-in pages to themselves', () => {
-    expect(activeNavPath('/account')).toBe('/account');
-    expect(activeNavPath('/sign-in')).toBe('/sign-in');
+  it('matches the account, sign-in and profile pages to themselves', () => {
+    for (const path of ['/account', '/sign-in', '/profile']) {
+      expect(activeNav(path)).withContext(path).toEqual({ path, exact: true });
+    }
   });
 });

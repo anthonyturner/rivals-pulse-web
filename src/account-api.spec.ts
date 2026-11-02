@@ -1,5 +1,6 @@
 import { handleAccountRequest, type AccountRequest, type AccountResponse } from './account-api';
-import { AuthUnavailableError, type AuthGateway, type RedeemResult } from './auth-gateway';
+import { AuthUnavailableError, type AuthGateway, type OwnDashboardRead, type RedeemResult } from './auth-gateway';
+import type { OwnDashboardLine } from './own-dashboard';
 
 const TOKENS = { accessToken: 'access.jwt.value', refreshToken: 'refresh-value' };
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
@@ -19,6 +20,7 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     linkedPlayer: async () => null,
     redeemLinkCode: async () => ({ status: 'invalid' }),
     unlinkPlayer: async () => undefined,
+    readOwnDashboard: async () => ({ linked: false }),
     ...overrides,
   };
 }
@@ -787,5 +789,230 @@ describe('every other case', () => {
 
     expect(response.status).toBe(500);
     expect(JSON.stringify(response.body)).not.toContain('secret');
+  });
+});
+
+describe('GET account/dashboard', () => {
+  const PLAYER = { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' };
+  const LINE: OwnDashboardLine = {
+    playedAt: '2026-10-30T20:00:00+00:00',
+    heroId: 1011,
+    kills: 12,
+    deaths: 4,
+    assists: 6,
+    finalHits: null,
+    isWin: true,
+    playModeId: 1,
+    mapName: 'Tokyo 2099',
+    figures: [],
+  };
+  const get = (overrides: Partial<AccountRequest> = {}) =>
+    request('account/dashboard', { cookieHeader: SESSION_COOKIE, ...overrides });
+  const reading = (read: OwnDashboardRead) => gateway({ readOwnDashboard: async () => read });
+
+  it('answers the derived stats of a linked player, and no line', async () => {
+    const response = await run(get(), reading({ linked: true, player: PLAYER, truncated: false, lines: [LINE] }));
+    const body = response.body as {
+      linked: boolean;
+      player: unknown;
+      truncated: boolean;
+      stats: { matches: number; wins: number };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.linked).toBeTrue();
+    expect(body.player).toEqual(PLAYER);
+    expect(body.truncated).toBeFalse();
+    expect(body.stats.matches).toBe(1);
+    expect(body.stats.wins).toBe(1);
+    expect(Object.keys(body).sort()).toEqual(['linked', 'player', 'stats', 'truncated']);
+    expect(JSON.stringify(body)).not.toContain('"lines"');
+    expect(JSON.stringify(body)).not.toMatch(/recorder|uid/i);
+  });
+
+  it('says so when the lines were cut off by the cap', async () => {
+    const response = await run(get(), reading({ linked: true, player: PLAYER, truncated: true, lines: [LINE] }));
+
+    expect((response.body as { truncated: boolean }).truncated).toBeTrue();
+  });
+
+  it('answers an account with no link as not linked', async () => {
+    const response = await run(get(), reading({ linked: false }));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ linked: false });
+  });
+
+  it('reads with the tokens Supabase confirmed, not the ones in the cookie', async () => {
+    const seen: unknown[] = [];
+
+    await run(
+      get(),
+      gateway({
+        resolve: async () => ({ account: ACCOUNT, tokens: { accessToken: 'new.jwt', refreshToken: 'new-refresh' } }),
+        readOwnDashboard: async (tokens) => {
+          seen.push(tokens);
+
+          return { linked: false };
+        },
+      }),
+    );
+
+    expect(seen).toEqual([{ accessToken: 'new.jwt', refreshToken: 'new-refresh' }]);
+  });
+
+  it('needs a session cookie, and reads nothing without one', async () => {
+    const read = jasmine.createSpy('readOwnDashboard').and.resolveTo({ linked: false });
+    const response = await run(get({ cookieHeader: undefined }), gateway({ readOwnDashboard: read }));
+
+    expect(response.status).toBe(401);
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it('answers 401 and clears the cookie when the session is no longer valid', async () => {
+    const response = await run(get(), gateway({ resolve: async () => undefined }));
+
+    expect(response.status).toBe(401);
+    expect(response.cookies[0]).toContain('Max-Age=0');
+  });
+
+  it('stores the new tokens when the access token had to be refreshed', async () => {
+    const response = await run(
+      get(),
+      gateway({
+        resolve: async () => ({ account: ACCOUNT, tokens: { accessToken: 'new.jwt', refreshToken: 'new-refresh' } }),
+      }),
+    );
+
+    expect(response.cookies[0]).toContain('rp_session=new.jwt~new-refresh');
+  });
+
+  it('says 503 and keeps the session when Supabase cannot be asked', async () => {
+    spyOn(console, 'warn');
+    const response = await run(
+      get(),
+      gateway({
+        readOwnDashboard: async () => {
+          throw new AuthUnavailableError('down');
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.cookies).toEqual([]);
+    expect(JSON.stringify(response.body)).not.toContain('down');
+    expect((response.body as { error: string }).error).toContain('dashboard');
+  });
+
+  it('is a GET route only, and a POST from another origin is refused first', async () => {
+    const read = jasmine.createSpy('readOwnDashboard').and.resolveTo({ linked: false });
+    const posted = request('account/dashboard', { method: 'POST', cookieHeader: SESSION_COOKIE });
+
+    expect((await run({ ...posted, originHeader: 'https://rivalspulse.com' }, gateway({ readOwnDashboard: read }))).status).toBe(405);
+    expect((await run({ ...posted, originHeader: 'https://evil.example' }, gateway({ readOwnDashboard: read }))).status).toBe(403);
+    expect(read).not.toHaveBeenCalled();
+  });
+});
+
+describe('a session that was refreshed during the request', () => {
+  const REFRESHED = { accessToken: 'new.jwt', refreshToken: 'new-refresh' };
+  const NEW_COOKIE = 'rp_session=new.jwt~new-refresh';
+  const refreshing = (overrides: Partial<AuthGateway>): AuthGateway =>
+    gateway({ resolve: async () => ({ account: ACCOUNT, tokens: REFRESHED }), ...overrides });
+  const down = async (): Promise<never> => {
+    throw new AuthUnavailableError('down');
+  };
+  const broken = async (): Promise<never> => {
+    throw new Error('secret detail');
+  };
+  const post = (route: string) =>
+    request(route, { method: 'POST', originHeader: 'https://rivalspulse.com', cookieHeader: SESSION_COOKIE, body: { code: 'abcd-efgh' } });
+  const get = () => request('account/dashboard', { cookieHeader: SESSION_COOKIE });
+
+  /** Each route that runs behind the session, with a way to make its Supabase call fail. */
+  const routes: {
+    name: string;
+    req: AccountRequest;
+    unavailable: string;
+    failing: (fail: () => Promise<never>) => Partial<AuthGateway>;
+  }[] = [
+    { name: 'link', req: post('account/link'), unavailable: 'Linking is unavailable', failing: (fail) => ({ redeemLinkCode: fail }) },
+    { name: 'unlink', req: post('account/unlink'), unavailable: 'Linking is unavailable', failing: (fail) => ({ unlinkPlayer: fail }) },
+    { name: 'dashboard', req: get(), unavailable: 'Your dashboard is unavailable', failing: (fail) => ({ readOwnDashboard: fail }) },
+  ];
+
+  /** The refreshed tokens belong only in the Set-Cookie value, never in a body or a log line. */
+  const expectNoTokenLeak = (response: AccountResponse, log: jasmine.Spy): void => {
+    const exposed = JSON.stringify([response.body, log.calls.allArgs().map(String)]);
+    expect(exposed).not.toContain(REFRESHED.accessToken);
+    expect(exposed).not.toContain(REFRESHED.refreshToken);
+  };
+
+  for (const { name, req, unavailable, failing } of routes) {
+    it(`keeps the new cookie on a 503 from ${name}`, async () => {
+      const warn = spyOn(console, 'warn');
+      const response = await run(req, refreshing(failing(down)));
+
+      expect(response.status).toBe(503);
+      expect(response.cookies.length).toBe(1);
+      expect(response.cookies[0]).toContain(NEW_COOKIE);
+      expect(JSON.stringify(response.body)).not.toContain('down');
+      expect((response.body as { error: string }).error).toContain(unavailable);
+      expectNoTokenLeak(response, warn);
+    });
+
+    it(`keeps the new cookie on a 500 from ${name}`, async () => {
+      const error = spyOn(console, 'error');
+      const response = await run(req, refreshing(failing(broken)));
+
+      expect(response.status).toBe(500);
+      expect(response.cookies.length).toBe(1);
+      expect(response.cookies[0]).toContain(NEW_COOKIE);
+      expect(JSON.stringify(response.body)).not.toContain('secret');
+      expectNoTokenLeak(response, error);
+    });
+
+    it(`keeps the original sign-in time on the cookie of a failed ${name}`, async () => {
+      spyOn(console, 'warn');
+      const response = await run(
+        { ...req, cookieHeader: signedInCookie(120) },
+        refreshing(failing(down)),
+      );
+
+      expect(response.cookies[0]).toContain(`${NEW_COOKIE}~${NOW_MS / 1000 - 120};`);
+    });
+
+    it(`sets no cookie on a 503 from ${name} when nothing was refreshed`, async () => {
+      spyOn(console, 'warn');
+      const response = await run(req, gateway(failing(down)));
+
+      expect(response.status).toBe(503);
+      expect(response.cookies).toEqual([]);
+    });
+  }
+
+  it('keeps the new cookie when the code is refused', async () => {
+    const response = await run(post('account/link'), refreshing({ redeemLinkCode: async () => ({ status: 'invalid' }) }));
+
+    expect(response.status).toBe(400);
+    expect(response.cookies[0]).toContain(NEW_COOKIE);
+  });
+
+  it('keeps the new cookie when the account has made too many wrong tries', async () => {
+    const response = await run(
+      post('account/link'),
+      refreshing({ redeemLinkCode: async () => ({ status: 'rate-limited', retryAfterSeconds: 600 }) }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.cookies[0]).toContain(NEW_COOKIE);
+  });
+
+  it('sets nothing when the refresh itself could not be made', async () => {
+    spyOn(console, 'warn');
+    const response = await run(get(), gateway({ resolve: down }));
+
+    expect(response.status).toBe(503);
+    expect(response.cookies).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
 import { accountRouteHandler, handleAccountHttp, isAccountRoute } from './account-http';
-import type { AuthGateway } from './auth-gateway';
+import { AuthUnavailableError, type AuthGateway } from './auth-gateway';
 
 const GATEWAY: AuthGateway = {
   authorizeUrl: async () => ({ url: 'https://project.supabase.co/auth/v1/authorize', verifier: 'v' }),
@@ -12,6 +12,7 @@ const GATEWAY: AuthGateway = {
   linkedPlayer: async () => null,
   redeemLinkCode: async () => ({ status: 'invalid' }),
   unlinkPlayer: async () => undefined,
+  readOwnDashboard: async () => ({ linked: false }),
 };
 
 interface Sent {
@@ -179,8 +180,34 @@ describe('handleAccountHttp account deletion', () => {
   });
 });
 
+describe('handleAccountHttp dashboard', () => {
+  const SESSION = 'rp_session=access.jwt.value~refresh-value';
+
+  it('is never stored by a shared cache, whether it answers, refuses or fails', async () => {
+    const down: AuthGateway = {
+      ...GATEWAY,
+      readOwnDashboard: async () => {
+        throw new AuthUnavailableError('down');
+      },
+    };
+    spyOn(console, 'warn');
+
+    for (const [cookie, gateway, status] of [
+      [SESSION, GATEWAY, 200],
+      ['', GATEWAY, 401],
+      [SESSION, down, 503],
+    ] as const) {
+      const sent = await send('GET', '/api/account/dashboard', 'account/dashboard', cookie ? { cookie } : {}, gateway);
+
+      expect(sent.status).toBe(status);
+      expect(sent.headers['cache-control']).toBe('private, no-store, max-age=0');
+    }
+  });
+});
+
 describe('isAccountRoute', () => {
   it('claims the auth and account paths only', () => {
+    expect(isAccountRoute('account/dashboard')).toBeTrue();
     expect(isAccountRoute('auth/session')).toBeTrue();
     expect(isAccountRoute('account/delete')).toBeTrue();
     expect(isAccountRoute('heroes')).toBeFalse();
