@@ -80,6 +80,11 @@ The session lives on the server side of the boundary:
   or uid, which are the app's claims and are only displayed. `GET /api/auth/session` returns
   `player: { name, avatarUrl } | null`, and `Nav` shows the name and Overwolf avatar instead of
   "Account" when it is set. The website holds no service key and no `RECORDER_ID_SECRET` for this.
+- `GET /api/account/dashboard` (issue 329) calls the `read_own_dashboard` database function with the player's
+  own token. The database picks the lines (those whose recorder and uid are the link's own, newest 2,000);
+  `src/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
+  records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
+  service key and no per-account copy of the data.
 - The desktop app also has its own link calls, each an Edge Function that confirms the Overwolf session:
   `refresh-linked-player` (refresh the name and avatar), `link-status` (am I linked, and as whom) and
   `unlink-player-app` (remove the link). They act only on the verified session's own link and never return the

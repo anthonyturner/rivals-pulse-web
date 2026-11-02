@@ -282,6 +282,135 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('readOwnDashboard', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const read = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).readOwnDashboard(tokens) };
+    };
+    const FULL_LINE = {
+      playedAt: '2026-10-30T20:00:00+00:00',
+      heroId: 1011,
+      kills: 12,
+      deaths: 4,
+      assists: 6,
+      finalHits: 3,
+      isWin: true,
+      playModeId: 1,
+      mapName: 'Tokyo 2099',
+      figures: [{ heroId: 1011, seconds: 600, damage: 9000, healing: null, blocked: 0 }],
+    };
+
+    it('calls the read function with no arguments and the user token, so the database picks the lines', async () => {
+      const { calls, result } = read({ status: 200, body: { linked: false } });
+
+      expect(await result).toEqual({ linked: false });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/read_own_dashboard');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({});
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('reads the player and the lines', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          name: 'Aurora',
+          avatarUrl: 'https://content.overwolf.com/a.png',
+          truncated: true,
+          lines: [FULL_LINE],
+        },
+      });
+
+      expect(await result).toEqual({
+        linked: true,
+        player: { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+        truncated: true,
+        lines: [FULL_LINE],
+      });
+    });
+
+    it('keeps a blank as null and never as 0', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          name: 'Aurora',
+          avatarUrl: null,
+          truncated: false,
+          lines: [
+            {
+              playedAt: '2026-10-30T20:00:00+00:00',
+              heroId: null,
+              kills: null,
+              deaths: 'many',
+              assists: null,
+              finalHits: null,
+              isWin: null,
+              playModeId: null,
+              mapName: '',
+              figures: [{ heroId: 1011, seconds: null, damage: null, healing: null, blocked: null }],
+            },
+          ],
+        },
+      });
+      const answer = await result;
+
+      expect(answer.linked && answer.player.avatarUrl).toBeNull();
+      expect(answer.linked && answer.lines[0]).toEqual({
+        playedAt: '2026-10-30T20:00:00+00:00',
+        heroId: null,
+        kills: null,
+        deaths: null,
+        assists: null,
+        finalHits: null,
+        isWin: null,
+        playModeId: null,
+        mapName: null,
+        figures: [{ heroId: 1011, seconds: null, damage: null, healing: null, blocked: null }],
+      });
+    });
+
+    it('drops a line whose time cannot be read, and a figure with no hero', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          name: 'Aurora',
+          truncated: false,
+          lines: [
+            { ...FULL_LINE, playedAt: 'yesterday' },
+            { ...FULL_LINE, playedAt: undefined },
+            null,
+            { ...FULL_LINE, figures: [{ seconds: 60 }, ...FULL_LINE.figures] },
+          ],
+        },
+      });
+      const answer = await result;
+
+      expect(answer.linked && answer.lines.length).toBe(1);
+      expect(answer.linked && answer.lines[0].figures).toEqual(FULL_LINE.figures);
+    });
+
+    it('reports a missing function, a refusal or an answer of an unknown shape as unavailable', async () => {
+      for (const answer of [
+        { status: 404, body: { code: 'PGRST202' } },
+        { status: 401 },
+        { status: 403, body: { code: '42501' } },
+        { status: 500 },
+        { status: 200 },
+        { status: 200, body: { linked: 'maybe' } },
+        { status: 200, body: { linked: true, lines: [] } },
+        { status: 200, body: { linked: true, name: 'Aurora', lines: 'none' } },
+      ]) {
+        await expectAsync(read(answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
   describe('signOut', () => {
     it('ends only this session and never throws', async () => {
       const { fetcher, calls } = fakeFetch(() => ({ status: 204 }));

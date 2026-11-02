@@ -76,6 +76,7 @@ repo's build. This is a move, not a redesign.
 | `20261101030000_tracked_match_recorders.sql` | `tracked_match_recorders` (which verified recorder uploaded each `tracked_matches` row; service role only, deleted with the match) |
 | `20261101040000_refresh_linked_player.sql` | The app refreshing its link's name and avatar: `refresh_linked_player` and the shared per-recorder limiter `take_link_app_call` (service role only), a `refresh` kind in `link_attempt_log`, and a `purge_link_data` that ages out every kind of the app's own calls |
 | `20261101050000_app_link_status.sql` | The app reading and removing its own link: `link_status_for_recorder` and `unlink_player_for_recorder` (service role only), and the `status` and `unlink` kinds in `link_attempt_log` |
+| `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 
 Link once per machine, check history, then apply:
@@ -756,6 +757,42 @@ name and avatar the app sends with the code request are claims and are only show
   answers 503.
 - `supabase/checks/player_links.sql` proves the rules against the linked project and rolls back:
   `npx supabase db query --linked -f supabase/checks/player_links.sql`. Run it after `db push`.
+
+### Reading a linked player's own dashboard (issue 329)
+
+`read_own_dashboard()` (`20261101060000_dashboard_read.sql`) is the only door to a player's own history. It
+takes no parameters, runs as definer with an empty `search_path`, is granted to `authenticated` only, and
+refuses a caller with no account (`28000`) and an anonymous Supabase session (`42501`), as `redeem_link_code`
+does. It finds the caller's link through `auth.uid()` and returns the newest 2,000 `participants` lines where
+`recorded_by = link.recorder_id AND uid = link.player_uid`, both taken from the link and never from the
+caller, each with its `participant_hero_figures`. `participants` stays closed (RLS on, no grant), and no
+service key is involved.
+
+- The answer is `{ "linked": false }`, or `{ "linked": true, "name", "avatarUrl", "truncated", "lines": [...] }`
+  newest first. A line has `playedAt`, `heroId`, `kills`, `deaths`, `assists`, `finalHits`, `isWin`,
+  `playModeId`, `mapName` and `figures` (`heroId`, `seconds`, `damage`, `healing`, `blocked`). A blank is JSON
+  `null`, never 0. `truncated` is true when more than 2,000 lines existed. The recorder and the uid are never in it.
+- The website (`GET /api/account/dashboard`, `src/auth-gateway.ts` `readOwnDashboard`) derives the figures from
+  those lines in `src/own-dashboard.ts` and sends the browser only the derived stats.
+- Which lines are the player's: a match is stored once, by its **first** uploader, so a match first uploaded by
+  another overlay user in the same lobby is not here; lines from the backfill (`backfill-143`) carry no real
+  recorder and never are; another recorder's line with the same uid is not (a uid is a claim); and
+  `participants` is purged after at most six months, so that is the depth. `hero_id` is the hero at the end of
+  the match (assumed, not yet confirmed from a real upload).
+- Figures on `participant_hero_figures` are attached by `record_match_extras` to the line whose `uid` equals the
+  uid its caller claims, without checking the line's recorder. A different recorder could therefore attach
+  figures to a line it did not record; the read cannot tell, because it filters the line and not the figure.
+  Closing that is a change to `record_match_extras`, which shipped overlays call.
+- `tracked_matches` is not read: it has no recorder column and is publicly readable, so the recorder must never
+  be added to it (issue 328 adds a side table). When that history is read, match on the side table's recorder
+  and treat a row whose recorder changed as not the player's own.
+- Before the read merges, resolve one open question with a read-only query after the first real link:
+  `select count(*) from participants where uid = '<link.player_uid>' and recorded_by = '<link.recorder_id>'`
+  must be above zero, or the link's `player_uid` does not match the uploads' uid format.
+- `supabase/checks/dashboard.sql` proves the rules against the linked project and rolls back:
+  `npx supabase db query --linked -f supabase/checks/dashboard.sql`. Run it after `db push`. The migration is
+  pushed by hand before the pull request merges, after the player-links migration it depends on; until then the
+  route answers 503.
 
 ### The app's own calls about its link (issues 320 and 343)
 
