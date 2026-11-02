@@ -1,4 +1,4 @@
-/* A page lists this in styleUrls beside its own file: the markup it styles belongs to the page, so a component's own scoped styles could not reach it. */
+/* A page, or a child component of a page, lists this in styleUrls: component styles are scoped, so each component that renders guide markup needs its own copy. */
 :host {
   display: block;
   min-width: 0;

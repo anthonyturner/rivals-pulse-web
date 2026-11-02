@@ -21,7 +21,6 @@ interface TileLink extends SourceLink {
 
 /**
  * One technique or hero workshop: a portrait, a title, the takeaway and the places to learn more.
- * A link starting with "/" is a page of this app and opens in the same tab; any other opens in a new one.
  */
 @Component({
   selector: 'app-technique-tile',
