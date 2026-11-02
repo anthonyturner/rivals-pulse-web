@@ -13,8 +13,8 @@ import {
   inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 
-import { EyebrowComponent } from '../../shared/components/eyebrow/eyebrow.component';
 import { ClosingCtaComponent } from './closing-cta/closing-cta.component';
 import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
@@ -23,20 +23,18 @@ import { HomeContentService } from './home-content.service';
 import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
-import { StatsSnapshotComponent } from './stats-snapshot/stats-snapshot.component';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 
 @Component({
   selector: 'app-home-page',
   imports: [
     ClosingCtaComponent,
-    EyebrowComponent,
     GameNewsBandComponent,
     HeroOverlayActionsComponent,
     HomeFaqComponent,
     HowItWorksComponent,
     OverlaySectionComponent,
-    StatsSnapshotComponent,
+    RouterLink,
     ToolsRowComponent,
   ],
   templateUrl: './home-page.component.html',

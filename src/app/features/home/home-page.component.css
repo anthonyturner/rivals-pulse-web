@@ -172,6 +172,22 @@ h1 {
   line-height: 1.68;
 }
 
+.lede-link {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lede-link:hover {
+  color: var(--cta-yellow);
+}
+
+.lede-link:focus-visible {
+  outline: 3px solid var(--cta-yellow);
+  outline-offset: 3px;
+}
+
 @keyframes video-popout-in {
   from {
     opacity: 0;

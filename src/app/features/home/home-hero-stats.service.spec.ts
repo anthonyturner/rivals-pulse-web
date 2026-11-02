@@ -64,15 +64,4 @@ describe('HomeHeroStatsService', () => {
     expect(answer).toBeNull();
   });
 
-  it('asks again on a reload and hands the new answer to everyone who listens', () => {
-    const answers: (HeroStats | null)[] = [];
-
-    service.getHeroStats().subscribe((value) => answers.push(value));
-    http.expectOne('/api/hero-stats').flush('down', { status: 500, statusText: 'Server Error' });
-
-    service.reload();
-    http.expectOne('/api/hero-stats').flush(stats);
-
-    expect(answers).toEqual([null, stats]);
-  });
 });

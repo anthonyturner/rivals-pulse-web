@@ -11,24 +11,32 @@
   list-style: none;
 }
 
+.tools li {
+  display: flex;
+}
+
 .tool {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  height: 100%;
-  padding: 20px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
   border: 1px solid var(--border);
+  border-top: 3px solid var(--teal);
   border-radius: 12px;
   background: var(--bg);
   color: inherit;
   text-decoration: none;
   transition:
     border-color 0.2s,
+    box-shadow 0.2s,
     transform 0.2s;
 }
 
 .tool:hover {
   border-color: var(--border-strong);
+  border-top-color: var(--teal);
+  box-shadow: 0 14px 32px rgba(7, 17, 31, 0.1);
   transform: translateY(-2px);
 }
 
@@ -37,14 +45,21 @@
   outline-offset: 3px;
 }
 
-.tool-icon {
+.tool__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool__icon {
   display: grid;
+  flex-shrink: 0;
   place-items: center;
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--bg-panel-soft);
-  color: #067d7a;
+  background: var(--ink);
+  color: var(--teal-bright);
 }
 
 .tool h3 {
@@ -56,40 +71,49 @@
 
 .tool p {
   margin: 0;
+}
+
+.tool__promise {
   color: var(--text-muted);
   font-size: 0.9375rem;
 }
 
-.tool .tool-overlay {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
+.tool__overlay {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-panel-soft);
   color: var(--text);
   font-size: 0.875rem;
-  font-weight: 600;
 }
 
-.tool-overlay__tag {
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: var(--ink);
-  color: var(--cta-yellow);
+.tool__overlay-label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--eyebrow);
   font-size: 0.6875rem;
   font-weight: 850;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-kbd {
-  padding: 1px 7px;
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  background: var(--bg-panel);
-  font: inherit;
-  font-size: 0.8125rem;
-  font-weight: 700;
+/* Pinned to the bottom, so the links line up across a row of cards of different lengths. */
+.tool__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+  color: #067d7a;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.tool__arrow {
+  transition: transform 0.2s;
+}
+
+.tool:hover .tool__arrow {
+  transform: translateX(3px);
 }
 
 @media (max-width: 1080px) {
@@ -105,11 +129,13 @@ kbd {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tool {
+  .tool,
+  .tool__arrow {
     transition: none;
   }
 
-  .tool:hover {
+  .tool:hover,
+  .tool:hover .tool__arrow {
     transform: none;
   }
 }

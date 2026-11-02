@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { HomeBandComponent } from '../home-band/home-band.component';
-import { JarvisConsoleComponent } from '../jarvis-console/jarvis-console.component';
 
 export interface OverlayFeature {
   title: string;
   /** Two lines at most. */
   description: string;
-  /** The overlay's default hotkeys for it, as the overlay's manifest lists them. */
-  keys: readonly string[];
   /** Path data for a 24x24 stroked icon. */
   iconPath: string;
+  /** A page on the site that carries the feature on, where there is one. */
+  link?: { label: string; path: string };
 }
 
 export interface OverlayScreenshot {
@@ -22,45 +22,40 @@ export interface OverlayScreenshot {
 }
 
 /**
- * Each card is a window or widget the overlay's manifest declares with a hotkey, worded from its
- * title there. Ranks are not shown: the roster HUD shows the players when a match starts.
+ * What the overlay shows in game, worded from the windows its manifest declares. Hotkeys are left
+ * out because players rebind them. Ranks are not shown: the roster HUD shows the players when a match starts.
  */
 export const OVERLAY_FEATURES: readonly OverlayFeature[] = [
   {
     title: 'Match preview',
-    description: 'A look at the match before round one starts.',
-    keys: ['Alt+I'],
+    description: 'A look at the match before round one starts, so you can plan your pick.',
     iconPath: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
   },
   {
-    title: 'Team and enemy rosters',
-    description: 'See who is on your team and who is on theirs once the match starts.',
-    keys: ['Alt+T', 'Alt+E'],
+    title: 'Live team and enemy rosters',
+    description: 'Who is on your team and who is on theirs, on screen as soon as the match starts.',
     iconPath: 'M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5M8 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
   },
   {
-    title: 'Last-match recap',
-    description: 'Bring back last match’s allies, its enemies and a recap of how it went.',
-    keys: ['Alt+P', 'Alt+O', 'Alt+R'],
-    iconPath: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v5l3 2',
-  },
-  {
-    title: 'Hero lookup, tier list and counter search',
-    description: 'Open a hero, the tier list or a counter search over the game without leaving it.',
-    keys: ['Alt+H', 'Alt+M', 'Alt+K'],
+    title: 'Counters and tier list over the game',
+    description: 'Open a hero, the tier list or a counter search without leaving the match.',
     iconPath: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5',
   },
   {
     title: 'Session record and stats bar',
     description: 'Your wins and losses this session, and a bar of your own stats while you play.',
-    keys: ['Alt+W', 'Alt+B'],
     iconPath: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   },
   {
-    title: 'Match summary and disconnects',
-    description: 'A summary of the match when it ends, and a list of the players who left it.',
-    keys: ['Alt+U', 'Alt+X'],
+    title: 'Match summary and recap',
+    description: 'A summary when the match ends, who left it, and a recap of your last match’s allies and enemies.',
     iconPath: 'M5 3h10l4 4v14H5zM14 3v5h5M8 13h8M8 17h8',
+  },
+  {
+    title: 'Your matches on the site',
+    description: 'Link the app to your account and the matches it records add up on your own stats page.',
+    iconPath: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v5l3 2',
+    link: { label: 'See My stats', path: '/profile' },
   },
 ];
 
@@ -85,10 +80,10 @@ export const OVERLAY_SCREENSHOTS: readonly OverlayScreenshot[] = [
   },
 ];
 
-/** What the overlay does: real captures, a card for each thing it can show, then the Jarvis demo. */
+/** What the overlay does in game: a card for each thing it shows, then real captures. */
 @Component({
   selector: 'app-overlay-section',
-  imports: [HomeBandComponent, JarvisConsoleComponent],
+  imports: [HomeBandComponent, RouterLink],
   templateUrl: './overlay-section.component.html',
   styleUrl: './overlay-section.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

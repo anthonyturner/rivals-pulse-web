@@ -61,9 +61,13 @@
 
     <header #heroBanner class="season-hero">
       <div class="hero-copy">
-        <app-eyebrow>Free Overwolf app for Marvel Rivals</app-eyebrow>
         <h1>Know every match before it starts.</h1>
-        <p class="lede">RivalsPulse puts live stats on your screen and counters at your fingertips.</p>
+        <p class="lede">
+          RivalsPulse is a free Overwolf app for Marvel Rivals. It shows both teams the moment a match starts,
+          keeps your record and stats for the session on screen, and brings up counters, the tier list and any
+          hero over the game, so you never alt-tab. Every tool is free on this site too. And it won't get you
+          banned: <a class="lede-link" routerLink="/faq" fragment="ban-risk">here's why</a>.
+        </p>
 
         <app-hero-overlay-actions />
       </div>
@@ -72,7 +76,6 @@
 
   <div>
     <app-overlay-section />
-    <app-stats-snapshot />
     <app-tools-row />
     <app-how-it-works />
     <app-game-news-band [content]="homeContent()" (watchVideo)="onWatchUpdateVideo(backgroundVideo)" />

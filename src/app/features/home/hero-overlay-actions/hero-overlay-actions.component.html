@@ -1,23 +1,26 @@
 <div class="hero-actions">
   <app-get-app-button />
 
-  <a class="cta cta-ghost" routerLink="/community">See stats</a>
+  <a class="cta cta-ghost" routerLink="/community">See hero stats</a>
 </div>
 
-<p class="safety-note">
-  Will it get me banned? <a class="safety-link" routerLink="/faq">No — here's why</a>
-</p>
+<p class="platform-note">Free on Windows · installs through Overwolf</p>
 
-<div class="trust-row">
-  <p class="trust-line" [class.is-loading]="loading()" [attr.aria-busy]="loading()">
-    @if (trustLine(); as line) {
-      {{ line.text }}
-    } @else {
-      <span class="skeleton" aria-hidden="true"></span>
+<div class="stat-row">
+  <dl class="stats">
+    @for (stat of statRow(); track stat.id) {
+      <div class="stat" [class.is-pending]="stat.pending">
+        <dt class="stat__label">{{ stat.label }}</dt>
+        <dd class="stat__value">{{ stat.value }}</dd>
+      </div>
     }
-  </p>
+    @if (loading()) {
+      <div class="stat is-loading" aria-busy="true">
+        <dt class="visually-hidden">Matches counted</dt>
+        <dd class="stat__value"><span class="skeleton" aria-hidden="true"></span></dd>
+      </div>
+    }
+  </dl>
 
-  @if (trustLine()) {
-    <a class="how-we-count" routerLink="/how-we-count">How we count</a>
-  }
+  <a class="how-we-count" routerLink="/how-we-count">How we count</a>
 </div>

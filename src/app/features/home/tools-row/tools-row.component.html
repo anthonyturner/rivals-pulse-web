@@ -1,38 +1,38 @@
 <app-home-band
   tone="white"
-  heading="Tools"
+  heading="Free hero stats, tier list and counters"
   headingId="home-tools-title"
-  lede="Open them right here in your browser. No install needed."
+  lede="Every tool is free in your browser, no install needed. The overlay brings the same answers into the match."
 >
   <ul class="tools">
     @for (tool of tools; track tool.path) {
       <li>
         <a class="tool" [routerLink]="tool.path">
-          <span class="tool-icon" aria-hidden="true">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              @for (circle of tool.iconCircles; track $index) {
-                <circle [attr.cx]="circle.cx" [attr.cy]="circle.cy" [attr.r]="circle.r" />
-              }
-              <path [attr.d]="tool.iconPath" />
-            </svg>
-          </span>
-          <h3>{{ tool.title }}</h3>
-          <p>{{ tool.promise }}</p>
+          <div class="tool__head">
+            <span class="tool__icon" aria-hidden="true">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                @for (circle of tool.iconCircles; track $index) {
+                  <circle [attr.cx]="circle.cx" [attr.cy]="circle.cy" [attr.r]="circle.r" />
+                }
+                <path [attr.d]="tool.iconPath" />
+              </svg>
+            </span>
+            <h3>{{ tool.title }}</h3>
+          </div>
+          <p class="tool__promise">{{ tool.promise }}</p>
           @if (tool.inOverlay; as overlay) {
-            <p class="tool-overlay">
-              <span class="tool-overlay__tag">In the overlay</span>
-              {{ overlay.feature }} <kbd>{{ overlay.key }}</kbd>
-            </p>
+            <p class="tool__overlay"><span class="tool__overlay-label">In the app</span> {{ overlay }}</p>
           }
+          <span class="tool__action">{{ tool.action }}<span class="tool__arrow" aria-hidden="true">→</span></span>
         </a>
       </li>
     }
