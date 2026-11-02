@@ -147,6 +147,13 @@ describe('TierListPageComponent', () => {
     expect(page.querySelector('.lede a')?.getAttribute('href')).toBe('/how-we-count');
   });
 
+  it('links the lede to the exact win rates', async () => {
+    const { page } = await open(partial);
+    const hrefs = Array.from(page.querySelectorAll('.lede a')).map((link) => link.getAttribute('href'));
+
+    expect(hrefs).toContain('/win-rates');
+  });
+
   it('draws the six tier rows with the placed heroes, their sample and the matches counted', async () => {
     const { page } = await open(partial);
 

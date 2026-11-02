@@ -1,356 +1,116 @@
-:host {
-  display: block;
-  min-width: 0;
-  max-width: 100%;
+/* Six columns do not fit a phone, so the table scrolls inside its own region. Its focus ring sits outside the region, because the sticky first column would paint over an inset one. */
+.scroll {
+  margin-top: 8px;
+  overflow-x: auto;
 }
 
-.stats-page {
-  min-height: 100%;
-  padding-block: 32px;
+table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  font-size: var(--type-small);
+  line-height: 1.3;
 }
 
-.page-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
-  gap: 20px;
-  align-items: end;
-  padding: 24px 0 28px;
-}
-
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-
-h1 {
-  max-width: 850px;
-  color: var(--text);
-  font-size: var(--type-page-title);
-  font-weight: 850;
-  line-height: 1.04;
-}
-
-h2 {
-  color: var(--text);
-  font-size: var(--type-h2);
-  line-height: 1.12;
-}
-
-.lede,
-.read-panel p,
-.source-panel p,
-.milestones p {
-  color: var(--text-soft);
-  line-height: 1.6;
-}
-
-.lede {
-  max-width: 790px;
-  margin-top: 16px;
-  font-size: 1.04rem;
-}
-
-.snapshot-card,
-.hero-metrics article,
-.read-panel article,
-.comparison-section,
-.milestones article,
-.source-panel {
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+tr {
   background: var(--bg-elevated);
-  box-shadow: 0 14px 28px rgba(17, 35, 57, 0.08);
 }
 
-.snapshot-card {
-  display: grid;
-  gap: 5px;
-  padding: 18px;
-  border-color: rgba(224, 169, 0, 0.34);
-  background: linear-gradient(135deg, #fff9df, #ffffff);
+th,
+td {
+  padding: 6px 8px;
+  box-shadow: inset 0 1px 0 var(--border);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: right;
 }
 
-.snapshot-card span,
-.snapshot-card small,
-.hero-metrics span,
-.hero-metrics small {
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.snapshot-card strong {
-  color: var(--accent-strong);
-  font-size: 1.35rem;
-}
-
-.hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.hero-metrics article {
-  display: grid;
-  gap: 7px;
-  padding: 18px;
-}
-
-.hero-metrics article:first-child {
-  border-color: rgba(3, 159, 159, 0.3);
-  background: linear-gradient(135deg, rgba(232, 247, 251, 0.92), #ffffff);
-}
-
-.hero-metrics strong {
-  color: var(--text);
-  font-size: clamp(1.55rem, 3vw, 2.35rem);
-  line-height: 1;
-}
-
-.hero-metrics article:first-child strong {
-  color: #087b7b;
-}
-
-.read-panel {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 16px;
-}
-
-.read-panel article {
-  display: grid;
-  gap: 12px;
-  padding: 20px;
-}
-
-.comparison-section {
-  margin-top: 16px;
-  padding: 20px;
-}
-
-.section-heading {
-  margin-bottom: 14px;
-}
-
-.comparison-table {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
-.table-head,
-.table-row {
-  display: grid;
-  grid-template-columns: minmax(150px, 1.4fr) repeat(4, minmax(96px, 0.8fr)) minmax(150px, 1fr);
-  gap: 10px;
-  align-items: center;
-}
-
-.table-head {
-  padding: 0 12px 8px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
-.table-row {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--surface);
+thead th {
+  box-shadow: none;
   color: var(--text-soft);
-  font-size: 0.86rem;
+  font-size: var(--type-caption);
   font-weight: 700;
-  text-decoration: none;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
-.table-row:hover {
-  border-color: rgba(224, 169, 0, 0.48);
-  background: #fff9df;
-  transform: translateY(-1px);
+th:first-child {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  text-align: left;
 }
 
-.table-row strong,
-.table-row small {
+.subject {
+  background: var(--surface-2);
+}
+
+.game-name {
   display: block;
+  font-weight: 700;
 }
 
-.table-row strong {
-  color: var(--text);
+.subject .game-name {
+  font-weight: 850;
 }
 
-.table-row small {
-  margin-top: 3px;
-  color: var(--text-muted);
-  font-size: 0.72rem;
+th small {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 400;
 }
 
-.metric-cell {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
+.delta {
+  display: block;
+  font-size: var(--type-caption);
+  font-weight: 700;
 }
 
-.table-row .trend {
-  margin-top: 0;
-  overflow-wrap: anywhere;
-  font-size: 0.7rem;
-  font-weight: 800;
-  line-height: 1.35;
-  white-space: normal;
+.rank .delta {
+  display: inline;
+  margin-left: 4px;
 }
 
-.table-row .trend-up {
+[data-trend='up'] {
   color: #0f6f43;
 }
 
-.table-row .trend-down {
+[data-trend='down'] {
   color: #9f1f38;
-}
-
-.table-row .trend-flat {
-  color: var(--text-muted);
 }
 
 .milestones {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
-.milestones article {
-  display: grid;
-  gap: 8px;
-  padding: 18px;
-}
-
-.milestones strong {
-  color: var(--accent-strong);
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.milestones h3 {
-  color: var(--text);
-  font-size: 1rem;
-}
-
-.source-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 20px;
-  align-items: center;
-  margin-top: 16px;
-  padding: 20px;
-}
-
-.source-list {
+.milestones div {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: 8px;
+  flex-direction: column-reverse;
 }
 
-.source-list a {
-  padding: 8px 10px;
-  border: 1px solid rgba(3, 159, 159, 0.25);
-  border-radius: 999px;
-  background: rgba(232, 247, 251, 0.82);
-  color: #087b7b;
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-decoration: none;
+dt,
+.note {
+  color: var(--text-soft);
+  font-size: var(--type-small);
 }
 
-.source-list a:hover {
-  border-color: rgba(224, 169, 0, 0.48);
-  background: #fff9df;
-  color: var(--accent-strong);
+dd {
+  font-size: var(--type-title);
+  font-weight: 850;
+  line-height: 1.2;
 }
 
-@media (max-width: 920px) {
-  .stats-page {
-    padding-block: 20px;
-  }
-
-  .page-hero,
-  .read-panel,
-  .source-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-metrics,
-  .milestones {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .source-list {
-    justify-content: start;
-  }
+.note {
+  margin-top: 8px;
 }
 
-@media (max-width: 900px) {
-  .table-head {
-    display: none;
-  }
-
-  .table-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 14px;
-  }
-
-  .table-row > span {
-    min-width: 0;
-  }
-
-  .table-row > span:first-child,
-  .table-row > span:last-child {
-    grid-column: 1 / -1;
-  }
-
-  .table-row > span:nth-child(n + 2)::before {
-    display: block;
-    margin-bottom: 2px;
-    color: var(--text-muted);
-    font-size: 0.66rem;
-    font-weight: 850;
-    text-transform: uppercase;
-  }
-
-  .table-row > span:nth-child(2)::before { content: 'Now'; }
-  .table-row > span:nth-child(3)::before { content: '24h peak'; }
-  .table-row > span:nth-child(4)::before { content: 'All-time peak'; }
-  .table-row > span:nth-child(5)::before { content: 'Rank / sellers'; }
-  .table-row > span:nth-child(6)::before { content: 'Comparison'; }
+.sources {
+  margin-top: 12px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
 }
 
-@media (max-width: 680px) {
-  .stats-page {
-    padding-block: var(--mobile-page-gutter);
-  }
-
-  .page-hero {
-    padding: 24px 0;
-  }
-
-  .hero-metrics,
-  .read-panel,
-  .milestones {
-    grid-template-columns: 1fr;
-  }
-
-  .comparison-section,
-  .source-panel,
-  .read-panel article {
-    padding: var(--mobile-panel-padding);
-  }
-
+.sources span[aria-hidden] {
+  margin-inline: 6px;
 }

@@ -5,6 +5,9 @@ import { BehaviorSubject, map, switchMap, tap } from 'rxjs';
 
 import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
+import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
+import { HeroImageFallbackDirective } from '../../../shared/directives/hero-image-fallback.directive';
 import { DEFAULT_MODE_ID, heroStatsModeOptions, type ModeOption } from '../../../shared/utilities/play-modes';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
@@ -14,10 +17,17 @@ import { buildWinRatesView } from './win-rates-view';
 
 @Component({
   selector: 'app-win-rates-page',
-  imports: [FilterSelectComponent, RouterLink, HeroProgressListComponent],
+  imports: [
+    FilterSelectComponent,
+    HeroImageFallbackDirective,
+    HeroProgressListComponent,
+    NoticeComponent,
+    RouterLink,
+    StatePanelComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './win-rates-page.component.html',
-  styleUrl: './win-rates-page.component.css',
+  styleUrls: ['../insight-page.css', './win-rates-page.component.css'],
 })
 export class WinRatesPageComponent {
   private readonly route = inject(ActivatedRoute);
@@ -30,6 +40,7 @@ export class WinRatesPageComponent {
   private readonly chosenMode = signal<HeroStatsModeId>(DEFAULT_MODE_ID);
   /** True from choosing another mode until its numbers arrive, so the last mode's are not shown under the new label. */
   private readonly pending = signal(false);
+  private readonly choiceMade = signal(false);
   /** Kept from the last answer, so the picker stays when a request for one mode fails. */
   private readonly modes = signal<ModeOption[]>([]);
   private readonly requested = new BehaviorSubject<HeroStatsModeId>(DEFAULT_MODE_ID);
@@ -69,16 +80,38 @@ export class WinRatesPageComponent {
     () => this.modes().length > 1 && (this.view() !== null || this.failed() || this.pending()),
   );
   readonly selectedMode = this.chosenMode.asReadonly();
+  /** With no picker to say which mode is counted, the meta line says it. */
+  readonly meta = computed(() => {
+    const view = this.view();
+
+    if (view === null || view.metaParts.length === 0) {
+      return '';
+    }
+
+    return (this.showModePicker() ? view.metaParts : [view.modeLabel, ...view.metaParts]).join(' · ');
+  });
+  /**
+   * The page's only live region. It speaks once the numbers for a picked mode arrive, and for a
+   * failure; the first load needs no announcement.
+   */
+  readonly announcement = computed(() => {
+    const view = this.view();
+
+    if (this.failed()) {
+      return 'Win rates could not be loaded';
+    }
+
+    return this.choiceMade() && view !== null
+      ? `Win rates updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`
+      : '';
+  });
 
   chooseMode(value: string): void {
     const mode = value as HeroStatsModeId;
 
     this.chosenMode.set(mode);
     this.pending.set(true);
+    this.choiceMade.set(true);
     this.requested.next(mode);
-  }
-
-  onImageError(event: Event): void {
-    (event.target as HTMLImageElement).src = '/images/heroes/default-hero.png';
   }
 }
