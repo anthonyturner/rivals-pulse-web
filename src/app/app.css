@@ -36,60 +36,37 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   color: var(--text);
-  font-weight: 700;
   text-decoration: none;
 }
 
+/* The desktop app's lockup, in its light-theme colours. */
 .brand-mark {
-  position: relative;
   display: grid;
   flex: none;
-  width: 36px;
+  width: 32px;
   aspect-ratio: 1;
   place-items: center;
-  overflow: hidden;
-  border: 1px solid rgba(16, 32, 51, 0.24);
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 42%),
-    linear-gradient(145deg, var(--text) 0%, #1d344f 54%, var(--accent) 55%, #f6d454 100%);
-  box-shadow: 0 6px 14px rgba(17, 35, 57, 0.18);
-  transform: skew(-7deg);
-}
-
-.brand-mark::before,
-.brand-mark::after {
-  position: absolute;
-  content: '';
-}
-
-.brand-mark::before {
-  inset: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.56);
-  border-radius: 5px;
-}
-
-/* The teal dot sits bottom right; its shadow is the red dot top left. */
-.brand-mark::after {
-  right: 4px;
-  bottom: 4px;
-  width: 7px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--teal);
-  box-shadow: -20px -20px 0 -2px var(--danger);
-}
-
-.brand-mark-core {
-  position: relative;
-  z-index: 1;
-  color: #ffffff;
+  background: linear-gradient(145deg, #e9eaf6 0 68%, #0e9c80 69%);
+  box-shadow: inset 0 0 0 1px #e0e1ef;
+  color: #151735;
   font-size: var(--type-caption);
   font-weight: 900;
-  text-shadow: 0 1px 4px rgba(16, 25, 39, 0.48);
-  transform: skew(7deg);
+  letter-spacing: 0.02em;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.brand-accent {
+  color: #087058;
 }
 
 main {
