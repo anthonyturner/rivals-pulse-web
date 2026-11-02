@@ -1,113 +1,66 @@
-<section class="media-page page-container page-container--wide">
-  <header class="page-header">
-    <div>
-      <h1>Watch the workbook lessons directly.</h1>
-      <p class="lede">
-        Embedded Marvel Rivals tutorials, masterclasses, hero sessions, mindset videos, VOD reviews,
-        and map guides from the materials workbook.
-      </p>
-    </div>
+<div class="media page-container page-container--wide">
+  <app-page-header
+    title="Video tutorials"
+    description="Tutorials, masterclasses, VOD reviews and map guides for Marvel Rivals, played right here."
+  />
 
-    <div class="header-stat" aria-label="Tutorial count">
-      <span>{{ tutorialViews.length }}</span>
-      <small>Tutorials</small>
-    </div>
-  </header>
-
-  <section class="featured" aria-label="Featured tutorial">
-    <div class="video-frame large">
+  <div class="workspace">
+    <section class="player-pane" aria-labelledby="player-title">
       <iframe
-        [src]="featuredTutorial.embedUrl"
-        [title]="featuredTutorial.title"
+        [src]="current().embedUrl"
+        [title]="current().title"
         loading="lazy"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
       ></iframe>
-    </div>
-
-    <div class="featured-copy">
-      <span>{{ featuredTutorial.category }}</span>
-      <h2>{{ featuredTutorial.title }}</h2>
-      <p>{{ featuredTutorial.description }}</p>
-      <div class="tag-list">
-        @for (tag of featuredTutorial.tags; track tag) {
-          <span>{{ tag }}</span>
+      <h2 id="player-title" #playerTitle tabindex="-1">{{ current().title }}</h2>
+      <p class="caption">{{ current().topics }}</p>
+      <p class="description">{{ current().description }}</p>
+      <p class="links">
+        <a class="link" [href]="current().sourceUrl" target="_blank" rel="noopener">
+          Watch on YouTube<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+        @if (current().guideUrl; as guideUrl) {
+          <a class="link" [routerLink]="guideUrl">Read guide notes</a>
         }
-      </div>
-      <div class="action-list">
-        <a [href]="featuredTutorial.sourceUrl" target="_blank" rel="noopener">Open source video</a>
-        @if (featuredTutorial.guideUrl) {
-          <a [href]="featuredTutorial.guideUrl">Read guide notes</a>
-        }
-      </div>
-    </div>
-  </section>
+      </p>
+    </section>
 
-  <section class="toolbar" aria-label="Tutorial filters">
-    <label class="search-field">
-      <span>Search tutorials</span>
-      <input
-        type="search"
-        placeholder="Timing, Jeff, Vanguard, map guide..."
-        [value]="searchTerm()"
-        (input)="updateSearch($event)"
-      />
-    </label>
+    <section class="picker" aria-label="Choose a tutorial">
+      <div class="controls">
+        <label class="search">
+          <span>Search tutorials</span>
+          <input type="search" [value]="searchTerm()" (input)="updateSearch($event)" />
+        </label>
+        <app-filter-select
+          label="Category"
+          [options]="categoryOptions"
+          [value]="category()"
+          (valueChange)="category.set($event)"
+        />
+      </div>
+      <p class="caption" role="status">{{ status() }}</p>
 
-    <div class="category-tabs" aria-label="Category filter">
-      @for (category of categories; track category) {
-        <button
-          type="button"
-          [class.active]="selectedCategory() === category"
-          (click)="selectCategory(category)"
-        >
-          {{ category }}
-        </button>
+      @if (rows().length > 0) {
+        <ul class="tutorial-list" aria-label="Tutorials">
+          @for (row of rows(); track row.id) {
+            <li>
+              <button
+                type="button"
+                class="pick"
+                [attr.aria-current]="row.id === current().id ? 'true' : null"
+                (click)="select(row.id)"
+              >
+                <app-hero-tile selectable [selected]="row.id === current().id" [name]="row.title" [imageUrl]="row.image">
+                  <span class="caption">{{ row.category }}</span>
+                </app-hero-tile>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-state-panel [announce]="false">No tutorials match. Clear the search or set Category to All.</app-state-panel>
       }
-    </div>
-  </section>
-
-  <section class="tutorial-grid" aria-label="Embedded tutorials">
-    @for (tutorial of filteredTutorials(); track tutorial.id) {
-      <article class="tutorial-card">
-        <div class="video-frame">
-          <iframe
-            [src]="tutorial.embedUrl"
-            [title]="tutorial.title"
-            loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          ></iframe>
-        </div>
-
-        <div class="tutorial-body">
-          <img [src]="tutorial.image" [alt]="tutorial.title + ' hero image'" loading="lazy" />
-          <div>
-            <span class="category">{{ tutorial.category }}</span>
-            <h2>{{ tutorial.title }}</h2>
-            <p>{{ tutorial.description }}</p>
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div class="tag-list" aria-label="Tutorial tags">
-            @for (tag of tutorial.tags; track tag) {
-              <span>{{ tag }}</span>
-            }
-          </div>
-          <div class="action-list compact-actions">
-            <a [href]="tutorial.sourceUrl" target="_blank" rel="noopener">Open video</a>
-            @if (tutorial.guideUrl) {
-              <a [href]="tutorial.guideUrl">Guide notes</a>
-            }
-          </div>
-        </div>
-      </article>
-    } @empty {
-      <div class="empty-state">
-        <strong>No tutorials found</strong>
-        <span>Try a different search or category.</span>
-      </div>
-    }
-  </section>
-</section>
+    </section>
+  </div>
+</div>
