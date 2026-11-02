@@ -66,10 +66,10 @@ describe('HeroOverlayActionsComponent', () => {
       'Matches counted: ',
     ]);
     expect(element.querySelector('.stat.is-loading .skeleton')).not.toBeNull();
-    expect(element.querySelector('a.how-we-count')).toBeNull();
+    expect(element.querySelector('a.how-we-count')?.getAttribute('href')).toBe('/how-we-count');
   });
 
-  it('states the matches counted, with the How we count link, once the stats arrive', async () => {
+  it('states the matches counted once the stats arrive', async () => {
     await answer(stats);
 
     expect(pair(statBlocks()[2])).toBe('Matches counted · Season 10.5: 1,482');
@@ -81,7 +81,6 @@ describe('HeroOverlayActionsComponent', () => {
     await answer({ unexpected: true });
 
     expect(statBlocks().length).toBe(2);
-    expect(element.querySelector('a.how-we-count')).toBeNull();
     expect(element.textContent).not.toMatch(/NaN|\b0\b/);
   });
 });

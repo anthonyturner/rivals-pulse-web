@@ -13,6 +13,7 @@ import {
   inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 
 import { ClosingCtaComponent } from './closing-cta/closing-cta.component';
 import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
@@ -33,6 +34,7 @@ import { ToolsRowComponent } from './tools-row/tools-row.component';
     HomeFaqComponent,
     HowItWorksComponent,
     OverlaySectionComponent,
+    RouterLink,
     ToolsRowComponent,
   ],
   templateUrl: './home-page.component.html',

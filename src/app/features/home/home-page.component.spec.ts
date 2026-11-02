@@ -81,8 +81,8 @@ describe('HomePageComponent', () => {
       expect(hero.querySelectorAll('p.lede').length).toBe(1);
       expect(lede).toContain('RivalsPulse is a free Overwolf app for Marvel Rivals.');
       expect(lede).toContain('counters, the tier list and any hero over the game');
-      expect(lede).toContain("It won't get you banned.");
-      expect(lede).toContain('Available on Windows.');
+      expect(lede).toContain("it won't get you banned: here's why.");
+      expect(hero.querySelector('.lede a')?.getAttribute('href')).toBe('/faq#ban-risk');
     });
 
     it('puts the heading first in every band, which carries no decorative eyebrow of its own', () => {

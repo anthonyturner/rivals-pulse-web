@@ -244,7 +244,7 @@ Already database-backed:
 - Heroes page
 - Glossary page
 - Home page official updates, latest tuning, and events/rewards
-- Tier list, the home hero stats snapshot and the Game News band's season dates, from Rivals Pulse players' matches
+- Tier list, the home hero's matches-counted figure and the Game News band's season dates, from Rivals Pulse players' matches
 
 ```mermaid
 flowchart LR
@@ -275,9 +275,9 @@ it, as a plain input, to the Game News band:
   for the glance come from the hero stats, in the browser only (the end is the next half-season's
   start, otherwise "ongoing"). The spotlight's "Watch update video" button emits `watchVideo`; the
   page, which owns the video, opens its player.
-- `StatsSnapshotComponent` reads the hero stats and the hero list (roles and portraits) in the
-  browser only. `HomeHeroStatsService` fetches `/api/hero-stats` once for the hero trust line, the
-  snapshot and the news band's dates, and can reload it for a retry.
+- `HomeHeroStatsService` fetches `/api/hero-stats` once, in the browser only, for the matches-counted
+  figure under the hero buttons and the news band's dates. The hero's downloads and rating come from
+  `OVERWOLF_LISTING_STATS` and read "Coming soon" until the Overwolf listing has them.
 
 That would make the home page use the same database-backed flow as the rest of the site.
 

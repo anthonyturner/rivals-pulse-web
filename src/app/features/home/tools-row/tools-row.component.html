@@ -8,7 +8,7 @@
     @for (tool of tools; track tool.path) {
       <li>
         <a class="tool" [routerLink]="tool.path">
-          <span class="tool__head">
+          <div class="tool__head">
             <span class="tool__icon" aria-hidden="true">
               <svg
                 width="20"
@@ -27,7 +27,7 @@
               </svg>
             </span>
             <h3>{{ tool.title }}</h3>
-          </span>
+          </div>
           <p class="tool__promise">{{ tool.promise }}</p>
           @if (tool.inOverlay; as overlay) {
             <p class="tool__overlay"><span class="tool__overlay-label">In the app</span> {{ overlay }}</p>

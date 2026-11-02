@@ -31,7 +31,6 @@ export class HeroOverlayActionsComponent {
 
   readonly loading = computed(() => this.stats() === undefined);
   readonly statRow = computed(() => buildHeroStatRow(OVERWOLF_LISTING_STATS, this.stats() ?? null));
-  readonly counted = computed(() => this.statRow().some((stat) => stat.id === 'matches'));
 
   constructor() {
     // The server render shows the listing figures and a reserved matches slot; the browser fetches the stats.

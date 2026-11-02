@@ -86,7 +86,7 @@ describe('ToolsRowComponent', () => {
       );
 
       expect(lines).toEqual({
-        'Hero stats': 'In the app Every match you play with the app adds to these numbers.',
+        'Hero stats': 'In the app The matches the app records are what these numbers count.',
         'Tier list': 'In the app Open the tier list over the game.',
         Counters: 'In the app Search counters without leaving the match.',
         'Team builder': '',
