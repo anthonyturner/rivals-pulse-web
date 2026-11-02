@@ -1,4 +1,4 @@
-# Rivals Pulse Coach
+# RivalsPulse
 
 ## Goal
 Create an AI-powered companion application for Marvel Rivals.

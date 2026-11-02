@@ -7,6 +7,8 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
  * - `error`: announced politely.
  * - `empty`: not announced, because the page already says what it is about.
  *
+ * Set `announce` to false when another panel on the page already says the same thing.
+ *
  * Its body is the content passed in. The heading is optional, and its level is the page's to choose
  * so the heading order does not skip.
  */
@@ -38,6 +40,7 @@ export class StatePanelComponent {
   readonly kind = input<'loading' | 'error' | 'empty'>('empty');
   readonly heading = input<string | null>(null);
   readonly headingLevel = input<2 | 3>(2);
+  readonly announce = input(true);
 
-  protected readonly announced = computed(() => this.kind() !== 'empty');
+  protected readonly announced = computed(() => this.announce() && this.kind() !== 'empty');
 }

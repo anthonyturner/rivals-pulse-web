@@ -1,6 +1,6 @@
 ---
 name: 'Instructions Generator'
-description: 'Writes a concise agent instruction file under docs/ for one layer of the Rivals Pulse Coach architecture or one coding standard.'
+description: 'Writes a concise agent instruction file under docs/ for one layer of the RivalsPulse architecture or one coding standard.'
 argument-hint: 'The layer of architecture or coding standard to document, and an optional file name.'
 tools: [read, edit, search, web]
 ---

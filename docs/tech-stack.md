@@ -1,6 +1,6 @@
 # Tech Stack
 
-What Rivals Pulse Coach is built on. Agents read this to avoid proposing a tool
+What RivalsPulse is built on. Agents read this to avoid proposing a tool
 the project does not use, so keep it current.
 
 Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,

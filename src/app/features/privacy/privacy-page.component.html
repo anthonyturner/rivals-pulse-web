@@ -59,8 +59,10 @@
     <p>
       For the uploading player we also keep a record of their own match history: the match facts
       and their own whole scoreboard line (player id, hero, team, kills, deaths, assists, final
-      hits and result), under the name they play with. That history has no time limit; it is
-      capped per player (currently the most recent 5,000 matches).
+      hits and result), under the name they play with. The same one-way code described above is
+      also kept next to each match in that history, so that the history can be shown to the
+      player once they link a website account. That history, and the code kept with it, has no
+      time limit; it is capped per player (currently the most recent 5,000 matches).
     </p>
     <p>
       Names and player ids are stored so that players can be looked up inside the desktop app.
@@ -129,7 +131,8 @@
       </li>
       <li>
         The uploading player's own match history (their name, whole scoreboard line and the match
-        facts) is <strong>not</strong> deleted on that schedule. It has no time limit and is
+        facts), and the one-way recorder code kept next to each of its matches, is
+        <strong>not</strong> deleted on that schedule. It has no time limit and is
         removed only when a player passes the cap of 5,000 matches and the oldest are pushed out.
       </li>
       <li>
