@@ -1,4 +1,6 @@
+import type { LinkedPlayer } from './app/core/auth/linked-player.types.js';
 import type { SessionTokens } from './auth-cookies.js';
+import type { OwnDashboardLine, OwnFigureLine } from './own-dashboard.js';
 
 /** What the account page shows. It never carries the user's id. */
 export interface Account {
@@ -14,6 +16,16 @@ export interface ResolvedSession {
 }
 
 export type OAuthProvider = 'discord';
+
+export type RedeemResult =
+  | { status: 'linked'; player: LinkedPlayer }
+  /** Wrong, used and expired codes are not told apart. */
+  | { status: 'invalid' }
+  | { status: 'rate-limited'; retryAfterSeconds: number };
+
+export type OwnDashboardRead =
+  | { linked: false }
+  | { linked: true; player: LinkedPlayer; truncated: boolean; lines: OwnDashboardLine[] };
 
 /**
  * Everything the account routes need from Supabase Auth, so the routes can be tested without a
@@ -36,6 +48,20 @@ export interface AuthGateway {
    * when the session is not valid, so nobody can delete an account they do not hold a session for.
    */
   deleteAccount(tokens: SessionTokens): Promise<'deleted' | 'not-signed-in'>;
+  /**
+   * The player the account is linked to, or null when it is not. Never throws: a header label is not
+   * worth failing a page for, so a Supabase that cannot answer reads as "not linked".
+   */
+  linkedPlayer(tokens: SessionTokens): Promise<LinkedPlayer | null>;
+  /** Spends a canonical link code for the account the (already verified) tokens belong to. */
+  redeemLinkCode(tokens: SessionTokens, code: string): Promise<RedeemResult>;
+  /** Removes the account's link. Removing none is not an error. */
+  unlinkPlayer(tokens: SessionTokens): Promise<void>;
+  /**
+   * The newest matches the account's link can prove are its own (capped by the database), or that it
+   * has no link. The database decides whose lines these are; nothing here says whose to read.
+   */
+  readOwnDashboard(tokens: SessionTokens): Promise<OwnDashboardRead>;
 }
 
 /** Supabase could not be asked: it is not configured, unreachable, or answered with a server error. */
@@ -157,6 +183,24 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
     return found && { ...found, tokens: current };
   };
 
+  /** Calls a database function as the signed-in user, so row-level security and `auth.uid()` apply. */
+  const rpc = async (name: string, args: Record<string, unknown>, accessToken: string): Promise<unknown> => {
+    const response = await call(
+      `/rest/v1/rpc/${name}`,
+      { method: 'POST', body: JSON.stringify(args) },
+      accessToken,
+    );
+
+    if (!response.ok) {
+      throw new AuthUnavailableError(`Supabase answered ${response.status} to ${name}`);
+    }
+
+    // A function that returns nothing answers with an empty body (204, or 200 on older PostgREST).
+    const text = await response.text();
+
+    return text ? JSON.parse(text) : undefined;
+  };
+
   return {
     async authorizeUrl(provider, redirectTo) {
       const verifier = randomToken();
@@ -224,6 +268,32 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
       return 'deleted';
     },
 
+    async linkedPlayer(tokens) {
+      try {
+        const response = await call(
+          '/rest/v1/player_links?select=player_name,avatar_url&limit=1',
+          { method: 'GET' },
+          tokens.accessToken,
+        );
+
+        return response.ok ? linkedPlayerOf(await response.json()) : failedLinkRead(response.status);
+      } catch (error) {
+        return failedLinkRead(error instanceof Error ? error.message : 'unknown error');
+      }
+    },
+
+    async redeemLinkCode(tokens, code) {
+      return redeemResultOf(await rpc('redeem_link_code', { p_code: code }, tokens.accessToken));
+    },
+
+    async unlinkPlayer(tokens) {
+      await rpc('unlink_player', {}, tokens.accessToken);
+    },
+
+    async readOwnDashboard(tokens) {
+      return dashboardReadOf(await rpc('read_own_dashboard', {}, tokens.accessToken));
+    },
+
     async signOut(tokens) {
       try {
         await call('/auth/v1/logout?scope=local', { method: 'POST' }, tokens.accessToken);
@@ -271,6 +341,113 @@ function accountOf(user: unknown): { id: string; account: Account } | undefined 
       createdAt: record.created_at,
     },
   };
+}
+
+function failedLinkRead(reason: string | number): null {
+  console.warn('The linked player could not be read:', reason);
+
+  return null;
+}
+
+function linkedPlayerOf(rows: unknown): LinkedPlayer | null {
+  const row = Array.isArray(rows)
+    ? (rows[0] as { player_name?: unknown; avatar_url?: unknown } | undefined)
+    : undefined;
+
+  return typeof row?.player_name === 'string' && row.player_name
+    ? { name: row.player_name, avatarUrl: typeof row.avatar_url === 'string' && row.avatar_url ? row.avatar_url : null }
+    : null;
+}
+
+function redeemResultOf(answer: unknown): RedeemResult {
+  const result = answer as { status?: unknown; name?: unknown; avatarUrl?: unknown; retryAfter?: unknown } | null;
+
+  switch (result?.status) {
+    case 'linked':
+      if (typeof result.name === 'string') {
+        return {
+          status: 'linked',
+          player: { name: result.name, avatarUrl: typeof result.avatarUrl === 'string' ? result.avatarUrl : null },
+        };
+      }
+
+      break;
+    case 'invalid':
+      return { status: 'invalid' };
+    case 'rate_limited':
+      return {
+        status: 'rate-limited',
+        retryAfterSeconds: typeof result.retryAfter === 'number' ? result.retryAfter : 60,
+      };
+  }
+
+  throw new AuthUnavailableError('Supabase answered redeem_link_code with an unknown shape');
+}
+
+function dashboardReadOf(answer: unknown): OwnDashboardRead {
+  const read = answer as {
+    linked?: unknown;
+    name?: unknown;
+    avatarUrl?: unknown;
+    truncated?: unknown;
+    lines?: unknown;
+  } | null;
+
+  if (read?.linked === false) {
+    return { linked: false };
+  }
+
+  if (read?.linked === true && typeof read.name === 'string' && Array.isArray(read.lines)) {
+    return {
+      linked: true,
+      player: { name: read.name, avatarUrl: typeof read.avatarUrl === 'string' && read.avatarUrl ? read.avatarUrl : null },
+      truncated: read.truncated === true,
+      lines: read.lines.flatMap((line) => dashboardLineOf(line) ?? []),
+    };
+  }
+
+  throw new AuthUnavailableError('Supabase answered read_own_dashboard with an unknown shape');
+}
+
+/** A line whose time cannot be read is dropped: it can be placed nowhere in a history. */
+function dashboardLineOf(raw: unknown): OwnDashboardLine | undefined {
+  const line = raw as Record<string, unknown> | null;
+
+  if (typeof line?.['playedAt'] !== 'string' || Number.isNaN(Date.parse(line['playedAt']))) {
+    return undefined;
+  }
+
+  return {
+    playedAt: line['playedAt'],
+    heroId: numberOrNull(line['heroId']),
+    kills: numberOrNull(line['kills']),
+    deaths: numberOrNull(line['deaths']),
+    assists: numberOrNull(line['assists']),
+    finalHits: numberOrNull(line['finalHits']),
+    isWin: typeof line['isWin'] === 'boolean' ? line['isWin'] : null,
+    playModeId: numberOrNull(line['playModeId']),
+    mapName: typeof line['mapName'] === 'string' && line['mapName'] ? line['mapName'] : null,
+    figures: Array.isArray(line['figures']) ? line['figures'].flatMap((figure) => figureOf(figure) ?? []) : [],
+  };
+}
+
+function figureOf(raw: unknown): OwnFigureLine | undefined {
+  const figure = raw as Record<string, unknown> | null;
+  const heroId = numberOrNull(figure?.['heroId']);
+
+  return heroId === null
+    ? undefined
+    : {
+        heroId,
+        seconds: numberOrNull(figure?.['seconds']),
+        damage: numberOrNull(figure?.['damage']),
+        healing: numberOrNull(figure?.['healing']),
+        blocked: numberOrNull(figure?.['blocked']),
+      };
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 function base64Url(bytes: Uint8Array): string {

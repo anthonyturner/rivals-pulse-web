@@ -30,7 +30,7 @@ describe('AuthService', () => {
 
     await Promise.all([service.load(), service.load()]);
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
     expect(fetchSpy).toHaveBeenCalledOnceWith('/api/auth/session');
   });
 
@@ -74,6 +74,93 @@ describe('AuthService', () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(3);
     expect(service.state().status).toBe('signedIn');
+  });
+
+  it('reads the linked player from the session', async () => {
+    const player = { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' };
+    create(answer(200, { signedIn: true, account: ACCOUNT, player }));
+
+    await service.load();
+
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+  });
+
+  it('ignores a player the answer does not describe properly', async () => {
+    create(answer(200, { signedIn: true, account: ACCOUNT, player: { avatarUrl: 'x' } }));
+
+    await service.load();
+
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+  });
+
+  describe('linking', () => {
+    const player = { name: 'Aurora', avatarUrl: null };
+    const signedIn = () => answer(200, { signedIn: true, account: ACCOUNT, player: null });
+
+    it('posts the typed code and then shows the linked player without asking the session again', async () => {
+      create(signedIn(), answer(200, { player }));
+      await service.load();
+
+      expect(await service.linkPlayer('abcd-efgh')).toEqual({ status: 'done' });
+
+      expect(fetchSpy.calls.argsFor(1)).toEqual([
+        '/api/account/link',
+        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'abcd-efgh' }) },
+      ]);
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+      expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('passes on the server message when the code is refused and changes nothing', async () => {
+      create(signedIn(), answer(400, { error: 'That code is wrong or has expired. Get a new one from the desktop app.' }));
+      await service.load();
+
+      expect(await service.linkPlayer('nope')).toEqual({
+        status: 'failed',
+        message: 'That code is wrong or has expired. Get a new one from the desktop app.',
+      });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+    });
+
+    it('gives a plain message when the answer has no readable error or the network is down', async () => {
+      create(signedIn(), answer(500));
+      await service.load();
+
+      const unreadable = await service.linkPlayer('abcd-efgh');
+
+      expect(unreadable.status === 'failed' && unreadable.message).toContain('could not be linked');
+
+      fetchSpy.and.rejectWith(new TypeError('offline'));
+
+      expect((await service.linkPlayer('abcd-efgh')).status).toBe('failed');
+    });
+
+    it('reports an ended session as signed out', async () => {
+      create(signedIn(), answer(401, { error: 'Sign in to link the desktop app.' }));
+      await service.load();
+
+      expect(await service.linkPlayer('abcd-efgh')).toEqual({ status: 'signedOut' });
+      expect(service.state()).toEqual({ status: 'signedOut' });
+    });
+
+    it('unlinks through a POST and shows no player', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT, player }), answer(200, { player: null }));
+      await service.load();
+
+      expect(await service.unlinkPlayer()).toEqual({ status: 'done' });
+
+      expect(fetchSpy.calls.argsFor(1)[0]).toBe('/api/account/unlink');
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+    });
+
+    it('keeps the player shown when unlinking fails', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT, player }), answer(503, { error: 'Linking is unavailable right now.' }));
+      await service.load();
+
+      expect(await service.unlinkPlayer()).toEqual({ status: 'failed', message: 'Linking is unavailable right now.' });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+    });
   });
 
   describe('deleteAccount', () => {

@@ -170,6 +170,247 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('linkedPlayer', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+
+    it('reads the account\'s link with the user token, so row-level security picks the row', async () => {
+      const { fetcher, calls } = fakeFetch(() => ({
+        status: 200,
+        body: [{ player_name: 'Aurora', avatar_url: 'https://content.overwolf.com/a.png' }],
+      }));
+
+      const player = await createSupabaseAuthGateway(ENV, fetcher).linkedPlayer(tokens);
+
+      expect(player).toEqual({ name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/player_links?select=player_name,avatar_url&limit=1');
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('has no avatar when the row holds none', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 200, body: [{ player_name: 'Aurora', avatar_url: null }] }));
+
+      expect(await createSupabaseAuthGateway(ENV, fetcher).linkedPlayer(tokens)).toEqual({
+        name: 'Aurora',
+        avatarUrl: null,
+      });
+    });
+
+    it('is null for an account with no link', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 200, body: [] }));
+
+      expect(await createSupabaseAuthGateway(ENV, fetcher).linkedPlayer(tokens)).toBeNull();
+    });
+
+    it('is null, and does not throw, when the table is not there yet or Supabase is down', async () => {
+      spyOn(console, 'warn');
+      const missing = fakeFetch(() => ({ status: 404, body: { code: 'PGRST205' } }));
+      const offline = (async () => {
+        throw new TypeError('offline');
+      }) as typeof fetch;
+
+      expect(await createSupabaseAuthGateway(ENV, missing.fetcher).linkedPlayer(tokens)).toBeNull();
+      expect(await createSupabaseAuthGateway(ENV, offline).linkedPlayer(tokens)).toBeNull();
+    });
+  });
+
+  describe('redeemLinkCode', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const redeem = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).redeemLinkCode(tokens, 'ABCDEFGH') };
+    };
+
+    it('calls the redeem function with the code and the user token', async () => {
+      const { calls, result } = redeem({
+        status: 200,
+        body: { status: 'linked', name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+      });
+
+      expect(await result).toEqual({
+        status: 'linked',
+        player: { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+      });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/redeem_link_code');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({ p_code: 'ABCDEFGH' });
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reads an invalid code', async () => {
+      expect(await redeem({ status: 200, body: { status: 'invalid' } }).result).toEqual({ status: 'invalid' });
+    });
+
+    it('reads a rate limit', async () => {
+      expect(await redeem({ status: 200, body: { status: 'rate_limited', retryAfter: 540 } }).result).toEqual({
+        status: 'rate-limited',
+        retryAfterSeconds: 540,
+      });
+    });
+
+    it('reports a missing function, a refusal or an answer of an unknown shape as unavailable', async () => {
+      for (const answer of [
+        { status: 404, body: { code: 'PGRST202' } },
+        { status: 401 },
+        { status: 500 },
+        { status: 200, body: { status: 'surprise' } },
+        { status: 200, body: { status: 'linked' } },
+      ]) {
+        await expectAsync(redeem(answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
+  describe('unlinkPlayer', () => {
+    it('calls the unlink function with the user token', async () => {
+      const { fetcher, calls } = fakeFetch(() => ({ status: 204 }));
+
+      await createSupabaseAuthGateway(ENV, fetcher).unlinkPlayer({ accessToken: 'access', refreshToken: 'refresh' });
+
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/unlink_player');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reports a refusal as unavailable, so the link is not shown as removed', async () => {
+      const { fetcher } = fakeFetch(() => ({ status: 500 }));
+
+      await expectAsync(
+        createSupabaseAuthGateway(ENV, fetcher).unlinkPlayer({ accessToken: 'a', refreshToken: 'r' }),
+      ).toBeRejectedWithError(AuthUnavailableError);
+    });
+  });
+
+  describe('readOwnDashboard', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const read = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).readOwnDashboard(tokens) };
+    };
+    const FULL_LINE = {
+      playedAt: '2026-10-30T20:00:00+00:00',
+      heroId: 1011,
+      kills: 12,
+      deaths: 4,
+      assists: 6,
+      finalHits: 3,
+      isWin: true,
+      playModeId: 1,
+      mapName: 'Tokyo 2099',
+      figures: [{ heroId: 1011, seconds: 600, damage: 9000, healing: null, blocked: 0 }],
+    };
+
+    it('calls the read function with no arguments and the user token, so the database picks the lines', async () => {
+      const { calls, result } = read({ status: 200, body: { linked: false } });
+
+      expect(await result).toEqual({ linked: false });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/read_own_dashboard');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({});
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('reads the player and the lines', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          name: 'Aurora',
+          avatarUrl: 'https://content.overwolf.com/a.png',
+          truncated: true,
+          lines: [FULL_LINE],
+        },
+      });
+
+      expect(await result).toEqual({
+        linked: true,
+        player: { name: 'Aurora', avatarUrl: 'https://content.overwolf.com/a.png' },
+        truncated: true,
+        lines: [FULL_LINE],
+      });
+    });
+
+    it('keeps a blank as null and never as 0', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          name: 'Aurora',
+          avatarUrl: null,
+          truncated: false,
+          lines: [
+            {
+              playedAt: '2026-10-30T20:00:00+00:00',
+              heroId: null,
+              kills: null,
+              deaths: 'many',
+              assists: null,
+              finalHits: null,
+              isWin: null,
+              playModeId: null,
+              mapName: '',
+              figures: [{ heroId: 1011, seconds: null, damage: null, healing: null, blocked: null }],
+            },
+          ],
+        },
+      });
+      const answer = await result;
+
+      expect(answer.linked && answer.player.avatarUrl).toBeNull();
+      expect(answer.linked && answer.lines[0]).toEqual({
+        playedAt: '2026-10-30T20:00:00+00:00',
+        heroId: null,
+        kills: null,
+        deaths: null,
+        assists: null,
+        finalHits: null,
+        isWin: null,
+        playModeId: null,
+        mapName: null,
+        figures: [{ heroId: 1011, seconds: null, damage: null, healing: null, blocked: null }],
+      });
+    });
+
+    it('drops a line whose time cannot be read, and a figure with no hero', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          name: 'Aurora',
+          truncated: false,
+          lines: [
+            { ...FULL_LINE, playedAt: 'yesterday' },
+            { ...FULL_LINE, playedAt: undefined },
+            null,
+            { ...FULL_LINE, figures: [{ seconds: 60 }, ...FULL_LINE.figures] },
+          ],
+        },
+      });
+      const answer = await result;
+
+      expect(answer.linked && answer.lines.length).toBe(1);
+      expect(answer.linked && answer.lines[0].figures).toEqual(FULL_LINE.figures);
+    });
+
+    it('reports a missing function, a refusal or an answer of an unknown shape as unavailable', async () => {
+      for (const answer of [
+        { status: 404, body: { code: 'PGRST202' } },
+        { status: 401 },
+        { status: 403, body: { code: '42501' } },
+        { status: 500 },
+        { status: 200 },
+        { status: 200, body: { linked: 'maybe' } },
+        { status: 200, body: { linked: true, lines: [] } },
+        { status: 200, body: { linked: true, name: 'Aurora', lines: 'none' } },
+      ]) {
+        await expectAsync(read(answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
   describe('signOut', () => {
     it('ends only this session and never throws', async () => {
       const { fetcher, calls } = fakeFetch(() => ({ status: 204 }));

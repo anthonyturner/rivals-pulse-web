@@ -5,13 +5,17 @@ import {
   readSessionTokens,
   serializePkceCookie,
   serializeSessionCookie,
+  type SessionTokens,
 } from './auth-cookies.js';
 import { AuthUnavailableError, type AuthGateway } from './auth-gateway.js';
+import { normalizeLinkCode } from './link-code.js';
+import { deriveOwnDashboard } from './own-dashboard.js';
 import {
   DELETION_MODES,
   isDeletionConfirmed,
   type DeleteAccountRequest,
 } from './app/core/auth/account-deletion.types.js';
+import type { OwnDashboardResponse } from './app/core/auth/own-dashboard.types.js';
 
 /**
  * A request as the account routes see it, free of any server framework: Express and the Vercel
@@ -49,6 +53,10 @@ const MAX_NEXT_LENGTH = 200;
 const NEXT_BASE = new URL('https://site.invalid');
 /** How recently the player must have signed in to delete an account (ADR-0004, decision 7). */
 const RECENT_SIGN_IN_SECONDS = 10 * 60;
+/** One message for a wrong, used or expired code, so the answer never says which one it was. */
+const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from the desktop app.';
+const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
+const DASHBOARD_UNAVAILABLE = 'Your dashboard is unavailable right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 export async function handleAccountRequest(
@@ -88,6 +96,12 @@ async function route(request: AccountRequest, gateway: () => AuthGateway): Promi
       return method === 'POST' ? signOut(request, gateway) : methodNotAllowed();
     case 'account/delete':
       return method === 'POST' ? deleteAccount(request, gateway) : methodNotAllowed();
+    case 'account/link':
+      return method === 'POST' ? linkPlayer(request, gateway) : methodNotAllowed();
+    case 'account/unlink':
+      return method === 'POST' ? unlinkPlayer(request, gateway) : methodNotAllowed();
+    case 'account/dashboard':
+      return method === 'GET' ? readDashboard(request, gateway) : methodNotAllowed();
     default:
       return json(404, { error: 'API route not found' });
   }
@@ -106,13 +120,123 @@ async function readSession(request: AccountRequest, gateway: () => AuthGateway):
     return { ...json(200, { signedIn: false }), cookies: [clearSessionCookie()] };
   }
 
-  const refreshed =
-    resolved.tokens.accessToken !== tokens.accessToken || resolved.tokens.refreshToken !== tokens.refreshToken;
-
   return {
-    ...json(200, { signedIn: true, account: resolved.account }),
-    cookies: refreshed ? [serializeSessionCookie({ ...resolved.tokens, signedInAt: tokens.signedInAt })] : [],
+    ...json(200, {
+      signedIn: true,
+      account: resolved.account,
+      player: await gateway().linkedPlayer(resolved.tokens),
+    }),
+    cookies: refreshedCookies(tokens, resolved.tokens),
   };
+}
+
+/** The cookie to set when Supabase handed back new tokens, keeping the original sign-in time. */
+function refreshedCookies(original: SessionTokens, current: SessionTokens): string[] {
+  const refreshed = current.accessToken !== original.accessToken || current.refreshToken !== original.refreshToken;
+
+  return refreshed ? [serializeSessionCookie({ ...current, signedInAt: original.signedInAt })] : [];
+}
+
+/**
+ * Runs `act` for a signed-in visitor, with tokens Supabase has just confirmed (refreshed if they had
+ * expired, in which case the new cookie rides on the answer). Linking and the dashboard are
+ * conveniences, so a Supabase that cannot be reached is a 503 here and never signs anyone out.
+ */
+async function withSession(
+  request: AccountRequest,
+  gateway: () => AuthGateway,
+  { signedOutMessage, unavailableMessage }: { signedOutMessage: string; unavailableMessage: string },
+  act: (tokens: SessionTokens) => Promise<AccountResponse>,
+): Promise<AccountResponse> {
+  const tokens = readSessionTokens(request.cookieHeader);
+
+  if (!tokens) {
+    return json(401, { error: signedOutMessage });
+  }
+
+  try {
+    const resolved = await gateway().resolve(tokens);
+
+    if (!resolved) {
+      return { ...json(401, { error: signedOutMessage }), cookies: [clearSessionCookie()] };
+    }
+
+    const response = await act(resolved.tokens);
+
+    return { ...response, cookies: [...response.cookies, ...refreshedCookies(tokens, resolved.tokens)] };
+  } catch (error) {
+    if (!(error instanceof AuthUnavailableError)) {
+      throw error;
+    }
+
+    console.warn('Account request failed:', error.message);
+
+    return json(503, { error: unavailableMessage });
+  }
+}
+
+async function linkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  const refusal = { signedOutMessage: 'Sign in to link the desktop app.', unavailableMessage: LINK_UNAVAILABLE };
+
+  return withSession(request, gateway, refusal, async (tokens) => {
+    const code = normalizeLinkCode((request.body as { code?: unknown } | undefined)?.code);
+
+    // A string that cannot be a code is no guess at one, so it costs the account no attempt.
+    if (!code) {
+      return json(400, { error: LINK_CODE_REFUSED });
+    }
+
+    const result = await gateway().redeemLinkCode(tokens, code);
+
+    switch (result.status) {
+      case 'linked':
+        return json(200, { player: result.player });
+      case 'invalid':
+        return json(400, { error: LINK_CODE_REFUSED });
+      case 'rate-limited':
+        return json(429, {
+          error: `Too many wrong codes. Try again in ${minutesFrom(result.retryAfterSeconds)}.`,
+          retryAfterSeconds: result.retryAfterSeconds,
+        });
+    }
+  });
+}
+
+/** "1 minute", "11 minutes": whole minutes, rounded up so the wait is never understated. */
+function minutesFrom(seconds: number): string {
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+
+  return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+}
+
+async function unlinkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  const refusal = { signedOutMessage: 'Sign in to unlink the desktop app.', unavailableMessage: LINK_UNAVAILABLE };
+
+  return withSession(request, gateway, refusal, async (tokens) => {
+    await gateway().unlinkPlayer(tokens);
+
+    return json(200, { player: null });
+  });
+}
+
+/**
+ * The signed-in player's own stats, derived here from the lines the database proved are theirs. Only
+ * the derived figures leave this function: no line, uid or recorder id reaches the browser.
+ */
+async function readDashboard(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  return withSession(
+    request,
+    gateway,
+    { signedOutMessage: 'Sign in to see your dashboard.', unavailableMessage: DASHBOARD_UNAVAILABLE },
+    async (tokens) => {
+      const read = await gateway().readOwnDashboard(tokens);
+      const body: OwnDashboardResponse = read.linked
+        ? { linked: true, player: read.player, truncated: read.truncated, stats: deriveOwnDashboard(read.lines) }
+        : { linked: false };
+
+      return json(200, body);
+    },
+  );
 }
 
 async function startDiscord(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {

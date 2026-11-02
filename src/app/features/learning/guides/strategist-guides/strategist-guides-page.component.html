@@ -7,16 +7,16 @@
       drills and decision rules.
     </p>
     <div class="actions">
-      <a class="button button--primary" [href]="playlistUrl" target="_blank" rel="noopener">
+      <a class="guide-button guide-button--primary" [href]="playlistUrl" target="_blank" rel="noopener">
         Watch the full playlist
         <span class="visually-hidden">(opens YouTube in a new tab)</span>
       </a>
-      <a class="button" routerLink="/techniques">Review all techniques</a>
+      <a class="guide-button" routerLink="/techniques">Review all techniques</a>
     </div>
   </header>
 
-  <div class="toolbar">
-    <label class="search">
+  <div class="guide-toolbar">
+    <label class="guide-search">
       <span class="visually-hidden">Search guides</span>
       <input
         #search
@@ -34,7 +34,7 @@
     />
   </div>
 
-  <p class="count" role="status">{{ countLabel() }}</p>
+  <p class="guide-count" role="status">{{ countLabel() }}</p>
 
   @if (cards().length > 0) {
     <ul class="grid">
@@ -55,7 +55,7 @@
   } @else {
     <app-state-panel heading="No guides match">
       <p>Try another hero, topic or category.</p>
-      <button type="button" class="button" (click)="clearFilters()">Clear search and category</button>
+      <button type="button" class="guide-button" (click)="clearFilters()">Clear search and category</button>
     </app-state-panel>
   }
 </main>

@@ -72,6 +72,23 @@ The session lives on the server side of the boundary:
 - The browser asks `GET /api/auth/session` through `AuthService`
   (`src/app/core/auth/`) and the `/account` route is guarded by `signedInGuard`.
 - `public.profiles` (one row per account, RLS on) is created at first sign-in.
+- An account can be linked to an in-game player with a one-time code (issue 264). The desktop app asks
+  the Edge Function `issue-link-code` for a code, proving who it is with its Overwolf session; the
+  player types it on the account page, `POST /api/account/link` calls the `redeem_link_code` database
+  function with the player's own token, and `public.player_links` (RLS: the owner reads, only the
+  functions write) holds the result. The link rests on the verified Overwolf identity, never on the name
+  or uid, which are the app's claims and are only displayed. `GET /api/auth/session` returns
+  `player: { name, avatarUrl } | null`, and `Nav` shows the name and Overwolf avatar instead of
+  "Account" when it is set. The website holds no service key and no `RECORDER_ID_SECRET` for this.
+- `GET /api/account/dashboard` (issue 329) calls the `read_own_dashboard` database function with the player's
+  own token. The database picks the lines (those whose recorder and uid are the link's own, newest 2,000);
+  `src/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
+  records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
+  service key and no per-account copy of the data.
+- The desktop app also has its own link calls, each an Edge Function that confirms the Overwolf session:
+  `refresh-linked-player` (refresh the name and avatar), `link-status` (am I linked, and as whom) and
+  `unlink-player-app` (remove the link). They act only on the verified session's own link and never return the
+  website account's email or id; see "The app's own calls about its link" in [supabase.md](supabase.md).
 - The session cookie also carries the time of the Discord sign-in (Supabase moves its own
   `last_sign_in_at` on every token refresh, so it cannot be used). `POST /api/account/delete` needs that
   sign-in to be under ten minutes old (ADR-0004, decision 7) and answers 401 with a reason otherwise.

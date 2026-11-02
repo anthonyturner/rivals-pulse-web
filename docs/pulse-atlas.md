@@ -18,6 +18,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | `maps.json` | Map ids to names: a list of `{ "id": number, "name": string }`. Source: [data/pulse-atlas/seed-maps.json](../data/pulse-atlas/seed-maps.json), copied unchanged from the overlay repo's `src/app/data/seed-maps.json`. |
 | `hero-styles.json` | Each hero's playstyle mix: whole-number percentages of Poke, Dive and Brawl. Shape below. Source: [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json), hand-maintained in this repository. |
 | `hero-stats.json` | Each hero's community stats in every half-season that has started: win rate, pick rate, KDA, final hits and the matches behind them, with an "enough data" flag per hero. One file for all half-seasons. Shape below. |
+| `community-stats.json` | The community's counter and partner counts: how often each hero beat or lost to each enemy hero, and to each ally hero it played with, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
 
 Every dataset file has this shape:
@@ -218,6 +219,118 @@ nothing else. It is **one file for every half-season**, listed in the manifest:
   (`?halfSeason=<number>`), so each season's numbers are its own. The envelope's
   `source` is `rivals-pulse-web:hero-stats-api`.
 
+### The `community-stats` data
+
+The counts behind the community counter and best-partner figures, for readers
+that want to show how a hero fares against, and together with, another hero.
+Like the tier list it is the **community** data: built from the matches Rivals
+Pulse players upload, by the pair derivation behind `GET /api/hero-pairs`
+([src/hero-pairs.ts](../src/hero-pairs.ts)), and from nothing else. It is **one
+file** for the half-season shown, listed in the manifest:
+
+```json
+{
+  "provenance": "rivals-pulse-community",
+  "minimumMatches": 10,
+  "priorMatches": 10,
+  "currentSeasonId": 21,
+  "season": { "id": 21, "label": "Season 10.5" },
+  "bands": [
+    {
+      "key": "all", "label": "All Ranks", "decidedMatches": 146,
+      "heroes": [{ "heroId": 1042, "appearances": 25, "wins": 16 }],
+      "counters": [{ "heroId": 1042, "enemyHeroId": 1011, "matches": 12, "appearances": 14, "wins": 9 }],
+      "synergies": [{ "heroId": 1011, "allyHeroId": 1042, "matches": 11, "appearances": 13, "wins": 6 }]
+    }
+  ]
+}
+```
+
+- **`provenance` is `"rivals-pulse-community"`, at the top level of `data`**,
+  as in the tier list. The generator refuses to build a file without it and the
+  read-back check fails if the written file lacks it.
+- **Counts only.** There is no win rate, no shrunk rate and no ranking. A reader
+  computes a rate as `wins / appearances`, and pulls it toward 50% as if
+  `priorMatches` more matches had been played at 50%
+  (`(wins + priorMatches / 2) / (appearances + priorMatches)`), the rule the
+  tier list uses ([src/hero-stats.ts](../src/hero-stats.ts)). `minimumMatches`
+  is the decided matches a pair needs before it is listed; a pair with fewer is
+  "not enough data", which is not the same as a pair that lost.
+- **The season** is as in the tier list: the id is the half-season number times
+  two (10 is 20, 10.5 is 21). `currentSeasonId` is the latest half-season whose
+  start has passed. `season` is the half-season the counts come from.
+  `inPlaceOfSeasonId` is present only when the current half-season has no pair at
+  the minimum yet and `season` is the previous half-season's counts. It names the
+  **current** half-season that is being replaced (it always equals
+  `currentSeasonId`), not the previous one; the previous one is `season.id`. This is the same rule as
+  `GET /api/hero-matchups`. Then `heroes` and `decidedMatches` are the previous half-season's too.
+- **`bands`** holds one band today, `all` (All Ranks). Rank bands are not
+  published yet; a reader must take the band it wants by `key` and ignore keys
+  it does not know. The `all` band is built from the matches with **no rank**,
+  which is every match today. Once ranks are stored, "no rank" will mean
+  "unknown rank", not "all ranks", and the all-ranks band will be built from
+  that alone, never by adding the rank bands together, because a rank band the
+  database hid for too few recorders would be inside such a sum.
+- **`decidedMatches`** is the number of matches with a win or a loss in
+  Competitive or Quick Match in that half-season, the same blend as
+  `hero-stats.json`. It is `0` for a half-season nobody has played.
+- **`heroes`** is each hero's `appearances` (scoreboard lines in those matches,
+  so it can exceed `decidedMatches`) and `wins`, from the same per-hero counts as
+  `hero-stats.json`, ordered by `heroId`. A hero below `minimumMatches` is
+  included, because a reader may need its record; it has no pair.
+- **`counters`** are directional: the row `{ heroId, enemyHeroId, ... }` is
+  `heroId`'s record in matches where `enemyHeroId` was on the other team, so
+  `wins` counts `heroId`'s wins and `appearances` is `heroId`'s scoreboard
+  lines in those `matches` decided matches. The row for the opposite direction is
+  its own row.
+- **`synergies`** are one row per unordered pair of heroes on the same team,
+  with `heroId` lower than `allyHeroId`. `appearances` is the number of times a
+  team held both in a decided match, so a match where both teams did counts twice
+  and `matches` once; `wins` counts those team occurrences that won. A reader
+  that wants a hero's partners reads the rows where the hero is either id. A
+  hero is never paired with itself (also not Deadpool with another form of
+  Deadpool).
+- **Hero ids** are the game's numeric ids, as in the tier list; join them to
+  `heroes.json`. Deadpool's three role forms are merged under his base id, 1057.
+  The database drops every pair of game ids below the minimum before the API
+  sees it, so each form needs the minimum on its own, and the merged count can
+  understate Deadpool's real total. The minimum is applied again after the merge,
+  as a guard if the database function ever lets thinner pairs through. The merge
+  adds the forms' match counts, so in the rare match where the two teams field
+  different Deadpool forms, `matches` can count it once per form. A game id that no hero in
+  `hero-game-ids.json` has (hero id 0 is "no hero recorded") is left out of the
+  file; a `heroId` that no hero in `heroes.json` has as its `gameId` is
+  published, with a warning, as in the tier list.
+- **Only these keys are published.** The generator allows exactly the keys
+  above (`readCommunityStats` in [src/pulse-atlas.ts](../src/pulse-atlas.ts))
+  and refuses to build if the file, a season, a band or a row has any other, if
+  a key names something private (the `counters` key is allowed here, because
+  these are the site's own counts), if a pair is below `minimumMatches`, is a
+  hero with itself, or a synergy is not listed once with the lower id first, or
+  if there is no `all` band. The file holds no player-level data: no names, uids,
+  teams, matches or per-match rows, only counts per hero and per pair.
+- **It never holds up the feed.** The endpoint and the database function behind
+  it are deployed apart from this repository, so a run can come before them, and
+  a failure must not stop heroes, the tier list and the rest from refreshing. When
+  fetching `/api/hero-pairs` fails (not deployed yet, an error, an answer with no
+  half-season yet, an answer that is not the expected shape or fails the checks
+  above, including the private-key and credential-value checks), the generator
+  keeps the last published `community-stats.json` exactly as it is (same bytes,
+  same hash) and warns. It leaves the dataset out of that run, with a warning,
+  in three cases:
+  - none was ever published (the published file answers 404);
+  - the published copy no longer passes the same checks;
+  - the published copy could not be read at all, for example because the Pages
+    site was unreachable (that one read is tried three times, unless it is a 404).
+
+  A run that leaves the file out removes it from the next deployment until a run
+  builds it again. A current half-season that has no pair at the minimum yet is
+  not a failure: the file is published with empty `counters` and `synergies`
+  (or the previous half-season's, see `inPlaceOfSeasonId`) and the run does not
+  warn. Only an answer with no half-season at all warns. A reader must treat the
+  file as absent until it exists.
+- The envelope's `source` is `rivals-pulse-web:hero-stats-api`.
+
 ### The hero `gameId`
 
 `heroes.json` carries the game's numeric hero id on each hero, so a consumer
@@ -325,7 +438,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -334,13 +447,16 @@ and they are not published: the Pages artifact holds only the generated
 
 ## What it never contains
 
-Player data, secrets, or counter data of any kind: no hero `counters` (the
+Player data, secrets, or third-party counter data: no hero `counters` (the
 matchup picks derive from a third-party site, so the generator removes them
-from every hero) and nothing from the dropped Counter Watch scraper. The
-generator refuses to build, and so nothing is published, if a dataset has a
-key naming something private (player, token, secret, email and similar) or a
-`counters` key, a value shaped like a credential, or a mention of the dropped
-counter source. See `UNSAFE_KEY` and `UNSAFE_VALUE` in
+from every hero) and nothing from the dropped Counter Watch scraper. The one
+exception is `community-stats.json`, whose `counters` are the site's own counts
+from uploaded matches (see above), and which the generator checks against an
+allow-list of keys instead. The generator refuses to build, and so nothing is
+published, if any other dataset has a key naming something private (player,
+token, secret, email and similar) or a `counters` key, if any dataset has a
+value shaped like a credential, or a mention of the dropped counter source. See
+`UNSAFE_KEY`, `PRIVATE_KEY` and `UNSAFE_VALUE` in
 [src/pulse-atlas.ts](../src/pulse-atlas.ts).
 
 ## How it is published
@@ -355,8 +471,9 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    then once per half-season (`?halfSeason=<number>`), the current one
    included. That needs no secret. The tier list and the hero stats are
    assembled from those same answers and the hero ids in `hero-game-ids.json`
-   by `assembleCommunityTierList` and `assembleCommunityHeroStats`; nothing
-   else is read.
+   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. The one
+   other read is `/api/hero-pairs`, once, for `community-stats`; see below for
+   what happens when it fails.
 2. Reads the maps, hero-styles and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
@@ -378,7 +495,13 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    [src/pulse-atlas-page.ts](../src/pulse-atlas-page.ts). It is not part of
    the feed: the manifest does not list it, and clients never need it.
 
-Any failed fetch (three attempts each), an empty or malformed dataset, or an
+`community-stats` is the exception to the rule below: `resolveCommunityStats`
+in [src/pulse-atlas.ts](../src/pulse-atlas.ts) turns any failure to fetch or
+assemble it into the last published file (kept byte for byte) or, if none was
+ever published, into leaving it out of the run, each with a warning. It never
+fails the generate job.
+
+Any other failed fetch (three attempts each), an empty or malformed dataset, or an
 unsafe value fails the generate job. The deploy job needs it, so it never runs
 and the last good publish stays live.
 
@@ -389,6 +512,12 @@ against an older deployment, the answer has no `halfSeasons` list, the
 generator stops with "is not the hero-stats shape ... Has the web app been
 deployed with it?", and the last good feed (including any older tier list)
 stays live. Re-run the workflow once the deployment is live.
+
+`community-stats` needs two more things deployed first: the `read_hero_pairs`
+migration (`supabase db push`, see [supabase.md](supabase.md)) and the web app
+with `/api/hero-pairs`. A run before them still publishes everything else and
+warns that `community-stats` was left out (or kept as last published); the first
+run after both are live publishes it.
 
 To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 24,
 which strips TypeScript types itself).
