@@ -4,7 +4,7 @@
 
 .overlay-section {
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
 .shots,
@@ -77,32 +77,23 @@
   font-size: 0.9375rem;
 }
 
-.feature .keys {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
+.feature-link {
+  justify-self: start;
   margin-top: 4px;
-  font-size: 0.8125rem;
+  color: var(--teal-bright);
+  font-size: 0.875rem;
+  font-weight: 750;
+  text-decoration: none;
 }
 
-.keys__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+.feature-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-kbd {
-  padding: 2px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font: inherit;
-  font-weight: 700;
+.feature-link:focus-visible {
+  outline: 3px solid var(--cta-yellow);
+  outline-offset: 3px;
 }
 
 @media (max-width: 960px) {

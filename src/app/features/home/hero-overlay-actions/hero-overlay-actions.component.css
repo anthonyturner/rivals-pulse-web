@@ -6,7 +6,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 36px;
+  margin-top: 32px;
 }
 
 .cta {
@@ -35,57 +35,68 @@
   background: rgba(7, 17, 31, 0.74);
 }
 
-.cta:focus-visible {
+.cta:focus-visible,
+.how-we-count:focus-visible {
   outline: 3px solid var(--cta-yellow);
   outline-offset: 3px;
 }
 
-.safety-note {
-  min-height: 24px;
-  margin: 18px 0 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.85rem;
-  line-height: 24px;
+.platform-note {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8125rem;
 }
 
-.safety-link {
-  color: #fff;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.safety-link:hover {
-  color: var(--cta-yellow);
-}
-
-.safety-link:focus-visible {
-  outline: 3px solid var(--cta-yellow);
-  outline-offset: 3px;
-}
-
-.trust-row {
+.stat-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0 14px;
-  min-height: 24px;
-  margin-top: 6px;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-.trust-line {
-  min-height: 24px;
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
   margin: 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.85rem;
-  line-height: 24px;
+}
+
+/* The figure reads first and the label under it; the markup keeps the label first for screen readers. */
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  min-width: 120px;
+}
+
+.stat__value {
+  margin: 0;
+  color: #fff;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.stat.is-pending .stat__value {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.125rem;
+  line-height: calc(1.75rem * 1.15);
+}
+
+.stat__label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .how-we-count {
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  line-height: 24px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -94,16 +105,10 @@
   color: var(--cta-yellow);
 }
 
-.how-we-count:focus-visible {
-  outline: 3px solid var(--cta-yellow);
-  outline-offset: 3px;
-}
-
 .skeleton {
   display: block;
-  width: 220px;
-  max-width: 100%;
-  height: 24px;
+  width: 120px;
+  height: calc(1.75rem * 1.15);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.16);
 }
@@ -117,10 +122,20 @@
     width: 100%;
   }
 
-  /* The link takes its own row here, and both rows are reserved so it never moves the buttons. */
-  .trust-row {
-    flex-direction: column;
-    align-items: flex-start;
-    min-height: 48px;
+  .stats {
+    gap: 16px 24px;
+  }
+
+  .stat {
+    min-width: 0;
+  }
+
+  .stat__value {
+    font-size: 1.375rem;
+  }
+
+  .stat.is-pending .stat__value {
+    font-size: 1rem;
+    line-height: calc(1.375rem * 1.15);
   }
 }

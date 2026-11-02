@@ -24,31 +24,32 @@ describe('ToolsRowComponent', () => {
 
   it('renders six cards, in order, each with one h3', () => {
     expect(cards().map((card) => flat(card.querySelector('h3')))).toEqual([
+      'Hero stats',
       'Tier list',
       'Counters',
-      'Heroes',
       'Team builder',
+      'Heroes',
       'Guides',
-      'Glossary',
     ]);
   });
 
-  it('shows an icon and a one-line promise on every card', () => {
+  it('shows an icon, a one-line promise and a named action on every card', () => {
     expect(cards().length).toBe(HOME_TOOLS.length);
     cards().forEach((card, index) => {
       expect(card.querySelector('svg')).not.toBeNull();
-      expect(card.querySelector('p')?.textContent?.trim()).toBe(HOME_TOOLS[index].promise);
+      expect(flat(card.querySelector('.tool__promise'))).toBe(HOME_TOOLS[index].promise);
+      expect(flat(card.querySelector('.tool__action'))).toBe(`${HOME_TOOLS[index].action}→`);
     });
   });
 
   it('links each card with routerLink to its page', () => {
     expect(cards().map((card) => card.getAttribute('href'))).toEqual([
+      '/community',
       '/tier-list',
       '/counters',
-      '/heroes',
       '/team-builder',
+      '/heroes',
       '/hero-guides',
-      '/glossary',
     ]);
   });
 
@@ -78,20 +79,22 @@ describe('ToolsRowComponent', () => {
     }
   });
 
-  describe('the In the overlay lines', () => {
-    it('pair each web tool with the overlay window that does the same job, and its default hotkey', () => {
+  describe('the In the app lines', () => {
+    it('say what the app does with the same answer in game, with no hotkey', () => {
       const lines = Object.fromEntries(
-        cards().map((card) => [flat(card.querySelector('h3')), flat(card.querySelector('.tool-overlay'))]),
+        cards().map((card) => [flat(card.querySelector('h3')), flat(card.querySelector('.tool__overlay'))]),
       );
 
       expect(lines).toEqual({
-        'Tier list': 'In the overlay Tier List Alt+M',
-        Counters: 'In the overlay Counter Search Alt+K',
-        Heroes: 'In the overlay Hero Lookup Alt+H',
+        'Hero stats': 'In the app Every match you play with the app adds to these numbers.',
+        'Tier list': 'In the app Open the tier list over the game.',
+        Counters: 'In the app Search counters without leaving the match.',
         'Team builder': '',
+        Heroes: 'In the app Look up any hero mid-match.',
         Guides: '',
-        Glossary: 'In the overlay GameGloss Alt+G',
       });
+      expect(fixture.nativeElement.querySelectorAll('kbd').length).toBe(0);
+      expect(fixture.nativeElement.textContent).not.toMatch(/alt\+|ctrl|hotkey/i);
     });
 
     it('are left out for the team builder and the guides, which have no counterpart', () => {

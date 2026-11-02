@@ -33,12 +33,10 @@ describe('HomePageComponent', () => {
       tiers: [],
       belowMinimum: [],
     });
-    http.expectOne('/api/heroes').flush([]);
     await settle();
   });
 
   afterEach(() => {
-    // Stops the Jarvis core's animation frame loop between specs.
     fixture.destroy();
     http.verify();
   });
@@ -59,9 +57,8 @@ describe('HomePageComponent', () => {
     it('has one h1, then an h2 for each band in visual order', () => {
       expect(element.querySelectorAll('h1').length).toBe(1);
       expect(Array.from(element.querySelectorAll('h2')).map(text)).toEqual([
-        'What the overlay does',
-        'Hero stats',
-        'Tools',
+        'The overlay does the work while you play',
+        'Free hero stats, tier list and counters',
         'How it works',
         "What's new in the game",
         'Frequently asked questions',
@@ -69,32 +66,30 @@ describe('HomePageComponent', () => {
       ]);
     });
 
-    it('puts the hero eyebrow, which names the product and no season, above the h1', () => {
+    it('has no eyebrow above the h1', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
-      const eyebrow = hero.firstElementChild as HTMLElement;
 
-      expect(eyebrow.tagName).toBe('APP-EYEBROW');
-      expect(text(eyebrow)).toBe('Free Overwolf app for Marvel Rivals');
-      expect(eyebrow.nextElementSibling?.tagName).toBe('H1');
-      expect(text(eyebrow)).not.toMatch(/season|\d/i);
+      expect(hero.querySelector('app-eyebrow')).toBeNull();
+      expect(hero.firstElementChild?.tagName).toBe('H1');
     });
 
-    it('says what the product does in the h1 and one line, with no paragraph repeating the eyebrow', () => {
+    it('says in the h1 and one paragraph what the free Overwolf app does, in game and on the site', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
+      const lede = text(hero.querySelector('.lede'));
 
       expect(text(hero.querySelector('h1'))).toBe('Know every match before it starts.');
-      expect(text(hero.querySelector('.lede'))).toBe(
-        'RivalsPulse puts live stats on your screen and counters at your fingertips.',
-      );
       expect(hero.querySelectorAll('p.lede').length).toBe(1);
-      expect(text(hero)).not.toContain('records each match you play');
+      expect(lede).toContain('RivalsPulse is a free Overwolf app for Marvel Rivals.');
+      expect(lede).toContain('counters, the tier list and any hero over the game');
+      expect(lede).toContain("It won't get you banned.");
+      expect(lede).toContain('Available on Windows.');
     });
 
     it('puts the heading first in every band, which carries no decorative eyebrow of its own', () => {
       const bands = Array.from(element.querySelectorAll<HTMLElement>('section.band'));
 
       expect(element.querySelectorAll('.band__head app-eyebrow').length).toBe(0);
-      expect(bands.length).toBe(7);
+      expect(bands.length).toBe(6);
       for (const band of bands) {
         const heading = band.querySelector('h2') as HTMLElement;
 
@@ -106,28 +101,27 @@ describe('HomePageComponent', () => {
       const bands = Array.from(element.querySelectorAll<HTMLElement>('section.band'));
 
       expect(element.querySelector('main')).toBeNull();
-      expect(bands.length).toBe(7);
+      expect(bands.length).toBe(6);
       expect(bands.map((band) => band.getAttribute('aria-labelledby'))).toEqual(
         bands.map((band) => band.querySelector('h2')?.id ?? null),
       );
       expect(element.querySelector('aside')).toBeNull();
     });
 
-    it('alternates dark, light, white, light, white, light and dark bands', () => {
+    it('alternates dark, white, light, white, light and dark bands', () => {
       const tones = Array.from(element.querySelectorAll('section.band')).map((band) =>
         band.classList.contains('band--dark') ? 'dark' : band.classList.contains('band--white') ? 'white' : 'light',
       );
 
-      expect(tones).toEqual(['dark', 'light', 'white', 'light', 'white', 'light', 'dark']);
+      expect(tones).toEqual(['dark', 'white', 'light', 'white', 'light', 'dark']);
     });
 
-    it('uses the one shared get-app button in the hero, the Jarvis console and the closing band', () => {
+    it('uses the one shared get-app button in the hero and the closing band', () => {
       const buttons = Array.from(element.querySelectorAll('app-get-app-button'));
 
-      expect(buttons.length).toBe(3);
-      expect(buttons.map((button) => button.parentElement?.closest('app-hero-overlay-actions, app-jarvis-console, app-closing-cta')?.tagName.toLowerCase())).toEqual([
+      expect(buttons.length).toBe(2);
+      expect(buttons.map((button) => button.parentElement?.closest('app-hero-overlay-actions, app-closing-cta')?.tagName.toLowerCase())).toEqual([
         'app-hero-overlay-actions',
-        'app-jarvis-console',
         'app-closing-cta',
       ]);
     });
@@ -140,10 +134,10 @@ describe('HomePageComponent', () => {
       expect(text(element.querySelector('app-game-news-band'))).toContain('Step into Season 10');
     });
 
-    it('makes no Jarvis or player-rank claim in the hero, and calls only the app free', () => {
-      const hero = text(element.querySelector('header.season-hero')).replace('Free Overwolf app for Marvel Rivals', '');
+    it('makes no Jarvis, hotkey or player-rank claim in the hero', () => {
+      const hero = text(element.querySelector('header.season-hero'));
 
-      expect(hero).not.toMatch(/jarvis|twelve|\branks?\b|voice|free/i);
+      expect(hero).not.toMatch(/jarvis|hotkey|twelve|\branks?\b|voice/i);
     });
 
     it('sets every heading from the shared type-scale tokens, in a modest size', () => {
