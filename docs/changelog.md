@@ -1,7 +1,7 @@
 # Changelog
 
 `CHANGELOG.md`, at the root of the repository, tells a person what changed
-between versions of Rivals Pulse Coach, in words they can read without opening a
+between versions of RivalsPulse, in words they can read without opening a
 diff. The commit history and pull requests hold the detail; they are written
 for reviewers. The changelog is written for someone asking "what's new?".
 

@@ -1,42 +1,48 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-30T07:12:07.538Z",
+  "generatedAt": "2026-11-01T18:53:54.708Z",
   "files": [
     {
       "dataset": "heroes",
       "path": "pulse-atlas/v1/heroes.json",
-      "sha256": "78134d8c536eefddfa63b62064d4e46d50064c7e7c068e8df53f8821d45a3e8c",
+      "sha256": "cbe4d7a0709aaba5ea2ecf80a1d9ead6ea27a774c31ee47395729ab624c2bca5",
       "bytes": 21379
     },
     {
       "dataset": "tier-list",
       "path": "pulse-atlas/v1/tier-list.json",
-      "sha256": "ee72c1cb28653a5d428aa49af1531d79e7c33c92458f9ba5ccdc1c31f9686273",
-      "bytes": 1781
+      "sha256": "a00d7765bcde10e6e8975a950ad49a3ad7c76fb7c06e7a97fa0d14820ce3d3d2",
+      "bytes": 1780
     },
     {
       "dataset": "glossary",
       "path": "pulse-atlas/v1/glossary.json",
-      "sha256": "81494a9dee4441051253bab1626f0d5d60b1e5ef6cf1486185d397718472292a",
+      "sha256": "5f24cdf51aef691bfc015c75dba5e669dc6bb713f9b06fca31ff820c683a046d",
       "bytes": 1661
     },
     {
       "dataset": "maps",
       "path": "pulse-atlas/v1/maps.json",
-      "sha256": "07102ea21bb82f1bcd5600f08a53595381c3378821ea10d855338aa9bdfd8998",
+      "sha256": "95d3f61f93434fe72d46f3c5462597e7a9d0803fbcb598aefe17cbe1c72b75f3",
       "bytes": 2156
     },
     {
       "dataset": "hero-styles",
       "path": "pulse-atlas/v1/hero-styles.json",
-      "sha256": "0ddd12033af4e5579a5e26e5a82f819ddc810f3cb8ec471ab951d1ab94a3e3f4",
+      "sha256": "53ff6d4c746872d5f236bc95d17ca31331cb176e7a12301fb585c60a60171690",
       "bytes": 220
     },
     {
       "dataset": "hero-stats",
       "path": "pulse-atlas/v1/hero-stats.json",
-      "sha256": "cee117fd13e728c9385e8d8517fa0228b690b68a28d2591a0aaf99c3acf8da7a",
-      "bytes": 802
+      "sha256": "d1f67a6c37e0f86c264076ccee57df597692076293b669f8c884103c60a037b5",
+      "bytes": 798
+    },
+    {
+      "dataset": "community-stats",
+      "path": "pulse-atlas/v1/community-stats.json",
+      "sha256": "6682549ed317bc2fe4763be63644bd1149420b465bb2787afc82f8173f865132",
+      "bytes": 733
     }
   ]
 }

@@ -35,7 +35,8 @@ repo's build. This is a move, not a redesign.
   every newer overlay's extras; a signature change follows "Changing a database function's
   signature" below).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`). The aggregate tables are read by the website only.
+  `record_match_extras`) and `tracked_match_recorders` (written by `track-match-history` itself). The
+  aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
   must be optional in the same way.
@@ -72,8 +73,10 @@ repo's build. This is a move, not a redesign.
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 | `20261101010000_profiles.sql` | `profiles`, one row per website account (RLS: the owner selects and inserts) |
 | `20261101020000_player_links.sql` | Linking an account to an in-game player: `player_links` (the owner selects), `link_codes` and `link_attempt_log` (service role and the functions only), and `link_code_hash`, `issue_link_code`, `redeem_link_code`, `unlink_player` |
+| `20261101030000_tracked_match_recorders.sql` | `tracked_match_recorders` (which verified recorder uploaded each `tracked_matches` row; service role only, deleted with the match) |
 | `20261101040000_refresh_linked_player.sql` | The app refreshing its link's name and avatar: `refresh_linked_player` and the shared per-recorder limiter `take_link_app_call` (service role only), a `refresh` kind in `link_attempt_log`, and a `purge_link_data` that ages out every kind of the app's own calls |
 | `20261101050000_app_link_status.sql` | The app reading and removing its own link: `link_status_for_recorder` and `unlink_player_for_recorder` (service role only), and the `status` and `unlink` kinds in `link_attempt_log` |
+| `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 
 Link once per machine, check history, then apply:
 
@@ -233,6 +236,16 @@ npx supabase functions deploy elevenlabs-agent-token
 participants backfill replays those rows, so lower the cap only after it has
 run.
 
+Each upload also writes a `tracked_match_recorders` row (`tracked_match_id`, `recorded_by`) naming the
+verified recorder, so a linked player's history can later be counted past the six-month
+`participants` window. It is a side table because `tracked_matches` is publicly readable: **never add
+`recorded_by` to `tracked_matches`**, since it is the hash that identifies a linked person. The table
+has RLS on and no grant to `anon` or `authenticated`; deleting a tracked match, which is how the cap
+above prunes, deletes its row. Rows exist only from the day the function carrying this write is
+deployed. The write is logged, never fatal, if it fails, so the upload's request and reply are
+unchanged. `supabase/checks/tracked_match_recorders.sql` proves the rules against the linked
+project and rolls back: `npx supabase db query --linked -f supabase/checks/tracked_match_recorders.sql`.
+
 ## Secrets
 
 Set with `npx supabase secrets set NAME=value`. Names only here.
@@ -248,7 +261,11 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
 Deploy order for `track-match-history`: migration, then secrets, then
-function. A function deployed first fails closed (every upload is refused).
+function. A function deployed first fails closed (every upload is refused). The
+`tracked_match_recorders` migration must also run before the function that writes to it: the
+Supabase GitHub integration deploys the function on merge, so push the migration by hand first.
+Out of order, uploads still succeed but the recorder rows for that period are lost, because the
+failed write is only logged.
 
 ## Premium launch order
 
@@ -353,8 +370,55 @@ Recompute and freeze, like the hero aggregates: `recompute_extended_aggregates()
 `recompute-extended-aggregates`) rebuilds every half-season that still has raw rows and is not
 frozen. `purge_expired_participants()` calls `freeze_extended_aggregates()` after the hero
 aggregates' freeze and before its first delete, so the counts are kept when the raw rows go. **Any
-later migration that restates `purge_expired_participants` must keep both calls**; a test reads the
-latest definition and fails if either is gone or comes after a delete.
+later migration that restates `purge_expired_participants` must keep calling every freeze** (see
+[Hero pair aggregates](#hero-pair-aggregates)).
+
+## Hero pair aggregates
+
+`hero_pair_aggregates` keeps, per half-season, game mode, rank bucket and pair of heroes, how often the
+pair met on opposite teams (`vs`) or played together on one team (`with`). `hero_pair_totals` keeps,
+per half-season, mode and rank bucket, the matches counted and, as numbers only, how many distinct
+recorders made them and how many matches the busiest one did. Neither table holds a uid, name,
+fingerprint or per-player row, both have RLS on with no policy, and only the service role reaches
+them. It is a family of its own, like the extended aggregates: `fill_hero_aggregates` is untouched.
+
+- `vs` is directional and counted like `hero_matchups`. `with` is stored once per unordered pair
+  (`hero_id < other_hero_id`) and counted once per team occurrence: a team in a match where two
+  different players played the two heroes. A match where both teams field the pair adds two
+  occurrences (`decided_lines`, `wins`) and one match. The same hero twice on a team is not a pair.
+  A team's result is the result its lines agree on.
+- A pair is stored, in every mode and bucket it was seen in, only when its decided matches summed over
+  the half-season reach `hero_pair_min_matches()` (10).
+- `rank_bucket` is -1 (unknown) on every row today: no rank is stored with an upload. Buckets of 0 or
+  more are reserved for 100-point buckets of the recorder's rank score once one is stored (issue
+  337); `fill_hero_pair_aggregates` is the one place that will derive it.
+- `recompute_hero_pair_aggregates()` rebuilds every half-season that still has raw rows and is not
+  frozen (hourly job `recompute-hero-pair-aggregates`). `purge_expired_participants()` calls
+  `freeze_hero_pair_aggregates()` before its first delete. **Any later migration that restates the
+  purge must keep calling every freeze**; a test reads the latest definition and fails if one is gone
+  or comes after a delete. Half-seasons whose raw rows were already purged before this migration ran
+  have no pair counts and cannot be filled.
+- `read_hero_pairs(p_play_mode_ids)` (granted to `anon` and `service_role`, as `read_hero_matchups`
+  is) returns `half_season, rank_bucket, kind, hero_id, other_hero_id, decided_matches, decided_lines,
+  wins`, summed over the modes asked for (default Quick Match and Competitive), with the minimum
+  applied again to the sum. Rank bucket -1 is returned without a recorder gate, as `hero_matchups` is
+  today; a bucket of 0 or more only from the (half-season, mode, bucket) rows whose own totals pass
+  `community_bucket_shown`, checked before the modes are summed: gating a combined figure would let a
+  caller subtract one list of modes from another and recover a hidden mode. Recorder counts are never
+  returned. It returns a set of rows, so a caller that reads more than 1000 of them pages through it
+  with a range and an explicit `order`, not the function's return order. The website reads it through
+  `GET /api/hero-pairs` ([`src/hero-pairs-read.ts`](../src/hero-pairs-read.ts)), which pages with
+  `limit`, `offset` and `order=half_season,rank_bucket,kind,hero_id,other_hero_id` until a page comes
+  back empty, for Competitive and Quick Match, and builds the "all" band from rank bucket -1 alone;
+  Pulse Atlas publishes that answer as `community-stats` ([pulse-atlas.md](pulse-atlas.md)).
+- Once a rank source exists, an all-ranks total built by adding buckets would include a bucket that
+  was hidden; whoever adds that must not publish it next to the visible ones. `read_hero_matchups`
+  already publishes ungated all-ranks `vs` counts, so `vs` rank buckets of 0 or more cannot be
+  published while it stays ungated: a bucket could be recovered by subtracting the rest from its
+  all-ranks total.
+- The migration checks the gate when it runs, on fixtures in a half-season that does not exist (a
+  one-recorder bucket must not come back, a three-recorder bucket must, alone and with the other
+  mode asked for); the fixtures are rolled back.
 
 ## Backfilling participants from stored matches
 
@@ -579,13 +643,15 @@ policy's hard limit), but later than promised.
 
 - **Required:** `select jobname from cron.job where jobname in
   ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
-  'recompute-play-time-aggregates', 'recompute-community-match-aggregates', 'purge-link-data');` must show all
-  six jobs (the daily purge, the four hourly aggregate rebuilds and the five-minute link purge). If one is
-  missing (the migrations warn when `pg_cron` is unavailable), enable `pg_cron` and schedule
+  'recompute-play-time-aggregates', 'recompute-community-match-aggregates',
+  'recompute-hero-pair-aggregates', 'purge-link-data');` must show all seven jobs (the daily purge, the
+  five hourly aggregate rebuilds and the five-minute link purge). If one is missing (the migrations warn
+  when `pg_cron` is unavailable), enable `pg_cron` and schedule
   `select public.purge_expired_participants();` daily,
   `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
-  `select public.recompute_play_time_aggregates();` and
-  `select public.recompute_community_match_aggregates();` hourly, and `select public.purge_link_data();`
+  `select public.recompute_play_time_aggregates();`,
+  `select public.recompute_community_match_aggregates();` and
+  `select public.recompute_hero_pair_aggregates();` hourly, and `select public.purge_link_data();`
   every five minutes, by hand.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 

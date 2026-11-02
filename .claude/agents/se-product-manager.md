@@ -1,6 +1,6 @@
 ---
 name: se-product-manager
-description: Turns Rivals Pulse Coach requests into scoped, testable GitHub issues.
+description: Turns RivalsPulse requests into scoped, testable GitHub issues.
 tools: [Read, Grep, Glob, Bash]
 ---
 

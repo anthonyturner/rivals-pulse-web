@@ -1,6 +1,6 @@
 ---
 name: 'Software Engineer'
-description: 'Implements a tracked Rivals Pulse Coach GitHub issue and carries it to a verified pull request, as far as the project autonomy mode allows.'
+description: 'Implements a tracked RivalsPulse GitHub issue and carries it to a verified pull request, as far as the project autonomy mode allows.'
 tools: [search/codebase, read/readFile, read/problems, edit/editFiles, execute/runInTerminal, execute/getTerminalOutput, execute/runTests, web/githubRepo]
 ---
 

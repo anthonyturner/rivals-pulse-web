@@ -1,6 +1,6 @@
 # Project guide for agents
 
-Project-specific working notes for Rivals Pulse Coach that are too long for
+Project-specific working notes for RivalsPulse that are too long for
 [AGENTS.md](../AGENTS.md). They carried over from the repository's own
 `AGENTS.md` when the agent playbook was installed. The rules themselves are in
 [rules.md](rules.md) (project rules start at 16).

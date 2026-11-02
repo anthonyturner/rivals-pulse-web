@@ -1,6 +1,6 @@
 ---
 name: 'QA Reviewer'
-description: 'Reviews Rivals Pulse Coach pull requests against the GitHub issue, acceptance criteria, standards, diffs and check evidence.'
+description: 'Reviews RivalsPulse pull requests against the GitHub issue, acceptance criteria, standards, diffs and check evidence.'
 tools: ['read', 'search', 'github/*']
 ---
 

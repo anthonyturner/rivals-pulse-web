@@ -94,6 +94,15 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('5,000');
   });
 
+  it('says the one-way recorder code is also kept with the own match history', () => {
+    const uploads = (section('uploaded-today').textContent ?? '').replace(/\s+/g, ' ');
+    const retention = (section('retention').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(uploads).toContain('also kept next to each match in that history');
+    expect(uploads).toContain('link a website account');
+    expect(retention).toContain('one-way recorder code kept next to each of its matches');
+  });
+
   it('says uploads are automatic rather than chosen', () => {
     const text = page.textContent ?? '';
 

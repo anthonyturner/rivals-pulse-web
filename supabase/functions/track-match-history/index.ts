@@ -12,6 +12,7 @@ import {
   rosterFingerprint,
   storableMatch,
 } from './match-payload.ts';
+import { recordTrackedMatchRecorder } from './tracked-match-recorder.ts';
 import { MAX_TRACKED_MATCHES_PER_PLAYER, TRACKED_MATCH_TRIM_BATCH } from './tracked-match-retention.ts';
 
 const corsHeaders = {
@@ -103,7 +104,7 @@ Deno.serve(async request => {
       .single();
     if (playerError) throw playerError;
 
-    const { error: trackedMatchError } = await supabase
+    const { data: trackedMatch, error: trackedMatchError } = await supabase
       .from('tracked_matches')
       .upsert({
         player_id: player.id,
@@ -113,8 +114,12 @@ Deno.serve(async request => {
         raw_payload: rawPayload,
         performance,
         recorded_at: now,
-      }, { onConflict: 'player_id,match_uid' });
+      }, { onConflict: 'player_id,match_uid' })
+      .select('id')
+      .single();
     if (trackedMatchError) throw trackedMatchError;
+
+    await recordTrackedMatchRecorder(supabase, trackedMatch.id, recordedBy);
 
     await pruneTrackedMatches(supabase, player.id);
 
