@@ -12,7 +12,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    // The header core orb links the home page's #jarvis-console fragment.
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled' })),
     { provide: TitleStrategy, useExisting: PageMetaTitleStrategy },
     provideHttpClient(withFetch()),

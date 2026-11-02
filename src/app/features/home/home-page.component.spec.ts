@@ -142,10 +142,6 @@ describe('HomePageComponent', () => {
       expect(text(element.querySelector('app-game-news-band'))).toContain('Step into Season 10');
     });
 
-    it('keeps the Jarvis console reachable at #jarvis-console, which the header orb links to', () => {
-      expect(element.querySelector('#jarvis-console')).toBeTruthy();
-    });
-
     it('makes no Jarvis or player-rank claim in the hero, and calls only the app free', () => {
       const hero = text(element.querySelector('header.season-hero')).replace('Free Overwolf app for Marvel Rivals', '');
 

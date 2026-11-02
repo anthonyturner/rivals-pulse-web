@@ -49,26 +49,6 @@ describe('Nav', () => {
     expect(link?.getAttribute('href')).toBe('/community');
   });
 
-  it('offers the core orb as a labelled link to the console', () => {
-    const orb = fixture.nativeElement.querySelector('.core-orb') as HTMLAnchorElement | null;
-
-    expect(orb).withContext('the nav renders a core orb').toBeTruthy();
-    expect(orb?.getAttribute('aria-label')).toContain('Jarvis console');
-    expect(orb?.getAttribute('href')).toContain('jarvis-console');
-  });
-
-  it('closes the menu when the orb is followed', () => {
-    component.toggleMenu();
-    expect(component.isMenuOpen()).toBeTrue();
-
-    const orb = fixture.nativeElement.querySelector('.core-orb') as HTMLAnchorElement;
-    // Cancelable, so the router link can stop the anchor navigating the test runner.
-    orb.addEventListener('click', (event: Event) => event.preventDefault());
-    orb.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-
-    expect(component.isMenuOpen()).toBeFalse();
-  });
-
   it('offers Sign in to a signed-out visitor', () => {
     expect(accountLink()?.textContent?.trim()).toBe('Sign in');
     expect(accountLink()?.getAttribute('href')).toBe('/sign-in');
