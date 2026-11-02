@@ -43,10 +43,10 @@ describe('TechniquesPageComponent', () => {
     expect(titles().length).toBe(TECHNIQUE_GUIDES.length);
   });
 
-  it('has one main landmark, one h1, a breadcrumb and a labelled search field', () => {
+  it('leaves the main landmark to the shell and has one h1, a breadcrumb and a labelled search field', () => {
     const crumbs = element.querySelector('nav[aria-label="Breadcrumb"]');
 
-    expect(element.querySelectorAll('main').length).toBe(1);
+    expect(element.querySelector('main')).toBeNull();
     expect(element.querySelectorAll('h1').length).toBe(1);
     expect(crumbs?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('Techniques');
     expect(element.querySelector('label.guide-search .visually-hidden')?.textContent?.trim()).toBe('Search technique guides');

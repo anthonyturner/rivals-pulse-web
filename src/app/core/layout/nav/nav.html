@@ -1,36 +1,34 @@
-<button class="menu-toggle" type="button" aria-label="Toggle navigation menu" aria-controls="primary-navigation"
-    [attr.aria-expanded]="isMenuOpen()" (click)="toggleMenu()">
-    <span class="menu-toggle-icon" aria-hidden="true"></span>
-    <span class="menu-toggle-label">Menu</span>
+<button #toggle class="menu-toggle" type="button" aria-controls="primary-navigation"
+  [attr.aria-expanded]="isMenuOpen()" (click)="toggleMenu()">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" aria-hidden="true" focusable="false">
+    @if (isMenuOpen()) {
+      <path d="M4 4l12 12M16 4L4 16" />
+    } @else {
+      <path d="M3 5h14M3 10h14M3 15h14" />
+    }
+  </svg>
+  Menu
 </button>
 
 <nav id="primary-navigation" aria-label="Primary navigation" [class.is-open]="isMenuOpen()">
-    @for (item of primaryNavItems; track item.label) {
-    @if (item.enabled) {
-    <a class="nav-link" [routerLink]="item.path" routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: item.path === '/' }" (click)="closeMenu()">
-        {{ item.label }}
-    </a>
-    } @else {
-    <span class="disabled">{{ item.label }}</span>
-    }
-    }
-    @if (accountLink(); as link) {
-    <a class="nav-link" [routerLink]="link.path" routerLinkActive="active" [attr.aria-label]="link.ariaLabel"
-        [attr.title]="link.player ? link.label : null" (click)="closeMenu()">
-        @if (link.player; as player) {
-        <span class="nav-player">
-            <app-player-avatar [name]="player.name" [avatarUrl]="player.avatarUrl" />
-            <span class="nav-player-name">{{ link.label }}</span>
-        </span>
-        } @else {
+  <a class="nav-link nav-home" [routerLink]="homeItem.path"
+    [attr.aria-current]="activePath() === homeItem.path ? 'page' : null" (click)="closeMenu()">{{ homeItem.label }}</a>
+  @for (item of primaryNavItems; track item.path) {
+    <a class="nav-link" [routerLink]="item.path" [attr.aria-current]="activePath() === item.path ? 'page' : null"
+      (click)="closeMenu()">{{ item.label }}</a>
+  }
+  @if (accountLink(); as link) {
+    <a class="nav-link nav-account" [routerLink]="link.path" [attr.aria-current]="activePath() === link.path ? 'page' : null"
+      [attr.aria-label]="link.ariaLabel" [attr.title]="link.player ? link.label : null" (click)="closeMenu()">
+      @if (link.player; as player) {
+        <app-player-avatar [name]="player.name" [avatarUrl]="player.avatarUrl" />
+        <span class="nav-player-name">{{ link.label }}</span>
+      } @else {
         {{ link.label }}
-        }
+      }
     </a>
-    }
+  } @else {
+    <span class="nav-link nav-account nav-pending" aria-hidden="true">Sign in</span>
+  }
 </nav>
-
-<a class="core-orb" routerLink="/" fragment="jarvis-console" (click)="closeMenu()"
-    aria-label="Jump to the Jarvis console">
-    <span class="core-orb-glow" aria-hidden="true"></span>
-</a>

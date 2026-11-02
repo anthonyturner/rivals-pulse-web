@@ -76,8 +76,8 @@ describe('HeroGuideDetailPageComponent', () => {
     expect(caption?.querySelector('a')?.textContent).toContain('opens YouTube in a new tab');
   });
 
-  it('has one main landmark wrapping the page', () => {
-    expect(element.querySelectorAll('main').length).toBe(1);
-    expect(element.querySelector('main h1')).not.toBeNull();
+  it('leaves the main landmark to the shell and has an h1', () => {
+    expect(element.querySelector('main')).toBeNull();
+    expect(element.querySelector('h1')).not.toBeNull();
   });
 });

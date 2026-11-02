@@ -72,9 +72,9 @@ describe('StrategistGuidesPageComponent', () => {
     expect(count()).toBe('3 of 10 guides');
   });
 
-  it('has one main landmark wrapping the header and the list', () => {
-    expect(element.querySelectorAll('main').length).toBe(1);
-    expect(element.querySelector('main h1')).not.toBeNull();
-    expect(element.querySelector('main app-guide-card')).not.toBeNull();
+  it('leaves the main landmark to the shell and lists the guides', () => {
+    expect(element.querySelector('main')).toBeNull();
+    expect(element.querySelector('h1')).not.toBeNull();
+    expect(element.querySelector('app-guide-card')).not.toBeNull();
   });
 });

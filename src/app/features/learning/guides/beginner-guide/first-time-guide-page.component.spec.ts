@@ -37,11 +37,11 @@ describe('FirstTimeGuidePageComponent', () => {
     expect(targets).toEqual(['/beginner-interactive-guide', '/media-tutorials']);
   });
 
-  it('is one article with a breadcrumb, one main and a decorative portrait', () => {
+  it('is one article with a breadcrumb and a decorative portrait, and leaves the main landmark to the shell', () => {
     const element = fixture.nativeElement as HTMLElement;
     const crumbs = element.querySelector('nav[aria-label="Breadcrumb"]');
 
-    expect(element.querySelectorAll('main').length).toBe(1);
+    expect(element.querySelector('main')).toBeNull();
     expect(element.querySelectorAll('h1').length).toBe(1);
     expect(crumbs?.querySelector('a')?.getAttribute('href')).toBe('/hero-guides');
     expect(crumbs?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('First-time guide');

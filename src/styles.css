@@ -25,7 +25,7 @@
   --blue: #147fb5;
   --teal: #039f9f;
   --purple: #7257c8;
-  /* Jarvis core: the overlay's team colours, shared by the console and the nav orb. */
+  /* Jarvis core: the overlay's team colours. */
   --ally: #3cf2a6;
   --enemy: #ff5d73;
   --gold: #ffc94d;
@@ -55,6 +55,8 @@
   --container: 1120px;
   --container-wide: 1220px;
   --page-gutter: 32px;
+  --nav-height: 56px;
+  --link: #0e6a98;
 }
 
 @media (max-width: 560px) {
@@ -67,6 +69,16 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+}
+
+/* Keeps a skip-link or fragment target from landing under the sticky header. */
+html {
+  scroll-padding-top: var(--nav-height);
+}
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
 }
 
 body {

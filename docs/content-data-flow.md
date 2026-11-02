@@ -262,7 +262,7 @@ The home page renders only content returned by `/api/home/content` and `/api/her
 it has a local content fallback. Every hero number on the site is a Rivals Pulse number: no
 third-party source is read, and below the minimum sample a page shows "not enough data yet".
 
-`HomePageComponent` stacks the sections as full-width bands inside one `<main>` and owns the hero
+`HomePageComponent` stacks the sections as full-width bands (the app shell supplies the page's one `<main>`) and owns the hero
 video. Each section wraps itself in the shared `HomeBandComponent`, which renders the band's
 `<section>`, h2 and lede, so heading order lives in one place. The page reads the cached
 official content through `HomeContentService` (one `/api/home/content` request, shared) and passes

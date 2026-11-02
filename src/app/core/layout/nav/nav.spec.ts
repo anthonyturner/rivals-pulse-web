@@ -1,9 +1,12 @@
-import { provideZonelessChangeDetection, signal } from '@angular/core';
+import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 
 import { AuthService, SessionState } from '../../auth/auth.service';
 import { Nav } from './nav';
+
+@Component({ template: '' })
+class PageStub {}
 
 describe('Nav', () => {
   let component: Nav;
@@ -12,7 +15,7 @@ describe('Nav', () => {
 
   const accountLink = (): HTMLAnchorElement | undefined =>
     Array.from(
-      fixture.nativeElement.querySelectorAll('#primary-navigation .nav-link') as NodeListOf<HTMLAnchorElement>,
+      fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
     ).find(
       (anchor) =>
         ['Sign in', 'Account'].includes(anchor.textContent?.trim() ?? '') ||
@@ -24,10 +27,9 @@ describe('Nav', () => {
 
     await TestBed.configureTestingModule({
       imports: [Nav],
-      // The app runs zoneless, and the core orb is a router link.
       providers: [
         provideZonelessChangeDetection(),
-        provideRouter([]),
+        provideRouter([{ path: '**', component: PageStub }]),
         { provide: AuthService, useValue: { state: sessionState, load: () => Promise.resolve(sessionState()) } },
       ],
     }).compileComponents();
@@ -43,30 +45,150 @@ describe('Nav', () => {
 
   it('offers a top-level Community link to the hub', () => {
     const link = Array.from(
-      fixture.nativeElement.querySelectorAll('#primary-navigation .nav-link') as NodeListOf<HTMLAnchorElement>,
+      fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
     ).find((anchor) => anchor.textContent?.trim() === 'Community');
 
     expect(link?.getAttribute('href')).toBe('/community');
   });
 
-  it('offers the core orb as a labelled link to the console', () => {
-    const orb = fixture.nativeElement.querySelector('.core-orb') as HTMLAnchorElement | null;
+  describe('the menu', () => {
+    const toggle = (): HTMLButtonElement => fixture.nativeElement.querySelector('.menu-toggle');
+    const panel = (): HTMLElement => fixture.nativeElement.querySelector('#primary-navigation');
+    const open = async (): Promise<void> => {
+      toggle().click();
+      await fixture.whenStable();
+    };
 
-    expect(orb).withContext('the nav renders a core orb').toBeTruthy();
-    expect(orb?.getAttribute('aria-label')).toContain('Jarvis console');
-    expect(orb?.getAttribute('href')).toContain('jarvis-console');
+    it('is a button that says Menu, and tells assistive technology what it opens and whether it is open', async () => {
+      expect(toggle().textContent?.trim()).toBe('Menu');
+      expect(toggle().getAttribute('aria-label')).toBeNull();
+      expect(toggle().getAttribute('aria-controls')).toBe('primary-navigation');
+      expect(toggle().getAttribute('aria-expanded')).toBe('false');
+
+      await open();
+
+      expect(toggle().getAttribute('aria-expanded')).toBe('true');
+      expect(panel().classList).toContain('is-open');
+    });
+
+    it('lists Home first and the account link last', () => {
+      const labels = Array.from(panel().querySelectorAll('a, .nav-pending')).map((link) => link.textContent?.trim());
+
+      expect(labels).toEqual(['Home', 'Heroes', 'Guides', 'Tools', 'Resources', 'Community', 'Sign in']);
+    });
+
+    it('closes on Escape and puts focus back on the button', async () => {
+      await open();
+      (panel().querySelector('a') as HTMLElement).focus();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await fixture.whenStable();
+
+      expect(component.isMenuOpen()).toBeFalse();
+      expect(document.activeElement).toBe(toggle());
+    });
+
+    it('leaves focus alone when Escape is pressed with the menu closed', () => {
+      const other = document.createElement('input');
+      document.body.appendChild(other);
+      other.focus();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(document.activeElement).toBe(other);
+      other.remove();
+    });
+
+    it('closes when a link is followed', async () => {
+      await open();
+      const link = panel().querySelector('a') as HTMLAnchorElement;
+      // Cancelable, so the router link can stop the anchor navigating the test runner.
+      link.addEventListener('click', (event) => event.preventDefault());
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      await fixture.whenStable();
+
+      expect(component.isMenuOpen()).toBeFalse();
+    });
+
+    it('closes on a click outside it, and stays open on a click inside it', async () => {
+      await open();
+      panel().click();
+      expect(component.isMenuOpen()).toBeTrue();
+
+      document.body.click();
+      await fixture.whenStable();
+
+      expect(component.isMenuOpen()).toBeFalse();
+    });
+
+    it('closes when focus moves to something outside it, but not to something inside it', async () => {
+      const outside = document.createElement('button');
+      document.body.appendChild(outside);
+      await open();
+
+      toggle().dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: panel().querySelector('a') }));
+      expect(component.isMenuOpen()).toBeTrue();
+
+      toggle().dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: outside }));
+      expect(component.isMenuOpen()).toBeFalse();
+      outside.remove();
+    });
+
+    it('closes when the page navigates', async () => {
+      await open();
+
+      await TestBed.inject(Router).navigateByUrl('/counters');
+      await fixture.whenStable();
+
+      expect(component.isMenuOpen()).toBeFalse();
+    });
+
+    it('traps no focus: the panel has no tabindex and nothing is inert', () => {
+      expect(panel().hasAttribute('tabindex')).toBeFalse();
+      expect(panel().hasAttribute('inert')).toBeFalse();
+    });
   });
 
-  it('closes the menu when the orb is followed', () => {
-    component.toggleMenu();
-    expect(component.isMenuOpen()).toBeTrue();
+  describe('the current page', () => {
+    const current = (): string[] =>
+      Array.from(fixture.nativeElement.querySelectorAll('#primary-navigation [aria-current]') as NodeListOf<HTMLElement>).map(
+        (link) => `${link.getAttribute('aria-current')}:${link.textContent?.trim()}`,
+      );
+    const go = async (url: string): Promise<void> => {
+      await TestBed.inject(Router).navigateByUrl(url);
+      await fixture.whenStable();
+    };
 
-    const orb = fixture.nativeElement.querySelector('.core-orb') as HTMLAnchorElement;
-    // Cancelable, so the router link can stop the anchor navigating the test runner.
-    orb.addEventListener('click', (event: Event) => event.preventDefault());
-    orb.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    it('marks the link for the page with aria-current', async () => {
+      await go('/heroes');
 
-    expect(component.isMenuOpen()).toBeFalse();
+      expect(current()).toEqual(['page:Heroes']);
+    });
+
+    it('marks a page under Heroes, Tools or Resources with the link it belongs to', async () => {
+      await go('/heroes/spider-man');
+      expect(current()).toEqual(['page:Heroes']);
+
+      await go('/counters?hero=1');
+      expect(current()).toEqual(['page:Tools']);
+
+      await go('/glossary#a');
+      expect(current()).toEqual(['page:Resources']);
+    });
+
+    it('marks Home on the home page only, and nothing on a page with no nav item', async () => {
+      await go('/');
+      expect(current()).toEqual(['page:Home']);
+
+      await go('/privacy');
+      expect(current()).toEqual([]);
+    });
+
+    it('marks the account link on the sign-in and account pages', async () => {
+      await go('/sign-in');
+
+      expect(current()).toEqual(['page:Sign in']);
+    });
   });
 
   it('offers Sign in to a signed-out visitor', () => {
@@ -149,10 +271,14 @@ describe('Nav', () => {
     });
   });
 
-  it('shows neither link while the session is still being read', () => {
+  it('shows neither link while the session is still being read, but keeps its place', () => {
     sessionState.set({ status: 'loading' });
     fixture.detectChanges();
 
+    const placeholder = fixture.nativeElement.querySelector('.nav-pending') as HTMLElement;
+
     expect(accountLink()).toBeUndefined();
+    expect(placeholder.getAttribute('aria-hidden')).toBe('true');
+    expect(getComputedStyle(placeholder).visibility).toBe('hidden');
   });
 });

@@ -21,8 +21,12 @@ describe('HouseAdComponent', () => {
   });
 
   it('promotes the app and says it is coming soon', () => {
-    expect(page.querySelector('h2')?.textContent).toContain('RivalsPulse');
+    expect(page.querySelector('.house-ad__title')?.textContent).toContain('RivalsPulse');
     expect(page.textContent).toContain('Coming soon');
+  });
+
+  it('adds no heading to the pages it sits beside', () => {
+    expect(page.querySelector('h1, h2, h3, h4, h5, h6')).toBeNull();
   });
 
   it('links nowhere, because the overlay has no store listing yet', () => {

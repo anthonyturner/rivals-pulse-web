@@ -5,7 +5,7 @@
     [description]="category.description"
   />
 
-  <main class="category-grid" [attr.aria-label]="category.label + ' pages'">
+  <section class="category-grid" [attr.aria-label]="category.label + ' pages'">
     @for (item of category.items; track item.label) {
       @if (item.enabled) {
         <a class="category-card" [routerLink]="item.path">
@@ -27,5 +27,5 @@
         </div>
       }
     }
-  </main>
+  </section>
 </section>

@@ -73,12 +73,13 @@ describe('CountersPageComponent', () => {
   };
 
   describe('landmarks', () => {
-    it('is the one main region of the page, with the headings inside it', async () => {
+    it('is one page wrapper that leaves the main landmark to the shell, with the headings inside it', async () => {
       const root = await open(matchupsOf([]));
 
-      expect(root.querySelector('main.counters.page-container--wide')).not.toBeNull();
+      expect(root.querySelector('div.counters.page-container--wide')).not.toBeNull();
+      expect(root.querySelector('main')).toBeNull();
       expect(root.querySelectorAll('header').length).toBe(2);
-      expect([...root.querySelectorAll('header')].every((header) => header.closest('main') !== null)).toBeTrue();
+      expect([...root.querySelectorAll('header')].every((header) => header.closest('.counters') !== null)).toBeTrue();
     });
   });
 

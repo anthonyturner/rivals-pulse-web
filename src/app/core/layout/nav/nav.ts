@@ -1,9 +1,23 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map } from 'rxjs';
 
 import { AuthService } from '../../auth/auth.service';
 import type { LinkedPlayer } from '../../auth/linked-player.types';
 import { PlayerAvatarComponent } from '../../../shared/components/player-avatar/player-avatar.component';
+import { HOME_NAV_ITEM, PRIMARY_NAV_ITEMS, activeNavPath } from './primary-nav';
 
 interface AccountLink {
   label: string;
@@ -13,18 +27,43 @@ interface AccountLink {
   player: LinkedPlayer | null;
 }
 
+/** Where the links stop fitting on one row and become a menu. `nav.css` uses the same width. */
+const WIDE_NAV_QUERY = '(min-width: 800px)';
+
 @Component({
   selector: 'app-nav',
-  imports: [PlayerAvatarComponent, RouterLink, RouterLinkActive],
+  imports: [PlayerAvatarComponent, RouterLink],
   templateUrl: './nav.html',
   styleUrl: './nav.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown.escape)': 'closeMenuAndRestoreFocus()',
+    '(document:click)': 'closeIfOutside($event)',
+    '(focusout)': 'closeIfFocusLeft($event)',
+  },
 })
 export class Nav {
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  private readonly toggle = viewChild.required<ElementRef<HTMLButtonElement>>('toggle');
 
   readonly isMenuOpen = signal(false);
+  readonly homeItem = HOME_NAV_ITEM;
+  readonly primaryNavItems = PRIMARY_NAV_ITEMS;
 
-  /** Hidden until the server has answered, so a signed-in visitor never sees "Sign in" flash by. */
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  /** The path of the link to mark as the current page. */
+  readonly activePath = computed(() => activeNavPath(this.url()));
+
+  /** Null until the server has answered, so a signed-in visitor never sees "Sign in" flash by. */
   readonly accountLink = computed<AccountLink | null>(() => {
     const state = this.auth.state();
 
@@ -46,17 +85,25 @@ export class Nav {
     }
   });
 
-  readonly primaryNavItems = [
-    { label: 'Home', path: '/', enabled: true },
-    { label: 'Heroes', path: '/heroes', enabled: true },
-    { label: 'Guides', path: '/hero-guides', enabled: true },
-    { label: 'Tools', path: '/tools', enabled: true },
-    { label: 'Resources', path: '/resources', enabled: true },
-    { label: 'Community', path: '/community', enabled: true },
-  ];
-
   constructor() {
     void this.auth.load();
+
+    effect(() => {
+      this.url();
+      untracked(() => this.closeMenu());
+    });
+
+    if (typeof matchMedia === 'function') {
+      const wide = matchMedia(WIDE_NAV_QUERY);
+      const onChange = (event: MediaQueryListEvent): void => {
+        if (event.matches) {
+          this.closeMenu();
+        }
+      };
+
+      wide.addEventListener('change', onChange);
+      inject(DestroyRef).onDestroy(() => wide.removeEventListener('change', onChange));
+    }
   }
 
   toggleMenu(): void {
@@ -65,5 +112,25 @@ export class Nav {
 
   closeMenu(): void {
     this.isMenuOpen.set(false);
+  }
+
+  protected closeMenuAndRestoreFocus(): void {
+    if (this.isMenuOpen()) {
+      this.closeMenu();
+      this.toggle().nativeElement.focus();
+    }
+  }
+
+  protected closeIfOutside(event: Event): void {
+    if (event.target instanceof Node && !this.host.contains(event.target)) {
+      this.closeMenu();
+    }
+  }
+
+  /** A null `relatedTarget` is a click on bare page or the browser's own chrome, which the other handlers cover. */
+  protected closeIfFocusLeft(event: FocusEvent): void {
+    if (event.relatedTarget instanceof Node && !this.host.contains(event.relatedTarget)) {
+      this.closeMenu();
+    }
   }
 }
