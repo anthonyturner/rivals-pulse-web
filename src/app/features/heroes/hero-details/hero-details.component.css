@@ -907,7 +907,7 @@ details.collapsible {
   padding: 16px;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  scroll-margin-top: 90px;
+  scroll-margin-top: 16px;
 }
 
 :host-context(.hero-detail-modal) .abilities article {

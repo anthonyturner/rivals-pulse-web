@@ -151,6 +151,14 @@ in `src/styles.css`, not from a width written in the page's own CSS.
 - A new width is a new token and a new modifier, not a literal `min(...)` or
   `max-width` in a component.
 
+## Page landmark
+
+The app shell renders the one `<main id="main-content" tabindex="-1">` around
+`<router-outlet>`, and the skip link and the focus move after a page change
+both target it. A page never renders its own `<main>`: its root is a `div`, or
+a `section` with an `aria-label` when the region needs a name. A page with
+several regions labels each one.
+
 ## Sidebar and ad slots
 
 Every page except the home page (whose route sets `data: ROUTE_WITHOUT_SIDEBAR`)

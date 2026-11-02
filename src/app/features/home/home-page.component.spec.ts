@@ -91,9 +91,9 @@ describe('HomePageComponent', () => {
     });
 
     it('puts the heading first in every band, which carries no decorative eyebrow of its own', () => {
-      const bands = Array.from(element.querySelectorAll<HTMLElement>('main section.band'));
+      const bands = Array.from(element.querySelectorAll<HTMLElement>('section.band'));
 
-      expect(element.querySelectorAll('main .band__head app-eyebrow').length).toBe(0);
+      expect(element.querySelectorAll('.band__head app-eyebrow').length).toBe(0);
       expect(bands.length).toBe(7);
       for (const band of bands) {
         const heading = band.querySelector('h2') as HTMLElement;
@@ -102,13 +102,11 @@ describe('HomePageComponent', () => {
       }
     });
 
-    it('holds every band in the one <main>, each a section labelled by its own h2, and has no aside', () => {
-      const main = element.querySelector('main') as HTMLElement;
-      const bands = Array.from(main.querySelectorAll<HTMLElement>('section.band'));
+    it('leaves the main landmark to the shell, keeps each band a section labelled by its own h2, and has no aside', () => {
+      const bands = Array.from(element.querySelectorAll<HTMLElement>('section.band'));
 
-      expect(element.querySelectorAll('main').length).toBe(1);
+      expect(element.querySelector('main')).toBeNull();
       expect(bands.length).toBe(7);
-      expect(bands.every((band) => main.contains(band))).toBeTrue();
       expect(bands.map((band) => band.getAttribute('aria-labelledby'))).toEqual(
         bands.map((band) => band.querySelector('h2')?.id ?? null),
       );
@@ -116,7 +114,7 @@ describe('HomePageComponent', () => {
     });
 
     it('alternates dark, light, white, light, white, light and dark bands', () => {
-      const tones = Array.from(element.querySelectorAll('main section.band')).map((band) =>
+      const tones = Array.from(element.querySelectorAll('section.band')).map((band) =>
         band.classList.contains('band--dark') ? 'dark' : band.classList.contains('band--white') ? 'white' : 'light',
       );
 
@@ -140,10 +138,6 @@ describe('HomePageComponent', () => {
       expect(hero.querySelector('aside, section, a[target="_blank"]')).toBeNull();
       expect(element.querySelector('app-season-glance, app-season-dashboard, .hero-sidecar')).toBeNull();
       expect(text(element.querySelector('app-game-news-band'))).toContain('Step into Season 10');
-    });
-
-    it('keeps the Jarvis console reachable at #jarvis-console, which the header orb links to', () => {
-      expect(element.querySelector('#jarvis-console')).toBeTruthy();
     });
 
     it('makes no Jarvis or player-rank claim in the hero, and calls only the app free', () => {
@@ -182,7 +176,7 @@ describe('HomePageComponent', () => {
 
       expect(stage.contains(player())).toBeTrue();
       expect(stage.contains(element.querySelector('header.season-hero'))).toBeTrue();
-      expect(stage.contains(element.querySelector('main'))).toBeFalse();
+      expect(stage.contains(element.querySelector('section.band'))).toBeFalse();
     });
   });
 

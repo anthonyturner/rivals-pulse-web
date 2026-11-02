@@ -25,10 +25,128 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.brand')?.textContent).toContain('RivalsPulse');
   });
+
+  it('shows the RP logo as a decorative image beside the name, and no tagline', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const brand = (fixture.nativeElement as HTMLElement).querySelector('.brand') as HTMLElement;
+
+    expect(brand.querySelector('img')?.getAttribute('src')).toBe('images/site/rp-logo.png');
+    expect(brand.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(brand.textContent).not.toContain('Draft smarter');
+  });
 });
 
 @Component({ template: '<p>page</p>' })
 class PageComponent {}
+
+describe('App shell', () => {
+  let fixture: ComponentFixture<App>;
+  let router: Router;
+  let page: HTMLElement;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([
+          { path: '', component: PageComponent, data: ROUTE_WITHOUT_SIDEBAR },
+          { path: 'heroes', component: PageComponent },
+          { path: 'counters', component: PageComponent },
+        ]),
+        {
+          provide: AuthService,
+          useValue: { state: signal<SessionState>({ status: 'signedOut' }), load: () => Promise.resolve() },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(App);
+    router = TestBed.inject(Router);
+    page = fixture.nativeElement as HTMLElement;
+    await router.navigateByUrl('/heroes');
+    await fixture.whenStable();
+  });
+
+  const main = (): HTMLElement => page.querySelector('main') as HTMLElement;
+  const goTo = async (url: string): Promise<void> => {
+    await router.navigateByUrl(url);
+    await fixture.whenStable();
+  };
+
+  it('owns the one main landmark, around the page and not the sidebar', () => {
+    expect(page.querySelectorAll('main').length).toBe(1);
+    expect(main().id).toBe('main-content');
+    expect(main().getAttribute('tabindex')).toBe('-1');
+    expect(main().querySelector('p')?.textContent).toBe('page');
+    expect(main().contains(page.querySelector('app-sidebar'))).toBeFalse();
+    expect(main().contains(page.querySelector('header'))).toBeFalse();
+    expect(main().contains(page.querySelector('app-footer'))).toBeFalse();
+  });
+
+  it('keeps the one main on a page with no sidebar', async () => {
+    await goTo('/');
+
+    expect(page.querySelectorAll('main').length).toBe(1);
+  });
+
+  it('makes the skip link the first stop, and sends focus to main without navigating', async () => {
+    const link = page.querySelector('a') as HTMLAnchorElement;
+    const url = router.url;
+
+    expect(link.textContent?.trim()).toBe('Skip to main content');
+    expect(link.classList).toContain('skip-link');
+    expect(page.querySelector('header')?.compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(click);
+    await fixture.whenStable();
+
+    expect(click.defaultPrevented).toBeTrue();
+    expect(document.activeElement).toBe(main());
+    expect(router.url).toBe(url);
+  });
+
+  it('moves focus to main when the page changes, but not on first load', async () => {
+    expect(document.activeElement).not.toBe(main());
+
+    await goTo('/counters');
+
+    expect(document.activeElement).toBe(main());
+  });
+
+  it('leaves focus to the router when a link goes to a fragment of another page', async () => {
+    const other = document.createElement('input');
+    page.appendChild(other);
+    other.focus();
+
+    await goTo('/counters#abilities');
+
+    expect(document.activeElement).not.toBe(main());
+    expect(document.activeElement).toBe(other);
+    other.remove();
+  });
+
+  it('leaves focus alone for a query or fragment change on the same page', async () => {
+    const other = document.createElement('input');
+    page.appendChild(other);
+
+    for (const url of ['/heroes?hero=1', '/heroes#abilities']) {
+      other.focus();
+      await goTo(url);
+
+      expect(document.activeElement).withContext(url).toBe(other);
+    }
+
+    other.remove();
+  });
+
+  it('labels the footer links and has one banner', () => {
+    expect(page.querySelector('app-footer nav')?.getAttribute('aria-label')).toBe('Site information');
+    expect(page.querySelectorAll('header').length).toBe(1);
+  });
+});
 
 describe('App sidebar', () => {
   let fixture: ComponentFixture<App>;

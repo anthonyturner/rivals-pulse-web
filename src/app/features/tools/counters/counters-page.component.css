@@ -1,5 +1,4 @@
 :host {
-  --link: #0e6a98;
   display: block;
   min-width: 0;
 }
@@ -250,7 +249,7 @@ app-filter-select,
 
   .picker {
     position: sticky;
-    top: 74px;
+    top: calc(var(--nav-height) + 16px);
     grid-template-rows: auto minmax(0, 1fr);
     max-height: min(640px, calc(100dvh - 98px));
   }

@@ -1,25 +1,20 @@
-<div class="app-shell">
-  <header class="top-nav">
-    <a class="brand" routerLink="/" aria-label="RivalsPulse home">
-      <span class="brand-mark" aria-hidden="true">
-        <span class="brand-mark-core">MR</span>
-      </span>
-      <span class="brand-copy">
-        <strong>RivalsPulse</strong>
-        <small>Draft smarter. Fight cleaner.</small>
-      </span>
-    </a>
-     <app-nav></app-nav>
-  </header>
+<a class="skip-link" href="#main-content" (click)="skipToMain($event)">Skip to main content</a>
 
-  <div class="app-body" [class.app-body--with-sidebar]="hasSidebar()">
-    <div class="app-body__page">
-      <router-outlet />
-    </div>
-    @if (hasSidebar()) {
-      <app-sidebar class="app-body__sidebar" />
-    }
-  </div>
+<header class="top-nav" #header>
+  <a class="brand" routerLink="/" aria-label="RivalsPulse home">
+    <img src="images/site/rp-logo.png" alt="" width="36" height="36" />
+    RivalsPulse
+  </a>
+  <app-nav />
+</header>
 
-  <app-footer></app-footer>
+<div class="app-body" [class.app-body--with-sidebar]="hasSidebar()">
+  <main id="main-content" tabindex="-1" #main>
+    <router-outlet />
+  </main>
+  @if (hasSidebar()) {
+    <app-sidebar class="app-body__sidebar" />
+  }
 </div>
+
+<app-footer />

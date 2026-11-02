@@ -75,10 +75,11 @@ describe('TeamBuilderPageComponent', () => {
   }
 
   describe('markup', () => {
-    it('is the one main region, with a single plain heading and no article', async () => {
+    it('is one page wrapper that leaves the main landmark to the shell, with a single plain heading and no article', async () => {
       await open();
 
-      expect(root.querySelector('main.team-builder.page-container--wide')).not.toBeNull();
+      expect(root.querySelector('div.team-builder.page-container--wide')).not.toBeNull();
+      expect(root.querySelector('main')).toBeNull();
       expect(root.querySelectorAll('h1').length).toBe(1);
       expect(text('h1')).toBe('Marvel Rivals team builder');
       expect(root.querySelector('app-page-header, article')).toBeNull();

@@ -269,7 +269,7 @@ dt {
 
 .feedback-panel {
   position: sticky;
-  top: 88px;
+  top: calc(var(--nav-height) + 16px);
   display: grid;
   gap: 14px;
   padding: 18px;

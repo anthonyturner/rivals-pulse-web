@@ -15,10 +15,10 @@ describe('BuildTheoryPageComponent', () => {
     element = fixture.nativeElement;
   });
 
-  it('has one main landmark, one h1 and a breadcrumb back to the guides', () => {
+  it('leaves the main landmark to the shell and has one h1 and a breadcrumb back to the guides', () => {
     const crumbs = element.querySelector('nav[aria-label="Breadcrumb"]');
 
-    expect(element.querySelectorAll('main').length).toBe(1);
+    expect(element.querySelector('main')).toBeNull();
     expect(element.querySelectorAll('h1').length).toBe(1);
     expect(crumbs?.querySelector('a')?.getAttribute('href')).toBe('/hero-guides');
     expect(crumbs?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('Build theory');
