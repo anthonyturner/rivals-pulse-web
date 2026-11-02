@@ -68,9 +68,9 @@
 }
 
 .community-counters__cards img {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  border-radius: 6px;
   object-fit: cover;
 }
 

@@ -1,8 +1,7 @@
 :host {
-  --portrait: 40px;
   position: relative;
   display: grid;
-  grid-template-columns: var(--portrait) minmax(0, 1fr);
+  grid-template-columns: var(--hero-thumb) minmax(0, 1fr);
   gap: 0 8px;
   align-items: center;
   min-width: 0;
@@ -25,8 +24,8 @@
 
 img {
   grid-row: 1 / span 2;
-  width: var(--portrait);
-  height: var(--portrait);
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
   border-radius: 6px;
   background: var(--surface-2);
   object-fit: cover;
@@ -83,7 +82,6 @@ img {
 
 @media (max-width: 560px) {
   :host {
-    --portrait: 36px;
     padding: 6px;
   }
 
