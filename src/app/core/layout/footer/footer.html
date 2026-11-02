@@ -1,11 +1,44 @@
 <footer class="site-footer">
-  <p>RivalsPulse is an independent project, not affiliated with NetEase, Marvel or Overwolf.</p>
-  <nav aria-label="Site information">
-    <a routerLink="/privacy">Privacy notes</a>
+  <div class="site-footer__main">
+    <div class="site-footer__about">
+      <app-brand />
+      <p class="site-footer__tagline">
+        The free companion for Marvel Rivals: an Overwolf overlay that tracks your matches, and hero stats, tier
+        lists and counters on the web.
+      </p>
+      <div class="site-footer__actions">
+        <app-get-app-button />
+        @if (discordUrl(); as url) {
+          <a class="site-footer__discord" [href]="url" target="_blank" rel="noopener noreferrer">
+            Join the Discord<span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
+        }
+      </div>
+    </div>
+
+    <nav class="site-footer__columns" aria-label="Footer">
+      @for (column of columns; track column.id) {
+        <div class="site-footer__column">
+          <h2 class="site-footer__heading" [id]="column.id">{{ column.heading }}</h2>
+          <ul [attr.aria-labelledby]="column.id">
+            @for (link of column.links; track link.path) {
+              <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+            }
+          </ul>
+        </div>
+      }
+    </nav>
+  </div>
+
+  <div class="site-footer__legal">
+    <p>
+      © {{ year }} RivalsPulse. RivalsPulse is an independent project, not affiliated with NetEase, Marvel or
+      Overwolf.
+    </p>
     @if (consent.canChangeChoice()) {
       <button type="button" class="site-footer__link" (click)="consent.reopenChoices()">
         Privacy and cookie settings
       </button>
     }
-  </nav>
+  </div>
 </footer>

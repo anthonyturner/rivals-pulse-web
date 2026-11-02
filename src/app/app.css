@@ -33,42 +33,6 @@
   background: var(--bg-elevated);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--text);
-  text-decoration: none;
-}
-
-/* The desktop app's lockup, in its light-theme colours. */
-.brand-mark {
-  display: grid;
-  flex: none;
-  width: 32px;
-  aspect-ratio: 1;
-  place-items: center;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #e9eaf6 0 68%, #0e9c80 69%);
-  box-shadow: inset 0 0 0 1px #e0e1ef;
-  color: #151735;
-  font-size: var(--type-caption);
-  font-weight: 900;
-  letter-spacing: 0.02em;
-}
-
-.brand-name {
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.brand-accent {
-  color: #087058;
-}
-
 main {
   min-width: 0;
 }
