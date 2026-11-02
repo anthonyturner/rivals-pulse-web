@@ -78,6 +78,7 @@ repo's build. This is a move, not a redesign.
 | `20261101050000_app_link_status.sql` | The app reading and removing its own link: `link_status_for_recorder` and `unlink_player_for_recorder` (service role only), and the `status` and `unlink` kinds in `link_attempt_log` |
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
+| `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
 
 Link once per machine, check history, then apply:
 
@@ -643,17 +644,21 @@ policy's hard limit), but later than promised.
 ## After setup
 
 - **Required:** `select jobname from cron.job where jobname in
-  ('purge-expired-participants', 'recompute-hero-aggregates', 'recompute-extended-aggregates',
-  'recompute-play-time-aggregates', 'recompute-community-match-aggregates',
-  'recompute-hero-pair-aggregates', 'purge-link-data');` must show all seven jobs (the daily purge, the
-  five hourly aggregate rebuilds and the five-minute link purge). If one is missing (the migrations warn
-  when `pg_cron` is unavailable), enable `pg_cron` and schedule
+  ('purge-expired-participants', 'purge-cron-run-history', 'recompute-hero-aggregates',
+  'recompute-extended-aggregates', 'recompute-play-time-aggregates',
+  'recompute-community-match-aggregates', 'recompute-hero-pair-aggregates', 'purge-link-data');` must
+  show all eight jobs (two daily jobs, the participant purge and the run history cleanup, the five
+  hourly aggregate rebuilds and the five-minute link purge). If one is missing (the migrations warn
+  when `pg_cron` is unavailable), enable `pg_cron` and schedule by hand
   `select public.purge_expired_participants();` daily,
+  `delete from cron.job_run_details where coalesce(end_time, start_time) < now() - interval '7 days'` daily,
   `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
   `select public.recompute_play_time_aggregates();`,
   `select public.recompute_community_match_aggregates();` and
   `select public.recompute_hero_pair_aggregates();` hourly, and `select public.purge_link_data();`
-  every five minutes, by hand.
+  every five minutes. `supabase/checks/cron-run-history.sql`
+  proves the cleanup against the linked project and rolls back:
+  `npx supabase db query --linked -f supabase/checks/cron-run-history.sql`.
 - Refused-call checks (no secret needed; `$SUPABASE_URL` is the project URL):
 
 ```sh
