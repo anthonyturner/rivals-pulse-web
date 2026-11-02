@@ -46,6 +46,7 @@ testem.log
 __screenshots__/
 dev-server*.log
 tmp-*
+.claude/tmp/
 
 # System files
 .DS_Store
