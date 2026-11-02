@@ -117,10 +117,12 @@ name only (settled).
 *Amended 2026-11-01 (maintainer decision, issue 264).* The link now also holds
 the in-game name, uid and the Overwolf account avatar address that the desktop
 app reports when it issues the code, and the site shows the name and avatar in
-the header and on the account page, to the owner only. The avatar is stored only
-if it is an `https` address on an allow-listed Overwolf host. Level is still not
-stored or shown: the overlay has no source for it. The Discord avatar and handle
-are still not read.
+the header and on the account page, to the owner only. After linking, the app
+re-sends the name and avatar and each replaces the stored one; the uid never
+changes, and the app's calls are counted in the hour-long abuse list alongside
+code requests. The avatar is stored only if it is an `https` address on an
+allow-listed Overwolf host. Level is still not stored or shown: the overlay has
+no source for it. The Discord avatar and handle are still not read.
 
 **3. Ownership is proven, never typed.** A link is made only from the overlay's
 verified Overwolf session, through the one-time code in #264. A name or uid
