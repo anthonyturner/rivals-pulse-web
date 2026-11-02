@@ -930,31 +930,46 @@ describe('a session that was refreshed during the request', () => {
   const get = () => request('account/dashboard', { cookieHeader: SESSION_COOKIE });
 
   /** Each route that runs behind the session, with a way to make its Supabase call fail. */
-  const routes: { name: string; req: AccountRequest; failing: (fail: () => Promise<never>) => Partial<AuthGateway> }[] = [
-    { name: 'link', req: post('account/link'), failing: (fail) => ({ redeemLinkCode: fail }) },
-    { name: 'unlink', req: post('account/unlink'), failing: (fail) => ({ unlinkPlayer: fail }) },
-    { name: 'dashboard', req: get(), failing: (fail) => ({ readOwnDashboard: fail }) },
+  const routes: {
+    name: string;
+    req: AccountRequest;
+    unavailable: string;
+    failing: (fail: () => Promise<never>) => Partial<AuthGateway>;
+  }[] = [
+    { name: 'link', req: post('account/link'), unavailable: 'Linking is unavailable', failing: (fail) => ({ redeemLinkCode: fail }) },
+    { name: 'unlink', req: post('account/unlink'), unavailable: 'Linking is unavailable', failing: (fail) => ({ unlinkPlayer: fail }) },
+    { name: 'dashboard', req: get(), unavailable: 'Your dashboard is unavailable', failing: (fail) => ({ readOwnDashboard: fail }) },
   ];
 
-  for (const { name, req, failing } of routes) {
+  /** The refreshed tokens belong only in the Set-Cookie value, never in a body or a log line. */
+  const expectNoTokenLeak = (response: AccountResponse, log: jasmine.Spy): void => {
+    const exposed = JSON.stringify([response.body, log.calls.allArgs().map(String)]);
+    expect(exposed).not.toContain(REFRESHED.accessToken);
+    expect(exposed).not.toContain(REFRESHED.refreshToken);
+  };
+
+  for (const { name, req, unavailable, failing } of routes) {
     it(`keeps the new cookie on a 503 from ${name}`, async () => {
-      spyOn(console, 'warn');
+      const warn = spyOn(console, 'warn');
       const response = await run(req, refreshing(failing(down)));
 
       expect(response.status).toBe(503);
       expect(response.cookies.length).toBe(1);
       expect(response.cookies[0]).toContain(NEW_COOKIE);
       expect(JSON.stringify(response.body)).not.toContain('down');
+      expect((response.body as { error: string }).error).toContain(unavailable);
+      expectNoTokenLeak(response, warn);
     });
 
     it(`keeps the new cookie on a 500 from ${name}`, async () => {
-      spyOn(console, 'error');
+      const error = spyOn(console, 'error');
       const response = await run(req, refreshing(failing(broken)));
 
       expect(response.status).toBe(500);
       expect(response.cookies.length).toBe(1);
       expect(response.cookies[0]).toContain(NEW_COOKIE);
       expect(JSON.stringify(response.body)).not.toContain('secret');
+      expectNoTokenLeak(response, error);
     });
 
     it(`keeps the original sign-in time on the cookie of a failed ${name}`, async () => {
