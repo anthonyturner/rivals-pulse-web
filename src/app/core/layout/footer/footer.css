@@ -9,12 +9,6 @@
   font-size: var(--type-small);
 }
 
-.site-footer__main,
-.site-footer__legal {
-  width: min(100% - 2 * max(var(--page-gutter), 12px), var(--container-wide));
-  margin-inline: auto;
-}
-
 .site-footer__main {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr);
@@ -133,5 +127,11 @@ ul a:hover {
 
   .site-footer__columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .site-footer__columns {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
