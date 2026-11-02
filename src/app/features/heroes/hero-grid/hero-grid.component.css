@@ -158,7 +158,6 @@
   line-clamp: 2;
 }
 .hero-card--placeholder {
-  height: 58px;
   border-color: transparent;
   background: var(--surface-2);
 }
@@ -167,7 +166,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px 2px 6px;
+  padding: 3px 7px 3px 6px;
   border: 1px solid color-mix(in srgb, var(--role-color, var(--accent)) 34%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--role-color, var(--accent)) 10%, #ffffff);
@@ -225,31 +224,28 @@
 @media (min-width: 561px) {
   .hero-grid--rows {
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
   }
   .hero-grid--rows .hero-card {
     grid-template-columns: 56px minmax(0, 1fr);
-    grid-template-rows: none;
     gap: 12px;
-    align-items: center;
     min-height: 72px;
-    padding: 8px;
-    text-align: left;
+  }
+  .hero-grid--rows .hero-card.selected::after {
+    top: 4px;
+    right: 4px;
   }
   .hero-grid--rows .hero-image {
     width: 56px;
     height: 56px;
-    border-radius: 6px;
   }
   .hero-grid--rows .hero-card-copy {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 2px 8px;
-    justify-items: start;
     align-items: center;
-    padding: 0;
   }
   .hero-grid--rows .hero-card-name {
     display: block;
-    min-height: 0;
     -webkit-line-clamp: unset;
   }
   .hero-grid--rows .hero-card-summary,
@@ -276,7 +272,7 @@
     display: none;
   }
   .hero-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
   .hero-card {
     min-height: 50px;
