@@ -191,9 +191,9 @@
 
 .guide-tile-head > img {
   flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  border-radius: 6px;
   background: var(--surface-2);
   object-fit: cover;
   object-position: top center;

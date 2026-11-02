@@ -82,8 +82,8 @@
 
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -91,17 +91,19 @@
 .hero-card {
   position: relative;
   display: grid;
-  grid-template-rows: 76px auto;
+  grid-template-columns: var(--hero-thumb) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
   width: 100%;
   height: 100%;
-  padding: 0;
-  overflow: hidden;
+  min-height: 58px;
+  padding: 8px;
   border: 1px solid rgba(83, 82, 1, 0.18);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.8);
   color: inherit;
   font: inherit;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
 }
 .hero-card:hover {
@@ -112,10 +114,11 @@
   background: rgb(255, 248, 203);
   box-shadow: 0 0 0 1px var(--accent);
 }
+/* Overhangs the corner so it never covers the name. */
 .hero-card.selected::after {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: -6px;
+  right: -6px;
   display: grid;
   place-items: center;
   width: 18px;
@@ -130,22 +133,21 @@
 }
 .hero-image {
   display: block;
-  width: 100%;
-  height: 76px;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  border-radius: 6px;
   object-fit: cover;
   object-position: top center;
   background: var(--surface);
 }
 .hero-card-copy {
   display: grid;
-  gap: 4px;
-  justify-items: center;
-  align-content: start;
-  padding: 4px 6px 6px;
+  gap: 2px;
+  justify-items: start;
+  min-width: 0;
 }
 .hero-card-name {
   display: -webkit-box;
-  min-height: 2.4em;
   overflow: hidden;
   color: var(--text);
   font-size: var(--type-small);
@@ -156,7 +158,6 @@
   line-clamp: 2;
 }
 .hero-card--placeholder {
-  height: 146px;
   border-color: transparent;
   background: var(--surface-2);
 }
@@ -223,31 +224,28 @@
 @media (min-width: 561px) {
   .hero-grid--rows {
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
   }
   .hero-grid--rows .hero-card {
     grid-template-columns: 56px minmax(0, 1fr);
-    grid-template-rows: none;
     gap: 12px;
-    align-items: center;
     min-height: 72px;
-    padding: 8px;
-    text-align: left;
+  }
+  .hero-grid--rows .hero-card.selected::after {
+    top: 4px;
+    right: 4px;
   }
   .hero-grid--rows .hero-image {
     width: 56px;
     height: 56px;
-    border-radius: 6px;
   }
   .hero-grid--rows .hero-card-copy {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 2px 8px;
-    justify-items: start;
     align-items: center;
-    padding: 0;
   }
   .hero-grid--rows .hero-card-name {
     display: block;
-    min-height: 0;
     -webkit-line-clamp: unset;
   }
   .hero-grid--rows .hero-card-summary,
@@ -272,6 +270,13 @@
   }
   .view-toggle {
     display: none;
+  }
+  .hero-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .hero-card {
+    min-height: 50px;
+    padding: 6px;
   }
   .hero-card-summary,
   .archetype-label {
