@@ -6,14 +6,17 @@ import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identi
 import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
 export interface WinRateRowView extends HeroCellView {
+  rank: number;
   winRate: number;
   winRateLabel: string;
   /** Where the bar's fill ends, as a share of its width. */
   barPercent: number;
   tone: 'above' | 'even' | 'below';
   appearances: number;
-  appearancesLabel: string;
-  winsLabel: string;
+  /** "11 / 14": wins, then games. */
+  winsGamesLabel: string;
+  /** What a screen reader says for the same cell: "11 wins in 14 games". */
+  winsGamesSpoken: string;
 }
 
 /**
@@ -37,7 +40,11 @@ export interface WinRatesView {
   /** Set when the numbers are the previous half-season's, shown until the current one has enough data. */
   fallbackNotice: string | null;
   minimumMatches: number;
+  /** "10 appearances", or "1 appearance". */
+  minimumLabel: string;
   matchesCountedLabel: string;
+  /** The toolbar's facts in reading order; empty when there is no table or progress list to describe. */
+  metaParts: string[];
   /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
   scopeLabel: string;
   ranked: WinRateRowView[];
@@ -48,9 +55,10 @@ export interface WinRatesView {
  * Turns the hero stats into what the win-rate page draws. Every label is built here, so a template
  * never formats a number and a missing figure can never reach the screen as NaN.
  *
- * `requestedSeason` is the address's season segment. The API serves one half-season, so any other
- * season gets the `unavailable-season` state, never an error; a segment that is not a half-season
- * number (such as `10` or `10.5`) is ignored and the served half-season is shown.
+ * `requestedSeason` is the address's season segment. This page shows only the half-season the API
+ * serves by default, so any other season gets the `unavailable-season` state, never an error; a
+ * segment that is not a half-season number (such as `week-2`) is ignored and the served
+ * half-season is shown.
  */
 export function buildWinRatesView(
   stats: HeroStats,
@@ -69,7 +77,9 @@ export function buildWinRatesView(
     modeCaveat: modeCaveat(stats.mode),
     fallbackNotice: null,
     minimumMatches: stats.minimumMatches,
+    minimumLabel: countLabel(stats.minimumMatches, 'appearance', 'appearances'),
     matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
+    metaParts: [],
     scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     ranked: [],
     building: [],
@@ -92,7 +102,8 @@ export function buildWinRatesView(
     .sort(
       (a, b) =>
         b.winRate - a.winRate || b.appearances - a.appearances || a.name.localeCompare(b.name),
-    );
+    )
+    .map((row, index) => ({ ...row, rank: index + 1 }));
   const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
   const fallbackNotice =
     stats.inPlaceOf === null
@@ -100,14 +111,27 @@ export function buildWinRatesView(
       : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null, nonDefaultModeLabel(stats));
   const state: WinRatesState =
     ranked.length > 0 ? 'full' : building.length > 0 || stats.matchesCounted > 0 ? 'partial' : 'empty';
+  const metaParts =
+    state === 'empty'
+      ? []
+      : [
+          season?.label,
+          season?.dateRange,
+          `${base.matchesCountedLabel} counted`,
+          `Heroes need ${base.minimumLabel} to be listed`,
+          state === 'full' ? 'Bars show win rate; the line marks 50%.' : null,
+        ].filter((part): part is string => !!part);
 
-  return { ...base, state, fallbackNotice, ranked, building };
+  return { ...base, state, fallbackNotice, metaParts, ranked, building };
 }
 
 function rankedRow(
   hero: HeroStats['tiers'][number]['heroes'][number],
   identities: HeroIdentities,
-): WinRateRowView {
+): Omit<WinRateRowView, 'rank'> {
+  const wins = countLabel(hero.wins, 'win', 'wins');
+  const games = countLabel(hero.appearances, 'game', 'games');
+
   return {
     ...heroCell(hero.hero, identities),
     winRate: hero.winRate,
@@ -115,8 +139,8 @@ function rankedRow(
     barPercent: Math.min(100, Math.max(0, hero.winRate)),
     tone: hero.winRate > 50 ? 'above' : hero.winRate < 50 ? 'below' : 'even',
     appearances: hero.appearances,
-    appearancesLabel: String(hero.appearances),
-    winsLabel: countLabel(hero.wins, 'win', 'wins'),
+    winsGamesLabel: `${hero.wins} / ${hero.appearances}`,
+    winsGamesSpoken: `${wins} in ${games}`,
   };
 }
 

@@ -1,151 +1,100 @@
-<section class="stats-page page-container page-container--wide">
-  <header class="page-hero">
-    <div>
-      <h1>Marvel Rivals compared against other major games.</h1>
-      <p class="lede">
-        A Steam-focused snapshot of player activity, ranking signals, Twitch attention, review sentiment,
-        and launch milestones. Numbers are a point-in-time read, not a full-platform population count.
-      </p>
-    </div>
-
-    <div class="snapshot-card">
-      <span>Snapshot</span>
-      <strong>{{ snapshotDate() }}</strong>
-      <small>Live current players fetched {{ fetchedAt() }}</small>
-      @if (previousSnapshotLabel(); as previousLabel) {
-        <small>Compared with {{ previousLabel }}</small>
-      } @else {
-        <small>First stored snapshot; comparisons begin with the next capture</small>
-      }
-    </div>
+<div class="insight-page page-container page-container--wide">
+  <header class="intro">
+    <h1>Marvel Rivals vs other major games</h1>
+    <p class="lede">
+      Steam player counts and rankings for Marvel Rivals next to other major games. A Steam-only
+      snapshot, not a count of everyone who plays.
+    </p>
+    @if (view(); as v) {
+      <p class="meta">{{ v.meta }}</p>
+    }
   </header>
 
-  <section class="hero-metrics" aria-label="Marvel Rivals current state">
-    <article>
-      <span>Steam right now</span>
-      <strong>{{ formatNumber(marvelRivals().currentPlayers) }}</strong>
-      <small>players in-game</small>
-    </article>
-    <article>
-      <span>24h Steam peak</span>
-      <strong>{{ formatNumber(marvelRivals().dailyPeak) }}</strong>
-      <small>{{ retentionRatio(marvelRivals()) }}% of all-time peak</small>
-    </article>
-    <article>
-      <span>All-time Steam peak</span>
-      <strong>{{ formatNumber(marvelRivals().allTimePeak) }}</strong>
-      <small>January 11, 2025</small>
-    </article>
-    <article>
-      <span>Steam rank signals</span>
-      <strong>{{ marvelRivals().steamDailyRank }}</strong>
-      <small>daily active users, {{ marvelRivals().topSellerRank }} top sellers</small>
-    </article>
-  </section>
-
-  <section class="read-panel">
-    <article>
-      <h2>Still a top live-service shooter, but no longer in launch-hype orbit.</h2>
-      <p>
-        Marvel Rivals is sitting near Overwatch on Steam concurrency in this snapshot, while still showing
-        stronger top-seller placement and a much larger all-time Steam peak. It trails giants like Counter-Strike 2,
-        Dota 2, and Apex in raw Steam concurrency, which is normal for a hero shooter compared with Steam's biggest
-        evergreen titles.
-      </p>
-    </article>
-
-    <article>
-      <h2>Steam is only one slice of the player base.</h2>
-      <p>
-        Marvel Rivals also runs on console and other ecosystems, so Steam numbers are best for trend comparison,
-        not total population. For coaching purposes, the useful signal is whether the game has enough active players,
-        attention, and revenue momentum to keep receiving updates.
-      </p>
-    </article>
-  </section>
-
-  <section class="comparison-section" aria-label="Game comparison table">
-    <div class="section-heading">
-      <div>
-        <h2>Where Marvel Rivals sits in the pack</h2>
-      </div>
-    </div>
-
-    <div class="comparison-table">
-      <div class="table-head">
-        <span>Game</span>
-        <span>Now</span>
-        <span>24h peak</span>
-        <span>All-time peak</span>
-        <span>Rank / sellers</span>
-        <span>Read</span>
-      </div>
-
-      @for (game of comparisons(); track game.name) {
-        <a class="table-row" [href]="game.sourceUrl" target="_blank" rel="noopener noreferrer">
-          <span>
-            <strong>{{ game.name }}</strong>
-            <small>{{ game.category }}</small>
-          </span>
-          <span class="metric-cell">
-            {{ formatNumber(game.currentPlayers) }}
-            @if (metricComparison(game, 'currentPlayers'); as comparison) {
-              <small class="trend" [ngClass]="trendClass(comparison)">{{ formatMetricChange(comparison) }}</small>
-            }
-          </span>
-          <span class="metric-cell">
-            {{ formatNumber(game.dailyPeak) }}
-            @if (metricComparison(game, 'dailyPeak'); as comparison) {
-              <small class="trend" [ngClass]="trendClass(comparison)">{{ formatMetricChange(comparison) }}</small>
-            }
-          </span>
-          <span class="metric-cell">
-            {{ formatNumber(game.allTimePeak) }}
-            @if (metricComparison(game, 'allTimePeak'); as comparison) {
-              <small class="trend" [ngClass]="trendClass(comparison)">{{ formatMetricChange(comparison) }}</small>
-            }
-          </span>
-          <span class="metric-cell">
-            {{ game.steamDailyRank }} DAU / {{ game.topSellerRank }}
-            @if (game.comparison; as comparison) {
-              <small class="trend" [ngClass]="trendClass(comparison.steamDailyRank)">
-                DAU: {{ formatRankChange(comparison.steamDailyRank) }}
-              </small>
-              <small class="trend" [ngClass]="trendClass(comparison.topSellerRank)">
-                Sellers: {{ formatRankChange(comparison.topSellerRank) }}
-              </small>
-            }
-          </span>
-          <span>{{ comparisonRead(game) }}</span>
-        </a>
-      }
-    </div>
-  </section>
-
-  <section class="milestones" aria-label="Marvel Rivals milestones">
-    @for (milestone of milestones; track milestone.label) {
-      <article>
-        <strong>{{ milestone.value }}</strong>
-        <h3>{{ milestone.label }}</h3>
-        <p>{{ milestone.detail }}</p>
-      </article>
+  @if (view(); as v) {
+    @if (v.saved) {
+      <app-notice>
+        Live numbers could not be loaded. Showing a saved snapshot from {{ v.snapshotDate }}.
+      </app-notice>
     }
-  </section>
 
-  <section class="source-panel" aria-label="Sources and update guidance">
-    <div>
-      <h2>How to keep this page fresh</h2>
-      <p>
-        Refresh this page's data from SteamDB or Steam's public current-player endpoint when a new season launches,
-        a hero drops, or a balance patch changes the ranked meta. The table should be treated as a quick state-of-game
-        dashboard, not a permanent historical claim.
-      </p>
-    </div>
+    @if (v.rows.length === 0) {
+      <app-state-panel heading="No games to compare yet">
+        <p>Player counts appear here once the first snapshot is captured.</p>
+      </app-state-panel>
+    } @else {
+      <div class="card">
+        <h2 id="comparison-title">Where Marvel Rivals sits in the pack</h2>
+        <div class="scroll" role="region" tabindex="0" aria-labelledby="comparison-title">
+          <table aria-describedby="comparison-note">
+            <caption class="visually-hidden">Steam players, peaks and ranks for each game</caption>
+            <thead>
+              <tr>
+                <th scope="col">Game</th>
+                <th scope="col">Players now</th>
+                <th scope="col">24h peak</th>
+                <th scope="col">All-time peak</th>
+                <th scope="col">Daily rank</th>
+                <th scope="col">Top sellers</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of v.rows; track row.name) {
+                <tr [class.subject]="row.subject">
+                  <th scope="row">
+                    <span class="game-name">{{ row.name }}</span>
+                    <small>{{ row.category }}</small>
+                  </th>
+                  @for (cell of row.cells; track $index) {
+                    <td [class.rank]="cell.kind === 'rank'">
+                      {{ cell.value }}
+                      @if (cell.delta; as delta) {
+                        <small class="delta" [attr.data-trend]="delta.trend">
+                          <span aria-hidden="true">{{ delta.text }}</span>
+                          <span class="visually-hidden">{{ delta.spoken }}</span>
+                        </small>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="note" id="comparison-note">
+          Changes compare with the previous snapshot. Daily rank is by daily active players on
+          Steam.
+        </p>
+      </div>
+    }
+  } @else {
+    <app-state-panel kind="loading" heading="Loading game stats" [announce]="false">
+      <p>Fetching the latest Steam numbers.</p>
+    </app-state-panel>
+  }
 
-    <div class="source-list">
-      @for (source of sourceLinks; track source.url) {
-        <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}</a>
+  <div class="card">
+    <h2>Launch milestones</h2>
+    <dl class="milestones">
+      @for (milestone of milestones; track milestone.label) {
+        <div>
+          <dt>{{ milestone.label }}</dt>
+          <dd>{{ milestone.value }}</dd>
+        </div>
       }
-    </div>
-  </section>
-</section>
+    </dl>
+    <p class="note">
+      Steam is only one slice of the player base: Marvel Rivals also runs on console, so Steam
+      numbers are best for comparing trends, not for counting everyone who plays.
+    </p>
+  </div>
+
+  <p class="sources">
+    Sources:
+    @for (source of sources; track source.url) {
+      <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}<span class="visually-hidden"> (opens in a new tab)</span></a>
+      @if (!$last) {
+        <span aria-hidden="true">&middot;</span>
+      }
+    }
+  </p>
+</div>

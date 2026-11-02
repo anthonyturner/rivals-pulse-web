@@ -107,7 +107,9 @@ describe('WinRatesPageComponent', () => {
   const text = (element: HTMLElement, selector: string): string[] =>
     Array.from(element.querySelectorAll(selector)).map((node) => node.textContent?.trim() ?? '');
 
-  it('says it is loading until the numbers arrive', async () => {
+  const squash = (value: string): string => value.replace(/\s+/g, ' ');
+
+  it('says it is loading until the numbers arrive, without announcing it', async () => {
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/win-rates');
@@ -116,19 +118,62 @@ describe('WinRatesPageComponent', () => {
     const element = harness.routeNativeElement as HTMLElement;
 
     expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading win rates');
+    expect(element.querySelector('[role="status"]')).toBeNull();
 
     http.expectOne('/api/heroes').flush([]);
     http.expectOne('/api/hero-stats').flush(empty);
   });
 
-  it('lists each hero with its win rate and appearances once there is enough data', async () => {
+  it('lists each hero with its win rate and record once there is enough data', async () => {
+    const element = await open('/win-rates', full);
+    const meta = squash(text(element, '.meta')[0]);
+
+    expect(meta).toContain('Season 10.5');
+    expect(meta).toContain('149 matches counted');
+    expect(meta).toContain('the line marks 50%');
+    expect(text(element, 'tbody .hero-name')).toEqual(['Storm', 'Hela']);
+    expect(text(element, 'tbody .rate strong')).toEqual(['66.7%', '45.0%']);
+    expect(text(element, 'tbody .col-games [aria-hidden="true"]')).toEqual(['8 / 12', '9 / 20']);
+    expect(text(element, 'tbody .col-games .visually-hidden')).toEqual([
+      '8 wins in 12 games',
+      '9 wins in 20 games',
+    ]);
+    expect(text(element, 'h2')[0]).toBe('Heroes, highest win rate first');
+  });
+
+  it('draws a real table: every header names its scope and the heading names the table', async () => {
+    const element = await open('/win-rates', full);
+    const table = element.querySelector('table') as HTMLTableElement;
+    const headers = Array.from(table.querySelectorAll('th'));
+
+    expect(table.getAttribute('aria-labelledby')).toBe('rates-title');
+    expect(element.querySelector('#rates-title')?.tagName).toBe('H2');
+    expect(headers.every((header) => header.getAttribute('scope') !== null)).toBeTrue();
+    expect(text(table, 'thead th')).toEqual(['#Rank', 'Hero', 'Role', 'Win rate', 'Wins / games']);
+  });
+
+  it('links each hero to the heroes page and keeps the decorative portrait out of the reading order', async () => {
+    const element = await open('/win-rates', full);
+    const link = element.querySelector('tbody a') as HTMLAnchorElement;
+    const image = link.querySelector('img') as HTMLImageElement;
+
+    expect(link.getAttribute('href')).toBe('/heroes?hero=storm');
+    expect(image.getAttribute('alt')).toBe('');
+    expect(image.getAttribute('width')).toBe('28');
+  });
+
+  it('is a page inside the shell: it adds no main landmark of its own', async () => {
     const element = await open('/win-rates', full);
 
-    expect(text(element, '.season-card strong')).toEqual(['Season 10.5']);
-    expect(text(element, 'tbody th strong')).toEqual(['Storm', 'Hela']);
-    expect(text(element, '.rate strong')).toEqual(['66.7%', '45.0%']);
-    expect(text(element, '.sample strong')).toEqual(['12', '20']);
-    expect(element.querySelector('table caption')?.textContent).toContain('highest win rate first');
+    expect(element.querySelector('main')).toBeNull();
+    expect(element.querySelectorAll('h1').length).toBe(1);
+  });
+
+  it('links its lede to the tier list and to how the numbers are counted', async () => {
+    const element = await open('/win-rates', full);
+    const hrefs = Array.from(element.querySelectorAll('.lede a')).map((link) => link.getAttribute('href'));
+
+    expect(hrefs).toEqual(['/tier-list', '/how-we-count']);
   });
 
   it('shows heroes still short of the minimum as not enough data yet, beside the full table', async () => {
@@ -139,75 +184,92 @@ describe('WinRatesPageComponent', () => {
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
   });
 
-  it('keeps static panels out of the live-region announcements', async () => {
+  it('says "1 appearance" when one is all a hero needs', async () => {
+    const element = await open('/win-rates', { ...full, minimumMatches: 1 });
+
+    expect(text(element, '.building h2')).toEqual(['Progress toward 1 appearance']);
+    expect(squash(text(element, '.meta')[0])).toContain('Heroes need 1 appearance to be listed');
+  });
+
+  it('keeps one live region on the page and leaves static panels out of it', async () => {
     const element = await open('/win-rates', partial);
 
     expect(element.querySelector('[role="status"]')).toBeNull();
+    expect(element.querySelectorAll('[aria-live]').length).toBe(1);
+    expect(element.querySelector('[aria-live]')?.textContent?.trim()).toBe('');
   });
 
   it('shows the matches counted and no table while no hero has enough data', async () => {
     const element = await open('/win-rates', partial);
 
-    expect(text(element, '.state-panel h2')).toEqual([
+    expect(text(element, 'app-state-panel h2')).toEqual([
       'Not enough data yet in Quick Match and Competitive for Season 10.5',
     ]);
-    expect(text(element, '.state-panel p')[0].replace(/\s+/g, ' ')).toContain(
+    expect(squash(text(element, 'app-state-panel p')[0])).toContain(
       '3 matches counted in Quick Match and Competitive for Season 10.5 so far',
     );
     expect(element.querySelector('table')).toBeNull();
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
+    expect(squash(text(element, '.meta')[0])).not.toContain('the line marks 50%');
   });
 
   it('draws a designed empty state, not blank panels, when nothing is counted', async () => {
     const element = await open('/win-rates', empty);
 
-    expect(text(element, '.state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive']);
-    expect(text(element, '.state-panel p')[0].replace(/\s+/g, ' ')).toContain(
+    expect(text(element, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive']);
+    expect(squash(text(element, 'app-state-panel p')[0])).toContain(
       'No matches are counted in Quick Match and Competitive yet',
     );
     expect(element.querySelector('table')).toBeNull();
     expect(element.querySelector('.building')).toBeNull();
-    expect(element.querySelector('.season-card')).toBeNull();
+    expect(element.querySelector('.toolbar')).toBeNull();
     expect(text(element, 'h1')[0].length).toBeGreaterThan(0);
   });
 
-  it('says the numbers could not be loaded when the request fails', async () => {
+  it('says the numbers could not be loaded when the request fails, announced once by the live region', async () => {
     const element = await open('/win-rates', 'failure');
 
-    expect(text(element, '.state-panel h2')).toEqual(['Win rates could not be loaded']);
+    expect(text(element, 'app-state-panel h2')).toEqual(['Win rates could not be loaded']);
     expect(element.querySelector('table')).toBeNull();
+    expect(element.querySelector('[role="status"]')).toBeNull();
+    expect(element.querySelector('[aria-live]')?.textContent?.trim()).toBe('Win rates could not be loaded');
   });
 
   it('answers an old season address with the empty state and a way to the current numbers', async () => {
-    const element = await open('/win-rates/9', full);
-    const link = element.querySelector<HTMLAnchorElement>('.action-link');
+    const element = await open('/win-rates/9', { ...full, mode: 'all', modes: MODES });
+    const link = element.querySelector<HTMLAnchorElement>('app-state-panel .body > a');
 
-    expect(text(element, '.state-panel h2')).toEqual(['Season 9 is not shown here']);
-    expect(text(element, '.state-panel p')[0]).toContain('shows only the current half-season');
-    expect(element.querySelector('.season-card')).toBeNull();
+    expect(text(element, 'app-state-panel h2')).toEqual(['Season 9 is not shown here']);
+    expect(squash(text(element, 'app-state-panel p')[0])).toContain('latest half-season only');
+    expect(element.querySelector('.toolbar')).toBeNull();
+    expect(element.querySelector('app-filter-select')).toBeNull();
+    expect(element.querySelector('.method-note')).toBeNull();
     expect(element.querySelector('table')).toBeNull();
     expect(link?.textContent).toContain('See Season 10.5 win rates');
     expect(link?.getAttribute('href')).toBe('/win-rates');
+    expect(element.querySelector('app-state-panel p a')?.getAttribute('href')).toBe('/tier-list');
   });
 
   it('shows the served season when the address names it', async () => {
     const element = await open('/win-rates/10.5', full);
 
-    expect(text(element, 'tbody th strong')).toEqual(['Storm', 'Hela']);
+    expect(text(element, 'tbody .hero-name')).toEqual(['Storm', 'Hela']);
   });
 
   it('labels the previous half-season when it stands in for the current one', async () => {
     const previous = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: season.startsAt };
     const element = await open('/win-rates', { ...full, halfSeason: previous, inPlaceOf: season });
 
-    expect(text(element, '.notice')[0]).toContain('Season 10.5 does not have enough data yet');
-    expect(text(element, '.season-card strong')).toEqual(['Season 10']);
+    expect(text(element, 'app-notice')[0]).toContain('Season 10.5 does not have enough data yet');
+    expect(squash(text(element, '.meta')[0])).toContain('Season 10 ');
   });
 
   describe('the mode picker', () => {
     const withModes: HeroStats = { ...full, mode: 'all', modes: MODES };
     const modeSelect = (element: HTMLElement): HTMLSelectElement =>
       element.querySelector('app-filter-select select') as HTMLSelectElement;
+    const liveRegion = (element: HTMLElement): string =>
+      element.querySelector('[aria-live]')?.textContent?.trim() ?? '';
 
     function choose(select: HTMLSelectElement, value: string): void {
       select.value = value;
@@ -235,15 +297,17 @@ describe('WinRatesPageComponent', () => {
         'Competitive',
       ]);
       expect(modeSelect(element).value).toBe('all');
+      expect(squash(text(element, '.meta')[0])).not.toContain('Quick Match and Competitive');
     });
 
-    it('draws no picker when only the default blend holds matches', async () => {
+    it('draws no picker when only the default blend holds matches, and names the mode in the meta line instead', async () => {
       const element = await open('/win-rates', { ...withModes, modes: [MODES[0]] });
 
-      expect(element.querySelector('.toolbar')).toBeNull();
+      expect(element.querySelector('app-filter-select')).toBeNull();
+      expect(squash(text(element, '.meta')[0])).toMatch(/^Quick Match and Competitive · Season 10.5/);
     });
 
-    it('asks for the mode chosen, shows it is loading, then names the mode and the matches in it', async () => {
+    it('asks for the mode chosen, stays silent while it loads, then announces the result once', async () => {
       const { harness, element } = await openWithPicker();
 
       choose(modeSelect(element), 'competitive');
@@ -251,12 +315,17 @@ describe('WinRatesPageComponent', () => {
 
       expect(element.querySelector('table')).toBeNull();
       expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading win rates');
+      expect(element.querySelector('[role="status"]')).toBeNull();
+      expect(liveRegion(element)).toBe('');
 
       http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
       harness.detectChanges();
 
-      expect(text(element, '.season-card small')).toContain('Competitive');
-      expect(text(element, '.season-card small')).toContain('28 matches');
+      expect(liveRegion(element)).toBe(
+        'Win rates updated in Competitive for Season 10.5: 28 matches counted',
+      );
+      expect(element.querySelectorAll('[aria-live]').length).toBe(1);
+      expect(squash(text(element, '.meta')[0])).toContain('28 matches counted');
       expect(modeSelect(element).value).toBe('competitive');
     });
 
@@ -275,7 +344,7 @@ describe('WinRatesPageComponent', () => {
       });
       harness.detectChanges();
 
-      expect(text(element, '.state-panel h2')).toEqual(['Not enough data yet in Competitive for Season 10.5']);
+      expect(text(element, 'app-state-panel h2')).toEqual(['Not enough data yet in Competitive for Season 10.5']);
       expect(modeSelect(element).options.length).toBe(3);
     });
 
@@ -292,20 +361,21 @@ describe('WinRatesPageComponent', () => {
       });
       harness.detectChanges();
 
-      expect(text(element, '.notice')[0]).toBe(
+      expect(text(element, 'app-notice')[0]).toBe(
         "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
       );
     });
 
-    it('keeps the picker when a request for one mode fails', async () => {
+    it('keeps the picker when a request for one mode fails, and says so in the live region', async () => {
       const { harness, element } = await openWithPicker();
 
       choose(modeSelect(element), 'competitive');
       http.expectOne('/api/hero-stats?mode=competitive').flush('down', { status: 500, statusText: 'Server Error' });
       harness.detectChanges();
 
-      expect(text(element, '.state-panel h2')).toEqual(['Win rates could not be loaded']);
+      expect(text(element, 'app-state-panel h2')).toEqual(['Win rates could not be loaded']);
       expect(modeSelect(element).options.length).toBe(3);
+      expect(liveRegion(element)).toBe('Win rates could not be loaded');
     });
   });
 });

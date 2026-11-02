@@ -1,181 +1,143 @@
-<section class="win-rates-page page-container page-container--wide">
-  <header class="page-hero">
-    <div>
-      <h1>How heroes are winning in RivalsPulse matches.</h1>
-      <p class="lede">
-        Win rates come only from matches that RivalsPulse players recorded: every player on the
-        scoreboard, all ranks together. Quick Match and Competitive are counted together unless you
-        pick a single mode.
-      </p>
-    </div>
-
-    @if (view(); as v) {
-      @if (v.state !== 'unavailable-season' && v.season; as season) {
-        <div class="season-card">
-          <span>Showing</span>
-          <strong>{{ season.label }}</strong>
-          @if (season.dateRange; as range) {
-            <small>{{ range }}</small>
-          }
-          <small>{{ v.modeLabel }}</small>
-          <small>{{ v.matchesCountedLabel }}</small>
-        </div>
-      }
-    }
+<div class="insight-page win-rates-page page-container page-container--wide">
+  <header class="intro">
+    <h1>Marvel Rivals hero win rates</h1>
+    <p class="lede">
+      How each hero is winning in matches RivalsPulse players recorded, all ranks together. For
+      tiers, see the <a routerLink="/tier-list">tier list</a>.
+      <a routerLink="/how-we-count">How we count</a>
+    </p>
   </header>
 
-  @if (showModePicker()) {
-    <section class="toolbar" aria-label="Win rate filters">
-      <app-filter-select
-        label="Mode"
-        [options]="modeChoices()"
-        [value]="selectedMode()"
-        (valueChange)="chooseMode($event)"
-      />
-    </section>
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+  @if (showModePicker() || meta()) {
+    <div class="toolbar">
+      @if (showModePicker()) {
+        <app-filter-select
+          label="Mode"
+          [options]="modeChoices()"
+          [value]="selectedMode()"
+          (valueChange)="chooseMode($event)"
+        />
+      }
+      @if (meta()) {
+        <p class="meta">{{ meta() }}</p>
+      }
+    </div>
   }
 
   @if (failed()) {
-    <section class="state-panel" role="status">
-      <h2>Win rates could not be loaded</h2>
-      <p>The win-rate numbers are unavailable right now. Try again in a few minutes.</p>
-    </section>
+    <app-state-panel kind="error" heading="Win rates could not be loaded" [announce]="false">
+      <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+    </app-state-panel>
   } @else if (loading()) {
-    <section class="state-panel" role="status" aria-busy="true">
-      <h2>Loading win rates</h2>
+    <app-state-panel kind="loading" heading="Loading win rates" [announce]="false">
       <p>Fetching the latest counted matches.</p>
-    </section>
+    </app-state-panel>
   } @else if (view(); as v) {
     @if (v.modeCaveat; as caveat) {
-      <p class="notice" role="note">{{ caveat }}</p>
+      <app-notice>{{ caveat }}</app-notice>
     }
 
     @if (v.fallbackNotice; as notice) {
-      <p class="notice" role="note">{{ notice }}</p>
+      <app-notice>{{ notice }}</app-notice>
     }
 
     @switch (v.state) {
       @case ('unavailable-season') {
-        <section class="state-panel">
-          <h2>{{ v.requestedLabel }} is not shown here</h2>
+        <app-state-panel heading="{{ v.requestedLabel }} is not shown here">
           <p>
-            This page shows only the current half-season, so {{ v.requestedLabel }}'s numbers are
-            not shown here.
+            This page shows win rates for the latest half-season only, so
+            {{ v.requestedLabel }}'s numbers are not shown here. The
+            <a routerLink="/tier-list">tier list</a> has a half-season picker.
           </p>
           @if (v.season; as season) {
-            <a class="action-link" routerLink="/win-rates">See {{ season.label }} win rates</a>
+            <a routerLink="/win-rates">See {{ season.label }} win rates</a>
           }
-        </section>
+        </app-state-panel>
       }
       @case ('empty') {
-        <section class="state-panel">
-          <h2>Not enough data yet {{ v.scopeLabel }}</h2>
+        <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
-            No matches are counted {{ v.scopeLabel }}
-            yet. Win rates appear here as RivalsPulse players record matches, once a hero has
-            {{ v.minimumMatches }} appearances.
+            No matches are counted {{ v.scopeLabel }} yet. Win rates appear here as RivalsPulse
+            players record matches, once a hero has {{ v.minimumLabel }}.
           </p>
-        </section>
+        </app-state-panel>
       }
       @case ('partial') {
-        <section class="state-panel">
-          <h2>Not enough data yet {{ v.scopeLabel }}</h2>
+        <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
-            {{ v.matchesCountedLabel }} counted {{ v.scopeLabel }}
-            so far, but no hero has reached {{ v.minimumMatches }} appearances. A hero's win rate
-            appears once it has.
+            {{ v.matchesCountedLabel }} counted {{ v.scopeLabel }} so far, but no hero has reached
+            {{ v.minimumLabel }}. A hero's win rate appears once it has.
           </p>
-        </section>
+        </app-state-panel>
       }
       @case ('full') {
-        <section class="rates" aria-labelledby="rates-title">
-          <div class="section-heading">
-            <h2 id="rates-title">Heroes with {{ v.minimumMatches }} or more appearances</h2>
-            <p>{{ v.matchesCountedLabel }} counted. A line is one hero on the scoreboard of one match.</p>
-          </div>
-
-          <div class="table-wrap">
-            <table>
-              <caption class="visually-hidden">
-                Hero win rates and the appearances behind them, highest win rate first
-              </caption>
-              <thead>
+        <div class="card">
+          <h2 id="rates-title">Heroes, highest win rate first</h2>
+          <table aria-labelledby="rates-title">
+            <thead>
+              <tr>
+                <th scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
+                <th scope="col">Hero</th>
+                <th scope="col" class="col-role">Role</th>
+                <th scope="col" class="col-rate">Win rate</th>
+                <th scope="col" class="col-games">Wins / games</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of v.ranked; track row.hero) {
                 <tr>
-                  <th scope="col">Hero</th>
-                  <th scope="col">Win rate</th>
-                  <th scope="col">Appearances</th>
+                  <td class="col-rank">{{ row.rank }}</td>
+                  <th scope="row">
+                    <a class="hero-link" [routerLink]="['/heroes']" [queryParams]="{ hero: row.hero }">
+                      <img appHeroImageFallback [src]="row.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                      <span class="hero-name">{{ row.name }}</span>
+                    </a>
+                    @if (row.role) {
+                      <span class="role-under">{{ row.role }}</span>
+                    }
+                  </th>
+                  <td class="col-role">{{ row.role }}</td>
+                  <td class="col-rate">
+                    <div class="rate" [attr.data-tone]="row.tone">
+                      <strong>{{ row.winRateLabel }}</strong>
+                      <span class="bar" aria-hidden="true">
+                        <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="col-games">
+                    <span class="visually-hidden">{{ row.winsGamesSpoken }}</span>
+                    <span aria-hidden="true">{{ row.winsGamesLabel }}</span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                @for (row of v.ranked; track row.hero) {
-                  <tr>
-                    <th scope="row">
-                      <a
-                        class="hero-cell"
-                        [routerLink]="['/heroes']"
-                        [queryParams]="{ hero: row.hero }"
-                      >
-                        <img
-                          [src]="row.imageUrl"
-                          alt=""
-                          width="40"
-                          height="40"
-                          loading="lazy"
-                          (error)="onImageError($event)"
-                        />
-                        <span>
-                          <strong>{{ row.name }}</strong>
-                          @if (row.role) {
-                            <small>{{ row.role }}</small>
-                          }
-                        </span>
-                      </a>
-                    </th>
-                    <td>
-                      <div class="rate" [attr.data-tone]="row.tone">
-                        <strong>{{ row.winRateLabel }}</strong>
-                        <span class="bar" aria-hidden="true">
-                          <span class="bar-fill" [style.width.%]="row.barPercent"></span>
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="sample">
-                        <strong>{{ row.appearancesLabel }}</strong>
-                        <small>{{ row.winsLabel }}</small>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     }
 
-    @if (v.state === 'full' || v.state === 'partial') {
-      @if (v.building.length > 0) {
-        <section class="building" aria-labelledby="building-title">
-          <div class="section-heading">
-            <h2 id="building-title">Progress toward {{ v.minimumMatches }} appearances</h2>
-            <p>
-              Not enough data yet: these heroes need {{ v.minimumMatches }} appearances before a
-              win rate is shown.
-            </p>
-          </div>
+    @if ((v.state === 'full' || v.state === 'partial') && v.building.length > 0) {
+      <section class="building" aria-labelledby="building-title">
+        <div class="section-heading">
+          <h2 id="building-title">Progress toward {{ v.minimumLabel }}</h2>
+          <p>Heroes need {{ v.minimumLabel }} before they get a win rate.</p>
+        </div>
 
-          <app-hero-progress-list [rows]="v.building" />
-        </section>
-      }
+        <app-hero-progress-list [rows]="v.building" />
+      </section>
     }
 
     @if (v.state !== 'unavailable-season') {
       <p class="method-note">
-        RivalsPulse has no rank breakdown, so every figure covers all ranks together. A hero on
-        both teams of one match is counted twice. Matches without a win or a loss, and matches
-        where the game did not say which mode they were, are left out.
+        RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match
+        and Competitive are counted together unless you pick a single mode. A game is one hero on
+        the scoreboard of one match, so a hero on both teams of one match is counted twice. Matches
+        without a win or a loss, and matches where the game did not say which mode they were, are
+        left out.
       </p>
     }
   }
-</section>
+</div>
