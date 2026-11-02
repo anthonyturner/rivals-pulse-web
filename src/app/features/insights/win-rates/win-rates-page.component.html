@@ -48,7 +48,8 @@
         <app-state-panel heading="{{ v.requestedLabel }} is not shown here">
           <p>
             This page shows win rates for the latest half-season only, so
-            {{ v.requestedLabel }}'s numbers are not shown here. The tier list has a half-season picker.
+            {{ v.requestedLabel }}'s numbers are not shown here. The
+            <a routerLink="/tier-list">tier list</a> has a half-season picker.
           </p>
           @if (v.season; as season) {
             <a routerLink="/win-rates">See {{ season.label }} win rates</a>
@@ -77,9 +78,7 @@
           <table aria-labelledby="rates-title">
             <thead>
               <tr>
-                <th scope="col" class="col-rank">
-                  <span aria-hidden="true">#</span><span class="visually-hidden">Rank</span>
-                </th>
+                <th scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
                 <th scope="col">Hero</th>
                 <th scope="col" class="col-role">Role</th>
                 <th scope="col" class="col-rate">Win rate</th>
@@ -92,19 +91,12 @@
                   <td class="col-rank">{{ row.rank }}</td>
                   <th scope="row">
                     <a class="hero-link" [routerLink]="['/heroes']" [queryParams]="{ hero: row.hero }">
-                      <img
-                        appHeroImageFallback
-                        [src]="row.imageUrl"
-                        alt=""
-                        width="28"
-                        height="28"
-                        loading="lazy"
-                      />
+                      <img appHeroImageFallback [src]="row.imageUrl" alt="" width="28" height="28" loading="lazy" />
                       <span class="hero-name">{{ row.name }}</span>
-                      @if (row.role) {
-                        <span class="role-under">{{ row.role }}</span>
-                      }
                     </a>
+                    @if (row.role) {
+                      <span class="role-under">{{ row.role }}</span>
+                    }
                   </th>
                   <td class="col-role">{{ row.role }}</td>
                   <td class="col-rate">

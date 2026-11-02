@@ -75,9 +75,15 @@ export class WinRatesPageComponent {
   });
 
   readonly modeChoices = computed(() => this.modes().map(({ id, label }) => ({ value: id, label })));
-  /** Hidden until the first numbers are in, so it does not push the loading panel down when it appears. */
+  /**
+   * Hidden until the first numbers are in, so it does not push the loading panel down when it
+   * appears, and for a season this page does not show, where a mode changes nothing.
+   */
   readonly showModePicker = computed(
-    () => this.modes().length > 1 && (this.view() !== null || this.failed() || this.pending()),
+    () =>
+      this.modes().length > 1 &&
+      this.view()?.state !== 'unavailable-season' &&
+      (this.view() !== null || this.failed() || this.pending()),
   );
   readonly selectedMode = this.chosenMode.asReadonly();
   /** With no picker to say which mode is counted, the meta line says it. */

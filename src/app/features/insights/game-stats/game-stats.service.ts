@@ -22,17 +22,44 @@ export class GameStatsService {
   }
 }
 
-/** Checks the parts the page reads, so a malformed answer becomes the saved snapshot, not a blank table. */
+/** Checks the parts the page reads, so a malformed answer becomes the saved snapshot, not a blank table or a thrown error. */
 export function isGameStats(body: unknown): body is GameStatsResponse {
-  if (typeof body !== 'object' || body === null) {
+  if (!isRecord(body)) {
     return false;
   }
 
-  const stats = body as Partial<GameStatsResponse>;
+  return (
+    typeof body['snapshotDate'] === 'string' &&
+    typeof body['fetchedAt'] === 'string' &&
+    (body['previousSnapshot'] === undefined ||
+      (isRecord(body['previousSnapshot']) && typeof body['previousSnapshot']['capturedAt'] === 'string')) &&
+    Array.isArray(body['games']) &&
+    body['games'].every(isGame)
+  );
+}
+
+const COMPARED_COUNTS = ['currentPlayers', 'dailyPeak', 'allTimePeak'];
+const COMPARED_RANKS = ['steamDailyRank', 'topSellerRank'];
+
+function isGame(game: unknown): boolean {
+  if (!isRecord(game)) {
+    return false;
+  }
+
+  const comparison = game['comparison'];
 
   return (
-    typeof stats.snapshotDate === 'string' &&
-    typeof stats.fetchedAt === 'string' &&
-    Array.isArray(stats.games)
+    typeof game['name'] === 'string' &&
+    typeof game['category'] === 'string' &&
+    COMPARED_COUNTS.every((key) => Number.isFinite(game[key])) &&
+    COMPARED_RANKS.every((key) => typeof game[key] === 'string') &&
+    (comparison === undefined ||
+      (isRecord(comparison) &&
+        COMPARED_COUNTS.every((key) => isRecord(comparison[key])) &&
+        COMPARED_RANKS.every((key) => isRecord(comparison[key]))))
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

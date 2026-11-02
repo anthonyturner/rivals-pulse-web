@@ -230,6 +230,23 @@ describe('GameStatsPageComponent', () => {
     expect(element.querySelectorAll('tbody tr').length).toBe(5);
   });
 
+  it('treats an answer with a game that is missing a figure as a failure', async () => {
+    const missing = await open({ ...live, games: [{ ...live.games[0], currentPlayers: null }] });
+
+    expect(text(missing, 'app-notice').length).toBe(1);
+    expect(missing.querySelectorAll('tbody tr').length).toBe(5);
+    expect(missing.textContent).not.toContain('NaN');
+  });
+
+  it('falls back to the saved snapshot when a comparison holds a null metric', async () => {
+    const [first] = live.games;
+    const broken = { ...first, comparison: { ...first.comparison, dailyPeak: null } };
+    const element = await open({ ...live, games: [broken] });
+
+    expect(text(element, 'app-notice').length).toBe(1);
+    expect(element.querySelectorAll('tbody tr').length).toBe(5);
+  });
+
   it('says there are no games to compare, and draws no table, when the answer holds none', async () => {
     const element = await open({ ...live, games: [] });
 

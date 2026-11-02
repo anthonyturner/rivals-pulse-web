@@ -1,7 +1,7 @@
 import type { GameStatsResponse } from '../../../../contracts/game-stats.model';
 
 /** Shown, behind a notice, when the live numbers cannot be fetched, so the page and crawlers still get a comparison. */
-export const SAVED_GAME_STATS: GameStatsResponse = {
+export const SAVED_GAME_STATS: Readonly<GameStatsResponse> = Object.freeze({
   snapshotDate: 'June 19, 2026',
   fetchedAt: '2026-06-19T00:00:00.000Z',
   currentPlayerSource: 'Valve ISteamUserStats GetNumberOfCurrentPlayers',
@@ -78,4 +78,4 @@ export const SAVED_GAME_STATS: GameStatsResponse = {
       sourceUrl: 'https://steamdb.info/app/730/charts/',
     },
   ],
-};
+});

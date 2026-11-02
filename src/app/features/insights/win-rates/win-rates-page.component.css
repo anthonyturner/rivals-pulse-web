@@ -50,16 +50,14 @@ thead th {
   line-height: 1.2;
   color: var(--text);
   font-weight: 700;
-  text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
-.hero-name {
-  overflow-wrap: anywhere;
-  text-decoration: underline;
+.hero-link:hover {
+  color: var(--link);
 }
 
 .hero-link img {
-  grid-row: span 2;
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -68,10 +66,8 @@ thead th {
 
 .role-under {
   display: none;
-  grid-column: 2;
   color: var(--text-soft);
   font-size: var(--type-caption);
-  font-weight: 400;
 }
 
 .rate {
@@ -83,7 +79,6 @@ thead th {
 .rate strong {
   flex: none;
   width: 52px;
-  font-weight: 850;
 }
 
 /* The win rate is the data; the bar's colour only repeats whether it is above, at or below the 50% line. */
@@ -135,8 +130,15 @@ thead th {
     width: 72px;
   }
 
+  /* The role sits under the name, outside the link, in the 14px the link leaves below the name. */
+  .hero-link {
+    align-items: start;
+    min-height: 31px;
+  }
+
   .role-under {
     display: block;
+    margin: -14px 0 0 36px;
   }
 
   .rate {

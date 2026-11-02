@@ -236,16 +236,18 @@ describe('WinRatesPageComponent', () => {
   });
 
   it('answers an old season address with the empty state and a way to the current numbers', async () => {
-    const element = await open('/win-rates/9', full);
-    const link = element.querySelector<HTMLAnchorElement>('app-state-panel a');
+    const element = await open('/win-rates/9', { ...full, mode: 'all', modes: MODES });
+    const link = element.querySelector<HTMLAnchorElement>('app-state-panel .body > a');
 
     expect(text(element, 'app-state-panel h2')).toEqual(['Season 9 is not shown here']);
     expect(squash(text(element, 'app-state-panel p')[0])).toContain('latest half-season only');
     expect(element.querySelector('.toolbar')).toBeNull();
+    expect(element.querySelector('app-filter-select')).toBeNull();
     expect(element.querySelector('.method-note')).toBeNull();
     expect(element.querySelector('table')).toBeNull();
     expect(link?.textContent).toContain('See Season 10.5 win rates');
     expect(link?.getAttribute('href')).toBe('/win-rates');
+    expect(element.querySelector('app-state-panel p a')?.getAttribute('href')).toBe('/tier-list');
   });
 
   it('shows the served season when the address names it', async () => {
