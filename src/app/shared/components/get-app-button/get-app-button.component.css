@@ -29,8 +29,9 @@ a.get-app:hover {
   cursor: not-allowed;
 }
 
+/* Yellow on white would not show, so the ring is the site's link colour unless a dark host sets it. */
 .get-app:focus-visible {
-  outline: 3px solid var(--cta-yellow);
+  outline: 3px solid var(--get-app-focus, var(--link));
   outline-offset: 3px;
 }
 

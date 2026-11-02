@@ -1,16 +1,17 @@
 import { ViewportScroller } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { Footer } from './core/layout/footer/footer';
 import { Nav } from './core/layout/nav/nav';
 import { Sidebar } from './core/layout/sidebar/sidebar';
 import { SidebarVisibility } from './core/layout/sidebar/sidebar-visibility';
+import { BrandComponent } from './shared/components/brand/brand.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterLink, RouterOutlet, Nav, Footer, Sidebar],
+  imports: [RouterOutlet, BrandComponent, Nav, Footer, Sidebar],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
