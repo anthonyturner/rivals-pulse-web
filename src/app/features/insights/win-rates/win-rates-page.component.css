@@ -1,351 +1,154 @@
-:host {
-  display: block;
-  min-width: 0;
-  max-width: 100%;
-}
-
+/* Tall enough that the footer starts below the fold, so it does not jump when the numbers replace the loading panel. */
 .win-rates-page {
-  min-height: 100%;
-  padding-block: 32px;
-}
-
-.page-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
-  gap: 20px;
-  align-items: end;
-  padding: 24px 0 28px;
-}
-
-h1,
-h2,
-p {
-  margin: 0;
-}
-
-h1 {
-  max-width: 850px;
-  color: var(--text);
-  font-size: var(--type-page-title);
-  font-weight: 850;
-  line-height: 1.04;
-}
-
-.lede {
-  max-width: 790px;
-  margin-top: 16px;
-  color: var(--text-soft);
-  font-size: 1.04rem;
-  line-height: 1.6;
-}
-
-.season-card,
-.toolbar,
-.state-panel,
-.rates,
-.building {
-  min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
-  box-shadow: 0 14px 28px rgba(17, 35, 57, 0.08);
-}
-
-.season-card {
-  display: grid;
-  gap: 5px;
-  padding: 18px;
-  border-color: rgba(224, 169, 0, 0.34);
-  background: linear-gradient(135deg, #fff9df, #ffffff);
-}
-
-.season-card span,
-.season-card small {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.season-card strong {
-  color: var(--accent-strong);
-  font-size: 1.5rem;
-}
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: end;
-  margin-bottom: 12px;
-  padding: 16px;
-}
-
-.state-panel {
-  display: grid;
-  gap: 10px;
-  justify-items: start;
-  padding: 22px;
-}
-
-.state-panel h2 {
-  color: var(--text);
-  font-size: var(--type-h3);
-}
-
-.state-panel p {
-  max-width: 62ch;
-  color: var(--text-soft);
-  line-height: 1.55;
-}
-
-.action-link {
-  padding: 10px 12px;
-  border: 1px solid rgba(3, 159, 159, 0.25);
-  border-radius: 7px;
-  background: rgba(232, 247, 251, 0.82);
-  color: color-mix(in srgb, var(--teal) 75%, var(--text));
-  font-size: 0.9rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.action-link:hover {
-  border-color: rgba(224, 169, 0, 0.48);
-  background: #fff9df;
-  color: var(--accent-strong);
-}
-
-.action-link:focus-visible,
-.hero-cell:focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-.notice {
-  margin-bottom: 12px;
-  padding: 12px 16px;
-  border: 1px solid rgba(224, 169, 0, 0.34);
-  border-radius: 8px;
-  background: #fff9df;
-  color: var(--accent-ink);
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-.rates,
-.building {
-  margin-top: 12px;
-  overflow: hidden;
-}
-
-.section-heading {
-  display: grid;
-  gap: 4px;
-  padding: 16px 16px 12px;
-}
-
-.section-heading h2 {
-  color: var(--text);
-  font-size: var(--type-h3);
-}
-
-.section-heading p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.table-wrap {
-  overflow-x: auto;
+  min-height: 100vh;
 }
 
 table {
   width: 100%;
+  margin-top: 8px;
   border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--type-small);
+}
+
+th,
+td {
+  padding: 4px 8px;
+  box-shadow: inset 0 1px 0 var(--border);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: left;
 }
 
 thead th {
-  padding: 10px 16px;
-  background: var(--surface);
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 850;
-  text-align: left;
-  text-transform: uppercase;
-}
-
-tbody th,
-tbody td {
-  padding: 8px 16px;
-  border-top: 1px solid var(--border);
-  text-align: left;
-  vertical-align: middle;
-}
-
-tbody th {
-  min-width: 0;
-  font-weight: inherit;
-}
-
-.hero-cell {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  min-width: 0;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.hero-cell img {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 7px;
-  background: var(--surface-2);
-  object-fit: cover;
-}
-
-.hero-cell span {
-  display: grid;
-  min-width: 0;
-}
-
-.hero-cell strong,
-.hero-cell small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hero-cell strong {
-  font-size: 0.98rem;
-  font-weight: 850;
-}
-
-.hero-cell small,
-.sample small {
-  color: var(--text-muted);
-  font-size: 0.78rem;
+  box-shadow: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
   font-weight: 700;
 }
 
-.hero-cell:hover strong {
-  color: var(--accent-strong);
+.col-rank {
+  width: 40px;
+  text-align: right;
+}
+
+.col-role {
+  width: 110px;
+}
+
+.col-games {
+  width: 104px;
+  text-align: right;
+}
+
+.hero-link {
+  display: grid;
+  grid-template-columns: 28px auto;
+  gap: 0 8px;
+  align-items: center;
+  width: fit-content;
+  line-height: 1.2;
+  color: var(--text);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.hero-link:hover {
+  color: var(--link);
+}
+
+.hero-link img {
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.role-under {
+  display: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
 }
 
 .rate {
-  --rate-color: var(--blue);
-  display: grid;
-  gap: 5px;
-  min-width: 96px;
-}
-
-.rate[data-tone='above'] {
-  --rate-color: color-mix(in srgb, var(--ally) 55%, var(--teal));
-}
-
-.rate[data-tone='below'] {
-  --rate-color: var(--danger);
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .rate strong {
-  color: var(--text);
-  font-size: 1.02rem;
-  font-weight: 850;
+  flex: none;
+  width: 52px;
 }
 
+/* The win rate is the data; the bar's colour only repeats whether it is above, at or below the 50% line. */
 .bar {
   position: relative;
-  display: block;
+  flex: 1 1 auto;
   height: 6px;
-  overflow: hidden;
   border-radius: 3px;
   background: var(--surface-2);
+}
+
+.bar::after {
+  content: '';
+  position: absolute;
+  inset-block: -2px;
+  left: 50%;
+  width: 2px;
+  background: var(--text-soft);
 }
 
 .bar-fill {
   display: block;
   height: 100%;
   border-radius: 3px;
-  background: var(--rate-color, var(--teal));
+  background: var(--blue);
 }
 
-.bar::after {
-  position: absolute;
-  inset: 0 auto 0 50%;
-  width: 2px;
-  background: var(--text-faint);
-  content: '';
+[data-tone='above'] .bar-fill {
+  background: #0f6f43;
 }
 
-.sample {
-  display: grid;
-  gap: 2px;
+[data-tone='below'] .bar-fill {
+  background: var(--danger);
 }
 
-.sample strong {
-  color: var(--text);
-  font-weight: 850;
-}
-
-.method-note {
-  margin-top: 16px;
-  color: var(--text-muted);
-  font-size: 0.86rem;
-  line-height: 1.55;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .win-rates-page {
-    padding-block: var(--mobile-page-gutter);
+@media (max-width: 560px) {
+  th,
+  td {
+    padding: 3px 4px;
   }
 
-  .page-hero {
-    grid-template-columns: 1fr;
-    padding: 24px 0;
+  .col-rank,
+  .col-role {
+    display: none;
   }
 
-  .toolbar,
-  .state-panel {
-    padding: var(--mobile-panel-padding);
+  .col-rate,
+  .col-games {
+    width: 72px;
   }
 
-  .toolbar {
-    align-items: stretch;
+  /* The role sits under the name, outside the link, in the 14px the link leaves below the name. */
+  .hero-link {
+    align-items: start;
+    min-height: 31px;
   }
 
-  .section-heading {
-    padding: var(--mobile-panel-padding);
-  }
-
-  thead th,
-  tbody th,
-  tbody td {
-    padding-inline: var(--mobile-panel-padding);
-  }
-
-  .hero-cell {
-    gap: 8px;
-  }
-
-  .hero-cell strong,
-  .hero-cell small {
-    overflow-wrap: anywhere;
-    text-overflow: clip;
-    white-space: normal;
+  .role-under {
+    display: block;
+    margin: -14px 0 0 36px;
+    line-height: 14px;
   }
 
   .rate {
-    min-width: 72px;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .bar {
+    flex: none;
+    width: 56px;
+    height: 4px;
   }
 }

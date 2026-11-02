@@ -1,0 +1,126 @@
+/* The frame the game-stats and win-rates pages share: a one-line title and lede, an optional toolbar, cards, and the notes under the numbers. */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.insight-page {
+  padding-block: 16px;
+}
+
+h1,
+h2,
+p,
+dl,
+dd {
+  margin: 0;
+}
+
+h2 {
+  font-size: var(--type-h3);
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.intro {
+  display: grid;
+  gap: 4px;
+  padding-block: 8px 12px;
+}
+
+h1 {
+  font-size: var(--type-page-title);
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.lede,
+.meta {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.lede a {
+  font-weight: 700;
+}
+
+/* The picker's label is --text-muted, 4.2:1 on the page background; --text-soft is 8.3:1. */
+.toolbar {
+  --text-muted: var(--text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: end;
+}
+
+.toolbar app-filter-select {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.toolbar .meta {
+  flex: 1 1 320px;
+  margin-left: auto;
+  text-align: right;
+}
+
+app-state-panel,
+app-notice,
+.card,
+.building {
+  margin-top: 12px;
+}
+
+.card,
+.building {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.card {
+  padding: 12px 16px;
+}
+
+.section-heading {
+  display: grid;
+  gap: 4px;
+  padding: 16px 16px 8px;
+}
+
+.section-heading p {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.method-note {
+  margin-top: 16px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+@media (max-width: 1023px) {
+  .toolbar .meta {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .insight-page {
+    padding-block: var(--mobile-page-gutter);
+  }
+
+  .card {
+    padding: var(--mobile-panel-padding);
+  }
+
+  .toolbar app-filter-select {
+    flex: 1 1 0;
+  }
+}

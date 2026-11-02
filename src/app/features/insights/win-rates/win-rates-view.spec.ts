@@ -84,10 +84,50 @@ describe('buildWinRatesView', () => {
       const [storm, hela] = buildWinRatesView(statsOf(), null, identities).ranked;
 
       expect(storm.winRateLabel).toBe('66.7%');
-      expect(storm.appearancesLabel).toBe('12');
-      expect(storm.winsLabel).toBe('8 wins');
+      expect(storm.winsGamesLabel).toBe('8 / 12');
+      expect(storm.winsGamesSpoken).toBe('8 wins in 12 games');
       expect(storm.tone).toBe('above');
       expect(hela.tone).toBe('even');
+    });
+
+    it('numbers the rows in the order they are ranked', () => {
+      const view = buildWinRatesView(statsOf(), null, identities);
+
+      expect(view.ranked.map((row) => row.rank)).toEqual([1, 2, 3]);
+    });
+
+    it('says "1 win in 1 game" and "1 appearance" in the singular', () => {
+      const view = buildWinRatesView(
+        statsOf({ minimumMatches: 1, tiers: [{ name: 'A', heroes: [hero('storm', 1, 1)] }] }),
+        null,
+        identities,
+      );
+
+      expect(view.ranked[0].winsGamesSpoken).toBe('1 win in 1 game');
+      expect(view.minimumLabel).toBe('1 appearance');
+      expect(view.metaParts).toContain('Heroes need 1 appearance to be listed');
+    });
+
+    it('lists the facts the toolbar shows, in order, once a table is drawn', () => {
+      const view = buildWinRatesView(statsOf(), null, identities);
+
+      expect(view.metaParts).toEqual([
+        'Season 10.5',
+        'Started Oct 9, 2026',
+        '149 matches counted',
+        'Heroes need 10 appearances to be listed',
+        'Bars show win rate; the line marks 50%.',
+      ]);
+    });
+
+    it('leaves the bar sentence out while there is no table, and everything out while nothing is counted', () => {
+      const partial = buildWinRatesView(statsOf({ tiers: [] }), null, identities);
+      const empty = buildWinRatesView(statsOf(nothingCounted), null, identities);
+
+      expect(partial.state).toBe('partial');
+      expect(partial.metaParts).not.toContain('Bars show win rate; the line marks 50%.');
+      expect(partial.metaParts.length).toBe(4);
+      expect(empty.metaParts).toEqual([]);
     });
 
     it('takes names, roles and portraits from the roster, and falls back for a hero it lacks', () => {
