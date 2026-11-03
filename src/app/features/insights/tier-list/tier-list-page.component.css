@@ -34,7 +34,6 @@ h1 {
   font-size: var(--type-small);
 }
 
-/* --blue is 3.7:1 on the page background; this is 5.0:1. */
 .lede-link {
   color: var(--link);
   font-weight: 700;

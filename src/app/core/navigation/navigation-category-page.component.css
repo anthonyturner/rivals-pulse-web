@@ -74,7 +74,7 @@
 }
 
 .coming-soon {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;

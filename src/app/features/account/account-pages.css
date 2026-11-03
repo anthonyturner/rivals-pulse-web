@@ -166,7 +166,7 @@ p {
 }
 
 .account-error {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-weight: 700;
 }
 

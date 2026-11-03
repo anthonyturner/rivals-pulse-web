@@ -149,7 +149,7 @@ h1 {
 .term-card-header span {
   display: inline-block;
   margin-bottom: 8px;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.72rem;
   font-weight: 750;
   text-transform: uppercase;
@@ -167,7 +167,7 @@ h1 {
 
 .term-card-header a:hover {
   border-color: var(--accent-line);
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 h2 {
@@ -211,7 +211,7 @@ h3 {
 
 .source-name {
   padding-top: 2px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 0.82rem;
 }
 

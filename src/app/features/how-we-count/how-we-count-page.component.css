@@ -52,7 +52,7 @@ li + li {
 }
 
 a {
-  color: var(--secondary);
+  color: var(--link);
   font-weight: 700;
 }
 

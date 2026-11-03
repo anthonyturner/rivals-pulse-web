@@ -255,7 +255,7 @@ h3 {
 }
 
 .build-profile-source a {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.78rem;
   font-weight: 750;
   text-decoration: none;
@@ -584,7 +584,7 @@ h3 {
 }
 
 .deadpool-upgrades article>a {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.78rem;
   font-weight: 750;
   text-decoration: none;
@@ -766,7 +766,7 @@ ul {
 }
 
 .section-heading a {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.78rem;
   font-weight: 750;
   text-decoration: none;

@@ -162,7 +162,7 @@ h1 {
 
 .path-hero span,
 .drill-card > span {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
