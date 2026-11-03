@@ -36,8 +36,8 @@ test('a known contrast gap still fails somewhere, so the list is not stale', () 
 test('the approved Aurora values are used exactly', () => {
   const { light, dark } = readTheme(readFileSync(THEME, 'utf8'));
   const approved = {
-    dark: { canvas: '#090b14', surface: '#10131f', border: '#1f2436', text: '#eceefe', muted: '#8d93b3', accent: '#3ee6c0', secondary: '#7b7bff', tertiary: '#e070ff', 'on-accent': '#05201a' },
-    light: { canvas: '#f3f3fa', surface: '#ffffff', border: '#e0e1ef', text: '#151735', muted: '#61668a', accent: '#0e9c80', secondary: '#5b55e6', tertiary: '#b44fd6', 'on-accent': '#05201a' },
+    dark: { canvas: '#090b14', surface: '#10131f', border: '#1f2436', text: '#eceefe', muted: '#8d93b3', accent: '#ffdf00', secondary: '#7b7bff', tertiary: '#e070ff', 'on-accent': '#1a1600' },
+    light: { canvas: '#f3f3fa', surface: '#ffffff', border: '#e0e1ef', text: '#151735', muted: '#61668a', accent: '#b38600', secondary: '#5b55e6', tertiary: '#b44fd6', 'on-accent': '#1a1600' },
   };
   for (const [name, tokens] of Object.entries({ dark, light })) {
     for (const [token, value] of Object.entries(approved[name])) {
@@ -46,15 +46,17 @@ test('the approved Aurora values are used exactly', () => {
   }
 });
 
-test('win and loss keep one hue across themes, away from mint and orchid', () => {
+test('win and loss keep one hue across themes, away from yellow and orchid', () => {
   const { light, dark } = readTheme(readFileSync(THEME, 'utf8'));
   for (const token of ['win', 'loss']) {
     assert.equal(light.get(`--aurora-${token}`), dark.get(`--aurora-${token}`), `${token} fill differs between themes`);
   }
   const win = hues('win').dark;
   const loss = hues('loss').dark;
-  assert.ok(win <= 140, `win hue ${win} is not a yellower green than mint`);
-  assert.ok(apart(win, hues('accent').dark) >= 30, 'win is too close to mint');
+  const accent = hues('accent');
+  assert.ok(win >= 90 && win <= 150, `win hue ${win} is not a green`);
+  assert.ok(apart(win, accent.dark) >= 45, 'win is too close to the yellow accent');
+  assert.ok(apart(win, accent.light) >= 45, 'win is too close to the gold accent');
   assert.ok(apart(loss, hues('tertiary').dark) >= 60, 'loss is too close to orchid');
   assert.ok(apart(win, loss) >= 90, 'win and loss are too close');
 });

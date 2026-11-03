@@ -162,13 +162,10 @@ function pairs(roles) {
     }
   }
   // Text on a tint: the active nav tab (accent-soft), hovered rows, and the ally and enemy rows.
-  for (const tint of ['accent-soft over surface', 'hover over surface', 'hover over panel', 'ally over panel', 'enemy over panel']) {
+  for (const tint of ['accent-soft over surface', 'accent-soft over panel', 'hover over surface', 'hover over panel', 'ally over panel', 'enemy over panel']) {
     add('Text', 'text', tint, TEXT);
     add('Text', 'muted', tint, TEXT);
   }
-  add('Text', 'text', 'accent-soft over panel', TEXT);
-  // Known gap: muted text does not clear 4.5:1 on this tint in dark. Components put --text there; the test fails if the gap closes, so the entry cannot go stale.
-  add('Text', 'muted', 'accent-soft over panel', TEXT, true);
   // Match History outcome words: "Victory" and "Defeat" in their outcome inks, "Result pending" muted.
   for (const surface of ['panel', 'row-alt']) {
     add('Outcome word', 'win-ink', surface, TEXT);
