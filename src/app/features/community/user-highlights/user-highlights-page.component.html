@@ -1,134 +1,91 @@
-<section class="highlights-page page-container page-container--wide">
-  <header class="page-header">
-    <div>
-      <h1>User highlights, reviewed one decision at a time.</h1>
-      <p class="lede">
-        Watch player-submitted Marvel Rivals moments, then slow the play down into positioning,
-        timing, target selection, and one useful takeaway for the next match.
+<div class="guide-article page-container">
+  <app-page-header
+    title="User highlights"
+    description="Player-submitted Marvel Rivals moments, broken down into positioning, timing and one takeaway for your next match."
+  />
+
+  <section class="clip" aria-labelledby="clip-title">
+    <div class="clip-player">
+      <video
+        controls
+        playsinline
+        preload="metadata"
+        [poster]="example.posterUrl"
+        [attr.aria-label]="example.player + ' playing ' + example.hero"
+      >
+        <source [src]="example.videoUrl" type="video/mp4" />
+        Your browser does not support embedded video playback.
+      </video>
+      <p class="clip-source">
+        <span class="guide-caption">Hosted by the official Marvel Rivals highlight service</span>
+        <a class="guide-link" [href]="example.shareUrl" target="_blank" rel="noopener noreferrer">
+          Open original highlight<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
       </p>
     </div>
 
-    <div class="header-badge" aria-label="Featured highlights">
-      <strong>01</strong>
-      <span>Featured review</span>
+    <div class="clip-summary guide-tile">
+      <h2 id="clip-title">{{ example.title }}</h2>
+      <app-hero-tile [name]="example.hero" [imageUrl]="example.heroImage">
+        <span class="guide-caption">Played by {{ example.player }}</span>
+      </app-hero-tile>
+      <p class="guide-caption">{{ example.duration }} · four eliminations</p>
+      <p class="guide-text">
+        This clip works because the engagement has shape: an elevated approach, a vertical target
+        chase, and a decisive return to the grouped objective fight. The finish is the reward; the
+        changing angles are what create it.
+      </p>
+      <p class="guide-caption">Topics: {{ topics }}</p>
     </div>
-  </header>
+  </section>
 
-  <div>
-    <article class="featured-highlight">
-      <div class="video-column">
-        <div class="video-frame">
-          <video
-            controls
-            playsinline
-            preload="metadata"
-            [poster]="example.posterUrl"
-            [attr.aria-label]="example.player + ' playing ' + example.hero"
-          >
-            <source [src]="example.videoUrl" type="video/mp4" />
-            Your browser does not support embedded video playback.
-          </video>
-        </div>
-
-        <div class="video-actions">
-          <span>Hosted by the official Marvel Rivals highlight service</span>
-          <a [href]="example.shareUrl" target="_blank" rel="noopener noreferrer">
-            Open original highlight
-          </a>
-        </div>
-      </div>
-
-      <div class="highlight-summary">
-        <div class="identity-row">
-          <span class="hero-mark" aria-hidden="true">HT</span>
-          <div>
-            <span class="label">Featured player</span>
-            <strong>{{ example.player }}</strong>
-            <small>{{ example.hero }}</small>
-          </div>
-        </div>
-
-        <div>
-          <h2>{{ example.title }}</h2>
-          <p class="clip-meta">{{ example.duration }} · Four-elimination finish</p>
-        </div>
-
-        <p class="summary-copy">
-          This clip works because the engagement has shape: an elevated approach, a vertical
-          target chase, and a decisive return to the grouped objective fight. The finish is the
-          reward; the changing angles are what create it.
-        </p>
-
-        <div class="tag-list" aria-label="Highlight tags">
-          <span>Human Torch</span>
-          <span>Off-angle</span>
-          <span>Vertical mobility</span>
-          <span>Objective pressure</span>
-        </div>
-      </div>
-    </article>
-
-    <section class="review-grid" aria-label="Highlight review">
-      <article class="timeline-panel">
-        <div class="section-heading">
-          <div>
-            <h2>How the play develops</h2>
-          </div>
-          <span>Observed from sampled frames</span>
-        </div>
-
-        <ol class="timeline">
-          @for (moment of timeline; track moment.time) {
-            <li>
-              <time>{{ moment.time }}</time>
-              <div>
-                <strong>{{ moment.title }}</strong>
-                <p>{{ moment.note }}</p>
-              </div>
-            </li>
-          }
-        </ol>
-      </article>
-
-      <div class="coaching-column">
-        <article class="review-card worked">
-          <span class="card-number">01</span>
-          <div>
-            <h2>What worked: change the angle before forcing the finish.</h2>
-            <p>
-              The clip avoids one long, predictable sightline. Height and lateral movement make
-              Human Torch difficult to follow while keeping pressure on the same fight.
-            </p>
-          </div>
-        </article>
-
-        <article class="review-card next-look">
-          <span class="card-number">02</span>
-          <div>
-            <h2>Review next: plan the exit before the objective dive.</h2>
-            <p>
-              The final commit succeeds with allied sustain. On review, check which movement tool
-              remains available if healing is delayed or the first elimination does not land.
-            </p>
-          </div>
-        </article>
-      </div>
+  <div class="review">
+    <section class="guide-section">
+      <h2>How the play develops</h2>
+      <p class="guide-caption">
+        Times are approximate, read from sampled frames. This timeline is the text version of the
+        clip.
+      </p>
+      <ol class="timeline">
+        @for (moment of timeline; track moment.time) {
+          <li>
+            <span>{{ moment.time }}</span>
+            <div>
+              <strong>{{ moment.title }}</strong>
+              <p class="guide-text">{{ moment.note }}</p>
+            </div>
+          </li>
+        }
+      </ol>
     </section>
 
-    <section class="submit-panel" aria-labelledby="share-highlight-title">
-      <div>
-        <h2 id="share-highlight-title">Have a moment worth reviewing?</h2>
-        <p>
-          Use a public Marvel Rivals highlight link and include the hero, what you were trying to
-          do, and the decision you want reviewed. Only submit clips you have permission to share.
-        </p>
-      </div>
-
-      <ul>
-        <li><span>1</span>Generate a share link in Marvel Rivals.</li>
-        <li><span>2</span>Remove social tracking parameters such as <code>fbclid</code>.</li>
-        <li><span>3</span>Describe the moment you want the film room to examine.</li>
-      </ul>
+    <section class="guide-section takeaways">
+      <h2>Takeaways</h2>
+      @for (takeaway of takeaways; track takeaway.title) {
+        <div class="guide-tile">
+          <h3>{{ takeaway.title }}</h3>
+          <p class="guide-text">{{ takeaway.body }}</p>
+        </div>
+      }
     </section>
   </div>
-</section>
+
+  <section class="guide-section">
+    <h2>Share a moment for review</h2>
+    <div class="guide-tile submit">
+      <p class="guide-text">
+        Use a public Marvel Rivals highlight link and include the hero, what you were trying to do,
+        and the decision you want reviewed. Only submit clips you have permission to share.
+      </p>
+      <ol class="guide-steps">
+        <li><span class="guide-text">Generate a share link in Marvel Rivals.</span></li>
+        <li>
+          <span class="guide-text">Remove social tracking parameters such as <code>fbclid</code>.</span>
+        </li>
+        <li>
+          <span class="guide-text">Describe the moment you want the film room to examine.</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+</div>
