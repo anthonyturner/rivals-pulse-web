@@ -28,8 +28,6 @@ describe('HeroesPageComponent', () => {
   let element: HTMLElement;
   let http: HttpTestingController;
 
-  const card = (id: string): HTMLButtonElement => element.querySelector(`[data-hero-id="${id}"]`) as HTMLButtonElement;
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
@@ -71,34 +69,12 @@ describe('HeroesPageComponent', () => {
     expect(element.querySelectorAll('.hero-card').length).toBe(3);
   });
 
-  it('selects the first hero on load and lists the count', async () => {
+  it('shows the roster and no hero until one is chosen, and lists the count', async () => {
     await loadRoster();
 
-    expect(card('mantis').getAttribute('aria-pressed')).toBe('true');
+    expect(element.querySelector('.hero-detail')).toBeNull();
+    expect(element.querySelector('[aria-current="page"]')).toBeNull();
     expect(element.querySelector('[data-testid="hero-count"]')?.textContent?.trim()).toBe('3 heroes');
-  });
-
-  it('choosing a card shows its details and moves focus to the hero name', async () => {
-    await loadRoster();
-
-    card('storm').click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(card('storm').getAttribute('aria-pressed')).toBe('true');
-    expect(document.activeElement?.tagName).toBe('H2');
-    expect(document.activeElement?.textContent?.trim()).toBe('Storm');
-  });
-
-  it('"Back to roster" returns focus to the selected hero card', async () => {
-    await loadRoster();
-    card('storm').click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    (element.querySelector('.detail-action') as HTMLButtonElement).click();
-
-    expect(document.activeElement).toBe(card('storm'));
   });
 
   it('renders no profile window or open-profile button, even after Escape', async () => {
@@ -110,13 +86,25 @@ describe('HeroesPageComponent', () => {
 
     expect(element.querySelector('[data-testid="open-profile"]')).toBeNull();
     expect(element.querySelector('[aria-modal="true"]')).toBeNull();
-    expect(card('mantis').getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('hides the detail panel when no hero matches the filters', async () => {
+  it('says so, and offers no roster, when the heroes could not be loaded', async () => {
+    spyOn(console, 'error');
+    http.match('/api/heroes').forEach((request) => request.flush('down', { status: 500, statusText: 'Server Error' }));
+    http.match('/api/hero-videos').forEach((request) => request.flush([]));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(element.textContent).toContain('Heroes could not be loaded');
+    expect(element.querySelector('app-hero-grid')).toBeNull();
+    expect(element.querySelector('.empty-state')).toBeNull();
+  });
+
+  it('shows the empty message when no hero matches the filters in the address', async () => {
     await loadRoster();
 
     fixture.componentInstance.updateSearchTerm('zzzz');
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(element.querySelector('.empty-state')).not.toBeNull();

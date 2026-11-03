@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from '../../../app.routes';
 import { DISCORD_INVITE_URL } from '../../../shared/discord-invite';
+import { declaresRoute } from '../../../testing/declared-routes';
 import { GoogleConsentService } from '../../consent/google-consent.service';
 import { NAVIGATION_CATEGORIES } from '../../navigation/navigation-category.data';
 import { Footer } from './footer';
@@ -57,7 +58,6 @@ describe('Footer', () => {
   });
 
   it('links only to declared routes the nav does not mark disabled', () => {
-    const declared = new Set(routes.map((route) => route.path).filter((path) => path !== undefined));
     const disabled = new Set(
       NAVIGATION_CATEGORIES.flatMap((category) => category.items)
         .filter((item) => !item.enabled)
@@ -65,7 +65,7 @@ describe('Footer', () => {
     );
 
     FOOTER_COLUMNS.flatMap((column) => column.links).forEach(({ path }) => {
-      expect(declared.has(path.slice(1))).withContext(`${path} is a declared route`).toBeTrue();
+      expect(declaresRoute(routes, path)).withContext(`${path} is a declared route`).toBeTrue();
       expect(disabled.has(path)).withContext(`${path} is released`).toBeFalse();
     });
   });

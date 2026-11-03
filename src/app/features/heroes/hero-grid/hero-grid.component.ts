@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { Hero, HeroRole } from '../hero.model';
 
@@ -23,13 +24,12 @@ const EAGER_CARD_COUNT = 20;
 
 @Component({
   selector: 'app-hero-grid',
+  imports: [RouterLink],
   templateUrl: './hero-grid.component.html',
   styleUrl: './hero-grid.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroGridComponent {
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-
   readonly heroes = input.required<Hero[]>();
   readonly roles = input.required<HeroRoleFilter[]>();
   readonly selectedRole = input.required<HeroRoleFilter>();
@@ -41,7 +41,6 @@ export class HeroGridComponent {
   readonly roleSelected = output<HeroRoleFilter>();
   readonly searchChanged = output<string>();
   readonly gridModeSelected = output<HeroGridMode>();
-  readonly heroSelected = output<string>();
   readonly filtersReset = output<void>();
 
   readonly placeholders = Array.from({ length: EAGER_CARD_COUNT }, (_, index) => index);
@@ -79,11 +78,6 @@ export class HeroGridComponent {
   });
 
   readonly hasActiveFilters = computed(() => this.selectedRole() !== 'All' || this.searchTerm() !== '');
-
-  /** Returns keyboard focus to a hero's card, scrolling it into view if needed. */
-  focusHero(heroId: string): void {
-    this.host.nativeElement.querySelector<HTMLElement>(`[data-hero-id="${CSS.escape(heroId)}"]`)?.focus();
-  }
 
   updateSearch(event: Event): void {
     this.searchChanged.emit((event.target as HTMLInputElement).value);

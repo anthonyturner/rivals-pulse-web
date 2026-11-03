@@ -67,12 +67,11 @@ describe('HeroContentComponent', () => {
     ]);
   });
 
-  it('emits when the reader asks to go back to the roster', () => {
-    const back = spyOn(fixture.componentInstance.rosterReturned, 'emit');
+  it('offers a link back to all heroes', () => {
+    const back = element.querySelector('a.detail-action');
 
-    (element.querySelector('.detail-action') as HTMLButtonElement).click();
-
-    expect(back).toHaveBeenCalledTimes(1);
+    expect(back?.getAttribute('href')).toBe('/heroes');
+    expect(back?.textContent?.trim()).toContain('All heroes');
   });
 
   it('offers no way to open a profile window', () => {

@@ -58,7 +58,7 @@
             <h2 #resultHeading tabindex="-1">{{ current.hero.name }}</h2>
             <p class="detail">{{ current.detail }}</p>
           </div>
-          <a class="link" routerLink="/heroes" [queryParams]="current.query">Open in Heroes</a>
+          <a class="link" [routerLink]="['/heroes', current.hero.id]">Open in Heroes</a>
           <p class="visually-hidden" role="status">Showing {{ current.hero.name }}</p>
         </header>
 
