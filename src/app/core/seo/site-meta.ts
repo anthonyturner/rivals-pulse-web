@@ -10,7 +10,7 @@ export const SITE_ORIGIN = 'https://rivalspulse.com';
 
 export const SITE_NAME = 'RivalsPulse';
 
-export const HOME_TITLE = 'RivalsPulse | Know every match before it starts';
+export const HOME_TITLE = 'RivalsPulse | Feel the pulse of every match';
 
 export const SITE_DESCRIPTION =
   'RivalsPulse is a free Marvel Rivals stats app: live stats on your screen and counters at your fingertips, with win rates and tier lists from real matches.';
@@ -22,4 +22,4 @@ export const PREVIEW_IMAGE_WIDTH = 1200;
 
 export const PREVIEW_IMAGE_HEIGHT = 630;
 
-export const PREVIEW_IMAGE_ALT = 'RivalsPulse: Know every match before it starts.';
+export const PREVIEW_IMAGE_ALT = 'RivalsPulse: Feel the pulse of every match.';
