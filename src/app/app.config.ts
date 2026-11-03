@@ -1,5 +1,4 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideRouter, TitleStrategy, withInMemoryScrolling } from '@angular/router';
 
@@ -21,7 +20,6 @@ export const appConfig: ApplicationConfig = {
         filter: (req) => !req.url.startsWith('/api/'),
       }),
     ),
-    provideAnimationsAsync(),
     provideAdSense(),
   ]
 };
