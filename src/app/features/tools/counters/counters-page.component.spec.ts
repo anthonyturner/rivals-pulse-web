@@ -66,7 +66,8 @@ describe('CountersPageComponent', () => {
   const panels = (root: HTMLElement): NodeListOf<Element> => root.querySelectorAll('.panel');
   const pickerDetails = (root: HTMLElement): (string | undefined)[] =>
     [...root.querySelectorAll('.hero-list .detail')].map((detail) => detail.textContent?.trim());
-  const answersStep = '.steps > section:last-child';
+  const liveRegions = (root: ParentNode): NodeListOf<Element> =>
+    root.querySelectorAll('[aria-live], [role="status"], [role="alert"]');
   const click = async (button: Element | null | undefined): Promise<void> => {
     (button as HTMLButtonElement).click();
     await fixture.whenStable();
@@ -83,6 +84,16 @@ describe('CountersPageComponent', () => {
     });
   });
 
+  describe('the dive planner', () => {
+    it('is one line away, as a link, and no longer on this page', async () => {
+      const root = await open(matchupsOf([]));
+
+      expect(text(root, '.to-planner')).toBe('Facing several divers? Use the dive planner.');
+      expect(root.querySelector('.to-planner a')?.getAttribute('href')).toBe('/dive-planner');
+      expect(root.querySelector('.planner, .chip, app-jubilee-case-study')).toBeNull();
+    });
+  });
+
   describe('while the roster loads', () => {
     it('shows a loading panel in the list and the result, and announces no hero count', async () => {
       const root = await open(matchupsOf([]), 'pending');
@@ -90,13 +101,13 @@ describe('CountersPageComponent', () => {
       expect(text(root, '.picker app-state-panel')).toContain('Loading heroes');
       expect(text(root, '.result app-state-panel')).toContain('Loading matchups');
       expect(root.querySelectorAll('.hero-list').length).toBe(0);
-      expect(text(root, '.picker [role="status"]').trim()).toBe('');
+      expect(text(root, '[aria-live]').trim()).toBe('');
     });
 
-    it('announces one loading panel, not one for each place that waits', async () => {
+    it('keeps one live region, not one for each place that waits', async () => {
       const root = await open('pending', 'pending');
 
-      expect(root.querySelectorAll('app-state-panel[role="status"]').length).toBe(1);
+      expect(liveRegions(root).length).toBe(1);
     });
   });
 
@@ -111,12 +122,11 @@ describe('CountersPageComponent', () => {
   });
 
   describe('when no matchup qualifies yet', () => {
-    it('shows one designed empty state in the planner and for the selected hero, with no NaN', async () => {
+    it('shows one designed empty state for the selected hero, with no NaN', async () => {
       const root = await open(matchupsOf([]));
 
       expect(text(root, '.result')).toContain('Not enough data yet');
       expect(text(root, '.result')).toContain('No two heroes have faced each other in 10 recorded matches yet');
-      expect(text(root, answersStep)).toContain('Not enough data yet');
       expect(panels(root).length).toBe(0);
       expect(root.querySelectorAll('.tiles').length).toBe(0);
       expect(root.textContent).not.toMatch(/NaN|\b0\.0%|Infinity|undefined/);
@@ -130,13 +140,13 @@ describe('CountersPageComponent', () => {
   });
 
   describe('when the matchups cannot be read', () => {
-    it('says so in the result and the planner, and the hero list still renders', async () => {
+    it('says so in the result and the live region, and the hero list still renders', async () => {
       const root = await open(500);
 
       expect(text(root, '.result')).toContain('Matchups unavailable');
       expect(text(root, '.result')).toContain('cannot be loaded right now');
-      expect(root.querySelectorAll('app-state-panel[role="status"]').length).toBe(1);
-      expect(text(root, answersStep)).toContain('Matchups unavailable');
+      expect(liveRegions(root).length).toBe(1);
+      expect(text(root, '[aria-live]')).toContain('cannot be loaded right now');
       expect(root.querySelectorAll('.hero-list .pick').length).toBe(roster.length);
       expect(pickerDetails(root).every((detail) => detail?.endsWith('Unavailable'))).toBeTrue();
       expect(root.textContent).not.toMatch(/NaN|Infinity/);
@@ -185,46 +195,6 @@ describe('CountersPageComponent', () => {
       expect(text(root, '.note')).toContain('only once it has 10 recorded matches');
     });
 
-    it('tells the planner which heroes have a winning record against several of the chosen threats', async () => {
-      const root = await open(partial);
-
-      expect(names(root, answersStep)).toEqual(['Peni Parker', 'Mantis']);
-      expect(text(root, answersStep)).toContain('Has a winning record against Angela, Black Cat');
-      expect(text(root, answersStep)).toContain('2/3');
-    });
-
-    it('shows the empty line, not an error, when the threats chosen have no winning answer yet', async () => {
-      const root = await open(partial);
-
-      await click(root.querySelectorAll('.chip[aria-pressed="true"]')[0]);
-      await click(root.querySelectorAll('.chip[aria-pressed="true"]')[0]);
-
-      expect(names(root, answersStep)).toEqual([]);
-      expect(text(root, answersStep)).toContain('No winning record yet');
-      expect(text(root, answersStep)).not.toContain('Not enough data yet');
-    });
-
-    it('asks for a threat when none is chosen', async () => {
-      const root = await open(partial);
-
-      for (const chip of Array.from(root.querySelectorAll('.chip[aria-pressed="true"]'))) {
-        await click(chip);
-      }
-
-      expect(text(root, '.steps')).toContain('Select at least one enemy threat.');
-      expect(text(root, '.chips + .detail')).toContain('0 of 4 chosen');
-    });
-
-    it('drops the oldest threat when a fifth is chosen', async () => {
-      const root = await open(partial);
-
-      await click(root.querySelectorAll('.chip[aria-pressed="false"]')[0]);
-      await click(root.querySelectorAll('.chip[aria-pressed="false"]')[0]);
-
-      expect(root.querySelectorAll('.chip[aria-pressed="true"]').length).toBe(4);
-      expect(root.querySelector('.chip[aria-pressed="true"]')?.textContent).not.toContain('Angela');
-    });
-
     it('has a labelled, hero-name-only search and a Role filter', async () => {
       const root = await open(partial);
 
@@ -242,7 +212,7 @@ describe('CountersPageComponent', () => {
       await fixture.whenStable();
 
       expect(names(root, '.hero-list')).toEqual(['Black Cat']);
-      expect(text(root, '.picker [role="status"]')).toBe('1 hero');
+      expect(text(root, '[aria-live]')).toBe('1 hero. Showing Black Cat');
       expect(text(root, '.result-head h2')).toBe('Black Cat');
 
       const role = root.querySelector('app-filter-select select') as HTMLSelectElement;
@@ -329,13 +299,6 @@ describe('CountersPageComponent', () => {
       );
 
       expect(root.textContent).not.toMatch(/\bban\b|\bbans\b|banned|\bban order\b/i);
-    });
-
-    it('keeps the Jubilee case study closed until it is opened', async () => {
-      const root = await open(matchupsOf([]));
-
-      expect(text(root, 'app-jubilee-case-study summary')).toBe('Jubilee case study');
-      expect(root.querySelector('app-jubilee-case-study details')?.hasAttribute('open')).toBeFalse();
     });
   });
 });

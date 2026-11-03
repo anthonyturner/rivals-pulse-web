@@ -23,25 +23,12 @@ import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero, HeroRole } from '../../heroes/hero.model';
 import { HeroMatchupsService } from '../../insights/hero-matchups.service';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
-import { CounterEngineService, MultiThreatAnswer } from './counter-engine.service';
-import { DIVE_THREATS } from './dive-threats';
-import { JubileeCaseStudyComponent } from './jubilee-case-study/jubilee-case-study.component';
+import { matchupNotice } from '../../insights/matchup-notice';
+import { CounterEngineService } from './counter-engine.service';
 
 type RoleFilter = HeroRole | 'All';
 
 const ROLES: readonly RoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist', 'Multi-Role'];
-
-/** The most enemy heroes the planner takes at once; choosing another drops the oldest. */
-const MAX_DIVE_THREATS = 4;
-
-/** What the matchup records are doing: waiting, unreadable, readable but empty, or ready to show. */
-type MatchupState = 'loading' | 'unavailable' | 'empty' | 'ready';
-
-interface MatchupNotice {
-  kind: 'loading' | 'error' | 'empty';
-  heading: string | null;
-  message: string;
-}
 
 @Component({
   selector: 'app-counters-page',
@@ -49,7 +36,6 @@ interface MatchupNotice {
     FilterSelectComponent,
     HeroImageFallbackDirective,
     HeroTileComponent,
-    JubileeCaseStudyComponent,
     NoticeComponent,
     PageHeaderComponent,
     RouterLink,
@@ -74,29 +60,13 @@ export class CountersPageComponent implements OnInit {
   private readonly matchups = signal<HeroMatchups | null | undefined>(undefined);
 
   protected readonly roleOptions: readonly FilterOption[] = ROLES.map((role) => ({ value: role, label: role }));
-  protected readonly maxDiveThreats = MAX_DIVE_THREATS;
 
   protected readonly selectedRole = signal<RoleFilter>('All');
   protected readonly selectedHeroId = signal('');
   protected readonly searchTerm = signal('');
-  protected readonly selectedDiveThreatIds = signal<string[]>(['angela', 'black-cat', 'spider-man']);
 
   protected readonly heroesLoaded = computed(() => this.heroes() !== undefined);
   protected readonly minimumMatches = computed(() => this.matchups()?.minimumMatches);
-
-  private readonly matchupState = computed<MatchupState>(() => {
-    const matchups = this.matchups();
-
-    if (matchups === undefined) {
-      return 'loading';
-    }
-
-    if (matchups === null) {
-      return 'unavailable';
-    }
-
-    return matchups.matchups.length === 0 ? 'empty' : 'ready';
-  });
 
   /** The sentence that says the previous half-season stands in for the current one, or null when it does not. */
   protected readonly scopeNotice = computed(() => {
@@ -114,27 +84,7 @@ export class CountersPageComponent implements OnInit {
       .join(' · ');
   });
 
-  /** What to show in place of records while there are none to show, or null once there are. */
-  protected readonly matchupNotice = computed<MatchupNotice | null>(() => {
-    switch (this.matchupState()) {
-      case 'loading':
-        return { kind: 'loading', heading: null, message: 'Loading matchups…' };
-      case 'unavailable':
-        return {
-          kind: 'error',
-          heading: 'Matchups unavailable',
-          message: 'RivalsPulse player matchups cannot be loaded right now. The hero list still works.',
-        };
-      case 'empty':
-        return {
-          kind: 'empty',
-          heading: 'Not enough data yet',
-          message: `No two heroes have faced each other in ${this.minimumMatches()} recorded matches yet. Matchups appear here as RivalsPulse players record more matches.`,
-        };
-      default:
-        return null;
-    }
-  });
+  protected readonly matchupNotice = computed(() => matchupNotice(this.matchups()));
 
   private readonly filteredHeroes = computed(() =>
     this.counterEngine.filterHeroes(this.heroes() ?? [], this.selectedRole(), this.searchTerm()),
@@ -142,11 +92,6 @@ export class CountersPageComponent implements OnInit {
 
   protected readonly pickerRows = computed(() =>
     this.filteredHeroes().map((hero) => ({ hero, detail: this.heroDetail(hero) })),
-  );
-
-  /** The filtered count for a screen reader; empty until the roster has loaded. */
-  protected readonly pickerStatus = computed(() =>
-    this.heroesLoaded() ? countLabel(this.pickerRows().length, 'hero', 'heroes') : '',
   );
 
   protected readonly pickerEmptyMessage = computed(() =>
@@ -188,29 +133,17 @@ export class CountersPageComponent implements OnInit {
     ];
   });
 
-  protected readonly threatChips = computed(() => {
-    const heroById = new Map((this.heroes() ?? []).map((hero) => [hero.id, hero]));
-    const chosen = new Set(this.selectedDiveThreatIds());
+  /** The page's one live region: the filtered count, the hero now shown, and a failure to read the matchups. */
+  protected readonly announcement = computed(() => {
+    const notice = this.matchupNotice();
 
-    return DIVE_THREATS.flatMap(({ id, instruction }) => {
-      const hero = heroById.get(id);
-
-      return hero ? [{ hero, instruction, pressed: chosen.has(id) }] : [];
-    });
-  });
-
-  protected readonly selectedThreats = computed(() => this.threatChips().filter((chip) => chip.pressed));
-
-  protected readonly answerRows = computed(() => {
-    const matchups = this.matchups();
-    const threats = this.selectedThreats().map((chip) => chip.hero);
-    const answers = matchups ? this.counterEngine.answersTo(threats, this.heroes() ?? [], matchups) : [];
-
-    return answers.map((answer) => ({
-      hero: answer.hero,
-      covers: `${answer.coveredThreats.length}/${threats.length}`,
-      detail: coverageLabel(answer),
-    }));
+    return [
+      this.heroesLoaded() && countLabel(this.pickerRows().length, 'hero', 'heroes'),
+      this.selected() && `Showing ${this.selected()?.hero.name}`,
+      notice?.kind === 'error' && notice.message,
+    ]
+      .filter(Boolean)
+      .join('. ');
   });
 
   ngOnInit(): void {
@@ -245,20 +178,10 @@ export class CountersPageComponent implements OnInit {
     this.selectedHeroId.set(heroId);
   }
 
-  /** Shows a hero picked from a card or an answer. The card is replaced, so focus moves to the new heading. */
+  /** Shows a hero picked from a card. The card is replaced, so focus moves to the new heading. */
   protected pivotTo(heroId: string): void {
     this.selectHero(heroId);
     this.resultHeading()?.nativeElement.focus();
-  }
-
-  protected toggleDiveThreat(heroId: string): void {
-    this.selectedDiveThreatIds.update((selectedIds) => {
-      if (selectedIds.includes(heroId)) {
-        return selectedIds.filter((selectedId) => selectedId !== heroId);
-      }
-
-      return selectedIds.length >= MAX_DIVE_THREATS ? [...selectedIds.slice(1), heroId] : [...selectedIds, heroId];
-    });
   }
 
   private heroDetail(hero: Hero): string {
@@ -268,8 +191,4 @@ export class CountersPageComponent implements OnInit {
   private selectFirstVisibleHero(): void {
     this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
   }
-}
-
-function coverageLabel(answer: MultiThreatAnswer): string {
-  return `Has a winning record against ${answer.coveredThreats.map((threat) => threat.name).join(', ')}`;
 }

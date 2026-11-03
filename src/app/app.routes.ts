@@ -206,6 +206,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'dive-planner',
+    title: 'Dive Response Planner | RivalsPulse',
+    loadComponent: () =>
+      import('./features/tools/dive-planner/dive-planner-page.component').then(
+        (module) => module.DivePlannerPageComponent,
+      ),
+  },
+  {
     path: 'team-builder',
     loadComponent: () =>
       import('./features/tools/team-builder/team-builder-page.component').then(

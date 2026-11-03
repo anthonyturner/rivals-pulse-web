@@ -7,10 +7,7 @@
 .workspace,
 .picker,
 .result,
-.panel,
-.planner,
-.steps,
-.steps > section {
+.panel {
   display: grid;
   gap: 12px;
   min-width: 0;
@@ -20,8 +17,7 @@
   padding-block: 16px 32px;
 }
 
-.workspace,
-.steps {
+.workspace {
   gap: 16px;
   align-items: start;
 }
@@ -48,8 +44,7 @@ img {
 
 .source,
 .detail,
-.note,
-.lede {
+.note {
   color: var(--text-soft);
   line-height: 1.4;
 }
@@ -58,10 +53,6 @@ img {
 .detail,
 .note {
   font-size: var(--type-caption);
-}
-
-.lede {
-  font-size: var(--type-small);
 }
 
 .detail {
@@ -111,9 +102,7 @@ app-filter-select,
 }
 
 .hero-list,
-.tiles,
-.chips,
-.reads {
+.tiles {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -131,8 +120,7 @@ app-filter-select,
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
 }
 
-.pick,
-.chip {
+.pick {
   width: 100%;
   min-height: 44px;
   border: 0;
@@ -149,8 +137,8 @@ app-filter-select,
   padding: 0;
 }
 
-.chip:focus-visible,
 .link:focus-visible,
+.to-planner a:focus-visible,
 .pick:focus-visible > app-hero-tile {
   outline: 3px solid var(--link);
   outline-offset: -3px;
@@ -193,6 +181,16 @@ app-filter-select,
   text-decoration: underline;
 }
 
+.to-planner {
+  font-size: var(--type-small);
+}
+
+.to-planner a {
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .panel-head {
   display: flex;
   gap: 8px;
@@ -206,40 +204,6 @@ app-filter-select,
   color: var(--text-soft);
   font-size: var(--type-small);
   font-weight: 800;
-}
-
-.planner h2 {
-  padding-top: 8px;
-  font-size: var(--type-h2);
-}
-
-.chips {
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-}
-
-.chip {
-  display: grid;
-  gap: 4px;
-  justify-items: center;
-  padding: 8px 4px;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  color: var(--text);
-  font-size: var(--type-caption);
-  font-weight: 700;
-  text-align: center;
-}
-
-.chip img {
-  width: var(--hero-thumb);
-  height: var(--hero-thumb);
-  border-radius: 6px;
-}
-
-.chip[aria-pressed='true'] {
-  border-color: var(--accent);
-  background: var(--bg-panel-soft);
-  box-shadow: inset 0 3px 0 var(--accent);
 }
 
 @media (min-width: 860px) {
@@ -256,10 +220,6 @@ app-filter-select,
 
   .hero-list {
     max-height: none;
-  }
-
-  .steps {
-    grid-template-columns: minmax(300px, 1fr) minmax(0, 1fr);
   }
 }
 
