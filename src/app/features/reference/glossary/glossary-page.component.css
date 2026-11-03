@@ -1,271 +1,123 @@
-:host {
-  display: block;
-}
-
-.glossary-page {
-  min-height: 100%;
-  padding-block: 32px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: end;
-  padding: 24px 0 28px;
-}
-
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-
-h1 {
-  max-width: 780px;
-  color: var(--text);
-  font-size: var(--type-page-title);
-  line-height: 1.06;
-  font-weight: 750;
-}
-
-.lede {
-  max-width: 680px;
-  margin-top: 14px;
-  color: var(--text-muted);
-  font-size: 1.05rem;
-  line-height: 1.65;
-}
-
-.header-stat {
-  min-width: 136px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-panel-soft);
-  text-align: right;
-}
-
-.header-stat span {
-  display: block;
-  color: var(--text);
-  font-size: 1.7rem;
-  font-weight: 750;
-}
-
-.header-stat small {
-  color: var(--text-muted);
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.toolbar {
-  display: grid;
-  grid-template-columns: minmax(240px, 390px) 1fr;
+.glossary {
   gap: 16px;
-  align-items: end;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-panel);
 }
 
-.search-field {
+.guide-search {
   display: grid;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  gap: 6px;
 }
 
-.search-field input {
-  width: 100%;
-  min-height: 46px;
-  padding: 0 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.95rem;
-  outline: none;
-  text-transform: none;
+.guide-search span {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 850;
 }
 
-.search-field input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--focus-ring);
-}
-
-.category-tabs {
+.status {
   display: flex;
   flex-wrap: wrap;
-  justify-content: end;
-  gap: 8px;
+  align-items: center;
+  gap: 8px 12px;
 }
 
-.category-tabs button {
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text-soft);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.category-tabs button.active,
-.category-tabs button:hover {
-  border-color: var(--accent-line);
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.term-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-  gap: 16px;
-  padding: 20px 0 40px;
-}
-
-.term-card {
-  display: grid;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
-}
-
-.term-card-header {
+.letters {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.letters a {
+  display: inline-flex;
+  min-width: 32px;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 12px;
+  scroll-margin-top: 16px;
+}
+
+/* A 296px minimum gives three columns beside the 332px sidebar at 1366, which is what keeps 140-odd rows short. */
+.letter > .guide-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 296px), 1fr));
+  gap: 8px;
+  grid-column: 1 / -1;
   align-items: start;
 }
 
-.term-card-header span {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 750;
-  text-transform: uppercase;
+.guide-tile:hover {
+  border-color: var(--link);
 }
 
-.term-card-header a {
-  padding: 7px 9px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text-soft);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-decoration: none;
+.guide-tile:target {
+  background: var(--bg-panel-soft);
 }
 
-.term-card-header a:hover {
-  border-color: var(--accent-line);
-  color: var(--accent-strong);
+.guide-tile > h3 {
+  margin-bottom: 4px;
 }
 
-h2 {
-  color: var(--text);
-  font-size: var(--type-h3);
-  line-height: 1.1;
-}
-
-h3 {
-  margin-bottom: 7px;
-  color: var(--text);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-}
-
-.definition,
-.term-card section p {
-  color: var(--text-soft);
-  line-height: 1.58;
-}
-
-.definition {
-  color: var(--text);
-  font-size: 1rem;
-}
-
-.related-list {
+/* The button fills the tile's top, padding included, so the whole of it is the target. */
+.toggle {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.related-list span {
-  padding: 7px 9px;
-  border-radius: 999px;
-  background: var(--bg-panel-soft);
-  color: var(--text-soft);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.source-name {
-  padding-top: 2px;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-}
-
-.empty-state {
-  display: grid;
-  gap: 8px;
-  grid-column: 1 / -1;
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-muted);
-  background: var(--bg-panel-soft);
-}
-
-.empty-state strong {
+  width: calc(100% + 32px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -12px -16px -4px;
+  padding: 12px 16px 4px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
   color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-@media (max-width: 920px) {
-  .glossary-page {
-    padding-block: 20px;
-  }
-
-  .page-header,
-  .toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .page-header {
-    display: grid;
-    align-items: stretch;
-  }
-
-  .header-stat {
-    text-align: left;
-  }
-
-  .category-tabs {
-    justify-content: start;
-  }
+.toggle:focus-visible {
+  outline-offset: -4px;
 }
 
-@media (max-width: 560px) {
-  .glossary-page {
-    padding-block: var(--mobile-page-gutter);
-  }
-
-  .toolbar,
-  .term-card {
-    padding: var(--mobile-panel-padding);
-  }
-
-  .term-grid {
-    grid-template-columns: 1fr;
-  }
+.definition:not(.is-open) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
+.details {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  line-height: 1.5;
+}
+
+.details > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.details > div + div {
+  margin-top: 6px;
+}
+
+.details dt {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.details dd {
+  margin: 0;
+}

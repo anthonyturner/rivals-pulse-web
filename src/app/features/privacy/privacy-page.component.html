@@ -1,10 +1,19 @@
-<div class="privacy-page">
+<div class="reading privacy page-container page-container--narrow">
   <app-page-header
     title="Privacy notes: where the community numbers come from"
     description="RivalsPulse shows totals built from matches the RivalsPulse desktop app uploads automatically. This page says what is uploaded, what the site publishes, and how long it is kept."
   />
 
-  <section class="privacy-section" id="summary" aria-labelledby="summary-title">
+  <nav class="privacy-toc" aria-labelledby="privacy-toc-title">
+    <p id="privacy-toc-title">On this page</p>
+    <ul>
+      @for (entry of contents; track entry.id) {
+        <li><a routerLink="." [fragment]="entry.id">{{ entry.label }}</a></li>
+      }
+    </ul>
+  </nav>
+
+  <section class="reading-section" id="summary" aria-labelledby="summary-title">
     <h2 id="summary-title">The short version</h2>
     <ul>
       <li>
@@ -35,7 +44,7 @@
     </ul>
   </section>
 
-  <section class="privacy-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
+  <section class="reading-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
     <h2 id="uploaded-today-title">What the app uploads today</h2>
     <p>
       Every match the desktop app records is uploaded automatically: the app has no setting to
@@ -70,14 +79,8 @@
     </p>
   </section>
 
-  <section class="privacy-section" id="extended-fields" aria-labelledby="extended-fields-title">
-    <h2 id="extended-fields-title">
-      @if (extendedBeingAdded) {
-        What the app is adding (being added)
-      } @else {
-        What the app also uploads
-      }
-    </h2>
+  <section class="reading-section" id="extended-fields" aria-labelledby="extended-fields-title">
+    <h2 id="extended-fields-title">{{ extendedHeading }}</h2>
     @if (extendedBeingAdded) {
       <p>
         These fields are <strong>being added</strong> to the desktop app's upload and to the
@@ -102,7 +105,7 @@
     </p>
   </section>
 
-  <section class="privacy-section" id="public-numbers" aria-labelledby="public-numbers-title">
+  <section class="reading-section" id="public-numbers" aria-labelledby="public-numbers-title">
     <h2 id="public-numbers-title">What this website publishes</h2>
     <ul>
       <li>
@@ -121,7 +124,7 @@
     </ul>
   </section>
 
-  <section class="privacy-section" id="retention" aria-labelledby="retention-title">
+  <section class="reading-section" id="retention" aria-labelledby="retention-title">
     <h2 id="retention-title">How long it is kept</h2>
     <ul>
       <li>
@@ -148,7 +151,7 @@
     </ul>
   </section>
 
-  <section class="privacy-section" id="accounts" aria-labelledby="accounts-title">
+  <section class="reading-section" id="accounts" aria-labelledby="accounts-title">
     <h2 id="accounts-title">Accounts and signing in</h2>
     <p>
       Signing in is optional and works with Discord only. Nothing on the community pages needs an
@@ -228,7 +231,7 @@
     </p>
   </section>
 
-  <section class="privacy-section" id="advertising" aria-labelledby="advertising-title">
+  <section class="reading-section" id="advertising" aria-labelledby="advertising-title">
     <h2 id="advertising-title">Advertising</h2>
     <p>
       This website uses Google AdSense, so every page loads Google's AdSense script. When it loads,
@@ -272,7 +275,7 @@
     </p>
   </section>
 
-  <section class="privacy-section" id="more" aria-labelledby="more-title">
+  <section class="reading-section" id="more" aria-labelledby="more-title">
     <h2 id="more-title">More</h2>
     <p>
       The desktop app's privacy policy also covers the ads shown inside the app, the optional voice

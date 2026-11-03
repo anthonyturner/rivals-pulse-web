@@ -11,7 +11,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
   selector: 'app-how-we-count-page',
   imports: [PageHeaderComponent, RouterLink],
   templateUrl: './how-we-count-page.component.html',
-  styleUrl: './how-we-count-page.component.css',
+  styleUrl: '../../shared/styles/reading.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HowWeCountPageComponent {}

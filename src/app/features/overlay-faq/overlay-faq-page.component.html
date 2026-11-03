@@ -1,54 +1,93 @@
-<div class="faq-page page-container page-container--narrow">
+<div class="reading faq page-container page-container--narrow">
   <app-page-header
     title="RivalsPulse FAQ: bans, your data and Overwolf"
     description="Straight answers to what a cautious player asks before installing an app that runs while they play. The rules below were last checked on 30 October 2026, and NetEase and Overwolf can change them at any time."
   />
 
-  <section class="faq-section" id="ban-risk" aria-labelledby="ban-risk-title">
-    <h2 id="ban-risk-title">Will RivalsPulse get me banned?</h2>
-    <p>{{ banAnswer }}</p>
-    <ul class="sources" aria-label="Sources for this answer">
-      @for (source of banSources; track source.url) {
-        <li><a [href]="source.url">{{ source.label }}</a></li>
-      }
-    </ul>
-  </section>
+  <div class="reading-section" id="ban-risk">
+    <h2 id="ban-risk-title">
+      <button
+        type="button"
+        class="chevron"
+        id="ban-risk-button"
+        aria-controls="ban-risk-panel"
+        [attr.aria-expanded]="open()['ban-risk'] ? 'true' : 'false'"
+        (click)="toggle('ban-risk')"
+      >
+        <span>Will RivalsPulse get me banned?</span>
+      </button>
+    </h2>
+    <div class="reading-panel" id="ban-risk-panel" role="region" aria-labelledby="ban-risk-button" [hidden]="!open()['ban-risk']">
+      <p>{{ banAnswer }}</p>
+      <ul class="sources" aria-label="Sources for this answer">
+        @for (source of banSources; track source.url) {
+          <li><a [href]="source.url">{{ source.label }}</a></li>
+        }
+      </ul>
+    </div>
+  </div>
 
-  <section class="faq-section" id="data" aria-labelledby="data-title">
-    <h2 id="data-title">What does the app send?</h2>
-    <p>
-      RivalsPulse records the matches you play and uploads each one automatically; the app has no
-      setting to turn that off. An upload holds the scoreboard line of every human player in the
-      match, including in-game names and player ids, plus facts such as the map and the mode. This
-      website publishes only anonymous totals, never names or ids; what is uploaded, what is kept
-      and for how long are in the <a routerLink="/privacy">privacy notes</a>, and how the totals
-      are counted is in <a routerLink="/how-we-count">How we count</a>.
-    </p>
-  </section>
+  <div class="reading-section" id="data">
+    <h2 id="data-title">
+      <button
+        type="button"
+        class="chevron"
+        id="data-button"
+        aria-controls="data-panel"
+        [attr.aria-expanded]="open()['data'] ? 'true' : 'false'"
+        (click)="toggle('data')"
+      >
+        <span>What does the app send?</span>
+      </button>
+    </h2>
+    <div class="reading-panel" id="data-panel" role="region" aria-labelledby="data-button" [hidden]="!open()['data']">
+      <p>
+        RivalsPulse records the matches you play and uploads each one automatically; the app has no
+        setting to turn that off. An upload holds the scoreboard line of every human player in the
+        match, including in-game names and player ids, plus facts such as the map and the mode. This
+        website publishes only anonymous totals, never names or ids; what is uploaded, what is kept
+        and for how long are in the <a routerLink="/privacy">privacy notes</a>, and how the totals
+        are counted is in <a routerLink="/how-we-count">How we count</a>.
+      </p>
+    </div>
+  </div>
 
-  <section class="faq-section" id="overwolf" aria-labelledby="overwolf-title">
-    <h2 id="overwolf-title">What does Overwolf have to do with it?</h2>
-    <p>
-      RivalsPulse is an app for Overwolf, a platform that lists Marvel Rivals among its supported
-      games and publishes official game-event support for it. Overwolf says it requires apps to
-      follow each game's terms and that it manually curates and tests the apps it publishes@if (!listed) {; RivalsPulse is not listed yet, so it has not been through that review}.
-      RivalsPulse is an independent project, not affiliated with NetEase, Marvel or Overwolf, and
-      what the game allows is still NetEase's decision.
-    </p>
-    <ul class="sources" aria-label="Sources for this answer">
-      <li>
-        <a href="https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/marvel-rivals">
-          Overwolf: Marvel Rivals game events
-        </a>
-      </li>
-      <li>
-        <a href="https://dev.overwolf.com/ow-native/guides/game-compliance/overview">
-          Overwolf: game compliance guide
-        </a>
-      </li>
-      <li><a href="https://www.overwolf.com/our-commitment">Overwolf: our commitment</a></li>
-    </ul>
-  </section>
+  <div class="reading-section" id="overwolf">
+    <h2 id="overwolf-title">
+      <button
+        type="button"
+        class="chevron"
+        id="overwolf-button"
+        aria-controls="overwolf-panel"
+        [attr.aria-expanded]="open()['overwolf'] ? 'true' : 'false'"
+        (click)="toggle('overwolf')"
+      >
+        <span>What does Overwolf have to do with it?</span>
+      </button>
+    </h2>
+    <div class="reading-panel" id="overwolf-panel" role="region" aria-labelledby="overwolf-button" [hidden]="!open()['overwolf']">
+      <p>
+        RivalsPulse is an app for Overwolf, a platform that lists Marvel Rivals among its supported
+        games and publishes official game-event support for it. Overwolf says it requires apps to
+        follow each game's terms and that it manually curates and tests the apps it publishes@if (!listed) {; RivalsPulse is not listed yet, so it has not been through that review}.
+        RivalsPulse is an independent project, not affiliated with NetEase, Marvel or Overwolf, and
+        what the game allows is still NetEase's decision.
+      </p>
+      <ul class="sources" aria-label="Sources for this answer">
+        <li>
+          <a href="https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/marvel-rivals">
+            Overwolf: Marvel Rivals game events
+          </a>
+        </li>
+        <li>
+          <a href="https://dev.overwolf.com/ow-native/guides/game-compliance/overview">
+            Overwolf: game compliance guide
+          </a>
+        </li>
+        <li><a href="https://www.overwolf.com/our-commitment">Overwolf: our commitment</a></li>
+      </ul>
+    </div>
+  </div>
 
-  <p class="faq-footer"><a routerLink="/">Back to the home page</a></p>
+  <p><a routerLink="/">Back to the home page</a></p>
 </div>

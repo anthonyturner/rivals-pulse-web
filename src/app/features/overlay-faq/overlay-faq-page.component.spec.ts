@@ -1,9 +1,13 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 
+import { routes } from '../../app.routes';
 import { buildBanAnswer } from '../../shared/ban-answer';
 import { OverlayFaqPageComponent } from './overlay-faq-page.component';
+
+const IDS = ['ban-risk', 'data', 'overwolf'];
 
 describe('OverlayFaqPageComponent', () => {
   let fixture: ComponentFixture<OverlayFaqPageComponent>;
@@ -32,14 +36,81 @@ describe('OverlayFaqPageComponent', () => {
   const sentences = (id: string): number =>
     flat(section(id).querySelector('p')).split(/(?<=\.)\s+(?=[A-Z])/).length;
 
-  it('has one h1, and one labelled h2 section for each question', () => {
+  const button = (id: string): HTMLButtonElement => page.querySelector<HTMLButtonElement>(`#${id}-button`) as HTMLButtonElement;
+  const panel = (id: string): HTMLElement => page.querySelector<HTMLElement>(`#${id}-panel`) as HTMLElement;
+  const openIds = (): string[] => IDS.filter((id) => !panel(id).hidden);
+
+  it('has one h1, and one h2 for each question holding the button that opens its panel', () => {
     expect(page.querySelectorAll('h1').length).toBe(1);
 
-    for (const id of ['ban-risk', 'data', 'overwolf']) {
+    for (const id of IDS) {
       expect(page.querySelector(`#${id}-title`)?.tagName).withContext(id).toBe('H2');
-      expect(section(id).getAttribute('aria-labelledby')).toBe(`${id}-title`);
+      expect(button(id).parentElement?.id).withContext(id).toBe(`${id}-title`);
+      expect(button(id).getAttribute('aria-controls')).toBe(`${id}-panel`);
+      expect(panel(id).getAttribute('role')).toBe('region');
+      expect(panel(id).getAttribute('aria-labelledby')).toBe(`${id}-button`);
     }
     expect(page.querySelectorAll('h2').length).toBe(3);
+    expect(page.querySelectorAll('main').length).toBe(0);
+  });
+
+  describe('accordion', () => {
+    it('starts with only the first question open', () => {
+      expect(openIds()).toEqual(['ban-risk']);
+      expect(IDS.map((id) => button(id).getAttribute('aria-expanded'))).toEqual(['true', 'false', 'false']);
+    });
+
+    it('opens and closes a question on click, and lets several stay open', () => {
+      button('data').click();
+      fixture.detectChanges();
+      button('overwolf').click();
+      fixture.detectChanges();
+
+      expect(openIds()).toEqual(IDS);
+      expect(button('data').getAttribute('aria-expanded')).toBe('true');
+
+      button('ban-risk').click();
+      fixture.detectChanges();
+
+      expect(openIds()).toEqual(['data', 'overwolf']);
+    });
+
+    it('keeps a closed answer in the page text but out of the tab order', () => {
+      expect(panel('data').hidden).toBeTrue();
+      expect(flat(panel('data'))).toContain('uploads each one automatically');
+    });
+  });
+
+  describe('a fragment link', () => {
+    const visit = async (url: string): Promise<void> => {
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        providers: [provideZonelessChangeDetection(), provideRouter(routes)],
+      }).compileComponents();
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl(url, OverlayFaqPageComponent);
+      await harness.fixture.whenStable();
+      page = harness.routeNativeElement as HTMLElement;
+    };
+    const land = async (url: string, expected: string): Promise<void> => {
+      await visit(url);
+
+      expect(page.querySelector(`#${expected}-button`)).withContext(url).toBe(document.activeElement);
+      expect(panel(expected).hidden).withContext(url).toBeFalse();
+    };
+
+    for (const id of IDS) {
+      it(`opens #${id} and focuses its button`, () => land(`/faq#${id}`, id));
+    }
+
+    it('lands on the question when the old /overlay-faq address is used', () => land('/overlay-faq#overwolf', 'overwolf'));
+
+    it('leaves the first question open, and takes no focus, for a fragment that is not a question', async () => {
+      await visit('/faq#nope');
+
+      expect(openIds()).toEqual(['ban-risk']);
+      expect(page.contains(document.activeElement)).toBeFalse();
+    });
   });
 
   it('keeps the data and Overwolf answers to three sentences, and the ban answer to a "No." and three', () => {
@@ -51,7 +122,7 @@ describe('OverlayFaqPageComponent', () => {
 
   describe('ban risk', () => {
     it('asks about RivalsPulse and answers No', () => {
-      expect(page.querySelector('#ban-risk-title')?.textContent).toBe('Will RivalsPulse get me banned?');
+      expect(flat(page.querySelector('#ban-risk-button span'))).toBe('Will RivalsPulse get me banned?');
       expect(flat(section('ban-risk').querySelector('p'))).toMatch(/^No\. /);
     });
 
