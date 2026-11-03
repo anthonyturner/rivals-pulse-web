@@ -31,24 +31,26 @@
       </button>
     }
 
-    <div class="chip-group view-toggle" role="group" aria-label="Hero card layout">
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="gridMode() === 'rows'"
-        (click)="gridModeSelected.emit('rows')"
-      >
-        Rows
-      </button>
-      <button
-        type="button"
-        class="chip"
-        [attr.aria-pressed]="gridMode() === 'thumbs'"
-        (click)="gridModeSelected.emit('thumbs')"
-      >
-        Thumbs
-      </button>
-    </div>
+    @if (isGrid()) {
+      <div class="chip-group view-toggle" role="group" aria-label="Hero card layout">
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="gridMode() === 'rows'"
+          (click)="gridModeSelected.emit('rows')"
+        >
+          Rows
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="gridMode() === 'thumbs'"
+          (click)="gridModeSelected.emit('thumbs')"
+        >
+          Thumbs
+        </button>
+      </div>
+    }
   </div>
 
   @if (loading()) {
@@ -65,7 +67,7 @@
       }
     </div>
   } @else {
-    <ul class="hero-grid" [class.hero-grid--rows]="gridMode() === 'rows'" aria-label="Hero list">
+    <ul class="hero-grid" [class.hero-grid--rows]="showsRows()" aria-label="Hero list">
       @for (card of cards(); track card.id) {
         <li>
           <a
@@ -88,7 +90,7 @@
             <span class="hero-card-copy">
               <span class="hero-card-name">{{ card.name }}</span>
               <span class="role-pill" [class]="card.roleClass">{{ card.roleLabel }}</span>
-              @if (gridMode() === 'rows') {
+              @if (showsRows()) {
                 <span class="hero-card-summary">{{ card.summary }}</span>
                 @if (card.archetype) {
                   <span class="archetype-label">{{ card.archetype }}</span>

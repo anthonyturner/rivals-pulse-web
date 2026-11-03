@@ -5,6 +5,7 @@ import { Hero, HeroRole } from '../hero.model';
 
 export type HeroRoleFilter = HeroRole | 'All';
 export type HeroGridMode = 'rows' | 'thumbs';
+export type HeroGridLayout = 'grid' | 'column';
 
 interface HeroCard {
   id: string;
@@ -28,6 +29,7 @@ const EAGER_CARD_COUNT = 20;
   templateUrl: './hero-grid.component.html',
   styleUrl: './hero-grid.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[attr.layout]': 'layout()' },
 })
 export class HeroGridComponent {
   readonly heroes = input.required<Hero[]>();
@@ -37,6 +39,8 @@ export class HeroGridComponent {
   readonly searchTerm = input.required<string>();
   readonly gridMode = input.required<HeroGridMode>();
   readonly loading = input(false);
+  /** `column` is the compact roster beside a hero's detail: no Rows/Thumbs choice, and the list scrolls on its own. */
+  readonly layout = input<HeroGridLayout>('grid');
 
   readonly roleSelected = output<HeroRoleFilter>();
   readonly searchChanged = output<string>();
@@ -70,6 +74,9 @@ export class HeroGridComponent {
       };
     });
   });
+
+  readonly isGrid = computed(() => this.layout() === 'grid');
+  readonly showsRows = computed(() => this.isGrid() && this.gridMode() === 'rows');
 
   readonly countLabel = computed(() => {
     const count = this.heroes().length;

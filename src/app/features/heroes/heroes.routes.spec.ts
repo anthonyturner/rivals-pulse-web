@@ -189,6 +189,28 @@ describe('heroes routes', () => {
       expect(element.querySelector('h2')?.textContent?.trim()).toBe('Storm');
     });
 
+    it('shows the roster as a column, not the full grid, and keeps it as heroes are chosen and closed', async () => {
+      const { harness, element } = await visit('/heroes');
+      const roster = element.querySelector('app-hero-grid') as HTMLElement;
+      expect(roster.getAttribute('layout')).toBe('grid');
+      expect(element.querySelector('.view-toggle')).not.toBeNull();
+
+      await navigate(harness, '/heroes/storm');
+      expect(element.querySelector('app-hero-grid')).toBe(roster);
+      expect(roster.getAttribute('layout')).toBe('column');
+      expect(element.querySelector('.view-toggle')).toBeNull();
+
+      await navigate(harness, '/heroes');
+      expect(roster.getAttribute('layout')).toBe('grid');
+    });
+
+    it('opens a hero page directly onto the column with the whole roster in it', async () => {
+      const { element } = await visit('/heroes/storm');
+
+      expect(element.querySelector('app-hero-grid')?.getAttribute('layout')).toBe('column');
+      expect(rowCount(element)).toBe(3);
+    });
+
     it('offers a link back to all heroes that keeps the filters', async () => {
       const { harness, element } = await visit('/heroes/storm?q=st');
 

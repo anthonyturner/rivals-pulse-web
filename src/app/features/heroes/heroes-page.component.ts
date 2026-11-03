@@ -27,7 +27,7 @@ import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
-import { HeroGridComponent, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
+import { HeroGridComponent, HeroGridLayout, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
 import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
@@ -141,6 +141,8 @@ export class HeroesPageComponent implements OnInit {
   readonly selectedHeroId = toSignal(this.routeHeroId.pipe(map((heroId) => heroId ?? '')), {
     initialValue: this.route.snapshot.paramMap.get('heroId') ?? '',
   });
+  /** On a hero page the roster is the compact column beside the detail; on the landing it is the full grid. */
+  readonly gridLayout = computed<HeroGridLayout>(() => (this.selectedHeroId() === '' ? 'grid' : 'column'));
   /** Chosen role filter's kit when there is one; resets when the role filter or the hero changes. */
   readonly selectedAbilityKitRole = linkedSignal<{ role: HeroRoleFilter; heroId: string }, HeroRole>({
     source: () => ({ role: this.selectedRole(), heroId: this.selectedHeroId() }),

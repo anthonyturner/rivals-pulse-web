@@ -113,6 +113,55 @@ describe('HeroGridComponent', () => {
     expect(hrefs).toEqual(['/heroes/storm', '/heroes/mantis']);
   });
 
+  describe('in the column layout', () => {
+    beforeEach(() => setInputs({ layout: 'column', gridMode: 'rows' }));
+
+    it('marks the host as a column and keeps the search, role filters and count on top', () => {
+      expect(element.getAttribute('layout')).toBe('column');
+      expect(element.querySelector('.search-field input')).not.toBeNull();
+      expect(element.querySelectorAll('.chip-group .chip').length).toBe(4);
+      expect(text(element.querySelector('[data-testid="hero-count"]'))).toBe('2 heroes');
+    });
+
+    it('leaves out the Rows/Thumbs choice and the row summaries, even if rows were chosen', () => {
+      expect(element.querySelector('.view-toggle')).toBeNull();
+      expect(element.querySelector('.hero-grid--rows')).toBeNull();
+      expect(element.querySelector('.hero-card-summary')).toBeNull();
+      expect(element.querySelector('.archetype-label')).toBeNull();
+    });
+
+    it('shows a portrait, the name and the role on each row, and marks the selected hero as the current page', () => {
+      const [storm, mantis] = Array.from(element.querySelectorAll<HTMLAnchorElement>('.hero-card'));
+
+      expect(storm.querySelector('img')).not.toBeNull();
+      expect(text(storm.querySelector('.hero-card-name'))).toBe('Storm');
+      expect(text(storm.querySelector('.role-pill'))).toBe('Vanguard');
+      expect(storm.getAttribute('aria-current')).toBe('page');
+      expect(mantis.getAttribute('aria-current')).toBeNull();
+    });
+
+    it('still emits the filter events, so a filter changes the visible rows without choosing a hero', () => {
+      const roleSpy = spyOn(fixture.componentInstance.roleSelected, 'emit');
+      const searchSpy = spyOn(fixture.componentInstance.searchChanged, 'emit');
+      const duelist = Array.from(element.querySelectorAll<HTMLButtonElement>('.chip')).find(
+        (chip) => text(chip) === 'Duelist',
+      ) as HTMLButtonElement;
+      const input = element.querySelector('.search-field input') as HTMLInputElement;
+
+      duelist.click();
+      input.value = 'sto';
+      input.dispatchEvent(new Event('input'));
+
+      expect(roleSpy).toHaveBeenCalledOnceWith('Duelist');
+      expect(searchSpy).toHaveBeenCalledOnceWith('sto');
+    });
+  });
+
+  it('is the full grid, with the Rows/Thumbs choice, by default', () => {
+    expect(element.getAttribute('layout')).toBe('grid');
+    expect(element.querySelector('.view-toggle')).not.toBeNull();
+  });
+
   it('loads images beyond the first two rows lazily', () => {
     const heroes = Array.from({ length: 22 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
     setInputs({ heroes });

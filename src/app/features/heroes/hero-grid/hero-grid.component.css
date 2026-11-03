@@ -283,3 +283,58 @@
     display: none;
   }
 }
+
+/* Column layout: the compact roster beside a hero's detail. These rules come last so they win over the grid's narrow-width ones. */
+:host([layout='column']) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+:host([layout='column']) .hero-browser {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+:host([layout='column']) .toolbar {
+  flex: none;
+}
+:host([layout='column']) .search-field {
+  flex-basis: 100%;
+}
+:host([layout='column']) .chip {
+  padding: 0 8px;
+}
+:host([layout='column']) .hero-grid {
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-height: 0;
+  max-height: 224px;
+  /* Room for the focus ring and the selected hero's outline, which the scroll box would otherwise clip. */
+  padding: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+:host([layout='column']) .hero-card {
+  height: auto;
+}
+:host([layout='column']) .hero-card.selected {
+  grid-template-columns: var(--hero-thumb) minmax(0, 1fr) auto;
+}
+/* The check sits in the row's own third column, so it can never cover a long name. */
+:host([layout='column']) .hero-card.selected::after {
+  position: static;
+}
+
+@media (min-width: 920px) {
+  :host([layout='column']) {
+    position: sticky;
+    top: calc(var(--nav-height) + 16px);
+    align-self: start;
+    max-height: calc(100dvh - var(--nav-height) - 32px);
+  }
+  :host([layout='column']) .hero-grid {
+    max-height: none;
+  }
+}
