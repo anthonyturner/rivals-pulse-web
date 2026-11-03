@@ -6,7 +6,7 @@
       Try again in a few minutes.
     </app-state-panel>
   } @else {
-    <div class="workspace" [class.workspace--with-hero]="gridLayout() === 'column'">
+    <div class="workspace" [class.workspace--with-hero]="gridLayout() === 'roster'">
       <app-hero-grid
         [layout]="gridLayout()"
         [heroes]="filteredHeroes()"

@@ -14,7 +14,7 @@ import { Hero, HeroRole } from '../hero.model';
 
 export type HeroRoleFilter = HeroRole | 'All';
 export type HeroGridMode = 'rows' | 'thumbs';
-export type HeroGridLayout = 'grid' | 'column';
+export type HeroGridLayout = 'grid' | 'roster';
 
 interface HeroCard {
   id: string;
@@ -48,7 +48,11 @@ export class HeroGridComponent {
   readonly searchTerm = input.required<string>();
   readonly gridMode = input.required<HeroGridMode>();
   readonly loading = input(false);
-  /** `column` is the compact roster beside a hero's detail: no Rows/Thumbs choice, and the list scrolls on its own. */
+  /**
+   * `roster` is the compact hero list that goes with a hero's detail, with no Rows/Thumbs choice. The stylesheet
+   * draws it as a column beside the detail from 920px and as a one-row portrait strip with no controls below
+   * that, so server and browser output are the same at every width.
+   */
   readonly layout = input<HeroGridLayout>('grid');
 
   readonly roleSelected = output<HeroRoleFilter>();
@@ -90,9 +94,9 @@ export class HeroGridComponent {
     // Reads only the layout, the loading flag and the chosen hero, so typing in the search box does not
     // move the list under the visitor; the roster arriving or another hero being chosen does.
     afterRenderEffect(() => {
-      if (this.layout() === 'column' && !this.loading()) {
+      if (this.layout() === 'roster' && !this.loading()) {
         this.selectedHeroId();
-        this.revealSelectedRow();
+        this.revealSelectedCard();
       }
     });
   }
@@ -112,20 +116,27 @@ export class HeroGridComponent {
     this.searchChanged.emit((event.target as HTMLInputElement).value);
   }
 
-  /** Scrolls the column's own list, never the page, so the chosen hero's row is in view on a direct load. */
-  private revealSelectedRow(): void {
+  /**
+   * Scrolls the roster's own list, never the page, so the chosen hero is in view on a direct load. The list
+   * scrolls down in the column and sideways in the strip; an axis that does not scroll is left alone.
+   */
+  private revealSelectedCard(): void {
     const list = this.host.nativeElement.querySelector<HTMLElement>('.hero-grid');
-    const row = list?.querySelector<HTMLElement>('.hero-card.selected');
+    const card = list?.querySelector<HTMLElement>('.hero-card.selected');
 
-    if (!list || !row) {
+    if (!list || !card) {
       return;
     }
 
     const listBox = list.getBoundingClientRect();
-    const rowBox = row.getBoundingClientRect();
+    const cardBox = card.getBoundingClientRect();
 
-    if (rowBox.top < listBox.top || rowBox.bottom > listBox.bottom) {
-      list.scrollTop += rowBox.top - listBox.top - (list.clientHeight - rowBox.height) / 2;
+    if (cardBox.top < listBox.top || cardBox.bottom > listBox.bottom) {
+      list.scrollTop += cardBox.top - listBox.top - (list.clientHeight - cardBox.height) / 2;
+    }
+
+    if (cardBox.left < listBox.left || cardBox.right > listBox.right) {
+      list.scrollLeft += cardBox.left - listBox.left - (list.clientWidth - cardBox.width) / 2;
     }
   }
 

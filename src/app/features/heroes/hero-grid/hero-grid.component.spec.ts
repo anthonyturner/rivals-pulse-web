@@ -113,11 +113,11 @@ describe('HeroGridComponent', () => {
     expect(hrefs).toEqual(['/heroes/storm', '/heroes/mantis']);
   });
 
-  describe('in the column layout', () => {
-    beforeEach(() => setInputs({ layout: 'column', gridMode: 'rows' }));
+  describe('in the roster layout', () => {
+    beforeEach(() => setInputs({ layout: 'roster', gridMode: 'rows' }));
 
-    it('marks the host as a column and keeps the search, role filters and count on top', () => {
-      expect(element.getAttribute('layout')).toBe('column');
+    it('marks the host as the roster and keeps the search, role filters and count on top', () => {
+      expect(element.getAttribute('layout')).toBe('roster');
       expect(element.querySelector('.search-field input')).not.toBeNull();
       expect(element.querySelectorAll('.chip-group .chip').length).toBe(4);
       expect(text(element.querySelector('[data-testid="hero-count"]'))).toBe('2 heroes');
@@ -157,19 +157,82 @@ describe('HeroGridComponent', () => {
     });
   });
 
-  it('scrolls its own list to the chosen hero in the column', async () => {
-    const heroes = Array.from({ length: 40 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
-    setInputs({ heroes, layout: 'column', selectedHeroId: 'hero-35' });
-    await fixture.whenStable();
-    const list = element.querySelector('.hero-grid') as HTMLElement;
-    const row = element.querySelector('.hero-card.selected') as HTMLElement;
-    const listBox = list.getBoundingClientRect();
-    const rowBox = row.getBoundingClientRect();
+  describe('keeping the chosen hero in view inside its own scrolling list', () => {
+    let geometry: HTMLStyleElement;
+    let spacer: HTMLElement;
 
-    expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
-    expect(list.scrollTop).toBeGreaterThan(0);
-    expect(rowBox.top).toBeGreaterThanOrEqual(listBox.top);
-    expect(rowBox.bottom).toBeLessThanOrEqual(listBox.bottom);
+    /** Pins the list's geometry whatever the Karma window width is, because the stylesheet picks column or strip by viewport. */
+    beforeEach(() => {
+      geometry = document.createElement('style');
+      geometry.textContent = `
+        .test-list-vertical { display: block !important; max-height: 200px !important; overflow: auto !important; }
+        .test-list-horizontal { display: flex !important; width: 300px !important; padding: 0 !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: none !important; }
+        .test-list-horizontal > li { flex: none !important; width: 68px !important; }
+      `;
+      document.head.appendChild(geometry);
+      spacer = document.createElement('div');
+      spacer.style.height = '5000px';
+      document.body.appendChild(spacer);
+    });
+
+    afterEach(() => {
+      geometry.remove();
+      spacer.remove();
+      window.scrollTo(0, 0);
+    });
+
+    const manyHeroes = (): Hero[] =>
+      Array.from({ length: 40 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
+
+    it('scrolls the list down to the chosen hero when the list scrolls vertically', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-vertical');
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
+      await fixture.whenStable();
+      const listBox = list.getBoundingClientRect();
+      const cardBox = (element.querySelector('.hero-card.selected') as HTMLElement).getBoundingClientRect();
+
+      expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+      expect(list.scrollTop).toBeGreaterThan(0);
+      expect(cardBox.top).toBeGreaterThanOrEqual(listBox.top);
+      expect(cardBox.bottom).toBeLessThanOrEqual(listBox.bottom);
+    });
+
+    it('scrolls the list sideways to the chosen hero when the list scrolls horizontally', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-horizontal');
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
+      await fixture.whenStable();
+      const listBox = list.getBoundingClientRect();
+      const cardBox = (element.querySelector('.hero-card.selected') as HTMLElement).getBoundingClientRect();
+
+      expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+      expect(list.scrollLeft).toBeGreaterThan(0);
+      expect(cardBox.left).toBeGreaterThanOrEqual(listBox.left);
+      expect(cardBox.right).toBeLessThanOrEqual(listBox.right);
+    });
+
+    it('leaves the page scroll position where it was while it reveals the chosen hero', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-horizontal');
+      window.scrollTo(0, 120);
+      expect(window.scrollY).toBe(120);
+
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
+      await fixture.whenStable();
+
+      expect(list.scrollLeft).toBeGreaterThan(0);
+      expect(window.scrollY).toBe(120);
+    });
+
+    it('does not move a list that already shows the chosen hero', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-horizontal');
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-1' });
+      await fixture.whenStable();
+
+      expect(list.scrollLeft).toBe(0);
+    });
   });
 
   it('is the full grid, with the Rows/Thumbs choice, by default', () => {
