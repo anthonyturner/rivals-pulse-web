@@ -66,7 +66,7 @@
   --aurora-enemy: var(--aurora-danger-soft);
 
   --aurora-on-accent: #1a1600;
-  --aurora-on-outcome: #1a1600;
+  --aurora-on-outcome: #05201a;
   --aurora-focus: var(--aurora-secondary);
   --aurora-hover: rgba(255, 223, 0, 0.08);
   --aurora-shadow-color: rgba(3, 4, 12, 0.55);
