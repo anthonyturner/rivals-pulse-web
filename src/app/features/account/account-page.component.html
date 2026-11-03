@@ -1,13 +1,15 @@
-<div class="account-page">
+<div class="account page-container page-container--narrow">
   <app-page-header
     title="Your account"
-    description="The details RivalsPulse holds about your sign-in. Nothing here is shown to anyone else."
+    description="What RivalsPulse holds about your sign-in. Nothing here is shown to anyone else."
   />
 
   @if (account(); as details) {
-    <section class="account-section" aria-labelledby="account-details-title">
+    <p class="visually-hidden" role="status">{{ announcement() }}</p>
+
+    <section class="panel" aria-labelledby="account-details-title">
       <h2 id="account-details-title">Sign-in details</h2>
-      <dl class="account-details">
+      <dl class="details">
         <div>
           <dt>Signed in with</dt>
           <dd>{{ method() }}</dd>
@@ -21,50 +23,49 @@
           <dd>{{ details.createdAt | date: 'longDate' }}</dd>
         </div>
       </dl>
-      <p>
-        <button class="account-button" type="button" (click)="signOut()">Sign out</button>
-      </p>
+      <div class="actions">
+        <button class="guide-button" type="button" (click)="signOut()">Sign out</button>
+        <a class="guide-link" routerLink="/privacy" fragment="accounts">What the account stores</a>
+      </div>
     </section>
 
-    <section class="account-section" aria-labelledby="account-link-title">
+    <section class="panel" aria-labelledby="account-link-title">
       <h2 id="account-link-title" #linkHeading tabindex="-1">Link the desktop app</h2>
-      <p class="visually-hidden" role="status">{{ linkNotice() }}</p>
       @if (player(); as linked) {
-        <p class="account-player">
+        <p class="player">
           <app-player-avatar [name]="linked.name" [avatarUrl]="linked.avatarUrl" />
           <span>
-            Linked to <strong class="account-player-name">{{ linked.name }}</strong>
+            Linked to <strong>{{ linked.name }}</strong>
           </span>
         </p>
-        <p class="account-note">
+        <p>
           Your in-game name and Overwolf avatar show here and in the site header, to you only.
           Unlinking removes the link. To link a different player, get a new code from the desktop
           app on that account.
         </p>
         @if (unlinkError(); as message) {
-          <p class="account-error" role="alert">{{ message }}</p>
+          <app-state-panel kind="error" [announce]="false">{{ message }}</app-state-panel>
         }
-        <p>
-          <button class="account-button" type="button" [disabled]="unlinking()" (click)="unlinkPlayer()">
+        <div class="actions">
+          <button class="guide-button" type="button" (click)="unlinkPlayer()">
             @if (unlinking()) {
-              Unlinking...
+              Unlinking…
             } @else {
               Unlink
             }
           </button>
-        </p>
+        </div>
       } @else {
         <p>
           Open the RivalsPulse desktop app, ask it for a link code, and type the code here. A code
-          works once and for ten minutes. Linking connects this account to your in-game player; the
-          site then shows your in-game name and Overwolf avatar, to you only.
+          works once and for ten minutes. Linking shows your in-game name and Overwolf avatar here
+          and in the site header, to you only.
         </p>
-        <form (submit)="linkPlayer($event)">
-          <p>
-            <label class="account-field" for="link-code">Link code</label>
+        <form [attr.aria-busy]="linking() ? 'true' : null" (submit)="linkPlayer($event)">
+          <label for="link-code">Link code</label>
+          <div class="row">
             <input
               id="link-code"
-              class="account-input"
               type="text"
               autocomplete="off"
               autocapitalize="characters"
@@ -72,102 +73,60 @@
               maxlength="16"
               placeholder="XXXX-XXXX"
               [value]="linkCode()"
-              [disabled]="linking()"
+              [readOnly]="linking()"
               [attr.aria-invalid]="linkError() ? 'true' : null"
               [attr.aria-describedby]="linkError() ? 'link-code-error' : null"
               (input)="onLinkCodeInput($event)"
             />
-          </p>
-          @if (linkError(); as message) {
-            <p id="link-code-error" class="account-error" role="alert">{{ message }}</p>
-          }
-          <p>
-            <button class="account-button" type="submit" [disabled]="!canLink()">
+            <button class="guide-button guide-button--primary" type="submit" [disabled]="!canLink()">
               @if (linking()) {
-                Linking...
+                Linking…
               } @else {
                 Link
               }
             </button>
-          </p>
+          </div>
+          @if (linkError(); as message) {
+            <app-state-panel id="link-code-error" kind="error" [announce]="false">{{ message }}</app-state-panel>
+          }
         </form>
       }
     </section>
 
-    <section class="account-section" aria-labelledby="account-data-title">
-      <h2 id="account-data-title">What we keep</h2>
-      <p>
-        The privacy notes list exactly what an account stores and the one cookie it uses.
-      </p>
-      <p>
-        <a routerLink="/privacy" fragment="accounts">Read what the account stores</a>
-      </p>
-    </section>
-
-    <section class="account-section" aria-labelledby="account-delete-title">
+    <section class="panel" aria-labelledby="account-delete-title">
       <h2 id="account-delete-title">Delete your account</h2>
-      <p class="account-note">
-        Deleting needs a sign-in from the last ten minutes; if yours is older you will be asked to
-        sign in again first.
+      <p>
+        Deleting removes your sign-in details and our row for them, and signs you out. It needs a
+        sign-in from the last ten minutes; if yours is older you will be asked to sign in again
+        first. Forgetting the matches the desktop app uploaded is not available yet.
       </p>
-      <form (submit)="deleteAccount($event)">
-        <fieldset class="account-choices" [disabled]="deleting()">
-          <legend>What should be removed?</legend>
-          <label class="account-choice">
-            <input type="radio" name="deletion-mode" value="account" checked />
-            <span>
-              <strong>Remove account only</strong>
-              Deletes your sign-in details and our row for them, and signs you out. You can sign
-              in again later; that starts a new, empty account.
-            </span>
-          </label>
-          <label class="account-choice account-choice--unavailable">
-            <input
-              type="radio"
-              name="deletion-mode"
-              value="account-and-matches"
-              disabled
-              aria-describedby="forget-me-hint"
-            />
-            <span>
-              <strong>Remove account and forget me</strong>
-              Also asks us to forget the matches the desktop app uploaded about you. This cannot be
-              undone, and anonymous totals already counted keep their counts.
-              <em id="forget-me-hint">This is available once you link the desktop app.</em>
-            </span>
-          </label>
-        </fieldset>
-
-        <p>
-          <label class="account-field" for="delete-confirmation">
-            Type <strong>{{ confirmationPhrase }}</strong> to confirm
-          </label>
+      <form [attr.aria-busy]="deleting() ? 'true' : null" (submit)="deleteAccount($event)">
+        <label for="delete-confirmation">
+          Type <strong>{{ confirmationPhrase }}</strong> to confirm
+        </label>
+        <div class="row">
           <input
             id="delete-confirmation"
-            class="account-input"
             type="text"
             autocomplete="off"
             autocapitalize="off"
             spellcheck="false"
             [value]="confirmation()"
-            [disabled]="deleting()"
+            [readOnly]="deleting()"
+            [attr.aria-describedby]="deleteError() ? 'delete-error' : null"
             (input)="onConfirmationInput($event)"
           />
-        </p>
-
-        @if (deleteError(); as message) {
-          <p class="account-error" role="alert">{{ message }}</p>
-        }
-
-        <p>
-          <button class="account-button account-button--danger" type="submit" [disabled]="!canDelete()">
+          <button class="guide-button danger" type="submit" [disabled]="!confirmed()">
             @if (deleting()) {
-              Deleting...
+              Deleting…
             } @else {
               Delete my account
             }
           </button>
-        </p>
+        </div>
+        @if (deleteError(); as message) {
+          <app-state-panel id="delete-error" kind="error" [announce]="false">{{ message }}</app-state-panel>
+        }
       </form>
     </section>
   }

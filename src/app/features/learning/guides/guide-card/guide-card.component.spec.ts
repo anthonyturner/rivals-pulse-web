@@ -10,7 +10,7 @@ import { GuideCardComponent } from './guide-card.component';
     <app-guide-card
       title="Captain America"
       [route]="['/hero-guides', 'captain-america']"
-      imageUrl="/images/heroes/captain-america.png"
+      [imageUrl]="image"
       caption="Vanguard"
       blurb="Stage around the enemy."
       [headingLevel]="level"
@@ -19,13 +19,15 @@ import { GuideCardComponent } from './guide-card.component';
 })
 class HostComponent {
   level: 2 | 3 | null = null;
+  image: string | null = '/images/heroes/captain-america.png';
 }
 
 describe('GuideCardComponent', () => {
-  function render(level: 2 | 3 | null = null): HTMLElement {
+  function render(level: 2 | 3 | null = null, image: string | null = '/images/heroes/captain-america.png'): HTMLElement {
     TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
     const fixture = TestBed.createComponent(HostComponent);
     fixture.componentInstance.level = level;
+    fixture.componentInstance.image = image;
     fixture.detectChanges();
 
     return fixture.nativeElement;
@@ -41,6 +43,13 @@ describe('GuideCardComponent', () => {
 
   it('hides its decorative portrait from assistive technology', () => {
     expect(render().querySelector('img')?.getAttribute('alt')).toBe('');
+  });
+
+  it('has no portrait column when the page gives no image', () => {
+    const card = render(null, null);
+
+    expect(card.querySelector('img')).toBeNull();
+    expect(card.querySelector('app-guide-card')?.classList).toContain('plain');
   });
 
   it('is not a heading unless the page asks for one', () => {

@@ -6,6 +6,7 @@ import { DELETE_CONFIRMATION_PHRASE, isDeletionConfirmed } from '../../core/auth
 import { AuthService } from '../../core/auth/auth.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PlayerAvatarComponent } from '../../shared/components/player-avatar/player-avatar.component';
+import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 
 const SIGN_IN_AFTER_DELETE = {
   deleted: { notice: 'deleted' },
@@ -17,9 +18,9 @@ const PROVIDER_LABELS: Record<string, string> = { discord: 'Discord', email: 'Em
 
 @Component({
   selector: 'app-account-page',
-  imports: [DatePipe, PageHeaderComponent, PlayerAvatarComponent, RouterLink],
+  imports: [DatePipe, PageHeaderComponent, PlayerAvatarComponent, RouterLink, StatePanelComponent],
   templateUrl: './account-page.component.html',
-  styleUrl: './account-pages.css',
+  styleUrls: ['../learning/guides/guide-article/guide-article.css', './account-pages.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountPageComponent {
@@ -43,12 +44,15 @@ export class AccountPageComponent {
     return state.status === 'signedIn' ? state.player : null;
   });
   readonly linkHeading = viewChild<ElementRef<HTMLElement>>('linkHeading');
-  /** Read out by screen readers when linking or unlinking succeeds, since the button pressed is gone by then. */
-  readonly linkNotice = signal('');
+  /**
+   * The one live region on the page. What an action did, whether it worked or not, is read out here
+   * and shown where it happened, so nothing else on the page is live and nothing is read twice.
+   */
+  readonly announcement = signal('');
   readonly linkCode = signal('');
   readonly linking = signal(false);
   readonly linkError = signal<string | null>(null);
-  readonly canLink = computed(() => !this.linking() && this.linkCode().trim().length > 0);
+  readonly canLink = computed(() => this.linkCode().trim().length > 0);
   readonly unlinking = signal(false);
   readonly unlinkError = signal<string | null>(null);
 
@@ -56,7 +60,7 @@ export class AccountPageComponent {
   readonly confirmation = signal('');
   readonly deleting = signal(false);
   readonly deleteError = signal<string | null>(null);
-  readonly canDelete = computed(() => !this.deleting() && isDeletionConfirmed(this.confirmation()));
+  readonly confirmed = computed(() => isDeletionConfirmed(this.confirmation()));
 
   async signOut(): Promise<void> {
     await this.auth.signOut();
@@ -70,12 +74,13 @@ export class AccountPageComponent {
   async linkPlayer(event: Event): Promise<void> {
     event.preventDefault();
 
-    if (!this.canLink()) {
+    if (!this.canLink() || this.linking()) {
       return;
     }
 
     this.linking.set(true);
     this.linkError.set(null);
+    this.announcement.set('');
 
     const result = await this.auth.linkPlayer(this.linkCode());
 
@@ -91,13 +96,19 @@ export class AccountPageComponent {
         break;
       case 'failed':
         this.linkError.set(result.message);
+        this.announcement.set(result.message);
         break;
     }
   }
 
   async unlinkPlayer(): Promise<void> {
+    if (this.unlinking()) {
+      return;
+    }
+
     this.unlinking.set(true);
     this.unlinkError.set(null);
+    this.announcement.set('');
 
     const result = await this.auth.unlinkPlayer();
 
@@ -112,6 +123,7 @@ export class AccountPageComponent {
         break;
       case 'failed':
         this.unlinkError.set(result.message);
+        this.announcement.set(result.message);
         break;
     }
   }
@@ -121,7 +133,7 @@ export class AccountPageComponent {
    * and the change is announced.
    */
   private announceLinkChange(message: string): void {
-    this.linkNotice.set(message);
+    this.announcement.set(message);
     this.linkHeading()?.nativeElement.focus();
   }
 
@@ -132,18 +144,20 @@ export class AccountPageComponent {
   async deleteAccount(event: Event): Promise<void> {
     event.preventDefault();
 
-    if (!this.canDelete()) {
+    if (!this.confirmed() || this.deleting()) {
       return;
     }
 
     this.deleting.set(true);
     this.deleteError.set(null);
+    this.announcement.set('');
 
     const result = await this.auth.deleteAccount({ mode: 'account', confirmation: this.confirmation() });
 
     if (result.status === 'failed') {
       this.deleting.set(false);
       this.deleteError.set(result.message);
+      this.announcement.set(result.message);
 
       return;
     }

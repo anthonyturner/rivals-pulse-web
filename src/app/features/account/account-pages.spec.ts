@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { AuthService, DeleteAccountResult, LinkChangeResult, SessionState } from '../../core/auth/auth.service';
@@ -91,7 +91,7 @@ describe('AccountPageComponent', () => {
 
 describe('AccountPageComponent deletion', () => {
   const deleteButton = (harness: RouterTestingHarness): HTMLButtonElement =>
-    page(harness).querySelector('.account-button--danger') as HTMLButtonElement;
+    page(harness).querySelector('.danger') as HTMLButtonElement;
   const phraseInput = (harness: RouterTestingHarness): HTMLInputElement =>
     page(harness).querySelector('#delete-confirmation') as HTMLInputElement;
 
@@ -104,17 +104,21 @@ describe('AccountPageComponent deletion', () => {
     await harness.fixture.whenStable();
   }
 
-  it('offers both choices, with "forget me" disabled until the desktop app is linked', async () => {
+  it('has one deletion, with no radio choices', async () => {
     setup(SIGNED_IN);
     const root = page(await RouterTestingHarness.create('/account'));
-    const [accountOnly, forgetMe] = Array.from(root.querySelectorAll<HTMLInputElement>('input[name="deletion-mode"]'));
 
-    expect(accountOnly.disabled).toBeFalse();
-    expect(accountOnly.checked).toBeTrue();
-    expect(forgetMe.disabled).toBeTrue();
-    expect(root.textContent).toContain('Remove account and forget me');
-    expect(root.querySelector('#forget-me-hint')?.textContent).toContain('available once you link the desktop app');
-    expect(forgetMe.getAttribute('aria-describedby')).toBe('forget-me-hint');
+    expect(root.querySelectorAll('input[type="radio"], fieldset').length).toBe(0);
+    expect(root.textContent).toContain('Forgetting the matches the desktop app uploaded is not available yet.');
+  });
+
+  it('has the details and delete panels, and no "What we keep" panel', async () => {
+    setup(SIGNED_IN);
+    const headings = Array.from(page(await RouterTestingHarness.create('/account')).querySelectorAll('h2')).map(
+      (heading) => heading.textContent?.trim(),
+    );
+
+    expect(headings).toEqual(['Sign-in details', 'Link the desktop app', 'Delete your account']);
   });
 
   it('keeps the delete button off until the phrase is typed', async () => {
@@ -143,7 +147,7 @@ describe('AccountPageComponent deletion', () => {
     expect(TestBed.inject(Router).url).toBe('/sign-in?notice=deleted');
   });
 
-  it('shows why it failed and lets the player try again', async () => {
+  it('shows why it failed, announces it once, and lets the player try again', async () => {
     const { auth } = setup(SIGNED_IN, { status: 'failed', message: 'Try again in a moment.' });
     const harness = await RouterTestingHarness.create('/account');
 
@@ -152,10 +156,39 @@ describe('AccountPageComponent deletion', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('Try again in a moment.');
+    expect(page(harness).querySelector('#delete-error')?.textContent).toContain('Try again in a moment.');
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('Try again in a moment.');
+    expect(page(harness).querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
+    expect(phraseInput(harness).getAttribute('aria-describedby')).toBe('delete-error');
     expect(TestBed.inject(Router).url).toBe('/account');
     expect(deleteButton(harness).disabled).toBeFalse();
     expect(auth.deleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables nothing while the deletion is in flight, so focus stays put, and ignores a second submit', async () => {
+    const { auth } = setup(SIGNED_IN);
+    let finish: (result: DeleteAccountResult) => void = () => undefined;
+
+    auth.deleteAccount.and.callFake(() => new Promise<DeleteAccountResult>((resolve) => (finish = resolve)));
+    const harness = await RouterTestingHarness.create('/account');
+    const deleteForm = page(harness).querySelector('#delete-confirmation')?.closest('form') as HTMLFormElement;
+
+    await type(harness, 'delete my account');
+    phraseInput(harness).focus();
+    deleteForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    deleteForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    harness.detectChanges();
+
+    expect(deleteForm.getAttribute('aria-busy')).toBe('true');
+    expect(phraseInput(harness).readOnly).toBeTrue();
+    expect(page(harness).querySelectorAll(':disabled:not(.guide-button)').length).toBe(0);
+    expect(deleteButton(harness).disabled).toBeFalse();
+    expect(deleteButton(harness).textContent).toContain('Deleting…');
+    expect(document.activeElement).toBe(phraseInput(harness));
+    expect(auth.deleteAccount).toHaveBeenCalledTimes(1);
+
+    finish({ status: 'deleted' });
+    await harness.fixture.whenStable();
   });
 
   it('sends a player whose last sign-in is too old to sign in again, with a reason', async () => {
@@ -234,7 +267,7 @@ describe('AccountPageComponent linking', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(page(harness).querySelector('.account-player-name')?.textContent).toBe('Aurora');
+    expect(page(harness).querySelector('.player strong')?.textContent).toBe('Aurora');
     expect(codeInput(harness)).toBeNull();
     expect(unlinkButton(harness)).toBeTruthy();
   });
@@ -248,7 +281,9 @@ describe('AccountPageComponent linking', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('wrong or has expired');
+    expect(page(harness).querySelector('#link-code-error')?.textContent).toContain('wrong or has expired');
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('wrong or has expired');
+    expect(page(harness).querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
     expect(codeInput(harness).value).toBe('abcd-efgh');
   });
 
@@ -293,6 +328,30 @@ describe('AccountPageComponent linking', () => {
     expect(document.activeElement).toBe(page(harness).querySelector('#account-link-title'));
   });
 
+  it('keeps the code box and Unlink enabled while a change is in flight, so focus stays put', async () => {
+    const { auth } = setup(SIGNED_IN);
+    let finish: (result: LinkChangeResult) => void = () => undefined;
+
+    auth.linkPlayer.and.callFake(() => new Promise<LinkChangeResult>((resolve) => (finish = resolve)));
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    codeInput(harness).focus();
+    codeInput(harness).closest('form')?.dispatchEvent(new Event('submit', { cancelable: true }));
+    codeInput(harness).closest('form')?.dispatchEvent(new Event('submit', { cancelable: true }));
+    harness.detectChanges();
+
+    expect(codeInput(harness).readOnly).toBeTrue();
+    expect(codeInput(harness).disabled).toBeFalse();
+    expect(linkButton(harness).disabled).toBeFalse();
+    expect(linkButton(harness).textContent).toContain('Linking…');
+    expect(document.activeElement).toBe(codeInput(harness));
+    expect(auth.linkPlayer).toHaveBeenCalledTimes(1);
+
+    finish({ status: 'done' });
+    await harness.fixture.whenStable();
+  });
+
   it('sends a visitor whose session ended to sign in', async () => {
     setup(SIGNED_IN, undefined, { status: 'signedOut' });
     const harness = await RouterTestingHarness.create('/account');
@@ -308,7 +367,7 @@ describe('AccountPageComponent linking', () => {
     const { auth } = setup(LINKED);
     const harness = await RouterTestingHarness.create('/account');
 
-    expect(page(harness).querySelector('.account-player-name')?.textContent).toBe('Aurora');
+    expect(page(harness).querySelector('.player strong')?.textContent).toBe('Aurora');
 
     unlinkButton(harness)?.click();
     await harness.fixture.whenStable();
@@ -327,14 +386,15 @@ describe('AccountPageComponent linking', () => {
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('unavailable');
-    expect(page(harness).querySelector('.account-player-name')?.textContent).toBe('Aurora');
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('unavailable');
+    expect(page(harness).querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
+    expect(page(harness).querySelector('.player strong')?.textContent).toBe('Aurora');
   });
 });
 
 describe('SignInPageComponent', () => {
   const discordLink = (harness: RouterTestingHarness): HTMLAnchorElement =>
-    page(harness).querySelector('a.account-button') as HTMLAnchorElement;
+    page(harness).querySelector('a.guide-button') as HTMLAnchorElement;
 
   it('offers Discord and carries the return address to the server', async () => {
     setup({ status: 'signedOut' });
@@ -355,7 +415,39 @@ describe('SignInPageComponent', () => {
     setup({ status: 'signedOut' });
     const harness = await RouterTestingHarness.create('/sign-in?error=cancelled');
 
-    expect(page(harness).querySelector('[role="alert"]')?.textContent).toContain('cancelled');
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('cancelled');
+    expect(page(harness).querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('shows one message when several apply, in the order error, notice, unavailable', async () => {
+    setup({ status: 'unavailable' });
+    const harness = await RouterTestingHarness.create('/sign-in?error=failed&notice=deleted');
+    const text = page(harness).textContent ?? '';
+
+    expect(text).toContain('Discord sign-in did not complete');
+    expect(text).not.toContain('account has been deleted');
+    expect(text).not.toContain('could not check whether you are signed in');
+    expect(page(harness).querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
+  });
+
+  it('says the session could not be checked, and still offers the button', async () => {
+    setup({ status: 'unavailable' });
+    const harness = await RouterTestingHarness.create('/sign-in');
+
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain(
+      'We could not check whether you are signed in. You can still sign in.',
+    );
+    expect(discordLink(harness)).toBeTruthy();
+    expect(page(harness).querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('shows no message when there is nothing to say, but keeps the one live region', async () => {
+    setup({ status: 'signedOut' });
+    const harness = await RouterTestingHarness.create('/sign-in');
+
+    expect(page(harness).querySelectorAll('[role="status"]').length).toBe(1);
+    expect(page(harness).querySelector('[role="status"]')?.textContent?.trim()).toBe('');
+    expect(page(harness).querySelector('h2')).toBeNull();
   });
 
   it('confirms that the account was deleted', async () => {
@@ -371,7 +463,7 @@ describe('SignInPageComponent', () => {
 
     await harness.fixture.whenStable();
 
-    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('sign in again to delete');
+    expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('Sign in again to delete');
     expect(TestBed.inject(Router).url).toBe('/sign-in?next=%2Faccount&notice=reauth');
     expect(discordLink(harness).getAttribute('href')).toBe('/api/auth/discord/start?next=%2Faccount');
   });
@@ -380,7 +472,29 @@ describe('SignInPageComponent', () => {
     setup({ status: 'signedOut' });
     const harness = await RouterTestingHarness.create('/sign-in?notice=anything');
 
-    expect(page(harness).querySelector('[role="status"]')).toBeNull();
+    expect(page(harness).querySelector('[role="status"]')?.textContent?.trim()).toBe('');
+  });
+
+  it('replaces the button with a loading panel for a visitor who is already signed in', () => {
+    setup(SIGNED_IN);
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap({ next: '/account', error: 'failed' }) } },
+        },
+      ],
+    });
+    const fixture = TestBed.createComponent(SignInPageComponent);
+    const root = fixture.nativeElement as HTMLElement;
+
+    fixture.detectChanges();
+
+    expect(root.querySelector('a.guide-button')).toBeNull();
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('You are already signed in');
+    expect(root.querySelector('[aria-busy="true"]')).toBeTruthy();
+    expect(root.textContent).not.toContain('did not complete');
+    expect(root.querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
   });
 
   it('sends a visitor who is already signed in on to where they were going', async () => {

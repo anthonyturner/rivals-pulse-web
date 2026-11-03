@@ -1,4 +1,6 @@
-<img appHeroImageFallback class="portrait" [src]="imageUrl()" alt="" loading="lazy" />
+@if (imageUrl(); as src) {
+  <img appHeroImageFallback class="portrait" [src]="src" alt="" loading="lazy" />
+}
 <div class="text">
   @if (caption(); as text) {
     <p class="caption">{{ text }}</p>
