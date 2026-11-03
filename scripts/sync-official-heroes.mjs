@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { deleteHero, getHero, saveHero } from '../src/server/heroes/catalog/hero-store.ts';
-import { finishSyncRun, getExternalSourcePayload, saveExternalSource, startSyncRun } from '../src/server/sync/sync-log.ts';
+import { deleteHero, getHero, saveHero } from '../src/server/heroes/catalog/index.ts';
+import { finishSyncRun, getExternalSourcePayload, saveExternalSource, startSyncRun } from '../src/server/sync/index.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 import {
   diffOfficialPayloads,

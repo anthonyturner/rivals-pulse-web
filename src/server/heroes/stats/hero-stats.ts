@@ -5,9 +5,9 @@ import type {
   HeroStatsHero,
   HeroStatsModeId,
   HeroStatsTier,
-} from '../../../contracts/hero-stats.model.js';
-import { PLAY_MODE_IDS } from '../../../contracts/play-modes.js';
-import type { TierName } from '../../../contracts/tier-list.model.js';
+} from '../../../contracts/hero-stats.model.ts';
+import { PLAY_MODE_IDS } from '../../../contracts/play-modes.ts';
+import type { TierName } from '../../../contracts/tier-list.model.ts';
 
 /**
  * Every hero number on the site is derived here and nowhere else, from the counts in

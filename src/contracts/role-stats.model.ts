@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason, HeroStatsModeId } from './hero-stats.model.js';
+import type { HeroStatsHalfSeason, HeroStatsModeId } from './hero-stats.model.ts';
 
 export const HERO_ROLES = ['Vanguard', 'Duelist', 'Strategist'] as const;
 

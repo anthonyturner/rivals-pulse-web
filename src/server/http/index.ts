@@ -1,1 +1,1 @@
-export { getQueryStringValue, handleJsonRequest, sendJson } from './vercel-api.js';
+export { getQueryStringValue, handleJsonRequest, sendJson } from './vercel-api.ts';

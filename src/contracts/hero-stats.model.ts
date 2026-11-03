@@ -1,4 +1,4 @@
-import type { TierName } from './tier-list.model.js';
+import type { TierName } from './tier-list.model.ts';
 
 /** One half-season. `endsAt` is the next half-season's start, or null while it is the latest. */
 export interface HeroStatsHalfSeason {

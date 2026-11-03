@@ -1,1 +1,1 @@
-export { getHeroPairs } from './hero-pairs-read.js';
+export { getHeroPairs } from './hero-pairs-read.ts';

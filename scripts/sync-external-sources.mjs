@@ -1,4 +1,4 @@
-import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/server/sync/sync-log.ts';
+import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/server/sync/index.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const sources = [

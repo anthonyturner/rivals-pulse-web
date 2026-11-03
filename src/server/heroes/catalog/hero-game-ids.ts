@@ -1,4 +1,4 @@
-import { HERO_ROLES, type HeroRole } from '../../../contracts/role-stats.model.js';
+import { HERO_ROLES, type HeroRole } from '../../../contracts/role-stats.model.ts';
 import curatedHeroGameIds from '../../../../data/pulse-atlas/hero-game-ids.json' with { type: 'json' };
 
 export interface HeroGameIdEntry {

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { GlossaryTerm } from '../../app/features/reference/glossary/glossary.model.js';
+import type { GlossaryTerm } from '../../app/features/reference/glossary/glossary.model.ts';
 
 // The one place that knows how glossary terms are stored in Supabase, shared by the API and the
 // glossary sync. No relative runtime import, for the same reason as hero-store.ts.

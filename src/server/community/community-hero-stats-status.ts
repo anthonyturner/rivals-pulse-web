@@ -1,5 +1,5 @@
-import type { HeroStats } from '../../contracts/hero-stats.model.js';
-import { getHeroStats } from '../heroes/stats/index.js';
+import type { HeroStats } from '../../contracts/hero-stats.model.ts';
+import { getHeroStats } from '../heroes/stats/index.ts';
 
 /** What `/api/content/status` reports about the community hero numbers; no hero or player is named. */
 export interface CommunityHeroStatsStatus {

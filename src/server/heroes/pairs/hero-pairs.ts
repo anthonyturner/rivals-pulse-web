@@ -4,14 +4,14 @@ import type {
   HeroPairsCounter,
   HeroPairsHero,
   HeroPairsSynergy,
-} from '../../../contracts/hero-pairs.model.js';
+} from '../../../contracts/hero-pairs.model.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
   chooseHalfSeason,
   halfSeasonTimeline,
   WIN_RATE_PRIOR_MATCHES,
   type HeroStatsSource,
-} from '../stats/hero-stats.js';
+} from '../stats/hero-stats.ts';
 
 /**
  * Every hero-pair count on the site is derived here, from the counts in `hero_pair_aggregates` and

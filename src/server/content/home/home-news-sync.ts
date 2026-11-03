@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { StringUtility } from '../../../app/shared/utilities/string-utility.js';
-import { getHomeContentBlock, saveHomeContentBlocks } from './home-content-store.js';
-import { parseCurrentSeason } from './official-season.js';
-import { getSupabaseClient } from '../../supabase/index.js';
-import { finishSyncRun, saveExternalSource, startSyncRun } from '../../sync/index.js';
+import { StringUtility } from '../../../app/shared/utilities/string-utility.ts';
+import { getHomeContentBlock, saveHomeContentBlocks } from './home-content-store.ts';
+import { parseCurrentSeason } from './official-season.ts';
+import { getSupabaseClient } from '../../supabase/index.ts';
+import { finishSyncRun, saveExternalSource, startSyncRun } from '../../sync/index.ts';
 
 type NewsItem = {
   label: string;

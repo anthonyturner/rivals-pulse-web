@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { HeroRole, HeroVideo, HeroVideoType } from '../../../app/features/heroes/hero.model.js';
+import type { HeroRole, HeroVideo, HeroVideoType } from '../../../app/features/heroes/hero.model.ts';
 
 // The one place that knows how hero videos are stored in Supabase, shared by the API and the
 // hero video sync. No relative runtime import, for the same reason as hero-store.ts.
