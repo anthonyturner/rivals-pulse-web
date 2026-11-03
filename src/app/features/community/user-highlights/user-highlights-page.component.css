@@ -12,6 +12,15 @@
   display: grid;
   gap: 8px;
   min-width: 0;
+  font-size: var(--type-small);
+}
+
+video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: #000;
 }
 
 .clip-source {
@@ -20,24 +29,6 @@
   gap: 0 16px;
   align-items: center;
   justify-content: space-between;
-}
-
-.summary {
-  font-size: var(--type-small);
-}
-
-.video-box {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #000;
-}
-
-video {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .guide-link {
@@ -52,28 +43,23 @@ video {
 
 .timeline {
   display: grid;
-  margin: 0;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
+  font-size: var(--type-small);
 }
 
 .timeline li {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   padding-block: 8px;
   border-top: 1px solid var(--border);
 }
 
-.timeline time {
-  color: var(--accent-strong);
+.timeline span {
   font-variant-numeric: tabular-nums;
   font-weight: 800;
-}
-
-.timeline strong,
-.timeline p {
-  font-size: var(--type-small);
 }
 
 @media (min-width: 860px) {
@@ -81,15 +67,8 @@ video {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
 
-  .review {
-    grid-template-columns: 1.2fr 0.8fr;
-  }
-
+  .review,
   .submit {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .timeline li {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 1.2fr 0.8fr;
   }
 }

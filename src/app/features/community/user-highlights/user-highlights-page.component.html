@@ -6,18 +6,16 @@
 
   <section class="clip" aria-labelledby="clip-title">
     <div class="clip-player">
-      <div class="video-box">
-        <video
-          controls
-          playsinline
-          preload="metadata"
-          [poster]="example.posterUrl"
-          [attr.aria-label]="example.player + ' playing ' + example.hero"
-        >
-          <source [src]="example.videoUrl" type="video/mp4" />
-          Your browser does not support embedded video playback.
-        </video>
-      </div>
+      <video
+        controls
+        playsinline
+        preload="metadata"
+        [poster]="example.posterUrl"
+        [attr.aria-label]="example.player + ' playing ' + example.hero"
+      >
+        <source [src]="example.videoUrl" type="video/mp4" />
+        Your browser does not support embedded video playback.
+      </video>
       <p class="clip-source">
         <span class="guide-caption">Hosted by the official Marvel Rivals highlight service</span>
         <a class="guide-link" [href]="example.shareUrl" target="_blank" rel="noopener noreferrer">
@@ -32,7 +30,7 @@
         <span class="guide-caption">Played by {{ example.player }}</span>
       </app-hero-tile>
       <p class="guide-caption">{{ example.duration }} · four eliminations</p>
-      <p class="guide-text summary">
+      <p class="guide-text">
         This clip works because the engagement has shape: an elevated approach, a vertical target
         chase, and a decisive return to the grouped objective fight. The finish is the reward; the
         changing angles are what create it.
@@ -51,7 +49,7 @@
       <ol class="timeline">
         @for (moment of timeline; track moment.time) {
           <li>
-            <time>{{ moment.time }}</time>
+            <span>{{ moment.time }}</span>
             <div>
               <strong>{{ moment.title }}</strong>
               <p class="guide-text">{{ moment.note }}</p>

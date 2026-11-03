@@ -15,7 +15,7 @@ const ALL_CATEGORIES = 'All';
   selector: 'app-media-tutorials-page',
   imports: [FilterSelectComponent, HeroTileComponent, PageHeaderComponent, RouterLink, StatePanelComponent],
   templateUrl: './media-tutorials-page.component.html',
-  styleUrl: './media-tutorials-page.component.css',
+  styleUrls: ['../guides/guide-article/guide-article.css', './media-tutorials-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MediaTutorialsPageComponent {
@@ -40,6 +40,12 @@ export class MediaTutorialsPageComponent {
   protected readonly current = computed(
     () => this.tutorials.find((tutorial) => tutorial.id === this.selectedId()) ?? this.tutorials[0],
   );
+
+  /**
+   * The player as a one-item list. Changing an iframe's address adds a history entry, so Back would
+   * step through earlier picks. A new iframe per pick does not.
+   */
+  protected readonly playing = computed(() => [this.current()]);
 
   protected readonly rows = computed(() => {
     const category = this.category();

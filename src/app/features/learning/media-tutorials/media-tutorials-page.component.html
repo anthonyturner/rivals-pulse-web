@@ -6,29 +6,30 @@
 
   <div class="workspace">
     <section class="player-pane" aria-labelledby="player-title">
-      <iframe
-        [src]="current().embedUrl"
-        [title]="current().title"
-        loading="lazy"
-        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-      ></iframe>
+      @for (tutorial of playing(); track tutorial.id) {
+        <iframe
+          [src]="tutorial.embedUrl"
+          [title]="tutorial.title"
+          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      }
       <h2 id="player-title" #playerTitle tabindex="-1">{{ current().title }}</h2>
-      <p class="caption">{{ current().topics }}</p>
-      <p class="description">{{ current().description }}</p>
-      <p class="links">
-        <a class="link" [href]="current().sourceUrl" target="_blank" rel="noopener">
+      <p class="guide-caption">{{ current().topics }}</p>
+      <p class="guide-text">{{ current().description }}</p>
+      <p class="guide-toolbar">
+        <a class="guide-link" [href]="current().sourceUrl" target="_blank" rel="noopener">
           Watch on YouTube<span class="visually-hidden"> (opens in a new tab)</span>
         </a>
         @if (current().guideUrl; as guideUrl) {
-          <a class="link" [routerLink]="guideUrl">Read guide notes</a>
+          <a class="guide-link" [routerLink]="guideUrl">Read guide notes</a>
         }
       </p>
     </section>
 
     <section class="picker" aria-label="Choose a tutorial">
-      <div class="controls">
-        <label class="search">
+      <div class="guide-toolbar">
+        <label class="guide-search">
           <span>Search tutorials</span>
           <input type="search" [value]="searchTerm()" (input)="updateSearch($event)" />
         </label>
@@ -39,7 +40,7 @@
           (valueChange)="category.set($event)"
         />
       </div>
-      <p class="caption" role="status">{{ status() }}</p>
+      <p class="guide-count" role="status">{{ status() }}</p>
 
       @if (rows().length > 0) {
         <ul class="tutorial-list" aria-label="Tutorials">
@@ -52,7 +53,7 @@
                 (click)="select(row.id)"
               >
                 <app-hero-tile selectable [selected]="row.id === current().id" [name]="row.title" [imageUrl]="row.image">
-                  <span class="caption">{{ row.category }}</span>
+                  <span class="guide-caption">{{ row.category }}</span>
                 </app-hero-tile>
               </button>
             </li>

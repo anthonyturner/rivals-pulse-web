@@ -1,8 +1,3 @@
-:host {
-  display: block;
-  min-width: 0;
-}
-
 .media,
 .workspace,
 .player-pane,
@@ -36,65 +31,23 @@ h2 {
   line-height: 1.15;
 }
 
-.caption,
-.search {
-  color: var(--text-soft);
-  font-size: var(--type-caption);
-}
-
-.description {
-  color: var(--text-soft);
-  line-height: 1.5;
-}
-
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 16px;
-}
-
-.link {
+.guide-link {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--link);
-  font-size: var(--type-small);
-  font-weight: 700;
-  text-decoration: underline;
 }
 
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: end;
-}
-
-app-filter-select,
-.search {
+.guide-search,
+app-filter-select {
   flex: 1 1 150px;
 }
 
-.search {
+.guide-search {
   display: grid;
   gap: 6px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
   font-weight: 850;
-}
-
-.search input {
-  min-height: 44px;
-  padding: 0 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: 7px;
-  background: var(--bg-elevated);
-  color: var(--text);
-  font: inherit;
-  font-weight: 700;
-}
-
-.link:focus-visible,
-.search input:focus-visible {
-  outline-width: 3px;
 }
 
 .tutorial-list {
@@ -109,10 +62,8 @@ app-filter-select,
 .pick {
   display: block;
   width: 100%;
-  min-height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 8px;
   background: none;
   color: inherit;
   font: inherit;

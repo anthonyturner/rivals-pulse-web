@@ -49,6 +49,20 @@ describe('MediaTutorialsPageComponent', () => {
     expect(element.querySelectorAll('h1').length).toBe(1);
   });
 
+  it('renders a new player for each pick, so Back does not step through earlier picks, still without autoplay', async () => {
+    const first = element.querySelector('iframe');
+
+    rows()[3].click();
+    await settle();
+    const second = element.querySelector('iframe') as HTMLIFrameElement;
+
+    expect(element.querySelectorAll('iframe').length).toBe(1);
+    expect(second).not.toBe(first);
+    expect(second.src).toBe('https://www.youtube.com/embed/' + MEDIA_TUTORIALS[3].youtubeId);
+    expect(second.src).not.toContain('autoplay');
+    expect(second.getAttribute('allow')).not.toContain('autoplay');
+  });
+
   it('lists every tutorial, selects the first and says how many', () => {
     expect(rows().length).toBe(MEDIA_TUTORIALS.length);
     expect(rows()[0].getAttribute('aria-current')).toBe('true');
