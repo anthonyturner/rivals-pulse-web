@@ -28,14 +28,15 @@ repo's build. This is a move, not a redesign.
   call; each function authorises callers itself).
 - Tables: `players`, `player_matches`, `matches`, `tracked_matches`,
   `match_history_sync_state`, `player_hero_profiles`, `player_hero_stats`,
-  `hero_stats_sync_state`, `voice_ai_token_requests`, `participants`.
+  `hero_stats_sync_state`, `participants`.
 - Functions in the database: `claim_upload_slot`, `record_match_participants`,
   `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
   once it carries the extended upload, so renaming it or changing its arguments silently drops
   every newer overlay's extras; a signature change follows "Changing a database function's
   signature" below).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`) and `tracked_match_recorders` (written by `track-match-history` itself). The
+  `record_match_extras`), `tracked_match_recorders` (written by `track-match-history` itself) and
+  `voice_ai_token_requests` (written by `elevenlabs-agent-token`; the publishable key cannot reach it). The
   aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
