@@ -2,8 +2,12 @@ import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { routes } from '../../../app.routes';
+import { DISCORD_INVITE_URL } from '../../../shared/discord-invite';
 import { GoogleConsentService } from '../../consent/google-consent.service';
+import { NAVIGATION_CATEGORIES } from '../../navigation/navigation-category.data';
 import { Footer } from './footer';
+import { FOOTER_COLUMNS } from './footer-links';
 
 describe('Footer', () => {
   const canChangeChoice = signal(false);
@@ -29,6 +33,62 @@ describe('Footer', () => {
 
     fixture = TestBed.createComponent(Footer);
     fixture.detectChanges();
+  });
+
+  it('shows the shared brand linking home, a tagline and the get-app button', () => {
+    expect(page().querySelector('app-brand a.brand')?.getAttribute('aria-label')).toBe('RivalsPulse home');
+    expect(page().querySelector('.site-footer__tagline')?.textContent).toContain('Marvel Rivals');
+    expect(page().querySelector('app-get-app-button')).withContext('the shared get-app button').toBeTruthy();
+  });
+
+  it('groups its links into labelled columns', () => {
+    const columns = Array.from(page().querySelectorAll<HTMLElement>('nav[aria-label="Footer"] .site-footer__column'));
+
+    expect(columns.map((column) => column.querySelector('h2')?.textContent?.trim())).toEqual([
+      'Stats & tools',
+      'Learn',
+      'RivalsPulse',
+    ]);
+    columns.forEach((column) => {
+      const heading = column.querySelector('h2') as HTMLElement;
+      expect(column.querySelector('ul')?.getAttribute('aria-labelledby')).toBe(heading.id);
+    });
+    expect(page().querySelector('a[href="/glossary"]')?.textContent?.trim()).toBe('Glossary');
+  });
+
+  it('links only to declared routes the nav does not mark disabled', () => {
+    const declared = new Set(routes.map((route) => route.path).filter((path) => path !== undefined));
+    const disabled = new Set(
+      NAVIGATION_CATEGORIES.flatMap((category) => category.items)
+        .filter((item) => !item.enabled)
+        .map((item) => item.path),
+    );
+
+    FOOTER_COLUMNS.flatMap((column) => column.links).forEach(({ path }) => {
+      expect(declared.has(path.slice(1))).withContext(`${path} is a declared route`).toBeTrue();
+      expect(disabled.has(path)).withContext(`${path} is released`).toBeFalse();
+    });
+  });
+
+  it('links to the Discord in a new tab', () => {
+    const link = page().querySelector<HTMLAnchorElement>('a.site-footer__discord');
+
+    expect(link?.getAttribute('href')).toBe(DISCORD_INVITE_URL);
+    expect(link?.target).toBe('_blank');
+    expect(link?.rel).toBe('noopener noreferrer');
+  });
+
+  it('leaves the Discord link out when there is no invite', async () => {
+    fixture.componentRef.setInput('discordUrl', '');
+    await fixture.whenStable();
+
+    expect(page().querySelector('a.site-footer__discord')).toBeNull();
+  });
+
+  it('carries the copyright line for the current year', () => {
+    expect(page().querySelector('.site-footer__legal')?.textContent).toContain(
+      `© ${new Date().getFullYear()} RivalsPulse.`,
+    );
   });
 
   it('links to the privacy notes', () => {

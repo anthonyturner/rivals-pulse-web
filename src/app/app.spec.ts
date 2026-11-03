@@ -147,7 +147,7 @@ describe('App shell', () => {
   });
 
   it('labels the footer links and has one banner', () => {
-    expect(page.querySelector('app-footer nav')?.getAttribute('aria-label')).toBe('Site information');
+    expect(page.querySelector('app-footer nav')?.getAttribute('aria-label')).toBe('Footer');
     expect(page.querySelectorAll('header').length).toBe(1);
   });
 });
