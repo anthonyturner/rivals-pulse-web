@@ -24,6 +24,7 @@ export interface PositioningGuide {
   title: string;
   lede: string;
   sourceLabel: string;
+  /** A video address: the guide map always links each timestamp into it as a YouTube link, so a source that is not a video needs a plain-list branch first. */
   sourceUrl: string;
   diagram: { caption: string; rows: DiagramRow[] };
   checklist: GuideNote[];

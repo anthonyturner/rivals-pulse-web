@@ -90,11 +90,17 @@
       <ul class="timeline">
         @for (timestamp of timestamps(); track timestamp.label) {
           <li>
-            <a class="guide-link" [href]="timestamp.url" target="_blank" rel="noopener">
+            <a
+              class="guide-link"
+              [href]="timestamp.url"
+              [attr.aria-describedby]="'stamp-' + $index"
+              target="_blank"
+              rel="noopener"
+            >
               {{ timestamp.label }}
               <span class="visually-hidden">(opens YouTube in a new tab)</span>
             </a>
-            <span class="guide-text">{{ timestamp.detail }}</span>
+            <span class="guide-text" [id]="'stamp-' + $index">{{ timestamp.detail }}</span>
           </li>
         }
       </ul>

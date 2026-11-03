@@ -66,8 +66,10 @@ describe('BeginnerGuidePageComponent', () => {
     await settle();
 
     expect(component.selectedChoice()?.feedbackTitle).toBe('Strong read');
-    expect(element.querySelector('[role="status"]')?.textContent).toContain('Strong read');
-    expect(element.querySelector('[role="status"]')?.textContent).toContain('Quality: strong');
+    expect(element.querySelector('.feedback')?.textContent).toContain('Strong read');
+    expect(element.querySelector('.feedback')?.textContent).toContain('Quality: strong');
+    expect(element.querySelector('.feedback')?.closest('[aria-live], [role="status"]')).toBeNull();
+    expect(element.querySelector('[role="status"]')?.textContent).toContain('Strong read. Quality: strong.');
     expect(element.querySelector('progress')?.value).toBe(1);
     expect(radios()[0].checked).toBeTrue();
   });
@@ -80,6 +82,35 @@ describe('BeginnerGuidePageComponent', () => {
 
     expect(component.selectedChoice()?.feedbackTitle).toBe('Too isolated');
     expect(element.querySelectorAll('[role="status"]').length).toBe(1);
+  });
+
+  it('announces an answer once and stays quiet when a module is revisited', async () => {
+    const status = (): string => element.querySelector('[role="status"]')?.textContent?.trim() ?? '';
+
+    expect(status()).toBe('');
+
+    radios()[0].click();
+    await settle();
+    expect(status()).toContain('Strong read');
+
+    component.goToModule(1);
+    await settle();
+    expect(status()).toBe('');
+
+    component.goToModule(0);
+    await settle();
+    expect(element.querySelector('.feedback')?.textContent).toContain('Strong read');
+    expect(status()).toBe('');
+  });
+
+  it('clears the announcement when the guide is reset', async () => {
+    radios()[0].click();
+    await settle();
+
+    component.resetGuide();
+    await settle();
+
+    expect(element.querySelector('[role="status"]')?.textContent?.trim()).toBe('');
   });
 
   it('has exactly one live region on the page', () => {

@@ -139,7 +139,8 @@ input::placeholder {
   font-size: var(--type-small);
 }
 
-.guide-section > h2 {
+.guide-section > h2,
+.guide-section > header h2 {
   margin-bottom: 12px;
   font-size: var(--type-h2);
   font-weight: 850;
@@ -257,16 +258,21 @@ input::placeholder {
 }
 
 /* The numeral is a readout, so it keeps its own size. */
-.guide-steps li::before {
+.guide-steps li::before,
+.guide-marker {
   display: grid;
+  flex: none;
   width: 28px;
   height: 28px;
   place-items: center;
   border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
   font-size: var(--type-small);
   font-weight: 800;
+}
+
+.guide-steps li::before {
+  background: var(--accent);
+  color: var(--accent-ink);
   content: counter(step);
 }
 

@@ -30,8 +30,9 @@ progress::-moz-progress-bar {
   gap: 8px;
 }
 
-.roles {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+.roles,
+.module-steps {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .option,
@@ -53,8 +54,8 @@ progress::-moz-progress-bar {
 .option[aria-pressed='true'],
 .option:has(input:checked),
 .module-step[aria-current='step'] {
-  border-color: var(--accent-strong);
-  box-shadow: inset 0 0 0 1px var(--accent-strong);
+  border-color: var(--accent-line);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
   background: var(--accent-soft);
 }
 
@@ -80,7 +81,6 @@ progress::-moz-progress-bar {
 
 .module-steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -91,21 +91,15 @@ progress::-moz-progress-bar {
   width: 100%;
 }
 
+/* The geometry comes from .guide-marker. */
 .marker {
-  display: grid;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  place-items: center;
   border: 1px solid var(--border-strong);
-  border-radius: 50%;
   background: var(--bg);
-  font-size: var(--type-small);
 }
 
 .module-step[aria-current='step'] .marker {
   border-color: var(--accent);
-  outline: 2px solid var(--accent-strong);
+  outline: 2px solid var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -120,9 +114,6 @@ progress::-moz-progress-bar {
 
 .module-head h2 {
   margin-bottom: 4px;
-  font-size: var(--type-h2);
-  font-weight: 850;
-  line-height: 1.15;
 }
 
 .module-head img {
@@ -181,7 +172,6 @@ fieldset .guide-text {
 
 .plan {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 12px;
   margin: 12px 0 0;
 }
@@ -200,4 +190,22 @@ fieldset .guide-text {
 
 .more {
   gap: 16px;
+}
+
+@media (min-width: 700px) {
+  .roles,
+  .module-steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .plan {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 359px) {
+  .roles,
+  .module-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

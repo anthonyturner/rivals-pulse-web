@@ -42,7 +42,7 @@
             [attr.aria-current]="step.current ? 'step' : null"
             (click)="goToModule($index)"
           >
-            <span class="marker" aria-hidden="true">{{ step.done ? '✓' : step.number }}</span>
+            <span class="guide-marker marker" aria-hidden="true">{{ step.done ? '✓' : step.number }}</span>
             {{ step.title }}
             @if (step.done) {
               <span class="visually-hidden">(done)</span>
@@ -98,7 +98,7 @@
             note will explain what the decision creates or risks.
           </p>
         }
-        <div class="feedback" role="status" aria-atomic="true">
+        <div class="feedback">
           @if (selectedChoice(); as choice) {
             <p>
               <strong>{{ choice.feedbackTitle }}</strong> · Quality: {{ choice.quality }}
@@ -106,6 +106,7 @@
             <p class="guide-text">{{ choice.feedbackBody }}</p>
           }
         </div>
+        <p class="visually-hidden" role="status" aria-atomic="true">{{ announcement() }}</p>
       </div>
     </div>
 

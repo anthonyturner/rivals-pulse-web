@@ -38,7 +38,7 @@
 }
 
 .flow li.key {
-  border-color: var(--accent-strong);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -49,7 +49,7 @@
 }
 
 .checks {
-  gap: 12px 32px;
+  gap: 12px;
 }
 
 .notes {
@@ -82,10 +82,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The test has five questions: three down the first column, two down the second. */
 @media (min-width: 700px) {
   .checks {
-    grid-template: repeat(3, auto) / repeat(2, minmax(0, 1fr));
-    grid-auto-flow: column;
+    display: block;
+    columns: 2;
+    column-gap: 32px;
+  }
+
+  .checks li {
+    margin-bottom: 12px;
+    break-inside: avoid;
   }
 }

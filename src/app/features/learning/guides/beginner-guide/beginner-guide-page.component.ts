@@ -72,6 +72,7 @@ export class BeginnerGuidePageComponent {
   readonly selectedRole = signal<PlayerRole>('Flexible');
   readonly currentModuleIndex = signal(0);
   readonly selectedAnswers = signal<Record<string, string>>({});
+  readonly announcement = signal('');
 
   readonly modules: BeginnerModule[] = [
     {
@@ -346,15 +347,25 @@ export class BeginnerGuidePageComponent {
       ...answers,
       [moduleId]: choiceId,
     }));
+
+    const choice = this.modules
+      .find((module) => module.id === moduleId)
+      ?.scenario.choices.find((candidate) => candidate.id === choiceId);
+
+    this.announcement.set(
+      choice ? `${choice.feedbackTitle}. Quality: ${choice.quality}. ${choice.feedbackBody}` : '',
+    );
   }
 
   goToModule(index: number): void {
     this.currentModuleIndex.set(Math.min(Math.max(index, 0), this.modules.length - 1));
+    this.announcement.set('');
     afterNextRender(() => this.moduleTitle().nativeElement.focus(), { injector: this.injector });
   }
 
   resetGuide(): void {
     this.selectedAnswers.set({});
     this.currentModuleIndex.set(0);
+    this.announcement.set('');
   }
 }
