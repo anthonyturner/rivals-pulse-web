@@ -97,8 +97,8 @@ The session lives on the server side of the boundary:
 - `POST /api/account/delete` verifies the session with Supabase (`auth.getUser`), requires the typed
   phrase and the "account" mode, then deletes the auth user with the service-role key, which the server
   uses for this call only. The profile row goes with it (`on delete cascade`) and the session cookie is
-  cleared. The "Remove account and forget me" mode is shown disabled and refused by the server until the
-  desktop app can be linked to an account.
+  cleared. The account page offers only that mode (it says forgetting uploaded matches is not available
+  yet); the server still refuses "Remove account and forget me" until that is built.
 
 
 ## AI Integration

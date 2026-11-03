@@ -13,6 +13,10 @@
   background: var(--bg-elevated);
 }
 
+:host(.plain) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 :host(.large) {
   --portrait: 56px;
   --blurb-lines: 3;

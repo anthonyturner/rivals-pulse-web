@@ -1,31 +1,23 @@
-<section class="category-page page-container page-container--wide">
-  <app-page-header
-    class="category-hero"
-    [title]="category.title"
-    [description]="category.description"
-  />
+<div class="category page-container page-container--wide">
+  <app-page-header [title]="category.label" [description]="category.description" />
 
-  <section class="category-grid" [attr.aria-label]="category.label + ' pages'">
-    @for (item of category.items; track item.label) {
-      @if (item.enabled) {
-        <a class="category-card" [routerLink]="item.path">
-          <span class="card-index">{{ $index + 1 }}</span>
-          <span>
-            <strong>{{ item.label }}</strong>
-            <small>{{ item.description }}</small>
-          </span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
-        </a>
-      } @else {
-        <div class="category-card is-disabled" aria-disabled="true">
-          <span class="card-index">{{ $index + 1 }}</span>
-          <span>
-            <strong>{{ item.label }}</strong>
-            <small>{{ item.description }}</small>
-          </span>
-          <span class="coming-soon">Coming soon</span>
-        </div>
-      }
+  <ul class="grid">
+    @for (item of released; track item.path) {
+      <li><app-guide-card [title]="item.label" [route]="item.path" [blurb]="item.description" /></li>
     }
-  </section>
-</section>
+  </ul>
+
+  @if (comingSoon.length > 0) {
+    <section aria-labelledby="coming-soon-title">
+      <h2 id="coming-soon-title">Coming soon</h2>
+      <ul class="grid soon">
+        @for (item of comingSoon; track item.path) {
+          <li>
+            <strong>{{ item.label }}</strong>
+            <p>{{ item.description }}</p>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

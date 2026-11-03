@@ -1,91 +1,38 @@
 :host {
   display: block;
+  min-width: 0;
 }
 
-.category-page {
-  padding-block: 76px 96px;
-}
-
-.category-hero {
-  padding-bottom: 46px;
-}
-
-.category-grid {
+.category {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding-block: 16px 32px;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: var(--type-h3);
+  font-weight: 850;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.category-card {
+.grid li {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
-  gap: 18px;
-  align-items: center;
-  min-height: 126px;
-  padding: 22px;
-  border: 1px solid var(--border);
+}
+
+.soon li {
+  align-content: start;
+  padding: 8px 12px;
+  border: 1px dashed var(--border-strong);
   border-radius: 8px;
-  background: var(--bg-panel);
-  color: var(--text);
-  text-decoration: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.category-card:not(.is-disabled):hover {
-  border-color: var(--accent-line);
-  box-shadow: 0 14px 28px var(--shadow-color);
-  transform: translateY(-2px);
-}
-
-.card-index {
-  display: grid;
-  width: 38px;
-  aspect-ratio: 1;
-  place-items: center;
-  border-radius: 6px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.category-card strong,
-.category-card small {
-  display: block;
-}
-
-.category-card strong {
-  font-size: 1.05rem;
-}
-
-.category-card small {
-  margin-top: 5px;
-  color: var(--text-muted);
-}
-
-.arrow {
-  color: var(--accent-strong);
-  font-size: 1.45rem;
-}
-
-.is-disabled {
-  background: var(--bg-panel);
-  opacity: 0.7;
-}
-
-.coming-soon {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .category-page {
-    padding-block: 48px 64px;
-  }
-
-  .category-grid {
-    grid-template-columns: 1fr;
-  }
+  font-size: var(--type-small);
+  line-height: 1.25;
 }

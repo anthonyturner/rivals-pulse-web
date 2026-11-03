@@ -1,7 +1,6 @@
 export interface NavigationCategory {
   label: string;
   path: string;
-  title: string;
   description: string;
   items: Array<{
     label: string;
@@ -15,9 +14,7 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
   {
     label: 'Resources',
     path: '/resources',
-    title: 'Keep the useful information within reach.',
-    description:
-      'Quick references for concepts, current numbers, and lessons you can watch when you need an example.',
+    description: 'Videos, guides, stats and a glossary for quick reference.',
     items: [
       { label: 'Media Tutorials', path: '/media-tutorials', description: 'Browse coaching videos by topic.', enabled: true },
       { label: 'Strategist Guides', path: '/strategist-guides', description: 'Study transcript-built support lessons and practice drills.', enabled: true },
@@ -31,15 +28,13 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
   {
     label: 'Tools',
     path: '/tools',
-    title: 'Turn a confusing match into a clear next step.',
-    description:
-      'Use these tools before you queue, after a tough fight, or when you want a more deliberate practice session.',
+    description: 'Check matchups and build a team before you queue.',
     items: [
       { label: 'Counters', path: '/counters', description: 'Explore practical matchup answers.', enabled: true },
       { label: 'Team Builder', path: '/team-builder', description: 'Sketch a team composition with intention.', enabled: true },
-      { label: 'Learning Paths', path: '/learning-paths', description: 'Focused routes through your next skill are coming soon.', enabled: false },
-      { label: 'Watch Next Quiz', path: '/watch-next', description: 'A quiz that picks your next lesson is coming soon.', enabled: false },
-      { label: 'AI Coach', path: '/ai-coach', description: 'Personalized coaching is coming soon.', enabled: false },
+      { label: 'Learning Paths', path: '/learning-paths', description: 'Focused routes through your next skill.', enabled: false },
+      { label: 'Watch Next Quiz', path: '/watch-next', description: 'A quiz that picks your next lesson.', enabled: false },
+      { label: 'AI Coach', path: '/ai-coach', description: 'Personalized coaching.', enabled: false },
     ],
   },
 ];

@@ -34,6 +34,7 @@ export const routes: Routes = [
   },
   ...NAVIGATION_CATEGORIES.map((category) => ({
     path: category.path.slice(1),
+    title: `${category.label} | RivalsPulse`,
     loadComponent: () =>
       import('./core/navigation/navigation-category-page.component').then(
         (module) => module.NavigationCategoryPageComponent,
@@ -243,6 +244,7 @@ export const routes: Routes = [
   {
     path: 'sign-in',
     title: 'Sign in | RivalsPulse',
+    data: ROUTE_WITHOUT_SIDEBAR,
     loadComponent: () =>
       import('./features/account/sign-in-page.component').then(
         (module) => module.SignInPageComponent,
@@ -251,6 +253,7 @@ export const routes: Routes = [
   {
     path: 'account',
     title: 'Your account | RivalsPulse',
+    data: ROUTE_WITHOUT_SIDEBAR,
     canActivate: [signedInGuard],
     loadComponent: () =>
       import('./features/account/account-page.component').then(
@@ -268,6 +271,11 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'heroes',
+    title: 'Page not found | RivalsPulse',
+    data: ROUTE_WITHOUT_SIDEBAR,
+    loadComponent: () =>
+      import('./shared/components/not-found/not-found.component').then(
+        (module) => module.NotFoundComponent,
+      ),
   },
 ];
