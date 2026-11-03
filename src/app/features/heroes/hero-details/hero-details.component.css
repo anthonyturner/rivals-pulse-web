@@ -1,5 +1,6 @@
 ﻿:host {
   display: block;
+  container-type: inline-size;
 }
 
 .detail-hero-container {
@@ -162,16 +163,8 @@ h3 {
   line-height: 1.55;
 }
 
-.hero-build-profile {}
-
 .hero-build-profile .section-heading {
   margin: 0;
-}
-
-.hero-build-profile .section-heading p {
-  color: var(--text-soft);
-  font-size: 0.78rem;
-  line-height: 1.35;
 }
 
 .build-profile-bars {
@@ -237,8 +230,6 @@ h3 {
   text-decoration: none;
   text-transform: uppercase;
 }
-
-.ultimate-strategies {}
 
 .ultimate-strategies article {
   display: grid;
@@ -973,7 +964,6 @@ details.collapsible {
 
 @media (max-width: 560px) {
 
-  .detail-hero,
   .detail-columns,
   .matchup-row,
   .ability-heading {
@@ -999,6 +989,25 @@ details.collapsible {
   .technical-details .stat-card:nth-last-child(1):nth-child(3n + 2),
   .technical-details .stat-card:nth-last-child(1):nth-child(2n + 1) {
     grid-column: 1 / -1;
+  }
+}
+
+/* Beside a long overview, the portrait column leaves an empty block once the panel is too narrow to give the overview room; stack it instead and lay the base stats across. */
+@container (max-width: 720px) {
+  .detail-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-base-stats {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  }
+
+  .hero-base-stats .stat-card,
+  .hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 1),
+  .hero-base-stats .stat-card:nth-last-child(2):nth-child(3n + 1),
+  .hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 2),
+  .hero-base-stats .stat-card:nth-last-child(1):nth-child(2n + 1) {
+    grid-column: auto;
   }
 }
 
