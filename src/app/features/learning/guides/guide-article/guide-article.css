@@ -100,10 +100,10 @@
 }
 
 .guide-button:disabled {
-  border-color: var(--border);
   border-style: dashed;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-soft);
+  cursor: not-allowed;
 }
 
 .guide-toolbar {

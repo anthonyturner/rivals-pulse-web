@@ -71,13 +71,6 @@ dd {
   justify-content: center;
 }
 
-.guide-button:disabled {
-  border-style: dashed;
-  background: transparent;
-  color: var(--text-soft);
-  cursor: not-allowed;
-}
-
 .danger:not(:disabled) {
   border-color: var(--danger);
   color: var(--danger-ink);

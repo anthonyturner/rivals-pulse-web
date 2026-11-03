@@ -197,3 +197,7 @@ fieldset .guide-text {
 .guide-tile > .guide-button {
   margin-top: 12px;
 }
+
+.more {
+  gap: 16px;
+}
