@@ -157,6 +157,21 @@ describe('HeroGridComponent', () => {
     });
   });
 
+  it('scrolls its own list to the chosen hero in the column, without scrolling the page', async () => {
+    const heroes = Array.from({ length: 40 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
+    setInputs({ heroes, layout: 'column', selectedHeroId: 'hero-35' });
+    await fixture.whenStable();
+    const list = element.querySelector('.hero-grid') as HTMLElement;
+    const row = element.querySelector('.hero-card.selected') as HTMLElement;
+    const listBox = list.getBoundingClientRect();
+    const rowBox = row.getBoundingClientRect();
+
+    expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    expect(list.scrollTop).toBeGreaterThan(0);
+    expect(rowBox.top).toBeGreaterThanOrEqual(listBox.top);
+    expect(rowBox.bottom).toBeLessThanOrEqual(listBox.bottom);
+  });
+
   it('is the full grid, with the Rows/Thumbs choice, by default', () => {
     expect(element.getAttribute('layout')).toBe('grid');
     expect(element.querySelector('.view-toggle')).not.toBeNull();
