@@ -1,37 +1,29 @@
-<section class="beginner-page page-container page-container--wide">
-  <header class="page-header">
-    <div>
-      <h1>Learn how hero shooter fights actually work.</h1>
-      <p class="lede">
-        Pick your role, walk through four match scenarios, and leave with a simple practice plan
-        for your next Marvel Rivals session.
-      </p>
-      <div class="hero-actions">
-        <a routerLink="/hero-guides">View hero guides</a>
-        <a routerLink="/media-tutorials">Find a video</a>
-      </div>
-    </div>
-
-    <aside class="progress-card" aria-label="Beginner guide progress">
-      <span>{{ answeredCount() }} / {{ modules.length }}</span>
-      <small>Scenarios complete</small>
-      <div class="progress-track" aria-hidden="true">
-        <div [style.width.%]="progressPercent()"></div>
-      </div>
-      <strong>{{ strongAnswerCount() }} strong reads</strong>
-    </aside>
+<div class="guide-article page-container">
+  <header class="guide-header">
+    <h1>Learn how hero shooter fights actually work.</h1>
+    <p class="guide-lede">
+      Pick your role, walk through four match scenarios, and leave with a simple practice plan for
+      your next Marvel Rivals session.
+    </p>
+    <nav class="guide-nav" aria-label="More ways to learn">
+      <a class="guide-link" routerLink="/hero-guides">View hero guides</a>
+      <a class="guide-link" routerLink="/media-tutorials">Find a video</a>
+    </nav>
   </header>
 
-  <section class="role-panel" aria-label="Choose your role">
-    <div>
-      <h2>Step 1: choose the job you want to practice</h2>
-    </div>
+  <div class="progress">
+    <p id="progress-summary" class="guide-text">{{ progressSummary() }}</p>
+    <progress aria-labelledby="progress-summary" [value]="answeredCount()" [max]="modules.length"></progress>
+  </div>
 
-    <div class="role-grid">
+  <section class="guide-section" aria-labelledby="role-title">
+    <h2 id="role-title">Step 1: choose the job you want to practice</h2>
+    <div class="options roles" role="group" aria-labelledby="role-title">
       @for (role of roles; track role) {
         <button
           type="button"
-          [class.active]="selectedRole() === role"
+          class="option"
+          [attr.aria-pressed]="selectedRole() === role"
           (click)="selectRole(role)"
         >
           {{ role }}
@@ -40,126 +32,132 @@
     </div>
   </section>
 
-  <div class="lesson-layout">
-    <section class="lesson-panel" aria-labelledby="lesson-title">
-      <div class="lesson-heading">
-        <div>
-          <h2 id="lesson-title">Module {{ currentModuleIndex() + 1 }}: {{ currentModule().title }}</h2>
-          <p>{{ currentModule().shortGoal }}</p>
-        </div>
-        <img [src]="currentModule().heroImage" [alt]="currentModule().title + ' hero image'" />
+  <nav aria-label="Modules">
+    <ol class="module-steps">
+      @for (step of moduleSteps(); track step.number) {
+        <li>
+          <button
+            type="button"
+            class="module-step"
+            [attr.aria-current]="step.current ? 'step' : null"
+            (click)="goToModule($index)"
+          >
+            <span class="marker" aria-hidden="true">{{ step.done ? '✓' : step.number }}</span>
+            {{ step.title }}
+            @if (step.done) {
+              <span class="visually-hidden">(done)</span>
+            }
+          </button>
+        </li>
+      }
+    </ol>
+  </nav>
+
+  <section class="guide-section" aria-labelledby="module-title">
+    <header class="module-head">
+      <div>
+        <h2 id="module-title" #moduleTitle tabindex="-1">
+          Module {{ currentModuleIndex() + 1 }}: {{ currentModule().title }}
+        </h2>
+        <p class="guide-text">{{ currentModule().shortGoal }}</p>
+      </div>
+      <img [src]="currentModule().heroImage" alt="" width="56" height="56" />
+    </header>
+
+    <div class="module-body">
+      <div class="guide-tile">
+        <h3>{{ currentModule().concept.heading }}</h3>
+        <p class="guide-text">{{ currentModule().concept.body }}</p>
+        <p class="guide-text"><strong>Beginner trap:</strong> {{ currentModule().concept.beginnerMistake }}</p>
+        <p class="guide-text"><strong>Coach tip:</strong> {{ currentModule().concept.coachTip }}</p>
       </div>
 
-      <article class="concept-card">
-        <h3>{{ currentModule().concept.heading }}</h3>
-        <p>{{ currentModule().concept.body }}</p>
-
-        <div class="concept-grid">
-          <div>
-            <span>Beginner trap</span>
-            <p>{{ currentModule().concept.beginnerMistake }}</p>
+      <div class="guide-tile">
+        <fieldset>
+          <legend>{{ currentModule().scenario.prompt }}</legend>
+          <p class="guide-text">{{ currentModule().scenario.context }}</p>
+          <div class="options">
+            @for (choice of choices(); track choice.id) {
+              <label class="option">
+                <input
+                  type="radio"
+                  [name]="currentModule().id"
+                  [value]="choice.id"
+                  [checked]="choice.checked"
+                  (change)="selectAnswer(currentModule().id, choice.id)"
+                />
+                {{ choice.label }}
+              </label>
+            }
           </div>
-          <div>
-            <span>Coach tip</span>
-            <p>{{ currentModule().concept.coachTip }}</p>
-          </div>
-        </div>
-      </article>
+        </fieldset>
 
-      <article class="scenario-card">
-        <span>Scenario</span>
-        <h3>{{ currentModule().scenario.prompt }}</h3>
-        <p>{{ currentModule().scenario.context }}</p>
-
-        <div class="choice-list">
-          @for (choice of currentModule().scenario.choices; track choice.id) {
-            <button
-              type="button"
-              [class.active]="selectedAnswers()[currentModule().id] === choice.id"
-              (click)="selectAnswer(currentModule().id, choice.id)"
-            >
-              {{ choice.label }}
-            </button>
+        @if (!selectedChoice()) {
+          <p class="guide-text hint">
+            <strong>Choose an answer.</strong> Pick the option you would try in match. The coaching
+            note will explain what the decision creates or risks.
+          </p>
+        }
+        <div class="feedback" role="status" aria-atomic="true">
+          @if (selectedChoice(); as choice) {
+            <p>
+              <strong>{{ choice.feedbackTitle }}</strong> · Quality: {{ choice.quality }}
+            </p>
+            <p class="guide-text">{{ choice.feedbackBody }}</p>
           }
         </div>
-      </article>
-    </section>
-
-    <aside class="feedback-panel" aria-live="polite" aria-label="Scenario feedback">
-      @if (selectedChoice(); as choice) {
-        <h2>{{ choice.feedbackTitle }}</h2>
-        <span class="quality" [class]="choice.quality">{{ choice.quality }}</span>
-        <p>{{ choice.feedbackBody }}</p>
-      } @else {
-        <h2>Choose an answer</h2>
-        <p>
-          Pick the option you would try in match. The coaching note will explain what the decision
-          creates or risks.
-        </p>
-      }
-
-      <div class="cue-box">
-        <span>Beginner cue</span>
-        <strong>{{ currentModule().cue }}</strong>
       </div>
+    </div>
 
-      <div class="module-controls">
-        <button type="button" (click)="previousModule()" [disabled]="currentModuleIndex() === 0">
+    <footer class="module-foot">
+      <p class="guide-text"><strong>Beginner cue:</strong> {{ currentModule().cue }}</p>
+      <div class="module-nav">
+        <button
+          type="button"
+          class="guide-button"
+          [disabled]="currentModuleIndex() === 0"
+          (click)="goToModule(currentModuleIndex() - 1)"
+        >
           Previous
         </button>
         <button
           type="button"
-          (click)="nextModule()"
+          class="guide-button guide-button--primary"
           [disabled]="currentModuleIndex() === modules.length - 1"
+          (click)="goToModule(currentModuleIndex() + 1)"
         >
           Next
         </button>
       </div>
-    </aside>
-  </div>
-
-  <section class="module-tabs" aria-label="Beginner guide modules">
-    @for (module of modules; track module.id; let index = $index) {
-      <button
-        type="button"
-        [class.active]="currentModuleIndex() === index"
-        [class.complete]="selectedAnswers()[module.id]"
-        (click)="currentModuleIndex.set(index)"
-      >
-        <span>{{ index + 1 }}</span>
-        {{ module.title }}
-      </button>
-    }
+    </footer>
   </section>
 
-  <section class="practice-section" aria-labelledby="practice-title">
-    <div class="section-heading">
-      <h2 id="practice-title">
-        {{ guideComplete() ? 'Take this into your next match' : 'Finish the scenarios to lock the plan' }}
-      </h2>
+  <section class="guide-section" aria-labelledby="practice-title">
+    <h2 id="practice-title">Your practice plan</h2>
+    <div class="guide-tile">
+      <h3>{{ selectedRole() }} practice: {{ recommendedPlan().title }}</h3>
+      <p class="guide-text">
+        <strong>{{ recommendedPlan().cue }}</strong>
+      </p>
+      @if (guideComplete()) {
+        <dl class="plan">
+          <div>
+            <dt>Setup</dt>
+            <dd class="guide-text">{{ recommendedPlan().setup }}</dd>
+          </div>
+          <div>
+            <dt>Reps</dt>
+            <dd class="guide-text">{{ recommendedPlan().reps }}</dd>
+          </div>
+          <div>
+            <dt>Review</dt>
+            <dd class="guide-text">{{ recommendedPlan().review }}</dd>
+          </div>
+        </dl>
+      } @else {
+        <p class="guide-text">Finish the scenarios to unlock the setup, reps and review for this plan.</p>
+      }
+      <button type="button" class="guide-button" (click)="resetGuide()">Reset guide</button>
     </div>
-
-    <article class="practice-card" [class.locked]="!guideComplete()">
-      <span>{{ selectedRole() }} practice</span>
-      <h3>{{ recommendedPlan().title }}</h3>
-      <strong>{{ recommendedPlan().cue }}</strong>
-
-      <dl>
-        <div>
-          <dt>Setup</dt>
-          <dd>{{ recommendedPlan().setup }}</dd>
-        </div>
-        <div>
-          <dt>Reps</dt>
-          <dd>{{ recommendedPlan().reps }}</dd>
-        </div>
-        <div>
-          <dt>Review</dt>
-          <dd>{{ recommendedPlan().review }}</dd>
-        </div>
-      </dl>
-
-      <button type="button" (click)="resetGuide()">Reset guide</button>
-    </article>
   </section>
-</section>
+</div>

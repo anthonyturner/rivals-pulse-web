@@ -99,6 +99,13 @@
   color: var(--accent-ink);
 }
 
+.guide-button:disabled {
+  border-color: var(--border);
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-muted);
+}
+
 .guide-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -148,6 +155,18 @@
 
 .guide-grid > li {
   display: grid;
+}
+
+/*
+ * At most two columns, so an odd last tile can take the whole row. On the plain grid the same rule
+ * would strand a tile on a three-column row.
+ */
+.guide-grid--pairs {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.guide-grid--pairs > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .guide-tile {

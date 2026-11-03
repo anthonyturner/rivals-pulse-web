@@ -1,376 +1,45 @@
-:host {
-  display: block;
+.prose {
+  max-width: 68ch;
 }
 
-.triple-page {
-  min-height: 100%;
-  padding-block: 32px;
-}
-
-.page-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
-  gap: 28px;
-  align-items: end;
-  padding: 28px 0 30px;
-}
-
-h1,
-h2,
-p {
+.core .guide-tile-head {
   margin: 0;
 }
 
-app-eyebrow {
-  margin-bottom: 8px;
+.weak {
+  margin-top: 12px;
 }
 
-h1 {
-  max-width: 800px;
-  font-size: var(--type-page-title);
-  font-weight: 850;
-  letter-spacing: -0.045em;
-  line-height: 0.96;
+.weak-list li:first-child {
+  font-weight: 400;
 }
 
-.lede {
-  max-width: 780px;
-  margin-top: 18px;
-  color: var(--text-muted);
-  font-size: 1.07rem;
-  line-height: 1.65;
+.plans {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.source-card {
+.picks {
   display: grid;
-  gap: 4px;
-  padding: 20px;
-  border: 1px solid var(--border-strong);
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--accent-soft), var(--bg-elevated));
-  color: var(--text);
-  text-decoration: none;
-}
-
-.source-card span,
-.source-card small {
-  color: var(--text-muted);
-  font-size: 0.74rem;
-}
-
-.source-card strong {
-  font-size: 1.5rem;
-}
-
-.source-card em {
-  margin-top: 10px;
-  color: var(--accent-strong);
-  font-size: 0.84rem;
-  font-style: normal;
-  font-weight: 850;
-}
-
-.read-the-comp,
-.plan-card,
-.checklist-card,
-.traps-card,
-.source-note {
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--bg-panel);
-}
-
-.read-the-comp {
-  padding: 24px;
-}
-
-.section-intro {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.65fr) minmax(300px, 1fr);
-  gap: 10px 32px;
-  align-items: end;
-}
-
-.section-intro h2,
-.plan-card h2,
-.execution-grid h2,
-.source-note h2 {
-  color: var(--text);
-  font-size: var(--type-h2);
-  line-height: 1.06;
-}
-
-.section-intro > p:last-child,
-.plan-card header p:last-child,
-.source-note p:last-child {
-  color: var(--text-soft);
-  line-height: 1.65;
-}
-
-.support-core {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.support-core article,
-.hero-picks article {
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.support-core img {
-  width: 58px;
-  aspect-ratio: 1;
-  border-radius: 8px;
-  object-fit: cover;
-  object-position: top;
-}
-
-.support-core strong,
-.hero-picks strong {
-  display: block;
-  color: var(--text);
-}
-
-.support-core p,
-.hero-picks small {
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.weakness-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  margin-top: 14px;
-  border-radius: 7px;
-  background: var(--border);
-}
-
-.weakness-strip span {
-  padding: 12px;
-  background: var(--ink-raised);
-  color: var(--on-ink);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-align: center;
-}
-
-.counter-plans {
-  display: grid;
-  gap: 18px;
-  padding: 18px 0;
-}
-
-.plan-card {
-  padding: 24px;
-}
-
-.plan-card > header {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 18px;
-  max-width: 900px;
-}
-
-.plan-card > header > span {
-  display: grid;
-  width: 64px;
-  height: 64px;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--text);
-  color: var(--bg-elevated);
-  font-size: 1.15rem;
-  font-weight: 900;
-}
-
-.plan-card h2 {
-  margin: 5px 0 10px;
-}
-
-.plan-body {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
-  gap: 24px;
-  margin-top: 22px;
-}
-
-.plan-body > ol {
-  display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 8px 12px;
+  margin: 12px 0 0;
   padding: 0;
-  margin: 0;
-  counter-reset: plan-step;
   list-style: none;
 }
 
-.plan-body > ol li {
-  position: relative;
-  padding: 12px 12px 12px 44px;
-  border-radius: 7px;
-  background: var(--bg-panel-soft);
-  color: var(--text-soft);
-  line-height: 1.5;
-  counter-increment: plan-step;
-}
-
-.plan-body > ol li::before {
-  position: absolute;
-  top: 12px;
-  left: 14px;
-  color: var(--accent-strong);
-  content: counter(plan-step, decimal-leading-zero);
-  font-weight: 900;
-}
-
-.hero-picks {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.hero-picks article {
-  grid-template-columns: 48px minmax(0, 1fr);
-  align-items: center;
-}
-
-.hero-picks img {
-  width: 48px;
-  aspect-ratio: 1;
-  border-radius: 7px;
-  object-fit: cover;
-  object-position: top;
-}
-
-.execution-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.checklist-card,
-.traps-card {
-  padding: 24px;
-}
-
-.execution-grid h2 {
-  margin: 6px 0 20px;
-}
-
-.checklist-card ol,
-.traps-card ul {
-  display: grid;
-  gap: 12px;
-  padding: 0;
+.picks .guide-tile-head {
   margin: 0;
-  list-style: none;
 }
 
-.checklist-card li {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-
-.checklist-card li > span {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.checklist-card li p,
-.traps-card li {
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-.traps-card li {
-  padding: 12px 14px;
-  border-left: 3px solid var(--danger);
-  border-radius: 4px;
-  background: var(--danger-soft);
-}
-
-.source-note {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 28px;
-  align-items: center;
-  padding: 24px;
-  margin: 18px 0 48px;
-  background: var(--bg-panel-soft);
-}
-
-.source-note h2 {
-  margin: 6px 0 10px;
-}
-
-.source-note a {
-  width: fit-content;
-  padding: 11px 14px;
-  border: 1px solid var(--accent-line);
-  border-radius: 7px;
-  background: var(--bg-elevated);
-  color: var(--accent-strong);
-  font-weight: 850;
-  text-decoration: none;
-}
-
-@media (max-width: 900px) {
-  .triple-page {
-    padding-block: 20px;
-  }
-
-  .page-header,
-  .section-intro,
-  .plan-body,
-  .source-note {
-    grid-template-columns: 1fr;
-  }
-
-  .support-core,
-  .weakness-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (min-width: 700px) {
+  .weak-list {
+    columns: 2;
+    column-gap: 32px;
   }
 }
 
-@media (max-width: 560px) {
-  .triple-page {
-    padding-block: var(--mobile-page-gutter);
-  }
-
-  .read-the-comp,
-  .plan-card,
-  .checklist-card,
-  .traps-card,
-  .source-note {
-    padding: var(--mobile-panel-padding);
-  }
-
-  .support-core,
-  .weakness-strip,
-  .hero-picks,
-  .execution-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .plan-card > header {
-    grid-template-columns: 1fr;
+@media (min-width: 1000px) {
+  .plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

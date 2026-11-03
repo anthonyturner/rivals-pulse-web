@@ -1,0 +1,103 @@
+<div class="guide-article page-container">
+  <header class="guide-header">
+    <app-eyebrow>Positioning</app-eyebrow>
+    <h1>{{ guide().title }}</h1>
+    <p class="guide-lede">{{ guide().lede }}</p>
+    <p>
+      <a class="guide-link" [href]="guide().sourceUrl" target="_blank" rel="noopener">
+        {{ guide().sourceLabel }}
+        <span class="visually-hidden">(opens YouTube in a new tab)</span>
+      </a>
+    </p>
+  </header>
+
+  <figure class="diagram">
+    <div class="diagram-rows" aria-hidden="true">
+      @for (row of guide().diagram.rows; track $index) {
+        <div>
+          @if (row.label) {
+            <p class="row-label">{{ row.label }}</p>
+          }
+          <ol class="flow">
+            @for (node of row.nodes; track node.text) {
+              <li [class.key]="node.key">{{ node.text }}</li>
+            }
+          </ol>
+        </div>
+      }
+    </div>
+    <figcaption class="guide-caption">{{ guide().diagram.caption }}</figcaption>
+  </figure>
+
+  <section class="guide-section" aria-labelledby="test-title">
+    <h2 id="test-title">Five-Question Test</h2>
+    <ol class="guide-steps checks">
+      @for (item of guide().checklist; track item.label) {
+        <li>
+          <div>
+            <strong>{{ item.label }}</strong>
+            <p class="guide-text">{{ item.detail }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="guide-section" aria-labelledby="ideas-title">
+    <h2 id="ideas-title">Key ideas</h2>
+    <ul class="guide-grid guide-grid--pairs">
+      @for (section of guide().sections; track section.title) {
+        <li class="guide-tile">
+          <h3>{{ section.title }}</h3>
+          <p class="guide-text">{{ section.summary }}</p>
+          <ul class="guide-bullets">
+            @for (point of section.points; track point) {
+              <li>{{ point }}</li>
+            }
+          </ul>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <div class="guide-grid guide-grid--pairs">
+    <section class="guide-tile" aria-labelledby="notes-title">
+      <h2 id="notes-title">{{ guide().notesTitle }}</h2>
+      <dl class="notes">
+        @for (note of guide().notes; track note.label) {
+          <dt>{{ note.label }}</dt>
+          <dd class="guide-text">{{ note.detail }}</dd>
+        }
+      </dl>
+    </section>
+
+    <section class="guide-tile" aria-labelledby="drills-title">
+      <h2 id="drills-title">Practice Drills</h2>
+      <ol class="guide-steps">
+        @for (drill of guide().drills; track drill.label) {
+          <li>
+            <div>
+              <strong>{{ drill.label }}</strong>
+              <p class="guide-text">{{ drill.detail }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <section class="guide-tile" aria-labelledby="map-title">
+      <h2 id="map-title">Guide Map</h2>
+      <ul class="timeline">
+        @for (timestamp of timestamps(); track timestamp.label) {
+          <li>
+            <a class="guide-link" [href]="timestamp.url" target="_blank" rel="noopener">
+              {{ timestamp.label }}
+              <span class="visually-hidden">(opens YouTube in a new tab)</span>
+            </a>
+            <span class="guide-text">{{ timestamp.detail }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+</div>

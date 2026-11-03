@@ -1,126 +1,105 @@
-<section class="triple-page page-container page-container--wide">
-  <header class="page-header">
-    <div>
-      <app-eyebrow>Composition</app-eyebrow>
-      <h1>How to break triple support</h1>
-      <p class="lede">
-        Stop feeding the sustain loop. Collapse on one target, compress your damage into a short
-        window, or pull the formation apart before the clock becomes their seventh player.
-      </p>
-    </div>
-
-    <a class="source-card" [href]="source.url" target="_blank" rel="noopener noreferrer">
-      <span>Primary source</span>
-      <strong>{{ source.publisher }}</strong>
-      <small>{{ source.author }} · {{ source.published }}</small>
-      <em>Read the original article →</em>
-    </a>
+<div class="guide-article page-container">
+  <header class="guide-header">
+    <app-eyebrow>Composition</app-eyebrow>
+    <h1>How to break triple support</h1>
+    <p class="guide-lede">
+      Stop feeding the sustain loop. Collapse on one target, compress your damage into a short
+      window, or pull the formation apart before the clock becomes their seventh player.
+    </p>
+    <p>
+      <a class="guide-link" [href]="source.url" target="_blank" rel="noopener noreferrer">
+        Primary source: {{ source.publisher }}, {{ source.author }} · {{ source.published }}
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+    </p>
   </header>
 
-  <div>
-    <section class="read-the-comp" aria-labelledby="read-the-comp-title">
-      <div class="section-intro">
-        <h2 id="read-the-comp-title">What triple support is trying to do</h2>
-        <p>
-          The composition trades offensive tempo for overlapping sustain and defensive cooldowns.
-          It wants your team to spread damage, fail to finish eliminations, and spend the match
-          charging support ultimates while the objective timer disappears.
-        </p>
-      </div>
-
-      <div class="support-core" aria-label="Typical triple support core">
-        @for (hero of supportCore; track hero.name) {
-          <article>
-            <img [src]="hero.image" [alt]="hero.name" />
+  <section class="guide-section" aria-labelledby="read-the-comp-title">
+    <h2 id="read-the-comp-title">What triple support is trying to do</h2>
+    <p class="guide-text prose">
+      The composition trades offensive tempo for overlapping sustain and defensive cooldowns. It
+      wants your team to spread damage, fail to finish eliminations, and spend the match charging
+      support ultimates while the objective timer disappears.
+    </p>
+    <ul class="guide-grid guide-grid--pairs core">
+      @for (hero of supportCore; track hero.name) {
+        <li class="guide-tile">
+          <div class="guide-tile-head">
+            <img [src]="hero.image" alt="" width="40" height="40" loading="lazy" />
             <div>
-              <strong>{{ hero.name }}</strong>
-              <p>{{ hero.job }}</p>
-            </div>
-          </article>
-        }
-      </div>
-
-      <div class="weakness-strip" aria-label="Triple support weaknesses">
-        <span>Less offensive tempo</span>
-        <span>One frontline must do too many jobs</span>
-        <span>Vulnerable before ultimates are online</span>
-        <span>Depends on formation and sightlines</span>
-      </div>
-    </section>
-
-    <section class="counter-plans" aria-label="Three counter plans">
-      @for (plan of plans; track plan.number) {
-        <article class="plan-card">
-          <header>
-            <span>{{ plan.number }}</span>
-            <div>
-              <h2>{{ plan.title }}</h2>
-              <p>{{ plan.summary }}</p>
-            </div>
-          </header>
-
-          <div class="plan-body">
-            <ol>
-              @for (step of plan.steps; track step) {
-                <li>{{ step }}</li>
-              }
-            </ol>
-
-            <div class="hero-picks" aria-label="Recommended heroes">
-              @for (hero of plan.heroes; track hero.name) {
-                <article>
-                  <img [src]="hero.image" [alt]="hero.name" loading="lazy" />
-                  <div>
-                    <strong>{{ hero.name }}</strong>
-                    <small>{{ hero.job }}</small>
-                  </div>
-                </article>
-              }
+              <h3>{{ hero.name }}</h3>
+              <p class="guide-text">{{ hero.job }}</p>
             </div>
           </div>
-        </article>
+        </li>
       }
+    </ul>
+    <p class="guide-text weak">Weak to:</p>
+    <ul class="guide-bullets weak-list">
+      @for (weakness of weaknesses; track weakness) {
+        <li>{{ weakness }}</li>
+      }
+    </ul>
+  </section>
+
+  <section class="guide-section" aria-labelledby="plans-title">
+    <h2 id="plans-title">Three ways to break it</h2>
+    <ul class="guide-grid plans">
+      @for (plan of plans; track plan.title) {
+        <li class="guide-tile">
+          <h3>{{ $index + 1 }}. {{ plan.title }}</h3>
+          <p class="guide-text">{{ plan.summary }}</p>
+          <ol class="guide-steps">
+            @for (step of plan.steps; track step) {
+              <li>{{ step }}</li>
+            }
+          </ol>
+          <ul class="picks" aria-label="Recommended heroes">
+            @for (hero of plan.heroes; track hero.name) {
+              <li class="guide-tile-head">
+                <img [src]="hero.image" alt="" width="40" height="40" loading="lazy" />
+                <div>
+                  <strong>{{ hero.name }}</strong>
+                  <p class="guide-text">{{ hero.job }}</p>
+                </div>
+              </li>
+            }
+          </ul>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <div class="guide-grid guide-grid--pairs">
+    <section class="guide-tile" aria-labelledby="checks-title">
+      <h2 id="checks-title">Run the same four checks every engagement</h2>
+      <ol class="guide-steps">
+        @for (item of fightChecklist; track item.label) {
+          <li>
+            <div>
+              <strong>{{ item.label }}</strong>
+              <p class="guide-text">{{ item.detail }}</p>
+            </div>
+          </li>
+        }
+      </ol>
     </section>
 
-    <section class="execution-grid" aria-label="Fight checklist and common traps">
-      <article class="checklist-card">
-        <h2>Run the same four checks every engagement</h2>
-        <ol>
-          @for (item of fightChecklist; track item.label) {
-            <li>
-              <span>{{ $index + 1 }}</span>
-              <div>
-                <strong>{{ item.label }}</strong>
-                <p>{{ item.detail }}</p>
-              </div>
-            </li>
-          }
-        </ol>
-      </article>
-
-      <article class="traps-card">
-        <h2>Five ways teams lose this matchup</h2>
-        <ul>
-          @for (trap of traps; track trap) {
-            <li>{{ trap }}</li>
-          }
-        </ul>
-      </article>
-    </section>
-
-    <section class="source-note" aria-labelledby="source-note-title">
-      <div>
-        <h2 id="source-note-title">Adapted from Dignitas</h2>
-        <p>
-          This guide summarizes and reorganizes the strategic recommendations in
-          <cite>{{ source.title }}</cite> by {{ source.author }}. Hero balance and team trends can
-          change between patches, so use the original article as the source and confirm current
-          ability behavior in game.
-        </p>
-      </div>
-      <a [href]="source.url" target="_blank" rel="noopener noreferrer">
-        Visit Dignitas and read the full guide
-      </a>
+    <section class="guide-tile" aria-labelledby="traps-title">
+      <h2 id="traps-title">Five ways teams lose this matchup</h2>
+      <ul class="guide-bullets">
+        @for (trap of traps; track trap) {
+          <li>{{ trap }}</li>
+        }
+      </ul>
     </section>
   </div>
-</section>
+
+  <section class="guide-section" aria-labelledby="source-note-title">
+    <h2 id="source-note-title">Adapted from {{ source.publisher }}</h2>
+    <p class="guide-text prose">
+      This guide summarizes and reorganizes <cite>{{ source.title }}</cite> by {{ source.author }};
+      hero balance changes between patches, so confirm current ability behavior in game.
+    </p>
+  </section>
+</div>

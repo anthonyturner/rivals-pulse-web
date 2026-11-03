@@ -8,6 +8,7 @@ import { NoticeComponent } from '../../../../shared/components/notice/notice.com
 import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
 import { GuideCardComponent } from '../guide-card/guide-card.component';
+import { videoUrlAt } from '../youtube-timestamp';
 import { STRATEGIST_GUIDES } from './strategist-guides.data';
 
 const RELATED_GUIDE_LIMIT = 3;
@@ -51,11 +52,16 @@ export class StrategistGuideDetailPageComponent {
   });
 
   readonly checkpoints = computed(() => {
+    const guide = this.guide();
     const videoUrl = this.videoUrl();
 
-    return (this.guide()?.checkpoints ?? []).map((checkpoint) => ({
+    if (!guide || !videoUrl) {
+      return [];
+    }
+
+    return guide.checkpoints.map((checkpoint) => ({
       ...checkpoint,
-      url: `${videoUrl}&t=${this.toSeconds(checkpoint.time)}s`,
+      url: videoUrlAt(videoUrl, checkpoint.time),
     }));
   });
 
@@ -74,11 +80,4 @@ export class StrategistGuideDetailPageComponent {
         caption: `${guide.category} · ${guide.heroFocus} · ${guide.duration}`,
       }));
   });
-
-  private toSeconds(timestamp: string): number {
-    return timestamp
-      .split(':')
-      .map(Number)
-      .reduce((total, part) => total * 60 + part, 0);
-  }
 }
