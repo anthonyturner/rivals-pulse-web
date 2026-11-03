@@ -1,5 +1,5 @@
-import { runGameStatsSync } from '../src/game-stats-sync.ts';
-import { recordSyncRun } from '../src/sync-log.ts';
+import { runGameStatsSync } from '../src/server/sync/game-stats-sync.ts';
+import { recordSyncRun } from '../src/server/sync/sync-log.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const result = await runGameStatsSync(getSupabaseClient(), recordSyncRun);

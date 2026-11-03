@@ -38,11 +38,11 @@ by hand. There is no sign-up route to it.
   site ... no new grant may assume otherwise"). A check that only asks "is this
   user signed in?" would admit every stranger who registers.
 - The API accepts only GET today and answers anything else with 405
-  (`src/vercel-api.ts:36-39`). Admin changes need
+  (`src/server/http/vercel-api.ts:36-39`). Admin changes need
   POST, which #270 is expected to add.
 - Default API answers are cached by the CDN (the shared web cache) for five
   minutes, and a stale copy may be served for up to an hour
-  (`src/vercel-api.ts:5`). A route that forgets to
+  (`src/server/http/vercel-api.ts:5`). A route that forgets to
   override that would hand one visitor's answer to the next. A `no-store`
   variant exists today for a single route (`api/home/content.ts:11`).
 - The database already has a posture for data the website alone may touch: RLS

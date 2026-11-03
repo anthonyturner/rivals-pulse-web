@@ -42,7 +42,7 @@ Every dataset file has this shape:
 
 The tier list is the **community list**: it is built from the matches Rivals
 Pulse players upload, by the hero-stats derivation behind `GET /api/hero-stats`
-([src/hero-stats.ts](../src/hero-stats.ts)). It does not use any third-party
+([src/server/heroes/stats/hero-stats.ts](../src/server/heroes/stats/hero-stats.ts)). It does not use any third-party
 site. There is one **season** per half-season that has started, and each season
 has one rank snapshot, `99` (All Ranks), because a player's rank is not stored
 with their matches. The feed is split by season so a client reads the current
@@ -142,7 +142,7 @@ season has a file too, so a client can treat every season the same way.
 The per-hero numbers behind the tier list, for readers that want the figures
 and not the tiers. Like the tier list it is the **community** data: built from
 the matches Rivals Pulse players upload, by the hero-stats derivation behind
-`GET /api/hero-stats` ([src/hero-stats.ts](../src/hero-stats.ts)), and from
+`GET /api/hero-stats` ([src/server/heroes/stats/hero-stats.ts](../src/server/heroes/stats/hero-stats.ts)), and from
 nothing else. It is **one file for every half-season**, listed in the manifest:
 
 ```json
@@ -204,7 +204,7 @@ nothing else. It is **one file for every half-season**, listed in the manifest:
   needs no such mechanism. If it ever grows past a size worth parsing for the
   current season alone, splitting it is a `v2` question.
 - **Only these keys are published.** The generator allows exactly the keys
-  above (`checkKeys` in [src/pulse-atlas.ts](../src/pulse-atlas.ts)) and refuses
+  above (`checkKeys` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and refuses
   to build if the file, a season or a cell has any other, if a key names
   something private (see below), or if a value is not a number, boolean or
   `null` where one is expected. The file holds no player-level data: no
@@ -225,7 +225,7 @@ The counts behind the community counter and best-partner figures, for readers
 that want to show how a hero fares against, and together with, another hero.
 Like the tier list it is the **community** data: built from the matches Rivals
 Pulse players upload, by the pair derivation behind `GET /api/hero-pairs`
-([src/hero-pairs.ts](../src/hero-pairs.ts)), and from nothing else. It is **one
+([src/server/heroes/pairs/hero-pairs.ts](../src/server/heroes/pairs/hero-pairs.ts)), and from nothing else. It is **one
 file** for the half-season shown, listed in the manifest:
 
 ```json
@@ -253,7 +253,7 @@ file** for the half-season shown, listed in the manifest:
   computes a rate as `wins / appearances`, and pulls it toward 50% as if
   `priorMatches` more matches had been played at 50%
   (`(wins + priorMatches / 2) / (appearances + priorMatches)`), the rule the
-  tier list uses ([src/hero-stats.ts](../src/hero-stats.ts)). `minimumMatches`
+  tier list uses ([src/server/heroes/stats/hero-stats.ts](../src/server/heroes/stats/hero-stats.ts)). `minimumMatches`
   is the decided matches a pair needs before it is listed; a pair with fewer is
   "not enough data", which is not the same as a pair that lost.
 - **The season** is as in the tier list: the id is the half-season number times
@@ -302,7 +302,7 @@ file** for the half-season shown, listed in the manifest:
   file; a `heroId` that no hero in `heroes.json` has as its `gameId` is
   published, with a warning, as in the tier list.
 - **Only these keys are published.** The generator allows exactly the keys
-  above (`readCommunityStats` in [src/pulse-atlas.ts](../src/pulse-atlas.ts))
+  above (`readCommunityStats` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts))
   and refuses to build if the file, a season, a band or a row has any other, if
   a key names something private (the `counters` key is allowed here, because
   these are the site's own counts), if a pair is below `minimumMatches`, is a
@@ -378,7 +378,7 @@ the new fields is unaffected.
   whole number above 0 or belongs to two heroes (or to a hero and its own
   variant), `gameIdVariants` is empty or has an entry without a `gameId` and a
   `role` of Vanguard, Duelist or Strategist, or no entry names any hero in
-  `heroes.json` (`findHeroGameIdProblems` in [src/pulse-atlas.ts](../src/pulse-atlas.ts),
+  `heroes.json` (`findHeroGameIdProblems` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts),
   which returns these as `errors` and the two cases above as `warnings`). A unit
   test runs the same check on the committed file, so a malformed id fails in a
   pull request before it can fail a publish.
@@ -411,7 +411,7 @@ One entry per hero in `heroes.json`, keyed by the hero's `id` slug:
 - The generator refuses to build, and so nothing is published, if a hero is
   listed twice, a weight is negative, not a whole number, or the three do not
   sum to 100, the list is empty, or no entry names any hero in `heroes.json`
-  (`findHeroStyleProblems` in [src/pulse-atlas.ts](../src/pulse-atlas.ts),
+  (`findHeroStyleProblems` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts),
   which returns these as `errors` and the two cases above as `warnings`). A
   unit test runs the same check on the committed file, so a malformed weight
   fails in a pull request before it can fail a publish.
@@ -457,7 +457,7 @@ published, if any other dataset has a key naming something private (player,
 token, secret, email and similar) or a `counters` key, if any dataset has a
 value shaped like a credential, or a mention of the dropped counter source. See
 `UNSAFE_KEY`, `PRIVATE_KEY` and `UNSAFE_VALUE` in
-[src/pulse-atlas.ts](../src/pulse-atlas.ts).
+[src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts).
 
 ## How it is published
 
@@ -480,7 +480,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    If this fails, for example with a 404 on the first run, everything is built
    fresh.
 4. Builds the files and manifest with the pure module
-   [src/pulse-atlas.ts](../src/pulse-atlas.ts). It slims the tier list and
+   [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts). It slims the tier list and
    writes one file per season, then hashes each season file's exact content for
    the `tier-list.json` index. It reuses a published file verbatim when its
    data and `source` are unchanged (compared as canonical JSON, so key order
@@ -492,11 +492,11 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    root and to `pulse-atlas/v1/index.html`, so opening the site in a browser
    shows what Pulse Atlas is and a table of every file with its size and
    sha256. It is static HTML with inline CSS and no scripts, built by
-   [src/pulse-atlas-page.ts](../src/pulse-atlas-page.ts). It is not part of
+   [src/server/pulse-atlas/pulse-atlas-page.ts](../src/server/pulse-atlas/pulse-atlas-page.ts). It is not part of
    the feed: the manifest does not list it, and clients never need it.
 
 `community-stats` is the exception to the rule below: `resolveCommunityStats`
-in [src/pulse-atlas.ts](../src/pulse-atlas.ts) turns any failure to fetch or
+in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts) turns any failure to fetch or
 assemble it into the last published file (kept byte for byte) or, if none was
 ever published, into leaving it out of the run, each with a warning. It never
 fails the generate job.

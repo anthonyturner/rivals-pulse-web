@@ -1,5 +1,5 @@
 /**
- * What a player may ask to have removed. The server reads this file too (`src/account-api.ts`), so it
+ * What a player may ask to have removed. The server reads this file too (`src/server/account/account-api.ts`), so it
  * imports nothing: the browser and the API must agree on these words.
  */
 export type DeletionMode =

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { normalizeLinkCode } from '../../../src/link-code.ts';
+import { normalizeLinkCode } from '../../../src/server/account/link-code.ts';
 import { formatLinkCode, generateLinkCode, LINK_CODE_ALPHABET, LINK_CODE_LENGTH } from './link-code.ts';
 
 const bytesOf = (...values: number[]) => (bytes: Uint8Array): Uint8Array => {

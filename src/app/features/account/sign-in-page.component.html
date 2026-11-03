@@ -10,7 +10,7 @@
         @if (current.kind === 'notice') {
           <app-notice>{{ current.text }}</app-notice>
         } @else {
-          <app-state-panel [kind]="current.kind" [announce]="false">{{ current.text }}</app-state-panel>
+          <app-state-panel [kind]="current.kind === 'error' ? 'error' : 'empty'" [announce]="false">{{ current.text }}</app-state-panel>
         }
       }
     </div>
@@ -18,8 +18,8 @@
     @if (!leaving()) {
       <a class="guide-button guide-button--primary" [href]="discordHref">Sign in with Discord</a>
       <p class="note">
-        We keep your Discord id, username, email (if Discord shares one) and the date you joined,
-        and send no marketing email.
+        We store your Discord id, username, email (if Discord shares one) and the date you joined.
+        No marketing email.
         <a class="guide-link" routerLink="/privacy" fragment="accounts">What the account stores</a>
       </p>
     }

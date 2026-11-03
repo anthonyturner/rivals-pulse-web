@@ -18,7 +18,11 @@ import {
  * server and in the browser. A route's `title` becomes the page title and the
  * preview title; a route without one falls back to the site name. The
  * canonical URL is the production origin plus the route's own path, so no page
- * claims another page as its canonical.
+ * claims another page as its canonical. The exception is a page that asks not to
+ * be indexed: it has no canonical, and the strategy tells by a `robots` tag with
+ * `noindex` that the page added while the router activated it, before the title
+ * is updated. `NotFoundComponent` adds that tag in its constructor and removes it
+ * when destroyed; a page that adds the tag later would still get a canonical.
  */
 @Injectable({ providedIn: 'root' })
 export class PageMetaTitleStrategy extends TitleStrategy {
@@ -49,7 +53,7 @@ export class PageMetaTitleStrategy extends TitleStrategy {
       { name: 'twitter:image', content: image },
       { name: 'twitter:image:alt', content: PREVIEW_IMAGE_ALT },
     ]);
-    this.setCanonical(url);
+    this.setCanonical(this.meta.getTag('name="robots"')?.content === 'noindex' ? null : url);
   }
 
   private setTags(tags: { name?: string; property?: string; content: string }[]): void {
@@ -58,8 +62,13 @@ export class PageMetaTitleStrategy extends TitleStrategy {
     }
   }
 
-  private setCanonical(url: string): void {
+  /** A page that asks not to be indexed has no canonical address to claim. */
+  private setCanonical(url: string | null): void {
     let link = this.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (url === null) {
+      link?.remove();
+      return;
+    }
     if (!link) {
       link = this.document.createElement('link');
       link.setAttribute('rel', 'canonical');

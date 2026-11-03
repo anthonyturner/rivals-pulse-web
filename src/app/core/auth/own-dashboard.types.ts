@@ -1,7 +1,7 @@
 import type { LinkedPlayer } from './linked-player.types.js';
 
 /**
- * What `GET /api/account/dashboard` answers. The server reads this file too (`src/own-dashboard.ts`),
+ * What `GET /api/account/dashboard` answers. The server reads this file too (`src/server/account/own-dashboard.ts`),
  * so it imports only a sibling type: the browser and the API must agree on it.
  *
  * A figure that was not recorded is `null`, never 0. A count of nothing (`matches: 0`) is a real 0.

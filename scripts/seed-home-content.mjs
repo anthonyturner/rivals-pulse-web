@@ -3,7 +3,7 @@
 // block alone; the home news sync rewrites its own blocks on its next run.
 import { readFileSync } from 'node:fs';
 
-import { replaceHomePortals, saveHomeContentBlocks } from '../src/home-content-store.ts';
+import { replaceHomePortals, saveHomeContentBlocks } from '../src/server/content/home/home-content-store.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const portals = readSeed('home-portals.mock.json');
