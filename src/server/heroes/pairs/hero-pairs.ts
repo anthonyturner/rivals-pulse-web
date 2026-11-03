@@ -58,13 +58,13 @@ export interface HeroPairRow {
   wins: number;
 }
 
-export interface DeriveHeroPairsOptions {
+interface DeriveHeroPairsOptions {
   now: Date;
   /** Game hero id to the hero's base game id (Deadpool's role forms to 1057). A game id missing here is left out. */
   baseGameIdByGameId: ReadonlyMap<number, number>;
 }
 
-export interface HeroPairsDerivation {
+interface HeroPairsDerivation {
   pairs: HeroPairs;
   /** Game hero ids in the counted rows that map to no hero (for example 0, "no hero recorded"). */
   excludedGameIds: number[];

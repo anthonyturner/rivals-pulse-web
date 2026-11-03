@@ -37,13 +37,13 @@ export interface HeroMatchupRow {
   wins: number;
 }
 
-export interface DeriveHeroMatchupsOptions {
+interface DeriveHeroMatchupsOptions {
   now: Date;
   /** Game hero id to the hero's id in `heroes.json`. A game id missing here is left out. */
   heroSlugByGameId: ReadonlyMap<number, string>;
 }
 
-export interface HeroMatchupsDerivation {
+interface HeroMatchupsDerivation {
   matchups: HeroMatchups;
   /** Game hero ids in the rows that map to no hero (for example 0, "no hero recorded"). */
   excludedGameIds: number[];

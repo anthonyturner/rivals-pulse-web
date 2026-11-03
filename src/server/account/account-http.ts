@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
 import { handleAccountRequest, type AccountRequest } from './account-api.js';
-import { createSupabaseAuthGateway, type AuthGateway } from '../auth/auth-gateway.js';
+import { createSupabaseAuthGateway, type AuthGateway } from '../auth/index.js';
 
 /** An answer about one visitor must never be stored by a shared cache. */
 const NO_STORE = 'private, no-store, max-age=0';

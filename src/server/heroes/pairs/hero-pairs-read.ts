@@ -1,5 +1,5 @@
 import type { HeroPairs } from '../../../contracts/hero-pairs.model.js';
-import { baseGameIdByGameId } from '../catalog/hero-game-ids.js';
+import { baseGameIdByGameId } from '../catalog/index.js';
 import {
   deriveHeroPairs,
   HERO_PAIR_PLAY_MODE_IDS,
@@ -7,10 +7,10 @@ import {
   type HeroPairKind,
   type HeroPairRow,
 } from './hero-pairs.js';
-import { readHeroStatsSource } from '../stats/hero-stats-read.js';
-import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/supabase-rpc.js';
+import { readHeroStatsSource } from '../stats/index.js';
+import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.js';
 
-export interface HeroPairsReadOptions {
+interface HeroPairsReadOptions {
   env?: SupabaseReadEnv;
   fetch?: typeof fetch;
   now?: () => Date;

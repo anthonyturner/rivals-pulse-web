@@ -3,7 +3,7 @@ import type { PulseAtlasManifest } from './pulse-atlas';
 export const PULSE_ATLAS_CONTRACT_URL =
   'https://github.com/anthonyturner/rivals-pulse-web/blob/master/docs/pulse-atlas.md';
 
-export interface PulseAtlasPageLocation {
+interface PulseAtlasPageLocation {
   /** Where this page is served, relative to the site root, e.g. `pulse-atlas/v1/index.html`. */
   pagePath: string;
   /** Where the manifest is served, relative to the site root. */

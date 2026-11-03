@@ -11,7 +11,7 @@ export interface HeroGameIdEntry {
  * Game hero id to the hero's id in `heroes.json`. A hero the game splits by role (Deadpool) answers
  * to its base id and to every variant id, so all of them count as the one hero.
  */
-export function buildHeroSlugByGameId(entries: readonly HeroGameIdEntry[]): ReadonlyMap<number, string> {
+function buildHeroSlugByGameId(entries: readonly HeroGameIdEntry[]): ReadonlyMap<number, string> {
   return new Map(
     entries.flatMap((entry): [number, string][] => [
       [entry.gameId, entry.id],

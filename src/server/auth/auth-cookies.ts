@@ -16,7 +16,7 @@ export interface SessionTokens {
   signedInAt?: number;
 }
 
-export interface PkceState {
+interface PkceState {
   verifier: string;
   next: string;
 }

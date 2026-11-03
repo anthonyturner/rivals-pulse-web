@@ -1,4 +1,4 @@
-export const PULSE_ATLAS_SCHEMA_VERSION = 1;
+const PULSE_ATLAS_SCHEMA_VERSION = 1;
 export const PULSE_ATLAS_BASE_PATH = 'pulse-atlas/v1';
 export const PULSE_ATLAS_DATASETS = [
   'heroes',
@@ -15,7 +15,7 @@ export const PULSE_ATLAS_DATASETS = [
  * `community-stats` depends on an endpoint and a database function that are deployed separately, so
  * the publish must not be held up by it (see `resolveCommunityStats`).
  */
-export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats'];
+const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats'];
 
 /**
  * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
@@ -27,9 +27,9 @@ const HERO_STYLE_WEIGHTS = ['poke', 'dive', 'brawl'] as const;
 const HERO_ROLES = ['Vanguard', 'Duelist', 'Strategist'] as const;
 const GAME_ID_ENTRY_KEYS: readonly string[] = ['id', 'gameId', 'gameIdVariants'];
 
-export type PulseAtlasDataset = (typeof PULSE_ATLAS_DATASETS)[number];
+type PulseAtlasDataset = (typeof PULSE_ATLAS_DATASETS)[number];
 
-export type Sha256Hex = (text: string) => string;
+type Sha256Hex = (text: string) => string;
 
 export interface PulseAtlasInput {
   dataset: PulseAtlasDataset | typeof PULSE_ATLAS_HERO_GAME_IDS;
@@ -38,7 +38,7 @@ export interface PulseAtlasInput {
   data: unknown;
 }
 
-export interface PulseAtlasEnvelope {
+interface PulseAtlasEnvelope {
   schemaVersion: number;
   /** When this dataset's data last changed, not when the feed last ran. */
   generatedAt: string;
@@ -46,7 +46,7 @@ export interface PulseAtlasEnvelope {
   data: unknown;
 }
 
-export interface PulseAtlasManifestEntry {
+interface PulseAtlasManifestEntry {
   dataset: PulseAtlasDataset;
   path: string;
   sha256: string;
@@ -241,7 +241,7 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
 }
 
 /** The top-level `provenance` of the tier-list index and of every season file. The overlay refuses a tier-list file without it. */
-export const COMMUNITY_PROVENANCE = 'rivals-pulse-community';
+const COMMUNITY_PROVENANCE = 'rivals-pulse-community';
 
 /** The one rank the community list covers: the uploader's own rank is not stored with the matches. */
 const ALL_RANKS = { value: '99', label: 'All Ranks' } as const;
@@ -278,7 +278,7 @@ interface HeroStatsView {
   belowMinimum: { hero: string; appearances: number }[];
 }
 
-export interface HalfSeasonStats {
+interface HalfSeasonStats {
   /** The half-season asked for, such as 10 or 10.5. */
   halfSeason: number;
   /** The `/api/hero-stats?halfSeason=<halfSeason>` response body. */
@@ -799,7 +799,7 @@ function publishedHeroIds(inputs: readonly PulseAtlasInput[]): string[] | undefi
     : undefined;
 }
 
-export interface HeroStyleFindings {
+interface HeroStyleFindings {
   /** Faults in the data itself; a build must not publish while any remain. */
   errors: string[];
   /** Mismatches with the hero list; publishing goes ahead without the affected hero. */
@@ -898,7 +898,7 @@ function withPublishableHeroStyles(inputs: readonly PulseAtlasInput[]): {
   };
 }
 
-export interface HeroGameIdFindings {
+interface HeroGameIdFindings {
   /** Faults in the map itself; a build must not publish while any remain. */
   errors: string[];
   /** Mismatches with the hero list; publishing goes ahead without the affected hero's id. */
@@ -1987,7 +1987,7 @@ function findCommunityStatsFileProblems(files: readonly PulseAtlasFile[]): strin
     : [`community-stats: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
 }
 
-export interface ResolveCommunityStatsOptions {
+interface ResolveCommunityStatsOptions {
   /** Reads the `/api/hero-pairs` answer. A failure to do so, or an unusable answer, takes the fallback. */
   read: () => Promise<unknown>;
   /** What is published right now. */

@@ -35,6 +35,37 @@ Scheduled content refresh runs via Vercel cron (`vercel.json` `crons`)
 hitting `api/sync/home-news.ts` and `api/sync/game-stats.ts`. Content is also refreshed manually through the
 `scripts/*.mjs` sync scripts (see `package.json` `sync:*` / `refresh:*`).
 
+### Server code layout
+
+The server code lives in `src/server/<feature>/`, one folder per feature
+(`account`, `auth`, `community`, `content`, `heroes/*`, `http`, `pulse-atlas`,
+`supabase`, `sync`). Inside a folder, a pure derivation module (for example
+`hero-matchups.ts`) sits beside the module that reads the database for it
+(`hero-matchups-read.ts`).
+
+- **Import a feature through its `index.ts`.** `api/`, `src/server.ts` and
+  other features import `../heroes/matchups/index.js`, never the files behind
+  it, so splitting or merging files inside a feature edits that feature only.
+  The entry point lists what code outside the folder uses and nothing more; an
+  export that nothing outside its own file uses is not exported.
+- **A pure module the browser reuses stays importable by file.** The app
+  reuses `heroes/stats/hero-stats.ts`, `account/own-dashboard.ts` and
+  `heroes/catalog/hero-game-ids.ts`. An entry point also pulls in Supabase
+  code, which must never reach the browser (`npm run check:browser-bundle`
+  fails the build if it does), so nothing under `src/app` imports an
+  `index.ts`, and a pure module (`hero-matchups.ts`, `hero-pairs.ts`,
+  `community-matches.ts` and the three above) imports other pure modules by
+  file. The `hero-stats` and `account` entry points leave their pure module
+  out for the same reason.
+- **A sync job lives with the content it feeds** (`content/home/home-news-sync.ts`),
+  unless it feeds several areas, in which case it lives in `sync/`
+  (`sync/game-stats-sync.ts`).
+- **Specs import the files they test.** Spec files, the `scripts/*.mjs` sync
+  scripts and `supabase/functions` tests are exempt from the entry-point rule:
+  Node loads the scripts through type stripping, which cannot resolve the
+  `.js` specifiers the `index.ts` files need under `api/`'s NodeNext compile.
+  `pulse-atlas` has no entry point because only scripts use it.
+
 ## Database
 
 - Turso (`@tursodatabase/serverless`, SQLite-compatible), accessed via

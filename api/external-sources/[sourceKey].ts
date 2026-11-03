@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { getExternalSourceFromDatabase } from '../../src/server/content/content-database.js';
-import { getQueryStringValue, sendJson } from '../../src/server/http/vercel-api.js';
+import { getExternalSourceFromDatabase } from '../../src/server/content/index.js';
+import { getQueryStringValue, sendJson } from '../../src/server/http/index.js';
 
 type SourceRequest = IncomingMessage & {
   query?: {

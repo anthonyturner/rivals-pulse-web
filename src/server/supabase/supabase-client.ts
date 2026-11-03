@@ -1,11 +1,11 @@
 /// <reference types="node" />
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-export const SUPABASE_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const;
+const SUPABASE_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const;
 
-export type SupabaseEnv = Readonly<Record<string, string | undefined>>;
+type SupabaseEnv = Readonly<Record<string, string | undefined>>;
 
-export interface SupabaseClientOptions {
+interface SupabaseClientOptions {
   fetch?: typeof fetch;
 }
 
@@ -26,7 +26,7 @@ export function findMissingSupabaseEnv(env: SupabaseEnv): string[] {
   return SUPABASE_ENV_NAMES.filter((name) => !env[name]?.trim());
 }
 
-export function isSupabaseConfigured(env: SupabaseEnv): boolean {
+function isSupabaseConfigured(env: SupabaseEnv): boolean {
   return findMissingSupabaseEnv(env).length === 0;
 }
 

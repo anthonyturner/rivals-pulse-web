@@ -1,19 +1,17 @@
 import { GlossaryTerm } from '../../app/features/reference/glossary/glossary.model.js';
 import { HomeContent, PortalCard } from '../../app/features/home/home-content.model.js';
 import { Hero, HeroVideo } from '../../app/features/heroes/hero.model.js';
-import { type CommunityHeroStatsStatus, readCommunityHeroStatsStatus } from '../community/community-hero-stats-status.js';
-import { countGameStatSnapshotGames, countGameStatSnapshots } from '../sync/game-stats-sync.js';
+import { type CommunityHeroStatsStatus, readCommunityHeroStatsStatus } from '../community/index.js';
 import { countGlossaryTerms, listGlossaryTerms } from './glossary-store.js';
-import { countHeroes, listHeroes } from '../heroes/catalog/hero-store.js';
-import { countHeroVideos, listHeroVideos } from '../heroes/catalog/hero-video-store.js';
+import { countHeroes, countHeroVideos, listHeroes, listHeroVideos } from '../heroes/catalog/index.js';
+import { countHomeContentBlocks, countHomePortals, getHomeContentBlocks, listHomePortals } from './home/index.js';
+import { getSupabaseClient, getSupabaseStatus, type SupabaseStatus } from '../supabase/index.js';
 import {
-  countHomeContentBlocks,
-  countHomePortals,
-  getHomeContentBlocks,
-  listHomePortals,
-} from './home/home-content-store.js';
-import { getSupabaseClient, getSupabaseStatus, type SupabaseStatus } from '../supabase/supabase-client.js';
-import { countExternalSources, getStoredExternalSourcePayload } from '../sync/sync-log.js';
+  countExternalSources,
+  countGameStatSnapshotGames,
+  countGameStatSnapshots,
+  getStoredExternalSourcePayload,
+} from '../sync/index.js';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;

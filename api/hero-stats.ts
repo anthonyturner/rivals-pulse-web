@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { getHeroStats, heroStatsQueryFrom } from '../src/server/heroes/stats/hero-stats-read.js';
-import { getQueryStringValue, handleJsonRequest } from '../src/server/http/vercel-api.js';
+import { getHeroStats, heroStatsQueryFrom } from '../src/server/heroes/stats/index.js';
+import { getQueryStringValue, handleJsonRequest } from '../src/server/http/index.js';
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
   return handleJsonRequest(req, res, () => {

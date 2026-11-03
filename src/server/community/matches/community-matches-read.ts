@@ -6,9 +6,9 @@ import {
   type CommunityMatchesSource,
 } from './community-matches.js';
 import type { CommunityMatches } from '../../../contracts/community-matches.model.js';
-import { getSupabaseClient } from '../../supabase/supabase-client.js';
+import { getSupabaseClient } from '../../supabase/index.js';
 
-export interface CommunityMatchesReadOptions {
+interface CommunityMatchesReadOptions {
   client?: SupabaseClient;
   now?: () => Date;
   /** One exact half-season instead of the current one; see `DeriveCommunityMatchesOptions`. */

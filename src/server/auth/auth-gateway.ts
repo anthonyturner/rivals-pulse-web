@@ -15,7 +15,7 @@ export interface ResolvedSession {
   tokens: SessionTokens;
 }
 
-export type OAuthProvider = 'discord';
+type OAuthProvider = 'discord';
 
 export type RedeemResult =
   | { status: 'linked'; player: LinkedPlayer }
@@ -72,7 +72,7 @@ export class AuthUnavailableError extends Error {
   }
 }
 
-export type AuthEnv = Readonly<Record<string, string | undefined>>;
+type AuthEnv = Readonly<Record<string, string | undefined>>;
 
 const REQUEST_TIMEOUT_MS = 5000;
 

@@ -3,7 +3,7 @@
  * that is missing or the wrong type is an error that names the function and the field, never a
  * NaN that reaches a page.
  */
-export interface AggregatePayloadReader {
+interface AggregatePayloadReader {
   object(value: unknown, what: string): Record<string, unknown>;
   list(value: unknown, what: string): Record<string, unknown>[];
   number(row: Record<string, unknown>, key: string): number;

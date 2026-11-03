@@ -1,14 +1,14 @@
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model.js';
-import { heroSlugByGameId } from '../catalog/hero-game-ids.js';
+import { heroSlugByGameId } from '../catalog/index.js';
 import {
   deriveHeroMatchups,
   HERO_MATCHUP_PLAY_MODE_IDS,
   type HeroMatchupRow,
 } from './hero-matchups.js';
-import { readHeroStatsSource } from '../stats/hero-stats-read.js';
-import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/supabase-rpc.js';
+import { readHeroStatsSource } from '../stats/index.js';
+import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.js';
 
-export interface HeroMatchupsReadOptions {
+interface HeroMatchupsReadOptions {
   env?: SupabaseReadEnv;
   fetch?: typeof fetch;
   now?: () => Date;

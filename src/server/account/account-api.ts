@@ -1,13 +1,15 @@
 import {
+  AuthUnavailableError,
   clearPkceCookie,
   clearSessionCookie,
   readPkceState,
   readSessionTokens,
   serializePkceCookie,
   serializeSessionCookie,
+  type AuthGateway,
+  type ResolvedSession,
   type SessionTokens,
-} from '../auth/auth-cookies.js';
-import { AuthUnavailableError, type AuthGateway, type ResolvedSession } from '../auth/auth-gateway.js';
+} from '../auth/index.js';
 import { normalizeLinkCode } from './link-code.js';
 import { deriveOwnDashboard } from './own-dashboard.js';
 import {
