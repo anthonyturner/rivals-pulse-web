@@ -9,9 +9,14 @@
   "rewrites": [
     {
       "source": "/((?!api/).*)",
-      "destination": "/index.csr.html"
+      "destination": "/api/ssr"
     }
   ],
+  "functions": {
+    "api/ssr.mjs": {
+      "includeFiles": "dist/rivals-pulse-coach/server/**"
+    }
+  },
   "crons": [
     {
       "path": "/api/sync/home-news",

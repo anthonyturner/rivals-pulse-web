@@ -29,7 +29,11 @@ import { getSupabaseClient } from './server/supabase';
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularNodeAppEngine({
+  // Vercel's edge sets every X-Forwarded-* header itself, and the engine otherwise falls back to a
+  // browser render when it sees one it was not told to trust (X-Forwarded-For, for one).
+  trustProxyHeaders: process.env['VERCEL'] ? true : undefined,
+});
 
 app.get('/api/content/status', (_req, res) => {
   handleApiResponse(res, () => getContentStatusFromDatabase());

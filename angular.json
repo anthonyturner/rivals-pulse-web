@@ -38,6 +38,14 @@
             "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
+            },
+            "security": {
+              "allowedHosts": [
+                "rivalspulse.com",
+                "www.rivalspulse.com",
+                "*.vercel.app",
+                "localhost"
+              ]
             }
           },
           "configurations": {
