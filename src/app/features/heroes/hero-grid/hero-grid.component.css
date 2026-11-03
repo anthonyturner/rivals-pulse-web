@@ -104,7 +104,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
+  text-decoration: none;
 }
 .hero-card:hover {
   border-color: var(--accent);

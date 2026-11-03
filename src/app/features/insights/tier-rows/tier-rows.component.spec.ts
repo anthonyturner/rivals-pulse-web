@@ -62,7 +62,7 @@ describe('TierRowsComponent', () => {
 
   it('leaves the hero tiles unlinked unless asked to link them', () => {
     expect(rows('plain').querySelector('a')).toBeNull();
-    expect(rows('linked').querySelector('a')?.getAttribute('href')).toBe('/heroes?hero=storm');
+    expect(rows('linked').querySelector('a')?.getAttribute('href')).toBe('/heroes/storm');
   });
 
   it('draws each row heading at the level the page asks for', () => {

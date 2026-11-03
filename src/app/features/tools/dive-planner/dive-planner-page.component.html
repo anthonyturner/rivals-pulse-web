@@ -51,7 +51,9 @@
           {{ current.message }}
         </app-state-panel>
       } @else if (selectedThreats().length === 0) {
-        <app-state-panel>Select at least one enemy threat.</app-state-panel>
+        @if (heroesLoaded()) {
+          <app-state-panel>Select at least one enemy threat.</app-state-panel>
+        }
       } @else if (answerRows().length === 0) {
         <app-state-panel heading="No winning record yet" [headingLevel]="3">
           No hero has a winning record against these threats in enough recorded matches yet.

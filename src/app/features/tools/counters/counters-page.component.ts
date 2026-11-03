@@ -84,7 +84,7 @@ export class CountersPageComponent implements OnInit {
       .join(' · ');
   });
 
-  protected readonly matchupNotice = computed(() => matchupNotice(this.matchups()));
+  protected readonly matchupNotice = computed(() => matchupNotice(this.matchups(), 'The hero list still works.'));
 
   private readonly filteredHeroes = computed(() =>
     this.counterEngine.filterHeroes(this.heroes() ?? [], this.selectedRole(), this.searchTerm()),
@@ -104,7 +104,7 @@ export class CountersPageComponent implements OnInit {
   protected readonly selected = computed(() => {
     const hero = this.heroes()?.find((candidate) => candidate.id === this.selectedHeroId());
 
-    return hero && { hero, detail: this.heroDetail(hero), query: { hero: hero.id } };
+    return hero && { hero, detail: this.heroDetail(hero) };
   });
 
   /** The two lists under the chosen hero: who has a winning record against it, and who it has one against. */

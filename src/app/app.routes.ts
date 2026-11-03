@@ -2,9 +2,11 @@ import { Routes } from '@angular/router';
 
 import { signedInGuard } from './core/auth/signed-in.guard';
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
+import { knownIdGuard } from './core/navigation/known-id.guard';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
 import { HOME_TITLE } from './core/seo/site-meta';
+import { heroesRoutes } from './features/heroes/heroes.routes';
 
 export const routes: Routes = [
   {
@@ -14,13 +16,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/home/home-page.component').then((module) => module.HomePageComponent),
   },
-  {
-    path: 'heroes',
-    loadComponent: () =>
-      import('./features/heroes/heroes-page.component').then(
-        (module) => module.HeroesPageComponent,
-      ),
-  },
+  ...heroesRoutes,
   {
     path: 'community',
     title: 'Community | RivalsPulse',
@@ -57,6 +53,13 @@ export const routes: Routes = [
   },
   {
     path: 'hero-guides/:heroId',
+    canMatch: [
+      knownIdGuard(() =>
+        import('./features/learning/guides/hero-guides/hero-guide-data').then((module) =>
+          module.HERO_GUIDES.map((guide) => guide.heroId),
+        ),
+      ),
+    ],
     loadComponent: () =>
       import('./features/learning/guides/hero-guides/hero-guide-detail-page.component').then(
         (module) => module.HeroGuideDetailPageComponent,
@@ -143,6 +146,13 @@ export const routes: Routes = [
   },
   {
     path: 'strategist-guides/:guideId',
+    canMatch: [
+      knownIdGuard(() =>
+        import('./features/learning/guides/strategist-guides/strategist-guides.data').then((module) =>
+          module.STRATEGIST_GUIDES.map((guide) => guide.id),
+        ),
+      ),
+    ],
     loadComponent: () =>
       import(
         './features/learning/guides/strategist-guides/strategist-guide-detail-page.component'

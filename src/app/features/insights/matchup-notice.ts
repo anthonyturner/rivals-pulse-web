@@ -9,9 +9,10 @@ export interface MatchupNotice {
 
 /**
  * The notice for the matchup records: `undefined` while they load, `null` when they could not be
- * read. Returns null once there are records to show.
+ * read. Returns null once there are records to show. `stillWorks` closes the unreadable message with
+ * what the page can still do without them.
  */
-export function matchupNotice(matchups: HeroMatchups | null | undefined): MatchupNotice | null {
+export function matchupNotice(matchups: HeroMatchups | null | undefined, stillWorks: string): MatchupNotice | null {
   if (matchups === undefined) {
     return { kind: 'loading', heading: null, message: 'Loading matchups…' };
   }
@@ -20,7 +21,7 @@ export function matchupNotice(matchups: HeroMatchups | null | undefined): Matchu
     return {
       kind: 'error',
       heading: 'Matchups unavailable',
-      message: 'RivalsPulse player matchups cannot be loaded right now. The hero list still works.',
+      message: `RivalsPulse player matchups cannot be loaded right now. ${stillWorks}`,
     };
   }
 

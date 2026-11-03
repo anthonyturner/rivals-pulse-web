@@ -50,7 +50,7 @@ export class DivePlannerPageComponent implements OnInit {
   protected readonly selectedDiveThreatIds = signal<string[]>(['angela', 'black-cat', 'spider-man']);
 
   protected readonly heroesLoaded = computed(() => this.heroes() !== undefined);
-  protected readonly notice = computed(() => matchupNotice(this.matchups()));
+  protected readonly notice = computed(() => matchupNotice(this.matchups(), 'The threat chips still work.'));
 
   protected readonly halfSeasonLine = computed(() => {
     const halfSeason = this.matchups()?.halfSeason;

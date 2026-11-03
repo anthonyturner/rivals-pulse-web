@@ -19,7 +19,7 @@ interface CounterPlan {
   selector: 'app-triple-support-guide-page',
   imports: [EyebrowComponent],
   templateUrl: './triple-support-guide-page.component.html',
-  styleUrls: ['../../guide-article/guide-article.css', './triple-support-guide-page.component.css'],
+  styleUrls: ['../../../../../shared/styles/guide-article.css', './triple-support-guide-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TripleSupportGuidePageComponent {

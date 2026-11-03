@@ -146,7 +146,7 @@ describe('CountersPageComponent', () => {
       expect(text(root, '.result')).toContain('Matchups unavailable');
       expect(text(root, '.result')).toContain('cannot be loaded right now');
       expect(liveRegions(root).length).toBe(1);
-      expect(text(root, '[aria-live]')).toContain('cannot be loaded right now');
+      expect(text(root, '[aria-live]')).toContain('cannot be loaded right now. The hero list still works.');
       expect(root.querySelectorAll('.hero-list .pick').length).toBe(roster.length);
       expect(pickerDetails(root).every((detail) => detail?.endsWith('Unavailable'))).toBeTrue();
       expect(root.textContent).not.toMatch(/NaN|Infinity/);
@@ -268,7 +268,7 @@ describe('CountersPageComponent', () => {
       const root = await open(partial);
 
       expect(text(root, '.result-head h2')).toBe('Mantis');
-      expect(root.querySelector('.link')?.getAttribute('href')).toBe('/heroes?hero=mantis');
+      expect(root.querySelector('.link')?.getAttribute('href')).toBe('/heroes/mantis');
     });
 
     it('labels the previous half-season when it stands in for the current one', async () => {

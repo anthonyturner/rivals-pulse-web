@@ -1,4 +1,4 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { HeroImageFallbackDirective } from '../../../shared/directives/hero-image-fallback.directive';
@@ -29,10 +29,4 @@ export class HeroTileComponent {
   readonly heroId = input<string | null>(null);
   readonly selectable = input(false, { transform: booleanAttribute });
   readonly selected = input(false, { transform: booleanAttribute });
-
-  protected readonly heroQuery = computed(() => {
-    const hero = this.heroId();
-
-    return hero === null ? null : { hero };
-  });
 }

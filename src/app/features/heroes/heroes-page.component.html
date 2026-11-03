@@ -1,26 +1,30 @@
 <section class="heroes-page page-container page-container--wide">
   <app-hero-page-header></app-hero-page-header>
 
-  <app-hero-grid
-    [heroes]="filteredHeroes()"
-    [roles]="roles"
-    [selectedRole]="selectedRole()"
-    [selectedHeroId]="activeHeroId()"
-    [searchTerm]="searchTerm()"
-    [gridMode]="heroGridMode()"
-    [loading]="!isRosterLoaded()"
-    (roleSelected)="selectRole($event)"
-    (searchChanged)="updateSearchTerm($event)"
-    (gridModeSelected)="selectHeroGridMode($event)"
-    (heroSelected)="selectHero($event)"
-    (filtersReset)="resetHeroFilters()"
-  ></app-hero-grid>
+  @if (isRosterFailed()) {
+    <app-state-panel kind="error" heading="Heroes could not be loaded">
+      Try again in a few minutes.
+    </app-state-panel>
+  } @else {
+    <app-hero-grid
+      [heroes]="filteredHeroes()"
+      [roles]="roles"
+      [selectedRole]="selectedRole()"
+      [selectedHeroId]="selectedHeroId()"
+      [searchTerm]="searchTerm()"
+      [gridMode]="heroGridMode()"
+      [loading]="!isRosterLoaded()"
+      (roleSelected)="selectRole($event)"
+      (searchChanged)="updateSearchTerm($event)"
+      (gridModeSelected)="selectHeroGridMode($event)"
+      (filtersReset)="resetHeroFilters()"
+    ></app-hero-grid>
 
-  <app-hero-content
-    [hero]="selectedHero()"
-    [videos]="selectedHeroVideos()"
-    [youtubeUrl]="selectedHeroYoutubeUrl()"
-    [controller]="detailsController"
-    (rosterReturned)="returnToRoster()"
-  ></app-hero-content>
+    <app-hero-content
+      [hero]="selectedHero()"
+      [videos]="selectedHeroVideos()"
+      [youtubeUrl]="selectedHeroYoutubeUrl()"
+      [controller]="detailsController"
+    ></app-hero-content>
+  }
 </section>

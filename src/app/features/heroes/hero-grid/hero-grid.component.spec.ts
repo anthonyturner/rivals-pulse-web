@@ -1,5 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { HeroGridComponent } from './hero-grid.component';
 import { Hero } from '../hero.model';
@@ -11,7 +12,7 @@ describe('HeroGridComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [HeroGridComponent],
-      providers: [provideZonelessChangeDetection()],
+      providers: [provideZonelessChangeDetection(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HeroGridComponent);
@@ -74,14 +75,14 @@ describe('HeroGridComponent', () => {
     expect(text(element)).not.toContain('Showing');
   });
 
-  it('marks the selected card and the active role and layout with aria-pressed', () => {
+  it('marks the selected card as the current page, and the active role and layout with aria-pressed', () => {
     setInputs({ selectedRole: 'Vanguard' });
-    const cards = Array.from(element.querySelectorAll<HTMLButtonElement>('.hero-card'));
+    const cards = Array.from(element.querySelectorAll<HTMLAnchorElement>('.hero-card'));
     const pressed = (label: string): string | null =>
       Array.from(element.querySelectorAll('.chip')).find((chip) => text(chip) === label)?.getAttribute('aria-pressed') ??
       null;
 
-    expect(cards.map((card) => card.getAttribute('aria-pressed'))).toEqual(['true', 'false']);
+    expect(cards.map((card) => card.getAttribute('aria-current'))).toEqual(['page', null]);
     expect(pressed('Vanguard')).toBe('true');
     expect(pressed('All')).toBe('false');
     expect(pressed('Thumbs')).toBe('true');
@@ -90,7 +91,7 @@ describe('HeroGridComponent', () => {
 
   it('names each card with the hero and the role it is shown under, and hides the decorative image', () => {
     setInputs({ selectedRole: 'Strategist' });
-    const [, mantis] = Array.from(element.querySelectorAll<HTMLButtonElement>('.hero-card'));
+    const [, mantis] = Array.from(element.querySelectorAll<HTMLAnchorElement>('.hero-card'));
 
     expect(mantis.getAttribute('aria-label')).toBe('Mantis, Strategist');
     expect(mantis.querySelector('img')?.getAttribute('alt')).toBe('');
@@ -106,12 +107,10 @@ describe('HeroGridComponent', () => {
     expect(text(element.querySelector('.archetype-label'))).toBe('Brawl');
   });
 
-  it('emits the hero id when a card is chosen', () => {
-    const emitSpy = spyOn(fixture.componentInstance.heroSelected, 'emit');
+  it('links each card to its hero, so the address can be shared and opened in a new tab', () => {
+    const hrefs = Array.from(element.querySelectorAll('.hero-card')).map((card) => card.getAttribute('href'));
 
-    element.querySelectorAll<HTMLButtonElement>('.hero-card')[1].click();
-
-    expect(emitSpy).toHaveBeenCalledOnceWith('mantis');
+    expect(hrefs).toEqual(['/heroes/storm', '/heroes/mantis']);
   });
 
   it('loads images beyond the first two rows lazily', () => {
@@ -121,14 +120,6 @@ describe('HeroGridComponent', () => {
 
     expect(images[19].getAttribute('loading')).toBeNull();
     expect(images[20].getAttribute('loading')).toBe('lazy');
-  });
-
-  it('moves focus to a hero card on request', () => {
-    document.body.appendChild(element);
-    fixture.componentInstance.focusHero('mantis');
-
-    expect(document.activeElement).toBe(element.querySelector('[data-hero-id="mantis"]'));
-    element.remove();
   });
 
   it('shows fixed-size placeholders and no empty message while the roster loads', () => {

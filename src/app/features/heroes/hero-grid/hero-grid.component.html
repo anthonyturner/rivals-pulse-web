@@ -68,14 +68,14 @@
     <ul class="hero-grid" [class.hero-grid--rows]="gridMode() === 'rows'" aria-label="Hero list">
       @for (card of cards(); track card.id) {
         <li>
-          <button
-            type="button"
+          <a
             class="hero-card"
+            [routerLink]="['/heroes', card.id]"
+            queryParamsHandling="preserve"
             [class.selected]="card.selected"
             [attr.data-hero-id]="card.id"
-            [attr.aria-pressed]="card.selected"
+            [attr.aria-current]="card.selected ? 'page' : null"
             [attr.aria-label]="card.label"
-            (click)="heroSelected.emit(card.id)"
           >
             <img
               class="hero-image"
@@ -95,7 +95,7 @@
                 }
               }
             </span>
-          </button>
+          </a>
         </li>
       }
     </ul>

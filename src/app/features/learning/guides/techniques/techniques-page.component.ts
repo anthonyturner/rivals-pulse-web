@@ -18,7 +18,7 @@ const ALL_CATEGORIES = 'All';
   selector: 'app-techniques-page',
   imports: [FilterSelectComponent, RouterLink, StatePanelComponent, TechniqueTileComponent],
   templateUrl: './techniques-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './techniques-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './techniques-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TechniquesPageComponent {

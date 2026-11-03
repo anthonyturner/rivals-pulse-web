@@ -20,6 +20,9 @@
   justify-content: space-between;
 }
 .detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--border);
@@ -29,7 +32,7 @@
   font: inherit;
   font-size: var(--type-small);
   font-weight: 700;
-  cursor: pointer;
+  text-decoration: none;
 }
 .detail-action:hover {
   border-color: var(--accent);

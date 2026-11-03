@@ -90,7 +90,7 @@ img {
 
 .chip:focus-visible,
 .pick:focus-visible > app-hero-tile {
-  outline: 3px solid var(--link);
+  outline: 3px solid var(--focus);
   outline-offset: -3px;
 }
 

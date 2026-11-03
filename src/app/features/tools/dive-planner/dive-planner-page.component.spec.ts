@@ -110,6 +110,7 @@ describe('DivePlannerPageComponent', () => {
       const root = await open(matchupsOf([]), 'pending');
 
       expect(root.querySelectorAll('.chip').length).toBe(0);
+      expect(text(root, '.steps')).not.toContain('Select at least one enemy threat.');
     });
 
     it('shows a loading panel and no answers while the matchups load', async () => {
@@ -137,7 +138,7 @@ describe('DivePlannerPageComponent', () => {
 
       expect(text(root, answersStep)).toContain('Matchups unavailable');
       expect(text(root, '[aria-live]')).toBe(
-        'RivalsPulse player matchups cannot be loaded right now. The hero list still works.',
+        'RivalsPulse player matchups cannot be loaded right now. The threat chips still work.',
       );
       expect(root.querySelectorAll('.chip').length).toBeGreaterThan(0);
       expect(root.textContent).not.toMatch(/NaN|Infinity/);

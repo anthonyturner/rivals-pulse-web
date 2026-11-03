@@ -5,7 +5,6 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
 import { NoticeComponent } from '../../../../shared/components/notice/notice.component';
-import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
 import { GuideCardComponent } from '../guide-card/guide-card.component';
 import { videoUrlAt } from '../youtube-timestamp';
@@ -21,10 +20,9 @@ const RELATED_GUIDE_LIMIT = 3;
     HeroImageFallbackDirective,
     NoticeComponent,
     RouterLink,
-    StatePanelComponent,
   ],
   templateUrl: './strategist-guide-detail-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './strategist-guide-detail-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './strategist-guide-detail-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StrategistGuideDetailPageComponent {

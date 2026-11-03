@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from '../../../app.routes';
 import { NAVIGATION_CATEGORIES } from '../../../core/navigation/navigation-category.data';
+import { declaresRoute } from '../../../testing/declared-routes';
 import { HOME_TOOLS, ToolsRowComponent } from './tools-row.component';
 
 describe('ToolsRowComponent', () => {
@@ -60,10 +61,8 @@ describe('ToolsRowComponent', () => {
   });
 
   it('points only at routes the app declares', () => {
-    const declared = new Set(routes.map((route) => `/${route.path}`));
-
     for (const tool of HOME_TOOLS) {
-      expect(declared.has(tool.path)).withContext(`${tool.path} is a declared route`).toBeTrue();
+      expect(declaresRoute(routes, tool.path)).withContext(`${tool.path} is a declared route`).toBeTrue();
     }
   });
 

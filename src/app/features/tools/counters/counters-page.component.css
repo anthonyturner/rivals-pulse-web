@@ -138,7 +138,6 @@ app-filter-select,
 }
 
 .link:focus-visible,
-.to-planner a:focus-visible,
 .pick:focus-visible > app-hero-tile {
   outline: 3px solid var(--link);
   outline-offset: -3px;

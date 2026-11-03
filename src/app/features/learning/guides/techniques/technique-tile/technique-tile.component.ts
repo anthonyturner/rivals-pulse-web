@@ -26,7 +26,7 @@ interface TileLink extends SourceLink {
   selector: 'app-technique-tile',
   imports: [HeroImageFallbackDirective, RouterLink],
   templateUrl: './technique-tile.component.html',
-  styleUrls: ['../../guide-article/guide-article.css', './technique-tile.component.css'],
+  styleUrls: ['../../../../../shared/styles/guide-article.css', './technique-tile.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TechniqueTileComponent {
