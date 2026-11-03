@@ -18,19 +18,9 @@
 
   <app-hero-content
     [hero]="selectedHero()"
-    [isModalOpen]="isHeroDetailModalOpen()"
     [videos]="selectedHeroVideos()"
     [youtubeUrl]="selectedHeroYoutubeUrl()"
     [controller]="detailsController"
-    (profileOpened)="openHeroDetailModal()"
     (rosterReturned)="returnToRoster()"
   ></app-hero-content>
-
-  @if (isHeroDetailModalOpen() && selectedHero(); as hero) {
-    <app-hero-detail-modal
-      [hero]="hero"
-      [controller]="detailsController"
-      (closed)="closeHeroDetailModal()"
-    ></app-hero-detail-modal>
-  }
 </section>

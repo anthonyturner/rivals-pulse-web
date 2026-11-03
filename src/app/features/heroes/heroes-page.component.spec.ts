@@ -2,7 +2,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 
 import type { Hero } from './hero.model';
@@ -35,7 +34,6 @@ describe('HeroesPageComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
-        provideNoopAnimations(),
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -80,7 +78,7 @@ describe('HeroesPageComponent', () => {
     expect(element.querySelector('[data-testid="hero-count"]')?.textContent?.trim()).toBe('3 heroes');
   });
 
-  it('choosing a card shows its details and moves focus to the hero name without opening the profile window', async () => {
+  it('choosing a card shows its details and moves focus to the hero name', async () => {
     await loadRoster();
 
     card('storm').click();
@@ -88,7 +86,6 @@ describe('HeroesPageComponent', () => {
     await fixture.whenStable();
 
     expect(card('storm').getAttribute('aria-pressed')).toBe('true');
-    expect(element.querySelector('app-hero-detail-modal')).toBeNull();
     expect(document.activeElement?.tagName).toBe('H2');
     expect(document.activeElement?.textContent?.trim()).toBe('Storm');
   });
@@ -99,26 +96,21 @@ describe('HeroesPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    (element.querySelector('.detail-action:not(.detail-action--primary)') as HTMLButtonElement).click();
+    (element.querySelector('.detail-action') as HTMLButtonElement).click();
 
     expect(document.activeElement).toBe(card('storm'));
   });
 
-  it('opens the profile window from "Open profile" only, and returns focus to that button when it closes', async () => {
+  it('opens no profile window, and Escape does nothing on the page', async () => {
     await loadRoster();
 
-    (element.querySelector('[data-testid="open-profile"]') as HTMLButtonElement).click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(element.querySelector('app-hero-detail-modal')).not.toBeNull();
-
-    fixture.componentInstance.closeHeroDetailModal();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(element.querySelector('app-hero-detail-modal')).toBeNull();
-    expect(document.activeElement).toBe(element.querySelector('[data-testid="open-profile"]'));
+    expect(element.querySelector('[data-testid="open-profile"]')).toBeNull();
+    expect(element.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(card('mantis').getAttribute('aria-pressed')).toBe('true');
   });
 
   it('hides the detail panel when no hero matches the filters', async () => {
