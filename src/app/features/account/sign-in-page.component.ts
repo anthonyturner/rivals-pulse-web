@@ -35,7 +35,7 @@ function pathOnThisSite(value: string | null): string {
   selector: 'app-sign-in-page',
   imports: [NoticeComponent, PageHeaderComponent, RouterLink, StatePanelComponent],
   templateUrl: './sign-in-page.component.html',
-  styleUrls: ['../learning/guides/guide-article/guide-article.css', './account-pages.css'],
+  styleUrls: ['../../shared/styles/guide-article.css', './account-pages.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignInPageComponent {

@@ -24,7 +24,7 @@ const RELATED_GUIDE_LIMIT = 3;
     StatePanelComponent,
   ],
   templateUrl: './strategist-guide-detail-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './strategist-guide-detail-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './strategist-guide-detail-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StrategistGuideDetailPageComponent {

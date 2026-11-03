@@ -12,7 +12,7 @@ import { PageHeaderComponent } from '../page-header/page-header.component';
   selector: 'app-not-found',
   imports: [PageHeaderComponent, RouterLink],
   templateUrl: './not-found.component.html',
-  styleUrls: ['../../../features/learning/guides/guide-article/guide-article.css', './not-found.component.css'],
+  styleUrls: ['../../styles/guide-article.css', './not-found.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotFoundComponent {

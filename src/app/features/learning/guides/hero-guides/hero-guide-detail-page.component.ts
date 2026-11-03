@@ -12,7 +12,7 @@ import { HERO_GUIDES } from './hero-guide-data';
   selector: 'app-hero-guide-detail-page',
   imports: [EyebrowComponent, HeroImageFallbackDirective, RouterLink, StatePanelComponent],
   templateUrl: './hero-guide-detail-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './hero-guide-detail-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './hero-guide-detail-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroGuideDetailPageComponent {

@@ -12,7 +12,7 @@ const ALL_CATEGORIES = 'All';
   selector: 'app-strategist-guides-page',
   imports: [FilterSelectComponent, GuideCardComponent, RouterLink, StatePanelComponent],
   templateUrl: './strategist-guides-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './strategist-guides-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './strategist-guides-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StrategistGuidesPageComponent {
