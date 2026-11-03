@@ -29,6 +29,8 @@ repo's build. This is a move, not a redesign.
 - Tables: `players`, `player_matches`, `matches`, `tracked_matches`,
   `match_history_sync_state`, `player_hero_profiles`, `player_hero_stats`,
   `hero_stats_sync_state`, `jarvis_token_requests`, `participants`.
+  `jarvis_token_requests` keeps the assistant's earlier name (it is now Pulsa) until issue 448
+  renames it.
 - Functions in the database: `claim_upload_slot`, `record_match_participants`,
   `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
   once it carries the extended upload, so renaming it or changing its arguments silently drops
@@ -260,7 +262,7 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
-| `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
+| `PREMIUM_PULSA_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
 Deploy order for `track-match-history`: migration, then secrets, then
 function. A function deployed first fails closed (every upload is refused). The
@@ -276,10 +278,10 @@ Premium is dormant until configured, on both sides. The order matters:
 1. Deploy `elevenlabs-agent-token` with `TEBEX_STORE_PUBLIC_TOKEN` still unset.
    Nothing changes for anyone.
 2. Release the overlay with the store's public token, package-to-perk map and
-   package to sell set. The overlay now gates Jarvis and sends the Overwolf
+   package to sell set. The overlay now gates Pulsa and sends the Overwolf
    session; the function still accepts everyone.
-3. Set `TEBEX_STORE_PUBLIC_TOKEN` last. Setting it before step 2 stops Jarvis
-   for every player. Set `PREMIUM_JARVIS_PACKAGE_IDS` with it if only some
+3. Set `TEBEX_STORE_PUBLIC_TOKEN` last. Setting it before step 2 stops Pulsa
+   for every player. Set `PREMIUM_PULSA_PACKAGE_IDS` with it if only some
    packages should count.
 
 ## Hero aggregates
