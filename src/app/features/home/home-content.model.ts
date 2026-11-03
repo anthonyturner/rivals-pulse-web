@@ -1,4 +1,4 @@
-import type { SeasonHighlight, SeasonUpdate } from './home-season.model.js';
+import type { SeasonHighlight, SeasonUpdate } from './home-season.model.ts';
 
 export interface HomeStat {
   value: string;

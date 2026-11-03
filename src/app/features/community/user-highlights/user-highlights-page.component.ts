@@ -13,7 +13,7 @@ interface HighlightTimelineEntry {
   selector: 'app-user-highlights-page',
   imports: [HeroTileComponent, PageHeaderComponent],
   templateUrl: './user-highlights-page.component.html',
-  styleUrls: ['../../learning/guides/guide-article/guide-article.css', './user-highlights-page.component.css'],
+  styleUrls: ['../../../shared/styles/guide-article.css', './user-highlights-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserHighlightsPageComponent {

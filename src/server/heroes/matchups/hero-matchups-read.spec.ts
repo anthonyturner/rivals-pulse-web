@@ -1,4 +1,4 @@
-import type { HeroMatchups } from '../../../contracts/hero-matchups.model.js';
+import type { HeroMatchups } from '../../../contracts/hero-matchups.model.ts';
 import { fetchHeroMatchupRows, getHeroMatchups, parseHeroMatchupRows } from './hero-matchups-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };

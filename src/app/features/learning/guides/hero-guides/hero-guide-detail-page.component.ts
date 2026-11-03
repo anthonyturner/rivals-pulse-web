@@ -4,15 +4,14 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
-import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
 import { HERO_GUIDES } from './hero-guide-data';
 
 @Component({
   selector: 'app-hero-guide-detail-page',
-  imports: [EyebrowComponent, HeroImageFallbackDirective, RouterLink, StatePanelComponent],
+  imports: [EyebrowComponent, HeroImageFallbackDirective, RouterLink],
   templateUrl: './hero-guide-detail-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './hero-guide-detail-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './hero-guide-detail-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroGuideDetailPageComponent {

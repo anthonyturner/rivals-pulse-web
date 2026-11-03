@@ -1,4 +1,4 @@
-import type { HeroStats } from '../../../contracts/hero-stats.model.js';
+import type { HeroStats } from '../../../contracts/hero-stats.model.ts';
 import type { RoleStats } from '../../../contracts/role-stats.model';
 import {
   fetchHeroStatsSource,

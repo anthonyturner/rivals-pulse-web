@@ -8,8 +8,8 @@ import type {
   OwnRecentMatch,
   OwnRecord,
   OwnRecords,
-} from '../../app/core/auth/own-dashboard.types.js';
-import { heroSlugByGameId } from '../heroes/catalog/hero-game-ids.js';
+} from '../../app/core/auth/own-dashboard.types.ts';
+import { heroSlugByGameId } from '../heroes/catalog/hero-game-ids.ts';
 
 /** One hero's recorded figures within a match; a blank is null. */
 export interface OwnFigureLine {

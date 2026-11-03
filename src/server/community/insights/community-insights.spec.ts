@@ -1,5 +1,5 @@
-import type { CommunityInsights } from '../../../contracts/community-insights.model.js';
-import { deriveCommunityInsights, type InsightsBucketRow } from './community-insights.js';
+import type { CommunityInsights } from '../../../contracts/community-insights.model.ts';
+import { deriveCommunityInsights, type InsightsBucketRow } from './community-insights.ts';
 
 function row(overrides: Partial<InsightsBucketRow>): InsightsBucketRow {
   return { dimension: 'weekday', bucket: 1, sharePercent: 33, winRatePercent: 50, ...overrides };

@@ -4,14 +4,14 @@ import type {
   CommunityMatches,
   CommunityMatchesMinimums,
   CommunityModeShare,
-} from '../../../contracts/community-matches.model.js';
-import { PLAY_MODE_NAMES } from '../../../contracts/play-modes.js';
+} from '../../../contracts/community-matches.model.ts';
+import { PLAY_MODE_NAMES } from '../../../contracts/play-modes.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
   PLAY_MODE_IDS,
   halfSeasonTimeline,
   type HalfSeasonStart,
-} from '../../heroes/stats/hero-stats.js';
+} from '../../heroes/stats/hero-stats.ts';
 
 /**
  * Every figure on the Community Matches tab is derived here and nowhere else, from the counts in

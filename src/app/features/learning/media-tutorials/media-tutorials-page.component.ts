@@ -15,7 +15,7 @@ const ALL_CATEGORIES = 'All';
   selector: 'app-media-tutorials-page',
   imports: [FilterSelectComponent, HeroTileComponent, PageHeaderComponent, RouterLink, StatePanelComponent],
   templateUrl: './media-tutorials-page.component.html',
-  styleUrls: ['../guides/guide-article/guide-article.css', './media-tutorials-page.component.css'],
+  styleUrls: ['../../../shared/styles/guide-article.css', './media-tutorials-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MediaTutorialsPageComponent {

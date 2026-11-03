@@ -60,7 +60,7 @@ interface PracticeDrill {
   selector: 'app-beginner-guide-page',
   imports: [RouterLink],
   templateUrl: './beginner-guide-page.component.html',
-  styleUrls: ['../guide-article/guide-article.css', './beginner-guide-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', './beginner-guide-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BeginnerGuidePageComponent {

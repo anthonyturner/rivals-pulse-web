@@ -5,7 +5,7 @@ export {
   GAME_STATS_SYNC_KEY,
   runGameStatsSync,
   syncGameStats,
-} from './game-stats-sync.js';
+} from './game-stats-sync.ts';
 export {
   countExternalSources,
   finishSyncRun,
@@ -14,4 +14,4 @@ export {
   recordSyncRun,
   saveExternalSource,
   startSyncRun,
-} from './sync-log.js';
+} from './sync-log.ts';

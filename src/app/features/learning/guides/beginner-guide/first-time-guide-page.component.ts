@@ -14,7 +14,7 @@ interface FirstTimeGuideSection {
   selector: 'app-first-time-guide-page',
   imports: [HeroImageFallbackDirective, RouterLink],
   templateUrl: './first-time-guide-page.component.html',
-  styleUrl: '../guide-article/guide-article.css',
+  styleUrl: '../../../../shared/styles/guide-article.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FirstTimeGuidePageComponent {

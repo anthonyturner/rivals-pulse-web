@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { getCommunityMatches } from '../../src/server/community/matches/index.js';
-import { halfSeasonFromQuery } from '../../src/server/heroes/stats/index.js';
-import { getQueryStringValue, handleJsonRequest } from '../../src/server/http/index.js';
+import { getCommunityMatches } from '../../src/server/community/matches/index.ts';
+import { halfSeasonFromQuery } from '../../src/server/heroes/stats/index.ts';
+import { getQueryStringValue, handleJsonRequest } from '../../src/server/http/index.ts';
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
   return handleJsonRequest(req, res, () => {

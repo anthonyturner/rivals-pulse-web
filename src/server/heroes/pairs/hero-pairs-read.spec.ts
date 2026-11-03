@@ -1,4 +1,4 @@
-import type { HeroPairs } from '../../../contracts/hero-pairs.model.js';
+import type { HeroPairs } from '../../../contracts/hero-pairs.model.ts';
 import { fetchHeroPairRows, getHeroPairs, parseHeroPairRows } from './hero-pairs-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };

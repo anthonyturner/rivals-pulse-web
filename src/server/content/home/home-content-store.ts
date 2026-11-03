@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { HomeContent, PortalCard } from '../../../app/features/home/home-content.model.js';
+import type { HomeContent, PortalCard } from '../../../app/features/home/home-content.model.ts';
 
 // The one place that knows how the home page content is stored in Supabase, shared by the API,
 // the home news sync and the seed script. No relative runtime import, for the same reason as

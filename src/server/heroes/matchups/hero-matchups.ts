@@ -1,11 +1,11 @@
-import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups.model.js';
-import type { HeroStatsHalfSeason } from '../../../contracts/hero-stats.model.js';
+import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups.model.ts';
+import type { HeroStatsHalfSeason } from '../../../contracts/hero-stats.model.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
   halfSeasonTimeline,
   shrunkWinRate,
   type HalfSeasonStart,
-} from '../stats/hero-stats.js';
+} from '../stats/hero-stats.ts';
 
 /**
  * Every hero-against-hero number on the site is derived here, from the counts in `hero_matchups`.

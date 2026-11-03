@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
-import { listHeroes, saveHero } from '../src/server/heroes/catalog/hero-store.ts';
+import { listHeroes, saveHero } from '../src/server/heroes/catalog/index.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
