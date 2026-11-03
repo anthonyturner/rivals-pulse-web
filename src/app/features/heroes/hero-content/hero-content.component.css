@@ -31,11 +31,6 @@
   font-weight: 700;
   cursor: pointer;
 }
-.detail-action--primary {
-  border-color: var(--border-strong);
-  background: var(--accent-soft);
-  color: var(--text);
-}
 .detail-action:hover {
   border-color: var(--accent);
   background: var(--bg-elevated);

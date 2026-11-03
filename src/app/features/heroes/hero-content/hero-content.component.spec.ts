@@ -35,7 +35,6 @@ describe('HeroContentComponent', () => {
     fixture = TestBed.createComponent(HeroContentComponent);
     element = fixture.nativeElement;
     fixture.componentRef.setInput('hero', mantis);
-    fixture.componentRef.setInput('isModalOpen', false);
     fixture.componentRef.setInput('videos', [
       { label: 'Guide', query: 'q', url: 'https://example.test/a' },
       { label: 'Gameplay', query: 'q', url: 'https://example.test/b' },
@@ -50,13 +49,6 @@ describe('HeroContentComponent', () => {
 
     expect(videos.open).toBeFalse();
     expect(videos.querySelector('summary')?.textContent?.trim()).toBe('YouTube videos (2)');
-  });
-
-  it('shows nothing while the profile window is open, so the page never holds two copies of the details', () => {
-    fixture.componentRef.setInput('isModalOpen', true);
-    fixture.detectChanges();
-
-    expect(element.querySelector('.hero-detail')).toBeNull();
   });
 
   it('scrolls to the panel without animation when the reader prefers reduced motion', () => {
@@ -75,14 +67,16 @@ describe('HeroContentComponent', () => {
     ]);
   });
 
-  it('emits when the reader asks to go back to the roster or open the profile', () => {
+  it('emits when the reader asks to go back to the roster', () => {
     const back = spyOn(fixture.componentInstance.rosterReturned, 'emit');
-    const open = spyOn(fixture.componentInstance.profileOpened, 'emit');
 
-    (element.querySelector('.detail-action:not(.detail-action--primary)') as HTMLButtonElement).click();
-    (element.querySelector('[data-testid="open-profile"]') as HTMLButtonElement).click();
+    (element.querySelector('.detail-action') as HTMLButtonElement).click();
 
     expect(back).toHaveBeenCalledTimes(1);
-    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no way to open a profile window', () => {
+    expect(element.querySelector('[data-testid="open-profile"]')).toBeNull();
+    expect(element.textContent).not.toContain('Open profile');
   });
 });
