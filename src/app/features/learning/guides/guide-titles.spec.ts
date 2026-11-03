@@ -7,10 +7,31 @@ import { routes } from '../../../app.routes';
 import { PageMetaTitleStrategy } from '../../../core/seo/page-meta-title.strategy';
 import { heroGuideTitle, strategistGuideTitle } from './guide-titles';
 
+describe('guide title text', () => {
+  it('adds "guide" to a hero name', () => {
+    expect(heroGuideTitle({ heroName: 'Captain America', category: 'hero' })).toBe(
+      'Captain America guide | RivalsPulse',
+    );
+  });
+
+  it('does not add "guide" to a fundamentals guide, which names itself', () => {
+    expect(heroGuideTitle({ heroName: 'The Ultimate Beginner Guide', category: 'fundamentals' })).toBe(
+      'The Ultimate Beginner Guide | RivalsPulse',
+    );
+  });
+
+  it('names a strategist guide by its title', () => {
+    expect(strategistGuideTitle({ title: 'Ultimate Efficiency 101' })).toBe(
+      'Ultimate Efficiency 101 | RivalsPulse',
+    );
+  });
+});
+
 describe('guide detail page titles', () => {
   let harness: RouterTestingHarness;
 
   beforeEach(async () => {
+    document.title = '';
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
@@ -19,26 +40,6 @@ describe('guide detail page titles', () => {
       ],
     });
     harness = await RouterTestingHarness.create();
-  });
-
-  describe('the title text', () => {
-    it('adds "guide" to a hero name', () => {
-      expect(heroGuideTitle({ heroName: 'Captain America', category: 'hero' })).toBe(
-        'Captain America guide | RivalsPulse',
-      );
-    });
-
-    it('does not add "guide" to a fundamentals guide, which names itself', () => {
-      expect(heroGuideTitle({ heroName: 'The Ultimate Beginner Guide', category: 'fundamentals' })).toBe(
-        'The Ultimate Beginner Guide | RivalsPulse',
-      );
-    });
-
-    it('names a strategist guide by its title', () => {
-      expect(strategistGuideTitle({ title: 'Ultimate Efficiency 101' })).toBe(
-        'Ultimate Efficiency 101 | RivalsPulse',
-      );
-    });
   });
 
   describe('hero guide pages', () => {
@@ -83,7 +84,8 @@ describe('guide detail page titles', () => {
       expect(document.title).toBe('Rocket to Celestial Guide | RivalsPulse');
     });
 
-    it('shows the not-found title for a guide that does not exist', async () => {
+    it('shows the not-found title, not the previous guide, for a guide that does not exist', async () => {
+      await harness.navigateByUrl('/strategist-guides/ult-efficiency-101');
       await harness.navigateByUrl('/strategist-guides/no-such-guide');
 
       expect(document.title).toBe('Page not found | RivalsPulse');
