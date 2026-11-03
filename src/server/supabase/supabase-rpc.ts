@@ -1,7 +1,7 @@
-export const SUPABASE_READ_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'] as const;
+const SUPABASE_READ_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'] as const;
 
 /** One page of a function that returns a set of rows; see `callSupabaseFunction`. */
-export interface SupabasePage {
+interface SupabasePage {
   offset: number;
   limit: number;
   /** Columns to sort by before the range is cut, so pages never overlap or skip on the function's own order. */
@@ -21,7 +21,7 @@ const READ_TIMEOUT_MS = 5000;
 const NOT_DEPLOYED_CODES: readonly string[] = ['PGRST202', '42P01', '42883'];
 
 /** A refused call. It keeps the status and the error code, never the response body or the key. */
-export class SupabaseFunctionError extends Error {
+class SupabaseFunctionError extends Error {
   constructor(
     readonly functionName: string,
     readonly status: number,
@@ -33,7 +33,7 @@ export class SupabaseFunctionError extends Error {
 }
 
 /** True when the function, or a table it reads, is not in the database yet: the migration is not applied. */
-export function isNotDeployedError(error: unknown): boolean {
+function isNotDeployedError(error: unknown): boolean {
   return (
     error instanceof SupabaseFunctionError &&
     (error.status === 404 || (error.code !== undefined && NOT_DEPLOYED_CODES.includes(error.code)))

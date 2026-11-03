@@ -1,3 +1,3 @@
-import { accountRouteHandler } from '../../src/server/account/account-http.js';
+import { accountRouteHandler } from '../../src/server/account/index.js';
 
 export default accountRouteHandler('account/delete');

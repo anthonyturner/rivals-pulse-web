@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Shared by every sync that records its runs in Supabase. No relative runtime import, for the
 // same reason as hero-store.ts.
 
-export type SyncRunStatus = 'running' | 'success' | 'error';
+type SyncRunStatus = 'running' | 'success' | 'error';
 
 export interface SyncRunResult {
   status: Exclude<SyncRunStatus, 'running'>;
@@ -12,7 +12,7 @@ export interface SyncRunResult {
   details?: unknown;
 }
 
-export interface ExternalSource {
+interface ExternalSource {
   sourceKey: string;
   sourceName: string;
   url: string;

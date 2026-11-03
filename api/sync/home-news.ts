@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { syncHomeNews } from '../../src/server/content/home/home-news-sync.js';
-import { sendJson } from '../../src/server/http/vercel-api.js';
+import { syncHomeNews } from '../../src/server/content/home/index.js';
+import { sendJson } from '../../src/server/http/index.js';
 
 const noStoreHeaders = {
   'cache-control': 'private, no-store, max-age=0',

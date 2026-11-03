@@ -13,7 +13,7 @@ const PORTAL_TABLE = 'home_portals';
 const BLOCK_TABLE = 'home_content_blocks';
 
 /** A content block's key, such as `latestNews`, and the value the API returns under it. */
-export type HomeContentBlocks = Partial<Record<keyof HomeContent, unknown>>;
+type HomeContentBlocks = Partial<Record<keyof HomeContent, unknown>>;
 
 /** The portal cards in their display order. */
 export async function listHomePortals(client: SupabaseClient): Promise<PortalCard[]> {

@@ -3,10 +3,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { StringUtility } from '../../../app/shared/utilities/string-utility.js';
 import { getHomeContentBlock, saveHomeContentBlocks } from './home-content-store.js';
 import { parseCurrentSeason } from './official-season.js';
-import { getSupabaseClient } from '../../supabase/supabase-client.js';
-import { finishSyncRun, saveExternalSource, startSyncRun } from '../../sync/sync-log.js';
+import { getSupabaseClient } from '../../supabase/index.js';
+import { finishSyncRun, saveExternalSource, startSyncRun } from '../../sync/index.js';
 
-export type NewsItem = {
+type NewsItem = {
   label: string;
   title: string;
   description: string;
@@ -67,7 +67,7 @@ type BattlePassSnapshot = {
   latestHeroImageUrl?: string;
 };
 
-export type HomeNewsSyncResult = {
+type HomeNewsSyncResult = {
   updatedAt: string;
   latestNews: NewsItem[];
   battlePass: BattlePassSnapshot;
@@ -231,7 +231,7 @@ function buildLatestNewsCards(officialNews: NewsItem[]): NewsItem[] {
   return officialNews.slice(0, 4);
 }
 
-export function buildPatchDescription(teaser: string, html: string): string {
+function buildPatchDescription(teaser: string, html: string): string {
   const beforeFixes = html.split(/<h2[^>]*>\s*Fixes and Optimizations\s*<\/h2>/i)[0];
   const additions = Array.from(beforeFixes.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>/gi))
     .map((match) => describePatchAddition(cleanText(match[1])))
@@ -389,7 +389,7 @@ function parseOfficialHomeSnapshot(html: string): { news: NewsItem[]; battlePass
   };
 }
 
-export function parseOfficialNewsCards(html: string): NewsItem[] {
+function parseOfficialNewsCards(html: string): NewsItem[] {
   const newsRegion = html.match(/<div class="newsCms"[^>]*>([\s\S]*?)<div class="news-tab">/i)?.[1]
     ?? html.match(/<div class="banner">([\s\S]*?)<\/div>\s*<div class="list">/i)?.[1]
     ?? '';
@@ -435,7 +435,7 @@ export function parseOfficialNewsCards(html: string): NewsItem[] {
   }];
 }
 
-export function parseSeasonEvents(html: string): SeasonHighlight[] {
+function parseSeasonEvents(html: string): SeasonHighlight[] {
   const article = html.match(/<div[^>]*class="[^"]*artText[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i)?.[1]
     ?? html;
   const content = article.split(/<h2[^>]*>\s*Fixes and Optimizations\s*<\/h2>/i)[0];

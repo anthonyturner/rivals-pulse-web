@@ -24,14 +24,14 @@ export const HERO_STATS_MIN_MATCHES = 10;
 export const WIN_RATE_PRIOR_MATCHES = 10;
 
 /** The lowest shrunk win rate (0 to 1) each tier takes, best first; anything lower is F. */
-export const TIER_CUT_OFFS: readonly (readonly [TierName, number])[] = [
+const TIER_CUT_OFFS: readonly (readonly [TierName, number])[] = [
   ['S', 0.62],
   ['A', 0.56],
   ['B', 0.52],
   ['C', 0.48],
   ['D', 0.44],
 ];
-export const LOWEST_TIER: TierName = 'F';
+const LOWEST_TIER: TierName = 'F';
 const TIER_ORDER: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
 
 export { PLAY_MODE_IDS };
@@ -44,7 +44,7 @@ export { PLAY_MODE_IDS };
  */
 export const BLENDED_PLAY_MODE_IDS: readonly number[] = [PLAY_MODE_IDS.quickMatch, PLAY_MODE_IDS.competitive];
 
-export interface PlayMode {
+interface PlayMode {
   id: HeroStatsModeId;
   label: string;
   /** The `participants.play_mode_id` values this mode counts. Unknown (-1) is in none of them. */
@@ -69,7 +69,7 @@ const DEFAULT_PLAY_MODE = PLAY_MODES[0];
  * The mode a `mode` query value names: the blend when there is none, and undefined for a value that
  * names no mode, which then counts nothing rather than quietly counting the blend.
  */
-export function playModeFromQuery(value: string | undefined): PlayMode | undefined {
+function playModeFromQuery(value: string | undefined): PlayMode | undefined {
   const id = value?.trim().toLowerCase();
 
   return id === undefined || id === '' ? DEFAULT_PLAY_MODE : PLAY_MODES.find((mode) => mode.id === id);
@@ -112,7 +112,7 @@ export interface HeroStatsSource {
   heroes: readonly HeroAggregateRow[];
 }
 
-export interface DeriveHeroStatsOptions {
+interface DeriveHeroStatsOptions {
   now: Date;
   /**
    * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has
@@ -128,7 +128,7 @@ export interface DeriveHeroStatsOptions {
   heroSlugByGameId: ReadonlyMap<number, string>;
 }
 
-export interface HeroStatsDerivation {
+interface HeroStatsDerivation {
   stats: HeroStats;
   /** Game hero ids in the counted rows that map to no hero (for example 0, "no hero recorded"). */
   excludedGameIds: number[];
@@ -173,7 +173,7 @@ interface HalfSeasonSnapshot {
  * Which half-seasons exist and which is current, from the start dates in `half_seasons` plus the
  * half-seasons that have counts but no start date. Shared by everything that picks a half-season.
  */
-export interface HalfSeasonTimeline {
+interface HalfSeasonTimeline {
   /** The latest half-season that has started, or undefined before any exists. */
   current: number | undefined;
   /** Every half-season up to and including the current one, oldest first. */
@@ -209,7 +209,7 @@ export function halfSeasonTimeline(
   };
 }
 
-export interface HalfSeasonChoice {
+interface HalfSeasonChoice {
   shown?: number;
   /** Set only when `shown` is the previous half-season, standing in for this current one. */
   inPlaceOf?: number;

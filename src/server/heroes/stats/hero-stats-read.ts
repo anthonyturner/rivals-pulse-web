@@ -1,7 +1,6 @@
 import type { HeroStats } from '../../../contracts/hero-stats.model.js';
 import type { RoleStats } from '../../../contracts/role-stats.model.js';
-import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId } from '../catalog/hero-game-ids.js';
-import { listHeroRoles } from '../catalog/hero-store.js';
+import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId, listHeroRoles } from '../catalog/index.js';
 import {
   deriveHeroStats,
   type HeroAggregateRow,
@@ -9,12 +8,17 @@ import {
   type MatchTotalsRow,
 } from './hero-stats.js';
 import { deriveRoleStats } from './role-stats.js';
-import { getSupabaseClient } from '../../supabase/supabase-client.js';
-import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/supabase-rpc.js';
+import {
+  answerReader,
+  callSupabaseFunction,
+  getSupabaseClient,
+  orWhenNotDeployed,
+  type SupabaseReadEnv,
+} from '../../supabase/index.js';
 
-export type HeroStatsEnv = SupabaseReadEnv;
+type HeroStatsEnv = SupabaseReadEnv;
 
-export interface HeroStatsReadOptions {
+interface HeroStatsReadOptions {
   env?: HeroStatsEnv;
   fetch?: typeof fetch;
   now?: () => Date;
@@ -25,7 +29,7 @@ export interface HeroStatsReadOptions {
 }
 
 /** Role stats carry every mode in one answer, so they take no `mode`. */
-export interface RoleStatsReadOptions extends Omit<HeroStatsReadOptions, 'mode'> {
+interface RoleStatsReadOptions extends Omit<HeroStatsReadOptions, 'mode'> {
   /** Hero id to role. By default read from `hero_content` through the shared Supabase client. */
   loadHeroRoles?: () => Promise<ReadonlyMap<string, string>>;
 }

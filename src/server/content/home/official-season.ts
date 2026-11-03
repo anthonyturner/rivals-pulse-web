@@ -1,6 +1,6 @@
 import { StringUtility } from '../../../app/shared/utilities/string-utility.js';
 
-export interface OfficialSeason {
+interface OfficialSeason {
   currentSeason: string;
   seasonStory?: string;
 }

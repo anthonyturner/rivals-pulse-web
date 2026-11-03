@@ -18,7 +18,7 @@ import type { recordSyncRun, SyncRunResult } from './sync-log.js';
 /** The `sync_runs.source_key` of the hourly sync. */
 export const GAME_STATS_SYNC_KEY = 'game-stats';
 
-export interface GameStatsSyncOptions {
+interface GameStatsSyncOptions {
   /** Reaches Steam; a test passes a stand-in. */
   fetch?: typeof fetch;
   now?: () => Date;
@@ -29,7 +29,7 @@ interface SteamGameDefinition extends Omit<GameComparison, 'currentPlayers' | 'c
 }
 
 /** A capture, and why it could not be stored when it was not. */
-export interface GameStatsCapture {
+interface GameStatsCapture {
   response: GameStatsResponse;
   storeFailure?: string;
 }

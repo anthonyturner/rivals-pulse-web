@@ -3,7 +3,7 @@ import type { SessionTokens } from './auth-cookies.js';
 import type { OwnDashboardLine, OwnFigureLine } from '../account/own-dashboard.js';
 
 /** What the account page shows. It never carries the user's id. */
-export interface Account {
+interface Account {
   email: string | null;
   provider: string;
   createdAt: string;
@@ -15,7 +15,7 @@ export interface ResolvedSession {
   tokens: SessionTokens;
 }
 
-export type OAuthProvider = 'discord';
+type OAuthProvider = 'discord';
 
 export type RedeemResult =
   | { status: 'linked'; player: LinkedPlayer }
@@ -72,7 +72,7 @@ export class AuthUnavailableError extends Error {
   }
 }
 
-export type AuthEnv = Readonly<Record<string, string | undefined>>;
+type AuthEnv = Readonly<Record<string, string | undefined>>;
 
 const REQUEST_TIMEOUT_MS = 5000;
 

@@ -16,13 +16,13 @@ export interface SessionTokens {
   signedInAt?: number;
 }
 
-export interface PkceState {
+interface PkceState {
   verifier: string;
   next: string;
 }
 
-export const SESSION_COOKIE = 'rp_session';
-export const PKCE_COOKIE = 'rp_pkce';
+const SESSION_COOKIE = 'rp_session';
+const PKCE_COOKIE = 'rp_pkce';
 
 const SESSION_PATH = '/api';
 const PKCE_PATH = '/api/auth';

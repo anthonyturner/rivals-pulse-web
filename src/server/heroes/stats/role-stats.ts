@@ -30,7 +30,7 @@ import {
  */
 export const ROLE_STATS_MIN_LINES = 50;
 
-export interface DeriveRoleStatsOptions {
+interface DeriveRoleStatsOptions {
   now: Date;
   /**
    * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has
@@ -41,7 +41,7 @@ export interface DeriveRoleStatsOptions {
   roleByGameId: ReadonlyMap<number, HeroRole>;
 }
 
-export interface RoleStatsDerivation {
+interface RoleStatsDerivation {
   stats: RoleStats;
   /** Game hero ids in the counted rows that map to no role (for example 0, "no hero recorded"). */
   excludedGameIds: number[];
