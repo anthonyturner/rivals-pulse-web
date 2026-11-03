@@ -11,6 +11,7 @@ import {
   PLATFORM_ID,
   ViewChild,
   inject,
+  signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -24,6 +25,12 @@ import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
+
+/** What the visitor chose for the video once the hero has scrolled out of view. */
+type FloatingVideoMode = 'floating' | 'minimized' | 'background';
+
+/** Where the video is drawn: in the hero, in the floating player, or folded into the tab. */
+type VideoPlacement = 'hero' | 'floating' | 'minimized';
 
 @Component({
   selector: 'app-home-page',
@@ -44,10 +51,19 @@ import { ToolsRowComponent } from './tools-row/tools-row.component';
 export class HomePageComponent implements AfterViewInit {
   @ViewChild('heroBanner') private heroBanner?: ElementRef<HTMLElement>;
   @ViewChild('videoClose') private videoClose?: ElementRef<HTMLButtonElement>;
+  @ViewChild('videoMinimize') private videoMinimize?: ElementRef<HTMLButtonElement>;
+  @ViewChild('videoTab') private videoTab?: ElementRef<HTMLButtonElement>;
 
   backgroundVideoMuted = true;
   backgroundVideoForeground = false;
-  backgroundVideoPoppedOut = false;
+  /** Held for the current visit only: a reload starts floating again. */
+  private readonly floatingVideoMode = signal<FloatingVideoMode>('floating');
+  private readonly heroScrolledPast = signal(false);
+  readonly videoPlacement = computed<VideoPlacement>(() => {
+    const mode = this.floatingVideoMode();
+
+    return this.heroScrolledPast() && mode !== 'background' ? mode : 'hero';
+  });
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
@@ -73,7 +89,21 @@ export class HomePageComponent implements AfterViewInit {
       return;
     }
 
-    this.backgroundVideoPoppedOut = hero.getBoundingClientRect().bottom <= 80;
+    this.heroScrolledPast.set(hero.getBoundingClientRect().bottom <= 80);
+  }
+
+  minimizeFloatingVideo(): void {
+    this.floatingVideoMode.set('minimized');
+    afterNextRender(() => this.videoTab?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  restoreFloatingVideo(): void {
+    this.floatingVideoMode.set('floating');
+    afterNextRender(() => this.videoMinimize?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  sendVideoBackToBackground(): void {
+    this.floatingVideoMode.set('background');
   }
 
   startBackgroundVideo(video: HTMLVideoElement): void {

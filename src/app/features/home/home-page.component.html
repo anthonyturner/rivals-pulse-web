@@ -3,13 +3,14 @@
     <div
       class="home-page-background"
       [class.is-foreground]="backgroundVideoForeground"
-      [class.is-popout]="backgroundVideoPoppedOut"
+      [class.is-popout]="videoPlacement() === 'floating'"
+      [class.is-minimized]="videoPlacement() === 'minimized'"
       [attr.role]="backgroundVideoForeground ? 'dialog' : 'button'"
       [attr.aria-modal]="backgroundVideoForeground ? 'true' : null"
       [attr.aria-label]="
         backgroundVideoForeground
           ? heroMedia().title + ' video player'
-          : backgroundVideoPoppedOut
+          : videoPlacement() === 'floating'
             ? 'Open the floating video player'
             : 'Play the background video in the foreground'
       "
@@ -48,6 +49,29 @@
         </button>
       }
     </div>
+
+    @if (videoPlacement() === 'floating' && !backgroundVideoForeground) {
+      <div class="home-page-video-controls">
+        <button #videoMinimize class="home-page-video-control" type="button" (click)="minimizeFloatingVideo()">
+          Minimize
+        </button>
+        <button class="home-page-video-control" type="button" (click)="sendVideoBackToBackground()">
+          Back to background
+        </button>
+      </div>
+    }
+
+    @if (videoPlacement() === 'minimized' && !backgroundVideoForeground) {
+      <button
+        #videoTab
+        class="home-page-video-tab"
+        type="button"
+        aria-label="Show the floating video player"
+        (click)="restoreFloatingVideo()"
+      >
+        Show video
+      </button>
+    }
 
     <button
       class="home-page-sound-toggle"
