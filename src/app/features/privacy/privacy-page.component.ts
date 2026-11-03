@@ -13,7 +13,7 @@ import {
   selector: 'app-privacy-page',
   imports: [PageHeaderComponent, RouterLink],
   templateUrl: './privacy-page.component.html',
-  styleUrl: './privacy-page.component.css',
+  styleUrls: ['../../shared/styles/reading.css', './privacy-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PrivacyPageComponent {
@@ -22,4 +22,17 @@ export class PrivacyPageComponent {
   /** Whether Google ads can appear yet, which is when an ad unit id is set. The page words the ads paragraph to match. */
   readonly adsLive = hasAdSenseSlot(inject(ADSENSE_CONFIG));
   readonly extendedBeingAdded = EXTENDED_UPLOAD_STATUS === 'being-added';
+  /** The heading of the section the app's extra fields are in, and its entry in the contents list. */
+  readonly extendedHeading = this.extendedBeingAdded ? 'What the app is adding (being added)' : 'What the app also uploads';
+  /** One entry for each section, in page order. A spec checks the labels against the page's headings. */
+  readonly contents = [
+    { id: 'summary', label: 'The short version' },
+    { id: 'uploaded-today', label: 'What the app uploads today' },
+    { id: 'extended-fields', label: this.extendedHeading },
+    { id: 'public-numbers', label: 'What this website publishes' },
+    { id: 'retention', label: 'How long it is kept' },
+    { id: 'accounts', label: 'Accounts and signing in' },
+    { id: 'advertising', label: 'Advertising' },
+    { id: 'more', label: 'More' },
+  ];
 }

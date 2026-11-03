@@ -37,11 +37,11 @@
   line-height: 1.6;
 }
 
-.reading ul {
+.reading-section ul {
   padding-left: 22px;
 }
 
-.reading li + li {
+.reading-section li + li {
   margin-top: 6px;
 }
 

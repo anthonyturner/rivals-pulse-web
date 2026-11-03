@@ -217,4 +217,28 @@ describe('PrivacyPageComponent', () => {
 
     expect(text).not.toContain('also covers advertising');
   });
+
+  describe('contents list', () => {
+    const sections = (): HTMLElement[] => Array.from(page.querySelectorAll<HTMLElement>('section[id]'));
+    const links = (): HTMLAnchorElement[] => Array.from(page.querySelectorAll<HTMLAnchorElement>('nav a'));
+
+    it('is one nav labelled "On this page", and the page has no main of its own', () => {
+      const nav = page.querySelector('nav');
+
+      expect(page.querySelectorAll('nav').length).toBe(1);
+      expect(nav?.getAttribute('aria-labelledby')).toBe('privacy-toc-title');
+      expect(page.querySelector('#privacy-toc-title')?.textContent).toBe('On this page');
+      expect(page.querySelectorAll('main').length).toBe(0);
+    });
+
+    it('has one entry for each section, in page order, worded like its heading', () => {
+      expect(links().map((link) => link.textContent?.trim() ?? '')).toEqual(
+        sections().map((section) => section.querySelector('h2')?.textContent?.trim() ?? ''),
+      );
+    });
+
+    it('points each entry at its section by fragment', () => {
+      expect(links().map((link) => new URL(link.href).hash.slice(1))).toEqual(sections().map((section) => section.id));
+    });
+  });
 });
