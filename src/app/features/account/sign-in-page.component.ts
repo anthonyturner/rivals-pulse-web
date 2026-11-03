@@ -6,15 +6,16 @@ import { NoticeComponent } from '../../shared/components/notice/notice.component
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 
-const SIGN_IN_ERRORS: Record<string, string> = {
-  cancelled: 'Sign-in was cancelled, so nothing changed. You can try again.',
-  failed: 'Discord sign-in did not complete. Try again in a moment.',
-};
+/** Maps, not objects: a key from the address such as `constructor` must not find anything. */
+const SIGN_IN_ERRORS = new Map([
+  ['cancelled', 'Sign-in was cancelled, so nothing changed. You can try again.'],
+  ['failed', 'Discord sign-in did not complete. Try again in a moment.'],
+]);
 
-const SIGN_IN_NOTICES: Record<string, string> = {
-  deleted: 'Your account has been deleted and you are signed out.',
-  reauth: 'Sign in again to delete your account, then return to the delete section.',
-};
+const SIGN_IN_NOTICES = new Map([
+  ['deleted', 'Your account has been deleted and you are signed out.'],
+  ['reauth', 'Sign in again to delete your account, then return to the delete section.'],
+]);
 
 const SIGN_IN_UNAVAILABLE = 'We could not check whether you are signed in. You can still sign in.';
 const ALREADY_SIGNED_IN = 'You are already signed in. Taking you on…';
@@ -50,8 +51,8 @@ export class SignInPageComponent {
   );
   /** At most one message, so the page never announces two at once: a redirect, then an error from the address, a notice, then an unreadable session. */
   readonly message = computed<PageMessage | null>(() => {
-    const error = SIGN_IN_ERRORS[this.query.get('error') ?? ''];
-    const notice = SIGN_IN_NOTICES[this.query.get('notice') ?? ''];
+    const error = SIGN_IN_ERRORS.get(this.query.get('error') ?? '');
+    const notice = SIGN_IN_NOTICES.get(this.query.get('notice') ?? '');
 
     if (this.leaving()) {
       return { kind: 'status', text: ALREADY_SIGNED_IN };

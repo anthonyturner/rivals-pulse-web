@@ -493,6 +493,19 @@ describe('SignInPageComponent', () => {
     expect(discordLink(harness).getAttribute('href')).toBe('/api/auth/discord/start?next=%2Faccount');
   });
 
+  it('shows nothing for a key that is a name on every object, not a message', async () => {
+    setup({ status: 'signedOut' });
+
+    for (const url of ['/sign-in?error=constructor', '/sign-in?notice=toString', '/sign-in?error=__proto__']) {
+      TestBed.resetTestingModule();
+      setup({ status: 'signedOut' });
+      const harness = await RouterTestingHarness.create(url);
+
+      expect(page(harness).querySelector('[role="status"]')?.textContent?.trim()).toBe('');
+      expect(page(harness).textContent).not.toContain('function');
+    }
+  });
+
   it('ignores a notice it does not know', async () => {
     setup({ status: 'signedOut' });
     const harness = await RouterTestingHarness.create('/sign-in?notice=anything');
