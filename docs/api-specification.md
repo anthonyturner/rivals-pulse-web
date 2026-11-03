@@ -47,7 +47,7 @@ good, its `profiles` row with it.
 `POST /api/account/link` takes the JSON body `{ "code": "ABCD-EFGH" }` and the `rp_session` cookie and
 links the signed-in account to the player the desktop app issued the code for (ADR-0004; the code comes
 from the Edge Function `issue-link-code`, see "Website accounts" in [supabase.md](supabase.md)). A code is
-read the way a person types it (`src/link-code.ts`: any case, spaces or dashes, `O` as 0, `I` and `L` as
+read the way a person types it (`src/server/account/link-code.ts`: any case, spaces or dashes, `O` as 0, `I` and `L` as
 1). It answers 200 `{ "player": { name, avatarUrl } }`; 400 with the one message "That code is wrong or has
 expired. Get a new one from the desktop app." for a wrong, used, expired or malformed code (the cases are
 never told apart); 429 `{ error, retryAfterSeconds }` after five wrong codes in 15 minutes; 401 with no

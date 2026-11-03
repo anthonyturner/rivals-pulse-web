@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 
-import { handleAccountHttp } from './account-http';
+import { handleAccountHttp } from './server/account/account-http';
 import {
   getContentStatusFromDatabase,
   getExternalSourceFromDatabase,
@@ -16,16 +16,16 @@ import {
   getHeroesFromDatabase,
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
-} from './content-database';
-import { getCommunityInsights } from './community-insights-read';
-import { getCommunityMatches } from './community-matches-read';
-import { getHeroMatchups } from './hero-matchups-read';
-import { getHeroPairs } from './hero-pairs-read';
-import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './hero-stats-read';
-import { syncHomeNews } from './home-news-sync';
-import { runGameStatsSync, syncGameStats } from './game-stats-sync';
-import { getSupabaseClient } from './supabase-client';
-import { recordSyncRun } from './sync-log';
+} from './server/content/content-database';
+import { getCommunityInsights } from './server/community/insights/community-insights-read';
+import { getCommunityMatches } from './server/community/matches/community-matches-read';
+import { getHeroMatchups } from './server/heroes/matchups/hero-matchups-read';
+import { getHeroPairs } from './server/heroes/pairs/hero-pairs-read';
+import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats/hero-stats-read';
+import { syncHomeNews } from './server/content/home/home-news-sync';
+import { runGameStatsSync, syncGameStats } from './server/sync/game-stats-sync';
+import { getSupabaseClient } from './server/supabase/supabase-client';
+import { recordSyncRun } from './server/sync/sync-log';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 

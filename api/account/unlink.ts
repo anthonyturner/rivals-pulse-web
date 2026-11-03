@@ -1,3 +1,3 @@
-import { accountRouteHandler } from '../../src/account-http.js';
+import { accountRouteHandler } from '../../src/server/account/account-http.js';
 
 export default accountRouteHandler('account/unlink');

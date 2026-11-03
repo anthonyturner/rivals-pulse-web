@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { runGameStatsSync } from '../../src/game-stats-sync.js';
-import { getSupabaseClient } from '../../src/supabase-client.js';
-import { recordSyncRun } from '../../src/sync-log.js';
-import { sendJson } from '../../src/vercel-api.js';
+import { runGameStatsSync } from '../../src/server/sync/game-stats-sync.js';
+import { getSupabaseClient } from '../../src/server/supabase/supabase-client.js';
+import { recordSyncRun } from '../../src/server/sync/sync-log.js';
+import { sendJson } from '../../src/server/http/vercel-api.js';
 
 const noStoreHeaders = {
   'cache-control': 'private, no-store, max-age=0',

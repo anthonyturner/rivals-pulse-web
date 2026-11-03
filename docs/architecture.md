@@ -20,11 +20,11 @@ Hosting:
 ## Backend / API
 
 There is no separate backend service. Content is served two ways from the
-same data-access code (`src/content-database.ts`):
+same data-access code (`src/server/content/content-database.ts`):
 
 - **Vercel serverless functions** in `api/` (e.g. `api/heroes.ts`,
   `api/hero-stats.ts`, `api/glossary.ts`) — the production path, each a thin
-  handler around `src/vercel-api.ts` + `content-database.ts`. Vercel serves a
+  handler around `src/server/http/vercel-api.ts` + `content-database.ts`. Vercel serves a
   file under `api/` only at its own path, so every route needs its own file;
   there is no catch-all.
 - **Express**, in `src/server.ts` — serves the same `/api/*` routes for
@@ -38,7 +38,7 @@ hitting `api/sync/home-news.ts` and `api/sync/game-stats.ts`. Content is also re
 ## Database
 
 - Turso (`@tursodatabase/serverless`, SQLite-compatible), accessed via
-  `src/content-database.ts`.
+  `src/server/content/content-database.ts`.
 - Schema lives in `scripts/sqlite-schema.sql`; local seed data in
   `data/seeds/*.mock.json`, seeded with `npm run db:seed`
   (`scripts/seed-sqlite.mjs`).
@@ -56,13 +56,13 @@ The session lives on the server side of the boundary:
 
 - The browser never holds a Supabase token or loads `@supabase/supabase-js`
   (`npm run check:browser-bundle` enforces it). It calls `/api/auth/*` and
-  `/api/account/*`, which are written once in `src/account-api.ts` and mounted by
+  `/api/account/*`, which are written once in `src/server/account/account-api.ts` and mounted by
   both Express (`src/server.ts`) and the Vercel functions (one file per route under `api/auth/` and `api/account/`)
-  through `src/account-http.ts`.
+  through `src/server/account/account-http.ts`.
 - The session is the `rp_session` cookie (`HttpOnly; Secure; SameSite=Lax;
   Path=/api`), holding the access and refresh tokens. Sign-in is a PKCE
   (one-time secret) flow whose verifier waits in the short-lived `rp_pkce`
-  cookie. `src/auth-gateway.ts` calls Supabase Auth with plain `fetch` and the
+  cookie. `src/server/auth/auth-gateway.ts` calls Supabase Auth with plain `fetch` and the
   publishable key plus the user's own token, so row-level security decides what a
   call may touch.
 - Every auth and account answer is `Cache-Control: private, no-store`, a POST
@@ -82,7 +82,7 @@ The session lives on the server side of the boundary:
   "Account" when it is set. The website holds no service key and no `RECORDER_ID_SECRET` for this.
 - `GET /api/account/dashboard` (issue 329) calls the `read_own_dashboard` database function with the player's
   own token. The database picks the lines (those whose recorder and uid are the link's own, newest 2,000);
-  `src/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
+  `src/server/account/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
   records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
   service key and no per-account copy of the data. The `/profile` page (`src/app/features/profile/`) asks it
   through `AuthService.loadDashboard()`, which validates the answer, and `buildProfileView` turns it into the

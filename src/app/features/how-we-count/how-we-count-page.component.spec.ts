@@ -2,7 +2,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { BLENDED_PLAY_MODE_IDS, HERO_STATS_MIN_MATCHES, PLAY_MODE_IDS, PLAY_MODES } from '../../../hero-stats';
+import { BLENDED_PLAY_MODE_IDS, HERO_STATS_MIN_MATCHES, PLAY_MODE_IDS, PLAY_MODES } from '../../../server/heroes/stats/hero-stats';
 import { SHOW_PRACTICE_MODE } from '../../shared/utilities/play-modes';
 import { HowWeCountPageComponent } from './how-we-count-page.component';
 

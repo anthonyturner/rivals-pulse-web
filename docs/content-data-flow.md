@@ -25,7 +25,7 @@ There are three separate jobs in the content system.
 | Seed | Copies local JSON data into Turso, and the home page seeds into Supabase | `scripts/seed-sqlite.mjs`, `scripts/seed-home-content.mjs` |
 | Sync | Fetches outside data from official, stats, and Fandom/wiki sources | `scripts/sync-external-sources.mjs`, `scripts/sync-home-news.mjs` |
 | Hero Sync | Finds current Fandom heroes and updates the heroes in Supabase | `scripts/sync-heroes.mjs` |
-| Read | Lets Angular pages get data from Turso | `src/server.ts`, `src/content-database.ts` |
+| Read | Lets Angular pages get data from Turso | `src/server.ts`, `src/server/content/content-database.ts` |
 
 ## 1. Seed Data
 
@@ -173,7 +173,7 @@ src/server.ts
 They read the database through:
 
 ```text
-src/content-database.ts
+src/server/content/content-database.ts
 ```
 
 `GET /api/content/status` includes `communityHeroStats: { status, halfSeason, inPlaceOf, matchesCounted, heroesPlaced }`,

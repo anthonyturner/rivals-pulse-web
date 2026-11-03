@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 
 import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { getHero, saveHero } from '../src/hero-store.ts';
-import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/sync-log.ts';
+import { getHero, saveHero } from '../src/server/heroes/catalog/hero-store.ts';
+import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/server/sync/sync-log.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
-const heroImagesPath = join(projectRoot, 'src', 'public', 'images', 'heroes');
+const heroImagesPath = join(projectRoot, 'public', 'images', 'heroes');
 const fandomApi = 'https://marvelrivals.fandom.com/api.php';
 
 const excludedTitles = new Set([

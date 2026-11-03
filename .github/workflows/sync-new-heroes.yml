@@ -67,7 +67,7 @@ jobs:
       - name: Detect new portrait files
         id: portraits
         run: |
-          if [ -n "$(git status --porcelain -- public/images/heroes src/public/images/heroes)" ]; then
+          if [ -n "$(git status --porcelain -- public/images/heroes)" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -93,7 +93,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git checkout -b "$branch"
-          git add public/images/heroes src/public/images/heroes
+          git add public/images/heroes
           git commit -m 'chore(heroes): add portraits for newly released heroes'
           git push --set-upstream origin "$branch"
 

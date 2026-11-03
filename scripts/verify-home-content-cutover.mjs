@@ -196,7 +196,7 @@ function compareEndpoints(label, actual, expected) {
   }
 }
 
-// The same shaping as src/home-content-store.ts: portals by sort_order, blocks keyed by name.
+// The same shaping as src/server/content/home/home-content-store.ts: portals by sort_order, blocks keyed by name.
 function endpointsFrom({ portals, blocks }) {
   return {
     portals: [...portals].sort((left, right) => left.sort_order - right.sort_order).map((row) => row.raw_json),
