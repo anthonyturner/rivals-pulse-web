@@ -13,7 +13,7 @@ export class StrategicCoverPageComponent {
   readonly guide: PositioningGuide = {
     title: 'Strategic Cover Usage',
     lede:
-      'Cleaned-up notes from the cover masterclass: minimize your hitbox, expose enemies more than they expose you, isolate angles, scout first, and peek with intention.',
+      'Cover masterclass notes: be hard to hit and make enemies easy to hit.',
     sourceLabel: 'Watch tutorial',
     sourceUrl: 'https://youtu.be/rqxP_tKV2vc?si=9K2auPgj1OXjaD2y',
     diagram: {
@@ -55,56 +55,49 @@ export class StrategicCoverPageComponent {
       {
         title: 'Minimize Your Hitbox',
         summary:
-          'Cover is not just something you stand near. You use it to remove the amount of body the enemy can see and shoot.',
+          'Cover is not just something you stand near. You use it to take body away from the enemy.',
         points: [
-          'Do not peek far away from cover. The more space between you and the cover edge, the more of your body is exposed.',
+          'Do not peek far away from cover: the more space between you and the cover edge, the more of your body is exposed.',
           'Back up or shift until the enemy mostly sees your head or a small slice of your model.',
           'Horizontal cover can hide your lower body; vertical cover can let you shoulder-peek and trade small windows.',
-          'Every extra exposed body part is another chance for the enemy to hit you before you can retreat.',
         ],
       },
       {
         title: 'Maximize Enemy Hitbox',
         summary:
-          'Good cover usage is not only defensive. You can position around your cover so the enemy has less cover from your angle.',
+          'Good cover usage is not only defensive.',
         points: [
-          'Shift left or right until you can see more of the enemy behind their corner.',
-          'Keep your own cover while choosing an angle that makes their escape path worse.',
-          'Even one extra shot opportunity matters when the enemy is trying to hide.',
-          'The best angle lets you pressure them while still giving yourself a quick way out.',
+          'Shift left or right until you can see more of the enemy behind their corner. Even one extra shot opportunity matters when they are trying to hide.',
+          'Keep your own cover and choose the angle that makes their escape path worse while still giving you a quick way out.',
         ],
       },
       {
         title: 'Deal With One Angle at a Time',
         summary:
-          'A common mistake is peeking forward into several threats at once. If you are only shooting one target, do not expose yourself to three angles.',
+          'If you are only shooting one target, do not expose yourself to three angles.',
         points: [
           'Use nearby walls, boxes, stairs, or height changes to block the angles you are not currently fighting.',
           'Move around cover based on the target you want to shoot: one position for C, another for D, another for a side angle.',
-          'If too many enemies can see you, you will be forced to spend resources early and give up the position.',
-          'Your goal is not perfect safety. Your goal is the least exposure possible while still creating pressure.',
+          'Your goal is not perfect safety: it is the least exposure possible while still creating pressure.',
         ],
       },
       {
         title: 'Scout Before You Shoot',
         summary:
-          'Cover lets you gather information before committing. This is especially important for burst heroes and long-range heroes.',
+          'Burst heroes and long-range heroes gain the most from scouting first.',
         points: [
-          'Scout first, then peek and shoot. Do not stand in the open waiting for a target to appear.',
+          'Scout first, then peek and shoot. Do not stand in the open waiting for a target to appear: if the enemy sees you early, they can move away before your shot matters.',
           'Charging or preparing behind cover makes your peek harder to react to.',
-          'If the enemy sees you early, they can move away before your shot matters.',
           'Mechanics improve when positioning reduces surprise movement and gives you predictable targets.',
         ],
       },
       {
         title: 'Peek Parallel to Cover',
         summary:
-          'Peeking forward into the enemy makes you easy to hit. Peeking sideways along the cover edge keeps movement harder to track.',
+          'Peeking forward into the enemy makes you easy to hit and your movement predictable.',
         points: [
-          'Move parallel to the cover edge: peek out, shoot, return.',
-          'Avoid walking directly toward the enemy sightline when you peek.',
-          'Good corners improve crosshair placement because you know exactly where your retreat is.',
-          'When pressured, already knowing your cover route prevents panic movement.',
+          'Move parallel to the cover edge instead: peek out, shoot, return. Sideways movement is harder to track.',
+          'Good corners improve crosshair placement, and knowing your cover route prevents panic movement when pressured.',
         ],
       },
     ],
@@ -120,7 +113,7 @@ export class StrategicCoverPageComponent {
       },
       {
         label: 'Multi-angle Exposure',
-        detail: 'Trying to shoot one enemy while A, B, C, and D can all pressure you burns resources fast.',
+        detail: 'Trying to shoot one enemy while A, B, C, and D can all pressure you burns resources fast and gives up the position.',
       },
       {
         label: 'Open Scouting',
@@ -145,11 +138,11 @@ export class StrategicCoverPageComponent {
       },
     ],
     timestamps: [
-      { label: '0:00', detail: 'Cover as hitbox minimization and safety.' },
-      { label: '1:40', detail: 'Maximizing enemy hitbox while using your own cover.' },
-      { label: '3:38', detail: 'Dealing with one angle at a time.' },
-      { label: '6:31', detail: 'Scouting from cover before shooting.' },
-      { label: '8:00', detail: 'Peeking parallel to cover and corner mechanics.' },
+      { label: '0:00', detail: 'Cover for hitbox and safety.' },
+      { label: '1:40', detail: 'Maximizing the enemy hitbox.' },
+      { label: '3:38', detail: 'One angle at a time.' },
+      { label: '6:31', detail: 'Scouting from cover.' },
+      { label: '8:00', detail: 'Peeking parallel, corner mechanics.' },
     ],
   };
 }
