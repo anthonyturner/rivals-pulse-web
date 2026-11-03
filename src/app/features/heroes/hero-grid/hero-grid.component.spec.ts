@@ -157,7 +157,7 @@ describe('HeroGridComponent', () => {
     });
   });
 
-  it('scrolls its own list to the chosen hero in the column, without scrolling the page', async () => {
+  it('scrolls its own list to the chosen hero in the column', async () => {
     const heroes = Array.from({ length: 40 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
     setInputs({ heroes, layout: 'column', selectedHeroId: 'hero-35' });
     await fixture.whenStable();

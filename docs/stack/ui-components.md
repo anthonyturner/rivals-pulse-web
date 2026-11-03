@@ -97,6 +97,7 @@ component below it.
 This section always applies, whatever the styling conventions above. The site has two themes, dark (the base) and light, and both use the desktop app's Aurora palette with the same values as the app's `styles-desktop-theme.scss`. Dark shows when there is no saved choice and no device preference.
 
 - **Palette tokens (`--aurora-*`) live in `src/styles.css` and nowhere else.** The dark values are the base `:root` block; `:root[data-theme='light']` overrides what differs and also sets `color-scheme`, so scrollbars and form controls match. A component never reads `--aurora-*`.
+- **The accent is the overlay app's yellow**: `#ffdf00` in dark and a deeper gold (`#b38600`, with `#7f5f00` as text) in light, because bright yellow is unreadable on white. Text on a filled accent is `#1a1600`. The same values are used in the overlay, so change them together.
 - **Components use role tokens only.** A role token names a job, never a hue. A `-strong` or `-ink` suffix means the role used as text, `-soft` its tint behind content, `-line` its border.
 
 | Job | Token |

@@ -314,7 +314,6 @@
   /* Room for the focus ring and the selected hero's outline, which the scroll box would otherwise clip. */
   padding: 4px;
   overflow-y: auto;
-  overscroll-behavior: contain;
 }
 :host([layout='column']) .hero-card {
   height: auto;
@@ -336,5 +335,6 @@
   }
   :host([layout='column']) .hero-grid {
     max-height: none;
+    overscroll-behavior: contain;
   }
 }

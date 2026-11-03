@@ -11,7 +11,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   background: var(--bg-panel);
-  scroll-margin-top: calc(var(--nav-height) + 16px);
+  scroll-margin-top: 16px;
   animation: fade-in 400ms ease-out;
 }
 .detail-actions {

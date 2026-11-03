@@ -1,0 +1,79 @@
+<div class="planner page-container page-container--wide">
+  <app-page-header
+    title="Dive Response Planner"
+    description="Choose up to {{ maxDiveThreats }} enemy dive heroes to see who has a winning record against several of them."
+  />
+  @if (halfSeasonLine(); as line) {
+    <p class="source">{{ line }}</p>
+  }
+  @if (scopeNotice(); as scope) {
+    <app-notice>{{ scope }}</app-notice>
+  }
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+  <div class="steps">
+    <section aria-labelledby="threats-title">
+      <h2 id="threats-title">Build the dive package</h2>
+      <ul class="chips">
+        @for (chip of threatChips(); track chip.hero.id) {
+          <li>
+            <button type="button" class="chip" [attr.aria-pressed]="chip.pressed" (click)="toggleDiveThreat(chip.hero.id)">
+              <img appHeroImageFallback [src]="chip.hero.imageUrl" alt="" width="40" height="40" loading="lazy" />
+              {{ chip.hero.name }}<span class="visually-hidden">, enemy threat</span>
+            </button>
+          </li>
+        }
+      </ul>
+      <p class="detail">{{ chosenLabel() }}</p>
+      @if (selectedThreats().length > 0) {
+        <ul class="reads">
+          @for (chip of selectedThreats(); track chip.hero.id) {
+            <li>
+              <app-hero-tile [name]="chip.hero.name" [imageUrl]="chip.hero.imageUrl">
+                <span class="detail">{{ chip.instruction }}</span>
+              </app-hero-tile>
+            </li>
+          }
+        </ul>
+      } @else if (heroesLoaded()) {
+        <app-state-panel>Select at least one enemy threat.</app-state-panel>
+      }
+    </section>
+
+    <section aria-labelledby="answers-title">
+      <h2 id="answers-title">Choose overlap, then assign jobs</h2>
+      <p class="lede">
+        The best swap is usually the hero who beats more than one of the dive. Results are heroes that win more than
+        they lose against those threats in recorded matches. Choose one to see its matchups on the Counters page.
+      </p>
+      @if (notice(); as current) {
+        <app-state-panel [kind]="current.kind" [heading]="current.heading" [headingLevel]="3" [announce]="false">
+          {{ current.message }}
+        </app-state-panel>
+      } @else if (selectedThreats().length === 0) {
+        @if (heroesLoaded()) {
+          <app-state-panel>Select at least one enemy threat.</app-state-panel>
+        }
+      } @else if (answerRows().length === 0) {
+        <app-state-panel heading="No winning record yet" [headingLevel]="3">
+          No hero has a winning record against these threats in enough recorded matches yet.
+        </app-state-panel>
+      } @else {
+        <ul class="tiles">
+          @for (answer of answerRows(); track answer.hero.id) {
+            <li>
+              <a class="pick" routerLink="/counters" [queryParams]="answer.query">
+                <app-hero-tile selectable [name]="answer.hero.name" [imageUrl]="answer.hero.imageUrl">
+                  <span tileFigure class="figure"><span class="visually-hidden">, covers </span>{{ answer.covers }}</span>
+                  <span class="detail">{{ answer.detail }}</span>
+                </app-hero-tile>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+
+  <app-jubilee-case-study />
+</div>
