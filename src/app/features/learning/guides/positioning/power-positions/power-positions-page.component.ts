@@ -13,7 +13,7 @@ export class PowerPositionsPageComponent {
   readonly guide: PositioningGuide = {
     title: 'Power Positions',
     lede:
-      'Notes from the masterclass: how to find, hold and leave power positions.',
+      'Notes from the masterclass: how to find, hold, and leave power positions.',
     sourceLabel: 'Watch masterclass',
     sourceUrl: 'https://youtu.be/hnCgeDZCt0I?si=d7wxsqlCxCDMWcwU',
     diagram: {
@@ -66,7 +66,7 @@ export class PowerPositionsPageComponent {
       {
         title: 'Why It Wins Fights',
         summary:
-          'Power positions create passive value before anyone commits.',
+          'Power positions create passive value before anyone commits: the enemy has to react to you.',
         points: [
           'Multiple angles make it harder for the enemy to shield, wall, or hold one doorway, and a second route keeps you from getting stuck in a choke.',
           'You gather information earlier, so you can decide to pressure, rotate, drop, or reset.',
@@ -110,12 +110,12 @@ export class PowerPositionsPageComponent {
       {
         label: 'Vanguard',
         detail:
-          'Use power positions to decide where the fight happens: rebuild defensive resources and force enemies out of strong space.',
+          'Use power positions to decide where the fight happens. Rebuild defensive resources and force enemies out of strong space.',
       },
       {
         label: 'Duelist',
         detail:
-          'Use them to scout, split attention, and make enemies turn before you commit your burst.',
+          'Use them to scout, split attention, open an angle, and make enemies turn before you commit your burst.',
       },
       {
         label: 'Strategist',
@@ -141,7 +141,7 @@ export class PowerPositionsPageComponent {
       },
     ],
     timestamps: [
-      { label: '1:36', detail: 'Definition and why they matter.' },
+      { label: '1:36', detail: 'Definition and why power positions matter.' },
       { label: '3:01', detail: 'Multiple angles and lane control.' },
       { label: '8:22', detail: 'Avoiding chokes, using more routes.' },
       { label: '17:33', detail: 'Information, passive value, cooldowns.' },

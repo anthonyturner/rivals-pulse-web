@@ -94,7 +94,7 @@ export class StrategicCoverPageComponent {
       {
         title: 'Peek Parallel to Cover',
         summary:
-          'Peeking forward into the enemy makes you easy to hit and your movement predictable.',
+          'Peeking forward into the enemy makes you easy to hit.',
         points: [
           'Move parallel to the cover edge instead: peek out, shoot, return. Sideways movement is harder to track.',
           'Good corners improve crosshair placement, and knowing your cover route prevents panic movement when pressured.',
