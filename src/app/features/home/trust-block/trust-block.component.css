@@ -20,7 +20,7 @@
   height: 48px;
   border-radius: 12px;
   background: var(--ink);
-  color: var(--teal-bright);
+  color: var(--ink-accent);
 }
 
 .trust__body {
@@ -53,7 +53,7 @@
 }
 
 .link {
-  color: #0f6f7a;
+  color: var(--accent-strong);
   font-weight: 700;
   text-underline-offset: 3px;
 }
@@ -63,7 +63,7 @@
 }
 
 .link:focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 

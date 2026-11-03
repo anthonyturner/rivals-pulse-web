@@ -30,13 +30,13 @@
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--ink-line);
   border-radius: 14px;
   background: var(--ink);
 }
 
 .shot__caption {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--on-ink-muted);
   font-size: 0.875rem;
 }
 
@@ -49,9 +49,9 @@
   gap: 8px;
   align-content: start;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--ink-line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--on-ink) 4%, transparent);
 }
 
 .feature-icon {
@@ -60,8 +60,8 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: rgba(119, 238, 215, 0.14);
-  color: var(--teal-bright);
+  background: color-mix(in srgb, var(--ink-accent) 14%, transparent);
+  color: var(--ink-accent);
 }
 
 .feature h3 {
@@ -73,14 +73,14 @@
 
 .feature p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--on-ink-muted);
   font-size: 0.9375rem;
 }
 
 .feature-link {
   justify-self: start;
   margin-top: 4px;
-  color: var(--teal-bright);
+  color: var(--ink-accent);
   font-size: 0.875rem;
   font-weight: 750;
   text-decoration: none;
@@ -92,7 +92,7 @@
 }
 
 .feature-link:focus-visible {
-  outline: 3px solid var(--cta-yellow);
+  outline: 3px solid var(--ink-focus);
   outline-offset: 3px;
 }
 

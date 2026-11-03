@@ -92,6 +92,35 @@ Whatever the styling approach, keep styles component-scoped: no global style
 overrides, and avoid `::ng-deep`, which leaks a component's styles into every
 component below it.
 
+## Colour and themes
+
+This section always applies, whatever the styling conventions above. The site has two themes, dark (the base) and light, and both use the desktop app's Aurora palette with the same values as the app's `styles-desktop-theme.scss`. Dark shows when there is no saved choice and no device preference.
+
+- **Palette tokens (`--aurora-*`) live in `src/styles.css` and nowhere else.** The dark values are the base `:root` block; `:root[data-theme='light']` overrides what differs and also sets `color-scheme`, so scrollbars and form controls match. A component never reads `--aurora-*`.
+- **Components use role tokens only.** A role token names a job, never a hue. A `-strong` or `-ink` suffix means the role used as text, `-soft` its tint behind content, `-line` its border.
+
+| Job | Token |
+| --- | --- |
+| Page, header and card surfaces | `--bg`, `--bg-elevated`, `--bg-panel`, `--bg-panel-soft`, `--surface`, `--surface-2` |
+| Text | `--text`, `--text-soft` (the same as `--text`), `--text-muted`, `--text-faint` (graphics only, below text contrast) |
+| Edges | `--border` (a divider), `--border-strong` (a panel edge), `--control-border` (the edge of an input or button), `--accent-line` (a selected edge) |
+| Links and focus | `--link` (always underlined), `--focus` (rings and outlines), `--focus-ring` (a soft halo) |
+| Primary action and brand | `--accent` (fill), `--accent-strong` (as text), `--accent-soft` (tint), `--accent-ink` (text drawn on an accent fill) |
+| Supporting emphasis | `--secondary`, `--tertiary`, each with `-ink` and `-soft` |
+| Match outcome, and nothing else | `--win`, `--loss`, each with `-ink` and `-soft` |
+| Warnings and errors | `--danger`, `--danger-ink`, `--danger-soft` |
+| Hero roles | `--role-vanguard`, `--role-duelist`, `--role-strategist` |
+| Shadows | `--shadow-color`, `--shadow-soft` |
+| Bands that stay dark in both themes (the home hero over its photo, the overlay section, the closing call to action, the house ad; also small dark chips and icon tiles) | `--ink`, `--ink-raised`, `--ink-line`, `--ink-control-border`, `--on-ink`, `--on-ink-muted`, `--ink-accent`, `--on-ink-accent`, `--ink-focus` |
+
+- **A component writes no colour literal**: no hex, `rgb()` or `hsl()`. A see-through version of a token is `color-mix(in srgb, var(--token) 40%, transparent)`. Where the site needs a role the palette lacks, derive it from a palette value and say so in the pull request; do not add a new hue.
+- **The only literals left in component styles are data, not theme**: the six tier colours in `tier-rows.component.css`. `npm run test:theme` fails on any other literal in `src/app/**/*.css`, on a component reading `--aurora-*`, and on a `var(--x)` that nothing declares.
+- **Contrast is tested, not eyeballed.** `npm run test:theme` (CI runs it with the other script tests) measures every text, control-edge and focus pair in both themes against WCAG 2.1 AA, and holds the `--ink-*` tokens equal to the dark palette. After changing a value in `styles.css`, run it.
+- **Pair text with its own kind of token.** Text on `--accent`, `--win` or `--loss` uses `--accent-ink`; coloured text on a plain surface uses an `-ink` or `-strong` token, never the fill. `--text-faint` is never text.
+- **Focus** is `var(--focus)` in both themes; the global `:focus-visible` rule in `styles.css` sets a 2px outline with it. A component that draws its own ring uses the same token.
+- **The choice** is owned by `ThemeService` (`core/theme`), which sets `data-theme` on `<html>` and saves it in `localStorage` under `rp.web-theme`. An inline script in `src/index.html` applies the same rule before the first paint, so the page does not flash the other theme; `scripts/theme-inline-script.test.mjs` keeps the two in step. No Content Security Policy is set today (not in `vercel.json` or `server.ts`); one that blocks inline scripts would need a nonce or hash for that script. The toggle is `app-theme-toggle`, inside the header navigation.
+- **An image that assumes a light page**, such as an all-black icon, uses `var(--icon-filter)`.
+
 ## Type scale
 
 This section always applies, whatever the styling conventions above.

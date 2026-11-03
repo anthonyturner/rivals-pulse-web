@@ -6,17 +6,17 @@
   display: grid;
   gap: 12px;
   padding: 14px;
-  border: 1px solid rgba(224, 169, 0, 0.24);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 203, 0.38)),
-    rgb(255 255 255);
+    linear-gradient(135deg, transparent, var(--accent-soft)),
+    var(--bg-elevated);
   box-shadow: var(--heroes-box-shadow);
 }
 
 .community-stats__heading {
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(224, 169, 0, 0.18);
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .community-stats__heading h3,
@@ -33,9 +33,9 @@
 
 .community-stats__figures > div {
   padding: 10px 12px;
-  border: 1px solid rgba(224, 169, 0, 0.24);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--bg-panel);
   box-shadow: inset 4px 0 var(--accent);
 }
 
@@ -75,7 +75,7 @@
   padding: 10px 12px;
   border: 1px dashed var(--border-strong);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--bg-panel);
 }
 
 .community-stats__status {

@@ -45,9 +45,9 @@ h1 {
   display: grid;
   gap: 4px;
   padding: 20px;
-  border: 1px solid rgba(224, 169, 0, 0.34);
+  border: 1px solid var(--border-strong);
   border-radius: 9px;
-  background: linear-gradient(135deg, #fffbea, #fff);
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-elevated));
   color: var(--text);
   text-decoration: none;
 }
@@ -157,8 +157,8 @@ h1 {
 
 .weakness-strip span {
   padding: 12px;
-  background: #102033;
-  color: #fff;
+  background: var(--ink-raised);
+  color: var(--on-ink);
   font-size: 0.78rem;
   font-weight: 800;
   text-align: center;
@@ -188,7 +188,7 @@ h1 {
   place-items: center;
   border-radius: 10px;
   background: var(--text);
-  color: #fff;
+  color: var(--bg-elevated);
   font-size: 1.15rem;
   font-weight: 900;
 }
@@ -217,7 +217,7 @@ h1 {
   position: relative;
   padding: 12px 12px 12px 44px;
   border-radius: 7px;
-  background: #f7fbfd;
+  background: var(--bg-panel-soft);
   color: var(--text-soft);
   line-height: 1.5;
   counter-increment: plan-step;
@@ -288,8 +288,8 @@ h1 {
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  background: var(--teal);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-size: 0.78rem;
   font-weight: 900;
 }
@@ -304,7 +304,7 @@ h1 {
   padding: 12px 14px;
   border-left: 3px solid var(--danger);
   border-radius: 4px;
-  background: rgba(217, 61, 92, 0.06);
+  background: var(--danger-soft);
 }
 
 .source-note {
@@ -324,9 +324,9 @@ h1 {
 .source-note a {
   width: fit-content;
   padding: 11px 14px;
-  border: 1px solid rgba(224, 169, 0, 0.4);
+  border: 1px solid var(--accent-line);
   border-radius: 7px;
-  background: #fff;
+  background: var(--bg-elevated);
   color: var(--accent-strong);
   font-weight: 850;
   text-decoration: none;

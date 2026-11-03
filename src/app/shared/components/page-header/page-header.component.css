@@ -10,7 +10,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 12px;
   background:
-    linear-gradient(105deg, rgba(255, 255, 255, 0.98) 0 62%, rgba(234, 247, 251, 0.92) 100%);
+    linear-gradient(105deg, var(--bg-elevated) 0 62%, var(--bg-panel-soft) 100%);
   box-shadow: var(--shadow-soft);
 }
 
@@ -19,7 +19,7 @@
   z-index: -1;
   inset: 0 auto 0 0;
   width: 7px;
-  background: linear-gradient(180deg, var(--accent) 0 42%, var(--teal) 42% 100%);
+  background: var(--accent);
   content: '';
 }
 
@@ -30,13 +30,13 @@
   right: -4%;
   width: clamp(220px, 34vw, 430px);
   aspect-ratio: 1;
-  border: 1px solid rgba(3, 159, 159, 0.18);
+  border: 1px solid var(--border-strong);
   border-radius: 50%;
   background:
     repeating-linear-gradient(
       135deg,
       transparent 0 17px,
-      rgba(3, 159, 159, 0.07) 17px 18px
+      var(--accent-soft) 17px 18px
     );
   content: '';
 }

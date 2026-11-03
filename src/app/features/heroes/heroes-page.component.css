@@ -1,7 +1,6 @@
 :host {
   display: block;
-  --modal-gold: #ffd866;
-  --heroes-box-shadow: inset 1px 0 var(--modal-gold), inset 0 1px rgba(255, 255, 255, 0.14);
+  --heroes-box-shadow: inset 1px 0 var(--accent-strong);
 }
 
 .heroes-page {

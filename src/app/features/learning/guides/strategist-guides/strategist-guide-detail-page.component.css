@@ -97,11 +97,11 @@ iframe {
 }
 
 .checkpoint:hover {
-  border-color: #0e6a98;
+  border-color: var(--link);
 }
 
 .checkpoint:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 

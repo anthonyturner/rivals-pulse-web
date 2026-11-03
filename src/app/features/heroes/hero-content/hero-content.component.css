@@ -7,9 +7,9 @@
   gap: 12px;
   margin-top: 20px;
   padding: 16px;
-  border: 1px solid rgba(83, 82, 1, 0.18);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--bg-panel);
   scroll-margin-top: 16px;
   animation: fade-in 400ms ease-out;
 }
@@ -32,17 +32,17 @@
   cursor: pointer;
 }
 .detail-action--primary {
-  border-color: rgba(138, 98, 0, 0.28);
-  background: rgba(255, 248, 203, 0.86);
-  color: #1d220b;
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+  color: var(--text);
 }
 .detail-action:hover {
   border-color: var(--accent);
-  background: #ffffff;
+  background: var(--bg-elevated);
 }
 .detail-action:focus-visible,
 .video-searches summary:focus-visible {
-  outline: 2px solid var(--accent-ink);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 .detail-layout {
@@ -61,7 +61,7 @@
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--bg-elevated);
 }
 .video-searches summary {
   color: var(--text);

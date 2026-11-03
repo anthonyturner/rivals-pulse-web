@@ -22,7 +22,7 @@
   gap: 12px;
   padding: 22px;
   border: 1px solid var(--border);
-  border-top: 3px solid var(--teal);
+  border-top: 3px solid var(--accent);
   border-radius: 12px;
   background: var(--bg);
   color: inherit;
@@ -35,13 +35,13 @@
 
 .tool:hover {
   border-color: var(--border-strong);
-  border-top-color: var(--teal);
-  box-shadow: 0 14px 32px rgba(7, 17, 31, 0.1);
+  border-top-color: var(--accent);
+  box-shadow: 0 14px 32px var(--shadow-color);
   transform: translateY(-2px);
 }
 
 .tool:focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -59,7 +59,7 @@
   height: 40px;
   border-radius: 10px;
   background: var(--ink);
-  color: var(--teal-bright);
+  color: var(--ink-accent);
 }
 
 .tool h3 {
@@ -103,7 +103,7 @@
   gap: 6px;
   margin-top: auto;
   padding-top: 4px;
-  color: #067d7a;
+  color: var(--accent-strong);
   font-size: 0.9375rem;
   font-weight: 800;
 }

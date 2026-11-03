@@ -153,10 +153,10 @@
 .actions__watch {
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid var(--teal-bright);
+  border: 1px solid var(--accent);
   border-radius: 999px;
-  background: var(--teal-bright);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
   font: inherit;
   font-size: 0.875rem;
   font-weight: 820;
@@ -164,11 +164,11 @@
 }
 
 .actions__watch:hover {
-  background: #baf8eb;
+  filter: brightness(1.1);
 }
 
 .block__link {
-  color: #0b5f8a;
+  color: var(--link);
   font-size: 0.875rem;
   font-weight: 800;
 }
@@ -176,7 +176,7 @@
 .actions__watch:focus-visible,
 .block__link:focus-visible,
 .list__link:focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 

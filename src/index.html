@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script>
+    // Sets the theme before the first paint. ThemeService (rp.web-theme) applies the same rule: the saved choice, else the device's colour scheme, else dark.
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem('rp.web-theme'); } catch (e) {}
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <title>RivalsPulse | Feel the pulse of every match</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
