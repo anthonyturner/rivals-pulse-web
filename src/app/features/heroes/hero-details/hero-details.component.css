@@ -1005,7 +1005,8 @@ details.collapsible {
   .hero-base-stats .stat-card,
   .hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 1),
   .hero-base-stats .stat-card:nth-last-child(2):nth-child(3n + 1),
-  .hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 2) {
+  .hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 2),
+  .hero-base-stats .stat-card:nth-last-child(1):nth-child(2n + 1) {
     grid-column: auto;
   }
 }
