@@ -14,12 +14,6 @@ h2 button {
   cursor: pointer;
 }
 
-/* Inset, so no neighbour and no clipping ancestor can hide the ring. */
-h2 button:focus-visible {
-  outline: 3px solid var(--link);
-  outline-offset: -3px;
-}
-
 .faq .sources {
   padding: 0;
   font-size: var(--type-small);
