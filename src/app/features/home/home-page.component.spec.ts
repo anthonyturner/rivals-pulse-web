@@ -66,18 +66,19 @@ describe('HomePageComponent', () => {
       ]);
     });
 
-    it('has no eyebrow above the h1', () => {
+    it('says what RivalsPulse gives you in the eyebrow above the h1', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
 
-      expect(hero.querySelector('app-eyebrow')).toBeNull();
-      expect(hero.firstElementChild?.tagName).toBe('H1');
+      expect(hero.firstElementChild?.tagName).toBe('APP-EYEBROW');
+      expect(text(hero.querySelector('app-eyebrow'))).toBe('Live counters in game. Real stats on the web.');
+      expect(hero.firstElementChild?.nextElementSibling?.tagName).toBe('H1');
     });
 
     it('says in the h1 and one paragraph what the free Overwolf app does, in game and on the site', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
       const lede = text(hero.querySelector('.lede'));
 
-      expect(text(hero.querySelector('h1'))).toBe('Know every match before it starts.');
+      expect(text(hero.querySelector('h1'))).toBe('Feel the pulse of every match.');
       expect(hero.querySelectorAll('p.lede').length).toBe(1);
       expect(lede).toContain('RivalsPulse is a free Overwolf app for Marvel Rivals.');
       expect(lede).toContain('counters, the tier list and any hero over the game');

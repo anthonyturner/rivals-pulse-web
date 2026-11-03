@@ -16,6 +16,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
+import { EyebrowComponent } from '../../shared/components/eyebrow/eyebrow.component';
 import { ClosingCtaComponent } from './closing-cta/closing-cta.component';
 import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
@@ -36,6 +37,7 @@ type VideoPlacement = 'hero' | 'floating' | 'minimized';
   selector: 'app-home-page',
   imports: [
     ClosingCtaComponent,
+    EyebrowComponent,
     GameNewsBandComponent,
     HeroOverlayActionsComponent,
     HomeFaqComponent,
