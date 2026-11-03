@@ -269,12 +269,20 @@ describe('HomePageComponent', () => {
     const backButton = (): HTMLButtonElement | null => floatingControl('Back to background');
     const tab = (): HTMLButtonElement | null => element.querySelector('.home-page-video-tab');
 
+    let main: HTMLElement;
+
     beforeEach(() => {
+      main = document.createElement('main');
+      main.id = 'main-content';
+      main.tabIndex = -1;
+      document.body.appendChild(main);
       heroBottom = 400;
       const hero = element.querySelector('header.season-hero') as HTMLElement;
 
       spyOn(hero, 'getBoundingClientRect').and.callFake(() => ({ bottom: heroBottom }) as DOMRect);
     });
+
+    afterEach(() => main.remove());
 
     it('floats the video once the hero has scrolled past', async () => {
       await scrollWithHeroBottomAt(40);
@@ -440,6 +448,106 @@ describe('HomePageComponent', () => {
 
       expect(controls.map(text)).toEqual(['Minimize', 'Back to background']);
       expect(controls.every((control) => control.tabIndex === 0)).toBeTrue();
+    });
+
+    it('mutes the video when it is minimized, and the sound toggle says so', async () => {
+      await scrollWithHeroBottomAt(40);
+      soundToggle().click();
+      await settle();
+      expect(video().muted).toBeFalse();
+
+      minimizeButton()?.click();
+      await settle();
+
+      expect(video().muted).toBeTrue();
+      expect(text(soundToggle())).toBe('Sound off');
+      expect(soundToggle().getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('mutes the video when it is sent back to the background, and the sound toggle says so', async () => {
+      await scrollWithHeroBottomAt(40);
+      soundToggle().click();
+      await settle();
+      expect(video().muted).toBeFalse();
+
+      backButton()?.click();
+      await settle();
+
+      expect(video().muted).toBeTrue();
+      expect(text(soundToggle())).toBe('Sound off');
+    });
+
+    it('moves focus to the main landmark, without scrolling, when Back to background removes the focused button', async () => {
+      await scrollWithHeroBottomAt(40);
+      const focusMain = spyOn(main, 'focus').and.callThrough();
+      backButton()?.focus();
+
+      backButton()?.click();
+      await settle();
+
+      expect(focusMain).toHaveBeenCalledOnceWith({ preventScroll: true });
+      expect(document.activeElement).toBe(main);
+    });
+
+    it('moves focus to the main landmark when the hero scrolls back into view while the tab has focus', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+      expect(document.activeElement).toBe(tab());
+
+      await scrollWithHeroBottomAt(400);
+
+      expect(tab()).toBeNull();
+      expect(document.activeElement).toBe(main);
+    });
+
+    it('leaves focus alone when the visitor is elsewhere on the page as the player changes', async () => {
+      const other = document.createElement('button');
+      document.body.appendChild(other);
+      other.focus();
+
+      await scrollWithHeroBottomAt(40);
+      await scrollWithHeroBottomAt(400);
+
+      expect(document.activeElement).toBe(other);
+      other.remove();
+    });
+
+    it('reserves the tab height below the end of the page only while minimized', async () => {
+      const bottomPadding = (): string => getComputedStyle(document.body).paddingBottom;
+      const tabHeight = (): string =>
+        getComputedStyle(document.documentElement).getPropertyValue('--floating-video-tab-height').trim();
+
+      await scrollWithHeroBottomAt(40);
+      expect(bottomPadding()).toBe('0px');
+
+      minimizeButton()?.click();
+      await settle();
+      expect(bottomPadding()).toBe(tabHeight());
+      expect(tabHeight()).not.toBe('');
+      expect(tab()?.getBoundingClientRect().height).toBeGreaterThanOrEqual(parseFloat(tabHeight()));
+
+      tab()?.click();
+      await settle();
+      expect(bottomPadding()).toBe('0px');
+
+      minimizeButton()?.click();
+      await settle();
+      expect(bottomPadding()).toBe(tabHeight());
+
+      await scrollWithHeroBottomAt(400);
+      expect(bottomPadding()).toBe('0px');
+    });
+
+    it('gives the reserve back when the page is left while minimized', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+      expect(document.documentElement.classList).toContain('has-minimized-video');
+
+      fixture.destroy();
+
+      expect(document.documentElement.classList).not.toContain('has-minimized-video');
     });
   });
 });

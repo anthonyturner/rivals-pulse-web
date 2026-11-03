@@ -5,11 +5,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   HostListener,
   Injector,
   PLATFORM_ID,
   ViewChild,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -27,11 +29,14 @@ import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 
+/** Tells `styles.css` to leave room below the footer for the minimized tab, which would otherwise cover its last line. */
+const RESERVE_CLASS = 'has-minimized-video';
+
 /** What the visitor chose for the video once the hero has scrolled out of view. */
 type FloatingVideoMode = 'floating' | 'minimized' | 'background';
 
-/** Where the video is drawn: in the hero, in the floating player, or folded into the tab. */
-type VideoPlacement = 'hero' | 'floating' | 'minimized';
+/** Where the video is drawn: in the hero, in the floating player, folded into the tab, or open as the dialog. */
+type VideoPlacement = 'hero' | 'floating' | 'minimized' | 'foreground';
 
 @Component({
   selector: 'app-home-page',
@@ -57,17 +62,22 @@ export class HomePageComponent implements AfterViewInit {
   @ViewChild('videoTab') private videoTab?: ElementRef<HTMLButtonElement>;
 
   backgroundVideoMuted = true;
-  backgroundVideoForeground = false;
+  private readonly foregroundOpen = signal(false);
   /** Held for the current visit only: a reload starts floating again. */
   private readonly floatingVideoMode = signal<FloatingVideoMode>('floating');
   private readonly heroScrolledPast = signal(false);
   readonly videoPlacement = computed<VideoPlacement>(() => {
     const mode = this.floatingVideoMode();
 
+    if (this.foregroundOpen()) {
+      return 'foreground';
+    }
+
     return this.heroScrolledPast() && mode !== 'background' ? mode : 'hero';
   });
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   /** What had focus when the player opened, so closing it puts focus back where the visitor was. */
   private videoOpener: HTMLElement | null = null;
@@ -76,6 +86,15 @@ export class HomePageComponent implements AfterViewInit {
     initialValue: this.homeContentService.fallbackContent,
   });
   readonly heroMedia = computed(() => buildHomeHeroMedia(this.homeContent()));
+
+  constructor() {
+    if (this.isBrowser) {
+      const root = this.document.documentElement;
+
+      effect(() => root.classList.toggle(RESERVE_CLASS, this.videoPlacement() === 'minimized'));
+      this.destroyRef.onDestroy(() => root.classList.remove(RESERVE_CLASS));
+    }
+  }
 
   ngAfterViewInit(): void {
     if (this.isBrowser) {
@@ -91,10 +110,18 @@ export class HomePageComponent implements AfterViewInit {
       return;
     }
 
+    const focused = this.document.activeElement;
+    const before = this.videoPlacement();
+
     this.heroScrolledPast.set(hero.getBoundingClientRect().bottom <= 80);
+
+    if (this.videoPlacement() !== before) {
+      this.keepFocusInPage(focused);
+    }
   }
 
-  minimizeFloatingVideo(): void {
+  minimizeFloatingVideo(video: HTMLVideoElement): void {
+    this.muteBackgroundVideo(video);
     this.floatingVideoMode.set('minimized');
     afterNextRender(() => this.videoTab?.nativeElement.focus(), { injector: this.injector });
   }
@@ -104,8 +131,30 @@ export class HomePageComponent implements AfterViewInit {
     afterNextRender(() => this.videoMinimize?.nativeElement.focus(), { injector: this.injector });
   }
 
-  sendVideoBackToBackground(): void {
+  sendVideoBackToBackground(video: HTMLVideoElement): void {
+    const focused = this.document.activeElement;
+
+    this.muteBackgroundVideo(video);
     this.floatingVideoMode.set('background');
+    this.keepFocusInPage(focused);
+  }
+
+  /** A video the visitor can no longer see must not go on playing sound, and the sound toggle has scrolled away. */
+  private muteBackgroundVideo(video: HTMLVideoElement): void {
+    this.backgroundVideoMuted = true;
+    video.muted = true;
+  }
+
+  /** A focused control that leaves the page would drop focus to the document body; the main landmark takes it instead. */
+  private keepFocusInPage(focused: Element | null): void {
+    afterNextRender(
+      () => {
+        if (focused && !focused.isConnected) {
+          this.document.getElementById('main-content')?.focus({ preventScroll: true });
+        }
+      },
+      { injector: this.injector },
+    );
   }
 
   startBackgroundVideo(video: HTMLVideoElement): void {
@@ -132,7 +181,7 @@ export class HomePageComponent implements AfterViewInit {
   }
 
   onBackgroundVideoSurfaceClick(video: HTMLVideoElement): void {
-    if (this.backgroundVideoForeground) {
+    if (this.foregroundOpen()) {
       this.closeBackgroundVideo();
       return;
     }
@@ -141,13 +190,13 @@ export class HomePageComponent implements AfterViewInit {
   }
 
   onWatchUpdateVideo(video: HTMLVideoElement): void {
-    if (!this.backgroundVideoForeground) {
+    if (!this.foregroundOpen()) {
       this.openBackgroundVideo(video);
     }
   }
 
   onBackgroundVideoKeydown(event: KeyboardEvent, video: HTMLVideoElement): void {
-    if (this.backgroundVideoForeground || (event.key !== 'Enter' && event.key !== ' ')) {
+    if (this.foregroundOpen() || (event.key !== 'Enter' && event.key !== ' ')) {
       return;
     }
 
@@ -156,7 +205,7 @@ export class HomePageComponent implements AfterViewInit {
   }
 
   onForegroundVideoClick(event: MouseEvent): void {
-    if (this.backgroundVideoForeground) {
+    if (this.foregroundOpen()) {
       event.stopPropagation();
     }
   }
@@ -166,7 +215,7 @@ export class HomePageComponent implements AfterViewInit {
   }
 
   closeBackgroundVideo(): void {
-    this.backgroundVideoForeground = false;
+    this.foregroundOpen.set(false);
 
     const opener = this.videoOpener;
 
@@ -183,7 +232,7 @@ export class HomePageComponent implements AfterViewInit {
 
   private openBackgroundVideo(video: HTMLVideoElement): void {
     this.videoOpener = this.isBrowser ? (this.document.activeElement as HTMLElement | null) : null;
-    this.backgroundVideoForeground = true;
+    this.foregroundOpen.set(true);
     afterNextRender(() => this.videoClose?.nativeElement.focus(), { injector: this.injector });
     void video.play().catch(() => {
       // Native foreground controls remain available if playback does not resume automatically.
@@ -192,7 +241,7 @@ export class HomePageComponent implements AfterViewInit {
 
   @HostListener('document:keydown.escape')
   closeBackgroundVideoOnEscape(): void {
-    if (this.backgroundVideoForeground) {
+    if (this.foregroundOpen()) {
       this.closeBackgroundVideo();
     }
   }

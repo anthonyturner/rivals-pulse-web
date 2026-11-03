@@ -70,7 +70,7 @@
   box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
 }
 
-.home-page-background.is-popout:not(.is-foreground) {
+.home-page-background.is-popout {
   position: fixed;
   z-index: 50;
   inset: auto var(--popout-gap) var(--popout-gap) auto;
@@ -84,11 +84,11 @@
   animation: video-popout-in 220ms ease-out both;
 }
 
-.home-page-background.is-popout:not(.is-foreground)::after {
+.home-page-background.is-popout::after {
   background: linear-gradient(180deg, transparent 62%, rgba(3, 7, 18, 0.46));
 }
 
-.home-page-background.is-minimized:not(.is-foreground) {
+.home-page-background.is-minimized {
   display: none;
 }
 
@@ -107,19 +107,26 @@
   backdrop-filter: blur(12px);
 }
 
+/* Covers the floating player exactly and lets clicks through, so the buttons sit in its top-right corner however tall they grow. */
 .home-page-video-controls {
   position: fixed;
   z-index: 51;
-  /* Sits in the top-right corner of the 16:9 floating player. */
-  right: calc(var(--popout-gap) + 8px);
-  bottom: calc(var(--popout-gap) + var(--popout-width) * 9 / 16 - 44px);
+  right: var(--popout-gap);
+  bottom: var(--popout-gap);
   display: flex;
+  width: var(--popout-width);
+  aspect-ratio: 16 / 9;
+  align-items: flex-start;
+  justify-content: flex-end;
   gap: 8px;
+  padding: 8px;
+  pointer-events: none;
 }
 
 .home-page-video-control {
   min-height: 36px;
   padding: 0 12px;
+  pointer-events: auto;
 }
 
 .home-page-video-tab {
@@ -127,7 +134,7 @@
   z-index: 50;
   right: var(--popout-gap);
   bottom: 0;
-  min-height: 32px;
+  min-height: var(--floating-video-tab-height);
   padding: 0 16px;
   border-bottom: 0;
   border-radius: 8px 8px 0 0;

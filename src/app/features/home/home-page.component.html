@@ -1,20 +1,22 @@
+@let placement = videoPlacement();
+
 <div class="home-page">
   <div class="hero-stage">
     <div
       class="home-page-background"
-      [class.is-foreground]="backgroundVideoForeground"
-      [class.is-popout]="videoPlacement() === 'floating'"
-      [class.is-minimized]="videoPlacement() === 'minimized'"
-      [attr.role]="backgroundVideoForeground ? 'dialog' : 'button'"
-      [attr.aria-modal]="backgroundVideoForeground ? 'true' : null"
+      [class.is-foreground]="placement === 'foreground'"
+      [class.is-popout]="placement === 'floating'"
+      [class.is-minimized]="placement === 'minimized'"
+      [attr.role]="placement === 'foreground' ? 'dialog' : 'button'"
+      [attr.aria-modal]="placement === 'foreground' ? 'true' : null"
       [attr.aria-label]="
-        backgroundVideoForeground
+        placement === 'foreground'
           ? heroMedia().title + ' video player'
-          : videoPlacement() === 'floating'
+          : placement === 'floating'
             ? 'Open the floating video player'
             : 'Play the background video in the foreground'
       "
-      [attr.tabindex]="backgroundVideoForeground ? -1 : 0"
+      [attr.tabindex]="placement === 'foreground' ? -1 : 0"
       (click)="onBackgroundVideoSurfaceClick(backgroundVideo)"
       (keydown)="onBackgroundVideoKeydown($event, backgroundVideo)"
     >
@@ -22,7 +24,7 @@
         #backgroundVideo
         class="home-page-background-video"
         autoplay
-        [controls]="backgroundVideoForeground"
+        [controls]="placement === 'foreground'"
         [muted]="backgroundVideoMuted"
         [src]="heroMedia().videoUrl"
         loop
@@ -37,7 +39,7 @@
         Your browser does not support embedded video playback.
       </video>
 
-      @if (backgroundVideoForeground) {
+      @if (placement === 'foreground') {
         <button
           #videoClose
           class="home-page-video-close"
@@ -50,18 +52,18 @@
       }
     </div>
 
-    @if (videoPlacement() === 'floating' && !backgroundVideoForeground) {
+    @if (placement === 'floating') {
       <div class="home-page-video-controls">
-        <button #videoMinimize class="home-page-video-control" type="button" (click)="minimizeFloatingVideo()">
+        <button #videoMinimize class="home-page-video-control" type="button" (click)="minimizeFloatingVideo(backgroundVideo)">
           Minimize
         </button>
-        <button class="home-page-video-control" type="button" (click)="sendVideoBackToBackground()">
+        <button class="home-page-video-control" type="button" (click)="sendVideoBackToBackground(backgroundVideo)">
           Back to background
         </button>
       </div>
     }
 
-    @if (videoPlacement() === 'minimized' && !backgroundVideoForeground) {
+    @if (placement === 'minimized') {
       <button
         #videoTab
         class="home-page-video-tab"
