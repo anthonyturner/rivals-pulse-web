@@ -126,7 +126,7 @@ h2:focus-visible,
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: none;
-  color: #9f1f38;
+  color: var(--loss-ink);
   font-size: var(--type-h3);
   cursor: pointer;
 }

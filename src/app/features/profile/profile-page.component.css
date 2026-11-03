@@ -19,9 +19,9 @@
   min-height: 42px;
   place-items: center;
   padding: 0 18px;
-  border: 1px solid rgba(224, 169, 0, 0.45);
+  border: 1px solid var(--accent-line);
   border-radius: 6px;
-  background: #f7f4e5;
+  background: var(--accent-soft);
   color: var(--accent-ink);
   font: inherit;
   font-weight: 700;
@@ -30,11 +30,11 @@
 }
 
 .action:hover {
-  background: #f1ebc9;
+  background: var(--accent-soft);
 }
 
 .action:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -114,11 +114,11 @@
 }
 
 .match-result--win {
-  color: #0f6f43;
+  color: var(--win-ink);
 }
 
 .match-result--loss {
-  color: #9f1f38;
+  color: var(--loss-ink);
 }
 
 .match-result--unknown {

@@ -126,7 +126,7 @@ h1 {
 .card-footer a {
   width: fit-content;
   padding: 9px 11px;
-  border: 1px solid rgba(224, 169, 0, 0.42);
+  border: 1px solid var(--accent-line);
   border-radius: 6px;
   color: var(--accent-strong);
   font-size: 0.86rem;
@@ -146,7 +146,7 @@ h1 {
 
 .featured-copy a:hover,
 .card-footer a:hover {
-  background: rgba(224, 169, 0, 0.1);
+  background: var(--accent-soft);
 }
 
 .toolbar {
@@ -203,7 +203,7 @@ h1 {
 
 .category-tabs button.active,
 .category-tabs button:hover {
-  border-color: rgba(3, 159, 159, 0.42);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -265,7 +265,7 @@ h1 {
 .tag-list span {
   padding: 7px 9px;
   border-radius: 999px;
-  background: #f7fbfd;
+  background: var(--bg-panel-soft);
   color: var(--text-soft);
   font-size: 0.8rem;
   font-weight: 800;

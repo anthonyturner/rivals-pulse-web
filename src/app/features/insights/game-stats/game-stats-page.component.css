@@ -70,11 +70,11 @@ th small {
 }
 
 [data-trend='up'] {
-  color: #0f6f43;
+  color: var(--win-ink);
 }
 
 [data-trend='down'] {
-  color: #9f1f38;
+  color: var(--loss-ink);
 }
 
 .milestones {

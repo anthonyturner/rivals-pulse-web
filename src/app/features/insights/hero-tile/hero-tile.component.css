@@ -17,9 +17,9 @@
 }
 
 :host(.selected) {
-  border-color: var(--teal);
+  border-color: var(--accent);
   background: var(--bg-panel-soft);
-  box-shadow: inset 3px 0 0 var(--teal);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 img {
@@ -60,7 +60,7 @@ img {
 }
 
 .name-link:hover {
-  color: #0e6a98;
+  color: var(--link);
 }
 
 /* The link covers the whole tile, so the ring does too. */
@@ -76,7 +76,7 @@ img {
 }
 
 .name-link:focus-visible::after {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 

@@ -27,7 +27,7 @@
   padding: 0 12px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--bg-elevated);
   color: var(--text);
   font: inherit;
   font-size: var(--type-small);
@@ -58,13 +58,13 @@
 }
 .chip:hover,
 .chip[aria-pressed='true'] {
-  border-color: rgba(224, 169, 0, 0.6);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
 .chip--clear {
   border-color: var(--border-strong);
-  background: #ffffff;
+  background: var(--bg-elevated);
   color: var(--text);
 }
 .count {
@@ -98,9 +98,9 @@
   height: 100%;
   min-height: 58px;
   padding: 8px;
-  border: 1px solid rgba(83, 82, 1, 0.18);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-panel);
   color: inherit;
   font: inherit;
   text-align: left;
@@ -111,7 +111,7 @@
 }
 .hero-card.selected {
   border-color: var(--accent);
-  background: rgb(255, 248, 203);
+  background: var(--accent-soft);
   box-shadow: 0 0 0 1px var(--accent);
 }
 /* Overhangs the corner so it never covers the name. */
@@ -169,7 +169,7 @@
   padding: 3px 7px 3px 6px;
   border: 1px solid color-mix(in srgb, var(--role-color, var(--accent)) 34%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--role-color, var(--accent)) 10%, #ffffff);
+  background: color-mix(in srgb, var(--role-color, var(--accent)) 10%, var(--bg-elevated));
   color: color-mix(in srgb, var(--role-color, var(--accent)) 68%, var(--text));
   font-size: var(--type-caption);
   font-weight: 700;
@@ -184,20 +184,20 @@
   content: '';
 }
 .vanguard {
-  --role-color: var(--blue);
+  --role-color: var(--role-vanguard);
 }
 .duelist {
-  --role-color: var(--danger);
+  --role-color: var(--role-duelist);
 }
 .strategist {
-  --role-color: var(--teal);
+  --role-color: var(--role-strategist);
 }
 .multi-role {
-  --role-color: var(--purple);
+  --role-color: var(--text-muted);
 }
 
 .archetype-label {
-  color: color-mix(in srgb, var(--accent-strong), #000000 25%);
+  color: var(--accent-strong);
   font-size: var(--type-caption);
   font-weight: 700;
   text-transform: uppercase;

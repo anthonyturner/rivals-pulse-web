@@ -63,8 +63,8 @@ h1 {
 }
 
 .source-link:hover {
-  border-color: rgba(3, 159, 159, 0.42);
-  background: rgba(224, 169, 0, 0.1);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
 }
 
 .concept-map {
@@ -79,8 +79,8 @@ h1 {
   min-height: 330px;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(25, 245, 197, 0.12) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(111, 233, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, var(--accent-soft) 1px, transparent 1px),
+    linear-gradient(0deg, var(--secondary-soft) 1px, transparent 1px),
     var(--surface);
   background-size: 44px 44px;
 }
@@ -94,7 +94,7 @@ h1 {
 
 .cover-wall {
   border-radius: 6px;
-  background: var(--surface-3);
+  background: var(--surface-2);
   box-shadow: inset 0 0 0 2px var(--border);
 }
 
@@ -123,7 +123,7 @@ h1 {
 .player.safe {
   left: 78px;
   top: 126px;
-  background: var(--teal);
+  background: var(--accent);
   color: var(--text);
 }
 
@@ -137,7 +137,7 @@ h1 {
 .enemy {
   right: 26px;
   top: 132px;
-  background: var(--blue);
+  background: var(--secondary);
   color: var(--text);
 }
 
@@ -151,7 +151,7 @@ h1 {
   left: 160px;
   top: 144px;
   width: 230px;
-  background: var(--teal);
+  background: var(--accent);
   transform: rotate(2deg);
 }
 
@@ -177,7 +177,7 @@ h1 {
 .danger-label {
   right: 44px;
   bottom: 36px;
-  background: rgba(224, 169, 0, 0.42);
+  background: var(--danger-soft);
 }
 
 .quick-check {

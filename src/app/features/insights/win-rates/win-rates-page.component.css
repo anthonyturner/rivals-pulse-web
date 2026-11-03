@@ -101,11 +101,11 @@ thead th {
   display: block;
   height: 100%;
   border-radius: 3px;
-  background: var(--blue);
+  background: var(--secondary);
 }
 
 [data-tone='above'] .bar-fill {
-  background: #0f6f43;
+  background: var(--win-ink);
 }
 
 [data-tone='below'] .bar-fill {

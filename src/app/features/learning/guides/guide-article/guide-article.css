@@ -67,7 +67,7 @@
 }
 
 .guide-link {
-  color: #0e6a98;
+  color: var(--link);
   font-weight: 700;
   text-decoration: underline;
 }
@@ -75,7 +75,7 @@
 .guide-link:focus-visible,
 .guide-button:focus-visible,
 .guide-search input:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 

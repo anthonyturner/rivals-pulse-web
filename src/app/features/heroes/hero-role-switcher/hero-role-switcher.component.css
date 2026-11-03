@@ -25,7 +25,7 @@
 }
 .ability-role-tabs button.active,
 .ability-role-tabs button:hover {
-  border-color: rgba(224, 169, 0, 0.48);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }

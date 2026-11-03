@@ -16,7 +16,7 @@
   justify-content: center;
   gap: 10px;
   padding: 0 20px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--ink-control-border);
   border-radius: 6px;
   color: inherit;
   font: inherit;
@@ -26,24 +26,24 @@
 }
 
 .cta-ghost {
-  background: rgba(7, 17, 31, 0.46);
+  background: color-mix(in srgb, var(--ink) 46%, transparent);
   backdrop-filter: blur(12px);
 }
 
 .cta-ghost:hover {
-  border-color: var(--cta-yellow);
-  background: rgba(7, 17, 31, 0.74);
+  border-color: var(--ink-accent);
+  background: color-mix(in srgb, var(--ink) 74%, transparent);
 }
 
 .cta:focus-visible,
 .how-we-count:focus-visible {
-  outline: 3px solid var(--cta-yellow);
+  outline: 3px solid var(--ink-focus);
   outline-offset: 3px;
 }
 
 .platform-note {
   margin: 12px 0 0;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--on-ink);
   font-size: 0.8125rem;
 }
 
@@ -54,7 +54,7 @@
   gap: 12px 24px;
   margin-top: 32px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid var(--ink-line);
 }
 
 .stats {
@@ -74,7 +74,7 @@
 
 .stat__value {
   margin: 0;
-  color: #fff;
+  color: var(--on-ink);
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.15;
@@ -82,19 +82,19 @@
 }
 
 .stat.is-pending .stat__value {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--on-ink-muted);
   font-size: 1.125rem;
   line-height: calc(1.75rem * 1.15);
 }
 
 .stat__label {
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--on-ink);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .how-we-count {
-  color: #fff;
+  color: var(--on-ink);
   font-size: 0.8125rem;
   font-weight: 700;
   text-decoration: underline;
@@ -102,7 +102,7 @@
 }
 
 .how-we-count:hover {
-  color: var(--cta-yellow);
+  color: var(--ink-accent);
 }
 
 .skeleton {
@@ -110,7 +110,7 @@
   width: 120px;
   height: calc(1.75rem * 1.15);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--ink-line);
 }
 
 @media (max-width: 720px) {
@@ -141,5 +141,5 @@
 }
 
 app-get-app-button {
-  --get-app-focus: var(--cta-yellow);
+  --get-app-focus: var(--ink-focus);
 }

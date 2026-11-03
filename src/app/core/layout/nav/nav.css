@@ -102,4 +102,9 @@ nav {
   .nav-account {
     margin-top: 8px;
   }
+
+  app-theme-toggle {
+    --theme-toggle-size: 44px;
+    margin-top: 8px;
+  }
 }

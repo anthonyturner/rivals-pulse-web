@@ -10,7 +10,7 @@
   text-decoration: none;
 }
 
-/* The desktop app's lockup, in its light-theme colours. */
+/* The desktop app's lockup. */
 .brand-mark {
   display: grid;
   flex: none;
@@ -18,9 +18,9 @@
   aspect-ratio: 1;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(145deg, #e9eaf6 0 68%, #0e9c80 69%);
-  box-shadow: inset 0 0 0 1px #e0e1ef;
-  color: #151735;
+  background: linear-gradient(145deg, var(--surface-2) 0 68%, var(--accent) 69%);
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--text);
   font-size: var(--type-caption);
   font-weight: 900;
   letter-spacing: 0.02em;
@@ -35,5 +35,5 @@
 }
 
 .brand-accent {
-  color: #087058;
+  color: var(--accent-strong);
 }

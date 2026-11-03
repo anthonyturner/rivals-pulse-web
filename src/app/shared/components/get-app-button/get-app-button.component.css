@@ -11,10 +11,10 @@
   justify-content: center;
   gap: 2px 10px;
   padding: 6px 16px;
-  border: 1px solid var(--cta-yellow);
+  border: 1px solid var(--accent);
   border-radius: 6px;
-  background: var(--cta-yellow);
-  color: #111827;
+  background: var(--accent);
+  color: var(--accent-ink);
   font: inherit;
   font-weight: 820;
   text-decoration: none;
@@ -22,16 +22,16 @@
 }
 
 a.get-app:hover {
-  background: #fff8dd;
+  filter: brightness(1.1);
 }
 
 .get-app.is-pending {
   cursor: not-allowed;
 }
 
-/* Yellow on white would not show, so the ring is the site's link colour unless a dark host sets it. */
+/* The ring cannot be the button's own colour, so it is the site's focus colour unless a dark host sets it. */
 .get-app:focus-visible {
-  outline: 3px solid var(--get-app-focus, var(--link));
+  outline: 3px solid var(--get-app-focus, var(--focus));
   outline-offset: 3px;
 }
 
@@ -40,8 +40,8 @@ a.get-app:hover {
   white-space: nowrap;
   padding: 3px 9px;
   border-radius: 999px;
-  background: #111827;
-  color: var(--cta-yellow);
+  background: var(--accent-ink);
+  color: var(--accent);
   font-size: var(--type-caption);
   font-weight: 700;
 }

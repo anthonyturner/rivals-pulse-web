@@ -81,7 +81,7 @@ h1 {
 .video-column {
   min-width: 0;
   padding: 14px;
-  background: #101927;
+  background: var(--ink-raised);
 }
 
 .video-frame {
@@ -89,7 +89,7 @@ h1 {
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 7px;
-  background: #05080d;
+  background: var(--ink);
 }
 
 .video-frame video {
@@ -105,12 +105,12 @@ h1 {
   gap: 16px;
   align-items: center;
   padding: 12px 2px 0;
-  color: rgba(255, 255, 255, 0.64);
+  color: var(--on-ink-muted);
   font-size: 0.75rem;
 }
 
 .video-actions a {
-  color: #f6d454;
+  color: var(--ink-accent);
   font-weight: 800;
   text-decoration: none;
 }
@@ -121,7 +121,7 @@ h1 {
   align-content: center;
   padding: 30px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(224, 169, 0, 0.16), transparent 42%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 42%),
     var(--bg-panel);
 }
 
@@ -137,8 +137,8 @@ h1 {
   aspect-ratio: 1;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f6d454, #e35c2f);
-  color: #101927;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-weight: 950;
 }
 
@@ -290,7 +290,7 @@ h1 {
 }
 
 .worked {
-  border-top: 4px solid var(--teal);
+  border-top: 4px solid var(--accent);
 }
 
 .next-look {
@@ -304,7 +304,7 @@ h1 {
   padding: 28px;
   margin-bottom: 48px;
   background:
-    linear-gradient(135deg, rgba(232, 247, 251, 0.8), rgba(255, 255, 255, 0.9)),
+    linear-gradient(135deg, var(--accent-soft), transparent),
     var(--bg-panel);
 }
 
@@ -335,7 +335,7 @@ h1 {
   place-items: center;
   border-radius: 50%;
   background: var(--text);
-  color: #fff;
+  color: var(--bg-elevated);
   font-size: 0.76rem;
   font-weight: 900;
 }
@@ -343,7 +343,7 @@ h1 {
 code {
   padding: 1px 4px;
   border-radius: 4px;
-  background: rgba(16, 32, 51, 0.08);
+  background: var(--surface-2);
 }
 
 @media (max-width: 900px) {

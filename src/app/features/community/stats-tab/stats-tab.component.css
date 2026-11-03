@@ -27,7 +27,7 @@
 }
 
 .mode:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 

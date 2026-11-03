@@ -20,17 +20,17 @@
 }
 
 .link {
-  color: var(--accent-on-dark);
+  color: var(--ink-accent);
   font-weight: 700;
   text-underline-offset: 3px;
 }
 
 .link:hover {
-  color: #fff;
+  color: var(--on-ink);
 }
 
 .link:focus-visible {
-  outline: 3px solid var(--cta-yellow);
+  outline: 3px solid var(--ink-focus);
   outline-offset: 3px;
 }
 
@@ -50,5 +50,5 @@
 }
 
 app-get-app-button {
-  --get-app-focus: var(--cta-yellow);
+  --get-app-focus: var(--ink-focus);
 }

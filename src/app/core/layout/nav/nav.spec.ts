@@ -51,6 +51,12 @@ describe('Nav', () => {
     expect(link?.getAttribute('href')).toBe('/community');
   });
 
+  it('puts the theme toggle inside the navigation, so the narrow menu holds it too', () => {
+    const toggle = fixture.nativeElement.querySelector('#primary-navigation app-theme-toggle button') as HTMLButtonElement | null;
+
+    expect(toggle?.getAttribute('aria-label')).toMatch(/^Switch to (light|dark) theme$/);
+  });
+
   describe('the menu', () => {
     const toggle = (): HTMLButtonElement => fixture.nativeElement.querySelector('.menu-toggle');
     const panel = (): HTMLElement => fixture.nativeElement.querySelector('#primary-navigation');

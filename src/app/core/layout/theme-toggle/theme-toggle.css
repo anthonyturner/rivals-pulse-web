@@ -1,0 +1,27 @@
+:host {
+  display: inline-flex;
+}
+
+/* The desktop app's toggle: a small square with a sun or a moon. The menu sets --theme-toggle-size for its larger touch rows. */
+.theme-toggle {
+  display: grid;
+  width: var(--theme-toggle-size, 36px);
+  height: var(--theme-toggle-size, 36px);
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--bg-panel-soft);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.theme-toggle__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
