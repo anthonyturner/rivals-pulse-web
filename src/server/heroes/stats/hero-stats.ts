@@ -112,7 +112,7 @@ export interface HeroStatsSource {
   heroes: readonly HeroAggregateRow[];
 }
 
-export interface DeriveHeroStatsOptions {
+interface DeriveHeroStatsOptions {
   now: Date;
   /**
    * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has

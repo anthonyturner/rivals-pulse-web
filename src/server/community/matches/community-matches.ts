@@ -68,7 +68,7 @@ export interface CommunityMatchesSource {
   days: readonly CommunityDayRow[];
 }
 
-export interface DeriveCommunityMatchesOptions {
+interface DeriveCommunityMatchesOptions {
   now: Date;
   /**
    * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has

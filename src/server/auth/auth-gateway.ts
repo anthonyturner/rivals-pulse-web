@@ -3,7 +3,7 @@ import type { SessionTokens } from './auth-cookies.js';
 import type { OwnDashboardLine, OwnFigureLine } from '../account/own-dashboard.js';
 
 /** What the account page shows. It never carries the user's id. */
-export interface Account {
+interface Account {
   email: string | null;
   provider: string;
   createdAt: string;
