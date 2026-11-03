@@ -67,8 +67,11 @@ video {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
 
-  .review,
-  .submit {
+  .review {
     grid-template-columns: 1.2fr 0.8fr;
+  }
+
+  .submit {
+    grid-template-columns: 1fr 1fr;
   }
 }
