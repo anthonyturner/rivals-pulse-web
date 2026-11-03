@@ -1,5 +1,6 @@
 :host {
   display: block;
+  container-type: inline-size;
 }
 
 .hero-detail {
@@ -117,7 +118,8 @@
   margin-top: 10px;
 }
 
-@media (min-width: 1080px) {
+/* The video column goes beside the details only when this panel is wide enough to leave them about 520px; the roster column and the sidebar take viewport width the panel never gets back. */
+@container (min-width: 900px) {
   .detail-layout {
     grid-template-columns: minmax(0, 1fr) 320px;
   }

@@ -6,25 +6,28 @@
       Try again in a few minutes.
     </app-state-panel>
   } @else {
-    <app-hero-grid
-      [heroes]="filteredHeroes()"
-      [roles]="roles"
-      [selectedRole]="selectedRole()"
-      [selectedHeroId]="selectedHeroId()"
-      [searchTerm]="searchTerm()"
-      [gridMode]="heroGridMode()"
-      [loading]="!isRosterLoaded()"
-      (roleSelected)="selectRole($event)"
-      (searchChanged)="updateSearchTerm($event)"
-      (gridModeSelected)="selectHeroGridMode($event)"
-      (filtersReset)="resetHeroFilters()"
-    ></app-hero-grid>
+    <div class="workspace" [class.workspace--with-hero]="gridLayout() === 'column'">
+      <app-hero-grid
+        [layout]="gridLayout()"
+        [heroes]="filteredHeroes()"
+        [roles]="roles"
+        [selectedRole]="selectedRole()"
+        [selectedHeroId]="selectedHeroId()"
+        [searchTerm]="searchTerm()"
+        [gridMode]="heroGridMode()"
+        [loading]="!isRosterLoaded()"
+        (roleSelected)="selectRole($event)"
+        (searchChanged)="updateSearchTerm($event)"
+        (gridModeSelected)="selectHeroGridMode($event)"
+        (filtersReset)="resetHeroFilters()"
+      ></app-hero-grid>
 
-    <app-hero-content
-      [hero]="selectedHero()"
-      [videos]="selectedHeroVideos()"
-      [youtubeUrl]="selectedHeroYoutubeUrl()"
-      [controller]="detailsController"
-    ></app-hero-content>
+      <app-hero-content
+        [hero]="selectedHero()"
+        [videos]="selectedHeroVideos()"
+        [youtubeUrl]="selectedHeroYoutubeUrl()"
+        [controller]="detailsController"
+      ></app-hero-content>
+    </div>
   }
 </section>
