@@ -22,13 +22,16 @@ const NOT_DEPLOYED_CODES: readonly string[] = ['PGRST202', '42P01', '42883'];
 
 /** A refused call. It keeps the status and the error code, never the response body or the key. */
 class SupabaseFunctionError extends Error {
-  constructor(
-    readonly functionName: string,
-    readonly status: number,
-    readonly code?: string,
-  ) {
+  readonly functionName: string;
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(functionName: string, status: number, code?: string) {
     super(`${functionName} answered ${status}`);
     this.name = 'SupabaseFunctionError';
+    this.functionName = functionName;
+    this.status = status;
+    this.code = code;
   }
 }
 

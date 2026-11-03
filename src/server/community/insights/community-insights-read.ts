@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { CommunityInsights } from '../../../contracts/community-insights.model.js';
-import { deriveCommunityInsights, type InsightsBucketRow, type InsightsSource } from './community-insights.js';
-import { answerReader, getSupabaseClient } from '../../supabase/index.js';
+import type { CommunityInsights } from '../../../contracts/community-insights.model.ts';
+import { deriveCommunityInsights, type InsightsBucketRow, type InsightsSource } from './community-insights.ts';
+import { answerReader, getSupabaseClient } from '../../supabase/index.ts';
 
 interface CommunityInsightsReadOptions {
   /** Defaults to the shared server client. */

@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { getHeroStats, heroStatsQueryFrom } from '../src/server/heroes/stats/index.js';
-import { getQueryStringValue, handleJsonRequest } from '../src/server/http/index.js';
+import { getHeroStats, heroStatsQueryFrom } from '../src/server/heroes/stats/index.ts';
+import { getQueryStringValue, handleJsonRequest } from '../src/server/http/index.ts';
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
   return handleJsonRequest(req, res, () => {

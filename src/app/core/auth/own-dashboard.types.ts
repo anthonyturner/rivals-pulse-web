@@ -1,4 +1,4 @@
-import type { LinkedPlayer } from './linked-player.types.js';
+import type { LinkedPlayer } from './linked-player.types.ts';
 
 /**
  * What `GET /api/account/dashboard` answers. The server reads this file too (`src/server/account/own-dashboard.ts`),

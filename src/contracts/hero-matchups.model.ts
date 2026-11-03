@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.js';
+import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
 
 /**
  * How one hero fares when an enemy plays another hero, from the matches RivalsPulse players

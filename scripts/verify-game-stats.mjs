@@ -31,7 +31,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildSnapshotComparison, GAME_STATS_SYNC_KEY } from '../src/server/sync/game-stats-sync.ts';
+import { buildSnapshotComparison, GAME_STATS_SYNC_KEY } from '../src/server/sync/index.ts';
 import { createTursoClient } from './turso-client.mjs';
 import { selectRows } from './turso-data-migration.mjs';
 

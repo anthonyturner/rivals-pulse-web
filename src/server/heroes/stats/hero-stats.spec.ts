@@ -1,5 +1,5 @@
-import type { HeroStatsModeId } from '../../../contracts/hero-stats.model.js';
-import type { TierName } from '../../../contracts/tier-list.model.js';
+import type { HeroStatsModeId } from '../../../contracts/hero-stats.model.ts';
+import type { TierName } from '../../../contracts/tier-list.model.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
   HERO_STATS_MIN_MATCHES,

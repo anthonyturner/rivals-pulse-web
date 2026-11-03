@@ -1,4 +1,4 @@
-import { StringUtility } from '../../../app/shared/utilities/string-utility.js';
+import { StringUtility } from '../../../app/shared/utilities/string-utility.ts';
 
 interface OfficialSeason {
   currentSeason: string;

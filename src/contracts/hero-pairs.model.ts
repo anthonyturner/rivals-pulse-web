@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.js';
+import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
 
 /** One hero's record in a band. Heroes are the game's hero ids, with Deadpool's role forms under 1057. */
 export interface HeroPairsHero {

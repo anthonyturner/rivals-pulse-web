@@ -5,5 +5,5 @@ export {
   listHomePortals,
   replaceHomePortals,
   saveHomeContentBlocks,
-} from './home-content-store.js';
-export { syncHomeNews } from './home-news-sync.js';
+} from './home-content-store.ts';
+export { syncHomeNews } from './home-news-sync.ts';

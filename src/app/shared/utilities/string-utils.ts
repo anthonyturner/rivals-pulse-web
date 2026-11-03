@@ -1,4 +1,4 @@
-import { StringUtility } from './string-utility.js';
+import { StringUtility } from './string-utility.ts';
 
 export { StringUtility };
 

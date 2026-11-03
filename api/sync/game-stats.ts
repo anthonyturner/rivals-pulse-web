@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { recordSyncRun, runGameStatsSync } from '../../src/server/sync/index.js';
-import { getSupabaseClient } from '../../src/server/supabase/index.js';
-import { sendJson } from '../../src/server/http/index.js';
+import { recordSyncRun, runGameStatsSync } from '../../src/server/sync/index.ts';
+import { getSupabaseClient } from '../../src/server/supabase/index.ts';
+import { sendJson } from '../../src/server/http/index.ts';
 
 const noStoreHeaders = {
   'cache-control': 'private, no-store, max-age=0',

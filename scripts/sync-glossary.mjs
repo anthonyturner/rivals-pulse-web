@@ -9,8 +9,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { listGlossaryTermIds, saveGlossaryTerms } from '../src/server/content/glossary-store.ts';
-import { finishSyncRun, startSyncRun } from '../src/server/sync/sync-log.ts';
+import { listGlossaryTermIds, saveGlossaryTerms } from '../src/server/content/index.ts';
+import { finishSyncRun, startSyncRun } from '../src/server/sync/index.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const args = process.argv.slice(2);

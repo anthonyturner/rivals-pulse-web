@@ -1,1 +1,1 @@
-export { getCommunityMatches } from './community-matches-read.js';
+export { getCommunityMatches } from './community-matches-read.ts';

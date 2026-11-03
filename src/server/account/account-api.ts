@@ -9,15 +9,15 @@ import {
   type AuthGateway,
   type ResolvedSession,
   type SessionTokens,
-} from '../auth/index.js';
-import { normalizeLinkCode } from './link-code.js';
-import { deriveOwnDashboard } from './own-dashboard.js';
+} from '../auth/index.ts';
+import { normalizeLinkCode } from './link-code.ts';
+import { deriveOwnDashboard } from './own-dashboard.ts';
 import {
   DELETION_MODES,
   isDeletionConfirmed,
   type DeleteAccountRequest,
-} from '../../app/core/auth/account-deletion.types.js';
-import type { OwnDashboardResponse } from '../../app/core/auth/own-dashboard.types.js';
+} from '../../app/core/auth/account-deletion.types.ts';
+import type { OwnDashboardResponse } from '../../app/core/auth/own-dashboard.types.ts';
 
 /**
  * A request as the account routes see it, free of any server framework: Express and the Vercel

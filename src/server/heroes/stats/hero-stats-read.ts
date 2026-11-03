@@ -1,20 +1,20 @@
-import type { HeroStats } from '../../../contracts/hero-stats.model.js';
-import type { RoleStats } from '../../../contracts/role-stats.model.js';
-import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId, listHeroRoles } from '../catalog/index.js';
+import type { HeroStats } from '../../../contracts/hero-stats.model.ts';
+import type { RoleStats } from '../../../contracts/role-stats.model.ts';
+import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId, listHeroRoles } from '../catalog/index.ts';
 import {
   deriveHeroStats,
   type HeroAggregateRow,
   type HeroStatsSource,
   type MatchTotalsRow,
-} from './hero-stats.js';
-import { deriveRoleStats } from './role-stats.js';
+} from './hero-stats.ts';
+import { deriveRoleStats } from './role-stats.ts';
 import {
   answerReader,
   callSupabaseFunction,
   getSupabaseClient,
   orWhenNotDeployed,
   type SupabaseReadEnv,
-} from '../../supabase/index.js';
+} from '../../supabase/index.ts';
 
 type HeroStatsEnv = SupabaseReadEnv;
 

@@ -8,8 +8,8 @@ import type {
   MetricComparison,
   RankComparison,
   SnapshotTrend,
-} from '../../contracts/game-stats.model.js';
-import type { recordSyncRun, SyncRunResult } from './sync-log.js';
+} from '../../contracts/game-stats.model.ts';
+import type { recordSyncRun, SyncRunResult } from './sync-log.ts';
 
 // The one place that knows how game stats are captured and stored in Supabase, shared by the API,
 // the hourly sync and `npm run sync:game-stats`. No relative runtime import, for the same reason as

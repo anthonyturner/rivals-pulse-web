@@ -1,12 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { aggregatePayloadReader } from './aggregate-payload.js';
+import { aggregatePayloadReader } from './aggregate-payload.ts';
 import {
   deriveCommunityMatches,
   type CommunityMatchesSource,
-} from './community-matches.js';
-import type { CommunityMatches } from '../../../contracts/community-matches.model.js';
-import { getSupabaseClient } from '../../supabase/index.js';
+} from './community-matches.ts';
+import type { CommunityMatches } from '../../../contracts/community-matches.model.ts';
+import { getSupabaseClient } from '../../supabase/index.ts';
 
 interface CommunityMatchesReadOptions {
   client?: SupabaseClient;
