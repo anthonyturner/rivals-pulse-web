@@ -494,8 +494,6 @@ describe('SignInPageComponent', () => {
   });
 
   it('shows nothing for a key that is a name on every object, not a message', async () => {
-    setup({ status: 'signedOut' });
-
     for (const url of ['/sign-in?error=constructor', '/sign-in?notice=toString', '/sign-in?error=__proto__']) {
       TestBed.resetTestingModule();
       setup({ status: 'signedOut' });
