@@ -7,17 +7,39 @@
 - Angular Signals (used throughout `src/app/features/**`)
 - RxJS
 
-Rendering: production pages render in the browser. `vercel.json` rewrites every
-non-API path to `index.csr.html`, so a `curl` of a page returns an empty
-`<app-root>`. The server render (`@angular/ssr`, `src/server.ts`) runs only for
-local dev and `npm run serve:ssr:rivals-pulse-coach`, so a feature must work
-without it. Routes that need the visitor's own session (`/sign-in`, `/account`, `/profile`)
-are declared `RenderMode.Client` in `src/app/app.routes.server.ts`.
+Rendering: every page is rendered on the server (`@angular/ssr`, `src/server.ts`),
+locally by `npm start` and `npm run serve:ssr:rivals-pulse-coach` and in production
+by a Vercel function. `vercel.json` rewrites every path that is neither a static file
+nor under `/api/` to `api/ssr.mjs`, which re-exports `reqHandler` from the built
+`dist/rivals-pulse-coach/server/server.mjs` (the function ships that folder through
+`includeFiles`). Static files in the build output are still served from the CDN. A `curl`
+of a page returns the rendered HTML, with its title and meta tags. Routes that need
+the visitor's own session (`/sign-in`, `/account`, `/profile`) are declared
+`RenderMode.Client` in `src/app/app.routes.server.ts`, so they answer the browser
+shell.
 The not-found page answers HTTP 404 from the server render (`respondNotFound()` in
 `core/seo/response-status.ts`, which sets the status on Angular's `RESPONSE_INIT`),
 and a guide route whose id is unknown falls through to it (`knownIdGuard` in
-`core/navigation/`). Production does not run the server render, so it still
-answers 200 there (issue 430).
+`core/navigation/`).
+
+Two settings make the server render work behind Vercel, and without either it
+quietly falls back to the browser shell and answers 200 for everything:
+
+- **Allowed hosts.** Angular refuses a request whose host it has not been told
+  about. `projects.*.architect.build.options.security.allowedHosts` in `angular.json`
+  lists `rivalspulse.com`, `www.rivalspulse.com`, `*.vercel.app` (previews) and
+  `localhost`; the list is compiled into the server build. To allow another
+  host, add it there, or set the `NG_ALLOWED_HOSTS` environment variable
+  (comma-separated), which Angular reads first.
+- **Proxy headers.** Vercel adds `X-Forwarded-For` and the other `X-Forwarded-*`
+  headers, which Angular only accepts from a proxy it trusts. `src/server.ts` sets
+  `trustProxyHeaders` when Vercel's `VERCEL` environment variable is present.
+
+During a server render the app's own `/api/*` requests go back to the same host,
+so each uncached page view can also invoke the API functions (the HTTP transfer cache
+skips `/api/` requests, so the browser asks again). A Vercel preview behind
+Deployment Protection answers those requests with a login page, and the page then
+renders without its API data.
 
 Hosting:
 - Vercel

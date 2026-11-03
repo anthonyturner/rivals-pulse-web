@@ -9,8 +9,8 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 ## Frontend
 
-- Angular 20, rendered in the browser in production (`vercel.json` serves
-  `index.csr.html`); `@angular/ssr` serves only local dev and
+- Angular 20, server-rendered with `@angular/ssr`: in production by the Vercel
+  function `api/ssr.mjs`, locally by `npm start` and
   `npm run serve:ssr:rivals-pulse-coach`
 - TypeScript
 - Angular Signals
@@ -18,7 +18,7 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 ## Server / API
 
-- Express (`src/server.ts`), used for local dev and the local server render
+- Express (`src/server.ts`), the server render everywhere, plus the `/api/*` routes for local dev
 - Vercel serverless functions (`api/`), used in production
 - No separate backend framework/service (no ASP.NET, no Rails, etc.)
 
