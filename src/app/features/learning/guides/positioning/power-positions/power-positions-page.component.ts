@@ -13,7 +13,7 @@ export class PowerPositionsPageComponent {
   readonly guide: PositioningGuide = {
     title: 'Power Positions',
     lede:
-      'Cleaned-up notes from the masterclass guide: what power positions are, how to find them, how to hold them, and how to turn them into pressure.',
+      'Notes from the masterclass: how to find, hold, and leave power positions.',
     sourceLabel: 'Watch masterclass',
     sourceUrl: 'https://youtu.be/hnCgeDZCt0I?si=d7wxsqlCxCDMWcwU',
     diagram: {
@@ -46,7 +46,7 @@ export class PowerPositionsPageComponent {
       },
       {
         label: 'Safety',
-        detail: 'Do I have cover, support line of sight, health pack, or cooldowns?',
+        detail: 'Do I have cover, a mobility route, support line of sight, health pack, or cooldowns?',
       },
       {
         label: 'Team Sync',
@@ -57,50 +57,46 @@ export class PowerPositionsPageComponent {
       {
         title: 'Definition',
         summary:
-          'A power position is a map location that gives your team multiple options: pressure objective, control lanes, scout enemy movement, and leave safely.',
+          'A power position is a map location that gives your team multiple options: control lanes, scout enemy movement, and leave safely.',
         points: [
           'It is not just any high ground. A good power position creates consistent pressure on the objective or cart.',
-          'It gives you several routes or angles instead of forcing you through one choke.',
           'It lets you play aggressively with your position while still using cover, cooldowns, and information patiently.',
         ],
       },
       {
         title: 'Why It Wins Fights',
         summary:
-          'Power positions create passive value before anyone commits. The enemy has to look at you, spend cooldowns, back up, or send someone to clear you.',
+          'Power positions create passive value before anyone commits: the enemy has to react to you.',
         points: [
-          'Multiple angles make it harder for the enemy to shield, wall, or hold one doorway.',
-          'You avoid getting stuck in chokes because you have more than one route into the fight.',
-          'You gather information earlier, which helps you decide whether to pressure, rotate, drop, or reset.',
+          'Multiple angles make it harder for the enemy to shield, wall, or hold one doorway, and a second route keeps you from getting stuck in a choke.',
+          'You gather information earlier, so you can decide to pressure, rotate, drop, or reset.',
           'You can force enemy actions first, then punish when their cooldowns are already spent.',
         ],
       },
       {
         title: 'How to Find One',
         summary:
-          'Look for spots that give you directions, not fixed scripts. The best spot changes based on team tempo, composition, cooldowns, and objective state.',
+          'Look for directions, not fixed scripts: the best spot changes with team tempo, composition, cooldowns, and objective state.',
         points: [
-          'Ask whether the spot controls more than one lane: main, side lane, bridge, doorway, stairs, or high ground route.',
-          'Check whether you can pressure objective without immediately dropping onto it.',
-          'Make sure you can leave: cover, health pack, mobility route, support line of sight, or defensive cooldown.',
-          'Adjust to your team. A smart position on the wrong side of the map is worse than a simple plan everyone follows.',
+          'Ask whether the spot controls more than one lane (main, side lane, bridge, doorway, stairs, high ground route) and pressures the objective without dropping onto it.',
+          'Adjust to your team: a smart position on the wrong side of the map is worse than a simple plan everyone follows.',
         ],
       },
       {
         title: 'How to Hold It',
         summary:
-          'Holding a power position is not standing still. You keep the position valuable by peeking, scouting, trading cooldowns, and rotating from cover to cover.',
+          'Holding a power position is not standing still.',
         points: [
-          'Move corner to corner instead of skipping straight into the enemy face.',
-          'Keep support line of sight when possible, but do not give up strong space only because healing might be imperfect.',
-          'Use defensive cooldowns as space enablers: shields, mobility, sustain tools, and escape cooldowns buy time to hold pressure.',
+          'Peek and scout corner to corner instead of skipping straight into the enemy face.',
+          'Keep support line of sight when possible, but do not give up strong space over imperfect healing.',
+          'Use shields, mobility, sustain tools, and escape cooldowns as space enablers: they buy time to hold pressure.',
           'When the enemy commits resources to clear you, kite, survive, and let your team use the space they gave up.',
         ],
       },
       {
         title: 'When to Leave',
         summary:
-          'The goal is not to worship the position. The goal is to use the advantage it gives you, then move when the fight asks for it.',
+          'Use the advantage the position gives you, then move when the fight asks for it.',
         points: [
           'Drop only when dropping wins the fight, secures objective, or lets you punish spent cooldowns.',
           'Rotate deeper when your team already won space and the original spot no longer applies pressure.',
@@ -114,17 +110,17 @@ export class PowerPositionsPageComponent {
       {
         label: 'Vanguard',
         detail:
-          'Use power positions to decide where the fight happens. Rotate corner to corner, rebuild defensive resources, and force enemies out of strong space.',
+          'Use power positions to decide where the fight happens. Rebuild defensive resources and force enemies out of strong space.',
       },
       {
         label: 'Duelist',
         detail:
-          'Use them to scout, split attention, and open an angle before committing burst. The position should make enemies turn before you spend everything.',
+          'Use them to scout, split attention, open an angle, and make enemies turn before you commit your burst.',
       },
       {
         label: 'Strategist',
         detail:
-          'Use them when possible to support lanes proactively. Heroes with mobility can take deeper angles; low-mobility supports may need safer versions with line of sight.',
+          'Use them to support lanes proactively. Mobile heroes can take deeper angles; low-mobility supports may need safer versions with line of sight.',
       },
     ],
     drills: [
@@ -145,12 +141,12 @@ export class PowerPositionsPageComponent {
       },
     ],
     timestamps: [
-      { label: '1:36', detail: 'Definition of power positions and why they matter.' },
-      { label: '3:01', detail: 'Multiple angles of attack and lane control.' },
-      { label: '8:22', detail: 'Avoiding chokes and using multiple routes.' },
-      { label: '17:33', detail: 'Information, passive value, and forcing enemy cooldowns.' },
-      { label: '41:00', detail: 'Support and team questions about taking these spots.' },
-      { label: '1:03:30', detail: 'How to find power positions in-game.' },
+      { label: '1:36', detail: 'Definition and why power positions matter.' },
+      { label: '3:01', detail: 'Multiple angles and lane control.' },
+      { label: '8:22', detail: 'Avoiding chokes, using more routes.' },
+      { label: '17:33', detail: 'Information, passive value, cooldowns.' },
+      { label: '41:00', detail: 'Support and team questions.' },
+      { label: '1:03:30', detail: 'Finding power positions in-game.' },
     ],
   };
 }

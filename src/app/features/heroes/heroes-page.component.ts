@@ -26,7 +26,6 @@ import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
-import { HeroDetailModalComponent } from './hero-detail-modal/hero-detail-modal.component';
 import { HeroGridComponent, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
 import {
@@ -94,7 +93,6 @@ interface FandomOverviewSection {
   imports: [
     CommonModule,
     HeroContentComponent,
-    HeroDetailModalComponent,
     HeroGridComponent,
     HeroPageHeaderComponent,
   ],
@@ -111,7 +109,6 @@ export class HeroesPageComponent implements OnInit {
   private readonly injector = inject(Injector);
   private readonly grid = viewChild(HeroGridComponent);
   private readonly content = viewChild(HeroContentComponent);
-  private scrollBeforeModal: number | null = null;
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
 
@@ -128,7 +125,6 @@ export class HeroesPageComponent implements OnInit {
   readonly isRosterLoaded = signal(false);
   readonly selectedHeroId = signal(this.heroes()[0]?.id ?? '');
   readonly selectedAbilityKitRole = signal<HeroRole>('Vanguard');
-  readonly isHeroDetailModalOpen = signal(false);
   readonly activeAbilityAnchorId = signal('');
   readonly selectedAbilityTabId = signal('');
   readonly activeUltimatePathName = signal('');
@@ -507,7 +503,6 @@ export class HeroesPageComponent implements OnInit {
     this.selectedRole.set(role);
     this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
     this.selectedAbilityKitRole.set(role === 'All' ? 'Vanguard' : role);
-    this.closeHeroDetailModal();
   }
 
   selectHeroGridMode(mode: HeroGridMode): void {
@@ -519,7 +514,6 @@ export class HeroesPageComponent implements OnInit {
     this.searchTerm.set('');
     this.heroGridMode.set('thumbs');
     this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
-    this.closeHeroDetailModal();
   }
 
   selectHero(heroId: string): void {
@@ -544,7 +538,6 @@ export class HeroesPageComponent implements OnInit {
   updateSearchTerm(searchTerm: string): void {
     this.searchTerm.set(searchTerm);
     this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
-    this.closeHeroDetailModal();
   }
 
   roleClass(role: HeroRole): string {
@@ -571,35 +564,6 @@ export class HeroesPageComponent implements OnInit {
 
   selectAbilityKit(role: HeroRole): void {
     this.selectedAbilityKitRole.set(role);
-  }
-
-  openHeroDetailModal(): void {
-    if (this.selectedHero()) {
-      this.scrollBeforeModal = window.scrollY;
-      this.isHeroDetailModalOpen.set(true);
-    }
-  }
-
-  closeHeroDetailModal(): void {
-    const scrollTop = this.scrollBeforeModal;
-    this.scrollBeforeModal = null;
-    this.isHeroDetailModalOpen.set(false);
-
-    // The detail panel is removed while the window is open, which shortens the page; put the reader back.
-    if (scrollTop !== null) {
-      afterNextRender(
-        () => {
-          window.scrollTo({ top: scrollTop, behavior: 'instant' });
-          this.content()?.focusProfileButton();
-        },
-        { injector: this.injector },
-      );
-    }
-  }
-
-  @HostListener('document:keydown.escape')
-  closeHeroDetailModalOnEscape(): void {
-    this.closeHeroDetailModal();
   }
 
   @HostListener('click', ['$event'])

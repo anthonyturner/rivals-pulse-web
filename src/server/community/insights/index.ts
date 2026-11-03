@@ -1,1 +1,1 @@
-export { getCommunityInsights } from './community-insights-read.js';
+export { getCommunityInsights } from './community-insights-read.ts';

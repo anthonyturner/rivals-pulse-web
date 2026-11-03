@@ -1,6 +1,6 @@
-import type { LinkedPlayer } from '../../app/core/auth/linked-player.types.js';
-import type { SessionTokens } from './auth-cookies.js';
-import type { OwnDashboardLine, OwnFigureLine } from '../account/own-dashboard.js';
+import type { LinkedPlayer } from '../../app/core/auth/linked-player.types.ts';
+import type { SessionTokens } from './auth-cookies.ts';
+import type { OwnDashboardLine, OwnFigureLine } from '../account/own-dashboard.ts';
 
 /** What the account page shows. It never carries the user's id. */
 interface Account {

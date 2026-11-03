@@ -6,5 +6,5 @@ export {
   getHeroVideosFromDatabase,
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
-} from './content-database.js';
-export { listGlossaryTermIds, saveGlossaryTerms } from './glossary-store.js';
+} from './content-database.ts';
+export { listGlossaryTermIds, saveGlossaryTerms } from './glossary-store.ts';

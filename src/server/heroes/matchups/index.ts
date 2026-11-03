@@ -1,1 +1,1 @@
-export { getHeroMatchups } from './hero-matchups-read.js';
+export { getHeroMatchups } from './hero-matchups-read.ts';

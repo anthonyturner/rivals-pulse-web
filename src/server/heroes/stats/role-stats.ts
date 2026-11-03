@@ -4,7 +4,7 @@ import {
   type RoleStats,
   type RoleStatsMode,
   type RoleStatsRole,
-} from '../../../contracts/role-stats.model.js';
+} from '../../../contracts/role-stats.model.ts';
 import {
   PLAY_MODES,
   addRow,
@@ -15,7 +15,7 @@ import {
   type HeroAggregateRow,
   type HeroStatsSource,
   type Tally,
-} from './hero-stats.js';
+} from './hero-stats.ts';
 
 /**
  * Every role number on the Community Stats tab is derived here, from the same per-hero counts the

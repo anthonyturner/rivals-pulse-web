@@ -23,12 +23,10 @@ export class HeroContentComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly hero = input<Hero>();
-  readonly isModalOpen = input.required<boolean>();
   readonly videos = input.required<HeroVideoSearch[]>();
   readonly youtubeUrl = input.required<string>();
   readonly controller = input.required<any>();
 
-  readonly profileOpened = output<void>();
   readonly rosterReturned = output<void>();
 
   /** The selected hero as a one-item list: tracking by id gives each hero fresh details with the long sections collapsed. */
@@ -52,9 +50,5 @@ export class HeroContentComponent {
       .querySelector('.hero-detail')
       ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     this.host.nativeElement.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
-  }
-
-  focusProfileButton(): void {
-    this.host.nativeElement.querySelector<HTMLElement>('[data-testid="open-profile"]')?.focus({ preventScroll: true });
   }
 }

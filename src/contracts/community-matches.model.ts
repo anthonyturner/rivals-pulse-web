@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.js';
+import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
 
 /*
  * Nothing in this payload is an exact count of matches. A hidden bucket (a map, a mode or a day with

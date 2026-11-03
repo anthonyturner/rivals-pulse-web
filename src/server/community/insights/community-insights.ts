@@ -2,7 +2,7 @@ import type {
   CommunityInsights,
   CommunityInsightsBucket,
   CommunityInsightsDimension,
-} from '../../../contracts/community-insights.model.js';
+} from '../../../contracts/community-insights.model.ts';
 
 /**
  * Every label and shape on the Insights tab is made here, from the shares and win rates that

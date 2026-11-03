@@ -1,14 +1,14 @@
-import type { HeroPairs } from '../../../contracts/hero-pairs.model.js';
-import { baseGameIdByGameId } from '../catalog/index.js';
+import type { HeroPairs } from '../../../contracts/hero-pairs.model.ts';
+import { baseGameIdByGameId } from '../catalog/index.ts';
 import {
   deriveHeroPairs,
   HERO_PAIR_PLAY_MODE_IDS,
   UNKNOWN_RANK_BUCKET,
   type HeroPairKind,
   type HeroPairRow,
-} from './hero-pairs.js';
-import { readHeroStatsSource } from '../stats/index.js';
-import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.js';
+} from './hero-pairs.ts';
+import { readHeroStatsSource } from '../stats/index.ts';
+import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.ts';
 
 interface HeroPairsReadOptions {
   env?: SupabaseReadEnv;

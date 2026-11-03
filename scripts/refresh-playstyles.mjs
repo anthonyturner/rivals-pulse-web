@@ -1,5 +1,5 @@
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { listHeroes, saveHero } from '../src/server/heroes/catalog/hero-store.ts';
+import { listHeroes, saveHero } from '../src/server/heroes/catalog/index.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const db = getSupabaseClient();

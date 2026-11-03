@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Hero } from '../../../app/features/heroes/hero.model.js';
+import type { Hero } from '../../../app/features/heroes/hero.model.ts';
 
 // The one place that knows how heroes are stored in Supabase, shared by the API and the sync
 // scripts. It has no relative runtime import on purpose: the scripts load it straight through
