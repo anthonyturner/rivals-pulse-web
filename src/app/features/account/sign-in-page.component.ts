@@ -19,9 +19,9 @@ const SIGN_IN_NOTICES: Record<string, string> = {
 const SIGN_IN_UNAVAILABLE = 'We could not check whether you are signed in. You can still sign in.';
 const ALREADY_SIGNED_IN = 'You are already signed in. Taking you on…';
 
-/** The one message the page shows. */
+/** The one message the page shows. `status` is plain text in a panel; it is not marked busy, which would hide it from a screen reader. */
 interface PageMessage {
-  kind: 'loading' | 'error' | 'notice';
+  kind: 'status' | 'error' | 'notice';
   text: string;
 }
 
@@ -54,7 +54,7 @@ export class SignInPageComponent {
     const notice = SIGN_IN_NOTICES[this.query.get('notice') ?? ''];
 
     if (this.leaving()) {
-      return { kind: 'loading', text: ALREADY_SIGNED_IN };
+      return { kind: 'status', text: ALREADY_SIGNED_IN };
     }
 
     if (error) {

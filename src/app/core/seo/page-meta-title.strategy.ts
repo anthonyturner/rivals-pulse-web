@@ -49,7 +49,7 @@ export class PageMetaTitleStrategy extends TitleStrategy {
       { name: 'twitter:image', content: image },
       { name: 'twitter:image:alt', content: PREVIEW_IMAGE_ALT },
     ]);
-    this.setCanonical(url);
+    this.setCanonical(this.meta.getTag('name="robots"')?.content === 'noindex' ? null : url);
   }
 
   private setTags(tags: { name?: string; property?: string; content: string }[]): void {
@@ -58,8 +58,13 @@ export class PageMetaTitleStrategy extends TitleStrategy {
     }
   }
 
-  private setCanonical(url: string): void {
+  /** A page that asks not to be indexed has no canonical address to claim. */
+  private setCanonical(url: string | null): void {
     let link = this.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (url === null) {
+      link?.remove();
+      return;
+    }
     if (!link) {
       link = this.document.createElement('link');
       link.setAttribute('rel', 'canonical');

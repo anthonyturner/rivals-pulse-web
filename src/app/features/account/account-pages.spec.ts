@@ -328,7 +328,7 @@ describe('AccountPageComponent linking', () => {
     expect(document.activeElement).toBe(page(harness).querySelector('#account-link-title'));
   });
 
-  it('keeps the code box and Unlink enabled while a change is in flight, so focus stays put', async () => {
+  it('keeps the code box and Link button enabled while linking, so focus stays put', async () => {
     const { auth } = setup(SIGNED_IN);
     let finish: (result: LinkChangeResult) => void = () => undefined;
 
@@ -347,6 +347,31 @@ describe('AccountPageComponent linking', () => {
     expect(linkButton(harness).textContent).toContain('Linking…');
     expect(document.activeElement).toBe(codeInput(harness));
     expect(auth.linkPlayer).toHaveBeenCalledTimes(1);
+
+    finish({ status: 'done' });
+    await harness.fixture.whenStable();
+  });
+
+  it('keeps Unlink enabled while unlinking and ignores a second click', async () => {
+    const { auth } = setup(LINKED);
+    let finish: (result: LinkChangeResult) => void = () => undefined;
+
+    auth.unlinkPlayer.and.callFake(() => new Promise<LinkChangeResult>((resolve) => (finish = resolve)));
+    const harness = await RouterTestingHarness.create('/account');
+    const button = Array.from(page(harness).querySelectorAll('button')).find((candidate) =>
+      candidate.textContent?.trim() === 'Unlink',
+    ) as HTMLButtonElement;
+
+    button.focus();
+    button.click();
+    harness.detectChanges();
+    button.click();
+    harness.detectChanges();
+
+    expect(button.disabled).toBeFalse();
+    expect(button.textContent).toContain('Unlinking…');
+    expect(document.activeElement).toBe(button);
+    expect(auth.unlinkPlayer).toHaveBeenCalledTimes(1);
 
     finish({ status: 'done' });
     await harness.fixture.whenStable();
@@ -492,7 +517,7 @@ describe('SignInPageComponent', () => {
 
     expect(root.querySelector('a.guide-button')).toBeNull();
     expect(root.querySelector('[role="status"]')?.textContent).toContain('You are already signed in');
-    expect(root.querySelector('[aria-busy="true"]')).toBeTruthy();
+    expect(root.querySelector('[aria-busy="true"]')).toBeNull();
     expect(root.textContent).not.toContain('did not complete');
     expect(root.querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
   });
