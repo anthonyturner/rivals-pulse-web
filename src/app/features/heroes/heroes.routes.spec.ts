@@ -189,7 +189,7 @@ describe('heroes routes', () => {
       expect(element.querySelector('h2')?.textContent?.trim()).toBe('Storm');
     });
 
-    it('shows the roster as a column, not the full grid, and keeps it as heroes are chosen and closed', async () => {
+    it('switches the roster from the full grid to the compact roster layout on a hero page, and keeps it as heroes are chosen and closed', async () => {
       const { harness, element } = await visit('/heroes');
       const roster = element.querySelector('app-hero-grid') as HTMLElement;
       expect(roster.getAttribute('layout')).toBe('grid');
@@ -197,17 +197,17 @@ describe('heroes routes', () => {
 
       await navigate(harness, '/heroes/storm');
       expect(element.querySelector('app-hero-grid')).toBe(roster);
-      expect(roster.getAttribute('layout')).toBe('column');
+      expect(roster.getAttribute('layout')).toBe('roster');
       expect(element.querySelector('.view-toggle')).toBeNull();
 
       await navigate(harness, '/heroes');
       expect(roster.getAttribute('layout')).toBe('grid');
     });
 
-    it('opens a hero page directly onto the column with the whole roster in it', async () => {
+    it('opens a hero page directly onto the compact roster layout with every hero in it', async () => {
       const { element } = await visit('/heroes/storm');
 
-      expect(element.querySelector('app-hero-grid')?.getAttribute('layout')).toBe('column');
+      expect(element.querySelector('app-hero-grid')?.getAttribute('layout')).toBe('roster');
       expect(rowCount(element)).toBe(3);
     });
 

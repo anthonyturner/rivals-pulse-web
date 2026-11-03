@@ -141,8 +141,8 @@ export class HeroesPageComponent implements OnInit {
   readonly selectedHeroId = toSignal(this.routeHeroId.pipe(map((heroId) => heroId ?? '')), {
     initialValue: this.route.snapshot.paramMap.get('heroId') ?? '',
   });
-  /** On a hero page the roster is the compact column beside the detail; on the landing it is the full grid. */
-  readonly gridLayout = computed<HeroGridLayout>(() => (this.selectedHeroId() === '' ? 'grid' : 'column'));
+  /** On a hero page the roster is the compact list that goes with the detail (a column, or a strip on narrow screens); on the landing it is the full grid. */
+  readonly gridLayout = computed<HeroGridLayout>(() => (this.selectedHeroId() === '' ? 'grid' : 'roster'));
   /** Chosen role filter's kit when there is one; resets when the role filter or the hero changes. */
   readonly selectedAbilityKitRole = linkedSignal<{ role: HeroRoleFilter; heroId: string }, HeroRole>({
     source: () => ({ role: this.selectedRole(), heroId: this.selectedHeroId() }),

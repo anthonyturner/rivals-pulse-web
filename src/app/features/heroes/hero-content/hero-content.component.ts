@@ -41,13 +41,29 @@ export class HeroContentComponent {
     return !!hero && this.controller().roleAbilityKits(hero).length > 0;
   });
 
-  /** Brings the panel into view and moves keyboard focus to the hero name. */
+  /**
+   * Moves keyboard focus to the hero name, and brings the panel to the top of the page only when the name is
+   * not already fully on screen, so choosing a hero from a roster that is in view does not move the page.
+   */
   focusHeading(): void {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const heading = this.host.nativeElement.querySelector<HTMLElement>('h2');
 
-    this.host.nativeElement
-      .querySelector('.hero-detail')
-      ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-    this.host.nativeElement.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
+    if (heading && !this.isOnScreen(heading)) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      this.host.nativeElement
+        .querySelector('.hero-detail')
+        ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    heading?.focus({ preventScroll: true });
+  }
+
+  /** On screen means below the fixed header, which the page reserves as its scroll padding, and above the window's bottom. */
+  private isOnScreen(element: HTMLElement): boolean {
+    const headerHeight = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    const box = element.getBoundingClientRect();
+
+    return box.top >= headerHeight && box.bottom <= window.innerHeight;
   }
 }
