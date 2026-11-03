@@ -12,12 +12,10 @@ import { ThemeService } from '../../theme/theme.service';
 export class ThemeToggle {
   private readonly themeService = inject(ThemeService);
 
-  private readonly isDark = computed(() => this.themeService.theme() === 'dark');
-
   /** Names the theme a click switches to, not the one showing. */
-  protected readonly label = computed(() => (this.isDark() ? 'Switch to light theme' : 'Switch to dark theme'));
-
-  protected readonly icon = computed(() => (this.isDark() ? '\u2600\uFE0F' : '\uD83C\uDF19'));
+  protected readonly label = computed(() =>
+    this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
+  );
 
   protected toggle(): void {
     this.themeService.toggleTheme();

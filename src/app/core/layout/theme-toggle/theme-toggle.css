@@ -2,17 +2,21 @@
   display: inline-flex;
 }
 
-/* The desktop app's toggle: a small square with a sun or a moon. The menu sets --theme-toggle-size for its larger touch rows. */
+/* The desktop app's toggle: a small square with a sun or a moon. The menu sets the custom properties below for its full-width row with a text label. */
 .theme-toggle {
-  display: grid;
-  width: var(--theme-toggle-size, 36px);
+  display: inline-flex;
+  width: var(--theme-toggle-width, var(--theme-toggle-size, 36px));
   height: var(--theme-toggle-size, 36px);
-  place-items: center;
-  padding: 0;
+  align-items: center;
+  justify-content: var(--theme-toggle-justify, center);
+  gap: 10px;
+  padding: 0 var(--theme-toggle-pad, 0);
   border: 1px solid var(--border-strong);
   border-radius: 7px;
   background: var(--bg-panel-soft);
   color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -22,6 +26,22 @@
 }
 
 .theme-toggle__icon {
-  font-size: 1rem;
   line-height: 1;
+}
+
+.theme-toggle__text {
+  display: var(--theme-toggle-text, none);
+}
+
+/* Both versions are in the page, so the server's HTML is right before the browser has run any script: the inline script in index.html sets data-theme before the first paint. The button shows what a click switches to. */
+.to-dark {
+  display: none;
+}
+
+:root[data-theme='light'] .to-light {
+  display: none;
+}
+
+:root[data-theme='light'] .to-dark {
+  display: inline;
 }

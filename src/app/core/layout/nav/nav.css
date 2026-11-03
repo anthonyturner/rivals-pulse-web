@@ -105,6 +105,10 @@ nav {
 
   app-theme-toggle {
     --theme-toggle-size: 44px;
+    --theme-toggle-width: 100%;
+    --theme-toggle-justify: flex-start;
+    --theme-toggle-pad: 14px;
+    --theme-toggle-text: inline;
     margin-top: 8px;
   }
 }

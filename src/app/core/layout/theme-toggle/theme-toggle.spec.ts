@@ -41,6 +41,12 @@ describe('ThemeToggle', () => {
     expect(button().getAttribute('aria-label')).toBe('Switch to dark theme');
   });
 
+  it('renders both the sun and the moon, and both labels, so the server HTML is right before the browser runs a script', () => {
+    expect(button().querySelectorAll('.theme-toggle__icon > span').length).toBe(2);
+    expect(button().querySelector('.theme-toggle__text .to-light')?.textContent).toBe('Light theme');
+    expect(button().querySelector('.theme-toggle__text .to-dark')?.textContent).toBe('Dark theme');
+  });
+
   it('hides its icon from assistive technology', () => {
     expect(button().querySelector('.theme-toggle__icon')?.getAttribute('aria-hidden')).toBe('true');
   });
