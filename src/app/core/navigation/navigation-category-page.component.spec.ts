@@ -41,8 +41,8 @@ describe('NavigationCategoryPageComponent', () => {
     const element = renderCategory('Tools');
     const cards = element.querySelectorAll('app-guide-card a');
 
-    expect(texts(cards)).toEqual(['Counters', 'Team Builder']);
-    expect(Array.from(cards).map((node) => node.getAttribute('href'))).toEqual(['/counters', '/team-builder']);
+    expect(texts(cards)).toEqual(['Counters', 'Dive Planner', 'Team Builder']);
+    expect(Array.from(cards).map((node) => node.getAttribute('href'))).toEqual(['/counters', '/dive-planner', '/team-builder']);
     expect(element.querySelector('app-guide-card img')).toBeNull();
     expect(texts(element.querySelectorAll('.soon strong'))).toEqual(['Learning Paths', 'Watch Next Quiz', 'AI Coach']);
     expect(element.querySelectorAll('.soon a, [aria-disabled]').length).toBe(0);

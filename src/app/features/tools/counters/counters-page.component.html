@@ -9,6 +9,9 @@
   @if (scopeNotice(); as notice) {
     <app-notice>{{ notice }}</app-notice>
   }
+  <p class="to-planner">Facing several divers? <a routerLink="/dive-planner">Use the dive planner.</a></p>
+
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
 
   <div class="workspace">
     <section class="picker" aria-label="Choose a hero">
@@ -19,7 +22,6 @@
         </label>
         <app-filter-select label="Role" [options]="roleOptions" [value]="selectedRole()" (valueChange)="selectRole($event)" />
       </div>
-      <p class="visually-hidden" role="status">{{ pickerStatus() }}</p>
 
       @if (!heroesLoaded()) {
         <app-state-panel kind="loading" [announce]="false">Loading heroes…</app-state-panel>
@@ -59,7 +61,6 @@
             <p class="detail">{{ current.detail }}</p>
           </div>
           <a class="link" [routerLink]="['/heroes', current.hero.id]">Open in Heroes</a>
-          <p class="visually-hidden" role="status">Showing {{ current.hero.name }}</p>
         </header>
 
         @if (matchupNotice(); as notice) {
@@ -104,75 +105,4 @@
       }
     </div>
   </div>
-
-  <section class="planner" aria-labelledby="planner-title">
-    <h2 id="planner-title">Dive Response Planner</h2>
-    <p class="lede">
-      Choose up to {{ maxDiveThreats }} enemy dive heroes to see who has a winning record against several of them.
-    </p>
-
-    <div class="steps">
-      <section aria-labelledby="threats-title">
-        <h3 id="threats-title">Build the dive package</h3>
-        <ul class="chips">
-          @for (chip of threatChips(); track chip.hero.id) {
-            <li>
-              <button type="button" class="chip" [attr.aria-pressed]="chip.pressed" (click)="toggleDiveThreat(chip.hero.id)">
-                <img appHeroImageFallback [src]="chip.hero.imageUrl" alt="" width="40" height="40" loading="lazy" />
-                {{ chip.hero.name }}<span class="visually-hidden">, enemy threat</span>
-              </button>
-            </li>
-          }
-        </ul>
-        <p class="detail" aria-live="polite">{{ selectedThreats().length }} of {{ maxDiveThreats }} chosen</p>
-        @if (selectedThreats().length > 0) {
-          <ul class="reads">
-            @for (chip of selectedThreats(); track chip.hero.id) {
-              <li>
-                <app-hero-tile [name]="chip.hero.name" [imageUrl]="chip.hero.imageUrl">
-                  <span class="detail">{{ chip.instruction }}</span>
-                </app-hero-tile>
-              </li>
-            }
-          </ul>
-        } @else if (heroesLoaded()) {
-          <app-state-panel>Select at least one enemy threat.</app-state-panel>
-        }
-      </section>
-
-      <section aria-labelledby="answers-title">
-        <h3 id="answers-title">Choose overlap, then assign jobs</h3>
-        <p class="lede">
-          The best swap is usually the hero who beats more than one of the dive. Results are heroes that win more than
-          they lose against those threats in recorded matches.
-        </p>
-        @if (matchupNotice(); as notice) {
-          <app-state-panel [kind]="notice.kind" [heading]="notice.heading" [headingLevel]="3">
-            {{ notice.message }}
-          </app-state-panel>
-        } @else if (selectedThreats().length === 0) {
-          <app-state-panel>Select at least one enemy threat.</app-state-panel>
-        } @else if (answerRows().length === 0) {
-          <app-state-panel heading="No winning record yet" [headingLevel]="3">
-            No hero has a winning record against these threats in enough recorded matches yet.
-          </app-state-panel>
-        } @else {
-          <ul class="tiles">
-            @for (answer of answerRows(); track answer.hero.id) {
-              <li>
-                <button type="button" class="pick" (click)="pivotTo(answer.hero.id)">
-                  <app-hero-tile selectable [name]="answer.hero.name" [imageUrl]="answer.hero.imageUrl">
-                    <span tileFigure class="figure"><span class="visually-hidden">, covers </span>{{ answer.covers }}</span>
-                    <span class="detail">{{ answer.detail }}</span>
-                  </app-hero-tile>
-                </button>
-              </li>
-            }
-          </ul>
-        }
-      </section>
-    </div>
-
-    <app-jubilee-case-study />
-  </section>
 </div>
