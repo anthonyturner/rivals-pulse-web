@@ -7,6 +7,7 @@ import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
 import { HOME_TITLE } from './core/seo/site-meta';
 import { heroesRoutes } from './features/heroes/heroes.routes';
+import { heroGuideRouteTitle, strategistGuideRouteTitle } from './features/learning/guides/guide-titles';
 
 export const routes: Routes = [
   {
@@ -53,6 +54,7 @@ export const routes: Routes = [
   },
   {
     path: 'hero-guides/:heroId',
+    title: heroGuideRouteTitle,
     canMatch: [
       knownIdGuard(() =>
         import('./features/learning/guides/hero-guides/hero-guide-data').then((module) =>
@@ -146,6 +148,7 @@ export const routes: Routes = [
   },
   {
     path: 'strategist-guides/:guideId',
+    title: strategistGuideRouteTitle,
     canMatch: [
       knownIdGuard(() =>
         import('./features/learning/guides/strategist-guides/strategist-guides.data').then((module) =>

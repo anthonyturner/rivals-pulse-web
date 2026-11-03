@@ -1128,3 +1128,7 @@ export const STRATEGIST_GUIDES: StrategistGuide[] = [
     ],
   },
 ];
+
+export function findStrategistGuide(guideId: string | null): StrategistGuide | null {
+  return STRATEGIST_GUIDES.find((guide) => guide.id === guideId) ?? null;
+}

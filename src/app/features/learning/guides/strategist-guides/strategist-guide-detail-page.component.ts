@@ -8,7 +8,7 @@ import { NoticeComponent } from '../../../../shared/components/notice/notice.com
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
 import { GuideCardComponent } from '../guide-card/guide-card.component';
 import { videoUrlAt } from '../youtube-timestamp';
-import { STRATEGIST_GUIDES } from './strategist-guides.data';
+import { findStrategistGuide, STRATEGIST_GUIDES } from './strategist-guides.data';
 
 const RELATED_GUIDE_LIMIT = 3;
 
@@ -29,11 +29,7 @@ export class StrategistGuideDetailPageComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
-  readonly guide = computed(() => {
-    const guideId = this.routeParams().get('guideId');
-
-    return STRATEGIST_GUIDES.find((guide) => guide.id === guideId) ?? null;
-  });
+  readonly guide = computed(() => findStrategistGuide(this.routeParams().get('guideId')));
 
   readonly embedUrl = computed(() => {
     const guide = this.guide();

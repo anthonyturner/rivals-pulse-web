@@ -1658,3 +1658,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     ultimates: [],
   },
 ];
+
+export function findHeroGuide(heroId: string | null): HeroGuide | null {
+  return HERO_GUIDES.find((guide) => guide.heroId === heroId) ?? null;
+}
