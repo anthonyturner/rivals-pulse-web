@@ -1,5 +1,14 @@
-import { CommonModule } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 type PlayerRole = 'Flexible' | 'Vanguard' | 'Duelist' | 'Strategist';
@@ -49,16 +58,21 @@ interface PracticeDrill {
 
 @Component({
   selector: 'app-beginner-guide-page',
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './beginner-guide-page.component.html',
-  styleUrl: './beginner-guide-page.component.css',
+  styleUrls: ['../guide-article/guide-article.css', './beginner-guide-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BeginnerGuidePageComponent {
+  private readonly injector = inject(Injector);
+  private readonly moduleTitle = viewChild.required<ElementRef<HTMLElement>>('moduleTitle');
+
   readonly roles: PlayerRole[] = ['Flexible', 'Vanguard', 'Duelist', 'Strategist'];
 
   readonly selectedRole = signal<PlayerRole>('Flexible');
   readonly currentModuleIndex = signal(0);
   readonly selectedAnswers = signal<Record<string, string>>({});
+  readonly announcement = signal('');
 
   readonly modules: BeginnerModule[] = [
     {
@@ -270,8 +284,6 @@ export class BeginnerGuidePageComponent {
 
   readonly answeredCount = computed(() => Object.keys(this.selectedAnswers()).length);
 
-  readonly progressPercent = computed(() => Math.round((this.answeredCount() / this.modules.length) * 100));
-
   readonly selectedChoice = computed(() => {
     const module = this.currentModule();
     const selectedChoiceId = this.selectedAnswers()[module.id];
@@ -290,6 +302,34 @@ export class BeginnerGuidePageComponent {
 
   readonly guideComplete = computed(() => this.answeredCount() === this.modules.length);
 
+  readonly progressSummary = computed(() => {
+    const strong = this.strongAnswerCount();
+
+    return `${this.answeredCount()} / ${this.modules.length} scenarios complete · ${strong} strong ${strong === 1 ? 'read' : 'reads'}`;
+  });
+
+  readonly moduleSteps = computed(() => {
+    const answers = this.selectedAnswers();
+    const current = this.currentModuleIndex();
+
+    return this.modules.map((module, index) => ({
+      title: module.title,
+      number: index + 1,
+      done: module.id in answers,
+      current: index === current,
+    }));
+  });
+
+  readonly choices = computed(() => {
+    const selectedId = this.selectedAnswers()[this.currentModule().id];
+
+    return this.currentModule().scenario.choices.map((choice) => ({
+      id: choice.id,
+      label: choice.label,
+      checked: choice.id === selectedId,
+    }));
+  });
+
   readonly recommendedPlan = computed(() => {
     const selectedRole = this.selectedRole();
     return (
@@ -307,18 +347,25 @@ export class BeginnerGuidePageComponent {
       ...answers,
       [moduleId]: choiceId,
     }));
+
+    const choice = this.modules
+      .find((module) => module.id === moduleId)
+      ?.scenario.choices.find((candidate) => candidate.id === choiceId);
+
+    this.announcement.set(
+      choice ? `${choice.feedbackTitle}. Quality: ${choice.quality}. ${choice.feedbackBody}` : '',
+    );
   }
 
-  nextModule(): void {
-    this.currentModuleIndex.update((index) => Math.min(index + 1, this.modules.length - 1));
-  }
-
-  previousModule(): void {
-    this.currentModuleIndex.update((index) => Math.max(index - 1, 0));
+  goToModule(index: number): void {
+    this.currentModuleIndex.set(Math.min(Math.max(index, 0), this.modules.length - 1));
+    this.announcement.set('');
+    afterNextRender(() => this.moduleTitle().nativeElement.focus(), { injector: this.injector });
   }
 
   resetGuide(): void {
     this.selectedAnswers.set({});
     this.currentModuleIndex.set(0);
+    this.announcement.set('');
   }
 }

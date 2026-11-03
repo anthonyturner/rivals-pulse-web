@@ -99,6 +99,13 @@
   color: var(--accent-ink);
 }
 
+.guide-button:disabled {
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
 .guide-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -132,7 +139,8 @@ input::placeholder {
   font-size: var(--type-small);
 }
 
-.guide-section > h2 {
+.guide-section > h2,
+.guide-section > header h2 {
   margin-bottom: 12px;
   font-size: var(--type-h2);
   font-weight: 850;
@@ -150,6 +158,18 @@ input::placeholder {
 
 .guide-grid > li {
   display: grid;
+}
+
+/*
+ * At most two columns, so an odd last tile can take the whole row. On the plain grid the same rule
+ * would strand a tile on a three-column row.
+ */
+.guide-grid--pairs {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.guide-grid--pairs > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .guide-tile {
@@ -238,16 +258,21 @@ input::placeholder {
 }
 
 /* The numeral is a readout, so it keeps its own size. */
-.guide-steps li::before {
+.guide-steps li::before,
+.guide-marker {
   display: grid;
+  flex: none;
   width: 28px;
   height: 28px;
   place-items: center;
   border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
   font-size: var(--type-small);
   font-weight: 800;
+}
+
+.guide-steps li::before {
+  background: var(--accent);
+  color: var(--accent-ink);
   content: counter(step);
 }
 

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { EyebrowComponent } from '../../../../../shared/components/eyebrow/eyebrow.component';
 
@@ -9,7 +9,6 @@ interface HeroPick {
 }
 
 interface CounterPlan {
-  number: string;
   title: string;
   summary: string;
   steps: string[];
@@ -20,7 +19,8 @@ interface CounterPlan {
   selector: 'app-triple-support-guide-page',
   imports: [EyebrowComponent],
   templateUrl: './triple-support-guide-page.component.html',
-  styleUrl: './triple-support-guide-page.component.css',
+  styleUrls: ['../../guide-article/guide-article.css', './triple-support-guide-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TripleSupportGuidePageComponent {
   readonly source = {
@@ -54,9 +54,15 @@ export class TripleSupportGuidePageComponent {
     },
   ];
 
+  readonly weaknesses = [
+    'Less offensive tempo',
+    'One frontline must do too many jobs',
+    'Vulnerable before ultimates are online',
+    'Depends on formation and sightlines',
+  ];
+
   readonly plans: CounterPlan[] = [
     {
-      number: '01',
       title: 'Dive one support together',
       summary:
         'Triple support can erase scattered poke, but it struggles when several threats arrive on the same target at the same time.',
@@ -75,7 +81,6 @@ export class TripleSupportGuidePageComponent {
       ],
     },
     {
-      number: '02',
       title: 'Burst through the healing window',
       summary:
         'Healing only matters when a target survives long enough to receive it. Layer control and damage into one short conversion window.',
@@ -93,7 +98,6 @@ export class TripleSupportGuidePageComponent {
       ],
     },
     {
-      number: '03',
       title: 'Break the formation',
       summary:
         'The comp depends on overlapping range, protection, and healing. Move one piece out of the formation and the numbers stop working together.',
