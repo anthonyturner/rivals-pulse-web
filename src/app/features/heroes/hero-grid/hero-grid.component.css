@@ -76,7 +76,7 @@
 .search-field input:focus-visible,
 .chip:focus-visible,
 .hero-card:focus-visible {
-  outline: 2px solid var(--accent-ink);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 

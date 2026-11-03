@@ -22,7 +22,7 @@
   border: 1px solid var(--accent-line);
   border-radius: 6px;
   background: var(--accent-soft);
-  color: var(--accent-ink);
+  color: var(--text);
   font: inherit;
   font-weight: 700;
   text-decoration: none;

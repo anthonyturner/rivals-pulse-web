@@ -124,21 +124,21 @@ h1 {
   left: 78px;
   top: 126px;
   background: var(--accent);
-  color: var(--text);
+  color: var(--accent-ink);
 }
 
 .player.wide {
   left: 232px;
   top: 126px;
   background: var(--danger);
-  color: var(--text);
+  color: var(--accent-ink);
 }
 
 .enemy {
   right: 26px;
   top: 132px;
   background: var(--secondary);
-  color: var(--text);
+  color: var(--bg-elevated);
 }
 
 .sightline {
@@ -177,7 +177,7 @@ h1 {
 .danger-label {
   right: 44px;
   bottom: 36px;
-  background: var(--danger-soft);
+  background: var(--danger);
 }
 
 .quick-check {

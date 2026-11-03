@@ -73,7 +73,7 @@ p {
   border: 1px solid var(--accent-line);
   border-radius: 6px;
   background: var(--accent-soft);
-  color: var(--accent-ink);
+  color: var(--text);
   font: inherit;
   font-weight: 700;
   text-decoration: none;
@@ -82,7 +82,7 @@ p {
 
 .account-button:hover,
 .account-button:focus-visible {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .account-button:disabled {

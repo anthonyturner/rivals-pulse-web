@@ -42,7 +42,7 @@
 }
 .detail-action:focus-visible,
 .video-searches summary:focus-visible {
-  outline: 2px solid var(--accent-ink);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 .detail-layout {

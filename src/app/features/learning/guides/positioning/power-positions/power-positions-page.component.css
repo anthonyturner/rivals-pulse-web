@@ -105,14 +105,14 @@ h1 {
   left: 22px;
   bottom: 28px;
   background: var(--secondary);
-  color: var(--text);
+  color: var(--bg-elevated);
 }
 
 .enemy {
   top: 26px;
   right: 24px;
   background: var(--danger);
-  color: var(--text);
+  color: var(--accent-ink);
 }
 
 .objective {
