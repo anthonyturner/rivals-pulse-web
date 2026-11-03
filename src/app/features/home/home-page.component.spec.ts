@@ -66,18 +66,19 @@ describe('HomePageComponent', () => {
       ]);
     });
 
-    it('has no eyebrow above the h1', () => {
+    it('says what RivalsPulse gives you in the eyebrow above the h1', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
 
-      expect(hero.querySelector('app-eyebrow')).toBeNull();
-      expect(hero.firstElementChild?.tagName).toBe('H1');
+      expect(hero.firstElementChild?.tagName).toBe('APP-EYEBROW');
+      expect(text(hero.querySelector('app-eyebrow'))).toBe('Live counters in game. Real stats on the web.');
+      expect(hero.firstElementChild?.nextElementSibling?.tagName).toBe('H1');
     });
 
     it('says in the h1 and one paragraph what the free Overwolf app does, in game and on the site', () => {
       const hero = element.querySelector('.hero-copy') as HTMLElement;
       const lede = text(hero.querySelector('.lede'));
 
-      expect(text(hero.querySelector('h1'))).toBe('Know every match before it starts.');
+      expect(text(hero.querySelector('h1'))).toBe('Feel the pulse of every match.');
       expect(hero.querySelectorAll('p.lede').length).toBe(1);
       expect(lede).toContain('RivalsPulse is a free Overwolf app for Marvel Rivals.');
       expect(lede).toContain('counters, the tier list and any hero over the game');
@@ -253,13 +254,35 @@ describe('HomePageComponent', () => {
   });
 
   describe('the popout', () => {
-    const scrollWithHeroBottomAt = async (bottom: number): Promise<void> => {
-      const hero = element.querySelector('header.season-hero') as HTMLElement;
+    let heroBottom = 400;
 
-      spyOn(hero, 'getBoundingClientRect').and.returnValue({ bottom } as DOMRect);
+    const scrollWithHeroBottomAt = async (bottom: number): Promise<void> => {
+      heroBottom = bottom;
       window.dispatchEvent(new Event('scroll'));
       await settle();
     };
+    const floatingControl = (name: string): HTMLButtonElement | null =>
+      Array.from(element.querySelectorAll<HTMLButtonElement>('.home-page-video-control')).find(
+        (button) => text(button) === name,
+      ) ?? null;
+    const minimizeButton = (): HTMLButtonElement | null => floatingControl('Minimize');
+    const backButton = (): HTMLButtonElement | null => floatingControl('Back to background');
+    const tab = (): HTMLButtonElement | null => element.querySelector('.home-page-video-tab');
+
+    let main: HTMLElement;
+
+    beforeEach(() => {
+      main = document.createElement('main');
+      main.id = 'main-content';
+      main.tabIndex = -1;
+      document.body.appendChild(main);
+      heroBottom = 400;
+      const hero = element.querySelector('header.season-hero') as HTMLElement;
+
+      spyOn(hero, 'getBoundingClientRect').and.callFake(() => ({ bottom: heroBottom }) as DOMRect);
+    });
+
+    afterEach(() => main.remove());
 
     it('floats the video once the hero has scrolled past', async () => {
       await scrollWithHeroBottomAt(40);
@@ -272,6 +295,259 @@ describe('HomePageComponent', () => {
       await scrollWithHeroBottomAt(400);
 
       expect(player().classList).not.toContain('is-popout');
+      expect(minimizeButton()).toBeNull();
+      expect(backButton()).toBeNull();
+      expect(tab()).toBeNull();
+    });
+
+    it('offers Minimize and Back to background on the floating player, as buttons outside the player surface', async () => {
+      await scrollWithHeroBottomAt(40);
+
+      expect(minimizeButton()?.type).toBe('button');
+      expect(backButton()?.type).toBe('button');
+      expect(player().contains(minimizeButton())).toBeFalse();
+      expect(player().contains(backButton())).toBeFalse();
+    });
+
+    it('minimizes to a tab at the bottom, hides the player and moves focus to the tab', async () => {
+      await scrollWithHeroBottomAt(40);
+
+      minimizeButton()?.click();
+      await settle();
+
+      expect(player().classList).toContain('is-minimized');
+      expect(player().classList).not.toContain('is-popout');
+      expect(getComputedStyle(player()).display).toBe('none');
+      expect(minimizeButton()).toBeNull();
+      expect(backButton()).toBeNull();
+      expect(text(tab())).toBe('Show video');
+      expect(tab()?.getAttribute('aria-label')).toBe('Show the floating video player');
+      expect(document.activeElement).toBe(tab());
+    });
+
+    it('restores the floating player from the tab and returns focus to Minimize', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+
+      tab()?.click();
+      await settle();
+
+      expect(player().classList).toContain('is-popout');
+      expect(player().classList).not.toContain('is-minimized');
+      expect(tab()).toBeNull();
+      expect(document.activeElement).toBe(minimizeButton());
+    });
+
+    it('stays minimized while scrolling, even back through the hero and down again', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+
+      await scrollWithHeroBottomAt(10);
+      expect(tab()).toBeTruthy();
+
+      await scrollWithHeroBottomAt(400);
+      expect(tab()).toBeNull();
+      expect(player().classList).not.toContain('is-minimized');
+
+      await scrollWithHeroBottomAt(-900);
+      expect(tab()).toBeTruthy();
+      expect(player().classList).toContain('is-minimized');
+      expect(player().classList).not.toContain('is-popout');
+    });
+
+    it('sends the video back to the hero background and keeps it there however far the visitor scrolls', async () => {
+      await scrollWithHeroBottomAt(40);
+
+      backButton()?.click();
+      await settle();
+
+      expect(player().classList).not.toContain('is-popout');
+      expect(player().classList).not.toContain('is-minimized');
+      expect(minimizeButton()).toBeNull();
+      expect(tab()).toBeNull();
+
+      await scrollWithHeroBottomAt(-3000);
+      expect(player().classList).not.toContain('is-popout');
+      expect(tab()).toBeNull();
+
+      await scrollWithHeroBottomAt(400);
+      await scrollWithHeroBottomAt(-3000);
+      expect(player().classList).not.toContain('is-popout');
+    });
+
+    it('still opens the foreground player from "Watch update video" after Back to background', async () => {
+      await scrollWithHeroBottomAt(40);
+      backButton()?.click();
+      await settle();
+
+      watchButton().click();
+      await settle();
+
+      expect(player().classList).toContain('is-foreground');
+      expect(document.activeElement).toBe(closeButton());
+
+      closeButton()?.click();
+      await settle();
+
+      expect(player().classList).not.toContain('is-foreground');
+      expect(player().classList).not.toContain('is-popout');
+    });
+
+    it('still opens the foreground player from "Watch update video" while minimized, and returns to the tab on close', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+
+      watchButton().click();
+      await settle();
+
+      expect(player().classList).toContain('is-foreground');
+      expect(getComputedStyle(player()).display).not.toBe('none');
+      expect(tab()).toBeNull();
+
+      closeButton()?.click();
+      await settle();
+
+      expect(player().classList).toContain('is-minimized');
+      expect(tab()).toBeTruthy();
+    });
+
+    it('does not open the foreground player when any of the controls is used', async () => {
+      await scrollWithHeroBottomAt(40);
+
+      minimizeButton()?.click();
+      await settle();
+      expect(player().classList).not.toContain('is-foreground');
+
+      tab()?.click();
+      await settle();
+      expect(player().classList).not.toContain('is-foreground');
+
+      backButton()?.click();
+      await settle();
+      expect(player().classList).not.toContain('is-foreground');
+    });
+
+    it('keeps the foreground player free of the floating controls', async () => {
+      await scrollWithHeroBottomAt(40);
+
+      player().click();
+      await settle();
+
+      expect(player().classList).toContain('is-foreground');
+      expect(minimizeButton()).toBeNull();
+      expect(backButton()).toBeNull();
+    });
+
+    it('puts both controls in the tab order, Minimize first', async () => {
+      await scrollWithHeroBottomAt(40);
+
+      const controls = Array.from(element.querySelectorAll<HTMLButtonElement>('.home-page-video-control'));
+
+      expect(controls.map(text)).toEqual(['Minimize', 'Back to background']);
+      expect(controls.every((control) => control.tabIndex === 0)).toBeTrue();
+    });
+
+    it('mutes the video when it is minimized, and the sound toggle says so', async () => {
+      await scrollWithHeroBottomAt(40);
+      soundToggle().click();
+      await settle();
+      expect(video().muted).toBeFalse();
+
+      minimizeButton()?.click();
+      await settle();
+
+      expect(video().muted).toBeTrue();
+      expect(text(soundToggle())).toBe('Sound off');
+      expect(soundToggle().getAttribute('aria-pressed')).toBe('false');
+    });
+
+    it('mutes the video when it is sent back to the background, and the sound toggle says so', async () => {
+      await scrollWithHeroBottomAt(40);
+      soundToggle().click();
+      await settle();
+      expect(video().muted).toBeFalse();
+
+      backButton()?.click();
+      await settle();
+
+      expect(video().muted).toBeTrue();
+      expect(text(soundToggle())).toBe('Sound off');
+    });
+
+    it('moves focus to the main landmark, without scrolling, when Back to background removes the focused button', async () => {
+      await scrollWithHeroBottomAt(40);
+      const focusMain = spyOn(main, 'focus').and.callThrough();
+      backButton()?.focus();
+
+      backButton()?.click();
+      await settle();
+
+      expect(focusMain).toHaveBeenCalledOnceWith({ preventScroll: true });
+      expect(document.activeElement).toBe(main);
+    });
+
+    it('moves focus to the main landmark when the hero scrolls back into view while the tab has focus', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+      expect(document.activeElement).toBe(tab());
+
+      await scrollWithHeroBottomAt(400);
+
+      expect(tab()).toBeNull();
+      expect(document.activeElement).toBe(main);
+    });
+
+    it('leaves focus alone when the visitor is elsewhere on the page as the player changes', async () => {
+      const other = document.createElement('button');
+      document.body.appendChild(other);
+      other.focus();
+
+      await scrollWithHeroBottomAt(40);
+      await scrollWithHeroBottomAt(400);
+
+      expect(document.activeElement).toBe(other);
+      other.remove();
+    });
+
+    it('reserves the tab height below the end of the page only while minimized', async () => {
+      const bottomPadding = (): string => getComputedStyle(document.body).paddingBottom;
+      const tabHeight = (): string =>
+        getComputedStyle(document.documentElement).getPropertyValue('--floating-video-tab-height').trim();
+
+      await scrollWithHeroBottomAt(40);
+      expect(bottomPadding()).toBe('0px');
+
+      minimizeButton()?.click();
+      await settle();
+      expect(bottomPadding()).toBe(tabHeight());
+      expect(tabHeight()).not.toBe('');
+      expect(tab()?.getBoundingClientRect().height).toBeGreaterThanOrEqual(parseFloat(tabHeight()));
+
+      tab()?.click();
+      await settle();
+      expect(bottomPadding()).toBe('0px');
+
+      minimizeButton()?.click();
+      await settle();
+      expect(bottomPadding()).toBe(tabHeight());
+
+      await scrollWithHeroBottomAt(400);
+      expect(bottomPadding()).toBe('0px');
+    });
+
+    it('gives the reserve back when the page is left while minimized', async () => {
+      await scrollWithHeroBottomAt(40);
+      minimizeButton()?.click();
+      await settle();
+      expect(document.documentElement.classList).toContain('has-minimized-video');
+
+      fixture.destroy();
+
+      expect(document.documentElement.classList).not.toContain('has-minimized-video');
     });
   });
 });

@@ -1,19 +1,22 @@
+@let placement = videoPlacement();
+
 <div class="home-page">
   <div class="hero-stage">
     <div
       class="home-page-background"
-      [class.is-foreground]="backgroundVideoForeground"
-      [class.is-popout]="backgroundVideoPoppedOut"
-      [attr.role]="backgroundVideoForeground ? 'dialog' : 'button'"
-      [attr.aria-modal]="backgroundVideoForeground ? 'true' : null"
+      [class.is-foreground]="placement === 'foreground'"
+      [class.is-popout]="placement === 'floating'"
+      [class.is-minimized]="placement === 'minimized'"
+      [attr.role]="placement === 'foreground' ? 'dialog' : 'button'"
+      [attr.aria-modal]="placement === 'foreground' ? 'true' : null"
       [attr.aria-label]="
-        backgroundVideoForeground
+        placement === 'foreground'
           ? heroMedia().title + ' video player'
-          : backgroundVideoPoppedOut
+          : placement === 'floating'
             ? 'Open the floating video player'
             : 'Play the background video in the foreground'
       "
-      [attr.tabindex]="backgroundVideoForeground ? -1 : 0"
+      [attr.tabindex]="placement === 'foreground' ? -1 : 0"
       (click)="onBackgroundVideoSurfaceClick(backgroundVideo)"
       (keydown)="onBackgroundVideoKeydown($event, backgroundVideo)"
     >
@@ -21,7 +24,7 @@
         #backgroundVideo
         class="home-page-background-video"
         autoplay
-        [controls]="backgroundVideoForeground"
+        [controls]="placement === 'foreground'"
         [muted]="backgroundVideoMuted"
         [src]="heroMedia().videoUrl"
         loop
@@ -36,7 +39,7 @@
         Your browser does not support embedded video playback.
       </video>
 
-      @if (backgroundVideoForeground) {
+      @if (placement === 'foreground') {
         <button
           #videoClose
           class="home-page-video-close"
@@ -48,6 +51,29 @@
         </button>
       }
     </div>
+
+    @if (placement === 'floating') {
+      <div class="home-page-video-controls">
+        <button #videoMinimize class="home-page-video-control" type="button" (click)="minimizeFloatingVideo(backgroundVideo)">
+          Minimize
+        </button>
+        <button class="home-page-video-control" type="button" (click)="sendVideoBackToBackground(backgroundVideo)">
+          Back to background
+        </button>
+      </div>
+    }
+
+    @if (placement === 'minimized') {
+      <button
+        #videoTab
+        class="home-page-video-tab"
+        type="button"
+        aria-label="Show the floating video player"
+        (click)="restoreFloatingVideo()"
+      >
+        Show video
+      </button>
+    }
 
     <button
       class="home-page-sound-toggle"
@@ -61,7 +87,8 @@
 
     <header #heroBanner class="season-hero">
       <div class="hero-copy">
-        <h1>Know every match before it starts.</h1>
+        <app-eyebrow>Live counters in game. Real stats on the web.</app-eyebrow>
+        <h1>Feel the pulse of every match.</h1>
         <p class="lede">
           RivalsPulse is a free Overwolf app for Marvel Rivals. It shows both teams the moment a match starts,
           keeps your record and stats for the session on screen, and brings up counters, the tier list and any

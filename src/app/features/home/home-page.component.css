@@ -5,6 +5,9 @@
 .home-page {
   /* The popout and the foreground player are fixed at z-index 50 and 1000: this keeps them above the bands. */
   isolation: isolate;
+  /* The floating player and its controls are placed from the same two sizes, so they cannot drift apart. */
+  --popout-width: min(420px, calc(100vw - 48px));
+  --popout-gap: 24px;
   min-height: 100%;
   background: var(--bg);
 }
@@ -67,11 +70,11 @@
   box-shadow: 0 30px 100px color-mix(in srgb, var(--ink) 70%, transparent);
 }
 
-.home-page-background.is-popout:not(.is-foreground) {
+.home-page-background.is-popout {
   position: fixed;
   z-index: 50;
-  inset: auto 24px 24px auto;
-  width: min(420px, calc(100vw - 48px));
+  inset: auto var(--popout-gap) var(--popout-gap) auto;
+  width: var(--popout-width);
   height: auto;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--ink-control-border);
@@ -81,11 +84,17 @@
   animation: video-popout-in 220ms ease-out both;
 }
 
-.home-page-background.is-popout:not(.is-foreground)::after {
+.home-page-background.is-popout::after {
   background: linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--ink) 46%, transparent));
 }
 
+.home-page-background.is-minimized {
+  display: none;
+}
+
 .home-page-video-close,
+.home-page-video-control,
+.home-page-video-tab,
 .home-page-sound-toggle {
   border: 1px solid var(--ink-control-border);
   border-radius: 999px;
@@ -96,6 +105,39 @@
   font-weight: 820;
   cursor: pointer;
   backdrop-filter: blur(12px);
+}
+
+/* Covers the floating player exactly and lets clicks through, so the buttons sit in its top-right corner however tall they grow. */
+.home-page-video-controls {
+  position: fixed;
+  z-index: 51;
+  right: var(--popout-gap);
+  bottom: var(--popout-gap);
+  display: flex;
+  width: var(--popout-width);
+  aspect-ratio: 16 / 9;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px;
+  pointer-events: none;
+}
+
+.home-page-video-control {
+  min-height: 36px;
+  padding: 0 12px;
+  pointer-events: auto;
+}
+
+.home-page-video-tab {
+  position: fixed;
+  z-index: 50;
+  right: var(--popout-gap);
+  bottom: 0;
+  min-height: var(--floating-video-tab-height);
+  padding: 0 16px;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
 }
 
 .home-page-video-close {
@@ -117,12 +159,16 @@
 }
 
 .home-page-video-close:hover,
+.home-page-video-control:hover,
+.home-page-video-tab:hover,
 .home-page-sound-toggle:hover {
   border-color: var(--ink-accent);
   background: color-mix(in srgb, var(--ink) 94%, transparent);
 }
 
 .home-page-video-close:focus-visible,
+.home-page-video-control:focus-visible,
+.home-page-video-tab:focus-visible,
 .home-page-sound-toggle:focus-visible {
   outline: 3px solid var(--ink-focus);
   outline-offset: 3px;
@@ -201,6 +247,11 @@ h1 {
 }
 
 @media (max-width: 720px) {
+  .home-page {
+    --popout-width: min(340px, calc(100vw - (2 * var(--mobile-page-gutter))));
+    --popout-gap: var(--mobile-page-gutter);
+  }
+
   .home-page-sound-toggle {
     top: 16px;
     right: 16px;
@@ -213,12 +264,6 @@ h1 {
 
   .hero-copy {
     padding-top: 0;
-  }
-
-  .home-page-background.is-popout:not(.is-foreground) {
-    right: var(--mobile-page-gutter);
-    bottom: var(--mobile-page-gutter);
-    width: min(340px, calc(100vw - (2 * var(--mobile-page-gutter))));
   }
 }
 
