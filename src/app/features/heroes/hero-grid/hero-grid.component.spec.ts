@@ -225,6 +225,41 @@ describe('HeroGridComponent', () => {
       expect(window.scrollY).toBe(120);
     });
 
+    it('brings the chosen hero back into view when the window crosses the column/strip width, and stops listening once destroyed', async () => {
+      let onChange: (() => void) | undefined;
+      const addSpy = jasmine.createSpy('addEventListener').and.callFake((_type: string, handler: () => void) => {
+        onChange = handler;
+      });
+      const removeSpy = jasmine.createSpy('removeEventListener');
+      spyOn(window, 'matchMedia').and.returnValue({
+        matches: false,
+        addEventListener: addSpy,
+        removeEventListener: removeSpy,
+      } as unknown as MediaQueryList);
+      const second = TestBed.createComponent(HeroGridComponent);
+      second.componentRef.setInput('heroes', manyHeroes());
+      second.componentRef.setInput('roles', ['All']);
+      second.componentRef.setInput('selectedRole', 'All');
+      second.componentRef.setInput('selectedHeroId', 'hero-35');
+      second.componentRef.setInput('searchTerm', '');
+      second.componentRef.setInput('gridMode', 'thumbs');
+      second.componentRef.setInput('layout', 'roster');
+      second.detectChanges();
+      const secondList = second.nativeElement.querySelector('.hero-grid') as HTMLElement;
+      secondList.classList.add('test-list-horizontal');
+      await second.whenStable();
+
+      expect(addSpy).toHaveBeenCalledOnceWith('change', jasmine.any(Function));
+      secondList.scrollLeft = 0;
+      onChange?.();
+
+      expect(secondList.scrollLeft).toBeGreaterThan(0);
+
+      second.destroy();
+
+      expect(removeSpy).toHaveBeenCalledOnceWith('change', onChange);
+    });
+
     it('does not move a list that already shows the chosen hero', async () => {
       const list = element.querySelector('.hero-grid') as HTMLElement;
       list.classList.add('test-list-horizontal');

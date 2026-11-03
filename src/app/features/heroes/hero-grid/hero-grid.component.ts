@@ -1,8 +1,10 @@
 import {
+  afterNextRender,
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -28,6 +30,9 @@ interface HeroCard {
   selected: boolean;
   lazy: boolean;
 }
+
+/** The width from which the roster is a column; below it, a strip. Keep in step with the media queries in the stylesheet. */
+const COLUMN_MEDIA_QUERY = '(min-width: 920px)';
 
 /** Cards in the first two rows at the widest layout; images after them load lazily. */
 const EAGER_CARD_COUNT = 20;
@@ -89,8 +94,23 @@ export class HeroGridComponent {
   });
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor() {
+    // Turning a tablet, or resizing a window, across the column/strip breakpoint changes which way the list
+    // scrolls; the stylesheet alone decides the layout, so this only brings the chosen hero back into view.
+    afterNextRender(() => {
+      const wide = window.matchMedia(COLUMN_MEDIA_QUERY);
+      const onChange = (): void => {
+        if (this.layout() === 'roster') {
+          this.revealSelectedCard();
+        }
+      };
+
+      wide.addEventListener('change', onChange);
+      this.destroyRef.onDestroy(() => wide.removeEventListener('change', onChange));
+    });
+
     // Reads only the layout, the loading flag and the chosen hero, so typing in the search box does not
     // move the list under the visitor; the roster arriving or another hero being chosen does.
     afterRenderEffect(() => {
