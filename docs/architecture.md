@@ -43,20 +43,24 @@ The server code lives in `src/server/<feature>/`, one folder per feature
 `hero-matchups.ts`) sits beside the module that reads the database for it
 (`hero-matchups-read.ts`).
 
-- **Import a feature through its `index.ts`.** `api/`, `src/server.ts`, the
-  `scripts/*.mjs` sync scripts and other features import
-  `../heroes/matchups/index.ts`, never the files behind it, so splitting or
+- **Import a feature through its `index.ts`.** `api/`, the `scripts/*.mjs`
+  sync scripts and other features import `../heroes/matchups/index.ts`, and
+  `src/server.ts` imports the folder (`./server/heroes/matchups`), never the
+  files behind it, so splitting or
   merging files inside a feature edits that feature only. A type-only import is
   the one exception, since it is erased at compile time. The entry point lists
   what code outside the folder uses and nothing more; an export that nothing
   outside its own file (or that file's spec) uses is not exported.
-- **Relative imports name the `.ts` file.** Node loads the scripts and the
+- **Relative imports under `src/server` and `api/` name the `.ts` file.**
+  `src/app` and `src/server.ts`, which only Angular's build compiles, stay
+  extensionless. Node loads the scripts and the
   function tests through type stripping, which does not map `.js` to `.ts`.
   `rewriteRelativeImportExtensions` in `tsconfig.json` turns the specifiers
   into `.js` when the compiler emits. `tsconfig.api.json` adds
-  `erasableSyntaxOnly` and `verbatimModuleSyntax`, so a server module cannot use
-  syntax that stripping rejects (parameter properties, enums) or import a type
-  without `import type`.
+  `erasableSyntaxOnly` and `verbatimModuleSyntax`, so a module the `api/`
+  functions reach cannot use syntax that stripping rejects (parameter
+  properties, enums) or import a type without `import type`. Modules only the
+  scripts reach (`pulse-atlas`) are not covered by that check.
 - **A pure module the browser reuses stays importable by file.** The app
   specs import `heroes/stats/hero-stats.ts` and `account/own-dashboard.ts`
   (which imports `heroes/catalog/hero-game-ids.ts`). An entry point also pulls
