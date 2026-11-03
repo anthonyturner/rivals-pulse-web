@@ -26,10 +26,10 @@
   --aurora-muted: #8d93b3;
   --aurora-faint: #656c92;
 
-  --aurora-accent: #3ee6c0;
-  --aurora-accent-ink: #3ee6c0;
-  --aurora-accent-soft: rgba(62, 230, 192, 0.14);
-  --aurora-accent-line: rgba(62, 230, 192, 0.55);
+  --aurora-accent: #ffdf00;
+  --aurora-accent-ink: #ffdf00;
+  --aurora-accent-soft: rgba(255, 223, 0, 0.11);
+  --aurora-accent-line: rgba(255, 223, 0, 0.55);
   --aurora-secondary: #7b7bff;
   --aurora-secondary-ink: #a9a9ff;
   --aurora-secondary-soft: rgba(123, 123, 255, 0.16);
@@ -65,10 +65,10 @@
   --aurora-ally: var(--aurora-secondary-soft);
   --aurora-enemy: var(--aurora-danger-soft);
 
-  --aurora-on-accent: #05201a;
-  --aurora-on-outcome: #05201a;
+  --aurora-on-accent: #1a1600;
+  --aurora-on-outcome: #1a1600;
   --aurora-focus: var(--aurora-secondary);
-  --aurora-hover: rgba(62, 230, 192, 0.08);
+  --aurora-hover: rgba(255, 223, 0, 0.08);
   --aurora-shadow-color: rgba(3, 4, 12, 0.55);
   --aurora-card-shadow: 0 12px 30px var(--aurora-shadow-color);
   --aurora-soft-shadow: 0 8px 22px rgba(3, 4, 12, 0.4);
@@ -95,10 +95,10 @@
   --aurora-muted: #61668a;
   --aurora-faint: #8087ad;
 
-  --aurora-accent: #0e9c80;
-  --aurora-accent-ink: #087058;
-  --aurora-accent-soft: rgba(14, 156, 128, 0.12);
-  --aurora-accent-line: rgba(14, 156, 128, 0.5);
+  --aurora-accent: #b38600;
+  --aurora-accent-ink: #7f5f00;
+  --aurora-accent-soft: rgba(179, 134, 0, 0.12);
+  --aurora-accent-line: rgba(179, 134, 0, 0.5);
   --aurora-secondary: #5b55e6;
   --aurora-secondary-ink: #4a44d4;
   --aurora-secondary-soft: rgba(91, 85, 230, 0.1);
@@ -110,7 +110,7 @@
   --aurora-loss-ink: #b8392d;
   --aurora-loss-soft: rgba(230, 89, 76, 0.1);
 
-  --aurora-hover: rgba(14, 156, 128, 0.07);
+  --aurora-hover: rgba(179, 134, 0, 0.07);
   --aurora-shadow-color: rgba(21, 23, 53, 0.16);
   --aurora-soft-shadow: 0 8px 22px rgba(21, 23, 53, 0.1);
 
@@ -173,8 +173,8 @@
   --ink-control-border: #6a7199;
   --on-ink: #eceefe;
   --on-ink-muted: #8d93b3;
-  --ink-accent: #3ee6c0;
-  --on-ink-accent: #05201a;
+  --ink-accent: #ffdf00;
+  --on-ink-accent: #1a1600;
   --ink-focus: #7b7bff;
 }
 

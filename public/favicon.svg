@@ -3,7 +3,7 @@
     <!-- The header badge's 145deg split, mapped to the square. -->
     <linearGradient id="split" gradientUnits="userSpaceOnUse" x1="3.2" y1="-2.27" x2="28.8" y2="34.27">
       <stop offset="0.68" stop-color="#e9eaf6"/>
-      <stop offset="0.69" stop-color="#0e9c80"/>
+      <stop offset="0.69" stop-color="#ffdf00"/>
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="8" fill="url(#split)"/>
