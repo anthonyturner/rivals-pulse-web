@@ -94,15 +94,20 @@ describe('ThemeService', () => {
     expect(seen).toEqual(['light', 'dark']);
   });
 
-  it('renders dark on the server and leaves the page and storage alone', () => {
+  it('renders dark on the server and ignores a saved light choice', () => {
     const service = create({ saved: 'light', platform: 'server' });
 
     expect(service.theme()).toBe('dark');
     expect(applied()).toBeNull();
+  });
+
+  it('on the server, changing the theme neither touches the page nor saves it', () => {
+    const service = create({ saved: 'dark', platform: 'server' });
 
     service.setTheme('light');
 
+    expect(service.theme()).toBe('light');
     expect(applied()).toBeNull();
-    expect(store.get(THEME_STORAGE_KEY)).toBe('light');
+    expect(store.get(THEME_STORAGE_KEY)).toBe('dark');
   });
 });

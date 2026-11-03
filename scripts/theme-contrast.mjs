@@ -88,9 +88,9 @@ function resolve(tokens, name) {
 }
 
 /** Pairs between two theme tokens, by token suffix. */
-function tokenPair(kind, foreground, background, needs) {
+function tokenPair(kind, foreground, background, needs, gap = false) {
   return {
-    kind, foreground, background, needs,
+    kind, foreground, background, needs, gap,
     measure: (tokens) => {
       const behind = resolve(tokens, background);
       return ratio(over(resolve(tokens, foreground), behind), behind);
@@ -167,6 +167,8 @@ function pairs(roles) {
     add('Text', 'muted', tint, TEXT);
   }
   add('Text', 'text', 'accent-soft over panel', TEXT);
+  // Known gap: muted text does not clear 4.5:1 on this tint in dark. Components put --text there; the test fails if the gap closes, so the entry cannot go stale.
+  add('Text', 'muted', 'accent-soft over panel', TEXT, true);
   // Match History outcome words: "Victory" and "Defeat" in their outcome inks, "Result pending" muted.
   for (const surface of ['panel', 'row-alt']) {
     add('Outcome word', 'win-ink', surface, TEXT);
@@ -213,7 +215,7 @@ export function hues(token, root = REPO_ROOT) {
 
 export function toMarkdown(rows) {
   const cell = (value, needs) => `${value.toFixed(2)}${value < needs ? ' FAIL' : ''}`;
-  const lines = rows.map((row) => `| ${row.kind} | ${row.foreground} | ${row.background} | ${row.needs}:1 | ${cell(row.light, row.needs)} | ${cell(row.dark, row.needs)} |`);
+  const lines = rows.map((row) => `| ${row.kind} | ${row.foreground} | ${row.background} | ${row.needs}:1 | ${cell(row.light, row.needs)} | ${cell(row.dark, row.needs)}${row.gap ? ' (known gap)' : ''} |`);
   return ['| Kind | Foreground | Background | Needs | Light | Dark |', '| --- | --- | --- | --- | --- | --- |', ...lines].join('\n');
 }
 

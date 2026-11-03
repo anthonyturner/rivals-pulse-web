@@ -21,9 +21,16 @@ test('measures contrast the way WCAG defines it', () => {
 test('every palette pair clears its contrast threshold in both themes', () => {
   const failures = evaluate()
     .flatMap((row) => ['light', 'dark'].map((theme) => ({ row, theme, value: row[theme] })))
-    .filter(({ row, value }) => value < row.needs)
+    .filter(({ row, value }) => !row.gap && value < row.needs)
     .map(({ row, theme, value }) => `${row.foreground} on ${row.background} (${theme}): ${value.toFixed(2)} < ${row.needs}`);
   assert.deepEqual(failures, []);
+});
+
+test('a known contrast gap still fails somewhere, so the list is not stale', () => {
+  const stale = evaluate()
+    .filter((row) => row.gap && row.light >= row.needs && row.dark >= row.needs)
+    .map((row) => `${row.foreground} on ${row.background} now passes: remove its known-gap flag`);
+  assert.deepEqual(stale, []);
 });
 
 test('the approved Aurora values are used exactly', () => {
