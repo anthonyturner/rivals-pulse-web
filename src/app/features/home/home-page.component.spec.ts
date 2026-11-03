@@ -135,10 +135,10 @@ describe('HomePageComponent', () => {
       expect(text(element.querySelector('app-game-news-band'))).toContain('Step into Season 10');
     });
 
-    it('makes no Jarvis, hotkey or player-rank claim in the hero', () => {
+    it('makes no Pulsa, hotkey or player-rank claim in the hero', () => {
       const hero = text(element.querySelector('header.season-hero'));
 
-      expect(hero).not.toMatch(/jarvis|hotkey|twelve|\branks?\b|voice/i);
+      expect(hero).not.toMatch(/pulsa|hotkey|twelve|\branks?\b|voice/i);
     });
 
     it('sets every heading from the shared type-scale tokens, in a modest size', () => {

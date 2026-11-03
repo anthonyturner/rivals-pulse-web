@@ -62,9 +62,9 @@ describe('HowItWorksComponent', () => {
     );
   });
 
-  it('makes no claim about autostart, hotkeys, ranks or Jarvis', () => {
+  it('makes no claim about autostart, hotkeys, ranks or Pulsa', () => {
     expect(text(element.querySelector('ol.steps'))).not.toMatch(
-      /jarvis|hotkey|alt\s*\+|ctrl|autostart|starts with|\branks?\b|premium|free/i,
+      /pulsa|hotkey|alt\s*\+|ctrl|autostart|starts with|\branks?\b|premium|free/i,
     );
   });
 });

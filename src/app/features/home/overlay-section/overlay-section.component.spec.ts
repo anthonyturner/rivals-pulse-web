@@ -29,14 +29,14 @@ describe('OverlaySectionComponent', () => {
   });
 
   describe('the feature cards', () => {
-    it('shows six cards, each with an h3 and a description, and no hotkeys or Jarvis demo', () => {
+    it('shows six cards, each with an h3 and a description, and no hotkeys or Pulsa demo', () => {
       const cards = Array.from(element.querySelectorAll('.feature'));
 
       expect(cards.length).toBe(6);
       expect(cards.map((card) => text(card.querySelector('h3')))).toEqual(OVERLAY_FEATURES.map((feature) => feature.title));
       expect(cards.every((card) => text(card.querySelector('p')).length > 0)).toBeTrue();
-      expect(element.querySelectorAll('kbd, app-jarvis-console').length).toBe(0);
-      expect(text(element)).not.toMatch(/alt\+|ctrl|hotkey|jarvis/i);
+      expect(element.querySelectorAll('kbd, app-pulsa-console').length).toBe(0);
+      expect(text(element)).not.toMatch(/alt\+|ctrl|hotkey|pulsa/i);
     });
 
     it('links only the card that carries on in the site, to My stats', () => {
