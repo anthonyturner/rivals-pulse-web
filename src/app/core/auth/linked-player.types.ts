@@ -1,6 +1,6 @@
 /**
  * The in-game player an account is linked to, as the session answer carries it. The server reads this
- * file too (`src/auth-gateway.ts`), so it imports nothing: the browser and the API must agree on it.
+ * file too (`src/server/auth/auth-gateway.ts`), so it imports nothing: the browser and the API must agree on it.
  */
 export interface LinkedPlayer {
   /** The name the desktop app reported when the code was made. */

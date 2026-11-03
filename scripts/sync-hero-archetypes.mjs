@@ -1,6 +1,6 @@
 import { HERO_GAMEPLAY_ARCHETYPES } from '../src/app/features/heroes/hero-gameplay-archetypes.ts';
-import { listHeroes, saveHero } from '../src/hero-store.ts';
-import { finishSyncRun, startSyncRun } from '../src/sync-log.ts';
+import { listHeroes, saveHero } from '../src/server/heroes/catalog/hero-store.ts';
+import { finishSyncRun, startSyncRun } from '../src/server/sync/sync-log.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const db = getSupabaseClient();

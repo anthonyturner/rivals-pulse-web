@@ -107,7 +107,7 @@ Local development and production use the same `TURSO_DATABASE_URL` and `TURSO_AU
 - `scripts/seed-sqlite.mjs` - local seed importer
 - `scripts/sync-*.mjs` - source-specific refresh jobs
 - `src/contracts/` - shared API response models
-- `src/content-database.ts` - server-side content queries
+- `src/server/content/content-database.ts` - server-side content queries
 - `src/server.ts` - Express API and SSR server
 - `api/` - Vercel serverless endpoints
 

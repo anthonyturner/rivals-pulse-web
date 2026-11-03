@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '../src/supabase-client.ts';
+import { getSupabaseClient } from '../src/server/supabase/supabase-client.ts';
 
 try {
   process.loadEnvFile?.('.env');

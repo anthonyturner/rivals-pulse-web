@@ -16,8 +16,8 @@ import {
   resolveCommunityStats,
   tierListSeasonPath,
   verifyPulseAtlas,
-} from '../src/pulse-atlas.ts';
-import { renderPulseAtlasPage } from '../src/pulse-atlas-page.ts';
+} from '../src/server/pulse-atlas/pulse-atlas.ts';
+import { renderPulseAtlasPage } from '../src/server/pulse-atlas/pulse-atlas-page.ts';
 
 // The public API is the source because it needs no credentials and is the same
 // contract the web app reads. Moving content to another database changes this

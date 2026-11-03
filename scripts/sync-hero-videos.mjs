@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { saveHeroVideos } from '../src/hero-video-store.ts';
-import { finishSyncRun, startSyncRun } from '../src/sync-log.ts';
+import { saveHeroVideos } from '../src/server/heroes/catalog/hero-video-store.ts';
+import { finishSyncRun, startSyncRun } from '../src/server/sync/sync-log.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

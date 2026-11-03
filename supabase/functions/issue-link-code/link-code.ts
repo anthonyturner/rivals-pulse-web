@@ -1,6 +1,6 @@
 /**
  * Crockford's base32: digits and letters without I, L, O and U, so a code read off a screen and typed
- * by hand cannot be confused. The website reads a typed code with the same rules (`src/link-code.ts`);
+ * by hand cannot be confused. The website reads a typed code with the same rules (`src/server/account/link-code.ts`);
  * `link-code.test.ts` keeps the two in step.
  */
 export const LINK_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';

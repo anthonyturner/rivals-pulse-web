@@ -1,4 +1,4 @@
-import { deriveOwnDashboard, type OwnDashboardLine } from '../../../own-dashboard';
+import { deriveOwnDashboard, type OwnDashboardLine } from '../../../server/account/own-dashboard';
 import { emptyDashboard, linkedDashboard } from './own-dashboard.fixtures';
 import { parseOwnDashboard } from './own-dashboard.parse';
 

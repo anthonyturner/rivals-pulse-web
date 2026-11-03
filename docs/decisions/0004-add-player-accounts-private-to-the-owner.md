@@ -188,7 +188,7 @@ issue 328, would carry it). It reads `participants` and `participant_hero_figure
 through `read_own_dashboard()`, a security-definer database function that finds the link
 through `auth.uid()` and returns only the lines where `recorded_by` is the link's recorder
 **and** `uid` is the link's player, newest 2,000 first. The website derives the figures from those
-lines (`src/own-dashboard.ts`) and sends the browser only the results.
+lines (`src/server/account/own-dashboard.ts`) and sends the browser only the results.
 
 | Dashboard content | Source | Depth |
 | --- | --- | --- |
