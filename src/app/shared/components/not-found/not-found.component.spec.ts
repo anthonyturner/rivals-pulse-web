@@ -1,9 +1,10 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, TitleStrategy } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { routes } from '../../../app.routes';
+import { PageMetaTitleStrategy } from '../../../core/seo/page-meta-title.strategy';
 import { NotFoundComponent } from './not-found.component';
 
 const robots = (): string | null =>
@@ -12,7 +13,11 @@ const robots = (): string | null =>
 describe('NotFoundComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter(routes)],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter(routes),
+        { provide: TitleStrategy, useExisting: PageMetaTitleStrategy },
+      ],
     });
   });
 
@@ -69,6 +74,21 @@ describe('NotFoundComponent', () => {
 
     await harness.navigateByUrl('/tools');
     expect(robots()).toBeNull();
+  });
+
+  it('has no canonical address while it shows, and gets the normal one back on the next page', async () => {
+    const canonical = (): string | null =>
+      document.head.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/tools');
+    expect(canonical()).toMatch(/\/tools$/);
+
+    await harness.navigateByUrl('/nope');
+    expect(canonical()).toBeNull();
+
+    await harness.navigateByUrl('/resources');
+    expect(canonical()).toMatch(/\/resources$/);
   });
 
   it('has a title that says so', async () => {

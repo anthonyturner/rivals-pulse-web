@@ -96,9 +96,8 @@
     <section class="panel" aria-labelledby="account-delete-title">
       <h2 id="account-delete-title">Delete your account</h2>
       <p>
-        Deleting removes your sign-in details and our row for them, and signs you out. It needs a
-        sign-in from the last ten minutes; if yours is older you will be asked to sign in again
-        first. Forgetting the matches the desktop app uploaded is not available yet.
+        Deleting needs a sign-in from the last ten minutes; if yours is older you will be asked to
+        sign in again first. Forgetting the matches the desktop app uploaded is not available yet.
       </p>
       <form [attr.aria-busy]="deleting() ? 'true' : null" (submit)="deleteAccount($event)">
         <label for="delete-confirmation">

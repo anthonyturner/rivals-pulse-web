@@ -121,8 +121,10 @@
   color: var(--text);
 }
 
-.guide-search input::placeholder {
+/* Firefox dims a placeholder to 54% unless told otherwise, which fails contrast in the light theme. */
+input::placeholder {
   color: var(--text-soft);
+  opacity: 1;
 }
 
 .guide-count {
