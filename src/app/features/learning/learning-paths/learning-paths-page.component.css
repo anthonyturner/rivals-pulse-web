@@ -125,7 +125,7 @@ h1 {
 
 .audience-tabs button.active,
 .audience-tabs button:hover {
-  border-color: rgba(3, 159, 159, 0.42);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -162,7 +162,7 @@ h1 {
 
 .path-hero span,
 .drill-card > span {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -192,9 +192,9 @@ dd {
   display: grid;
   gap: 8px;
   padding: 12px;
-  border-left: 3px solid var(--teal);
+  border-left: 3px solid var(--accent);
   border-radius: 6px;
-  background: rgba(3, 159, 159, 0.1);
+  background: var(--accent-soft);
 }
 
 .outcome strong {
@@ -239,7 +239,7 @@ dd {
   width: fit-content;
   margin-top: 9px;
   padding: 7px 9px;
-  border: 1px solid rgba(224, 169, 0, 0.42);
+  border: 1px solid var(--accent-line);
   border-radius: 6px;
   color: var(--accent-strong);
   font-size: 0.82rem;
@@ -248,7 +248,7 @@ dd {
 }
 
 .lesson-list a:hover {
-  background: rgba(224, 169, 0, 0.1);
+  background: var(--accent-soft);
 }
 
 .drills {

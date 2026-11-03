@@ -63,8 +63,8 @@ h1 {
 }
 
 .source-link:hover {
-  border-color: rgba(3, 159, 159, 0.42);
-  background: rgba(224, 169, 0, 0.1);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
 }
 
 .concept-map {
@@ -79,8 +79,8 @@ h1 {
   min-height: 330px;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(25, 245, 197, 0.12) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(111, 233, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, var(--accent-soft) 1px, transparent 1px),
+    linear-gradient(0deg, var(--secondary-soft) 1px, transparent 1px),
     var(--surface);
   background-size: 44px 44px;
 }
@@ -104,21 +104,21 @@ h1 {
 .spawn {
   left: 22px;
   bottom: 28px;
-  background: var(--blue);
-  color: var(--text);
+  background: var(--secondary);
+  color: var(--bg-elevated);
 }
 
 .enemy {
   top: 26px;
   right: 24px;
   background: var(--danger);
-  color: var(--text);
+  color: var(--accent-ink);
 }
 
 .objective {
   right: 76px;
   bottom: 42px;
-  background: var(--surface-3);
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -127,7 +127,7 @@ h1 {
   left: 50%;
   width: 150px;
   transform: translateX(-50%);
-  border: 1px solid rgba(224, 169, 0, 0.42);
+  border: 1px solid var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -149,7 +149,7 @@ h1 {
 
 .side-lane {
   width: 235px;
-  background: var(--teal);
+  background: var(--accent);
 }
 
 .side-lane.left {

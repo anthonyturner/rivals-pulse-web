@@ -32,7 +32,7 @@ ul {
   gap: 2px;
   padding-top: 12px;
   border-right: 1px solid var(--border);
-  background: color-mix(in srgb, var(--tier-color) 38%, white);
+  background: color-mix(in srgb, var(--tier-color) 38%, var(--bg-elevated));
 }
 
 .tier-letter {

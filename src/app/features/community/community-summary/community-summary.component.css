@@ -37,13 +37,13 @@
 
 .link {
   padding-block: 2px;
-  color: #0e6a98;
+  color: var(--link);
   font-size: var(--type-small);
   font-weight: 700;
   text-decoration: underline;
 }
 
 .link:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }

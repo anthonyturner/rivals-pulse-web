@@ -12,7 +12,7 @@
   padding: 20px;
   border-radius: 8px;
   background: var(--ink);
-  color: #ffffff;
+  color: var(--on-ink);
 }
 
 .house-ad__title {
@@ -22,11 +22,11 @@
 }
 
 .house-ad__text {
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--on-ink);
   font-size: var(--type-small);
   line-height: 1.5;
 }
 
 app-get-app-button {
-  --get-app-focus: var(--cta-yellow);
+  --get-app-focus: var(--ink-focus);
 }

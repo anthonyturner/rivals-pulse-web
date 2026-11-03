@@ -28,13 +28,13 @@
 }
 
 .community-page__link {
-  color: #0e6a98;
+  color: var(--link);
   font-weight: 700;
   text-decoration: underline;
 }
 
 .community-page__link:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -75,7 +75,7 @@
 
 .community-page__tab:focus-visible,
 .community-page__panel:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: -3px;
 }
 

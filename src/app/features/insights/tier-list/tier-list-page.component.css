@@ -34,14 +34,13 @@ h1 {
   font-size: var(--type-small);
 }
 
-/* --blue is 3.7:1 on the page background; this is 5.0:1. */
 .lede-link {
-  color: #0e6a98;
+  color: var(--link);
   font-weight: 700;
 }
 
 .lede-link:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 

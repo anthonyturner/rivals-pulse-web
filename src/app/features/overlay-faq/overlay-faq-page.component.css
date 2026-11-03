@@ -43,12 +43,12 @@ ul {
 }
 
 a {
-  color: var(--blue);
+  color: var(--link);
   font-weight: 700;
 }
 
 a:focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 

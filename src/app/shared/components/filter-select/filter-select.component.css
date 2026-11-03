@@ -27,7 +27,7 @@
 }
 
 .filter-select__control:focus {
-  border-color: var(--teal);
+  border-color: var(--accent);
   outline: 3px solid var(--focus-ring);
 }
 

@@ -17,6 +17,7 @@ import { filter, map } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import type { LinkedPlayer } from '../../auth/linked-player.types';
 import { PlayerAvatarComponent } from '../../../shared/components/player-avatar/player-avatar.component';
+import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import { HOME_NAV_ITEM, PRIMARY_NAV_ITEMS, PROFILE_PATH, activeNav } from './primary-nav';
 
 interface AccountLink {
@@ -32,7 +33,7 @@ const WIDE_NAV_QUERY = '(min-width: 920px)';
 
 @Component({
   selector: 'app-nav',
-  imports: [PlayerAvatarComponent, RouterLink],
+  imports: [PlayerAvatarComponent, RouterLink, ThemeToggle],
   templateUrl: './nav.html',
   styleUrl: './nav.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

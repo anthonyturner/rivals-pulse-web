@@ -118,7 +118,7 @@ h1 {
 
 .category-tabs button.active,
 .category-tabs button:hover {
-  border-color: rgba(3, 159, 159, 0.42);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -149,7 +149,7 @@ h1 {
 .term-card-header span {
   display: inline-block;
   margin-bottom: 8px;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.72rem;
   font-weight: 750;
   text-transform: uppercase;
@@ -166,8 +166,8 @@ h1 {
 }
 
 .term-card-header a:hover {
-  border-color: rgba(3, 159, 159, 0.42);
-  color: var(--accent);
+  border-color: var(--accent-line);
+  color: var(--accent-strong);
 }
 
 h2 {
@@ -203,7 +203,7 @@ h3 {
 .related-list span {
   padding: 7px 9px;
   border-radius: 999px;
-  background: #f7fbfd;
+  background: var(--bg-panel-soft);
   color: var(--text-soft);
   font-size: 0.8rem;
   font-weight: 700;
@@ -211,7 +211,7 @@ h3 {
 
 .source-name {
   padding-top: 2px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 0.82rem;
 }
 

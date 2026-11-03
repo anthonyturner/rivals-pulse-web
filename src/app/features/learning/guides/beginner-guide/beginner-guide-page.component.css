@@ -53,7 +53,7 @@ h1 {
   min-height: 42px;
   place-items: center;
   padding: 0 13px;
-  border: 1px solid rgba(224, 169, 0, 0.42);
+  border: 1px solid var(--accent-line);
   border-radius: 6px;
   color: var(--accent-strong);
   font-weight: 700;
@@ -105,13 +105,13 @@ h1 {
   height: 10px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(16, 32, 51, 0.12);
+  background: var(--surface-2);
 }
 
 .progress-track div {
   height: 100%;
   border-radius: inherit;
-  background: var(--teal);
+  background: var(--accent);
   transition: width 160ms ease;
 }
 
@@ -160,7 +160,7 @@ h1 {
 .choice-list button.active,
 .choice-list button:hover,
 .module-tabs button.active {
-  border-color: rgba(3, 159, 159, 0.42);
+  border-color: var(--accent-line);
   background: var(--accent);
   color: var(--accent-ink);
 }
@@ -238,9 +238,9 @@ dd {
 .cue-box,
 .practice-card strong {
   padding: 12px;
-  border-left: 3px solid var(--teal);
+  border-left: 3px solid var(--accent);
   border-radius: 6px;
-  background: rgba(3, 159, 159, 0.1);
+  background: var(--accent-soft);
 }
 
 .concept-grid span,
@@ -284,22 +284,25 @@ dt {
   width: fit-content;
   padding: 7px 10px;
   border-radius: 999px;
-  color: #ffffff;
+  color: var(--text);
   font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .quality.strong {
-  background: #168f56;
+  background: var(--win-soft);
+  color: var(--win-ink);
 }
 
 .quality.situational {
-  background: var(--blue);
+  background: var(--secondary-soft);
+  color: var(--secondary-ink);
 }
 
 .quality.risky {
-  background: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .cue-box strong,
@@ -341,13 +344,13 @@ dt {
   aspect-ratio: 1;
   place-items: center;
   border-radius: 6px;
-  background: rgba(16, 32, 51, 0.1);
+  background: var(--surface-2);
   color: inherit;
   font-weight: 800;
 }
 
 .module-tabs button.complete:not(.active) {
-  border-color: rgba(3, 159, 159, 0.32);
+  border-color: var(--accent-line);
 }
 
 .practice-section {

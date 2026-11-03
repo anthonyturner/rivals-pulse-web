@@ -14,7 +14,7 @@
 
 .band--dark {
   background: var(--ink-raised);
-  color: #fff;
+  color: var(--on-ink);
 }
 
 .band__inner {
@@ -56,7 +56,7 @@
 }
 
 .band--dark .band__lede {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--on-ink-muted);
 }
 
 @media (max-width: 720px) {

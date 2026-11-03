@@ -70,10 +70,10 @@ p {
   min-height: 42px;
   place-items: center;
   padding: 0 18px;
-  border: 1px solid rgba(224, 169, 0, 0.45);
+  border: 1px solid var(--accent-line);
   border-radius: 6px;
-  background: #f7f4e5;
-  color: var(--accent-ink);
+  background: var(--accent-soft);
+  color: var(--text);
   font: inherit;
   font-weight: 700;
   text-decoration: none;
@@ -82,7 +82,7 @@ p {
 
 .account-button:hover,
 .account-button:focus-visible {
-  background: #f1ebc9;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .account-button:disabled {
@@ -93,7 +93,7 @@ p {
 .account-button--danger {
   border-color: var(--danger);
   background: transparent;
-  color: color-mix(in srgb, var(--danger) 78%, black);
+  color: var(--danger-ink);
 }
 
 .account-button--danger:hover:not(:disabled),
@@ -166,7 +166,7 @@ p {
 }
 
 .account-error {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-weight: 700;
 }
 

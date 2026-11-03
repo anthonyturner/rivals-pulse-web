@@ -34,7 +34,7 @@
 
 .question::after {
   flex: none;
-  color: #0f6f7a;
+  color: var(--accent-strong);
   font-size: 1.4rem;
   font-weight: 700;
   line-height: 1;
@@ -49,7 +49,7 @@
 
 .question:focus-visible,
 .more:focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -63,7 +63,7 @@
 .more {
   display: inline-block;
   margin: 8px 0 12px;
-  color: #0f6f7a;
+  color: var(--accent-strong);
   font-size: 0.94rem;
   font-weight: 700;
   text-underline-offset: 3px;

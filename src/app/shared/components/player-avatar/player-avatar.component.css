@@ -14,8 +14,8 @@
 .player-avatar--initial {
   display: grid;
   place-items: center;
-  background: var(--accent-ink);
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-size: calc(var(--player-avatar-size, 28px) * 0.5);
   font-weight: 700;
   line-height: 1;
