@@ -80,6 +80,15 @@ html {
   outline-offset: 2px;
 }
 
+/* The home page's minimized video tab sits fixed at the bottom edge; this lets the footer scroll clear of it. */
+:root {
+  --floating-video-tab-height: 32px;
+}
+
+html.has-minimized-video body {
+  padding-bottom: var(--floating-video-tab-height);
+}
+
 body {
   background: var(--bg);
   color: var(--text);
