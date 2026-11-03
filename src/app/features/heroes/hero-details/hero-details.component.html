@@ -1,4 +1,4 @@
-﻿<div class="detail-hero-container" [class.detail-hero-container--compact]="compact()">
+﻿<div class="detail-hero-container">
   <div class="detail-hero">
     <div class="detail-hero-profile">
       <div class="detail-hero-media">
@@ -39,7 +39,7 @@
         </div>
         @for (section of controller.fandomOverviewSections(hero); track section.title) {
         <article class="overview-section">
-          @if (!compact() || section.title !== 'Overview') {
+          @if (section.title !== 'Overview') {
           <strong>{{ section.title }}</strong>
           }
           @for (paragraph of section.paragraphs; track paragraph) {
@@ -294,287 +294,232 @@
     }
   </section>
 
-  <ng-template #buildProfileBody>
-    <div class="build-profile-bars">
-      @for (type of controller.buildTypes; track type) {
-      <div [class]="controller.scoreTone(controller.heroBuildValue(hero, type))">
-        <span>{{ type }}</span>
-        <meter min="0" max="10" [value]="controller.heroBuildValue(hero, type)"></meter>
-        <strong>{{ controller.heroBuildValue(hero, type) }}</strong>
-      </div>
-      }
-    </div>
-
-    <p class="build-profile-note">
-      Ratings combine role, ability text, and guide interpretation. They are meant to explain a
-      hero's fight-plan value, not replace official ability numbers.
-    </p>
-
-    @if (controller.heroBuildProfileRationale(hero); as rationale) {
-    <div class="build-profile-source">
-      <strong>Fandom description analysis</strong>
-      <p>{{ rationale.reason }}</p>
-      <div>
-        <a [href]="rationale.source.url" target="_blank" rel="noopener noreferrer">{{
-          rationale.source.label
-          }}</a>
-      </div>
-    </div>
-    }
-  </ng-template>
-  @if (compact()) {
   <details class="collapsible hero-build-profile">
     <summary class="section-heading">
       <h3>Build Profile</h3>
     </summary>
     <div class="collapsible-body">
-    <p class="section-note">0-10 coach rating by fight-plan value, not official stats</p>
-    <ng-container [ngTemplateOutlet]="buildProfileBody"></ng-container>
+      <p class="section-note">0-10 coach rating by fight-plan value, not official stats</p>
+      <div class="build-profile-bars">
+        @for (type of controller.buildTypes; track type) {
+        <div [class]="controller.scoreTone(controller.heroBuildValue(hero, type))">
+          <span>{{ type }}</span>
+          <meter min="0" max="10" [value]="controller.heroBuildValue(hero, type)"></meter>
+          <strong>{{ controller.heroBuildValue(hero, type) }}</strong>
+        </div>
+        }
+      </div>
+
+      <p class="build-profile-note">
+        Ratings combine role, ability text, and guide interpretation. They are meant to explain a
+        hero's fight-plan value, not replace official ability numbers.
+      </p>
+
+      @if (controller.heroBuildProfileRationale(hero); as rationale) {
+      <div class="build-profile-source">
+        <strong>Fandom description analysis</strong>
+        <p>{{ rationale.reason }}</p>
+        <div>
+          <a [href]="rationale.source.url" target="_blank" rel="noopener noreferrer">{{
+            rationale.source.label
+            }}</a>
+        </div>
+      </div>
+      }
     </div>
   </details>
-  } @else {
-  <section class="hero-build-profile" aria-label="Hero build theory profile">
-    <div class="section-heading">
-      <h3>Build Profile</h3>
-      <p>0-10 coach rating by fight-plan value, not official stats</p>
-    </div>
-    <ng-container [ngTemplateOutlet]="buildProfileBody"></ng-container>
-  </section>
-  }
 
   @if (controller.displayedPlaystyleGuides(hero).length > 0) {
-  <ng-template #playstyleVariantsBody>
-    @for (guide of controller.displayedPlaystyleGuides(hero); track guide.id) {
-    <article>
-      <strong>{{ guide.title }}</strong>
-      <p>{{ guide.whenToUse }}</p>
-
-      <ol>
-        @for (idea of guide.coreIdeas; track idea.label; let index = $index) {
-        <li>
-          <span>{{ index + 1 }}</span>
-          <div>
-            <strong>{{ idea.label }}</strong>
-            <p>{{ idea.description }}</p>
-          </div>
-        </li>
-        }
-      </ol>
-
-      @if (guide.upgradeNotes.length > 0) {
-      <p class="upgrade-source">Upgrade read: {{ guide.upgradeNotes.join(' ') }}</p>
-      }
-
-      @if (guide.ultimateNotes.length > 0) {
-      <p class="upgrade-source">Ultimate read: {{ guide.ultimateNotes.join(' ') }}</p>
-      }
-
-      @if (guide.sourceUrl) {
-      <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">{{
-        guide.sourceTitle ??
-        'Original
-        source'
-        }}</a>
-      }
-    </article>
-    }
-  </ng-template>
-  @if (compact()) {
   <details class="collapsible deadpool-upgrades">
     <summary class="section-heading">
       <h3>Playstyle Variants</h3>
     </summary>
     <div class="collapsible-body">
-    <p class="section-note">{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
-    <ng-container [ngTemplateOutlet]="playstyleVariantsBody"></ng-container>
-    </div>
-  </details>
-  } @else {
-  <section class="deadpool-upgrades" aria-label="Detailed playstyle variants">
-    <div class="section-heading">
-      <div>
-        <h3>Playstyle Variants</h3>
-        <p>{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
-      </div>
-    </div>
-    <ng-container [ngTemplateOutlet]="playstyleVariantsBody"></ng-container>
-  </section>
-  }
-  }
-  @if (controller.ultimateStrategies(hero).length > 0) {
-  <ng-template #ultimateStrategyBody>
-    @for (ultimate of controller.ultimateStrategies(hero); track ultimate.ability.name) {
-    <article>
-      <span>{{ ultimate.ability.name }}</span>
-      <p class="ultimate-source" [innerHTML]="controller.highlightedAbilityText(hero, ultimate.sourceDescription)"></p>
-      <p [innerHTML]="controller.highlightedAbilityText(hero, ultimate.strategy)"></p>
-    </article>
-    }
-
-    @if (
-    controller.deadpoolVanguardUltimatePaths(hero).length > 0 && controller.activeDeadpoolUltimatePath(hero);
-    as activePath
-    ) {
-    <section class="ultimate-paths" aria-labelledby="deadpool-ultimate-path-title">
-      <div class="section-heading">
-        <div>
-          <h3 id="deadpool-ultimate-path-title">Ultimate Path</h3>
-          <p>Vanguard Deadpool fight plan</p>
-        </div>
-      </div>
-
-      <div class="ultimate-path-tabs" role="tablist" aria-label="Vanguard Deadpool ultimate paths">
-        @for (path of controller.deadpoolVanguardUltimatePaths(hero); track path.name) {
-        <button type="button" role="tab" [class.active]="activePath.name === path.name"
-          [attr.aria-selected]="activePath.name === path.name"
-          (click)="controller.selectDeadpoolUltimatePath(path.name)">
-          {{ path.name }}
-        </button>
-        }
-      </div>
-
-      <article class="ultimate-path-panel" role="tabpanel">
-        <strong>{{ activePath.name }}</strong>
-        <p>{{ activePath.plan }}</p>
-        <p class="ultimate-path-timing">{{ activePath.timing }}</p>
-
-        <div class="ultimate-path-grid">
-          <section>
-            <h4>Execute</h4>
-            <ul>
-              @for (step of activePath.execution; track step) {
-              <li>{{ step }}</li>
-              }
-            </ul>
-          </section>
-
-          <section>
-            <h4>Good Into</h4>
-            <ul>
-              @for (target of activePath.goodAgainst; track target) {
-              <li>{{ target }}</li>
-              }
-            </ul>
-          </section>
-
-          <section>
-            <h4>Avoid Into</h4>
-            <ul>
-              @for (target of activePath.avoidInto; track target) {
-              <li>{{ target }}</li>
-              }
-            </ul>
-          </section>
-        </div>
-      </article>
-    </section>
-    }
-
-    @if (
-    controller.deadpoolVanguardAggressivePaths(hero).length > 0 && controller.activeDeadpoolAggressivePath(hero);
-    as activePath
-    ) {
-    <section class="deadpool-upgrades aggressive-paths" aria-labelledby="deadpool-aggressive-path-title">
-      <div class="section-heading">
-        <div>
-          <h3 id="deadpool-aggressive-path-title">Aggressive Paths</h3>
-          <p>Skill book routes from the rank-one Tankpool review</p>
-        </div>
-      </div>
-
-      <div class="aggressive-path-tabs" role="tablist" aria-label="Vanguard Deadpool aggressive upgrade paths">
-        @for (path of controller.deadpoolVanguardAggressivePaths(hero); track path.id) {
-        <button type="button" role="tab" [class.active]="activePath.id === path.id"
-          [attr.aria-selected]="activePath.id === path.id" (click)="controller.selectDeadpoolAggressivePath(path.id)">
-          {{ path.title }}
-        </button>
-        }
-      </div>
-
-      <article class="aggressive-path-panel" role="tabpanel">
-        <strong>{{ activePath.title }}</strong>
-        <p>{{ activePath.summary }}</p>
-        <p class="upgrade-source">{{ activePath.whenToUse }}</p>
+      <p class="section-note">{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
+      @for (guide of controller.displayedPlaystyleGuides(hero); track guide.id) {
+      <article>
+        <strong>{{ guide.title }}</strong>
+        <p>{{ guide.whenToUse }}</p>
 
         <ol>
-          @for (upgrade of activePath.upgrades; track upgrade.name) {
+          @for (idea of guide.coreIdeas; track idea.label; let index = $index) {
           <li>
-            <span>{{ upgrade.rank }}</span>
+            <span>{{ index + 1 }}</span>
             <div>
-              <strong>{{ upgrade.name }}</strong>
-              <p>{{ upgrade.reason }}</p>
-              <small>{{ upgrade.note }}</small>
+              <strong>{{ idea.label }}</strong>
+              <p>{{ idea.description }}</p>
             </div>
           </li>
           }
         </ol>
 
-        <p class="upgrade-source">{{ activePath.transcriptRead }}</p>
+        @if (guide.upgradeNotes.length > 0) {
+        <p class="upgrade-source">Upgrade read: {{ guide.upgradeNotes.join(' ') }}</p>
+        }
+
+        @if (guide.ultimateNotes.length > 0) {
+        <p class="upgrade-source">Ultimate read: {{ guide.ultimateNotes.join(' ') }}</p>
+        }
+
+        @if (guide.sourceUrl) {
+        <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">{{
+          guide.sourceTitle ??
+          'Original
+          source'
+          }}</a>
+        }
       </article>
-    </section>
-    }
-  </ng-template>
-  @if (compact()) {
+      }
+    </div>
+  </details>
+  }
+  @if (controller.ultimateStrategies(hero).length > 0) {
   <details class="collapsible ultimate-strategies">
     <summary class="section-heading">
       <h3>Ultimate Strategy</h3>
     </summary>
     <div class="collapsible-body">
-    <ng-container [ngTemplateOutlet]="ultimateStrategyBody"></ng-container>
+      @for (ultimate of controller.ultimateStrategies(hero); track ultimate.ability.name) {
+      <article>
+        <span>{{ ultimate.ability.name }}</span>
+        <p class="ultimate-source" [innerHTML]="controller.highlightedAbilityText(hero, ultimate.sourceDescription)"></p>
+        <p [innerHTML]="controller.highlightedAbilityText(hero, ultimate.strategy)"></p>
+      </article>
+      }
+
+      @if (
+      controller.deadpoolVanguardUltimatePaths(hero).length > 0 && controller.activeDeadpoolUltimatePath(hero);
+      as activePath
+      ) {
+      <section class="ultimate-paths" aria-labelledby="deadpool-ultimate-path-title">
+        <div class="section-heading">
+          <div>
+            <h3 id="deadpool-ultimate-path-title">Ultimate Path</h3>
+            <p>Vanguard Deadpool fight plan</p>
+          </div>
+        </div>
+
+        <div class="ultimate-path-tabs" role="tablist" aria-label="Vanguard Deadpool ultimate paths">
+          @for (path of controller.deadpoolVanguardUltimatePaths(hero); track path.name) {
+          <button type="button" role="tab" [class.active]="activePath.name === path.name"
+            [attr.aria-selected]="activePath.name === path.name"
+            (click)="controller.selectDeadpoolUltimatePath(path.name)">
+            {{ path.name }}
+          </button>
+          }
+        </div>
+
+        <article class="ultimate-path-panel" role="tabpanel">
+          <strong>{{ activePath.name }}</strong>
+          <p>{{ activePath.plan }}</p>
+          <p class="ultimate-path-timing">{{ activePath.timing }}</p>
+
+          <div class="ultimate-path-grid">
+            <section>
+              <h4>Execute</h4>
+              <ul>
+                @for (step of activePath.execution; track step) {
+                <li>{{ step }}</li>
+                }
+              </ul>
+            </section>
+
+            <section>
+              <h4>Good Into</h4>
+              <ul>
+                @for (target of activePath.goodAgainst; track target) {
+                <li>{{ target }}</li>
+                }
+              </ul>
+            </section>
+
+            <section>
+              <h4>Avoid Into</h4>
+              <ul>
+                @for (target of activePath.avoidInto; track target) {
+                <li>{{ target }}</li>
+                }
+              </ul>
+            </section>
+          </div>
+        </article>
+      </section>
+      }
+
+      @if (
+      controller.deadpoolVanguardAggressivePaths(hero).length > 0 && controller.activeDeadpoolAggressivePath(hero);
+      as activePath
+      ) {
+      <section class="deadpool-upgrades aggressive-paths" aria-labelledby="deadpool-aggressive-path-title">
+        <div class="section-heading">
+          <div>
+            <h3 id="deadpool-aggressive-path-title">Aggressive Paths</h3>
+            <p>Skill book routes from the rank-one Tankpool review</p>
+          </div>
+        </div>
+
+        <div class="aggressive-path-tabs" role="tablist" aria-label="Vanguard Deadpool aggressive upgrade paths">
+          @for (path of controller.deadpoolVanguardAggressivePaths(hero); track path.id) {
+          <button type="button" role="tab" [class.active]="activePath.id === path.id"
+            [attr.aria-selected]="activePath.id === path.id" (click)="controller.selectDeadpoolAggressivePath(path.id)">
+            {{ path.title }}
+          </button>
+          }
+        </div>
+
+        <article class="aggressive-path-panel" role="tabpanel">
+          <strong>{{ activePath.title }}</strong>
+          <p>{{ activePath.summary }}</p>
+          <p class="upgrade-source">{{ activePath.whenToUse }}</p>
+
+          <ol>
+            @for (upgrade of activePath.upgrades; track upgrade.name) {
+            <li>
+              <span>{{ upgrade.rank }}</span>
+              <div>
+                <strong>{{ upgrade.name }}</strong>
+                <p>{{ upgrade.reason }}</p>
+                <small>{{ upgrade.note }}</small>
+              </div>
+            </li>
+            }
+          </ol>
+
+          <p class="upgrade-source">{{ activePath.transcriptRead }}</p>
+        </article>
+      </section>
+      }
     </div>
   </details>
-  } @else {
-  <section class="ultimate-strategies" aria-label="Ultimate strategies">
-    <div class="section-heading">
-      <h3>Ultimate Strategy</h3>
-    </div>
-    <ng-container [ngTemplateOutlet]="ultimateStrategyBody"></ng-container>
-  </section>
-  }
   }
 
   @if (
   controller.deadpoolUpgradeOrder(hero).length > 0 && controller.deadpoolVanguardAggressivePaths(hero).length === 0
   ) {
-  <ng-template #upgradeOrderBody>
-    <ol>
-      @for (upgrade of controller.deadpoolUpgradeOrder(hero); track upgrade.name) {
-      <li>
-        <span>{{ upgrade.rank }}</span>
-        <div>
-          <strong>{{ upgrade.name }}</strong>
-          <p>{{ upgrade.reason }}</p>
-          <small>{{ upgrade.note }}</small>
-        </div>
-      </li>
-      }
-    </ol>
-
-    <p class="upgrade-source">
-      Recommended order based on the current Fandom upgrade stats and role win condition.
-    </p>
-  </ng-template>
-  @if (compact()) {
   <details class="collapsible deadpool-upgrades">
     <summary class="section-heading">
       <h3>Upgrade Book Order</h3>
     </summary>
     <div class="collapsible-body">
-    <p class="section-note">{{ controller.deadpoolUpgradeRole(hero) }} default priority</p>
-    <ng-container [ngTemplateOutlet]="upgradeOrderBody"></ng-container>
+      <p class="section-note">{{ controller.deadpoolUpgradeRole(hero) }} default priority</p>
+      <ol>
+        @for (upgrade of controller.deadpoolUpgradeOrder(hero); track upgrade.name) {
+        <li>
+          <span>{{ upgrade.rank }}</span>
+          <div>
+            <strong>{{ upgrade.name }}</strong>
+            <p>{{ upgrade.reason }}</p>
+            <small>{{ upgrade.note }}</small>
+          </div>
+        </li>
+        }
+      </ol>
+
+      <p class="upgrade-source">
+        Recommended order based on the current Fandom upgrade stats and role win condition.
+      </p>
     </div>
   </details>
-  } @else {
-  <section class="deadpool-upgrades" aria-labelledby="deadpool-upgrade-title">
-    <div class="section-heading">
-      <div>
-        <h3 id="deadpool-upgrade-title">Upgrade Book Order</h3>
-        <p>{{ controller.deadpoolUpgradeRole(hero) }} default priority</p>
-      </div>
-    </div>
-    <ng-container [ngTemplateOutlet]="upgradeOrderBody"></ng-container>
-  </section>
-  }
   }
 
 </div>
