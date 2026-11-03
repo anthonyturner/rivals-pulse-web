@@ -7,14 +7,15 @@ import {
   HostListener,
   inject,
   Injector,
+  linkedSignal,
   OnInit,
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { distinctUntilChanged, filter, forkJoin, map, pairwise } from 'rxjs';
 
 import {
   HERO_GUIDES,
@@ -28,6 +29,7 @@ import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
 import { HeroGridComponent, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
+import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
   buildHeroBuildProfileRationale,
   computeHeroBuildProfile,
@@ -47,6 +49,7 @@ import {
   HeroVideoType,
 } from './hero.model';
 
+import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
 
 interface HeroVideoSearch {
@@ -95,6 +98,7 @@ interface FandomOverviewSection {
     HeroContentComponent,
     HeroGridComponent,
     HeroPageHeaderComponent,
+    StatePanelComponent,
   ],
   templateUrl: './heroes-page.component.html',
   styleUrl: './heroes-page.component.css',
@@ -106,11 +110,18 @@ export class HeroesPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly injector = inject(Injector);
-  private readonly grid = viewChild(HeroGridComponent);
   private readonly content = viewChild(HeroContentComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
+  private readonly routeHeroId = this.route.paramMap.pipe(
+    map((params) => params.get('heroId')),
+    distinctUntilChanged(),
+  );
+  private readonly query = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   /** RivalsPulse player stats for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroStats = signal<HeroStats | null | undefined>(undefined);
@@ -119,12 +130,22 @@ export class HeroesPageComponent implements OnInit {
   /** Every hero, for the counters section to name and picture the heroes in a matchup. */
   readonly heroRoster = this.heroes.asReadonly();
   readonly roles: HeroRoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist'];
-  readonly selectedRole = signal<HeroRoleFilter>('All');
+  /** The roster filters live in the address, so a shared link or the back button restores them. */
+  readonly selectedRole = computed(() => parseRoleFilter(this.query().get(ROLE_QUERY_PARAM)));
+  readonly searchTerm = computed(() => this.query().get(SEARCH_QUERY_PARAM) ?? '');
   readonly heroGridMode = signal<HeroGridMode>('thumbs');
-  readonly searchTerm = signal('');
   readonly isRosterLoaded = signal(false);
-  readonly selectedHeroId = signal(this.heroes()[0]?.id ?? '');
-  readonly selectedAbilityKitRole = signal<HeroRole>('Vanguard');
+  /** True when the roster could not be loaded or came back empty; both show the load-error state. */
+  readonly isRosterFailed = signal(false);
+  /** The hero in the address; empty on the roster-only landing. */
+  readonly selectedHeroId = toSignal(this.routeHeroId.pipe(map((heroId) => heroId ?? '')), {
+    initialValue: this.route.snapshot.paramMap.get('heroId') ?? '',
+  });
+  /** Chosen role filter's kit when there is one; resets when the role filter or the hero changes. */
+  readonly selectedAbilityKitRole = linkedSignal<{ role: HeroRoleFilter; heroId: string }, HeroRole>({
+    source: () => ({ role: this.selectedRole(), heroId: this.selectedHeroId() }),
+    computation: ({ role }) => (role === 'All' ? 'Vanguard' : role),
+  });
   readonly activeAbilityAnchorId = signal('');
   readonly selectedAbilityTabId = signal('');
   readonly activeUltimatePathName = signal('');
@@ -442,15 +463,12 @@ export class HeroesPageComponent implements OnInit {
     });
   });
 
+  /** Looked up in the whole roster, so a filter that hides the hero's card does not hide the hero. */
   readonly selectedHero = computed<Hero | undefined>(() => {
-    const visibleHeroes = this.filteredHeroes();
-    const selectedHero = visibleHeroes.find((hero) => hero.id === this.selectedHeroId());
+    const heroId = this.selectedHeroId();
 
-    // Keep the detail panel populated when filters hide the previously selected hero.
-    return selectedHero ?? visibleHeroes[0];
+    return this.heroes().find((hero) => hero.id === heroId);
   });
-
-  readonly activeHeroId = computed(() => this.selectedHero()?.id ?? '');
 
   readonly selectedHeroVideos = computed<HeroVideoSearch[]>(() => {
     const hero = this.selectedHero();
@@ -469,6 +487,22 @@ export class HeroesPageComponent implements OnInit {
   readonly selectedHeroYoutubeUrl = computed(() =>
     this.youtubeSearchUrl(`Marvel Rivals ${this.selectedHero()?.name ?? ''}`),
   );
+
+  constructor() {
+    // The app shell moves focus to the page when the path changes. Choosing a hero moves it on to the
+    // hero's name, which renders after the shell has acted; a page opened straight onto a hero leaves
+    // focus where the shell put it.
+    this.routeHeroId
+      .pipe(
+        pairwise(),
+        filter(([, heroId]) => heroId !== null),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() =>
+        afterNextRender(() => this.content()?.focusHeading(), { injector: this.injector }),
+      );
+  }
+
   ngOnInit(): void {
     this.heroStatsService
       .getHeroStats()
@@ -481,28 +515,25 @@ export class HeroesPageComponent implements OnInit {
       .subscribe((matchups) => this.heroMatchups.set(matchups));
 
     forkJoin({
-      heroes: this.heroDataService.getHeroes(),
+      heroes: this.heroDataService.getHeroRoster(),
       heroVideos: this.heroDataService.getHeroVideos(),
-    }).subscribe(({ heroes, heroVideos }) => {
-      const hydratedHeroes = heroes.map((hero) => ({
-        ...hero,
-        buildProfile: hero.buildProfile ?? computeHeroBuildProfile(hero),
-      }));
-      const requestedHeroId = this.route.snapshot.queryParamMap.get('hero') ?? '';
-      const initialHero =
-        hydratedHeroes.find((hero) => hero.id === requestedHeroId) ?? hydratedHeroes[0];
-
-      this.heroes.set(hydratedHeroes);
-      this.heroVideos.set(heroVideos);
-      this.selectedHeroId.set(initialHero?.id ?? '');
-      this.isRosterLoaded.set(true);
-    });
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ heroes, heroVideos }) => {
+        this.heroes.set(
+          (heroes ?? []).map((hero) => ({
+            ...hero,
+            buildProfile: hero.buildProfile ?? computeHeroBuildProfile(hero),
+          })),
+        );
+        this.heroVideos.set(heroVideos);
+        this.isRosterFailed.set(heroes === null);
+        this.isRosterLoaded.set(true);
+      });
   }
 
   selectRole(role: HeroRoleFilter): void {
-    this.selectedRole.set(role);
-    this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
-    this.selectedAbilityKitRole.set(role === 'All' ? 'Vanguard' : role);
+    this.updateFilters({ [ROLE_QUERY_PARAM]: role === 'All' ? null : role.toLowerCase() });
   }
 
   selectHeroGridMode(mode: HeroGridMode): void {
@@ -510,34 +541,22 @@ export class HeroesPageComponent implements OnInit {
   }
 
   resetHeroFilters(): void {
-    this.selectedRole.set('All');
-    this.searchTerm.set('');
     this.heroGridMode.set('thumbs');
-    this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
-  }
-
-  selectHero(heroId: string): void {
-    this.selectedHeroId.set(heroId);
-    const role = this.selectedRole();
-
-    if (role !== 'All') {
-      this.selectedAbilityKitRole.set(role);
-    }
-    afterNextRender(() => this.content()?.focusHeading(), { injector: this.injector });
-  }
-
-  returnToRoster(): void {
-    this.grid()?.focusHero(this.activeHeroId());
-  }
-
-  updateSearch(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.updateSearchTerm(input.value);
+    this.updateFilters({ [ROLE_QUERY_PARAM]: null, [SEARCH_QUERY_PARAM]: null });
   }
 
   updateSearchTerm(searchTerm: string): void {
-    this.searchTerm.set(searchTerm);
-    this.selectedHeroId.set(this.filteredHeroes()[0]?.id ?? '');
+    this.updateFilters({ [SEARCH_QUERY_PARAM]: searchTerm === '' ? null : searchTerm });
+  }
+
+  /** A filter change replaces the history entry, so Back leaves the page instead of undoing each keystroke. */
+  private updateFilters(queryParams: Record<string, string | null>): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   roleClass(role: HeroRole): string {

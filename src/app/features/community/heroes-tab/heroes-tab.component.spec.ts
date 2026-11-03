@@ -62,7 +62,7 @@ describe('HeroesTabComponent', () => {
     expect(text()).not.toMatch(/NaN|undefined|null/);
 
     const hrefs = Array.from(host().querySelectorAll('a')).map((anchor) => anchor.getAttribute('href'));
-    expect(hrefs).toContain('/heroes?hero=storm');
+    expect(hrefs).toContain('/heroes/storm');
     expect(hrefs).toContain('/heroes');
     expect(hrefs).toContain('/win-rates');
   });

@@ -1,9 +1,9 @@
 @if (hero()) {
   <section class="hero-detail" aria-label="Selected hero details">
     <div class="detail-actions">
-      <button type="button" class="detail-action" (click)="rosterReturned.emit()">
-        <span aria-hidden="true">&larr;</span> Back to roster
-      </button>
+      <a class="detail-action" routerLink="/heroes" queryParamsHandling="preserve">
+        <span aria-hidden="true">&larr;</span> All heroes
+      </a>
     </div>
 
     @for (shown of detailHeroes(); track shown.id) {

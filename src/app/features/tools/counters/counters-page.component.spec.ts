@@ -298,7 +298,7 @@ describe('CountersPageComponent', () => {
       const root = await open(partial);
 
       expect(text(root, '.result-head h2')).toBe('Mantis');
-      expect(root.querySelector('.link')?.getAttribute('href')).toBe('/heroes?hero=mantis');
+      expect(root.querySelector('.link')?.getAttribute('href')).toBe('/heroes/mantis');
     });
 
     it('labels the previous half-season when it stands in for the current one', async () => {

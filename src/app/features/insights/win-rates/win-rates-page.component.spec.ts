@@ -157,7 +157,7 @@ describe('WinRatesPageComponent', () => {
     const link = element.querySelector('tbody a') as HTMLAnchorElement;
     const image = link.querySelector('img') as HTMLImageElement;
 
-    expect(link.getAttribute('href')).toBe('/heroes?hero=storm');
+    expect(link.getAttribute('href')).toBe('/heroes/storm');
     expect(image.getAttribute('alt')).toBe('');
     expect(image.getAttribute('width')).toBe('28');
   });

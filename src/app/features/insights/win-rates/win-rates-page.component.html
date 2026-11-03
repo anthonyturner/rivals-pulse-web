@@ -90,7 +90,7 @@
                 <tr>
                   <td class="col-rank">{{ row.rank }}</td>
                   <th scope="row">
-                    <a class="hero-link" [routerLink]="['/heroes']" [queryParams]="{ hero: row.hero }">
+                    <a class="hero-link" [routerLink]="['/heroes', row.hero]">
                       <img appHeroImageFallback [src]="row.imageUrl" alt="" width="28" height="28" loading="lazy" />
                       <span class="hero-name">{{ row.name }}</span>
                     </a>

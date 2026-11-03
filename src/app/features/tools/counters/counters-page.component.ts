@@ -159,7 +159,7 @@ export class CountersPageComponent implements OnInit {
   protected readonly selected = computed(() => {
     const hero = this.heroes()?.find((candidate) => candidate.id === this.selectedHeroId());
 
-    return hero && { hero, detail: this.heroDetail(hero), query: { hero: hero.id } };
+    return hero && { hero, detail: this.heroDetail(hero) };
   });
 
   /** The two lists under the chosen hero: who has a winning record against it, and who it has one against. */

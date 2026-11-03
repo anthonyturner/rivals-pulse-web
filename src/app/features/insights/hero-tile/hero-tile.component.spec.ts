@@ -38,7 +38,7 @@ describe('HeroTileComponent', () => {
     const link = tile('linked').querySelector('a');
 
     expect(link?.textContent?.trim()).toBe('Hela');
-    expect(link?.getAttribute('href')).toBe('/heroes?hero=hela');
+    expect(link?.getAttribute('href')).toBe('/heroes/hela');
   });
 
   it('places the figure beside the name and the other lines under it', () => {

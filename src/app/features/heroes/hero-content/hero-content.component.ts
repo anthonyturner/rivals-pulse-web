@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
 import { SafeResourceUrl } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
 
 import { HeroDetailsComponent } from '../hero-details/hero-details.component';
 import { Hero } from '../hero.model';
@@ -14,7 +15,7 @@ interface HeroVideoSearch {
 
 @Component({
   selector: 'app-hero-content',
-  imports: [HeroDetailsComponent, HeroRoleSwitcherComponent],
+  imports: [HeroDetailsComponent, HeroRoleSwitcherComponent, RouterLink],
   templateUrl: './hero-content.component.html',
   styleUrl: './hero-content.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,8 +27,6 @@ export class HeroContentComponent {
   readonly videos = input.required<HeroVideoSearch[]>();
   readonly youtubeUrl = input.required<string>();
   readonly controller = input.required<any>();
-
-  readonly rosterReturned = output<void>();
 
   /** The selected hero as a one-item list: tracking by id gives each hero fresh details with the long sections collapsed. */
   readonly detailHeroes = computed(() => {
