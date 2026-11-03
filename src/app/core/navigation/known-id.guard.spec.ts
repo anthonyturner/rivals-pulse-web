@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection, RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Route, Router, UrlSegment } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { routes } from '../../app.routes';
@@ -9,6 +9,7 @@ import { HeroGuideDetailPageComponent } from '../../features/learning/guides/her
 import { StrategistGuideDetailPageComponent } from '../../features/learning/guides/strategist-guides/strategist-guide-detail-page.component';
 import { STRATEGIST_GUIDES } from '../../features/learning/guides/strategist-guides/strategist-guides.data';
 import { NotFoundComponent } from '../../shared/components/not-found/not-found.component';
+import { knownIdGuard } from './known-id.guard';
 
 describe('knownIdGuard on the guide routes', () => {
   const response = { status: 200 };
@@ -58,5 +59,22 @@ describe('knownIdGuard on the guide routes', () => {
 
     expect(response.status).toBe(200);
     expect(harness.routeNativeElement?.querySelector('app-not-found')).toBeNull();
+  });
+});
+
+describe('knownIdGuard', () => {
+  const matches = async (path: string, url: string[]): Promise<unknown> =>
+    knownIdGuard(async () => ['a', 'b'])({ path } as Route, url.map((part) => new UrlSegment(part, {})));
+
+  it('reads the id from the segment its :param stands for, wherever that is', async () => {
+    expect(await matches('guides/:id', ['guides', 'a'])).toBe(true);
+    expect(await matches('guides/:id/notes', ['guides', 'a', 'notes'])).toBe(true);
+    expect(await matches(':id/notes', ['b', 'notes'])).toBe(true);
+    expect(await matches('guides/:id/notes', ['guides', 'notes', 'a'])).toBe(false);
+  });
+
+  it('does not match an unknown id or a missing segment', async () => {
+    expect(await matches('guides/:id', ['guides', 'nope'])).toBe(false);
+    expect(await matches('guides/:id', ['guides'])).toBe(false);
   });
 });

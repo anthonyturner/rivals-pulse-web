@@ -8,7 +8,7 @@ import { CanMatchFn } from '@angular/router';
  */
 export function knownIdGuard(loadIds: () => Promise<readonly string[]>): CanMatchFn {
   return async (route, segments) => {
-    const idIndex = (route.path ?? '').split('/').length - 1;
+    const idIndex = (route.path ?? '').split('/').findIndex((part) => part.startsWith(':'));
     const id = segments[idIndex]?.path;
 
     return id !== undefined && (await loadIds()).includes(id);
