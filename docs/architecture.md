@@ -13,6 +13,11 @@ non-API path to `index.csr.html`, so a `curl` of a page returns an empty
 local dev and `npm run serve:ssr:rivals-pulse-coach`, so a feature must work
 without it. Routes that need the visitor's own session (`/sign-in`, `/account`, `/profile`)
 are declared `RenderMode.Client` in `src/app/app.routes.server.ts`.
+The not-found page answers HTTP 404 from the server render (`respondNotFound()` in
+`core/seo/response-status.ts`, which sets the status on Angular's `RESPONSE_INIT`),
+and a guide route whose id is unknown falls through to it (`knownIdGuard` in
+`core/navigation/`). Production does not run the server render, so it still
+answers 200 there (issue 430).
 
 Hosting:
 - Vercel

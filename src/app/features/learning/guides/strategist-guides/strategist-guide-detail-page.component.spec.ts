@@ -12,12 +12,6 @@ describe('StrategistGuideDetailPageComponent', () => {
   let fixture: ComponentFixture<StrategistGuideDetailPageComponent>;
   let element: HTMLElement;
 
-  async function open(guideId: string): Promise<void> {
-    params.next(convertToParamMap({ guideId }));
-    await fixture.whenStable();
-    fixture.detectChanges();
-  }
-
   beforeEach(() => {
     params.next(convertToParamMap({ guideId: guide.id }));
     TestBed.configureTestingModule({
@@ -30,15 +24,6 @@ describe('StrategistGuideDetailPageComponent', () => {
     fixture = TestBed.createComponent(StrategistGuideDetailPageComponent);
     fixture.detectChanges();
     element = fixture.nativeElement;
-  });
-
-  it('says the guide is not found for an unknown id, with a way back', async () => {
-    await open('nope');
-
-    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Guide not found');
-    expect(element.querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
-    expect(element.querySelector('a[href="/strategist-guides"]')).not.toBeNull();
-    expect(element.querySelector('iframe')).toBeNull();
   });
 
   it('marks the current guide in the breadcrumb', () => {
@@ -65,6 +50,19 @@ describe('StrategistGuideDetailPageComponent', () => {
 
     expect(headers).toEqual(['When', 'Do']);
     expect(element.querySelectorAll('table tbody tr').length).toBe(guide.decisionRules.length);
+  });
+
+  it('names the table parts explicitly, because the phone layout stacks them as blocks and Safari then drops the table', () => {
+    const roles = (selector: string) =>
+      Array.from(element.querySelectorAll(`table ${selector}`), (cell) => cell.getAttribute('role'));
+    const rows = guide.decisionRules.length;
+
+    expect(element.querySelector('table')?.getAttribute('role')).toBe('table');
+    expect(roles('thead, tbody')).toEqual(['rowgroup', 'rowgroup']);
+    expect(roles('tr')).toEqual(Array(rows + 1).fill('row'));
+    expect(roles('thead th')).toEqual(['columnheader', 'columnheader']);
+    expect(roles('tbody th')).toEqual(Array(rows).fill('rowheader'));
+    expect(roles('tbody td')).toEqual(Array(rows).fill('cell'));
   });
 
   it('says each checkpoint link opens YouTube in a new tab', () => {

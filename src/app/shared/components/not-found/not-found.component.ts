@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular
 import { Meta } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
+import { respondNotFound } from '../../../core/seo/response-status';
 import { PageHeaderComponent } from '../page-header/page-header.component';
 
 /**
- * The page for an address that leads nowhere, and the view a page shows in place of its content when
- * the thing it was asked for does not exist. It asks search engines not to index the page it is on.
+ * The page for an address that leads nowhere, including a guide address that names no guide. It
+ * answers 404 on the server and asks search engines not to index it. It is a routed page and carries
+ * its own page container, so do not nest it inside another one.
  */
 @Component({
   selector: 'app-not-found',
@@ -26,6 +28,8 @@ export class NotFoundComponent {
   ];
 
   constructor() {
+    respondNotFound();
+
     const meta = inject(Meta);
     const tag = meta.addTag({ name: 'robots', content: 'noindex' });
 

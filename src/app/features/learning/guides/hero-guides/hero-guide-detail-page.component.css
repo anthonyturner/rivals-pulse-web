@@ -72,3 +72,14 @@ iframe {
     grid-column: 1 / -1;
   }
 }
+
+/* On a phone the intro already fills the screen (header, quick read, video), so a tighter gap lets the first card start above the fold. */
+@media (max-width: 560px) {
+  .guide-article {
+    gap: 16px;
+  }
+
+  .intro {
+    gap: 12px;
+  }
+}
