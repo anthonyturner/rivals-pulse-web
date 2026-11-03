@@ -58,6 +58,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 - The Community Stats tab no longer shows Arcade and Practice buttons that only said "not enough data": a mode's button appears once it has data, and an empty role names its mode ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - The Community tier list and heroes tabs, and How we count, now say which game modes their numbers cover and how the new Mode picker works ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
 - Learning Paths and Watch Next Quiz now sit at the bottom of the Tools page beside AI Coach as Coming soon cards instead of links, and the beginner and first-time guides point to Hero Guides and Media Tutorials instead ([#220](https://github.com/anthonyturner/rivals-pulse-web/pull/220)).
+- The How we count, FAQ and Privacy pages now read as plain documents: each section has a divider and a heading instead of its own card, and links are underlined. The FAQ questions open and close (the first starts open, and a link such as `/faq#overwolf` opens its question), and Privacy gains an "On this page" list under its heading; its wording is unchanged ([#353](https://github.com/anthonyturner/rivals-pulse-web/issues/353)).
 
 ### Removed
 
