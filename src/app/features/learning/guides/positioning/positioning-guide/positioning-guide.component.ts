@@ -9,7 +9,7 @@ import type { PositioningGuide } from './positioning-guide.types';
   selector: 'app-positioning-guide',
   imports: [EyebrowComponent],
   templateUrl: './positioning-guide.component.html',
-  styleUrls: ['../../guide-article/guide-article.css', './positioning-guide.component.css'],
+  styleUrls: ['../../../../../shared/styles/guide-article.css', './positioning-guide.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PositioningGuideComponent {

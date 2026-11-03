@@ -20,7 +20,7 @@ const PROVIDER_LABELS: Record<string, string> = { discord: 'Discord', email: 'Em
   selector: 'app-account-page',
   imports: [DatePipe, PageHeaderComponent, PlayerAvatarComponent, RouterLink, StatePanelComponent],
   templateUrl: './account-page.component.html',
-  styleUrls: ['../learning/guides/guide-article/guide-article.css', './account-pages.css'],
+  styleUrls: ['../../shared/styles/guide-article.css', './account-pages.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountPageComponent {

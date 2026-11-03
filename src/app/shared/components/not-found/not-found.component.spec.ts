@@ -1,4 +1,4 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, TitleStrategy } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -89,6 +89,16 @@ describe('NotFoundComponent', () => {
 
     await harness.navigateByUrl('/resources');
     expect(canonical()).toMatch(/\/resources$/);
+  });
+
+  it('makes the server answer 404 (the other tests run with no response, as in the browser, and must not fail)', async () => {
+    const response = { status: 200 };
+
+    TestBed.configureTestingModule({ providers: [{ provide: RESPONSE_INIT, useValue: response }] });
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/nope');
+    expect(response.status).toBe(404);
   });
 
   it('has a title that says so', async () => {

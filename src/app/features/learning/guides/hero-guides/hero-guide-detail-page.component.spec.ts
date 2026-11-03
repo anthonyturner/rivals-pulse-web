@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 
-import { HERO_GUIDES } from './hero-guide-data';
 import { HeroGuideDetailPageComponent } from './hero-guide-detail-page.component';
 
 describe('HeroGuideDetailPageComponent', () => {
@@ -39,15 +38,6 @@ describe('HeroGuideDetailPageComponent', () => {
     await open('jubilee');
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Jubilee');
-  });
-
-  it('says the guide is not found for an unknown id instead of showing another guide', async () => {
-    await open('nope');
-
-    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Guide not found');
-    expect(element.querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
-    expect(element.querySelector('a[href="/hero-guides"]')).not.toBeNull();
-    expect(element.textContent).not.toContain(HERO_GUIDES[0].heroName);
   });
 
   it('shows each section as a card with plain bullets', () => {

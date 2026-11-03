@@ -22,7 +22,7 @@ interface UtilitySignal {
   selector: 'app-build-theory-page',
   imports: [EyebrowComponent, HeroImageFallbackDirective, NoticeComponent, RouterLink],
   templateUrl: './build-theory-page.component.html',
-  styleUrl: '../../guide-article/guide-article.css',
+  styleUrl: '../../../../../shared/styles/guide-article.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BuildTheoryPageComponent {

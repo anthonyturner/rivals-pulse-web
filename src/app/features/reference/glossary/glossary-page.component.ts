@@ -46,7 +46,7 @@ const LETTERS_ID = 'letters';
   imports: [FilterSelectComponent, NoticeComponent, PageHeaderComponent, RouterLink, StatePanelComponent],
   templateUrl: './glossary-page.component.html',
   styleUrls: [
-    '../../learning/guides/guide-article/guide-article.css',
+    '../../../shared/styles/guide-article.css',
     '../../../shared/styles/disclosure-chevron.css',
     './glossary-page.component.css',
   ],

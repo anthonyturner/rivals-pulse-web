@@ -60,18 +60,18 @@
     @if (currentGuide.decisionRules.length > 0) {
       <section class="guide-section">
         <h2>Read the state, take the action</h2>
-        <table class="rules">
-          <thead>
-            <tr>
-              <th scope="col">When</th>
-              <th scope="col">Do</th>
+        <table class="rules" role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col">When</th>
+              <th role="columnheader" scope="col">Do</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             @for (rule of currentGuide.decisionRules; track rule.when) {
-              <tr>
-                <th scope="row">{{ rule.when }}</th>
-                <td>{{ rule.action }}</td>
+              <tr role="row">
+                <th role="rowheader" scope="row">{{ rule.when }}</th>
+                <td role="cell">{{ rule.action }}</td>
               </tr>
             }
           </tbody>
@@ -144,13 +144,5 @@
         </ul>
       </section>
     }
-  } @else {
-    <header class="guide-header">
-      <h1>Guide not found</h1>
-    </header>
-    <app-state-panel kind="error">
-      <p>We couldn't find that guide.</p>
-      <a class="guide-link" routerLink="/strategist-guides">Back to strategist guides</a>
-    </app-state-panel>
   }
 </div>
