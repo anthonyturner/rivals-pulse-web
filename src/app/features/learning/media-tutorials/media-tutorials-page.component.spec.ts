@@ -50,7 +50,7 @@ describe('MediaTutorialsPageComponent', () => {
   });
 
   it('renders a new player for each pick, so Back does not step through earlier picks, still without autoplay', async () => {
-    const first = element.querySelector('iframe');
+    const first = element.querySelector('iframe') as HTMLIFrameElement;
 
     rows()[3].click();
     await settle();
