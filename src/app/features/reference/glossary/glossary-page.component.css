@@ -61,19 +61,30 @@
   background: var(--bg-panel-soft);
 }
 
+.guide-tile > h3 {
+  margin-bottom: 4px;
+}
+
+/* The button fills the tile's top, padding included, so the whole of it is the target. */
 .toggle {
   display: flex;
-  width: 100%;
+  width: calc(100% + 32px);
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0;
+  margin: -12px -16px -4px;
+  padding: 12px 16px 4px;
   border: 0;
+  border-radius: 7px;
   background: none;
   color: var(--text);
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.toggle:focus-visible {
+  outline-offset: -4px;
 }
 
 .definition:not(.is-open) {

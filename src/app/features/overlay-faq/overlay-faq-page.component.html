@@ -8,13 +8,13 @@
     <h2 id="ban-risk-title">
       <button
         type="button"
+        class="chevron"
         id="ban-risk-button"
         aria-controls="ban-risk-panel"
         [attr.aria-expanded]="open()['ban-risk'] ? 'true' : 'false'"
         (click)="toggle('ban-risk')"
       >
         <span>Will RivalsPulse get me banned?</span>
-        <span aria-hidden="true">{{ open()['ban-risk'] ? '▾' : '▸' }}</span>
       </button>
     </h2>
     <div class="reading-panel" id="ban-risk-panel" role="region" aria-labelledby="ban-risk-button" [hidden]="!open()['ban-risk']">
@@ -31,13 +31,13 @@
     <h2 id="data-title">
       <button
         type="button"
+        class="chevron"
         id="data-button"
         aria-controls="data-panel"
         [attr.aria-expanded]="open()['data'] ? 'true' : 'false'"
         (click)="toggle('data')"
       >
         <span>What does the app send?</span>
-        <span aria-hidden="true">{{ open()['data'] ? '▾' : '▸' }}</span>
       </button>
     </h2>
     <div class="reading-panel" id="data-panel" role="region" aria-labelledby="data-button" [hidden]="!open()['data']">
@@ -56,13 +56,13 @@
     <h2 id="overwolf-title">
       <button
         type="button"
+        class="chevron"
         id="overwolf-button"
         aria-controls="overwolf-panel"
         [attr.aria-expanded]="open()['overwolf'] ? 'true' : 'false'"
         (click)="toggle('overwolf')"
       >
         <span>What does Overwolf have to do with it?</span>
-        <span aria-hidden="true">{{ open()['overwolf'] ? '▾' : '▸' }}</span>
       </button>
     </h2>
     <div class="reading-panel" id="overwolf-panel" role="region" aria-labelledby="overwolf-button" [hidden]="!open()['overwolf']">

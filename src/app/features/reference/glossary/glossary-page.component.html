@@ -72,14 +72,13 @@
             <h3>
               <button
                 type="button"
-                class="toggle"
+                class="toggle chevron"
                 [id]="row.buttonId"
                 [attr.aria-expanded]="open()[row.id] ? 'true' : 'false'"
                 [attr.aria-controls]="row.panelId"
                 (click)="toggle(row.id)"
               >
                 <span>{{ row.term }}</span>
-                <span aria-hidden="true">{{ open()[row.id] ? '▾' : '▸' }}</span>
               </button>
             </h3>
             <p class="guide-text definition" [class.is-open]="open()[row.id]">{{ row.definition }}</p>
@@ -116,9 +115,13 @@
               <div>
                 <dt>Source</dt>
                 <dd>
-                  <a class="guide-link" [href]="row.sourceUrl" target="_blank" rel="noopener">
-                    {{ row.sourceName }}<span class="visually-hidden"> (opens in a new tab)</span>
-                  </a>
+                  @if (row.sourceUrl) {
+                    <a class="guide-link" [href]="row.sourceUrl" target="_blank" rel="noopener">
+                      {{ row.sourceName }}<span class="visually-hidden"> (opens in a new tab)</span>
+                    </a>
+                  } @else {
+                    {{ row.sourceName }}
+                  }
                 </dd>
               </div>
             </dl>

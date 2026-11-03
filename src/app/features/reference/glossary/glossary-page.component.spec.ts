@@ -31,7 +31,12 @@ const TERMS: GlossaryTerm[] = [
   term('dive', 'Dive', { definition: 'A coordinated attack where heroes jump on a vulnerable target.', relatedTerms: ['Flank'] }),
   term('flank', 'Flank', { definition: 'Attack from behind.' }),
   term('gg', 'gg', { category: 'Gaming Chat', definition: 'Good game. Often said to a team that dived well.' }),
-  term('team-up', 'Team-Up', { category: 'Team-Up', definition: 'Two heroes that unlock a shared ability.' }),
+  term('team-up', 'Team-Up', {
+    category: 'Team-Up',
+    definition: 'Two heroes that unlock a shared ability.',
+    sourceName: 'Manual seed data',
+    sourceUrl: '/glossary',
+  }),
 ];
 
 describe('GlossaryPageComponent', () => {
@@ -313,6 +318,14 @@ describe('GlossaryPageComponent', () => {
       expect(link.href).toBe('https://example.test/dive');
       expect(link.rel).toContain('noopener');
       expect(link.querySelector('.visually-hidden')?.textContent).toContain('opens in a new tab');
+    });
+
+    it('shows the source as plain text, not a link, when it is a page of this site', async () => {
+      button('team-up').click();
+      await settle();
+
+      expect(details('team-up').querySelector('a[target="_blank"]')).toBeNull();
+      expect(details('team-up').textContent).toContain('Manual seed data');
     });
 
     it('opens and focuses the term a see-also link names', async () => {

@@ -20,7 +20,7 @@ const QUESTION_IDS = ['ban-risk', 'data', 'overwolf'];
   selector: 'app-overlay-faq-page',
   imports: [PageHeaderComponent, RouterLink],
   templateUrl: './overlay-faq-page.component.html',
-  styleUrls: ['../../shared/styles/reading.css', './overlay-faq-page.component.css'],
+  styleUrls: ['../../shared/styles/reading.css', '../../shared/styles/disclosure-chevron.css', './overlay-faq-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OverlayFaqPageComponent {

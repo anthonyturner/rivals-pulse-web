@@ -97,6 +97,16 @@ describe('glossary view', () => {
       ]);
     });
 
+    it('keeps an outside source address and drops one that points at a page of this site', () => {
+      const [outside, inside] = buildRows([
+        term('a', 'A', { sourceUrl: 'https://example.test/wiki' }),
+        term('b', 'B', { sourceUrl: '/glossary' }),
+      ]);
+
+      expect(outside.sourceUrl).toBe('https://example.test/wiki');
+      expect(inside.sourceUrl).toBe('');
+    });
+
     it('puts a term that does not start with a letter under "#"', () => {
       expect(rows.map((row) => row.letter)).toEqual(['#', 'A', 'T']);
     });

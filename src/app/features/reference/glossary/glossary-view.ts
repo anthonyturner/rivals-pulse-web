@@ -23,6 +23,7 @@ export interface TermRow {
   category: string;
   categoryLabel: string;
   sourceName: string;
+  /** The source's address when it is an outside page, or an empty string: some terms cite a page of this site, which is no source to link. */
   sourceUrl: string;
   related: readonly RelatedTerm[];
   /** The searchable text of the term, its definition and its related terms, as `searchKey` writes it. */
@@ -104,7 +105,7 @@ export function buildRows(terms: readonly GlossaryTerm[]): TermRow[] {
         category: term.category,
         categoryLabel: categoryLabel(term.category),
         sourceName: term.sourceName,
-        sourceUrl: term.sourceUrl,
+        sourceUrl: /^https?:\/\//i.test(term.sourceUrl) ? term.sourceUrl : '',
         related,
         keys: [term.term, term.definition, ...term.relatedTerms].map(searchKey),
         letter: /^[a-z]/i.test(term.term) ? term.term[0].toUpperCase() : '#',

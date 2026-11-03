@@ -19,3 +19,13 @@ h2 button {
   font-size: var(--type-small);
   list-style: none;
 }
+
+.faq .sources li + li {
+  margin-top: 0;
+}
+
+.faq .sources a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+}
