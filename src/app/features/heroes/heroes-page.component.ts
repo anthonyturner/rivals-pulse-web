@@ -135,7 +135,7 @@ export class HeroesPageComponent implements OnInit {
   readonly searchTerm = computed(() => this.query().get(SEARCH_QUERY_PARAM) ?? '');
   readonly heroGridMode = signal<HeroGridMode>('thumbs');
   readonly isRosterLoaded = signal(false);
-  /** True when the roster could not be loaded, as opposed to loaded and empty. */
+  /** True when the roster could not be loaded or came back empty; both show the load-error state. */
   readonly isRosterFailed = signal(false);
   /** The hero in the address; empty on the roster-only landing. */
   readonly selectedHeroId = toSignal(this.routeHeroId.pipe(map((heroId) => heroId ?? '')), {
