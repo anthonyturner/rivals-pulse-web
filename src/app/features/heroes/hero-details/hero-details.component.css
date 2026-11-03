@@ -101,20 +101,10 @@ h2 {
   line-height: 1.05;
 }
 
-:host-context(.hero-detail-modal) p,
-:host-context(.hero-detail-modal) li {
-  color: var(--text);
-}
-
 h3 {
   color: var(--text);
   font-size: 0.78rem;
   text-transform: uppercase;
-}
-
-:host-context(.hero-detail-modal) h3 {
-  color: var(--accent-strong);
-  letter-spacing: 0.08em;
 }
 
 .difficulty {
@@ -170,20 +160,6 @@ h3 {
 .overview-section p {
   color: var(--text);
   line-height: 1.55;
-}
-
-:host-context(.hero-detail-modal) .detail-hero {
-  border-color: var(--border-strong);
-}
-
-:host-context(.hero-detail-modal) .overview-panel {
-  border-color: var(--border-strong);
-  box-shadow: inset 4px 0 var(--accent-strong),
-    0 12px 24px var(--shadow-color);
-}
-
-:host-context(.hero-detail-modal) .overview-panel .section-heading {
-  border-bottom-color: var(--border-strong);
 }
 
 .hero-build-profile {}
@@ -262,38 +238,6 @@ h3 {
   text-transform: uppercase;
 }
 
-:host-context(.hero-detail-modal) .hero-build-profile {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .hero-build-profile .section-heading {
-  border-bottom-color: var(--border-strong);
-}
-
-:host-context(.hero-detail-modal) .build-profile-bars div,
-:host-context(.hero-detail-modal) .build-profile-source {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .build-profile-source {
-  box-shadow: inset 4px 0 var(--accent-strong);
-}
-
-:host-context(.hero-detail-modal) .hero-build-profile .section-heading p,
-:host-context(.hero-detail-modal) .build-profile-bars span,
-:host-context(.hero-detail-modal) .build-profile-bars strong,
-:host-context(.hero-detail-modal) .build-profile-note,
-:host-context(.hero-detail-modal) .build-profile-source p {
-  color: var(--text);
-}
-
-:host-context(.hero-detail-modal) .build-profile-source strong,
-:host-context(.hero-detail-modal) .build-profile-source a {
-  color: var(--accent-strong);
-}
-
 .ultimate-strategies {}
 
 .ultimate-strategies article {
@@ -337,22 +281,6 @@ h3 {
   border: 1px solid var(--border-strong);
   color: var(--text-soft);
   font-size: 0.92rem;
-}
-
-:host-context(.hero-detail-modal) .ultimate-strategies {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .ultimate-strategies article {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-  box-shadow: inset 4px 0 var(--accent-strong);
-}
-
-:host-context(.hero-detail-modal) .ultimate-strategies article .ultimate-source {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
 }
 
 .ultimate-paths {
@@ -454,22 +382,6 @@ h3 {
 
 .ultimate-path-grid li {
   line-height: 1.45;
-}
-
-:host-context(.hero-detail-modal) .ultimate-paths,
-:host-context(.hero-detail-modal) .ultimate-path-panel,
-:host-context(.hero-detail-modal) .ultimate-path-grid section {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .ultimate-path-tabs button {
-  border-color: var(--border-strong);
-}
-
-:host-context(.hero-detail-modal) .ultimate-path-panel>strong,
-:host-context(.hero-detail-modal) .ultimate-path-grid h4 {
-  color: var(--accent-strong);
 }
 
 .aggressive-paths {
@@ -598,21 +510,6 @@ h3 {
   font-weight: 750;
 }
 
-:host-context(.hero-detail-modal) .deadpool-upgrades {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .deadpool-upgrades article,
-:host-context(.hero-detail-modal) .deadpool-upgrades li {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .aggressive-path-tabs button {
-  border-color: var(--border-strong);
-}
-
 .detail-columns,
 .matchup-row {
   display: grid;
@@ -632,13 +529,6 @@ h3 {
   background:
     linear-gradient(135deg, transparent, var(--accent-soft)),
     var(--bg-elevated);
-  box-shadow: var(--heroes-box-shadow);
-}
-
-:host-context(.hero-detail-modal) .detail-columns section,
-:host-context(.hero-detail-modal) .matchup-row section {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
   box-shadow: var(--heroes-box-shadow);
 }
 
@@ -665,20 +555,8 @@ ul {
   background: var(--bg-panel);
 }
 
-:host-context(.hero-detail-modal) .tag-list span:not(.hero-matchup-chip) {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
 .abilities {
   backdrop-filter: blur(14px) saturate(130%);
-}
-
-:host-context(.hero-detail-modal) .abilities {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-  box-shadow:
-    0 18px 38px var(--shadow-color);
 }
 
 .ability-tabs {
@@ -725,18 +603,6 @@ ul {
   line-height: 1.25;
 }
 
-:host-context(.hero-detail-modal) .ability-tabs button {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-}
-
-:host-context(.hero-detail-modal) .ability-tabs button:hover,
-:host-context(.hero-detail-modal) .ability-tabs button.active {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px var(--accent-soft);
-}
-
 .passive-abilities {
   background:
     linear-gradient(135deg, transparent, var(--accent-soft)),
@@ -747,10 +613,6 @@ ul {
   box-shadow:
     inset 4px 0 var(--accent),
     var(--heroes-box-shadow);
-}
-
-:host-context(.hero-detail-modal) .passive-abilities {
-  background: var(--bg-elevated);
 }
 
 .ability-heading {
@@ -827,41 +689,41 @@ details.collapsible {
   line-height: 1.35;
 }
 
-.detail-hero-container--compact h2 {
+.detail-hero-container h2 {
   font-size: var(--type-title);
 }
 
-.detail-hero-container--compact h3 {
+.detail-hero-container h3 {
   font-size: var(--type-h3);
   font-weight: 700;
   text-transform: none;
 }
 
-.detail-hero-container--compact .hero-image.large {
+.detail-hero-container .hero-image.large {
   width: 64px;
   height: 64px;
 }
 
-.detail-hero-container--compact .overview-section p,
-.detail-hero-container--compact .strategy-playstyle p {
+.detail-hero-container .overview-section p,
+.detail-hero-container .strategy-playstyle p {
   max-width: 70ch;
 }
 
-.detail-hero-container--compact .section-heading a,
-.detail-hero-container--compact .section-note {
+.detail-hero-container .section-heading a,
+.detail-hero-container .section-note {
   font-size: var(--type-caption);
   text-transform: none;
 }
 
-.detail-hero-container--compact .technical-details dt,
-.detail-hero-container--compact .build-profile-source strong,
-.detail-hero-container--compact .ultimate-strategies article span,
-.detail-hero-container--compact .abilities article span,
-.detail-hero-container--compact .abilities article h4,
-.detail-hero-container--compact .ultimate-path-grid h4,
-.detail-hero-container--compact .archetype-grid span,
-.detail-hero-container--compact .archetype-grid a,
-.detail-hero-container--compact .ability-tabs button span {
+.detail-hero-container .technical-details dt,
+.detail-hero-container .build-profile-source strong,
+.detail-hero-container .ultimate-strategies article span,
+.detail-hero-container .abilities article span,
+.detail-hero-container .abilities article h4,
+.detail-hero-container .ultimate-path-grid h4,
+.detail-hero-container .archetype-grid span,
+.detail-hero-container .archetype-grid a,
+.detail-hero-container .ability-tabs button span {
   font-size: var(--type-caption);
 }
 
@@ -876,29 +738,12 @@ details.collapsible {
   scroll-margin-top: 16px;
 }
 
-:host-context(.hero-detail-modal) .abilities article {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-  box-shadow: var(--heroes-box-shadow);
-}
-
 .abilities article:target,
 .abilities article.highlighted {
   border-color: var(--accent-line);
   background:
     linear-gradient(110deg, var(--accent-soft), transparent 46%), var(--bg-elevated);
   animation: ability-focus 900ms ease-out;
-}
-
-:host-context(.hero-detail-modal) .abilities article:target,
-:host-context(.hero-detail-modal) .abilities article.highlighted {
-  border-color: var(--accent-line);
-  background:
-    linear-gradient(120deg, var(--accent-soft), transparent), var(--bg-elevated);
-  box-shadow:
-    inset 5px 0 var(--accent-strong),
-    0 0 0 3px var(--accent-soft),
-    0 18px 34px var(--shadow-color);
 }
 
 .abilities article::after {
@@ -918,10 +763,6 @@ details.collapsible {
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-:host-context(.hero-detail-modal) .abilities article span {
-  color: var(--text-muted);
 }
 
 .abilities article strong {
@@ -979,11 +820,6 @@ details.collapsible {
 .technical-details .stat-card:nth-last-child(2):nth-child(3n + 1),
 .technical-details .stat-card:nth-last-child(1):nth-child(3n + 2) {
   grid-column: span 3;
-}
-
-:host-context(.hero-detail-modal) .technical-details .stat-card {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
 }
 
 .stat-icon {
@@ -1094,11 +930,6 @@ details.collapsible {
   font-size: 0.72rem;
 }
 
-:host-context(.hero-detail-modal) .gameplay-archetypes {
-  border-color: var(--border-strong);
-  background: var(--accent-soft);
-}
-
 .technical-details dt {
   color: var(--accent-strong);
   font-size: 0.66rem;
@@ -1116,87 +947,6 @@ details.collapsible {
   font-size: 0.86rem;
   font-weight: 700;
   line-height: 1.3;
-}
-
-/* Keep the lookup modal aligned with the site's 16px reading scale.
-   Compact labels remain secondary without falling into 10–12px text. */
-:host-context(.hero-detail-modal) .detail-hero-container {
-  --lookup-body-size: 1rem;
-  --lookup-support-size: 0.9rem;
-  --lookup-control-size: 0.875rem;
-  --lookup-label-size: 0.8rem;
-  gap: 18px;
-  color: var(--text);
-  font-size: var(--lookup-body-size);
-  line-height: 1.6;
-}
-
-:host-context(.hero-detail-modal) h2 {
-  font-size: clamp(1.75rem, 3vw, 2rem);
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-:host-context(.hero-detail-modal) h3 {
-  font-size: var(--lookup-control-size);
-  font-weight: 850;
-  letter-spacing: 0.065em;
-  line-height: 1.25;
-}
-
-:host-context(.hero-detail-modal) .detail-hero-container p,
-:host-context(.hero-detail-modal) .detail-hero-container li {
-  font-size: var(--lookup-body-size);
-  line-height: 1.6;
-}
-
-:host-context(.hero-detail-modal) .hero-build-profile .section-heading p,
-:host-context(.hero-detail-modal) .ultimate-paths .section-heading p,
-:host-context(.hero-detail-modal) .deadpool-upgrades .section-heading p,
-:host-context(.hero-detail-modal) .build-profile-note,
-:host-context(.hero-detail-modal) .upgrade-source,
-:host-context(.hero-detail-modal) .ultimate-strategies article .ultimate-source,
-:host-context(.hero-detail-modal) .archetype-grid p,
-:host-context(.hero-detail-modal) .archetype-note {
-  font-size: var(--lookup-support-size);
-  line-height: 1.55;
-}
-
-:host-context(.hero-detail-modal) .overview-section strong,
-:host-context(.hero-detail-modal) .build-profile-source strong,
-:host-context(.hero-detail-modal) .ultimate-strategies article span,
-:host-context(.hero-detail-modal) .ultimate-path-grid h4,
-:host-context(.hero-detail-modal) .ability-tabs button span,
-:host-context(.hero-detail-modal) .abilities article span,
-:host-context(.hero-detail-modal) .abilities article h4,
-:host-context(.hero-detail-modal) .archetype-grid span,
-:host-context(.hero-detail-modal) .technical-details dt {
-  font-size: var(--lookup-label-size);
-  font-weight: 850;
-  letter-spacing: 0.07em;
-  line-height: 1.3;
-}
-
-:host-context(.hero-detail-modal) .section-heading a,
-:host-context(.hero-detail-modal) .build-profile-source a,
-:host-context(.hero-detail-modal) .deadpool-upgrades article>a,
-:host-context(.hero-detail-modal) .archetype-grid a {
-  font-size: var(--lookup-control-size);
-  line-height: 1.35;
-}
-
-:host-context(.hero-detail-modal) .build-profile-bars span,
-:host-context(.hero-detail-modal) .build-profile-bars strong,
-:host-context(.hero-detail-modal) .ultimate-path-tabs button,
-:host-context(.hero-detail-modal) .aggressive-path-tabs button,
-:host-context(.hero-detail-modal) .ability-tabs button small {
-  font-size: var(--lookup-control-size);
-  line-height: 1.35;
-}
-
-:host-context(.hero-detail-modal) .technical-details dd {
-  font-size: 0.95rem;
-  line-height: 1.4;
 }
 
 @media (max-width: 920px) {

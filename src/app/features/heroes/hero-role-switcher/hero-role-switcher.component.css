@@ -29,10 +29,3 @@
   background: var(--accent);
   color: var(--accent-ink);
 }
-
-:host-context(.hero-detail-modal) .ability-role-tabs button {
-  min-height: 38px;
-  padding-inline: 14px;
-  font-size: 0.875rem;
-  line-height: 1;
-}

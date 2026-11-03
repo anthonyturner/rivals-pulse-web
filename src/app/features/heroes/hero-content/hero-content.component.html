@@ -12,11 +12,7 @@
           @if (hasRoleKits()) {
             <app-hero-role-switcher [hero]="shown" [controller]="controller()"></app-hero-role-switcher>
           }
-          <app-hero-details
-            [hero]="shown"
-            [controller]="controller()"
-            [compact]="true"
-          ></app-hero-details>
+          <app-hero-details [hero]="shown" [controller]="controller()"></app-hero-details>
         </div>
 
         <aside class="detail-side" aria-label="YouTube videos for selected hero">
