@@ -101,7 +101,7 @@ describe('HeroesPageComponent', () => {
     expect(document.activeElement).toBe(card('storm'));
   });
 
-  it('opens no profile window, and Escape does nothing on the page', async () => {
+  it('renders no profile window or open-profile button, even after Escape', async () => {
     await loadRoster();
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

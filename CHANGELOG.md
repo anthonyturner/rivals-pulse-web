@@ -68,7 +68,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Removed
 
-- The Heroes page no longer opens a hero profile in a pop-up window. The "Open profile" button is gone, and pressing Escape on the page does nothing now; a hero's details are the panel below the roster, as before ([#417](https://github.com/anthonyturner/rivals-pulse-web/issues/417)).
+- The Heroes page no longer opens a hero profile in a pop-up window. The "Open profile" button is gone, and pressing Escape on the page does nothing now; a hero's details are the panel below the roster, as before ([#424](https://github.com/anthonyturner/rivals-pulse-web/pull/424)).
 - The local development server no longer answers `GET /api/heroes/:id` (one hero by id). The website and the app never called it, and the live site never served it. The unused catch-all API file that duplicated every route is gone too ([#330](https://github.com/anthonyturner/rivals-pulse-web/pull/330)).
 
 ### Fixed
