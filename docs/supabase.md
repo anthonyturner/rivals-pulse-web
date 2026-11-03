@@ -28,16 +28,15 @@ repo's build. This is a move, not a redesign.
   call; each function authorises callers itself).
 - Tables: `players`, `player_matches`, `matches`, `tracked_matches`,
   `match_history_sync_state`, `player_hero_profiles`, `player_hero_stats`,
-  `hero_stats_sync_state`, `jarvis_token_requests`, `participants`.
-  `jarvis_token_requests` keeps the assistant's earlier name (it is now Pulsa) until issue 448
-  renames it.
+  `hero_stats_sync_state`, `participants`.
 - Functions in the database: `claim_upload_slot`, `record_match_participants`,
   `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
   once it carries the extended upload, so renaming it or changing its arguments silently drops
   every newer overlay's extras; a signature change follows "Changing a database function's
   signature" below).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`) and `tracked_match_recorders` (written by `track-match-history` itself). The
+  `record_match_extras`), `tracked_match_recorders` (written by `track-match-history` itself) and
+  `voice_ai_token_requests` (written by `elevenlabs-agent-token`; the publishable key cannot reach it). The
   aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
@@ -81,6 +80,7 @@ repo's build. This is a move, not a redesign.
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
+| `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
 
 Link once per machine, check history, then apply:
 

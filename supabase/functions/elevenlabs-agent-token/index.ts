@@ -157,7 +157,7 @@ async function checkRateLimit(ip: string): Promise<RateLimitDecision> {
     const windowStart = new Date(Date.now() - TOKEN_WINDOW_MS).toISOString();
 
     const { data: recent, error: readError } = await supabase
-      .from('jarvis_token_requests')
+      .from('voice_ai_token_requests')
       .select('requested_at')
       .eq('client_ip', ip)
       .gte('requested_at', windowStart)
@@ -173,14 +173,14 @@ async function checkRateLimit(ip: string): Promise<RateLimitDecision> {
     }
 
     const { error: insertError } = await supabase
-      .from('jarvis_token_requests')
+      .from('voice_ai_token_requests')
       .insert({ client_ip: ip });
     if (insertError) throw insertError;
 
     // Rows older than the window can never count again. Pruned across every address rather than
     // just this one, so an address that never returns does not leave its rows behind for good.
     const { error: pruneError } = await supabase
-      .from('jarvis_token_requests')
+      .from('voice_ai_token_requests')
       .delete()
       .lt('requested_at', windowStart);
     if (pruneError) console.error(`Pulsa token rate-limit prune failed: ${getErrorMessage(pruneError)}`);
