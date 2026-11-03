@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
-import { HERO_GUIDES } from './hero-guide-data';
+import { findHeroGuide } from './hero-guide-data';
 
 @Component({
   selector: 'app-hero-guide-detail-page',
@@ -18,11 +18,7 @@ export class HeroGuideDetailPageComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
-  readonly guide = computed(() => {
-    const heroId = this.routeParams().get('heroId');
-
-    return HERO_GUIDES.find((guide) => guide.heroId === heroId) ?? null;
-  });
+  readonly guide = computed(() => findHeroGuide(this.routeParams().get('heroId')));
 
   readonly sourceEmbedUrl = computed(() => this.youtubeEmbedUrl(this.guide()?.sourceUrl));
 
