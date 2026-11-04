@@ -16,6 +16,13 @@ dependency, run with `npx supabase`). No project reference or secret value appea
 CLI keeps the link in `supabase/.temp/`, which git ignores along with
 `supabase/.branches/`.
 
+The integration refuses to run if production has a migration that `master` does not. The `Supabase
+Preview` check then fails with `Remote migration versions not found in local migrations directory.`,
+and that merge deploys nothing, functions included. This happened from 2026-11-01 to 2026-11-04,
+because a migration pushed from a branch stayed unmerged. So merge a pull request soon after pushing
+its migration. If the check fails on `master`, a merged function change is not live: land the missing
+migration file, and deploy any function that merged in the meantime by hand.
+
 ## Frozen for shipped overlays
 
 Players run overlays that call these objects with a publishable key baked into
@@ -225,9 +232,9 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
 | `sync-match-history` | yes, but not used by the release overlay |
 | `sync-hero-stats` | yes, but not used by the release overlay |
 | `marvel-rivals-proxy` | yes, but its source is not in this repo yet (it lives on the overlay branch `fix/381-api-key-server-side`) |
-| `issue-link-code` | new (issue 264); deploy it after the `player_links` migration and with the secrets below. Additive: no shipped overlay calls it |
-| `refresh-linked-player` | new (issue 320); deploy it after the `refresh_linked_player` migration. Additive: no shipped overlay calls it |
-| `link-status`, `unlink-player-app` | new (issue 343); deploy them after the `app_link_status` migration. Additive: no shipped overlay calls them |
+| `issue-link-code` | yes, needs the secrets below. No shipped overlay calls it |
+| `refresh-linked-player` | yes. No shipped overlay calls it |
+| `link-status`, `unlink-player-app` | yes. No shipped overlay calls them |
 
 The live deployments can be older than the source here. Check
 `npx supabase functions list` before assuming they match.
