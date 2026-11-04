@@ -10,6 +10,7 @@ import type {
   OwnRecords,
 } from '../../app/core/auth/own-dashboard.types.ts';
 import { heroSlugByGameId } from '../heroes/catalog/hero-game-ids.ts';
+import { deriveOwnActivity } from './own-activity.ts';
 
 /** One hero's recorded figures within a match; a blank is null. */
 export interface OwnFigureLine {
@@ -61,6 +62,7 @@ export function deriveOwnDashboard(lines: readonly OwnDashboardLine[]): OwnDashb
     recent: newestFirst.slice(0, RECENT_MATCHES).map(recentOf),
     firstPlayedAt: oldestFirst[0]?.playedAt ?? null,
     lastPlayedAt: newestFirst[0]?.playedAt ?? null,
+    activity: deriveOwnActivity(newestFirst),
   };
 }
 

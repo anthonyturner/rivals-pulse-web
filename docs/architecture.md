@@ -71,8 +71,8 @@ The server code lives in `src/server/<feature>/`, one folder per feature
   (which imports `heroes/catalog/hero-game-ids.ts`). An entry point also pulls
   in Supabase code, which must never reach the browser (the CI step
   `npm run check:browser-bundle` fails if it does), so nothing under `src/app` imports an
-  `index.ts`, and a pure module (`hero-matchups.ts`, `hero-pairs.ts`,
-  `community-matches.ts` and the three above) imports other pure modules by
+  `index.ts`, and a pure module (`hero-matchups.ts`, `hero-pairs.ts`
+  and the three above) imports other pure modules by
   file. The `hero-stats` and `account` entry points leave their pure module
   out for the same reason.
 - **A sync job lives with the content it feeds** (`content/home/home-news-sync.ts`),
@@ -130,9 +130,9 @@ The session lives on the server side of the boundary:
 - `GET /api/account/dashboard` (issue 329) calls the `read_own_dashboard` database function with the player's
   own token. The database picks the lines (those whose recorder and uid are the link's own, newest 2,000);
   `src/server/account/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
-  records, recent matches) and only those reach the browser. A blank figure is `null`, never 0. There is no
-  service key and no per-account copy of the data. The `/profile` page (`src/app/features/profile/`) asks it
-  through `AuthService.loadDashboard()`, which validates the answer, and `buildProfileView` turns it into the
+  records, recent matches, and the activity tables from `own-activity.ts`) and only those reach the browser. A blank figure is `null`, never 0. There is no
+  service key and no per-account copy of the data. The `/profile` page (`src/app/features/profile/`) and the private My matches and My insights Community tabs
+  (`src/app/features/community/own-activity/`) ask it through `AuthService.loadDashboard()`, which validates the answer, and `buildProfileView` turns it into the
   states the page draws (not linked, no matches, unavailable, ready).
 - The desktop app also has its own link calls, each an Edge Function that confirms the Overwolf session:
   `refresh-linked-player` (refresh the name and avatar), `link-status` (am I linked, and as whom) and

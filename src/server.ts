@@ -18,8 +18,6 @@ import {
   getHomePortalsFromDatabase,
 } from './server/content';
 import { getCommunityFigures, getCommunityKills } from './server/community/extended';
-import { getCommunityInsights } from './server/community/insights';
-import { getCommunityMatches } from './server/community/matches';
 import { getHeroMatchups } from './server/heroes/matchups';
 import { getHeroPairs } from './server/heroes/pairs';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
@@ -42,12 +40,6 @@ app.get('/api/hero-stats', (req, res) => {
   handleApiResponse(res, () => getHeroStats(heroStatsQueryFrom(read)));
 });
 
-app.get('/api/community/matches', (req, res) => {
-  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
-
-  handleApiResponse(res, () => getCommunityMatches({ halfSeason: halfSeasonFromQuery(halfSeason) }));
-});
-
 app.get('/api/community/figures', (req, res) => {
   const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
@@ -58,10 +50,6 @@ app.get('/api/community/kills', (req, res) => {
   const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
   handleApiResponse(res, () => getCommunityKills({ halfSeason: halfSeasonFromQuery(halfSeason) }));
-});
-
-app.get('/api/community/insights', (_req, res) => {
-  handleApiResponse(res, () => getCommunityInsights());
 });
 
 app.get('/api/hero-matchups', (_req, res) => {

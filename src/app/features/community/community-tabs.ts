@@ -17,11 +17,11 @@ export interface CommunityTab {
 /** The order mirrors the RivalsPulse desktop app's screens. */
 export const COMMUNITY_TABS: readonly CommunityTab[] = [
   { id: 'heroes', label: 'Heroes', component: HeroesTabComponent },
-  { id: 'matches', label: 'Matches', component: MatchesTabComponent },
+  { id: 'matches', label: 'My matches', component: MatchesTabComponent },
   { id: 'counters', label: 'Counters', component: CountersTabComponent },
   { id: 'tier-list', label: 'Tier list', component: TierListTabComponent },
   { id: 'stats', label: 'Stats', component: StatsTabComponent },
-  { id: 'insights', label: 'Insights', component: InsightsTabComponent },
+  { id: 'insights', label: 'My insights', component: InsightsTabComponent },
 ];
 
 export const DEFAULT_COMMUNITY_TAB_ID = COMMUNITY_TABS[0].id;

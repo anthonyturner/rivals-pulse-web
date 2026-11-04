@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { aggregatePayloadReader } from '../matches/aggregate-payload.ts';
+import { aggregatePayloadReader } from '../aggregate-payload.ts';
 import {
   deriveCommunityFigures,
   type CommunityFiguresSource,

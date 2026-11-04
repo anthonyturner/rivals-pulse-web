@@ -75,6 +75,7 @@ export function dashboardStats(overrides: Partial<OwnDashboardStats> = {}): OwnD
     ],
     firstPlayedAt: '2026-05-20T12:00:00Z',
     lastPlayedAt: '2026-10-30T18:20:00Z',
+    activity: { maps: [], modes: [], days: [], weekdays: [], timesOfDay: [], sessionPlaces: [] },
     ...overrides,
   };
 }
@@ -107,5 +108,6 @@ export function emptyDashboard(): Extract<OwnDashboardResponse, { linked: true }
     recent: [],
     firstPlayedAt: null,
     lastPlayedAt: null,
+    activity: { maps: [], modes: [], days: [], weekdays: [], timesOfDay: [], sessionPlaces: [] },
   });
 }
