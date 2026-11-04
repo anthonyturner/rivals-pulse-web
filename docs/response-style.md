@@ -41,9 +41,9 @@ dropped.
 - **Give the title with every issue or pull request number.** Each time a
   response mentions an issue or pull request by number, put its real GitHub
   title beside the number, so the reader knows what it is at a glance: "#123,
-  Let players filter heroes by role". A number repeated in the same paragraph or list item needs the
-  title only once. Give the title alone; do not copy in the issue's body. Look
-  the title up rather than guessing. A `Closes #123` line is exempt, because
+  Let players filter heroes by role". A number repeated in the same
+  paragraph or list item needs the title only once. Give the title alone; do not
+  copy in the issue's body. Look the title up rather than guessing. A `Closes #123` line is exempt, because
   GitHub reads it, not a person. Commit messages follow **Issue references in
   commits** in [agent-workflows/implementation.md](agent-workflows/implementation.md),
   and changelog entries and tracking lines keep the format their workflow doc
