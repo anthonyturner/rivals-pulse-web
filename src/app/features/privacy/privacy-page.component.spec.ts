@@ -85,18 +85,21 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('never');
   });
 
-  it('says hero averages come from own figures and wait for enough players', () => {
-    const text = page.textContent ?? '';
-    expect(text).toContain('Hero averages');
+  it('marks hero averages as planned, from own figures, and waiting for enough players', () => {
+    const text = section('public-numbers').textContent ?? '';
+    expect(text).toContain('are planned');
+    expect(text).toContain("own figures");
     expect(text).toContain("never show one player's numbers");
     expect(text).toContain('enough different players');
     expect(text).toContain('never in the game');
   });
 
-  it('keeps ability and ultimate use to the uploading player', () => {
-    const useCounts = EXTENDED_UPLOAD_FIELDS.find((field) => field.label === 'Ability and ultimate use');
-    expect(useCounts?.detail).toContain('uploading player');
-    expect(useCounts?.detail).toContain('Never counted for other players');
+  it('lists ability and ultimate use as planned, apart from the extended status', () => {
+    expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Ability and ultimate use');
+    const planned = section('planned-fields').textContent ?? '';
+    expect(planned).toContain('uploading player');
+    expect(planned).toContain('not whether it hit anyone');
+    expect(planned).toContain('Never uploaded for other players');
   });
 
   it('states the retention rule', () => {
