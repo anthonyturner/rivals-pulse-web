@@ -14,7 +14,7 @@ import { chooseHalfSeason, halfSeasonTimeline, type HalfSeasonStart } from '../.
  */
 export const COMMUNITY_KILLS_MINIMUMS: CommunityKillsMinimums = {
   pairMatches: 10,
-  // Mirrors `community_bucket_shown` in the database, which is where the privacy rule is applied: a
+  // Mirrors `hero_figure_qualifies` in the database, which is where the privacy rule is applied: a
   // pair that fewer players recorded (or that one player mostly recorded) never reaches this code.
   recorders: 3,
 };
