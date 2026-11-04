@@ -54,13 +54,9 @@
 .video-copy a,
 .video-all {
   width: fit-content;
-  color: var(--accent-strong);
+  color: var(--link);
   font-size: var(--type-small);
   font-weight: 700;
-  text-decoration: none;
-}
-.video-copy a:hover,
-.video-all:hover {
   text-decoration: underline;
 }
 .video-all {

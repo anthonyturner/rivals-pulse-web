@@ -113,6 +113,8 @@ export class HeroesPageComponent implements OnInit {
   private readonly content = viewChild(HeroContentComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
+  /** One wrapper per video: Angular compares the wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
+  private readonly embedUrls = new Map<string, SafeResourceUrl>();
   private readonly routeHeroId = this.route.paramMap.pipe(
     map((params) => params.get('heroId')),
     distinctUntilChanged(),
@@ -1390,8 +1392,16 @@ export class HeroesPageComponent implements OnInit {
   }
 
   private youtubeVideoEmbedUrl(videoId: string): SafeResourceUrl {
-    const url = `https://www.youtube.com/embed/${videoId}`;
+    const known = this.embedUrls.get(videoId);
 
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    if (known) {
+      return known;
+    }
+
+    const url = this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoId}`);
+
+    this.embedUrls.set(videoId, url);
+
+    return url;
   }
 }

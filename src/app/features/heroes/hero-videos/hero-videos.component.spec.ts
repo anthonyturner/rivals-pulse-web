@@ -15,7 +15,7 @@ describe('HeroVideosComponent', () => {
     embedUrl: TestBed.inject(DomSanitizer).bypassSecurityTrustResourceUrl('about:blank'),
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
     fixture = TestBed.createComponent(HeroVideosComponent);
     element = fixture.nativeElement;
@@ -25,7 +25,7 @@ describe('HeroVideosComponent', () => {
       videoAt('https://example.test/a'),
       { label: 'Gameplay', query: 'Search', url: 'https://example.test/b' },
     ]);
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('names the videos after the hero and shows them without a click', () => {
@@ -39,6 +39,16 @@ describe('HeroVideosComponent', () => {
     expect(element.querySelector('iframe')?.getAttribute('title')).toBe('Mantis Guide');
     expect(element.querySelectorAll('.video-copy a').length).toBe(2);
     expect(element.querySelector('.video-all')?.getAttribute('href')).toBe('https://example.test/all');
+  });
+
+  it('keeps the player when the same video is given again in a new list', async () => {
+    const before = element.querySelector('iframe');
+    const video = fixture.componentInstance.videos()[0];
+
+    fixture.componentRef.setInput('videos', [{ ...video }]);
+    await fixture.whenStable();
+
+    expect(element.querySelector('iframe')).toBe(before);
   });
 
   it('builds a new player for a different video, so changing hero adds no Back step', async () => {

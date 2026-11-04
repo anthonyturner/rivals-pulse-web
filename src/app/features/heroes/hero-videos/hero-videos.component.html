@@ -4,30 +4,40 @@
     @for (video of videos(); track video.url) {
       <article class="video-card">
         @if (video.embedUrl) {
-          <iframe
-            class="video-embed"
-            [src]="video.embedUrl"
-            [title]="heroName() + ' ' + video.label"
-            loading="lazy"
-            allow="
-              accelerometer;
-              autoplay;
-              clipboard-write;
-              encrypted-media;
-              gyroscope;
-              picture-in-picture;
-              web-share;
-            "
-            allowfullscreen
-          ></iframe>
+          @if (showPlayers()) {
+            <iframe
+              class="video-embed"
+              [src]="video.embedUrl"
+              [title]="heroName() + ' ' + video.label"
+              loading="lazy"
+              allow="
+                accelerometer;
+                autoplay;
+                clipboard-write;
+                encrypted-media;
+                gyroscope;
+                picture-in-picture;
+                web-share;
+              "
+              allowfullscreen
+            ></iframe>
+          } @else {
+            <div class="video-embed"></div>
+          }
         }
         <span class="video-copy">
           <strong>{{ video.label }}</strong>
           <small>{{ video.query }}</small>
-          <a [href]="video.url" target="_blank" rel="noopener noreferrer">Open on YouTube</a>
+          <a
+            [href]="video.url"
+            [attr.aria-label]="'Open on YouTube: ' + video.label"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Open on YouTube</a
+          >
         </span>
       </article>
     }
   </div>
-  <a class="video-all" [href]="youtubeUrl()" target="_blank" rel="noopener noreferrer">View all</a>
+  <a class="video-all" [href]="youtubeUrl()" target="_blank" rel="noopener noreferrer">View all on YouTube</a>
 </aside>
