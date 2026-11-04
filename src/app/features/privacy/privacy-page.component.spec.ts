@@ -212,6 +212,24 @@ describe('PrivacyPageComponent', () => {
     expect(text).not.toContain('No ads are shown yet');
   });
 
+  it('says hero pages fetch video pictures from YouTube (Google) and a player loads only on play', () => {
+    const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+    const videos = section('videos');
+    const text = (videos.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(summary).toContain('Hero pages fetch video pictures from YouTube (Google)');
+    expect(text).toContain("fetches those pictures from YouTube's image host, which Google runs");
+    expect(text).toContain('before you press anything');
+    expect(text).toContain('loads from YouTube only when you press play');
+    expect(videos.querySelector('a[href="https://policies.google.com/privacy"]')).toBeTruthy();
+  });
+
+  it('does not claim the other YouTube players wait for a press', () => {
+    const text = (section('videos').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('still show YouTube players that load as soon as the page opens');
+  });
+
   it('no longer says the website has no advertising', () => {
     const text = (section('more').textContent ?? '').replace(/\s+/g, ' ');
 

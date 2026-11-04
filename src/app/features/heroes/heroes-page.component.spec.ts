@@ -1,7 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, SecurityContext } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DomSanitizer } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
@@ -167,6 +168,22 @@ describe('HeroesPageComponent videos in the sidebar', () => {
     await harness.navigateByUrl('/heroes/luna');
 
     expect(page.selectedHero()?.name).toBe('Luna');
-    expect(page.selectedHeroVideos()[0].embedUrl).toBe(before.embedUrl);
+    expect(page.selectedHeroVideos()[0].player).toBe(before.player);
+  });
+
+  it('gives a single video a thumbnail from YouTube and a player on the privacy-enhanced host that autoplays', () => {
+    const player = page.selectedHeroVideos()[0].player;
+    const embed = TestBed.inject(DomSanitizer).sanitize(SecurityContext.RESOURCE_URL, player?.embedUrl ?? null);
+    const id = player?.thumbnailUrl.match(/^https:\/\/i\.ytimg\.com\/vi\/([\w-]+)\/hqdefault\.jpg$/)?.[1];
+
+    expect(id).toBeTruthy();
+    expect(embed).toBe(`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`);
+  });
+
+  it('gives a video that is only a YouTube search link no player', () => {
+    const [, gameplay] = page.selectedHeroVideos();
+
+    expect(gameplay.url).toContain('youtube.com/results');
+    expect(gameplay.player).toBeUndefined();
   });
 });

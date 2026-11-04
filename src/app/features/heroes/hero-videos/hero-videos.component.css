@@ -63,3 +63,42 @@
   display: block;
   margin-top: 10px;
 }
+/* The picture a video shows until it is pressed. It fills the same 16:9 box the player will. */
+.video-play {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+}
+.video-play:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* YouTube's still is 4:3 with black bars above and below a 16:9 video; cover crops them off. */
+.video-play__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.video-play__icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  box-sizing: content-box;
+  width: 28px;
+  height: 28px;
+  padding: 10px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 80%, transparent);
+  color: var(--on-ink);
+  transform: translate(-50%, -50%);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.video-play:hover .video-play__icon,
+.video-play:focus-visible .video-play__icon {
+  background: var(--ink-accent);
+  color: var(--on-ink-accent);
+}
