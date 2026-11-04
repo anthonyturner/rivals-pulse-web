@@ -102,7 +102,7 @@ describe('HeroVideosComponent', () => {
     expect(playButton()).toBeNull();
   });
 
-  it('builds a new card for a different video, so changing hero adds no Back step', async () => {
+  it('builds a new card for a different video', async () => {
     await press(playButton());
 
     await setVideos([videoAt('https://example.test/c')]);

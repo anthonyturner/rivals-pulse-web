@@ -70,10 +70,6 @@
   padding: 0;
   cursor: pointer;
 }
-.video-play:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
 /* YouTube's still is 4:3 with black bars above and below a 16:9 video; cover crops them off. */
 .video-play__image {
   display: block;
