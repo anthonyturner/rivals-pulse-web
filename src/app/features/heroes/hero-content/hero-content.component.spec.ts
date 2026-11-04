@@ -35,20 +35,8 @@ describe('HeroContentComponent', () => {
     fixture = TestBed.createComponent(HeroContentComponent);
     element = fixture.nativeElement;
     fixture.componentRef.setInput('hero', mantis);
-    fixture.componentRef.setInput('videos', [
-      { label: 'Guide', query: 'q', url: 'https://example.test/a' },
-      { label: 'Gameplay', query: 'q', url: 'https://example.test/b' },
-    ]);
-    fixture.componentRef.setInput('youtubeUrl', 'https://example.test/all');
     fixture.componentRef.setInput('controller', controller);
     fixture.detectChanges();
-  });
-
-  it('collapses the videos behind a summary that counts them', () => {
-    const videos = element.querySelector('details.video-searches') as HTMLDetailsElement;
-
-    expect(videos.open).toBeFalse();
-    expect(videos.querySelector('summary')?.textContent?.trim()).toBe('YouTube videos (2)');
   });
 
   describe('focusing the hero name', () => {

@@ -29,6 +29,7 @@ import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
 import { HeroGridComponent, HeroGridLayout, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
+import { HeroVideosComponent } from './hero-videos/hero-videos.component';
 import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
   buildHeroBuildProfileRationale,
@@ -46,18 +47,13 @@ import {
   HeroRoleAbilityKit,
   HeroStrategyGuide,
   HeroVideo,
+  HeroVideoSearch,
   HeroVideoType,
 } from './hero.model';
 
+import { SidebarContentDirective } from '../../core/layout/sidebar/sidebar-content';
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
-
-interface HeroVideoSearch {
-  label: string;
-  query: string;
-  url: string;
-  embedUrl?: SafeResourceUrl;
-}
 
 interface UltimateStrategy {
   ability: HeroAbility;
@@ -98,6 +94,8 @@ interface FandomOverviewSection {
     HeroContentComponent,
     HeroGridComponent,
     HeroPageHeaderComponent,
+    HeroVideosComponent,
+    SidebarContentDirective,
     StatePanelComponent,
   ],
   templateUrl: './heroes-page.component.html',

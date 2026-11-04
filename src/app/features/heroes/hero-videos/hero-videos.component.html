@@ -1,0 +1,33 @@
+<aside class="hero-videos" [attr.aria-label]="'YouTube videos for ' + heroName()">
+  <h2 class="hero-videos__heading">YouTube videos</h2>
+  <div class="hero-videos__list">
+    @for (video of videos(); track video.url) {
+      <article class="video-card">
+        @if (video.embedUrl) {
+          <iframe
+            class="video-embed"
+            [src]="video.embedUrl"
+            [title]="heroName() + ' ' + video.label"
+            loading="lazy"
+            allow="
+              accelerometer;
+              autoplay;
+              clipboard-write;
+              encrypted-media;
+              gyroscope;
+              picture-in-picture;
+              web-share;
+            "
+            allowfullscreen
+          ></iframe>
+        }
+        <span class="video-copy">
+          <strong>{{ video.label }}</strong>
+          <small>{{ video.query }}</small>
+          <a [href]="video.url" target="_blank" rel="noopener noreferrer">Open on YouTube</a>
+        </span>
+      </article>
+    }
+  </div>
+  <a class="video-all" [href]="youtubeUrl()" target="_blank" rel="noopener noreferrer">View all</a>
+</aside>

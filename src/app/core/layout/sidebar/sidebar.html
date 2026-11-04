@@ -1,3 +1,10 @@
-<aside class="sidebar" aria-label="Advertisement">
-  <app-ad-slot slot="rectangle" />
-</aside>
+<div class="sidebar">
+  @if (pageContent(); as template) {
+    <div class="sidebar__page-content">
+      <ng-container [ngTemplateOutlet]="template" />
+    </div>
+  }
+  <aside class="sidebar__ads" aria-label="Advertisement">
+    <app-ad-slot slot="rectangle" />
+  </aside>
+</div>
