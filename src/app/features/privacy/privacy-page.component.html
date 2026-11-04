@@ -93,7 +93,10 @@
         server that receives it. They are not uploaded yet. This page will say so when they are.
       </p>
     } @else {
-      <p>The app uploads these fields in addition to the ones above.</p>
+      <p>
+        The app uploads these fields in addition to the ones above. Older versions of the app do not
+        send them.
+      </p>
     }
     <ul>
       @for (field of extendedFields; track field.label) {
@@ -150,7 +153,7 @@
       <li>
         Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
-        The figures being added above are kept for the same time.
+        The extra figures above are kept for the same time.
       </li>
       <li>
         The uploading player's own match history (their name, whole scoreboard line and the match
