@@ -4,7 +4,9 @@
       <li>
         <app-hero-tile [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="hero.hero">
           <span tileFigure class="figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>
-          <span class="sample">{{ hero.sample }}</span>
+          @if (hero.sample) {
+            <span class="sample">{{ hero.sample }}</span>
+          }
         </app-hero-tile>
       </li>
     }

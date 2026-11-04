@@ -1,0 +1,37 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Damage, healing and damage blocked per minute"
+  subject="Community per-minute role figures"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+>
+  @if (current.kind === 'ready') {
+    <div class="role-figures__scroll">
+      <table class="role-figures__table">
+        <caption class="role-figures__caption">Per minute played, by role</caption>
+        <thead>
+          <tr>
+            <th scope="col">Role</th>
+            <th scope="col">Damage</th>
+            <th scope="col">Healing</th>
+            <th scope="col">Damage blocked</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of current.rows; track row.role) {
+            <tr>
+              <th scope="row">{{ row.role }}</th>
+              <td>{{ row.damage }}</td>
+              <td>{{ row.healing }}</td>
+              <td>{{ row.blocked }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="role-figures__note">{{ current.note }}</p>
+  }
+</app-community-summary>

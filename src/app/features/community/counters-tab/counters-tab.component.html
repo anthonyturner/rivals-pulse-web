@@ -32,3 +32,38 @@
     </ol>
   }
 </app-community-summary>
+
+@let killFeed = killFeedView();
+
+<app-community-summary
+  class="kill-feed"
+  [kind]="killFeed.kind"
+  heading="Community kill feed: most seen kills"
+  subject="community kill-feed counters"
+  [summary]="killFeed.kind === 'not-enough-data' ? killFeed.summary : ''"
+  [halfSeasonLabel]="killFeed.kind === 'ready' ? killFeed.halfSeasonLabel : null"
+  [notice]="killFeed.kind === 'ready' ? killFeed.notice : null"
+  [footnote]="killFeed.kind === 'ready' ? killFeedFootnote : null"
+>
+  @if (killFeed.kind === 'ready') {
+    <ol class="records">
+      @for (pair of killFeed.pairs; track pair.key) {
+        <li [attr.title]="pair.description">
+          <div class="record">
+            <div class="winner">
+              <span class="hero">
+                <img [src]="pair.killer.imageUrl" alt="" width="36" height="36" loading="lazy" (error)="onImageError($event)" />
+                <span class="name">{{ pair.killer.name }}</span>
+              </span>&ngsp;<span class="verb">was seen killing</span>
+            </div>&ngsp;<span class="hero">
+              <img [src]="pair.victim.imageUrl" alt="" width="36" height="36" loading="lazy" (error)="onImageError($event)" />
+              <span class="name">{{ pair.victim.name }}</span>
+            </span>&ngsp;<span class="result">
+              <span class="figure">{{ pair.band }}</span>
+            </span>
+          </div>
+        </li>
+      }
+    </ol>
+  }
+</app-community-summary>

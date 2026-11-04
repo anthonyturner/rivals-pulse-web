@@ -24,3 +24,27 @@
     </div>
   }
 </app-community-summary>
+
+@let figuresCurrent = figuresView();
+
+<app-community-summary
+  class="figures"
+  [kind]="figuresCurrent.kind"
+  heading="Community hero damage, healing and damage blocked"
+  subject="community hero damage, healing and damage blocked per minute"
+  [summary]="figuresCurrent.kind === 'not-enough-data' ? figuresCurrent.summary : ''"
+  [halfSeasonLabel]="figuresCurrent.kind === 'ready' ? figuresCurrent.halfSeasonLabel : null"
+  [notice]="figuresCurrent.kind === 'ready' ? figuresCurrent.notice : null"
+  [footnote]="figuresCurrent.kind === 'ready' ? figuresFootnote : null"
+>
+  @if (figuresCurrent.kind === 'ready') {
+    <div class="lists">
+      @for (group of figuresCurrent.groups; track group.key) {
+        <section class="list" [attr.aria-labelledby]="'heroes-tab-figure-' + group.key">
+          <h3 [id]="'heroes-tab-figure-' + group.key" class="list-title">{{ group.title }}</h3>
+          <app-community-hero-list [heroes]="group.heroes" [figureLabel]="group.figureLabel" />
+        </section>
+      }
+    </div>
+  }
+</app-community-summary>
