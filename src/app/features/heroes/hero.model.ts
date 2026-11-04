@@ -99,12 +99,18 @@ export interface HeroVideo {
   title: string;
 }
 
-/** A video offered on a hero page: `embedUrl` is missing when the link is a YouTube search rather than one video. */
+/** How one YouTube video is shown: its still picture, and the player that replaces the picture when pressed. */
+export interface HeroVideoPlayer {
+  embedUrl: SafeResourceUrl;
+  thumbnailUrl: string;
+}
+
+/** A video offered on a hero page: `player` is missing when the link is a YouTube search rather than one video. */
 export interface HeroVideoSearch {
   label: string;
   query: string;
   url: string;
-  embedUrl?: SafeResourceUrl;
+  player?: HeroVideoPlayer;
 }
 
 export interface Hero {

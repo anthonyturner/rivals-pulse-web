@@ -229,6 +229,33 @@ describe('PrivacyPageComponent', () => {
     expect(text).not.toContain('No ads are shown yet');
   });
 
+  it('says hero pages fetch video pictures from YouTube (Google) and a player loads only on play', () => {
+    const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+    const videos = section('videos');
+    const text = (videos.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(summary).toContain('Hero pages fetch video pictures from YouTube (Google)');
+    expect(text).toContain("fetches those pictures from YouTube's image host, which Google runs");
+    expect(text).toContain('before you press anything');
+    expect(summary).toContain('their players load only when you press play');
+    expect(summary).toContain('Players on hero guide, strategist guide and video tutorial pages load without a press');
+    expect(text).toContain('loads from YouTube only when you press play');
+    expect(videos.querySelector('a[href="https://policies.google.com/privacy"]')).toBeTruthy();
+  });
+
+  it('does not claim the other YouTube players wait for a press', () => {
+    const text = (section('videos').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('still show YouTube players that load without a press');
+  });
+
+  it('says players may use cookies and that the consent message does not cover videos', () => {
+    const text = (section('videos').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain("may set or read YouTube's own cookies");
+    expect(text).toContain('these pictures and players do not wait for your answer');
+  });
+
   it('no longer says the website has no advertising', () => {
     const text = (section('more').textContent ?? '').replace(/\s+/g, ' ');
 
