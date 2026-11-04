@@ -58,7 +58,13 @@ its own.
 - **Below the rule there is no score, and never a guess.** The stat's `status` is
   `collecting`, and `matches`, `contributors` and `oneContributorAboveHalf` say how
   far along it is. Because the rule is per mode, these show the closest single mode;
-  6 lines in Quick Match and 8 in Competitive reads as 8.
+  6 lines in Quick Match and 8 in Competitive reads as the 8.
+- **Progress counts matches in steps of 5.** 8 lines reads as 5, so a display says
+  "5 of 10". With one contributor an exact count is one person's own games on that
+  hero, and comparing two publishes would show when they played. ADR-0021 promises
+  never one player's numbers.
+- **A hero the game splits by role passes per form too.** Deadpool's role ids each
+  pass the rule on their own before they are added together.
 - **A hero with no line at all in the half-season has no entry.** That reads as
   0 of each minimum.
 - **Each stat stands alone.** A hero can have a Damage score and be collecting for
@@ -90,9 +96,10 @@ The rules run in this order, and stop at the first that decides:
 1. **The hero kit mobility table lists it:** Mobility.
 2. **It is a normal attack:** Damage.
 3. **The one-line description names an effect:** that tag, when it names exactly
-   one. Naming two is undecided. The description is the page's own statement of what
-   the ability is for, so a number in a detail row does not outvote it. An ability
-   described as a stun or a slow that also prints a little damage is therefore
+   one. Naming two is undecided, and any mention of damage done to someone counts as
+   naming Damage. The description is the page's own statement of what the ability is
+   for, so a number in a detail row does not outvote it. An ability whose description
+   names only a stun or a slow, and which also prints a little damage, is therefore
    Utility. This is the judgement most worth a reviewer's eye.
 4. **The detail rows name one effect:** that tag.
 5. **Otherwise:** no tag.
@@ -108,7 +115,8 @@ or the source and rerun the script. Hand edits to the table are lost on the next
 
 The upload counts by slot, and a slot follows a key: `ability_0` Right Click,
 `ability_1` Shift, `ability_2` E, `ability_3` F, `team_up_0` C, and `ultimate` Q,
-from the overlay's logged matches. `ability_4` and `team_up_1` are not established,
+from the overlay's logged matches. Those logs cover about eight heroes, and the
+mapping is applied to all of them. `ability_4` and `team_up_1` are not established,
 so nothing maps to them.
 
 - **A slot the hero's page does not list is ignored.** The overlay sends every slot,
@@ -120,6 +128,8 @@ so nothing maps to them.
 - **Utility counts a slot only with a plain cooldown.** Without one there is no way
   to say how often it was available. A printed cooldown such as "3s after it breaks"
   does not count. Use above 100% of the cooldown is capped, as cooldown cuts allow it.
+  A team-up on a shared key is taken as available for all time played, which it may
+  not be.
 
 ## Known limits
 
@@ -129,5 +139,11 @@ so nothing maps to them.
 - **The counts themselves are estimates.** Overlay issue 1320 covers two ways they
   could be wrong on heroes not yet seen in logs: a partial cooldown cut read as a use,
   and a dip before an ultimate that is lost.
+- **The rule counts lines, and a rate reads the lines that carry its figure.** Uses
+  per ten minutes reads lines with a time played, and takedowns the lines that carry
+  them. With today's overlay these are the same lines. If they ever differ, a passing
+  row's rate could rest on fewer players than the rule counted.
+- **Most heroes cannot get a Utility score yet.** Today only those with a Utility
+  ability on its own key and a plain cooldown can.
 - **Nothing has been scored from real data.** No release of the overlay has sent
   ability counts yet, so Ultimate and Utility have run only on test data.

@@ -1,7 +1,7 @@
 import type { HeroScores } from '../../../contracts/hero-scores.model';
 import { PLAY_MODE_IDS } from '../../heroes/stats/hero-stats';
 import { assembleHeroScores, buildPulseAtlas, verifyPulseAtlas, type PulseAtlasFile } from '../../pulse-atlas/pulse-atlas';
-import type { HeroAbilitySlot } from './hero-ability-tags';
+import { bundledHeroAbilityTagTable, heroAbilitySlots, type HeroAbilitySlot } from './hero-ability-tags';
 import {
   HERO_SCORE_MINIMUMS,
   deriveHeroScores,
@@ -148,13 +148,20 @@ describe('deriveHeroScores', () => {
       status: 'collecting',
       score: null,
       label: 'measured',
-      matches: 7,
+      matches: 5,
       contributors: 2,
       oneContributorAboveHalf: false,
       measures: null,
     });
     expect(heroOf(scores.heroes, 'e').damage.score).toBe(10);
     expect(heroOf(scores.heroes, 'a').damage.score).toBe(1);
+  });
+
+  it('shows progress below the rule only in steps of 5, so one player\'s exact count is never published', () => {
+    const lines = (count: number) => ({ ...WAITING, lines: count, contributors: 1, busiestAboveHalf: true });
+    const matchesFor = (count: number) => heroOf(derive({ figures: [figures(1, { damage: lines(count) })] }).scores.heroes, 'a').damage.matches;
+
+    expect([1, 4, 5, 9, 10, 14].map(matchesFor)).toEqual([0, 0, 5, 5, 10, 10]);
   });
 
   it('says when one player holding too many lines is what holds a hero back', () => {
@@ -169,12 +176,12 @@ describe('deriveHeroScores', () => {
   it('never adds lines across modes when saying how far along a hero is, because the rule is per mode', () => {
     const { scores } = derive({
       figures: [
-        figures(1, { damage: { ...WAITING, lines: 6 } }),
-        figures(1, { playModeId: PLAY_MODE_IDS.quickMatch, damage: { ...WAITING, lines: 8 } }),
+        figures(1, { damage: { ...WAITING, lines: 4 } }),
+        figures(1, { playModeId: PLAY_MODE_IDS.quickMatch, damage: { ...WAITING, lines: 7 } }),
       ],
     });
 
-    expect(heroOf(scores.heroes, 'a').damage.matches).toBe(8);
+    expect(heroOf(scores.heroes, 'a').damage.matches).toBe(5);
   });
 
   it('pools only the modes that pass, and never Arcade or Practice', () => {
@@ -209,7 +216,7 @@ describe('deriveHeroScores', () => {
 
     expect(hero.damage.status).toBe('scored');
     expect(hero.sustain).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 0, contributors: 0 }));
-    expect(hero.ultimate).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 3, contributors: 1, oneContributorAboveHalf: true }));
+    expect(hero.ultimate).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 0, contributors: 1, oneContributorAboveHalf: true }));
     expect(hero.utility).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 0 }));
   });
 
@@ -232,7 +239,7 @@ describe('deriveHeroScores', () => {
     it('waits while one of the two figures is held back, because the sum would understate the hero', () => {
       const { scores } = derive({ figures: FIVE_HEROES.map((id) => figures(id, { healing: passing(id * 1000), blocked: WAITING })) });
 
-      expect(heroOf(scores.heroes, 'a').sustain).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 7, measures: null }));
+      expect(heroOf(scores.heroes, 'a').sustain).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 5, measures: null }));
     });
   });
 
@@ -257,7 +264,7 @@ describe('deriveHeroScores', () => {
     it('has no score when the app counted no kills or assists, since 0 would be a guess', () => {
       const { scores } = derive({ abilities: FIVE_HEROES.map((id) => ability(id, 'ultimate', { killsAfterN: 0, assistsAfterN: 0 })) });
 
-      expect(heroOf(scores.heroes, 'a').ultimate.status).toBe('collecting');
+      expect(heroOf(scores.heroes, 'a').ultimate).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 20, contributors: 4, oneContributorAboveHalf: false }));
     });
   });
 
@@ -384,8 +391,11 @@ describe('the derived scores in Pulse Atlas', () => {
   const gameIds = SLUGS.map((id, index) => ({ id, gameId: index + 1 }));
 
   function publish(scores: unknown): { files: PulseAtlasFile[]; warnings: string[] } {
+    return publishData(assembleHeroScores(JSON.parse(JSON.stringify(scores)), gameIds));
+  }
+
+  function publishData(data: unknown): { files: PulseAtlasFile[]; warnings: string[] } {
     const warnings: string[] = [];
-    const data = assembleHeroScores(JSON.parse(JSON.stringify(scores)), gameIds, (warning) => warnings.push(warning));
     const season = { id: 21, label: 'Season 10.5', startTime: '2026-10-09T09:00:00Z' };
     const files = buildPulseAtlas(
       [
@@ -438,6 +448,24 @@ describe('the derived scores in Pulse Atlas', () => {
     expect(published.data.heroes[4].damage.score).toBe(10);
     expect(published.data.heroes[5].damage.status).toBe('collecting');
     expect(published.data.heroes[5].damage.measures).toBeNull();
+  });
+
+  it('passes the allow-list with the real tag table for every hero', () => {
+    const heroes = bundledHeroAbilityTagTable.heroes.map((hero) => hero.heroId);
+    const slugs = new Map(heroes.map((hero, index) => [index + 1, hero]));
+    const slots = ['ability_0', 'ability_1', 'ability_2', 'ability_3', 'team_up_0', 'ultimate'];
+    const { scores } = deriveHeroScores(
+      {
+        halfSeasons: HALF_SEASONS,
+        figures: heroes.map((_, index) => figures(index + 1)),
+        abilities: heroes.flatMap((_, index) => slots.map((slot) => ability(index + 1, slot, { usesTimedSum: index }))),
+      },
+      { now: NOW, heroSlugByGameId: slugs, slotsByHero: heroAbilitySlots() },
+    );
+    const data = assembleHeroScores(JSON.parse(JSON.stringify(scores)), heroes.map((id, index) => ({ id, gameId: index + 1 })));
+
+    expect(scores.heroes.length).toBe(heroes.length);
+    expect(() => publishData(data)).not.toThrow();
   });
 
   it('passes the allow-list with too few heroes to rank, and with nothing at all', () => {

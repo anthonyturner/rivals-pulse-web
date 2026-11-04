@@ -23,12 +23,14 @@ const SLOT_BY_KEY = new Map([
 // Each tag's evidence, in the official wording. Delivery words such as "launch", "throw" and "fire" are
 // left out on purpose: they say how an ability travels, not what it does.
 const DESCRIPTION_SIGNALS = {
-  Damage: /\b(deal\w* (?:\w+ ){0,3}damage|damag(?:e|es|ing) (?:\w+ )?(?:enemies|enemy|foes?|targets?))\b/i,
+  // Any damage done to someone. A boost, a cut or damage the hero takes is not damage dealt.
+  Damage:
+    /(?<!(?:incoming|absorbing|taking|you take|amplify|reducing) )\bdamag\w*\b(?! (?:boost|reduction|increase|taken|received|passing))/i,
   Sustain:
     /\b(heal\w*|restor\w* (?:\w+ )?health|bonus health|regenerat\w*|shields?|barriers?|protect\w*|invincib\w*|damage reduction|lifesteal)\b/i,
   Mobility: /\b(dash\w*|leap\w*|fly\w*|flight|glid\w*|soar\w*|teleport\w*|blink\w*|jump\w*|swing\w*|sprint\w*|lunge\w*|burrow\w*)\b/i,
   Utility:
-    /\b(stun\w*|slow\w*|freez\w*|root\w*|imprison\w*|immobili\w*|knock\w*|pull\w*|push\w*|taunt\w*|blind\w*|silenc\w*|charm\w*|reveal\w*|sleep\w*|slumber\w*|mark\w*|boost\w*|revive\w*|resurrect\w*|invisib\w*|stealth\w*|cleans\w*|disrupt\w*|portal\w*|tether\w*|cocoon\w*|trap\w*)\b/i,
+    /\b(stun\w*|slow\w*|freez\w*|root\w*|imprison\w*|immobili\w*|knock\w*|pull\w*|push\w*|taunt\w*|blind\w*|silenc\w*|charm\w*|reveal\w*|sleep\w*|slumber\w*|sedat\w*|boost\w*|revive\w*|resurrect\w*|invisib\w*|stealth\w*|cleans\w*|disrupt\w*|portal\w*|tether\w*|cocoon\w*|trap\w*)\b/i,
 };
 
 // The same four ideas in the names of the page's detail rows. Rows that only qualify another row

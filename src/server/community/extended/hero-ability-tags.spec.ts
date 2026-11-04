@@ -98,6 +98,16 @@ describe('the hero ability tag table', () => {
     expect(rows.filter(({ row }) => row.type === 'Normal Attack' && row.tag === 'Utility')).toEqual([]);
   });
 
+  it('never tags as Utility an ability whose description names damage dealt', () => {
+    const notDealt = /damage (?:boost|reduction|increase|taken|received|passing)|(?:incoming|absorbing|taking|you take|amplify|reducing) damage/gi;
+    const named = rows
+      .filter(({ row }) => row.tag === 'Utility')
+      .filter(({ heroId, index }) => /damag/i.test(officialOf(heroId, index).description.replace(notDealt, '')))
+      .map(({ heroId, row }) => `${heroId} ${row.ability}`);
+
+    expect(named).toEqual([]);
+  });
+
   it('leaves enough heroes with a measurable Utility ability for a ranking to exist', () => {
     const measurable = [...heroAbilitySlots().values()].filter((slots) =>
       slots.some((slot) => slot.tag === 'Utility' && slot.cooldownSeconds !== null && slot.slot !== 'ultimate'),

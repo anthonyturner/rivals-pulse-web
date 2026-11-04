@@ -293,7 +293,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging surrounding enemies); Mobility (description: leap)"
+     "reason": "More than one tag: Damage (description: damaging); Mobility (description: leap)"
     },
     {
      "ability": "Celestial Command",
@@ -303,12 +303,8 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": "Mobility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "leap"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: leap)"
     },
     {
      "ability": "ASGARDIANS OF THE GALAXY",
@@ -372,7 +368,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal Damage); Mobility (description: dash)"
+     "reason": "More than one tag: Damage (description: Damage); Mobility (description: dash)"
     },
     {
      "ability": "CAT'S CRADLE",
@@ -401,7 +397,7 @@
       "raw": "5s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages an enemy); Utility (description: pulling)"
+     "reason": "More than one tag: Damage (description: damages); Utility (description: pulling)"
     },
     {
      "ability": "THIEVING GRACE",
@@ -452,8 +448,12 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "GIFT OF GOLD",
@@ -464,7 +464,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: healing); Utility (description: slowing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing); Utility (description: slowing)"
     },
     {
      "ability": "CLAW WHIP",
@@ -619,7 +619,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: Knocking)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Bonus Health); Utility (description: Knocking)"
     },
     {
      "ability": "BINDING TIES",
@@ -630,7 +630,7 @@
      "slot": "ability_2",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal bonus damage); Utility (description: mark)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Immobilizes)"
     }
    ]
   },
@@ -661,8 +661,12 @@
      ],
      "slot": "ultimate",
      "cooldown": null,
-     "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Utility (description: Mark)"
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "Spirit Rend",
@@ -726,11 +730,11 @@
       "value": 6,
       "raw": "6s"
      },
-     "tag": "Utility",
+     "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "description",
-      "raw": "Mark"
+      "field": "Damage",
+      "raw": "50"
      }
     },
     {
@@ -742,7 +746,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: Deal higher damage); Sustain (description: Health)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Health)"
     },
     {
      "ability": "GAMMA VIBRANIUM ARMOR",
@@ -755,12 +759,8 @@
       "value": 45,
       "raw": "45"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: health)"
     },
     {
      "ability": "DAMISA-YAO",
@@ -774,7 +774,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Utility (description: Slow)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Slow)"
     },
     {
      "ability": "DIMENSIONAL SHORTCUT",
@@ -788,7 +788,7 @@
       "raw": "35s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging nearby enemies); Sustain (description: Bonus Health); Mobility (description: teleport); Utility (description: Marks)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Bonus Health); Mobility (description: teleport)"
     }
    ]
   },
@@ -838,7 +838,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deal increased damage"
+      "raw": "damage"
      }
     },
     {
@@ -1060,8 +1060,12 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     }
    ]
   },
@@ -1191,7 +1195,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal damage); Mobility (description: leap); Utility (description: slow)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: leap); Utility (description: slow)"
     },
     {
      "ability": "VIBRANIUM BASTION",
@@ -1205,7 +1209,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Healing); Utility (description: Slowing)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Healing); Utility (description: Slowing)"
     },
     {
      "ability": "STARS ALIGNED",
@@ -1232,12 +1236,8 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Shield"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Shield)"
     }
    ]
   },
@@ -1269,7 +1269,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: healing); Mobility (description: dashes)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healing); Mobility (description: dashes)"
     },
     {
      "ability": "Light's Embrace",
@@ -1291,7 +1291,7 @@
      "slot": "ability_2",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage enemies); Utility (description: Blind)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Blind)"
     },
     {
      "ability": "Dark Teleportation",
@@ -1320,7 +1320,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: heals); Utility (description: boosts)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: heals); Utility (description: boosts)"
     },
     {
      "ability": "Lightforce Dagger",
@@ -1516,7 +1516,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing massive secondary explosive damage"
+      "raw": "damage"
      }
     },
     {
@@ -1548,8 +1548,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Burn Damage",
-      "raw": "7/hit, 2 times per second"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -1617,8 +1617,12 @@
       "value": 12,
       "raw": "12s"
      },
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "DEVIL'S LATCH",
@@ -1645,7 +1649,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: Slows)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Utility (description: Slows)"
     },
     {
      "ability": "Sonic Pursuit",
@@ -1696,12 +1700,8 @@
      ],
      "slot": "ultimate",
      "cooldown": null,
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Blind"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Blind)"
     },
     {
      "ability": "BLIND VERDICT",
@@ -1711,12 +1711,8 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "blind"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: blind)"
     },
     {
      "ability": "COMPREHENSIVE DEFENSE",
@@ -1727,7 +1723,7 @@
      "slot": "ability_0",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage all enemies); Sustain (description: Health)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Health)"
     },
     {
      "ability": "DEVILISH AFFAIR",
@@ -1741,7 +1737,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Mobility (description: Swings); Utility (description: Slow)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: Swings); Utility (description: Slow)"
     }
    ]
   },
@@ -2033,7 +2029,7 @@
       "raw": "60s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: bonus health); Utility (description: taunt)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: bonus health); Utility (description: taunt)"
     },
     {
      "ability": "DUAL DESERT EAGLES - DUELIST",
@@ -2251,7 +2247,7 @@
       "raw": "45s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Healing); Utility (description: boost)"
+     "reason": "More than one tag: Damage (description: Damage); Sustain (description: Healing); Utility (description: boost)"
     },
     {
      "ability": "SKILL ISSUE - UPGRADED",
@@ -2507,7 +2503,7 @@
       "raw": "60s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: bonus health); Utility (description: taunt)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: bonus health); Utility (description: taunt)"
     },
     {
      "ability": "\"HEL-YEAH, HONEY\"",
@@ -2517,12 +2513,8 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "healing"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     },
     {
      "ability": "GUMBO CHIMICHANGAS",
@@ -2536,7 +2528,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal damage); Mobility (description: leap); Utility (description: Stun)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: leap); Utility (description: Stun)"
     }
    ]
   },
@@ -2618,7 +2610,7 @@
       "raw": "8s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: Deals extra damage); Sustain (description: Bonus Health)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "Prehistoric Plating",
@@ -2629,7 +2621,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: healing); Utility (description: knock)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing); Utility (description: knock)"
     },
     {
      "ability": "Apex Advantage",
@@ -2669,8 +2661,12 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "PRIMAL PUNISHMENT",
@@ -2683,12 +2679,8 @@
       "value": 12,
       "raw": "12s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Damage Reduction"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Damage Reduction)"
     },
     {
      "ability": "SURF & TURF",
@@ -2699,7 +2691,7 @@
      "slot": "ability_0",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages enemies); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: healing)"
     }
    ]
   },
@@ -2733,8 +2725,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage",
-      "raw": "60"
+      "field": "description",
+      "raw": "Damage"
      }
     },
     {
@@ -2770,7 +2762,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deal damage"
+      "raw": "damage"
      }
     },
     {
@@ -2799,12 +2791,8 @@
      ],
      "slot": "ability_0",
      "cooldown": null,
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "protective"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: protective)"
     },
     {
      "ability": "Price of Magic",
@@ -2844,7 +2832,7 @@
       "raw": "6s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: Invisible)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: Bonus Health); Utility (description: Invisible)"
     },
     {
      "ability": "GAMMA MAELSTROM",
@@ -2872,7 +2860,7 @@
       "raw": "6s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Shield); Utility (description: Invisible)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Shield); Utility (description: Invisible)"
     }
    ]
   },
@@ -2921,8 +2909,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "description",
-      "raw": "Dealing damage"
+      "field": "Damage/Instinct Conversion Rate",
+      "raw": "0.009"
      }
     },
     {
@@ -2974,7 +2962,7 @@
       "raw": "8s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal extra damage); Sustain (description: shields); Utility (description: marking)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: shields); Utility (description: boost)"
     },
     {
      "ability": "SMOKY SNARE",
@@ -2988,7 +2976,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Mobility (description: dash); Utility (description: trap)"
+     "reason": "More than one tag: Damage (description: Damages); Mobility (description: dash); Utility (description: trap)"
     },
     {
      "ability": "APEX PREDATOR",
@@ -3002,7 +2990,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing heavy damage"
+      "raw": "damage"
      }
     },
     {
@@ -3014,7 +3002,7 @@
      "slot": "ability_0",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging nearby enemies); Sustain (description: healed); Utility (description: Taunt)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healed); Utility (description: Taunt)"
     },
     {
      "ability": "PREHISTORIC TRAP",
@@ -3027,12 +3015,8 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "trap"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: Damages); Utility (description: trap)"
     },
     {
      "ability": "LOUDMOUTH MERCS",
@@ -3046,7 +3030,7 @@
       "raw": "8s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging nearby enemies); Sustain (description: healing); Utility (description: Taunt)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healing); Utility (description: Taunt)"
     }
    ]
   },
@@ -3095,8 +3079,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage",
-      "raw": "Deal 5 damage per direct hit. When the sentience shatters, i"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -3144,7 +3128,7 @@
       "raw": "2s"
      },
      "tag": null,
-     "reason": "More than one tag: Mobility (description: flying); Utility (description: knock)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: flying); Utility (description: knock)"
     },
     {
      "ability": "CARBON CRUSH",
@@ -3191,7 +3175,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: heal); Utility (description: slowing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: heal); Utility (description: slowing)"
     },
     {
      "ability": "SPIRIT BREAKER",
@@ -3202,7 +3186,7 @@
      "slot": "ability_2",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: Deals damage); Sustain (description: Healthfor)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Healthfor)"
     },
     {
      "ability": "ICED OUT DIAMOND",
@@ -3216,7 +3200,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Utility (description: Slowto)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Slowto)"
     }
    ]
   },
@@ -3248,7 +3232,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: heal); Mobility (description: Jump); Utility (description: Boost)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: heal); Mobility (description: Jump); Utility (description: Boost)"
     },
     {
      "ability": "Cajun Charge",
@@ -3319,8 +3303,12 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "Bridge Boost",
@@ -3357,7 +3345,7 @@
      "slot": "ability_3",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: Healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Healing)"
     },
     {
      "ability": "Bidding Barrage",
@@ -3371,7 +3359,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "damage enemies"
+      "raw": "damage"
      }
     },
     {
@@ -3386,7 +3374,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage to enemies); Sustain (description: heal)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: heal)"
     },
     {
      "ability": "SPARKLING STAFF",
@@ -3400,7 +3388,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: deals damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     }
    ]
   },
@@ -3496,12 +3484,8 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Bonus Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "Twilight of the Gods",
@@ -3515,7 +3499,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deals devastating damage"
+      "raw": "damage"
      }
     },
     {
@@ -3529,12 +3513,8 @@
       "value": 20,
       "raw": "20s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Bonus Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Bonus Health)"
     },
     {
      "ability": "Hive Mind",
@@ -3548,7 +3528,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing piercing damage); Utility (description: Boost)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Boost)"
     }
    ]
   },
@@ -3608,12 +3588,8 @@
       "value": 12,
       "raw": "12s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Bonus Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "Spore Bomb",
@@ -3752,8 +3728,12 @@
      ],
      "slot": "ultimate",
      "cooldown": null,
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "Damage"
+     }
     },
     {
      "ability": "Crescent Slash",
@@ -3785,7 +3765,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing two instances of damage); Mobility (description: flying); Utility (description: Slow)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: flying); Utility (description: Slow)"
     },
     {
      "ability": "Ronin Slash",
@@ -3831,8 +3811,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Bonus Damage",
-      "raw": "0 - 90 (Maximum damage is achieved after 0.9s of aiming)"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -3847,7 +3827,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: heals); Utility (description: boosts)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: heals); Utility (description: boosts)"
     },
     {
      "ability": "SENBONZAKURA STRIKE",
@@ -3873,7 +3853,7 @@
      "slot": "ability_1",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: heals); Utility (description: boosts)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: heals); Utility (description: boosts)"
     }
    ]
   },
@@ -4103,8 +4083,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage",
-      "raw": "40"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -4115,8 +4095,12 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": null,
-     "reason": "The page names no effect these rules know."
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "Heavy Blow",
@@ -4155,12 +4139,8 @@
       "value": 10,
       "raw": "10s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "shields"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: shields)"
     },
     {
      "ability": "Radioactive Lockdown",
@@ -4206,8 +4186,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage",
-      "raw": "65"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -4280,8 +4260,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage",
-      "raw": "125"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -4296,7 +4276,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: Health); Mobility (description: Leap)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Health); Mobility (description: Leap)"
     },
     {
      "ability": "GAMMA FASTBALL",
@@ -4411,7 +4391,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deal damage"
+      "raw": "damage"
      }
     },
     {
@@ -4426,7 +4406,7 @@
       "raw": "25s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: Invisible)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Utility (description: Invisible)"
     },
     {
      "ability": "Pyrokinetic Energy",
@@ -4440,7 +4420,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "damage enemies"
+      "raw": "damage"
      }
     },
     {
@@ -4455,7 +4435,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing damage"
+      "raw": "damage"
      }
     },
     {
@@ -4487,12 +4467,8 @@
       "value": 20,
       "raw": "20s"
      },
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "pulls"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damages); Utility (description: pulls)"
     }
    ]
   },
@@ -4524,7 +4500,7 @@
      "slot": "ability_0",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: shield); Utility (description: slowed)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: shield); Utility (description: slowed)"
     },
     {
      "ability": "Psionic Vortex",
@@ -4537,8 +4513,12 @@
       "value": 12,
       "raw": "12s"
      },
-     "tag": null,
-     "reason": "More than one tag: Damage (Spell Field Damage: 35/sec); Utility (Slow Rate: Center 50%, Edge 0)"
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "Force Physics",
@@ -4607,7 +4587,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: Invisible)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Utility (description: Invisible)"
     },
     {
      "ability": "UNITED SIBLINGS",
@@ -4632,7 +4612,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: healing); Utility (description: Invisible)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing); Utility (description: Invisible)"
     }
    ]
   },
@@ -4678,12 +4658,8 @@
      ],
      "slot": "ultimate",
      "cooldown": null,
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "boost"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: boost)"
     },
     {
      "ability": "K'un-Lun Kick",
@@ -4904,8 +4880,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage Over Time",
-      "raw": "300/s"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -4949,11 +4925,11 @@
       "value": 20,
       "raw": "20s"
      },
-     "tag": "Sustain",
+     "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Bonus Health",
-      "raw": "100"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -5001,7 +4977,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing continuous damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     },
     {
      "ability": "GAMMA CHARGE",
@@ -5048,7 +5024,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing bonus damage"
+      "raw": "damage"
      }
     }
    ]
@@ -5216,12 +5192,8 @@
       "value": 20,
       "raw": "20"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "healing"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     },
     {
      "ability": "MR. POOL'S INTERDIMENSIONAL TOY BOX",
@@ -5235,7 +5207,7 @@
       "raw": "15"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: healing); Utility (description: Taunts)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healing); Utility (description: Taunts)"
     }
    ]
   },
@@ -5267,7 +5239,7 @@
      "slot": "ability_0",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages enemies); Sustain (description: heals)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: heals)"
     },
     {
      "ability": "Sparking Sprint",
@@ -5299,7 +5271,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: healing); Utility (description: Blind)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing); Utility (description: Blind)"
     },
     {
      "ability": "Sparkle Mark",
@@ -5310,7 +5282,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing burst damage); Sustain (description: Healing); Utility (description: Mark)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Healing); Utility (description: Boost)"
     },
     {
      "ability": "Firework Finale",
@@ -5321,7 +5293,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages enemies); Sustain (description: heals); Mobility (description: flying); Utility (description: Knocking)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: heals); Mobility (description: flying); Utility (description: Knocking)"
     },
     {
      "ability": "HELLFIRE SPARKS",
@@ -5331,8 +5303,12 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": null,
-     "reason": "More than one tag: Sustain (description: healing); Utility (description: Mark)"
+     "tag": "Sustain",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "healing"
+     }
     },
     {
      "ability": "VAMPIRIC KIN",
@@ -5440,7 +5416,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing extra damage); Utility (description: Pull)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Pull)"
     },
     {
      "ability": "Deception",
@@ -5485,12 +5461,8 @@
       "value": 30,
       "raw": "30"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Health)"
     },
     {
      "ability": "VIBRANT VITALITY",
@@ -5503,12 +5475,8 @@
       "value": 30,
       "raw": "30s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Health)"
     }
    ]
   },
@@ -5554,7 +5522,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healing)"
     },
     {
      "ability": "Share the Stage",
@@ -5635,7 +5603,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: heal); Utility (description: slowing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: heal); Utility (description: slowing)"
     },
     {
      "ability": "SPIRIT FOX ACCORD",
@@ -5803,12 +5771,8 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Bonus Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "CHAIN OF CYTTORAK",
@@ -5897,7 +5861,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deals massive damage"
+      "raw": "damage"
      }
     },
     {
@@ -5958,12 +5922,8 @@
      ],
      "slot": "ability_0",
      "cooldown": null,
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "knock"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: knock)"
     },
     {
      "ability": "Magnetic Descent",
@@ -5994,8 +5954,8 @@
      "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Projectile Damage",
-      "raw": "40"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -6013,7 +5973,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deals damage"
+      "raw": "damage"
      }
     },
     {
@@ -6077,11 +6037,11 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Damage",
+     "tag": "Utility",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage",
-      "raw": "10"
+      "field": "description",
+      "raw": "Sedate"
      }
     },
     {
@@ -6256,8 +6216,12 @@
       "value": 12,
       "raw": "12s"
      },
-     "tag": null,
-     "reason": "More than one tag: Sustain (Shield Value: 300); Utility (Self Slow Rate: -35%); Damage (Damage Absorbed - Damage Reflected Conversion Rate: 60%)"
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "Brainiac Bounce",
@@ -6322,12 +6286,8 @@
      ],
      "slot": "team_up_0",
      "cooldown": null,
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Bonus Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     }
    ]
   },
@@ -6445,7 +6405,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing damage"
+      "raw": "damage"
      }
     },
     {
@@ -6590,7 +6550,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "damage nearby enemies"
+      "raw": "damage"
      }
     },
     {
@@ -6624,7 +6584,7 @@
       "raw": "25"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: barrier); Utility (description: Boost)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: barrier); Utility (description: Boost)"
     },
     {
      "ability": "CHILLING CHARISMA",
@@ -6638,7 +6598,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing area damage); Utility (description: Pushes)"
+     "reason": "More than one tag: Damage (description: damages); Utility (description: Pushes)"
     }
    ]
   },
@@ -6780,7 +6740,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages nearby enemies); Sustain (description: Bonus Health)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: Bonus Health)"
     },
     {
      "ability": "VIBRANIUM MECH",
@@ -6793,12 +6753,8 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Shield"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: DamageBoost); Sustain (description: Shield)"
     },
     {
      "ability": "ROCKET NETWORK",
@@ -6854,7 +6810,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "Mark"
+      "raw": "Stuns"
      }
     },
     {
@@ -6902,7 +6858,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing devastating damage); Sustain (description: shields); Mobility (description: Soar)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: shields); Mobility (description: Soar)"
     },
     {
      "ability": "Mind's Grace",
@@ -6927,7 +6883,7 @@
       "raw": "10s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Healing); Utility (description: Mark)"
+     "reason": "More than one tag: Sustain (description: Healing); Utility (description: Stuns)"
     },
     {
      "ability": "TELEKINETIC BEATDOWN",
@@ -6976,7 +6932,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing massive damage"
+      "raw": "damage"
      }
     },
     {
@@ -7027,7 +6983,7 @@
       "raw": "8s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: Bonus Health)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "LIGHT & DARK DARTS",
@@ -7043,7 +6999,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: heals); Utility (description: boosts)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: heals); Utility (description: boosts)"
     },
     {
      "ability": "MENTAL PROJECTION",
@@ -7071,7 +7027,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage enemies); Sustain (description: Health); Utility (description: Stealth)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Health); Utility (description: Stealth)"
     }
    ]
   },
@@ -7226,7 +7182,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal continuous damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     }
    ]
   },
@@ -7257,11 +7213,11 @@
      ],
      "slot": "ability_0",
      "cooldown": null,
-     "tag": "Sustain",
+     "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage Reduction",
-      "raw": "60%"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -7363,7 +7319,7 @@
       "raw": "30s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages nearby enemies); Sustain (description: heals)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: heals)"
     },
     {
      "ability": "MR. & MRS. X",
@@ -7377,7 +7333,7 @@
       "raw": "30s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing area damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     },
     {
      "ability": "EXPLOSIVE ENTANGLEMENT",
@@ -7388,7 +7344,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Damage Reduction); Utility (description: boosting)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Damage Reduction); Utility (description: boosting)"
     }
    ]
   },
@@ -7420,7 +7376,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing gradually increasing damage); Sustain (description: Bonus Health); Mobility (description: flight); Utility (description: pull)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Mobility (description: flight); Utility (description: pull)"
     },
     {
      "ability": "Mystic Projection",
@@ -7482,7 +7438,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "damaging enemies"
+      "raw": "damaging"
      }
     },
     {
@@ -7493,8 +7449,12 @@
      ],
      "slot": "ability_3",
      "cooldown": null,
-     "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Utility (description: mark)"
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
     },
     {
      "ability": "CHAOS MARK",
@@ -7505,7 +7465,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: deals damage); Sustain (description: Bonus Health); Utility (description: mark)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "Sorcery Surge",
@@ -7548,7 +7508,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     }
    ]
   },
@@ -7594,12 +7554,8 @@
      ],
      "slot": "ultimate",
      "cooldown": null,
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Stun"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Stun)"
     },
     {
      "ability": "Web-Swing",
@@ -7649,7 +7605,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing extra damage"
+      "raw": "damage"
      }
     },
     {
@@ -7708,7 +7664,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "damage enemies"
+      "raw": "damage"
      }
     },
     {
@@ -7723,7 +7679,7 @@
       "raw": "20"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages nearby enemies); Sustain (description: Bonus Health)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: Bonus Health)"
     },
     {
      "ability": "SYMBIOTE BOND",
@@ -7737,7 +7693,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage enemies); Utility (description: tether)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: tether)"
     },
     {
      "ability": "PARKER POWER-UP",
@@ -7751,7 +7707,7 @@
       "raw": "10s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages nearby enemies); Sustain (description: Bonus Health); Utility (description: marks)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: Bonus Health)"
     }
    ]
   },
@@ -7786,7 +7742,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing damage"
+      "raw": "damage"
      }
     },
     {
@@ -7851,7 +7807,7 @@
       "raw": "20"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing continuous damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     },
     {
      "ability": "SQUIRREL MISSILE",
@@ -7879,7 +7835,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Utility (description: Slowing)"
+     "reason": "More than one tag: Damage (description: damaging); Utility (description: Slowing)"
     }
    ]
   },
@@ -7947,7 +7903,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "damage to enemies"
+      "raw": "damage"
      }
     },
     {
@@ -7991,12 +7947,8 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "root"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: root)"
     },
     {
      "ability": "STAR-SOUL",
@@ -8045,7 +7997,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deal damage"
+      "raw": "damage"
      }
     },
     {
@@ -8212,7 +8164,7 @@
       "raw": "10s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Lifesteal); Utility (description: Blinded)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Lifesteal); Utility (description: Blinded)"
     },
     {
      "ability": "Void Walk",
@@ -8244,7 +8196,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing damage"
+      "raw": "damage"
      }
     },
     {
@@ -8274,7 +8226,7 @@
       "raw": "16"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damages enemies); Sustain (description: Healing); Mobility (description: teleport)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: Healing); Mobility (description: teleport)"
     },
     {
      "ability": "New Moon's Shadow",
@@ -8285,7 +8237,7 @@
      "slot": "ability_2",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: Barrier); Utility (description: Blinded)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Barrier); Utility (description: Blinded)"
     }
    ]
   },
@@ -8367,7 +8319,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing massive damage"
+      "raw": "damage"
      }
     },
     {
@@ -8411,7 +8363,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "deals piercing damage"
+      "raw": "damage"
      }
     },
     {
@@ -8425,12 +8377,8 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "blind"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: blind)"
     },
     {
      "ability": "Ancient Judgement",
@@ -8440,11 +8388,11 @@
      ],
      "slot": null,
      "cooldown": null,
-     "tag": "Sustain",
+     "tag": "Damage",
      "evidence": {
       "source": "official-kit",
-      "field": "Damage Reduction",
-      "raw": "25%"
+      "field": "description",
+      "raw": "damage"
      }
     },
     {
@@ -8605,7 +8553,7 @@
       "raw": "25s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: Dealing damage); Sustain (description: health); Utility (description: boosting)"
+     "reason": "More than one tag: Damage (description: Damage); Sustain (description: health); Utility (description: boosting)"
     },
     {
      "ability": "Flying Thing",
@@ -8619,7 +8567,7 @@
      "evidence": {
       "source": "official-kit",
       "field": "description",
-      "raw": "dealing damage"
+      "raw": "damage"
      }
     },
     {
@@ -8634,7 +8582,7 @@
       "raw": "18s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: deals splash damage); Utility (description: Stun)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Stun)"
     },
     {
      "ability": "UNBREAKABLE FORCES",
@@ -8648,7 +8596,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: Invisible)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Utility (description: Invisible)"
     }
    ]
   },
@@ -8680,7 +8628,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage on enemies); Mobility (description: Soar)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: Soar)"
     },
     {
      "ability": "Storm Surge",
@@ -8774,12 +8722,8 @@
       "value": 30,
       "raw": "30s"
      },
-     "tag": "Mobility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "leap"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: leap)"
     },
     {
      "ability": "RAGNAROK REBIRTH",
@@ -8793,7 +8737,7 @@
       "raw": "50s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: resurrects)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Utility (description: resurrects)"
     },
     {
      "ability": "DIVINE ARMORY",
@@ -8807,7 +8751,7 @@
       "raw": "20s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Mobility (description: leaping)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Mobility (description: leaping)"
     }
    ]
   },
@@ -8842,7 +8786,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: marked)"
+     "reason": "More than one tag: Damage (description: Damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "IMPERATIVE: PATCH",
@@ -8886,7 +8830,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: damaging enemies); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healing)"
     },
     {
      "ability": "NANO RAY",
@@ -8900,7 +8844,7 @@
       "raw": "30s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing continuous damage); Sustain (description: healing)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: healing)"
     },
     {
      "ability": "STARK PROTOCOL",
@@ -8913,8 +8857,12 @@
       "value": 20,
       "raw": "20s"
      },
-     "tag": null,
-     "reason": "More than one tag: Damage (Ray Damage: 70/s); Sustain (Ray Healing Amount: 70/s)"
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damaging"
+     }
     },
     {
      "ability": "SP//DR SYNC",
@@ -8964,7 +8912,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: deal damage); Sustain (description: health); Mobility (description: Burrow)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: health); Mobility (description: Burrow)"
     },
     {
      "ability": "Venom Swing",
@@ -8995,12 +8943,8 @@
       "value": 15,
       "raw": "15s"
      },
-     "tag": "Sustain",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Bonus Health"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health)"
     },
     {
      "ability": "Frenzied Arrival",
@@ -9031,12 +8975,8 @@
       "value": 8,
       "raw": "8s"
      },
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "Slow"
-     }
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Slow)"
     },
     {
      "ability": "Alien Biology",
@@ -9141,7 +9081,7 @@
       "raw": "6s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: heals); Utility (description: Charms)"
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: heals); Utility (description: Charms)"
     },
     {
      "ability": "FOX FORM AWAKENING",
@@ -9254,7 +9194,7 @@
       "raw": "20"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Healing); Utility (description: Slowing)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Healing); Utility (description: Slowing)"
     },
     {
      "ability": "NINEFOLD SLAM",
@@ -9301,7 +9241,7 @@
       "raw": "25s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Healing); Utility (description: Slowing)"
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: Healing); Utility (description: Slowing)"
     },
     {
      "ability": "PSIONIC FOX",
@@ -9344,7 +9284,7 @@
      "slot": "ultimate",
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Sustain (description: health); Mobility (description: Leap); Utility (description: marking)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: health); Mobility (description: Leap)"
     },
     {
      "ability": "Trooper's Fist",
@@ -9376,7 +9316,7 @@
       "raw": "6s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Mobility (description: flying); Utility (description: Slowing)"
+     "reason": "More than one tag: Damage (description: damage); Mobility (description: flying); Utility (description: Slowing)"
     },
     {
      "ability": "Bionic Hook",
@@ -9423,7 +9363,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: damage nearby foes); Sustain (description: Bonus Health); Mobility (description: leap); Utility (description: slows)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Mobility (description: leap); Utility (description: slows)"
     },
     {
      "ability": "TIMELESS VETERANS",
@@ -9437,7 +9377,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing damage); Utility (description: Knocking)"
+     "reason": "More than one tag: Damage (description: damage); Utility (description: Knocking)"
     },
     {
      "ability": "EXPERT INSTINCT",
@@ -9571,7 +9511,7 @@
      "slot": null,
      "cooldown": null,
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Bonus Health); Utility (description: boosting)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Bonus Health); Utility (description: boosting)"
     },
     {
      "ability": "Phoenix Warrior",
@@ -9585,7 +9525,7 @@
       "raw": "15s"
      },
      "tag": null,
-     "reason": "More than one tag: Damage (description: dealing Percentage Damage); Sustain (description: Lifesteal); Mobility (description: Leap)"
+     "reason": "More than one tag: Damage (description: Damage); Sustain (description: Lifesteal); Mobility (description: Leap)"
     },
     {
      "ability": "Kinetic Claws",
@@ -9632,7 +9572,7 @@
       "raw": "12s"
      },
      "tag": null,
-     "reason": "More than one tag: Sustain (description: Healing); Mobility (description: Jump); Utility (description: Boost)"
+     "reason": "More than one tag: Damage (description: damage); Sustain (description: Healing); Mobility (description: Jump); Utility (description: Boost)"
     }
    ]
   }

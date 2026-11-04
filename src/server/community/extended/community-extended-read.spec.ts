@@ -287,8 +287,8 @@ describe('getCommunityHeroScores', () => {
     expect(calls[0].steps[0]).toEqual(['rpc', [HERO_SCORES_FUNCTION, undefined]]);
     expect(scores.status).toBe('not-enough-data');
     expect(scores.heroes[0].hero).toBe('hela');
-    expect(scores.heroes[0].damage).toEqual(jasmine.objectContaining({ status: 'collecting', score: null, matches: 7, contributors: 2 }));
-    expect(scores.heroes[0].ultimate).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 3, contributors: 1, oneContributorAboveHalf: true }));
+    expect(scores.heroes[0].damage).toEqual(jasmine.objectContaining({ status: 'collecting', score: null, matches: 5, contributors: 2 }));
+    expect(scores.heroes[0].ultimate).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 0, contributors: 1, oneContributorAboveHalf: true }));
     expect(keysOf(scores)).not.toContain('uid');
     expect(keysOf(scores)).not.toContain('name');
   });

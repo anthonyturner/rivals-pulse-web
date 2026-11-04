@@ -18,7 +18,10 @@ export interface HeroScoreStat {
   /** A whole number from 1 to 10, present only when `status` is `scored`. */
   score: number | null;
   label: HeroScoreLabel;
-  /** The hero's lines (one player on one hero in one match) behind the score, or counted so far. */
+  /**
+   * The hero's lines (one player on one hero in one match) behind the score. While `collecting`, how
+   * many so far, rounded down to a multiple of 5, because an exact count could be one person's own games.
+   */
   matches: number;
   /** Different players so far, only while `collecting`. */
   contributors: number | null;

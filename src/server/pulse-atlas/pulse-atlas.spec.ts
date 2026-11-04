@@ -139,7 +139,7 @@ function communityStatsData(overrides: Record<string, unknown> = {}, band: Recor
 
 // The valid inputs' community stats pair two heroes that heroes.json does not list, which warns.
 function heroScoreCollecting(label: string): Record<string, unknown> {
-  return { status: 'collecting', score: null, label, matches: 7, contributors: 2, oneContributorAboveHalf: false, measures: null };
+  return { status: 'collecting', score: null, label, matches: 5, contributors: 2, oneContributorAboveHalf: false, measures: null };
 }
 
 function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<string, unknown> = {}): Record<string, unknown> {
@@ -2073,6 +2073,17 @@ describe('the hero-scores dataset', () => {
 
     expect(buildWith(withStray({ ...collecting, score: 3, measures: null }))).toThrowError(/has a score but its status is collecting/);
     expect(buildWith(withStray({ ...collecting, score: null, measures: { damagePerMinute: 1 } }))).toThrowError(/may carry no measures before it passes the rule/);
+  });
+
+  it('refuses an exact count below the rule, since it could be one person\'s own games', () => {
+    const collecting = { status: 'collecting', score: null, contributors: 1, oneContributorAboveHalf: true, measures: null };
+
+    expect(buildWith(withStray({ ...collecting, matches: 7 }))).toThrowError(/only in steps of 5/);
+    expect(buildWith(withStray({ ...collecting, matches: 5 }))).not.toThrow();
+  });
+
+  it('refuses an inPlaceOfSeasonId that is not the current season', () => {
+    expect(buildWith(heroScoresData({ inPlaceOfSeasonId: 1 }))).toThrowError(/inPlaceOfSeasonId must be the currentSeasonId/);
   });
 
   it('refuses to name contributors once a hero passes the rule', () => {

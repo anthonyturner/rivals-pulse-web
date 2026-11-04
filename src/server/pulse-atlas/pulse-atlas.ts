@@ -2070,6 +2070,8 @@ const HERO_SCORES_HERO_KEYS: readonly string[] = ['heroId', ...HERO_SCORE_STATS,
 const HERO_SCORES_STAT_KEYS: readonly string[] = ['status', 'score', 'label', 'matches', 'contributors', 'oneContributorAboveHalf', 'measures'];
 const HERO_SCORES_ABILITY_KEYS: readonly string[] = ['slot', 'ability', 'tag', 'usesPerTenMinutes', 'takedownsPerUse', 'matches'];
 const HERO_SCORES_STATUSES: readonly unknown[] = ['scored', 'collecting', 'ranking-too-small', 'no-measurable-ability'];
+/** An exact count below the rule could be one person's own games on a hero, so the file refuses one. */
+const HERO_SCORE_PROGRESS_STEP = 5;
 const HERO_SCORE_TAGS: readonly unknown[] = ['Utility', 'Damage', 'Mobility', 'Sustain', null];
 /** Utility and Ultimate stay estimates: the game shows that an ability was used, not whether it landed. */
 const HERO_SCORE_LABELS: Readonly<Record<(typeof HERO_SCORE_STATS)[number], string>> = {
@@ -2197,6 +2199,10 @@ function findHeroScoreStatProblems(
     if (!isInteger(contributors) || contributors < 0 || typeof oneContributorAboveHalf !== 'boolean') {
       found.push(`${where} needs contributors and oneContributorAboveHalf while collecting`);
     }
+
+    if (isInteger(matches) && matches % HERO_SCORE_PROGRESS_STEP !== 0) {
+      found.push(`${where} may show matches only in steps of ${HERO_SCORE_PROGRESS_STEP} while collecting`);
+    }
   } else if (contributors !== null || oneContributorAboveHalf !== null) {
     found.push(`${where} may name contributors only while collecting`);
   }
@@ -2274,6 +2280,10 @@ function readHeroScores(data: unknown): ReadHeroScores {
 
   if (!isInteger(data['currentSeasonId'])) {
     problems.push('currentSeasonId must be a whole number');
+  }
+
+  if (data['inPlaceOfSeasonId'] !== undefined && data['inPlaceOfSeasonId'] !== data['currentSeasonId']) {
+    problems.push('inPlaceOfSeasonId must be the currentSeasonId when present');
   }
 
   if (!isRecord(season) || !isInteger(season['id']) || !isNonEmptyString(season['label'])) {

@@ -13,7 +13,7 @@ import { ABILITY_SLOTS } from './extended-payload.ts';
 const UPLOAD = '20261030120000_extended_upload.sql';
 const AGGREGATES = '20261030120100_extended_aggregates.sql';
 const CONTRIBUTORS = '20261104120000_hero_figure_contributors.sql';
-const HERO_SCORES = '20261105120000_hero_score_read.sql';
+const HERO_SCORES = '20261104130000_hero_score_read.sql';
 
 describe('the hero score read migration', () => {
   const sql = withoutComments(read(HERO_SCORES));

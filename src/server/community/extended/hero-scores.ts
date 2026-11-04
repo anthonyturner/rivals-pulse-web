@@ -6,7 +6,7 @@ import type {
   HeroScores,
   HeroScoreStat,
 } from '../../../contracts/hero-scores.model.ts';
-import { PLAY_MODES, chooseHalfSeason, halfSeasonTimeline, type HalfSeasonStart } from '../../heroes/stats/hero-stats.ts';
+import { BLENDED_PLAY_MODE_IDS, chooseHalfSeason, halfSeasonTimeline, type HalfSeasonStart } from '../../heroes/stats/hero-stats.ts';
 import { heroAbilitySlots, type HeroAbilitySlot } from './hero-ability-tags.ts';
 
 /**
@@ -91,9 +91,11 @@ export interface HeroScoresDerivation {
   excludedGameIds: number[];
 }
 
-const BLENDED_PLAY_MODE_IDS = PLAY_MODES[0].playModeIds;
 const ULTIMATE_SLOT = 'ultimate';
 const SECONDS_PER_TEN_MINUTES = 600;
+// With few players, an exact count below the rule is one person's own games on a hero, and comparing
+// two publishes would show when they played. In steps it still says how far along a hero is.
+const PROGRESS_MATCH_STEP = 5;
 
 /** The lines of one input: those that pass the rule, and those that do not yet. */
 interface Gate<T extends GatedCount> {
@@ -113,6 +115,8 @@ const sumOf = <T>(rows: readonly T[], value: (row: T) => number): number => rows
 
 const rounded = (value: number): number => Math.round(value * 100) / 100;
 
+const progressMatches = (lines: number): number => Math.floor(lines / PROGRESS_MATCH_STEP) * PROGRESS_MATCH_STEP;
+
 /**
  * A stat before ranking. `measures` is what is published; `ranked` is what the ranking reads, the
  * measures and weights of a score made of two, or the one measure of a score made of one.
@@ -125,19 +129,21 @@ interface ReadyStat {
 
 type Measure = ReadyStat | null;
 
-function collecting(label: HeroScoreLabel, gates: readonly Gate<GatedCount>[], matchesSoFar = 0): HeroScoreStat {
+function collecting(label: HeroScoreLabel, gates: readonly Gate<GatedCount>[]): HeroScoreStat {
   // The input furthest behind is what holds the stat back. A row's mode is applied on its own, so
-  // lines in two modes are not added: the closest single mode is how far along it really is.
-  const closest = gates
-    .filter((gate) => gate.ready.length === 0)
-    .flatMap((gate) => (gate.waiting.length === 0 ? [] : [gate.waiting.reduce((best, row) => (row.lines > best.lines ? row : best))]))
+  // lines in two modes are not added: the closest single mode is how far along it really is. When
+  // every input passes and only a usable figure is missing, the passing lines are how far along it is.
+  const held = gates.filter((gate) => gate.ready.length === 0 && gate.waiting.length > 0);
+  const rowsOf = (gate: Gate<GatedCount>): GatedCount[] => (held.length > 0 ? gate.waiting : gate.ready);
+  const closest = (held.length > 0 ? held : gates)
+    .flatMap((gate) => (rowsOf(gate).length === 0 ? [] : [rowsOf(gate).reduce((best, row) => (row.lines > best.lines ? row : best))]))
     .sort((a, b) => a.lines - b.lines)[0];
 
   return {
     status: 'collecting',
     score: null,
     label,
-    matches: closest?.lines ?? matchesSoFar,
+    matches: progressMatches(closest?.lines ?? 0),
     contributors: closest?.contributors ?? 0,
     oneContributorAboveHalf: closest?.busiestAboveHalf ?? false,
     measures: null,
@@ -155,7 +161,7 @@ function stat(label: HeroScoreLabel, gates: readonly Gate<GatedCount>[], measure
     return collecting(label, gates);
   }
 
-  return measure() ?? collecting(label, gates, Math.min(...present.map((gate) => sumOf(gate.ready, (row) => row.lines))));
+  return measure() ?? collecting(label, present);
 }
 
 function perMinuteOf(gate: Gate<FigureCount>): number | null {
@@ -174,7 +180,7 @@ function damageStat(rows: readonly HeroScoreFigureRow[]): ReadyStat | HeroScoreS
       ? null
       : {
           matches: sumOf(gate.ready, (row) => row.lines),
-          measures: { damagePerMinute: rounded(rate) },
+          measures: { damagePerMinute: Math.round(rate) },
           ranked: [{ value: rate, weight: 1 }],
         };
   });
@@ -198,9 +204,9 @@ function sustainStat(rows: readonly HeroScoreFigureRow[]): ReadyStat | HeroScore
     return {
       matches: Math.min(...gates.filter(hasLines).map((gate) => sumOf(gate.ready, (row) => row.lines))),
       measures: {
-        ...(healingRate === null ? {} : { healingPerMinute: rounded(healingRate) }),
-        ...(blockedRate === null ? {} : { blockedPerMinute: rounded(blockedRate) }),
-        sustainPerMinute: rounded(total),
+        ...(healingRate === null ? {} : { healingPerMinute: Math.round(healingRate) }),
+        ...(blockedRate === null ? {} : { blockedPerMinute: Math.round(blockedRate) }),
+        sustainPerMinute: Math.round(total),
       },
       ranked: [{ value: total, weight: 1 }],
     };
