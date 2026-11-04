@@ -66,14 +66,15 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
   }
 
   const { overviewMatches, mapMatches, lengthMatches, recorders } = data.minimums;
-  const fromPlayers = `from at least ${recorders} players`;
+  const fromPlayers = recorders > 1 ? ` from at least ${recorders} players` : '';
+  const onePlayerNote = recorders === 1 ? ' While few players upload, these figures can come from a single player.' : '';
   const halfSeasonLabel = data.halfSeason?.label ?? null;
 
   if (data.status === 'not-enough-data') {
     return {
       kind: 'not-enough-data',
       halfSeasonLabel,
-      summary: `${halfSeasonLabel ? `${halfSeasonLabel} does not have enough data yet.` : 'No matches are counted yet.'} The first figures appear at ${overviewMatches} matches ${fromPlayers}.`,
+      summary: `${halfSeasonLabel ? `${halfSeasonLabel} does not have enough data yet.` : 'No matches are counted yet.'} The first figures appear at ${overviewMatches} matches${fromPlayers}.`,
     };
   }
 
@@ -84,7 +85,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     kind: 'ready',
     halfSeasonLabel,
     notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
-    sample: `${data.matchesBand === null ? 'Matches' : `${data.matchesBand}+ matches`} in ${season}, each counted once however many players recorded it.`,
+    sample: `${data.matchesBand === null ? 'Matches' : `${data.matchesBand}+ matches`} in ${season}, each counted once however many players recorded it.${onePlayerNote}`,
     maps: {
       rows: data.maps.map((record) => ({
         map: record.map,
@@ -95,7 +96,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         data.mapsBelowMinimum.length === 0 ? null : `Not enough data yet for: ${data.mapsBelowMinimum.join(', ')}.`,
       note:
         data.maps.length === 0
-          ? `Not enough data yet. A map needs ${mapMatches} matches with a result ${fromPlayers} before its win rate shows.`
+          ? `Not enough data yet. A map needs ${mapMatches} matches with a result${fromPlayers} before its win rate shows.`
           : null,
     },
     modeMix: {
@@ -105,13 +106,13 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         lengthLabel: share.averageLengthMinutes === null ? null : minutesLabel(share.averageLengthMinutes),
         barPercent: share.share,
       })),
-      note: data.modeMix === null ? `Not enough data yet. The mix appears at ${overviewMatches} matches ${fromPlayers}.` : null,
+      note: data.modeMix === null ? `Not enough data yet. The mix appears at ${overviewMatches} matches${fromPlayers}.` : null,
     },
     averageLength:
       data.averageLengthMinutes === null
         ? {
             label: null,
-            note: `Not enough data yet. An average needs ${lengthMatches} matches with a known length ${fromPlayers}.`,
+            note: `Not enough data yet. An average needs ${lengthMatches} matches with a known length${fromPlayers}.`,
           }
         : { label: minutesLabel(data.averageLengthMinutes), note: null },
     perDay: {
@@ -120,7 +121,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         shareLabel: percentLabel(day.share),
         barPercent: (day.share / busiestDay) * 100,
       })),
-      note: data.perDay === null ? `Not enough data yet. Days appear at ${overviewMatches} matches ${fromPlayers}.` : null,
+      note: data.perDay === null ? `Not enough data yet. Days appear at ${overviewMatches} matches${fromPlayers}.` : null,
     },
   };
 }

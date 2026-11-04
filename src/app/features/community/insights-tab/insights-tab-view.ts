@@ -81,7 +81,12 @@ function gateNotes(insights: CommunityInsights): string[] {
     return [];
   }
 
+  const fromPlayers = minimumRecorders > 1 ? ` from at least ${minimumRecorders} players` : '';
+  const shareCap =
+    maxRecorderSharePercent < 100 ? `, and no one player recorded more than ${maxRecorderSharePercent}% of them` : '';
+  const onePlayerNote = minimumRecorders === 1 ? ' While few players upload, a row can come from a single player.' : '';
+
   return [
-    `A row appears once at least ${minimumMatches} matches from at least ${minimumRecorders} players are behind it in a half-season, and no one player recorded more than ${maxRecorderSharePercent}% of them. Shares are of the rows shown.`,
+    `A row appears once at least ${minimumMatches} matches${fromPlayers} are behind it in a half-season${shareCap}. Shares are of the rows shown.${onePlayerNote}`,
   ];
 }

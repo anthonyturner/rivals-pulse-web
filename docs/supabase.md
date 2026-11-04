@@ -79,6 +79,7 @@ repo's build. This is a move, not a redesign.
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
+| `20261104130000_community_tabs_one_player.sql` | Lets one player's matches fill the Community Matches and Insights tabs: `insights_min_recorders()` 1, `insights_max_recorder_share_percent()` 100, `community_tab_bucket_shown`, and `read_community_matches` applying it |
 
 Link once per machine, check history, then apply:
 
@@ -519,12 +520,12 @@ reaches it.
   per shown bucket, a whole-number `share_percent` and `win_rate_percent`. It returns no counts: every
   dimension adds up to the same matches, so an exact count would let a bucket hidden in another
   dimension be found by subtraction. A bucket is shown only if its own half-season row has at least
-  `insights_min_matches()` (30) matches, at least `insights_min_recorders()` (3) different players, and
-  no one player over `insights_max_recorder_share_percent()` (50) of its matches; the rows that pass
+  `insights_min_matches()` (30) matches, at least `insights_min_recorders()` (1) different players, and
+  no one player over `insights_max_recorder_share_percent()` (100) of its matches; the rows that pass
   are added over half-seasons inside the function. A share is over the shown buckets of its dimension
   only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
-  win rate is null with fewer than 30 results. With one main uploader nothing passes, and "not enough
-  data yet" is the expected state.
+  win rate is null with fewer than 30 results. One player's matches can fill the tab (issue 449); raise
+  the two recorder numbers before other players are invited.
 - The server calls it with the shared client and labels the answer in
   [`src/server/community/insights/community-insights.ts`](../src/server/community/insights/community-insights.ts), served by `GET /api/community/insights`.
   A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP
@@ -578,11 +579,12 @@ row.
   another match. When recorders on both teams uploaded the match, the earliest upload is the one that
   counts, so a match is never both a win and a loss. A match with no such row still counts as a match
   but is left out of win rates and averages.
-- **Privacy gate (epic 170).** `community_bucket_shown` lets a bucket (a map in a mode, a mode, a day)
-  through only with at least 3 distinct recorders and no recorder above 50% of its matches.
-  `read_community_matches()` applies it, so a hidden bucket never leaves the database, and every total
-  the site shows is computed over the shown buckets only. The migration asserts the gate's own cases
-  when it runs. With one or two uploaders nothing passes, and the tab shows "not enough data yet".
+- **Recorder gate.** `community_tab_bucket_shown` lets a bucket (a map in a mode, a mode, a day) through
+  on `insights_min_recorders()` (1) and `insights_max_recorder_share_percent()` (100), the numbers the
+  Insights tab uses. `read_community_matches()` applies it, so a hidden bucket never leaves the database,
+  and every total the site shows is computed over the shown buckets only. One player's matches can fill
+  the tab (issue 449); raise the two numbers before other players are invited. `community_bucket_shown`
+  (at least 3 recorders, none above 50%) stays as the hero pair rank-band gate.
 - `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
   frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
   half-season a week after the next one began (uploads are refused once a match is a week old), or

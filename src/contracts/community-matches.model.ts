@@ -41,7 +41,7 @@ export interface CommunityMatchesMinimums {
   lengthMatches: number;
   /**
    * Distinct players who must have recorded the matches of a map, mode or day before it shows. The
-   * database applies this (with a cap of half a bucket for any one player); it is here so the tab can say so.
+   * database applies this; it is here so the tab can say so. At 1, a bucket can be one player's matches.
    */
   recorders: number;
 }
