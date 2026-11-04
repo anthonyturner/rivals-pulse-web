@@ -62,6 +62,16 @@ describe('deriveOwnActivity', () => {
     ]);
   });
 
+  it('keeps a day in UTC and counts only the ranked modes in it', () => {
+    const { days, weekdays } = deriveOwnActivity([
+      line({ playedAt: '2026-11-02T23:30:00-05:00' }),
+      line({ playedAt: '2026-11-03T10:00:00Z', playModeId: 3 }),
+    ]);
+
+    expect(days.map((row) => [row.label, row.matches])).toEqual([['2026-11-03', 1]]);
+    expect(weekdays.map((row) => row.label)).toEqual(['Tuesday']);
+  });
+
   it('lists the newest day first and answers empty lists for no matches', () => {
     const { days } = deriveOwnActivity([
       line({ playedAt: '2026-11-01T10:00:00Z' }),

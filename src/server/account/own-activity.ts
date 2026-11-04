@@ -22,7 +22,7 @@ export function deriveOwnActivity(lines: readonly OwnDashboardLine[]): OwnActivi
   return {
     maps: byMostPlayed(rowsOf(ranked, ({ line }) => line.mapName)),
     modes: byMostPlayed(rowsOf(placed, ({ line }) => PLAY_MODE_NAMES.get(line.playModeId ?? PLAY_MODE_IDS.unknown) ?? 'Other')),
-    days: rowsOf(placed, ({ line }) => line.playedAt.slice(0, 10))
+    days: rowsOf(ranked, ({ line }) => new Date(line.playedAt).toISOString().slice(0, 10))
       .sort((a, b) => b.label.localeCompare(a.label))
       .slice(0, NEWEST_DAYS),
     weekdays: inOrder(rowsOf(ranked, ({ line }) => weekdayOf(line.playedAt)), WEEKDAYS),

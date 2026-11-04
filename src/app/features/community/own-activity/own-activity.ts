@@ -17,6 +17,12 @@ export interface OwnActivityRowView {
   barPercent: number;
 }
 
+export interface OwnActivityTableView {
+  title: string;
+  rowHeading: string;
+  rows: OwnActivityRowView[];
+}
+
 const ACCOUNT_LINK: CommunitySummaryLink = { label: 'Go to your account', path: '/account' };
 
 /**
@@ -26,7 +32,7 @@ const ACCOUNT_LINK: CommunitySummaryLink = { label: 'Go to your account', path: 
  */
 export function injectOwnActivity(tabPath: string): Signal<OwnActivityState> {
   const auth = inject(AuthService);
-  const result = signal<DashboardResult | undefined>(undefined);
+  const answered = signal<{ reader: string; result: DashboardResult } | undefined>(undefined);
   const reader = computed(() => readerKey(auth.state()));
 
   void auth.load();
@@ -36,18 +42,22 @@ export function injectOwnActivity(tabPath: string): Signal<OwnActivityState> {
     let current = true;
 
     onCleanup(() => (current = false));
-    untracked(() => result.set(undefined));
+    untracked(() => answered.set(undefined));
 
     if (key !== null) {
-      void auth.loadDashboard().then((answer) => {
+      void auth.loadDashboard().then((result) => {
         if (current) {
-          result.set(answer);
+          answered.set({ reader: key, result });
         }
       });
     }
   });
 
-  return computed(() => ownActivityState(auth.state(), result(), tabPath));
+  return computed(() => {
+    const answer = answered();
+
+    return ownActivityState(auth.state(), answer?.reader === reader() ? answer?.result : undefined, tabPath);
+  });
 }
 
 export function ownActivityState(

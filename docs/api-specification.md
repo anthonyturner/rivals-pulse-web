@@ -23,6 +23,8 @@ Static reference data for other tools is published separately as Pulse Atlas; se
 
 `/api/hero-pairs` serves the counts behind the community counter and partner figures: for one half-season, per band (today only `all`, All Ranks), each hero's `appearances` and `wins`, each directional hero-against-enemy pair (`counters`) and each pair that played together (`synergies`, listed once with the lower `heroId` first), with `matches`, `appearances` and `wins`. Heroes are the game's numeric ids, Deadpool's role forms merged under 1057, in the Quick Match and Competitive blend. It carries counts only, no rate (readers compute those from `priorMatches`), and lists a pair only from `minimumMatches` decided matches. Like `/api/hero-matchups` it shows the previous half-season, naming the current one in `inPlaceOf`, while the current one has no such pair, and it answers 200 with `status: "not-enough-data"` before any exists. Pulse Atlas publishes it as `community-stats`; see [pulse-atlas.md](pulse-atlas.md).
 
+`/api/hero-stats` takes two optional query values: `halfSeason` (an exact half-season such as `10.5`) and `mode` (`quick-match`, `competitive`, `arcade`, `practice` or `all`, the default Quick Match and Competitive blend). Every answer carries `mode` and the `modes` on offer.
+
 `/api/community/stats` serves the Community Stats tab's role benchmarks (average K/D/A, KDA, final hits and win rate per role and mode) from the same matches; see "Role benchmarks" in [supabase.md](supabase.md). It takes the same optional `halfSeason` query value.
 
 The `/api/auth/*` and `/api/account/*` routes belong to the Discord sign-in and the account. They are

@@ -72,3 +72,14 @@ tbody th {
   height: 100%;
   background: var(--accent-strong);
 }
+
+.panels {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

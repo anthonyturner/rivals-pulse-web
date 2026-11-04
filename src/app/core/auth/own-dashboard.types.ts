@@ -77,7 +77,7 @@ export interface OwnActivity {
   maps: OwnActivityRow[];
   /** Most played first, every mode. */
   modes: OwnActivityRow[];
-  /** `label` is a calendar day (`2026-10-29`), the newest 30 days played, newest first. */
+  /** `label` is a calendar day (`2026-10-29`), the newest 30 days played, newest first, Competitive and Quick Match. */
   days: OwnActivityRow[];
   weekdays: OwnActivityRow[];
   timesOfDay: OwnActivityRow[];
