@@ -39,6 +39,11 @@ export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'Damage blocked', detail: 'Damage blocked by the uploading player.' },
   { label: 'Time played per hero', detail: 'How long the uploading player spent on each hero.' },
   {
+    label: 'Ability and ultimate use',
+    detail:
+      'How often the uploading player used each ability and their ultimate on each hero. Never counted for other players.',
+  },
+  {
     label: 'Kill feed',
     detail: 'Which hero defeated which hero, and how many times, with no player names or ids.',
   },

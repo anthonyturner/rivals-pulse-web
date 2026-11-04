@@ -85,6 +85,20 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('never');
   });
 
+  it('says hero averages come from own figures and wait for enough players', () => {
+    const text = page.textContent ?? '';
+    expect(text).toContain('Hero averages');
+    expect(text).toContain("never show one player's numbers");
+    expect(text).toContain('enough different players');
+    expect(text).toContain('never in the game');
+  });
+
+  it('keeps ability and ultimate use to the uploading player', () => {
+    const useCounts = EXTENDED_UPLOAD_FIELDS.find((field) => field.label === 'Ability and ultimate use');
+    expect(useCounts?.detail).toContain('uploading player');
+    expect(useCounts?.detail).toContain('Never counted for other players');
+  });
+
   it('states the retention rule', () => {
     const text = section('retention').textContent ?? '';
 
