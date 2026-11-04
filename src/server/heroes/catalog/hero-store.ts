@@ -42,11 +42,24 @@ async function readAllRows<Row>(client: SupabaseClient, columns: string, failure
   }
 }
 
+/**
+ * Rows saved before the build scores came from real matches still hold guessed values. They stop
+ * here, so neither the site nor Pulse Atlas publishes them, and the next save drops them for good.
+ */
+function withoutGuessedProfile(stored: Hero): Hero {
+  const { buildProfile: _profile, buildProfileRationale: _rationale, ...hero } = stored as Hero & {
+    buildProfile?: unknown;
+    buildProfileRationale?: unknown;
+  };
+
+  return hero;
+}
+
 /** Every hero, ordered by name ignoring case. */
 export async function listHeroes(client: SupabaseClient): Promise<Hero[]> {
   const rows = await readAllRows<HeroRow>(client, 'id, name, raw_json', 'Reading heroes failed');
 
-  return rows.sort(compareHeroRows).map((row) => row.raw_json);
+  return rows.sort(compareHeroRows).map((row) => withoutGuessedProfile(row.raw_json));
 }
 
 /** Each hero's role (`Vanguard`, `Duelist` or `Strategist`) by hero id, for the numbers split by role. */
@@ -67,7 +80,7 @@ export async function getHero(client: SupabaseClient, id: string): Promise<Hero 
     throw new Error(`Reading hero ${id} failed: ${error.message}`);
   }
 
-  return data?.raw_json;
+  return data ? withoutGuessedProfile(data.raw_json) : undefined;
 }
 
 export async function countHeroes(client: SupabaseClient): Promise<number> {

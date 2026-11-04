@@ -42,9 +42,9 @@ describe('HeroDetailsComponent', () => {
 
     expect(sections.length).toBeGreaterThan(0);
     expect(sections.some((section) => section.open)).toBeFalse();
-    expect(sections.map((section) => section.querySelector('summary h3')?.textContent?.trim())).toContain('Build Profile');
+    expect(sections.map((section) => section.querySelector('summary h3')?.textContent?.trim())).toContain('Build Signals');
     expect(sections[0].querySelector('.collapsible-body > .section-note')?.textContent?.trim()).toBe(
-      '0-10 coach rating by fight-plan value, not official stats',
+      "Scores out of 10. Mobility comes from the hero's kit, the rest from matches recorded by RivalsPulse players",
     );
   });
 

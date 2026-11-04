@@ -5,11 +5,20 @@ out from what RivalsPulse overlay users actually did, in Quick Match and
 Competitive. Mobility is the fifth signal and comes from the hero's kit instead;
 see [hero-kit-mobility.md](hero-kit-mobility.md).
 
-Nothing on the site reads these yet. Issue 460, "Show real build signals in the
-team builder and hero pages", owns the display and removing today's guesses.
+The team builder and the hero pages show them; a hero without a score says why and
+how far along it is, and is never given a guess. A team's signal is the average out
+of 10 across the chosen heroes with a number for it, and says how many of the six
+it uses. The display is in
+[hero-build-signals.ts](../src/app/features/heroes/hero-build-signals/hero-build-signals.ts).
 Nothing here reaches the game: the overlay has no reader for this data. The
 decision behind collecting and publishing them is the overlay repository's
 ADR-0021.
+
+The wiki-based guesses these replace are gone. Stored hero rows may still hold the
+old `buildProfile` and `buildProfileRationale` until their next save, so the hero
+store drops both on every read, and neither `/api/heroes` nor Pulse Atlas publishes
+them. The overlay's hero lookup hides its Combat Profile panel for a hero without a
+`buildProfile`.
 
 - **Code:** [hero-scores.ts](../src/server/community/extended/hero-scores.ts).
 - **Tags:** [hero-ability-tags.table.json](../src/server/community/extended/hero-ability-tags.table.json),

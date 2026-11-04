@@ -83,8 +83,7 @@ h2:focus-visible,
 }
 
 .slots,
-.grid,
-.signals {
+.grid {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -93,7 +92,7 @@ h2:focus-visible,
 }
 
 .slots {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
 }
 
 .grid {
@@ -102,6 +101,8 @@ h2:focus-visible,
 
 .slots li {
   display: grid;
+  gap: 8px;
+  align-content: start;
   min-height: 64px;
 }
 
@@ -163,15 +164,8 @@ h2:focus-visible,
   background: var(--bg-elevated);
 }
 
-.signals li {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 2ch;
-  gap: 8px;
-  align-items: center;
-}
-
-.signals meter {
-  width: 100%;
+.source-note {
+  margin-top: 12px;
 }
 
 .notes ul {
@@ -180,7 +174,6 @@ h2:focus-visible,
 }
 
 @media (max-width: 560px) {
-  .slots,
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

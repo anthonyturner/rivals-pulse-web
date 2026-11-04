@@ -1,0 +1,44 @@
+@if (fallbackNotice(); as notice) {
+  <p class="notice"><strong>Previous half-season.</strong> {{ notice }}</p>
+}
+
+<app-build-signal-rows [rows]="rows()" />
+
+@if (sourceNote(); as note) {
+  <p class="note">{{ note }}</p>
+}
+
+@if (isAnswered()) {
+  <h4>How players use each ability</h4>
+  <p class="note">
+    Read from each ability's cooldown. The game shows an ability was used, not whether it hit anyone.
+  </p>
+  @if (abilities().length > 0) {
+    <div class="table-scroll" role="region" aria-label="Ability use" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Ability</th>
+            <th scope="col">Type</th>
+            <th scope="col">Uses per 10 min</th>
+            <th scope="col">Kills or assists per use</th>
+            <th scope="col">Matches</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ability of abilities(); track ability.slot) {
+            <tr>
+              <th scope="row">{{ ability.ability }} <span class="key">{{ ability.keyLabel }}</span></th>
+              <td>{{ ability.type }}</td>
+              <td>{{ ability.uses }}</td>
+              <td>{{ ability.takedowns }}</td>
+              <td>{{ ability.matches }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="empty">Collecting data: no ability has enough matches yet.</p>
+  }
+}

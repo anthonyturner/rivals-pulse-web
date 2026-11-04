@@ -5,8 +5,8 @@
     {
       "dataset": "heroes",
       "path": "pulse-atlas/v1/heroes.json",
-      "sha256": "cbe4d7a0709aaba5ea2ecf80a1d9ead6ea27a774c31ee47395729ab624c2bca5",
-      "bytes": 21379
+      "sha256": "9984a4be97c978556594eeb765dd4bf096fad1ca104b617c068b909009ef8470",
+      "bytes": 20099
     },
     {
       "dataset": "tier-list",

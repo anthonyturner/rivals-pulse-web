@@ -23,10 +23,12 @@ import {
 } from '../learning/guides/hero-guides/hero-guide-data';
 import type { CommunityKills } from '../../../contracts/community-kills.model';
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
+import type { CommunityHeroScores } from '../../../contracts/hero-scores.model';
 import type { HeroStats } from '../../../contracts/hero-stats.model';
 import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
+import { HeroScoresService } from './hero-scores.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
 import { HeroGridComponent, HeroGridLayout, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
@@ -34,16 +36,9 @@ import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.com
 import { HeroVideosComponent } from './hero-videos/hero-videos.component';
 import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
-  buildHeroBuildProfileRationale,
-  computeHeroBuildProfile,
-  heroBuildTypes,
-  HeroBuildType,
-} from './hero-build-profile';
-import {
   Hero,
   HeroAbility,
   HeroAbilityTechnicalDetail,
-  HeroBuildProfileRationale,
   HeroPlaystyleGuide,
   HeroRole,
   HeroRoleAbilityKit,
@@ -107,6 +102,7 @@ interface FandomOverviewSection {
 export class HeroesPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
   private readonly heroStatsService = inject(HeroStatsService);
+  private readonly heroScoresService = inject(HeroScoresService);
   private readonly heroMatchupsService = inject(HeroMatchupsService);
   private readonly communityKillsService = inject(CommunityKillsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -129,6 +125,7 @@ export class HeroesPageComponent implements OnInit {
 
   /** RivalsPulse player stats for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroStats = signal<HeroStats | null | undefined>(undefined);
+  readonly heroScores = signal<CommunityHeroScores | null | undefined>(undefined);
   /** RivalsPulse player matchups for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroMatchups = signal<HeroMatchups | null | undefined>(undefined);
   /** RivalsPulse player kill-feed counters for every hero: `undefined` while loading, `null` when unreadable. */
@@ -158,7 +155,6 @@ export class HeroesPageComponent implements OnInit {
   readonly selectedAbilityTabId = signal('');
   readonly activeUltimatePathName = signal('');
   readonly activeAggressivePathId = signal('');
-  readonly buildTypes = heroBuildTypes();
   readonly detailsController = this;
   readonly deadpoolUltimatePaths: DeadpoolUltimatePath[] = [
     {
@@ -517,6 +513,11 @@ export class HeroesPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((stats) => this.heroStats.set(stats));
 
+    this.heroScoresService
+      .getHeroScores()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((scores) => this.heroScores.set(scores));
+
     this.heroMatchupsService
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -533,12 +534,7 @@ export class HeroesPageComponent implements OnInit {
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ heroes, heroVideos }) => {
-        this.heroes.set(
-          (heroes ?? []).map((hero) => ({
-            ...hero,
-            buildProfile: hero.buildProfile ?? computeHeroBuildProfile(hero),
-          })),
-        );
+        this.heroes.set(heroes ?? []);
         this.heroVideos.set(heroVideos);
         this.isRosterFailed.set(heroes === null);
         this.isRosterLoaded.set(true);
@@ -908,14 +904,6 @@ export class HeroesPageComponent implements OnInit {
     return role !== 'All' && this.heroMatchesRole(hero, role) ? role : hero.role;
   }
 
-  heroBuildValue(hero: Hero, type: HeroBuildType): number {
-    return (hero.buildProfile ?? computeHeroBuildProfile(hero))[type];
-  }
-
-  heroBuildProfileRationale(hero: Hero): HeroBuildProfileRationale {
-    return hero.buildProfileRationale ?? buildHeroBuildProfileRationale(hero);
-  }
-
   strategyGuide(hero: Hero): HeroStrategyGuide {
     return (
       hero.strategyGuide ?? {
@@ -1019,20 +1007,6 @@ export class HeroesPageComponent implements OnInit {
     }
 
     return '/icons/fontawesome/solid/handshake-angle.svg';
-  }
-
-  scoreTone(value: number, max = 10): string {
-    const ratio = max > 0 ? value / max : 0;
-
-    if (ratio >= 0.7) {
-      return 'score-high';
-    }
-
-    if (ratio >= 0.4) {
-      return 'score-mid';
-    }
-
-    return 'score-low';
   }
 
   private heroMatchesRole(hero: Hero, role: HeroRole): boolean {

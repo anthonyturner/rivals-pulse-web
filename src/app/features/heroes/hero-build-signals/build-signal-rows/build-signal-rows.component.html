@@ -1,0 +1,29 @@
+<ul class="signals">
+  @for (row of viewRows(); track row.type) {
+    <li class="signal" [class]="row.sourceClass">
+      <div class="signal-head">
+        <strong>{{ row.type }}</strong>
+        <span class="source">{{ row.source }}</span>
+        <strong class="value" [class.no-number]="row.value === null">{{ row.valueLabel }}</strong>
+      </div>
+      @if (row.value !== null) {
+        <div
+          class="bar"
+          role="meter"
+          aria-valuemin="0"
+          aria-valuemax="10"
+          [attr.aria-valuenow]="row.roundedValue"
+          [attr.aria-label]="row.ariaLabel"
+        >
+          <i [style.width.%]="row.percent"></i>
+        </div>
+      }
+      @if (row.figures) {
+        <span class="figures">{{ row.figures }}</span>
+      }
+      @if (row.detail) {
+        <span class="detail">{{ row.detail }}</span>
+      }
+    </li>
+  }
+</ul>

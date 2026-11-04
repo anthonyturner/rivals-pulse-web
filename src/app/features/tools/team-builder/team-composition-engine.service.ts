@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 
 import {
-  computeHeroBuildProfile,
-  heroBuildTypes,
-  HeroBuildProfile,
+  BuildSignalRow,
   HeroBuildType,
-} from '../../heroes/hero-build-profile';
+  HeroScoresAnswer,
+  teamBuildSignals,
+} from '../../heroes/hero-build-signals/hero-build-signals';
 import { Hero, HeroRole } from '../../heroes/hero.model';
 
 type CompArchetype = 'Dive/Pick' | 'Poke' | 'Brawl' | 'Balanced';
@@ -23,7 +23,9 @@ export interface CompSummary {
   roleLine: string;
   strengths: string[];
   risks: string[];
-  buildScores: HeroBuildProfile;
+  signals: BuildSignalRow[];
+  /** The signal the team leans on, or null while too little of it has data to say. */
+  lean: HeroBuildType | null;
 }
 
 const archetypeHeroIds: Record<Exclude<CompArchetype, 'Balanced'>, string[]> = {
@@ -91,12 +93,10 @@ export class TeamCompositionEngineService {
     },
   ];
 
-  readonly buildTypes = heroBuildTypes();
-
-  analyzeTeam(selectedHeroes: Hero[]): CompSummary {
+  analyzeTeam(selectedHeroes: Hero[], scores: HeroScoresAnswer, teamSize: number): CompSummary {
     const roleCounts = this.roleCounts(selectedHeroes);
-    const buildScores = this.buildScores(selectedHeroes);
-    const primaryBuild = this.primaryBuild(buildScores, selectedHeroes);
+    const signals = teamBuildSignals(selectedHeroes, scores, teamSize);
+    const lean = this.leaningSignal(signals, selectedHeroes.length);
     const archetype = this.compArchetype(selectedHeroes, roleCounts);
     const filledSlots = selectedHeroes.length;
     const roleLine = `${roleCounts['Vanguard']} Vanguard / ${roleCounts['Duelist']} Duelist / ${roleCounts['Strategist']} Strategist`;
@@ -110,24 +110,27 @@ export class TeamCompositionEngineService {
         roleLine,
         strengths: ['Use the hero thumbnails below as your draft pool.'],
         risks: ['The comp summary will activate after you add heroes.'],
-        buildScores,
+        signals,
+        lean,
       };
     }
 
-    const quality = this.compQuality(filledSlots, roleCounts, buildScores);
-    const signal = this.buildSignals.find((item) => item.type === primaryBuild);
+    const quality = this.compQuality(filledSlots, roleCounts);
+    const signal = this.buildSignals.find((item) => item.type === lean);
+    const leaning = lean ? `${lean.toLowerCase()}-leaning ` : '';
 
     return {
-      title: `${primaryBuild} ${archetype} Comp`,
+      title: lean ? `${lean} ${archetype} Comp` : `${archetype} Comp`,
       grade: quality.grade,
       description:
         filledSlots < 6
-          ? `You have ${filledSlots}/6 heroes selected. So far this looks like a ${primaryBuild.toLowerCase()}-leaning ${archetype.toLowerCase()} draft that ${signal?.summary ?? 'has a clear fight plan'}.`
-          : this.compDescription(primaryBuild, archetype, signal?.summary),
+          ? `You have ${filledSlots}/6 heroes selected. So far this looks like a ${leaning}${archetype.toLowerCase()} draft${signal ? ` that ${signal.summary}` : ''}.`
+          : this.compDescription(leaning, archetype, signal?.summary),
       roleLine,
-      strengths: this.compStrengths(primaryBuild, archetype, roleCounts, filledSlots),
-      risks: this.compRisks(primaryBuild, archetype, roleCounts, filledSlots),
-      buildScores,
+      strengths: this.compStrengths(lean, archetype, roleCounts, filledSlots),
+      risks: this.compRisks(lean, archetype, roleCounts, filledSlots),
+      signals,
+      lean,
     };
   }
 
@@ -143,35 +146,16 @@ export class TeamCompositionEngineService {
     );
   }
 
-  private buildScores(heroes: Hero[]): HeroBuildProfile {
-    const scores: HeroBuildProfile = {
-      Utility: 0,
-      Damage: 0,
-      Sustain: 0,
-      Mobility: 0,
-      Ultimate: 0,
-    };
+  /**
+   * The highest signal among those with a number for most of the chosen heroes. It takes two such
+   * signals to compare, so Mobility alone, which needs no match data, never names a team's lean.
+   */
+  private leaningSignal(signals: readonly BuildSignalRow[], chosen: number): HeroBuildType | null {
+    const comparable = signals.filter(({ used, value }) => value !== null && used * 2 > chosen);
 
-    for (const hero of heroes) {
-      const profile = hero.buildProfile ?? computeHeroBuildProfile(hero);
-      scores.Utility += profile.Utility;
-      scores.Damage += profile.Damage;
-      scores.Sustain += profile.Sustain;
-      scores.Mobility += profile.Mobility;
-      scores.Ultimate += profile.Ultimate;
-    }
-
-    return scores;
-  }
-
-  private primaryBuild(scores: HeroBuildProfile, heroes: Hero[]): HeroBuildType {
-    const diveCount = this.archetypeCount(heroes, 'Dive/Pick');
-
-    if (diveCount >= 2 && scores.Mobility >= scores.Damage - 8) {
-      return 'Mobility';
-    }
-
-    return [...this.buildTypes].sort((a, b) => scores[b] - scores[a])[0];
+    return comparable.length < 2
+      ? null
+      : comparable.reduce((best, row) => ((row.value ?? 0) > (best.value ?? 0) ? row : best)).type;
   }
 
   private compArchetype(
@@ -204,21 +188,20 @@ export class TeamCompositionEngineService {
   }
 
   private compDescription(
-    primaryBuild: HeroBuildType,
+    leaning: string,
     archetype: CompArchetype,
     buildSummary = 'has a defined fight plan',
   ): string {
     if (archetype === 'Dive/Pick') {
-      return `This six-player team reads more like a dive/pick comp than a raw damage comp. Based on the build theory page, its ${primaryBuild.toLowerCase()} lean means it wants to stage first, collapse on a vulnerable target, force defensive cooldowns, then reset before the counter-engage.`;
+      return 'This six-player team reads more like a dive/pick comp than a raw damage comp. Based on the build theory page, it wants to stage first, collapse on a vulnerable target, force defensive cooldowns, then reset before the counter-engage.';
     }
 
-    return `This six-player team looks like a ${primaryBuild.toLowerCase()}-leaning ${archetype.toLowerCase()} comp. Based on the build theory page, it ${buildSummary}.`;
+    return `This six-player team looks like a ${leaning}${archetype.toLowerCase()} comp. Based on the build theory page, it ${buildSummary}.`;
   }
 
   private compQuality(
     filledSlots: number,
     roleCounts: Record<CoreHeroRole, number>,
-    scores: HeroBuildProfile,
   ): { grade: string; score: number } {
     let score = 0;
 
@@ -227,7 +210,6 @@ export class TeamCompositionEngineService {
     score += roleCounts.Strategist >= 2 ? 18 : roleCounts.Strategist === 1 ? 6 : -16;
     score += roleCounts.Duelist >= 2 ? 10 : 0;
     score += roleCounts.Duelist > 3 ? -8 : 0;
-    score += Math.max(...Object.values(scores)) >= 8 ? 10 : 0;
 
     if (filledSlots < 6) {
       score -= (6 - filledSlots) * 7;
@@ -249,7 +231,7 @@ export class TeamCompositionEngineService {
   }
 
   private compStrengths(
-    primaryBuild: HeroBuildType,
+    lean: HeroBuildType | null,
     archetype: CompArchetype,
     roleCounts: Record<CoreHeroRole, number>,
     filledSlots: number,
@@ -278,13 +260,15 @@ export class TeamCompositionEngineService {
       );
     }
 
-    strengths.push(this.primaryBuildStrength(primaryBuild));
+    if (lean) {
+      strengths.push(this.leanStrength(lean));
+    }
 
     return strengths;
   }
 
   private compRisks(
-    primaryBuild: HeroBuildType,
+    lean: HeroBuildType | null,
     archetype: CompArchetype,
     roleCounts: Record<CoreHeroRole, number>,
     filledSlots: number,
@@ -313,13 +297,13 @@ export class TeamCompositionEngineService {
       );
     }
 
-    if (primaryBuild === 'Ultimate') {
+    if (lean === 'Ultimate') {
       risks.push(
         'Ultimate comps need patience. Spending key cooldowns early can ruin the fight-winning timing.',
       );
     }
 
-    if (primaryBuild === 'Damage') {
+    if (lean === 'Damage') {
       risks.push(
         'Damage-heavy comps must avoid farming stats into tanks instead of forcing useful angles.',
       );
@@ -330,7 +314,7 @@ export class TeamCompositionEngineService {
       : ['No major structural risk detected. The main challenge is execution and cooldown timing.'];
   }
 
-  private primaryBuildStrength(type: HeroBuildType): string {
+  private leanStrength(type: HeroBuildType): string {
     switch (type) {
       case 'Utility':
         return 'Utility tools can answer enemy win conditions and create cleaner engages.';

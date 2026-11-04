@@ -7,12 +7,15 @@ from each hero's published kit, and it is labelled Hero kit.
 The table is [hero-kit-mobility.table.json](../src/app/features/heroes/hero-kit-mobility.table.json)
 and the formula is [hero-kit-mobility.ts](../src/app/features/heroes/hero-kit-mobility.ts).
 
-## The website does not use this yet
+## The website does not use the formula yet
 
 `publishableHeroKitMobilityScores()` returns nothing until every hero can be
-scored, so the site keeps today's hand-set Mobility values until then. Mixing
+scored, so `heroKitMobilityValue()` gives today's hand-set Mobility values until
+then, and switches to the formula by itself once the table is complete. Mixing
 the two scales would put heroes side by side on numbers that mean different
-things.
+things. The hand-set list has no value for Cyclops, Gorr, Jubilee or The Hood,
+so they read "No value yet" rather than a guess. The formula's scores run lower
+than the hand-set values, so expect the numbers to drop on the switch.
 
 ## Rules for the table
 

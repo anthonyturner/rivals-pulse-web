@@ -1,0 +1,87 @@
+:host {
+  display: block;
+}
+
+.signals {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.signal-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.source {
+  padding: 1px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+/* Estimated reads differently without colour: a dashed badge, italic text and a hatched bar. */
+.estimated .source {
+  border-style: dashed;
+  font-style: italic;
+}
+
+.value {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.value.no-number {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.bar {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-panel);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.estimated .bar {
+  border-style: dashed;
+}
+
+.estimated .bar i {
+  background: repeating-linear-gradient(135deg, var(--accent) 0 5px, transparent 5px 9px);
+}
+
+.hero-kit .bar i {
+  background: var(--text-muted);
+}
+
+.figures {
+  font-size: var(--type-small);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  overflow-wrap: anywhere;
+}
