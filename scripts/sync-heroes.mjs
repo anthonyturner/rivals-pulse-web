@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
 import { getHero, saveHero } from '../src/server/heroes/catalog/index.ts';
 import { finishSyncRun, saveExternalSource, startSyncRun } from '../src/server/sync/index.ts';
@@ -36,7 +35,7 @@ try {
         continue;
       }
 
-      await saveHero(db, withBuildProfile(hero));
+      await saveHero(db, hero);
       synced.push(hero.name);
       console.log(`Synced hero: ${hero.name}`);
     } catch (error) {
@@ -168,16 +167,6 @@ function mergeHero(existingHero, syncedHero) {
     imageUrl: existingHero.imageUrl && !existingHero.imageUrl.includes('default-hero')
       ? existingHero.imageUrl
       : syncedHero.imageUrl,
-  };
-}
-
-function withBuildProfile(hero) {
-  const buildProfile = buildHeroBuildProfile(hero);
-
-  return {
-    ...hero,
-    buildProfile,
-    buildProfileRationale: buildProfileRationale(hero, buildProfile),
   };
 }
 

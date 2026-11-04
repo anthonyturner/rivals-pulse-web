@@ -110,6 +110,22 @@ describe('getHero', () => {
   });
 });
 
+describe('the old guessed build profile in a stored row', () => {
+  const guessed = { ...hero('hela'), buildProfile: { Damage: 9 }, buildProfileRationale: { reason: 'a guess' } };
+
+  it('is not handed out by a read of every hero, which is what the feed publishes', async () => {
+    const { client } = fakeSupabaseClient(() => ({ data: [{ id: 'hela', name: 'Hela', raw_json: guessed }] }));
+
+    expect(await listHeroes(client)).toEqual([hero('hela')]);
+  });
+
+  it('is not handed out by a read of one hero, so a sync cannot save it back', async () => {
+    const { client } = fakeSupabaseClient(() => ({ data: { raw_json: guessed } }));
+
+    expect(await getHero(client, 'hela')).toEqual(hero('hela'));
+  });
+});
+
 describe('countHeroes', () => {
   it('counts without reading rows', async () => {
     const { client, calls } = fakeSupabaseClient(() => ({ count: 54 }));

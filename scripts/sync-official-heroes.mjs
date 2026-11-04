@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildHeroBuildProfile, buildProfileRationale } from './hero-build-profile-utils.mjs';
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
 import { deleteHero, getHero, saveHero } from '../src/server/heroes/catalog/index.ts';
 import { finishSyncRun, getExternalSourcePayload, saveExternalSource, startSyncRun } from '../src/server/sync/index.ts';
@@ -117,14 +116,14 @@ async function saveOfficialHero(db, officialHero) {
     synergies: officialTeamUpNames(officialAbilities, existingHero?.synergies ?? []),
     imageUrl: getImageUrl(officialHero.id, existingHero?.imageUrl, officialHero.listImageUrl),
   };
-  const heroWithComputedFields = withBuildProfile({
+  const hero = {
     ...mergedHero,
     playstyle: buildHeroPlaystyle(mergedHero),
-  });
+  };
 
-  await saveHero(db, heroWithComputedFields);
+  await saveHero(db, hero);
 
-  if (legacyHeroId && legacyHeroId !== heroWithComputedFields.id) {
+  if (legacyHeroId && legacyHeroId !== hero.id) {
     await deleteHero(db, legacyHeroId);
   }
 }
@@ -141,16 +140,6 @@ function getImageUrl(heroId, existingImageUrl, officialImageUrl) {
   // A hero added mid-season has no committed portrait yet, so the official
   // image keeps the card correct until `sync:official-hero-images` runs.
   return officialImageUrl || '/images/heroes/default-hero.png';
-}
-
-function withBuildProfile(hero) {
-  const buildProfile = buildHeroBuildProfile(hero);
-
-  return {
-    ...hero,
-    buildProfile,
-    buildProfileRationale: buildProfileRationale(hero, buildProfile),
-  };
 }
 
 function officialTeamUpNames(abilities, existingSynergies) {

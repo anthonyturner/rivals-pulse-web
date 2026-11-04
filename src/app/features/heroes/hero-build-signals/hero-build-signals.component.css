@@ -1,0 +1,62 @@
+:host {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+h4,
+.note,
+.notice,
+.empty {
+  margin: 0;
+}
+
+.note,
+.empty {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  line-height: 1.5;
+}
+
+.notice {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel-soft);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: 2px;
+}
+
+table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: var(--type-small);
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.key {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 400;
+}

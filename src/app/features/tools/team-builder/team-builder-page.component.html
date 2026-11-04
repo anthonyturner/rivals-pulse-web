@@ -10,6 +10,9 @@
     <div class="bar">
       <h2 #teamHeading tabindex="-1">Your team</h2>
       <p class="caption count">{{ chosenLabel() }}</p>
+      @if (coverage(); as coverage) {
+        <p class="caption coverage">{{ coverage }}</p>
+      }
       <button type="button" class="action" [disabled]="isEmpty()" (click)="clearTeam()">Clear team</button>
     </div>
 
@@ -25,6 +28,9 @@
                 </button>
               </span>
             </app-hero-tile>
+            @if (slot.card; as card) {
+              <app-hero-signal-card [card]="card" />
+            }
           } @else {
             <span class="caption">{{ slot.caption }}</span>
           }
@@ -44,16 +50,11 @@
 
         <div class="panel">
           <h3>Build signals</h3>
-          <p class="caption">Coach ratings from each hero's fight plan, not official stats.</p>
-          <ul class="signals">
-            @for (row of signalRows(); track row.type) {
-              <li>
-                <span aria-hidden="true">{{ row.type }}</span>
-                <meter min="0" [max]="signalMax" [value]="row.value" [attr.aria-label]="row.label"></meter>
-                <strong aria-hidden="true">{{ row.value }}</strong>
-              </li>
-            }
-          </ul>
+          <p class="caption">{{ signalsIntro() }}</p>
+          <app-build-signal-rows [rows]="summary.signals" />
+          @if (sourceNote(); as sourceNote) {
+            <p class="caption source-note">{{ sourceNote }}</p>
+          }
         </div>
 
         <div class="panel notes">

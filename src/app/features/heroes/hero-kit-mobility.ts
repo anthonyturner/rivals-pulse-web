@@ -64,6 +64,61 @@ const FLIGHT_ABILITY_POINTS = 1;
 const EXTRA_JUMP_POINTS = 0.25;
 const NORMAL_BASE_SPEED = 6;
 
+// Today's hand-set values, shown until the table covers every hero. Delete this and its fallback in
+// `heroKitMobilityValue` once it does. A hero missing here has no value yet, never a guess.
+const HAND_SET_MOBILITY: Readonly<Record<string, number>> = {
+  'adam-warlock': 3,
+  'angela': 9,
+  'black-cat': 9,
+  'black-panther': 10,
+  'black-widow': 4,
+  'blade': 8,
+  'hulk': 9,
+  'captain-america': 8,
+  'cloak-and-dagger': 5,
+  'daredevil': 8,
+  'deadpool': 9,
+  'devil-dinosaur': 6,
+  'doctor-strange': 4,
+  'elsa-bloodstone': 7,
+  'emma-frost': 4,
+  'gambit': 5,
+  'groot': 2,
+  'hawkeye': 5,
+  'hela': 5,
+  'human-torch': 9,
+  'invisible-woman': 5,
+  'iron-fist': 9,
+  'iron-man': 9,
+  'jeff-the-land-shark': 6,
+  'loki': 6,
+  'luna-snow': 8,
+  'magik': 9,
+  'magneto': 4,
+  'mantis': 6,
+  'mister-fantastic': 6,
+  'moon-knight': 7,
+  'namor': 4,
+  'peni-parker': 5,
+  'phoenix': 8,
+  'psylocke': 9,
+  'rocket-raccoon': 8,
+  'rogue': 8,
+  'scarlet-witch': 7,
+  'spider-man': 10,
+  'squirrel-girl': 7,
+  'star-lord': 9,
+  'storm': 9,
+  'the-punisher': 3,
+  'the-thing': 5,
+  'thor': 8,
+  'ultron': 8,
+  'venom': 9,
+  'white-fox': 5,
+  'winter-soldier': 6,
+  'wolverine': 8,
+};
+
 /** The table's fields a hero still lacks before the formula can score them. */
 export function missingMobilityFields(hero: HeroKitMobilityHero): string[] {
   const missing = hero.baseSpeed ? [] : ['base speed'];
@@ -123,6 +178,13 @@ export function publishableHeroKitMobilityScores(
   }
 
   return new Map(table.heroes.map((hero) => [hero.heroId, heroKitMobilityScore(hero) as number]));
+}
+
+const PUBLISHABLE_SCORES = publishableHeroKitMobilityScores();
+
+/** The Mobility a page shows for this hero, or null when there is no value yet. */
+export function heroKitMobilityValue(heroId: string): number | null {
+  return (PUBLISHABLE_SCORES ? PUBLISHABLE_SCORES.get(heroId) : HAND_SET_MOBILITY[heroId]) ?? null;
 }
 
 function burstPoints(abilities: HeroKitMobilityAbility[]): number {

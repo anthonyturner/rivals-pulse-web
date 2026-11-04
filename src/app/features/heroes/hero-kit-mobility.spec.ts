@@ -4,6 +4,7 @@ import {
   bundledHeroKitMobilityTable as table,
   heroKitMobilityCoverage,
   heroKitMobilityScore,
+  heroKitMobilityValue,
   missingMobilityFields,
   publishableHeroKitMobilityScores,
   type HeroKitMobilityAbility,
@@ -363,5 +364,18 @@ describe('publishableHeroKitMobilityScores', () => {
 
     expect(total).toBe(table.heroes.length);
     expect(publishableHeroKitMobilityScores() === null).toBe(missing.length > 0);
+  });
+});
+
+describe('heroKitMobilityValue', () => {
+  it("shows today's hand-set value while the table has gaps", () => {
+    expect(heroKitMobilityCoverage().missing.length).toBeGreaterThan(0);
+    expect(heroKitMobilityValue('spider-man')).toBe(10);
+    expect(heroKitMobilityValue('groot')).toBe(2);
+  });
+
+  it('has no value, and no guess, for a hero without one', () => {
+    expect(heroKitMobilityValue('jubilee')).toBeNull();
+    expect(heroKitMobilityValue('not-a-hero')).toBeNull();
   });
 });

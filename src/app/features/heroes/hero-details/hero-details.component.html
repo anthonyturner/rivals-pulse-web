@@ -303,36 +303,11 @@
 
   <details class="collapsible hero-build-profile">
     <summary class="section-heading">
-      <h3>Build Profile</h3>
+      <h3>Build Signals</h3>
     </summary>
     <div class="collapsible-body">
-      <p class="section-note">0-10 coach rating by fight-plan value, not official stats</p>
-      <div class="build-profile-bars">
-        @for (type of controller.buildTypes; track type) {
-        <div [class]="controller.scoreTone(controller.heroBuildValue(hero, type))">
-          <span>{{ type }}</span>
-          <meter min="0" max="10" [value]="controller.heroBuildValue(hero, type)"></meter>
-          <strong>{{ controller.heroBuildValue(hero, type) }}</strong>
-        </div>
-        }
-      </div>
-
-      <p class="build-profile-note">
-        Ratings combine role, ability text, and guide interpretation. They are meant to explain a
-        hero's fight-plan value, not replace official ability numbers.
-      </p>
-
-      @if (controller.heroBuildProfileRationale(hero); as rationale) {
-      <div class="build-profile-source">
-        <strong>Fandom description analysis</strong>
-        <p>{{ rationale.reason }}</p>
-        <div>
-          <a [href]="rationale.source.url" target="_blank" rel="noopener noreferrer">{{
-            rationale.source.label
-            }}</a>
-        </div>
-      </div>
-      }
+      <p class="section-note">Scores out of 10 from matches recorded by RivalsPulse players</p>
+      <app-hero-build-signals [heroId]="hero.id" [scores]="controller.heroScores()" />
     </div>
   </details>
 

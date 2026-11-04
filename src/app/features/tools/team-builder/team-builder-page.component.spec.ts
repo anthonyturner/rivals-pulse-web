@@ -18,6 +18,33 @@ const roster = [
   heroOf('magik', 'Magik', 'Duelist'),
 ];
 
+const minimums = { matches: 10, contributors: 3, busiestContributorShare: 0.5, rankedHeroes: 5 };
+const launchScores = { status: 'not-enough-data', minimums, halfSeasons: [], halfSeason: null, inPlaceOf: null, heroes: [] };
+
+const measured = (score: number) => ({
+  status: 'scored',
+  score,
+  label: 'measured',
+  matches: 42,
+  contributors: null,
+  oneContributorAboveHalf: null,
+  measures: { damagePerMinute: 900, sustainPerMinute: 500 },
+});
+const noUtility = { status: 'no-measurable-ability', score: null, label: 'estimated', matches: 0, contributors: null, oneContributorAboveHalf: null, measures: null };
+const scoredHero = (hero: string, damage: number, sustain: number) => ({
+  hero,
+  damage: measured(damage),
+  sustain: measured(sustain),
+  ultimate: measured(5),
+  utility: noUtility,
+  abilities: [],
+});
+const someScores = {
+  ...launchScores,
+  status: 'ready',
+  heroes: [scoredHero('angela', 9, 8), scoredHero('mantis', 3, 10)],
+};
+
 const six = ['Angela', 'Black Cat', 'Spider-Man', 'Peni Parker', 'Mantis', 'Psylocke'];
 
 describe('TeamBuilderPageComponent', () => {
@@ -38,7 +65,7 @@ describe('TeamBuilderPageComponent', () => {
   afterEach(() => http.verify());
 
   /** Opens the page; `heroes` is what `/api/heroes` answers, or `'pending'` to leave it waiting. */
-  async function open(heroes: Hero[] | 'pending' = roster): Promise<void> {
+  async function open(heroes: Hero[] | 'pending' = roster, scores: object = launchScores): Promise<void> {
     fixture = TestBed.createComponent(TeamBuilderPageComponent);
     root = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
@@ -46,6 +73,7 @@ describe('TeamBuilderPageComponent', () => {
     if (heroes !== 'pending') {
       http.expectOne('/api/heroes').flush(heroes);
     }
+    http.expectOne('/api/community/hero-scores').flush(scores);
     await fixture.whenStable();
   }
 
@@ -181,19 +209,49 @@ describe('TeamBuilderPageComponent', () => {
 
   describe('the analysis', () => {
     it('shows the summary, build signals with named meters, and notes once a hero is picked', async () => {
-      await open();
+      await open(roster, someScores);
       await pick('Angela', 'Mantis');
 
       expect(root.querySelectorAll('.panels .panel').length).toBe(3);
       expect(root.querySelector('section[aria-label="Team analysis"] app-state-panel')).toBeNull();
       expect(text('.panels h2')).toContain('Comp');
       expect(text('.panel strong')).toMatch(/^Grade: .+ · 1 Vanguard \/ 0 Duelist \/ 1 Strategist$/);
-      const labels = [...root.querySelectorAll('meter')].map((meter) => meter.getAttribute('aria-label'));
-      expect(labels.length).toBe(5);
-      expect(labels[0]).toMatch(/^Utility \d+ of 60$/);
-      expect(root.querySelectorAll('.signals li > [aria-hidden="true"]').length).toBe(10);
+      const labels = [...root.querySelectorAll('[role="meter"]')].map((meter) => meter.getAttribute('aria-label'));
+      expect(labels).toEqual([
+        'Damage 6.0 out of 10, measured. Uses 2 of 6 heroes.',
+        'Sustain 9.0 out of 10, measured. Uses 2 of 6 heroes.',
+        'Ultimate 5.0 out of 10, estimated. Uses 2 of 6 heroes.',
+        jasmine.stringMatching(/^Mobility \d\.\d out of 10, hero kit\. Uses 2 of 6 heroes\.$/),
+      ]);
+      expect(text('.coverage')).toBe('2 of 7 heroes have enough data so far');
+      expect(text('.panels h2')).toBe('Sustain Balanced Comp');
+      expect(root.querySelectorAll('.slots app-hero-signal-card .tile').length).toBe(10);
+      expect(root.textContent).toContain('This team leans Sustain.');
+      expect(root.textContent).not.toContain('Coach ratings');
       expect(text('.notes')).toContain('Strengths');
       expect(text('.notes')).toContain('Risks');
+    });
+
+    it('works at the launch state: collecting cards, no invented numbers and no lean', async () => {
+      await open();
+      await pick('Angela', 'Mantis');
+
+      expect(text('.slots app-hero-signal-card')).toContain('Collecting data');
+      expect(text('.slots app-hero-signal-card')).toContain('0 of 10 matches, 0 of 3 players');
+      expect(root.querySelectorAll('.slots .tile').length).toBe(0);
+      expect(root.querySelectorAll('[role="meter"]').length).toBe(1);
+      expect(text('.panels h2')).toBe('Balanced Comp');
+      expect(root.textContent).not.toContain('This team leans');
+      expect(root.textContent).toContain('Uses 0 of 6 heroes.');
+      expect(text('.coverage')).toBe('0 of 7 heroes have enough data so far');
+    });
+
+    it('says the scores failed rather than that they are collecting', async () => {
+      await open(roster, { status: 'ready' });
+      await pick('Angela');
+
+      expect(text('.slots app-hero-signal-card')).toBe('Scores cannot be loaded right now.');
+      expect(root.querySelector('.coverage')).toBeNull();
     });
 
     it('goes back to the state panel when the team is cleared', async () => {

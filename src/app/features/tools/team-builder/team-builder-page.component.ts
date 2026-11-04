@@ -17,20 +17,26 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { HeroDataService } from '../../heroes/hero-data.service';
+import { BuildSignalRowsComponent } from '../../heroes/hero-build-signals/build-signal-rows.component';
+import {
+  heroesWithScores,
+  HeroScoresAnswer,
+  heroSignalCard,
+  scoresSourceNote,
+} from '../../heroes/hero-build-signals/hero-build-signals';
+import { HeroSignalCardComponent } from '../../heroes/hero-build-signals/hero-signal-card.component';
+import { HeroScoresService } from '../../heroes/hero-scores.service';
 import { Hero } from '../../heroes/hero.model';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 import { TeamCompositionEngineService } from './team-composition-engine.service';
 
 const TEAM_SIZE = 6;
 
-/** A hero scores up to 10 on each build signal, so a full team's total tops out at 60. */
-const MAX_SIGNAL = 10 * TEAM_SIZE;
-
 const removeLabel = (hero: Hero): string => `Remove ${hero.name} from team`;
 
 @Component({
   selector: 'app-team-builder-page',
-  imports: [HeroTileComponent, NoticeComponent, StatePanelComponent],
+  imports: [BuildSignalRowsComponent, HeroSignalCardComponent, HeroTileComponent, NoticeComponent, StatePanelComponent],
   templateUrl: './team-builder-page.component.html',
   styleUrl: './team-builder-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +44,7 @@ const removeLabel = (hero: Hero): string => `Remove ${hero.name} from team`;
 export class TeamBuilderPageComponent implements OnInit {
   private readonly engine = inject(TeamCompositionEngineService);
   private readonly heroDataService = inject(HeroDataService);
+  private readonly heroScoresService = inject(HeroScoresService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   private readonly teamHeading = viewChild.required<ElementRef<HTMLElement>>('teamHeading');
@@ -49,8 +56,9 @@ export class TeamBuilderPageComponent implements OnInit {
 
   private readonly team = signal<(Hero | undefined)[]>(Array.from({ length: TEAM_SIZE }));
 
+  private readonly scores = signal<HeroScoresAnswer>(undefined);
+
   protected readonly announcement = signal('');
-  protected readonly signalMax = MAX_SIGNAL;
 
   private readonly chosen = computed(() => this.team().filter((hero): hero is Hero => hero !== undefined));
   protected readonly isEmpty = computed(() => this.chosen().length === 0);
@@ -62,6 +70,7 @@ export class TeamBuilderPageComponent implements OnInit {
       hero,
       caption: `P${index + 1} · ${hero?.role ?? 'Empty'}`,
       removeLabel: hero && removeLabel(hero),
+      card: hero && heroSignalCard(hero.id, this.scores()),
     })),
   );
 
@@ -91,22 +100,28 @@ export class TeamBuilderPageComponent implements OnInit {
     });
   });
 
-  protected readonly summary = computed(() => (this.isEmpty() ? null : this.engine.analyzeTeam(this.chosen())));
+  protected readonly summary = computed(() => (this.isEmpty() ? null : this.engine.analyzeTeam(this.chosen(), this.scores(), TEAM_SIZE)));
 
-  protected readonly signalRows = computed(() => {
-    const scores = this.summary()?.buildScores;
+  /** Says how much of the roster has data, once the scores have answered. */
+  protected readonly coverage = computed(() => {
+    const scores = this.scores();
+    const roster = this.heroes()?.length ?? 0;
 
-    return scores
-      ? this.engine.buildSignals.map(({ type }) => ({
-          type,
-          value: scores[type],
-          label: `${type} ${scores[type]} of ${MAX_SIGNAL}`,
-        }))
-      : [];
+    return scores && roster > 0 ? `${heroesWithScores(scores)} of ${roster} heroes have enough data so far` : null;
+  });
+
+  protected readonly sourceNote = computed(() => scoresSourceNote(this.scores()));
+
+  /** The sentence over the signals: what the numbers are, and which signal the team leans on. */
+  protected readonly signalsIntro = computed(() => {
+    const lean = this.summary()?.lean;
+
+    return `Your team's average out of 10, using only the heroes with a number for each signal.${lean ? ` This team leans ${lean}.` : ''}`;
   });
 
   ngOnInit(): void {
     this.loadHeroes();
+    this.loadScores();
   }
 
   protected reload(): void {
@@ -165,6 +180,13 @@ export class TeamBuilderPageComponent implements OnInit {
       .getHeroes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((heroes) => this.heroes.set(heroes));
+  }
+
+  private loadScores(): void {
+    this.heroScoresService
+      .getHeroScores()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((scores) => this.scores.set(scores));
   }
 
   /** Puts the hero in the slot, moving it there if it was already in the team. */

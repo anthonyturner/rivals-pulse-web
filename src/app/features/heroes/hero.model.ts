@@ -42,23 +42,6 @@ export interface HeroRoleAbilityKit {
   abilities: HeroAbility[];
 }
 
-export interface HeroBuildProfile {
-  Utility: number;
-  Damage: number;
-  Sustain: number;
-  Mobility: number;
-  Ultimate: number;
-}
-
-export interface HeroBuildProfileRationale {
-  source: {
-    label: string;
-    url: string;
-  };
-  reason: string;
-  strongestSignals: string[];
-}
-
 export interface HeroPlaystyleGuide {
   id: string;
   role?: HeroRole;
@@ -129,8 +112,6 @@ export interface Hero {
   abilities: HeroAbility[];
   roleAbilityKits?: HeroRoleAbilityKit[];
   playstyles?: HeroPlaystyleGuide[];
-  buildProfile?: HeroBuildProfile;
-  buildProfileRationale?: HeroBuildProfileRationale;
   gameplayArchetypes?: HeroGameplayArchetype[];
   officialSource?: HeroOfficialSource;
   imageUrl: string;

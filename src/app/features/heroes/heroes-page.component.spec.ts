@@ -13,6 +13,7 @@ import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
+import { HeroScoresService } from './hero-scores.service';
 import { heroesMatcher } from './heroes.routes';
 import { HeroesPageComponent } from './heroes-page.component';
 
@@ -138,6 +139,7 @@ describe('HeroesPageComponent videos in the sidebar', () => {
           },
         },
         { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
+        { provide: HeroScoresService, useValue: { getHeroScores: () => of(null) } },
         { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
         { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
       ],
