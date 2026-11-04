@@ -36,6 +36,10 @@ dropped.
   instead of wrapping it in backticks. This lets the reader jump straight to
   the definition. Plain prose, file paths without a specific symbol, and code
   blocks are unaffected by this rule.
+- **Speech names the work, never its number.** Anything spoken aloud (a cue, a
+  session label, a line said mid-turn) uses the title of the issue or pull
+  request, in natural words: "Saved filters are ready for review", not "Issue
+  142, saved filters". A number means nothing when heard. Written text keeps it.
 - **File and line references stay.** They are evidence, not prose — put them
   in parentheses after the plain-English claim so a reader can skip them.
 - **Give the title with every issue or pull request number.** Each time a
