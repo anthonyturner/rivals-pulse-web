@@ -21,9 +21,11 @@ optional.
    findings, then merge with a merge commit. Never merge a pull request that
    has no posted review, that still has a blocking finding, or whose checks
    fail.
-3. Never force-push, rewrite history, delete branches, bypass branch
+3. Never force-push, rewrite history, delete remote branches, bypass branch
    protection, or commit directly to `master`. Merging goes
-   through the pull request and nowhere else.
+   through the pull request and nowhere else. The one branch deletion allowed
+   is a local branch that `git branch --merged master` lists, with
+   `git branch -d`; never force the deletion with `-D`.
 4. Never commit or print real secrets. Reference credentials by name only.
 5. Preserve unrelated working-tree changes; stop if they block safe isolation.
 6. Do not add or upgrade dependencies without discussing it first.
