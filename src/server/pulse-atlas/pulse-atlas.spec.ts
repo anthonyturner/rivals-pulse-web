@@ -6,12 +6,15 @@ import {
   buildPulseAtlas,
   findHeroGameIdProblems,
   findHeroStyleProblems,
+  parseManifest,
   PULSE_ATLAS_DATASETS,
   PulseAtlasFile,
   PulseAtlasInput,
   assembleCommunityTierList,
   communityHalfSeasonRequests,
   resolveCommunityStats,
+  resolveHeroScores,
+  assembleHeroScores,
   verifyPulseAtlas,
 } from './pulse-atlas';
 
@@ -135,6 +138,39 @@ function communityStatsData(overrides: Record<string, unknown> = {}, band: Recor
 }
 
 // The valid inputs' community stats pair two heroes that heroes.json does not list, which warns.
+function heroScoreCollecting(label: string): Record<string, unknown> {
+  return { status: 'collecting', score: null, label, matches: 5, contributors: 2, oneContributorAboveHalf: false, measures: null };
+}
+
+function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    provenance: PROVENANCE,
+    minimums: { matches: 10, contributors: 3, busiestContributorShare: 0.5, rankedHeroes: 5 },
+    currentSeasonId: 2,
+    season: { id: 2, label: 'Season 1' },
+    heroes: [
+      {
+        heroId: THOR_GAME_ID,
+        damage: {
+          status: 'scored',
+          score: 7,
+          label: 'measured',
+          matches: 42,
+          contributors: null,
+          oneContributorAboveHalf: null,
+          measures: { damagePerMinute: 812.5 },
+          ...damage,
+        },
+        sustain: heroScoreCollecting('measured'),
+        ultimate: heroScoreCollecting('estimated'),
+        utility: { status: 'no-measurable-ability', score: null, label: 'estimated', matches: 0, contributors: null, oneContributorAboveHalf: null, measures: null },
+        abilities: [{ slot: 'ability_0', ability: 'Hammer Throw', tag: 'Damage', usesPerTenMinutes: 12.5, takedownsPerUse: 0.4, matches: 42 }],
+      },
+    ],
+    ...overrides,
+  };
+}
+
 const notAboutCommunityStats = (warning: string): boolean => !warning.startsWith('community-stats:');
 
 function validInputs(): PulseAtlasInput[] {
@@ -150,6 +186,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'hero-styles', source: 'test', data: [{ heroId: 'thor', poke: 10, dive: 20, brawl: 70 }] },
     { dataset: 'hero-stats', source: 'test', data: heroStatsTable() },
     { dataset: 'community-stats', source: 'test', data: communityStatsData() },
+    { dataset: 'hero-scores', source: 'test', data: heroScoresData() },
     { dataset: 'hero-game-ids', source: 'test', data: [thorEntry] },
   ];
 }
@@ -177,6 +214,7 @@ describe('buildPulseAtlas', () => {
       'pulse-atlas/v1/hero-styles.json',
       'pulse-atlas/v1/hero-stats.json',
       'pulse-atlas/v1/community-stats.json',
+      'pulse-atlas/v1/hero-scores.json',
       'pulse-atlas/v1/tier-list/seasons/1.json',
       'pulse-atlas/v1/tier-list/seasons/2.json',
       'pulse-atlas/v1/manifest.json',
@@ -1981,6 +2019,211 @@ describe('assembleCommunityStats', () => {
     expect(() => assembleCommunityStats(answer({ halfSeason: { id: 10.25, label: 'Season 10.25' } }))).toThrowError(
       /has no season id/,
     );
+  });
+});
+
+describe('the hero-scores dataset', () => {
+  const buildWith = (data: unknown): (() => PulseAtlasFile[]) => () => buildPulseAtlas(withData('hero-scores', data), GENERATED_AT, fakeSha256);
+  const withStray = (extra: Record<string, unknown>): Record<string, unknown> => heroScoresData({}, extra);
+
+  it('is published and listed in the manifest', () => {
+    const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+    const manifest = parseManifest(files[files.length - 1].content);
+    const file = files.find((candidate) => candidate.path === 'pulse-atlas/v1/hero-scores.json');
+
+    expect(manifest.files.map((entry) => entry.dataset)).toContain('hero-scores');
+    expect(JSON.parse(file?.content ?? '{}').data).toEqual(heroScoresData());
+  });
+
+  it('is valid with no hero at all, which is the launch state', () => {
+    expect(buildWith(heroScoresData({ heroes: [] }))).not.toThrow();
+  });
+
+  it('may be left out of a run, and the feed is still valid', () => {
+    const inputs = validInputs().filter((input) => input.dataset !== 'hero-scores');
+    const files = buildPulseAtlas(inputs, GENERATED_AT, fakeSha256);
+
+    expect(files.some((file) => file.path.endsWith('hero-scores.json'))).toBeFalse();
+    expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
+  });
+
+  it('refuses a key outside the allow-list at every level', () => {
+    expect(buildWith(heroScoresData({ note: 'x' }))).toThrowError(/the file has a key outside the allow-list: note/);
+    expect(buildWith(heroScoresData({ minimums: { matches: 10, contributors: 3, busiestContributorShare: 0.5, rankedHeroes: 5, extra: 1 } }))).toThrowError(/minimums has a key outside the allow-list/);
+    expect(buildWith(withStray({ names: 'x' }))).toThrowError(/damage has a key outside the allow-list: names/);
+    expect(buildWith(withStray({ measures: { damagePerMinute: 1, rank: 2 } }))).toThrowError(/measures has a key outside the allow-list: rank/);
+    const hero = (heroScoresData()['heroes'] as Record<string, unknown>[])[0];
+    expect(buildWith(heroScoresData({ heroes: [{ ...hero, role: 'Vanguard' }] }))).toThrowError(/has a key outside the allow-list: role/);
+    expect(buildWith(heroScoresData({ heroes: [{ ...hero, abilities: [{ slot: 'x', ability: null, tag: null, usesPerTenMinutes: 1, takedownsPerUse: null, matches: 1, uid: 'x' }] }] }))).toThrowError(/has a key outside the allow-list: uid/);
+  });
+
+  it('refuses a key naming something private', () => {
+    expect(buildWith(heroScoresData({ playerCount: 3 }))).toThrowError(/playerCount/);
+  });
+
+  it('refuses a score below the minimum matches, or off the scale', () => {
+    expect(buildWith(withStray({ matches: 9 }))).toThrowError(/score with fewer than the minimum matches/);
+    expect(buildWith(withStray({ score: 11 }))).toThrowError(/whole number from 1 to 10/);
+    expect(buildWith(withStray({ score: 0 }))).toThrowError(/whole number from 1 to 10/);
+    expect(buildWith(withStray({ score: 5.5 }))).toThrowError(/whole number from 1 to 10/);
+  });
+
+  it('refuses a hero below the rule that carries a score or a figure', () => {
+    const collecting = { status: 'collecting', contributors: 2, oneContributorAboveHalf: false };
+
+    expect(buildWith(withStray({ ...collecting, score: 3, measures: null }))).toThrowError(/has a score but its status is collecting/);
+    expect(buildWith(withStray({ ...collecting, score: null, measures: { damagePerMinute: 1 } }))).toThrowError(/may carry no measures before it passes the rule/);
+  });
+
+  it('refuses an exact count below the rule, since it could be one person\'s own games', () => {
+    const collecting = { status: 'collecting', score: null, contributors: 1, oneContributorAboveHalf: true, measures: null };
+
+    expect(buildWith(withStray({ ...collecting, matches: 7 }))).toThrowError(/only in steps of 5/);
+    expect(buildWith(withStray({ ...collecting, matches: 5 }))).not.toThrow();
+  });
+
+  it('refuses an inPlaceOfSeasonId that is not the current season', () => {
+    expect(buildWith(heroScoresData({ inPlaceOfSeasonId: 1 }))).toThrowError(/inPlaceOfSeasonId must be the currentSeasonId/);
+  });
+
+  it('refuses to name contributors once a hero passes the rule', () => {
+    expect(buildWith(withStray({ contributors: 3 }))).toThrowError(/may name contributors only while collecting/);
+  });
+
+  it('keeps the labels fixed, so an estimate can never read as measured', () => {
+    const hero = (heroScoresData()['heroes'] as Record<string, unknown>[])[0];
+
+    expect(buildWith(heroScoresData({ heroes: [{ ...hero, utility: heroScoreCollecting('measured') }] }))).toThrowError(/utility must be labelled estimated/);
+  });
+
+  it('refuses a file that is not the community data', () => {
+    expect(buildWith(heroScoresData({ provenance: 'elsewhere' }))).toThrowError(/provenance must be/);
+  });
+
+  it('warns about a hero id heroes.json does not know, and publishes it', () => {
+    const warnings: string[] = [];
+
+    buildPulseAtlas(withData('hero-scores', heroScoresData({ heroes: [{ ...(heroScoresData()['heroes'] as Record<string, unknown>[])[0], heroId: 424242 }] })), GENERATED_AT, fakeSha256, [], (warning) => warnings.push(warning));
+
+    expect(warnings.some((warning) => warning.startsWith('hero-scores:') && warning.includes('424242'))).toBeTrue();
+  });
+
+  it('fails read-back when the written file loses its community marker', () => {
+    const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256).map((file) =>
+      file.path.endsWith('hero-scores.json') ? { ...file, content: file.content.replace(PROVENANCE, 'other') } : file,
+    );
+    const rehashed = files.map((file) => {
+      if (!file.path.endsWith('manifest.json')) {
+        return file;
+      }
+
+      const manifest = parseManifest(file.content);
+      const scores = files.find((one) => one.path.endsWith('hero-scores.json'));
+
+      return {
+        ...file,
+        content: JSON.stringify({
+          ...manifest,
+          files: manifest.files.map((entry) =>
+            entry.dataset === 'hero-scores'
+              ? { ...entry, sha256: fakeSha256(scores?.content ?? ''), bytes: new TextEncoder().encode(scores?.content ?? '').length }
+              : entry,
+          ),
+        }),
+      };
+    });
+
+    expect(() => verifyPulseAtlas(rehashed, fakeSha256)).toThrowError(/hero-scores: the file does not carry provenance/);
+  });
+});
+
+describe('assembleHeroScores', () => {
+  const answer = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    status: 'not-enough-data',
+    minimums: { matches: 10, contributors: 3, busiestContributorShare: 0.5, rankedHeroes: 5 },
+    halfSeasons: [],
+    halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null },
+    inPlaceOf: null,
+    heroes: [{ hero: 'thor', damage: { status: 'collecting' } }, { hero: 'nobody', damage: { status: 'collecting' } }],
+    ...overrides,
+  });
+
+  it('turns hero slugs into game ids and half-seasons into season ids, leaving out what it cannot map', () => {
+    const warnings: string[] = [];
+    const data = assembleHeroScores(answer(), [thorEntry], (warning) => warnings.push(warning)) as Record<string, unknown>;
+
+    expect(data).toEqual({
+      provenance: PROVENANCE,
+      minimums: answer()['minimums'],
+      currentSeasonId: 21,
+      season: { id: 21, label: 'Season 10.5' },
+      heroes: [{ heroId: THOR_GAME_ID, damage: { status: 'collecting' } }],
+    });
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toContain('nobody');
+  });
+
+  it('names the current half-season when the previous one stands in for it', () => {
+    const data = assembleHeroScores(
+      answer({ halfSeason: { id: 10, label: 'Season 10' }, inPlaceOf: { id: 10.5, label: 'Season 10.5' }, heroes: [] }),
+      [thorEntry],
+    ) as Record<string, unknown>;
+
+    expect(data['currentSeasonId']).toBe(21);
+    expect(data['season']).toEqual({ id: 20, label: 'Season 10' });
+    expect(data['inPlaceOfSeasonId']).toBe(21);
+  });
+
+  it('throws on an answer of another shape, or with no half-season', () => {
+    expect(() => assembleHeroScores({ nope: true }, [thorEntry])).toThrowError(/not the hero-scores shape/);
+    expect(() => assembleHeroScores(answer({ halfSeason: null }), [thorEntry])).toThrowError(/no half-season yet/);
+  });
+});
+
+describe('resolveHeroScores', () => {
+  const PATH = 'pulse-atlas/v1/hero-scores.json';
+  const liveAnswer = (): Record<string, unknown> => ({
+    minimums: { matches: 10, contributors: 3, busiestContributorShare: 0.5, rankedHeroes: 5 },
+    halfSeason: { id: 1, label: 'Season 1' },
+    inPlaceOf: null,
+    heroes: [],
+  });
+
+  async function resolve(read: () => Promise<unknown>, published: PulseAtlasFile[] = []) {
+    const warnings: string[] = [];
+    const input = await resolveHeroScores({ read, published, source: 'live', heroGameIds: [thorEntry], warn: (warning) => warnings.push(warning) });
+
+    return { input, warnings };
+  }
+
+  it('builds the dataset from the live answer, with no warning', async () => {
+    const { input, warnings } = await resolve(async () => liveAnswer());
+
+    expect(input?.dataset).toBe('hero-scores');
+    expect(warnings).toEqual([]);
+  });
+
+  it('leaves the dataset out, with a warning, when the endpoint is not there yet and none was ever published', async () => {
+    const { input, warnings } = await resolve(() => Promise.reject(new Error('Could not fetch: Error: HTTP 404')));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/hero-scores could not be built.*HTTP 404.*left out of this publish/);
+  });
+
+  it('keeps the last published file when the endpoint fails', async () => {
+    const previous = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+    const { input, warnings } = await resolve(() => Promise.reject(new Error('HTTP 500')), previous);
+
+    expect(input).toEqual({ dataset: 'hero-scores', source: 'test', data: heroScoresData() });
+    expect(warnings[0]).toMatch(/last published file is kept/);
+    expect(previous.some((file) => file.path === PATH)).toBeTrue();
+  });
+
+  it('takes the fallback when the answer fails the gate, so a bad answer cannot stop the feed', async () => {
+    const { input, warnings } = await resolve(async () => ({ ...liveAnswer(), heroes: [{ hero: 'thor', playerName: 'x' }] }));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/left out of this publish/);
   });
 });
 

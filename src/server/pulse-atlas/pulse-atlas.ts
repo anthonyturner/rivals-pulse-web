@@ -8,14 +8,15 @@ export const PULSE_ATLAS_DATASETS = [
   'hero-styles',
   'hero-stats',
   'community-stats',
+  'hero-scores',
 ] as const;
 
 /**
  * Datasets a run may leave out: the feed is valid without them, in the manifest and on disk alike.
- * `community-stats` depends on an endpoint and a database function that are deployed separately, so
- * the publish must not be held up by it (see `resolveCommunityStats`).
+ * These depend on an endpoint and a database function that are deployed separately, so the publish
+ * must not be held up by them (see `resolveOptionalDataset`).
  */
-const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats'];
+export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats', 'hero-scores'];
 
 /**
  * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
@@ -170,8 +171,11 @@ export function buildPulseAtlas(
   const community = withPublishableCommunityStats(counted.inputs);
   community.warnings.forEach((warning) => warn(`community-stats: ${warning}`));
 
+  const scored = withPublishableHeroScores(community.inputs);
+  scored.warnings.forEach((warning) => warn(`hero-scores: ${warning}`));
+
   const built = PULSE_ATLAS_DATASETS.flatMap((dataset): BuiltDataset[] => {
-    const input = community.inputs.find((candidate) => candidate.dataset === dataset);
+    const input = scored.inputs.find((candidate) => candidate.dataset === dataset);
 
     return input ? [{ dataset, ...buildEnvelopeFile(datasetPath(dataset), input, generatedAt, previous) }] : [];
   });
@@ -234,6 +238,7 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
   problems.push(...findSeasonFileProblems(files, sha256));
   problems.push(...findHeroStatsFileProblems(files));
   problems.push(...findCommunityStatsFileProblems(files));
+  problems.push(...findHeroScoresFileProblems(files));
 
   if (problems.length > 0) {
     throw new Error(`Pulse Atlas failed verification:\n- ${problems.join('\n- ')}`);
@@ -787,6 +792,8 @@ function describeShapeProblem(
       return describeHeroStatsProblem(data);
     case 'community-stats':
       return describeCommunityStatsProblem(data);
+    case 'hero-scores':
+      return readHeroScores(data).problems.join('; ') || undefined;
   }
 }
 
@@ -1988,7 +1995,7 @@ function findCommunityStatsFileProblems(files: readonly PulseAtlasFile[]): strin
 }
 
 interface ResolveCommunityStatsOptions {
-  /** Reads the `/api/hero-pairs` answer. A failure to do so, or an unusable answer, takes the fallback. */
+  /** Reads the API answer. A failure to do so, or an unusable answer, takes the fallback. */
   read: () => Promise<unknown>;
   /** What is published right now. */
   published: readonly PulseAtlasFile[];
@@ -1998,40 +2005,372 @@ interface ResolveCommunityStatsOptions {
 }
 
 /**
- * The community-stats input for a run, which can never fail the publish: the data from the API when
- * it answers with something that passes the gate; otherwise the last published file, as it is
- * (bytes and hash unchanged); and only when none was ever published, or the published one no longer
- * passes the gate, no input at all, so the run leaves the dataset out. Each fallback is reported
- * through `warn`. The gate is the shape check plus the private-key and credential-value checks. The dataset depends on an endpoint and a database function that are deployed apart
- * from this repository's push to the default branch, so a run can come before them.
+ * The input for a dataset whose failure can never fail the publish: the data from the API when it
+ * answers with something that passes the gate; otherwise the last published file, as it is (bytes
+ * and hash unchanged); and only when none was ever published, or the published one no longer passes
+ * the gate, no input at all, so the run leaves the dataset out. Each fallback is reported through
+ * `warn`. These datasets depend on an endpoint and a database function that are deployed apart from
+ * this repository's push to the default branch, so a run can come before them.
  */
-export async function resolveCommunityStats(options: ResolveCommunityStatsOptions): Promise<PulseAtlasInput | undefined> {
-  const { read, published, source, warn } = options;
-
+async function resolveOptionalDataset(
+  dataset: PulseAtlasDataset,
+  assemble: (answer: unknown) => unknown,
+  describeProblem: (data: unknown) => string | undefined,
+  { read, published, source, warn }: ResolveCommunityStatsOptions,
+): Promise<PulseAtlasInput | undefined> {
   try {
-    const data = assembleCommunityStats(await read());
-    const problem = describeCommunityStatsInputProblem(data);
+    const data = assemble(await read());
+    const problem = describeProblem(data);
 
     if (problem === undefined) {
-      return { dataset: 'community-stats', source, data };
+      return { dataset, source, data };
     }
 
     throw new Error(problem);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    const file = published.find((candidate) => candidate.path === datasetPath('community-stats'));
+    const file = published.find((candidate) => candidate.path === datasetPath(dataset));
     const envelope = file ? parseEnvelope(file.content) : undefined;
 
-    if (envelope && describeCommunityStatsInputProblem(envelope.data) === undefined) {
-      warn(`community-stats could not be built (${reason}); the last published file is kept as it is`);
-      return { dataset: 'community-stats', source: envelope.source, data: envelope.data };
+    if (envelope && describeProblem(envelope.data) === undefined) {
+      warn(`${dataset} could not be built (${reason}); the last published file is kept as it is`);
+      return { dataset, source: envelope.source, data: envelope.data };
     }
 
     warn(
-      `community-stats could not be built (${reason}) and ${file ? 'the published file is unusable' : 'none was ever published'}; it is left out of this publish`,
+      `${dataset} could not be built (${reason}) and ${file ? 'the published file is unusable' : 'none was ever published'}; it is left out of this publish`,
     );
     return undefined;
   }
+}
+
+/** The community-stats input for a run; see `resolveOptionalDataset`. The gate is the shape check plus the private-key and credential-value checks. */
+export function resolveCommunityStats(options: ResolveCommunityStatsOptions): Promise<PulseAtlasInput | undefined> {
+  return resolveOptionalDataset('community-stats', assembleCommunityStats, describeCommunityStatsInputProblem, options);
+}
+
+/** The hero-scores input for a run; see `resolveOptionalDataset`. */
+export function resolveHeroScores(
+  options: ResolveCommunityStatsOptions & { heroGameIds: unknown },
+): Promise<PulseAtlasInput | undefined> {
+  return resolveOptionalDataset(
+    'hero-scores',
+    (answer) => assembleHeroScores(answer, options.heroGameIds, options.warn),
+    describeHeroScoresInputProblem,
+    options,
+  );
+}
+
+const HERO_SCORE_STATS = ['damage', 'sustain', 'ultimate', 'utility'] as const;
+
+/** The keys a hero-scores file, hero, stat and ability may carry: the allow-list. Anything else refuses the build. */
+const HERO_SCORES_KEYS: readonly string[] = ['provenance', 'minimums', 'currentSeasonId', 'season', 'inPlaceOfSeasonId', 'heroes'];
+const HERO_SCORES_MINIMUM_KEYS: readonly string[] = ['matches', 'contributors', 'busiestContributorShare', 'rankedHeroes'];
+const HERO_SCORES_HERO_KEYS: readonly string[] = ['heroId', ...HERO_SCORE_STATS, 'abilities'];
+const HERO_SCORES_STAT_KEYS: readonly string[] = ['status', 'score', 'label', 'matches', 'contributors', 'oneContributorAboveHalf', 'measures'];
+const HERO_SCORES_ABILITY_KEYS: readonly string[] = ['slot', 'ability', 'tag', 'usesPerTenMinutes', 'takedownsPerUse', 'matches'];
+const HERO_SCORES_STATUSES: readonly unknown[] = ['scored', 'collecting', 'ranking-too-small', 'no-measurable-ability'];
+/** An exact count below the rule could be one person's own games on a hero, so the file refuses one. */
+const HERO_SCORE_PROGRESS_STEP = 5;
+const HERO_SCORE_TAGS: readonly unknown[] = ['Utility', 'Damage', 'Mobility', 'Sustain', null];
+/** Utility and Ultimate stay estimates: the game shows that an ability was used, not whether it landed. */
+const HERO_SCORE_LABELS: Readonly<Record<(typeof HERO_SCORE_STATS)[number], string>> = {
+  damage: 'measured',
+  sustain: 'measured',
+  ultimate: 'estimated',
+  utility: 'estimated',
+};
+const HERO_SCORE_MEASURES: Readonly<Record<(typeof HERO_SCORE_STATS)[number], readonly string[]>> = {
+  damage: ['damagePerMinute'],
+  sustain: ['healingPerMinute', 'blockedPerMinute', 'sustainPerMinute'],
+  ultimate: ['usesPerTenMinutes', 'takedownsPerUse'],
+  utility: ['useOfAvailable', 'takedownsPerUse'],
+};
+
+/**
+ * Folds the `/api/community/hero-scores` answer into the `hero-scores` dataset the gate checks: hero
+ * slugs become the game's numeric ids (a hero without an entry is left out, with a warning) and
+ * half-seasons become season ids, as in the tier list. Throws when the answer is not that shape, or
+ * names no half-season yet, so the caller can fall back to the last published file.
+ */
+export function assembleHeroScores(answer: unknown, heroGameIds: unknown, warn: (warning: string) => void = () => undefined): unknown {
+  const problem = (detail: string): Error =>
+    new Error(`/api/community/hero-scores is not the hero-scores shape (${detail}). Has the web app been deployed with it?`);
+  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => {
+    if (value === null) {
+      return null;
+    }
+
+    if (!isRecord(value) || !isFiniteNumber(value['id']) || !isNonEmptyString(value['label'])) {
+      throw problem('a half-season needs an id and a label');
+    }
+
+    return { id: value['id'], label: value['label'] };
+  };
+
+  if (!isRecord(answer) || !isRecord(answer['minimums']) || !Array.isArray(answer['heroes'])) {
+    throw problem('no minimums and heroes');
+  }
+
+  const shown = halfSeasonOf(answer['halfSeason']);
+  const inPlaceOf = halfSeasonOf(answer['inPlaceOf']);
+  const current = inPlaceOf ?? shown;
+
+  if (!current || !shown) {
+    throw new Error('The hero-scores API has no half-season yet, so there is nothing to publish.');
+  }
+
+  const { gameIdOf, unmapped } = heroGameIdLookup(heroGameIds);
+  const heroes = answer['heroes'].flatMap((row: unknown) => {
+    if (!isRecord(row) || !isNonEmptyString(row['hero'])) {
+      throw problem('a hero needs an id');
+    }
+
+    const { hero, ...rest } = row;
+    const heroId = gameIdOf(String(hero));
+
+    return heroId === undefined ? [] : [{ heroId, ...rest }];
+  });
+
+  unmapped.forEach((hero) => warn(`${hero}: no gameId in hero-game-ids.json, so the hero is left out of hero-scores`));
+
+  return {
+    provenance: COMMUNITY_PROVENANCE,
+    minimums: answer['minimums'],
+    currentSeasonId: seasonIdOf(current.id),
+    season: { id: seasonIdOf(shown.id), label: shown.label },
+    ...(inPlaceOf === null ? {} : { inPlaceOfSeasonId: seasonIdOf(inPlaceOf.id) }),
+    heroes,
+  };
+}
+
+interface ReadHeroScores {
+  /** Faults in the data; empty when `table` is set. */
+  problems: string[];
+  /** The data as it is published: heroes ordered by id. */
+  table?: Record<string, unknown>;
+  /** Every hero id that has a row. */
+  heroes?: Set<number>;
+}
+
+// One stat's faults. A score can only be there with enough matches behind it and with the fixed
+// label, and a hero below the rule can carry no figure.
+function findHeroScoreStatProblems(
+  stat: unknown,
+  name: (typeof HERO_SCORE_STATS)[number],
+  minimumMatches: unknown,
+  where: string,
+  checkKeys: CheckKeys,
+): string[] {
+  if (!isRecord(stat)) {
+    return [`${where} is not an object`];
+  }
+
+  const found: string[] = [];
+  const { status, score, label, matches, contributors, oneContributorAboveHalf, measures } = stat;
+
+  checkKeys(stat, HERO_SCORES_STAT_KEYS, where);
+
+  if (!HERO_SCORES_STATUSES.includes(status)) {
+    found.push(`${where} has an unknown status`);
+  }
+
+  if (label !== HERO_SCORE_LABELS[name]) {
+    found.push(`${where} must be labelled ${HERO_SCORE_LABELS[name]}`);
+  }
+
+  if (!isInteger(matches) || matches < 0) {
+    found.push(`${where} needs matches as a non-negative whole number`);
+  }
+
+  if (status === 'scored') {
+    if (!isInteger(score) || score < 1 || score > 10) {
+      found.push(`${where} needs a score that is a whole number from 1 to 10`);
+    }
+
+    if (!isFiniteNumber(minimumMatches) || !isInteger(matches) || matches < minimumMatches) {
+      found.push(`${where} has a score with fewer than the minimum matches`);
+    }
+  } else if (score !== null) {
+    found.push(`${where} has a score but its status is ${String(status)}`);
+  }
+
+  if (status === 'collecting') {
+    if (!isInteger(contributors) || contributors < 0 || typeof oneContributorAboveHalf !== 'boolean') {
+      found.push(`${where} needs contributors and oneContributorAboveHalf while collecting`);
+    }
+
+    if (isInteger(matches) && matches % HERO_SCORE_PROGRESS_STEP !== 0) {
+      found.push(`${where} may show matches only in steps of ${HERO_SCORE_PROGRESS_STEP} while collecting`);
+    }
+  } else if (contributors !== null || oneContributorAboveHalf !== null) {
+    found.push(`${where} may name contributors only while collecting`);
+  }
+
+  if (status === 'scored' || status === 'ranking-too-small') {
+    if (!isRecord(measures)) {
+      found.push(`${where} needs its measures`);
+    } else {
+      checkKeys(measures, HERO_SCORE_MEASURES[name], `${where} measures`);
+
+      if (!Object.values(measures).every((value) => isFiniteNumber(value) && value >= 0)) {
+        found.push(`${where} needs every measure to be a number of 0 or more`);
+      }
+    }
+  } else if (measures !== null) {
+    found.push(`${where} may carry no measures before it passes the rule`);
+  }
+
+  return found;
+}
+
+function findHeroScoreAbilityProblems(ability: unknown, where: string, checkKeys: CheckKeys): string[] {
+  if (!isRecord(ability)) {
+    return [`${where} is not an object`];
+  }
+
+  checkKeys(ability, HERO_SCORES_ABILITY_KEYS, where);
+
+  const { slot, ability: name, tag, usesPerTenMinutes, takedownsPerUse, matches } = ability;
+  const valid =
+    isNonEmptyString(slot) &&
+    isNullableString(name) &&
+    HERO_SCORE_TAGS.includes(tag) &&
+    isFiniteNumber(usesPerTenMinutes) &&
+    usesPerTenMinutes >= 0 &&
+    (takedownsPerUse === null || (isFiniteNumber(takedownsPerUse) && takedownsPerUse >= 0)) &&
+    isInteger(matches) &&
+    matches >= 0;
+
+  return valid ? [] : [`${where} is not a slot, ability, tag, usesPerTenMinutes, takedownsPerUse and matches`];
+}
+
+/**
+ * Checks the hero-scores dataset and, when it is sound, returns it with heroes in id order. Faults are
+ * reported together so one run names them all. It refuses a file that is not the community's, a key
+ * outside the allow-list (so nothing can reach a row by accident), a score below the minimum matches
+ * and a hero below the rule that carries a figure. No hero at all is valid: that is the launch state.
+ */
+function readHeroScores(data: unknown): ReadHeroScores {
+  if (isRecord(data) && data['provenance'] !== COMMUNITY_PROVENANCE) {
+    return { problems: [`provenance must be "${COMMUNITY_PROVENANCE}"`] };
+  }
+
+  if (!isRecord(data) || !isRecord(data['minimums']) || !Array.isArray(data['heroes'])) {
+    return { problems: ['expected an object with minimums and a heroes list'] };
+  }
+
+  const problems: string[] = [];
+  const checkKeys: CheckKeys = (record, allowed, where) => {
+    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
+
+    if (stray.length > 0) {
+      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
+    }
+  };
+  const minimums = data['minimums'];
+  const season = data['season'];
+
+  checkKeys(data, HERO_SCORES_KEYS, 'the file');
+  checkKeys(minimums, HERO_SCORES_MINIMUM_KEYS, 'minimums');
+
+  if (!HERO_SCORES_MINIMUM_KEYS.every((key) => isFiniteNumber(minimums[key]))) {
+    problems.push('minimums needs its four numbers');
+  }
+
+  if (!isInteger(data['currentSeasonId'])) {
+    problems.push('currentSeasonId must be a whole number');
+  }
+
+  if (data['inPlaceOfSeasonId'] !== undefined && data['inPlaceOfSeasonId'] !== data['currentSeasonId']) {
+    problems.push('inPlaceOfSeasonId must be the currentSeasonId when present');
+  }
+
+  if (!isRecord(season) || !isInteger(season['id']) || !isNonEmptyString(season['label'])) {
+    problems.push('season needs an id and a label');
+  } else {
+    checkKeys(season, COMMUNITY_STATS_SEASON_KEYS, 'season');
+  }
+
+  const heroes = new Set<number>();
+
+  data['heroes'].forEach((row: unknown, index: number) => {
+    if (!isRecord(row) || !isInteger(row['heroId'])) {
+      problems.push(`hero ${index} needs an integer heroId`);
+      return;
+    }
+
+    const heroId = row['heroId'];
+    const where = `hero ${heroId}`;
+
+    if (heroes.has(heroId)) {
+      problems.push(`${where} is listed more than once`);
+    }
+    heroes.add(heroId);
+    checkKeys(row, HERO_SCORES_HERO_KEYS, where);
+
+    for (const name of HERO_SCORE_STATS) {
+      problems.push(...findHeroScoreStatProblems(row[name], name, minimums['matches'], `${where} ${name}`, checkKeys));
+    }
+
+    const abilities = row['abilities'];
+
+    if (!Array.isArray(abilities)) {
+      problems.push(`${where} needs an abilities list`);
+    } else {
+      abilities.forEach((ability: unknown, position: number) => {
+        problems.push(...findHeroScoreAbilityProblems(ability, `${where} ability ${position}`, checkKeys));
+      });
+    }
+  });
+
+  if (problems.length > 0) {
+    return { problems };
+  }
+
+  const ordered = [...data['heroes']].sort((a, b) => Number(a['heroId']) - Number(b['heroId']));
+
+  return { problems, heroes, table: { ...data, heroes: ordered } };
+}
+
+/** The gate a hero-scores input must pass, checked before the build so a fallback can be chosen. */
+function describeHeroScoresInputProblem(data: unknown): string | undefined {
+  const problems = [...readHeroScores(data).problems, ...findUnsafeContent(data, 'hero-scores')];
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
+}
+
+/**
+ * The inputs with hero-scores in its published order, plus a warning for each hero id that no hero
+ * in heroes.json has as its `gameId`. A run without the dataset has nothing to replace.
+ */
+function withPublishableHeroScores(inputs: readonly PulseAtlasInput[]): { inputs: PulseAtlasInput[]; warnings: string[] } {
+  const input = inputs.find((candidate) => candidate.dataset === 'hero-scores');
+  const { table, heroes } = input ? readHeroScores(input.data) : { table: undefined, heroes: undefined };
+
+  if (!input || !table || !heroes) {
+    return { inputs: [...inputs], warnings: [] };
+  }
+
+  return {
+    inputs: inputs.map((candidate) => (candidate === input ? { ...candidate, data: table } : candidate)),
+    warnings: describeUnknownHeroes(heroes, inputs.find((candidate) => candidate.dataset === 'heroes')?.data),
+  };
+}
+
+// Read-back check of the written file: it keeps the community marker.
+function findHeroScoresFileProblems(files: readonly PulseAtlasFile[]): string[] {
+  const file = files.find((candidate) => candidate.path === datasetPath('hero-scores'));
+
+  if (!file) {
+    return [];
+  }
+
+  const data = parseEnvelope(file.content)?.data;
+
+  return isRecord(data) && data['provenance'] === COMMUNITY_PROVENANCE
+    ? []
+    : [`hero-scores: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
 }
 
 function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256Hex): string[] {

@@ -1,1 +1,1 @@
-export { getCommunityFigures, getCommunityKills } from './community-extended-read.ts';
+export { getCommunityFigures, getCommunityHeroScores, getCommunityKills } from './community-extended-read.ts';

@@ -19,6 +19,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | `hero-styles.json` | Each hero's playstyle mix: whole-number percentages of Poke, Dive and Brawl. Shape below. Source: [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json), hand-maintained in this repository. |
 | `hero-stats.json` | Each hero's community stats in every half-season that has started: win rate, pick rate, KDA, final hits and the matches behind them, with an "enough data" flag per hero. One file for all half-seasons. Shape below. |
 | `community-stats.json` | The community's counter and partner counts: how often each hero beat or lost to each enemy hero, and to each ally hero it played with, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
+| `hero-scores.json` | Each hero's 1 to 10 Damage, Sustain, Ultimate and Utility scores with the figures behind them, or how far along a hero below the rule is, in the half-season shown. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
 
 Every dataset file has this shape:
@@ -331,6 +332,68 @@ file** for the half-season shown, listed in the manifest:
   file as absent until it exists.
 - The envelope's `source` is `rivals-pulse-web:hero-stats-api`.
 
+### The `hero-scores` data
+
+The 1 to 10 hero build scores, for readers that want them without the website. How
+they are worked out is in [hero-build-scores.md](hero-build-scores.md). Like the
+tier list it is the **community** data. It is **one file** for the half-season
+shown, listed in the manifest:
+
+```json
+{
+  "provenance": "rivals-pulse-community",
+  "minimums": { "matches": 10, "contributors": 3, "busiestContributorShare": 0.5, "rankedHeroes": 5 },
+  "currentSeasonId": 21,
+  "season": { "id": 21, "label": "Season 10.5" },
+  "heroes": [
+    {
+      "heroId": 1042,
+      "damage": { "status": "scored", "score": 7, "label": "measured", "matches": 42, "contributors": null, "oneContributorAboveHalf": null, "measures": { "damagePerMinute": 812.5 } },
+      "sustain": { "status": "ranking-too-small", "score": null, "label": "measured", "matches": 42, "contributors": null, "oneContributorAboveHalf": null, "measures": { "healingPerMinute": 0, "blockedPerMinute": 412.5, "sustainPerMinute": 412.5 } },
+      "ultimate": { "status": "collecting", "score": null, "label": "estimated", "matches": 5, "contributors": 2, "oneContributorAboveHalf": false, "measures": null },
+      "utility": { "status": "no-measurable-ability", "score": null, "label": "estimated", "matches": 0, "contributors": null, "oneContributorAboveHalf": null, "measures": null },
+      "abilities": [{ "slot": "ability_1", "ability": "Bionic Spider-Nest", "tag": null, "usesPerTenMinutes": 12.5, "takedownsPerUse": 0.4, "matches": 42 }]
+    }
+  ]
+}
+```
+
+- **`provenance` is `"rivals-pulse-community"`, at the top level of `data`.** The
+  generator refuses to build a file without it and the read-back check fails if the
+  written file lacks it.
+- **A hero with no line in the half-season has no row**, which reads as 0 of each
+  minimum. With nobody at the rule, which is today, every stat is `collecting`, or
+  `no-measurable-ability` for a Utility with nothing to measure, and the file is valid.
+  An empty `heroes` is valid too. Hero ids are as in the tier
+  list; Deadpool's role forms are merged under 1057.
+- **`status`** is `scored`, `collecting`, `ranking-too-small` or
+  `no-measurable-ability`. `score` is a whole number from 1 to 10 only when `scored`.
+  `measures` is present only for `scored` and `ranking-too-small`: a hero below the
+  rule carries no figure. `contributors` and `oneContributorAboveHalf` are present
+  only while `collecting`. `label` is fixed per stat.
+- **`matches`** is lines (one player on one hero in one match), so two uploaders in
+  one lobby count twice. While `collecting` it is rounded down to a multiple of 5, and
+  the generator refuses anything else, because an exact count could be one person's own
+  games. A reader takes progress from it, such as "5 of 10 matches, 2 of 3 players".
+- **`abilities`** lists a slot only once that slot passes the rule on its own.
+  `ability` is null when the slot holds several abilities. `tag` is null when the
+  ability is untagged, when several disagree and, for `ultimate`, always.
+- **The season** works as in `community-stats`, including `inPlaceOfSeasonId`.
+- **Only these keys are published.** The generator allows exactly the keys above
+  (`readHeroScores` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and
+  refuses a file, hero, stat, measure or ability with any other, a key naming
+  something private, a score off the scale or below the minimum matches, a stat below
+  the rule carrying a figure, and a stat with the wrong label. The word `player` in a
+  key refuses the build, which is why this file says `contributors`. It holds no
+  player-level data: no names, uids, teams, matches or per-match rows, and no sum.
+- **No shipped overlay reads it.** The overlay reads the manifest entries it asks for
+  by name and skips the rest, as it already does for `hero-stats.json`. Nothing here
+  may reach the game (overlay ADR-0021), so do not add an overlay reader for it.
+- **It never holds up the feed**, by the same rule as `community-stats` below: a
+  failure keeps the last published file, or leaves the file out if there is none. The
+  source is `/api/community/hero-scores`, and the envelope's `source` is
+  `rivals-pulse-web:hero-stats-api`.
+
 ### The hero `gameId`
 
 `heroes.json` carries the game's numeric hero id on each hero, so a consumer
@@ -438,7 +501,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -495,10 +558,10 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    [src/server/pulse-atlas/pulse-atlas-page.ts](../src/server/pulse-atlas/pulse-atlas-page.ts). It is not part of
    the feed: the manifest does not list it, and clients never need it.
 
-`community-stats` is the exception to the rule below: `resolveCommunityStats`
-in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts) turns any failure to fetch or
-assemble it into the last published file (kept byte for byte) or, if none was
-ever published, into leaving it out of the run, each with a warning. It never
+`community-stats` and `hero-scores` are the exceptions to the rule below:
+`resolveOptionalDataset` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts) turns any failure to fetch or
+assemble one into the last published file (kept byte for byte) or, if none was
+ever published, into leaving it out of the run, each with a warning. Neither ever
 fails the generate job.
 
 Any other failed fetch (three attempts each), an empty or malformed dataset, or an
@@ -518,6 +581,11 @@ migration (`supabase db push`, see [supabase.md](supabase.md)) and the web app
 with `/api/hero-pairs`. A run before them still publishes everything else and
 warns that `community-stats` was left out (or kept as last published); the first
 run after both are live publishes it.
+
+`hero-scores` works the same way: it needs the `read_community_hero_scores`
+migration and the web app with `/api/community/hero-scores`. A merge starts a run that
+can reach the API before Vercel has deployed it; that run warns, and the next
+scheduled run, within six hours, publishes the file.
 
 To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 24,
 which strips TypeScript types itself).

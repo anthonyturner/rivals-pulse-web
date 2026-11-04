@@ -12,8 +12,10 @@ import {
   PULSE_ATLAS_DATASETS,
   PULSE_ATLAS_HERO_GAME_IDS,
   PULSE_ATLAS_MANIFEST_PATH,
+  PULSE_ATLAS_OPTIONAL_DATASETS,
   parseManifest,
   resolveCommunityStats,
+  resolveHeroScores,
   tierListSeasonPath,
   verifyPulseAtlas,
 } from '../src/server/pulse-atlas/pulse-atlas.ts';
@@ -95,6 +97,19 @@ const communityStats = await resolveCommunityStats({
 
 if (communityStats) {
   live.push(communityStats);
+}
+
+// The same promise: the scores never hold up the publish either.
+const heroScores = await resolveHeroScores({
+  read: () => fetchJson(`${apiBase}/community/hero-scores`),
+  published,
+  source: HERO_STATS_SOURCE_LABEL,
+  warn,
+  heroGameIds,
+});
+
+if (heroScores) {
+  live.push(heroScores);
 }
 
 const now = new Date().toISOString();
@@ -196,9 +211,10 @@ async function fetchPublished() {
   ];
   const results = await Promise.all(
     paths.map(async (path) => {
-      // community-stats is the one file the run cannot rebuild if the read fails, so it is tried
+      // An optional dataset's file is one the run cannot rebuild if the read fails, so it is tried
       // again unless the answer is a plain 404 (never published).
-      const attempts = path === `${PULSE_ATLAS_BASE_PATH}/community-stats.json` ? FETCH_ATTEMPTS : 1;
+      const optional = PULSE_ATLAS_OPTIONAL_DATASETS.some((name) => path === `${PULSE_ATLAS_BASE_PATH}/${name}.json`);
+      const attempts = optional ? FETCH_ATTEMPTS : 1;
       let lastError;
 
       for (let attempt = 1; attempt <= attempts; attempt += 1) {
@@ -253,6 +269,8 @@ function toSample(input, sampleHeroIds) {
         return trimHeroStats(data);
       case 'community-stats':
         return trimCommunityStats(data);
+      case 'hero-scores':
+        return { ...data, heroes: data.heroes.slice(0, 2) };
       case 'tier-list': {
         // The current season and the one before it, so the sample shows the index
         // entry with ranks next to one without.
