@@ -103,6 +103,14 @@
       no player names or ids at all. These figures are used for community benchmarks, such as
       damage per minute, and for hero-against-hero counter numbers.
     </p>
+    <p>A further field is <strong>planned</strong>. It is not uploaded yet:</p>
+    <ul id="planned-fields">
+      @for (field of plannedFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
   </section>
 
   <section class="reading-section" id="public-numbers" aria-labelledby="public-numbers-title">
@@ -121,6 +129,12 @@
         Below that the page says there is not enough data yet instead of showing a number.
       </li>
       <li>A match recorded by two players is counted once, so one match cannot weigh twice.</li>
+      <li>
+        <strong>Hero averages</strong> and scores worked out from them are planned, built from each
+        uploading player's own figures. They will never show one player's numbers, and a hero will
+        be shown only once enough different players have contributed. They will appear on this site
+        and never in the game.
+      </li>
     </ul>
   </section>
 

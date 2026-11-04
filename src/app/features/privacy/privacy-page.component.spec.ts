@@ -85,6 +85,23 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('never');
   });
 
+  it('marks hero averages as planned, from own figures, and waiting for enough players', () => {
+    const text = section('public-numbers').textContent ?? '';
+    expect(text).toContain('are planned');
+    expect(text).toContain("own figures");
+    expect(text).toContain("never show one player's numbers");
+    expect(text).toContain('enough different players');
+    expect(text).toContain('never in the game');
+  });
+
+  it('lists ability and ultimate use as planned, apart from the extended status', () => {
+    expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Ability and ultimate use');
+    const planned = section('planned-fields').textContent ?? '';
+    expect(planned).toContain('uploading player');
+    expect(planned).toContain('not whether it hit anyone');
+    expect(planned).toContain('Never uploaded for other players');
+  });
+
   it('states the retention rule', () => {
     const text = section('retention').textContent ?? '';
 
