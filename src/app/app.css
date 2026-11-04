@@ -56,4 +56,10 @@ main:focus {
     align-self: start;
     padding: 24px var(--page-gutter) 0 0;
   }
+
+  /* A column of page content starts level with the page's columns and sticks level with them; a margin applies only at rest, so it does not hold the column down once stuck. */
+  .app-body__sidebar.sidebar--with-page-content {
+    margin-top: var(--columns-top);
+    padding-top: 0;
+  }
 }

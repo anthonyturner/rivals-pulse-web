@@ -203,7 +203,9 @@ gets a sidebar from the app shell, so a page does not add one itself. From
   `<ng-template appSidebarContent>` (`core/layout/sidebar/sidebar-content.ts`).
   It shows for as long as that place in the page exists. The column is 300px wide
   and follows the page as it scrolls; content too tall to fit above the ad scrolls
-  on its own, so the ad stays in view. A hero page's YouTube videos are the example.
+  on its own, so the ad stays in view. The column then starts `--columns-top` below
+  the top of the page, so a page using this holds its header to that height to keep
+  its columns level. A hero page's YouTube videos are the example.
 - An ad is an `app-ad-slot` with a size id from `AD_SLOT_SIZES`. The slot
   reserves that size in CSS and knows no ad network; what fills it is the
   `AdProvider` behind the `AD_PROVIDER` token (the house ad by default). A

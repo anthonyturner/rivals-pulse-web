@@ -53,6 +53,18 @@ describe('Sidebar', () => {
     expect(ads.querySelector('.supplied')).toBeNull();
   });
 
+  it('marks itself only while it has page content, which is what starts it level with the page', async () => {
+    const fixture = await render(true);
+    const host = (fixture.nativeElement as HTMLElement).querySelector('app-sidebar') as HTMLElement;
+
+    expect(host.classList).toContain('sidebar--with-page-content');
+
+    fixture.componentInstance.first.set(false);
+    await fixture.whenStable();
+
+    expect(host.classList).not.toContain('sidebar--with-page-content');
+  });
+
   it('removes the content when the page stops supplying it', async () => {
     const fixture = await render(true);
 
