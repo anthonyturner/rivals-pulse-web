@@ -148,7 +148,9 @@ Deno.serve(async request => {
       status: 'ok',
       recorded: 1,
       participants: stored,
-      ...(extendedStored ? { extended: { ...extendedStored, ...(abilityUsesStored === null ? {} : { ability_uses: abilityUsesStored }) } } : {}),
+      ...(extendedStored || abilityUsesStored !== null
+        ? { extended: { ...extendedStored, ...(abilityUsesStored === null ? {} : { ability_uses: abilityUsesStored }) } }
+        : {}),
     });
   } catch (error) {
     if (error instanceof IdentityError) return json({ error: error.message }, error.status);

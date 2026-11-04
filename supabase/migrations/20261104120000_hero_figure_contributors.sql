@@ -12,8 +12,7 @@
 
 -- The one rule for publishing a hero figure or a kill pair. To change a starting value, restate this
 -- function in a new migration: the counts it reads are stored, so nothing needs rebuilding. The
--- website's copy of the player minimum, which it only prints, is `COMMUNITY_FIGURES_MINIMUMS`
--- (`extended-migrations.test.ts` fails if the two differ).
+-- website keeps its own minimums beside it; see "Who contributed" in docs/supabase.md.
 create or replace function public.hero_figure_qualifies(
   p_matches integer,
   p_recorders integer,
@@ -24,6 +23,17 @@ immutable
 set search_path = ''
 as $$
   select p_matches >= 10 and p_recorders >= 3 and p_top_recorder_matches * 2 <= p_matches
+$$;
+
+-- A wrong rule fails the push rather than publishing someone's numbers.
+do $$
+begin
+  assert public.hero_figure_qualifies(10, 3, 5), 'the starting values must qualify';
+  assert not public.hero_figure_qualifies(9, 3, 4), 'too few matches must be hidden';
+  assert not public.hero_figure_qualifies(10, 2, 5), 'too few players must be hidden';
+  assert not public.hero_figure_qualifies(10, 3, 6), 'a player above half must be hidden';
+  assert not public.hero_figure_qualifies(0, 0, 0), 'a row with no counts must be hidden';
+end
 $$;
 
 -- Distinct players per hero, and the segments of the one with most. The per-figure pairs exist

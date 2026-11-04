@@ -138,8 +138,17 @@ describe('the extended upload migrations', () => {
     it('holds the qualifying rule in one function, whose player minimum the website prints', () => {
       const rule = functionBody('hero_figure_qualifies');
       assert.match(rule, /p_matches >= 10 and p_recorders >= 3 and p_top_recorder_matches \* 2 <= p_matches/);
-      const website = readFileSync(new URL('../../../src/server/community/extended/community-figures.ts', import.meta.url), 'utf8');
-      assert.match(website, /recorders: 3,/);
+      const latestRule = readdirSync(MIGRATIONS)
+        .filter(name => name.endsWith('.sql'))
+        .sort()
+        .map(name => withoutComments(read(name)))
+        .filter(migration => migration.includes('function public.hero_figure_qualifies('))
+        .at(-1) ?? '';
+      const playerMinimum = latestRule.match(/p_recorders >= (\d+)/)?.[1];
+      for (const file of ['community-figures.ts', 'community-kills.ts']) {
+        const website = readFileSync(new URL(`../../../src/server/community/extended/${file}`, import.meta.url), 'utf8');
+        assert.match(website, new RegExp(`recorders: ${playerMinimum},`), file);
+      }
     });
 
     it('applies the rule to every figure and every pair the read functions return', () => {

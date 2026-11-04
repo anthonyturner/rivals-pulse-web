@@ -35,7 +35,7 @@ repo's build. This is a move, not a redesign.
   every newer overlay's extras; a signature change follows "Changing a database function's
   signature" below), `record_match_ability_uses` (the same).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`), `tracked_match_recorders` (written by `track-match-history` itself) and
+  `record_match_extras`), `participant_hero_ability_uses` (written by `record_match_ability_uses`), `tracked_match_recorders` (written by `track-match-history` itself) and
   `voice_ai_token_requests` (written by `elevenlabs-agent-token`; the publishable key cannot reach it). The
   aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
@@ -80,8 +80,8 @@ repo's build. This is a move, not a redesign.
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
-| `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
 | `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
+| `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
 
 Link once per machine, check history, then apply:
 
@@ -391,15 +391,17 @@ stored exactly as before.
 - `kills_after` and `assists_after` are whole numbers from 0 to 999, or omitted when not counted. The window (the overlay's starting values are 5 seconds after an ability and 10 after an ultimate) belongs to the overlay.
 - At most 160 entries (20 heroes in 8 slots); a longer list is dropped whole. The first entry of a hero and slot wins, and a repeat of the match writes nothing.
 
-The reply's `extended` gains `ability_uses` (rows written) only when the upload carried the list. If the call fails, it is logged and the match still succeeds. `hero_ability_aggregates` keeps the counts, rebuilt and frozen with the other extended aggregates, and no read function publishes them yet.
+The reply's `extended` gains `ability_uses` (rows written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. `hero_ability_aggregates` keeps the counts, rebuilt and frozen with the other extended aggregates, and no read function publishes them yet.
 
 ### Who contributed, and when a figure is published
 
 `hero_figure_aggregates` records `recorders` and `top_recorder_segments` per hero, and the same pair per figure. `hero_kill_aggregates` records `recorders` and `top_recorder_matches`. Numbers only, never who. A row frozen before these columns existed reads 0 and never qualifies.
 
-`hero_figure_qualifies(matches, recorders, top)` is the one rule: 10 or more matches, 3 or more players, nobody above 50%. These are starting values. Restate that one function in a new migration to change them; nothing needs rebuilding, because the rule runs when the numbers are read. If the player minimum changes, change `COMMUNITY_FIGURES_MINIMUMS` too, which only prints it (a test compares them).
+`hero_figure_qualifies(matches, recorders, top)` is the one rule: 10 or more matches, 3 or more players, nobody above 50%. "Matches" means segments (one player on one hero in one match), so two uploaders in one lobby count twice. These are starting values. Restate that one function in a new migration to change them; nothing needs rebuilding, because the rule runs when the numbers are read. If the player minimum changes, change `COMMUNITY_FIGURES_MINIMUMS` and `COMMUNITY_KILLS_MINIMUMS` too, which only print it (a test compares them). To lower the 10, also lower the website's own `heroLines` and `pairMatches`, which filter again after pooling.
 
-The website reads through `read_community_hero_figures()` and `read_community_kill_feed()` (service role only). A figure or pair that fails is not returned. The rule is applied per half-season and mode before anything is summed.
+The website reads through `read_community_hero_figures()` and `read_community_kill_feed()` (service role only). A figure that fails is sent as zero lines, sum and seconds, a hero whose three figures all fail is absent, and a kill pair that fails is absent. The rule is applied per half-season and mode before anything is summed.
+
+A uid is the client's claim, as it is for figures (see "Reading a linked player's own dashboard"), so contributor counts trust it.
 
 The aggregates leave out a segment with time played and no figure above 0, which looks like figures the feed never sent (overlay issue 1161), and count a figure only on segments with a time played above 0. A half-season is corrected at its next rebuild; a frozen one is never rebuilt.
 
