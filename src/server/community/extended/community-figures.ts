@@ -34,7 +34,7 @@ import { ROLE_STATS_MIN_LINES } from '../../heroes/stats/role-stats.ts';
 export const COMMUNITY_FIGURES_MINIMUMS: CommunityFiguresMinimums = {
   roleLines: ROLE_STATS_MIN_LINES,
   heroLines: HERO_STATS_MIN_MATCHES,
-  // Mirrors `community_bucket_shown` in the database, which is where the privacy rule is applied:
+  // Mirrors `hero_figure_qualifies` in the database, which is where the privacy rule is applied:
   // a hero's figure that fewer players recorded (or that one player mostly recorded) arrives as
   // zero lines, so every sum here is already a sum over shown buckets.
   recorders: 3,

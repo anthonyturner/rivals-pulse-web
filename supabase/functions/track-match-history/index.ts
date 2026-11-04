@@ -137,6 +137,9 @@ Deno.serve(async request => {
     const extendedStored = extended
       ? await recordExtendedUpload(supabase, { fingerprint, playedAt, extended })
       : null;
+    const abilityUsesStored = extended && extended.hero_ability_uses.length > 0
+      ? await recordAbilityUses(supabase, { fingerprint, playedAt, extended })
+      : null;
 
     await purgeExpiredParticipants(supabase);
 
@@ -145,7 +148,7 @@ Deno.serve(async request => {
       status: 'ok',
       recorded: 1,
       participants: stored,
-      ...(extendedStored ? { extended: extendedStored } : {}),
+      ...(extendedStored ? { extended: { ...extendedStored, ...(abilityUsesStored === null ? {} : { ability_uses: abilityUsesStored }) } } : {}),
     });
   } catch (error) {
     if (error instanceof IdentityError) return json({ error: error.message }, error.status);
@@ -200,6 +203,26 @@ async function recordExtendedUpload(
     return data as { hero_figures: number; hero_kills: number };
   } catch (error) {
     console.error(`Extended upload not stored: ${getErrorMessage(error)}`);
+    return null;
+  }
+}
+
+/** The recorder's ability and ultimate counts, with the same rule: a failure costs only these rows. */
+async function recordAbilityUses(
+  supabase: ReturnType<typeof createClient>,
+  match: { fingerprint: string; playedAt: string; extended: ExtendedUpload },
+): Promise<number | null> {
+  try {
+    const { data, error } = await supabase.rpc('record_match_ability_uses', {
+      p_fingerprint: match.fingerprint,
+      p_played_at: match.playedAt,
+      p_recorder_uid: match.extended.recorder_uid,
+      p_ability_uses: match.extended.hero_ability_uses,
+    });
+    if (error) throw error;
+    return data as number;
+  } catch (error) {
+    console.error(`Ability uses not stored: ${getErrorMessage(error)}`);
     return null;
   }
 }
