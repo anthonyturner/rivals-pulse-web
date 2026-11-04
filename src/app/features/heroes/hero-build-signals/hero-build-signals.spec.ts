@@ -108,10 +108,12 @@ describe('heroBuildSignals', () => {
     expect(damage.detail).toBe('0 of 10 matches, 0 of 3 players');
   });
 
-  it('says when one player is holding a hero back', () => {
-    const held = { ...magneto, damage: collecting(10, 3, true) };
+  it('says when one player is what holds a hero back, and not while players are still short', () => {
+    const held = { ...magneto, damage: collecting(10, 3, true), sustain: collecting(5, 1, true) };
+    const rows = heroBuildSignals('magneto', answer([held]));
 
-    expect(row(heroBuildSignals('magneto', answer([held])), 'Damage').detail).toContain('One player has more than half');
+    expect(row(rows, 'Damage').detail).toContain('One player has more than half');
+    expect(row(rows, 'Sustain').detail).toBe('5 of 10 matches, 1 of 3 players');
   });
 
   it('says plainly that no measurable ability is not a low score', () => {
@@ -236,7 +238,7 @@ describe('teamBuildSignals', () => {
     const utility = row(teamBuildSignals(team, answer([hela, magneto]), 6), 'Utility');
 
     expect(utility.value).toBe(4);
-    expect(utility.detail).toBe('Uses 1 of 6 heroes: Hela. Not measurable yet for 1 of them.');
+    expect(utility.detail).toBe('Uses 1 of 6 heroes: Hela. Not measurable yet for 1 hero.');
   });
 
   it('leaves Mobility resting on the kit values it has, and needs no match data', () => {

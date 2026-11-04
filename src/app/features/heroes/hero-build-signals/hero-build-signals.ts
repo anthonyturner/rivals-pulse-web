@@ -3,6 +3,7 @@ import type {
   HeroScores,
   HeroScoreStat,
 } from '../../../../contracts/hero-scores.model';
+import { countLabel } from '../../../shared/utilities/stat-labels';
 import { heroKitMobilityValue } from '../hero-kit-mobility';
 
 export type HeroBuildType = 'Damage' | 'Sustain' | 'Ultimate' | 'Utility' | 'Mobility';
@@ -324,12 +325,15 @@ function withoutNumber(
   };
 }
 
-/** Match counts arrive in steps of 5 while a hero is below the rule, so an exact count never shows. */
+/**
+ * Match counts arrive in steps of 5 while a hero is below the rule, so an exact count never shows.
+ * The busiest player is only named as the reason once there are enough players for it to be one.
+ */
 function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores): string {
   const { matches, contributors } = answer.minimums;
   const progress = `${stat?.matches ?? 0} of ${matches} matches, ${stat?.contributors ?? 0} of ${contributors} players`;
 
-  return stat?.oneContributorAboveHalf
+  return stat?.oneContributorAboveHalf && (stat.contributors ?? 0) >= contributors
     ? `${progress}. One player has more than half of these matches, so it needs more players.`
     : progress;
 }
@@ -339,7 +343,7 @@ function teamDetail(type: HeroBuildType, uses: string, names: readonly string[],
     return `${uses}. From each hero's kit, not match data.`;
   }
 
-  const left = notMeasurable > 0 ? ` Not measurable yet for ${notMeasurable} of them.` : '';
+  const left = notMeasurable > 0 ? ` Not measurable yet for ${countLabel(notMeasurable, 'hero', 'heroes')}.` : '';
 
   return `${uses}: ${names.join(', ')}.${left}`;
 }
