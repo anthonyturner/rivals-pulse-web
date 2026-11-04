@@ -1,3 +1,5 @@
+import type { SafeResourceUrl } from '@angular/platform-browser';
+
 export type HeroRole = 'Vanguard' | 'Duelist' | 'Strategist' | 'Multi-Role';
 
 export interface HeroGameplayArchetype {
@@ -95,6 +97,14 @@ export interface HeroVideo {
   videoType: HeroVideoType;
   youtubeId: string;
   title: string;
+}
+
+/** A video offered on a hero page: `embedUrl` is missing when the link is a YouTube search rather than one video. */
+export interface HeroVideoSearch {
+  label: string;
+  query: string;
+  url: string;
+  embedUrl?: SafeResourceUrl;
 }
 
 export interface Hero {

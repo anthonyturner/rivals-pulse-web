@@ -24,10 +24,18 @@
 
       <app-hero-content
         [hero]="selectedHero()"
-        [videos]="selectedHeroVideos()"
-        [youtubeUrl]="selectedHeroYoutubeUrl()"
         [controller]="detailsController"
       ></app-hero-content>
     </div>
+
+    @if (selectedHero(); as hero) {
+      <ng-template appSidebarContent>
+        <app-hero-videos
+          [heroName]="hero.name"
+          [videos]="selectedHeroVideos()"
+          [youtubeUrl]="selectedHeroYoutubeUrl()"
+        ></app-hero-videos>
+      </ng-template>
+    }
   }
 </section>

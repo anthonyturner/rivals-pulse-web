@@ -29,6 +29,7 @@ import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
 import { HeroGridComponent, HeroGridLayout, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
+import { HeroVideosComponent } from './hero-videos/hero-videos.component';
 import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
   buildHeroBuildProfileRationale,
@@ -46,18 +47,13 @@ import {
   HeroRoleAbilityKit,
   HeroStrategyGuide,
   HeroVideo,
+  HeroVideoSearch,
   HeroVideoType,
 } from './hero.model';
 
+import { SidebarContentDirective } from '../../core/layout/sidebar/sidebar-content';
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
-
-interface HeroVideoSearch {
-  label: string;
-  query: string;
-  url: string;
-  embedUrl?: SafeResourceUrl;
-}
 
 interface UltimateStrategy {
   ability: HeroAbility;
@@ -98,6 +94,8 @@ interface FandomOverviewSection {
     HeroContentComponent,
     HeroGridComponent,
     HeroPageHeaderComponent,
+    HeroVideosComponent,
+    SidebarContentDirective,
     StatePanelComponent,
   ],
   templateUrl: './heroes-page.component.html',
@@ -115,6 +113,8 @@ export class HeroesPageComponent implements OnInit {
   private readonly content = viewChild(HeroContentComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
+  /** One wrapper per video: Angular compares the wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
+  private readonly embedUrls = new Map<string, SafeResourceUrl>();
   private readonly routeHeroId = this.route.paramMap.pipe(
     map((params) => params.get('heroId')),
     distinctUntilChanged(),
@@ -1392,8 +1392,16 @@ export class HeroesPageComponent implements OnInit {
   }
 
   private youtubeVideoEmbedUrl(videoId: string): SafeResourceUrl {
-    const url = `https://www.youtube.com/embed/${videoId}`;
+    const known = this.embedUrls.get(videoId);
 
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    if (known) {
+      return known;
+    }
+
+    const url = this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoId}`);
+
+    this.embedUrls.set(videoId, url);
+
+    return url;
   }
 }

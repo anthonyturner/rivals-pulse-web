@@ -199,6 +199,11 @@ gets a sidebar from the app shell, so a page does not add one itself. From
   not the viewport, so its content is the viewport minus the sidebar column
   (about 332px) minus the gutters. A page whose layout needs more than that at
   1280px is a page that needs fixing, not a reason to move the breakpoint.
+- A page can put something of its own in the sidebar, above the ads, with
+  `<ng-template appSidebarContent>` (`core/layout/sidebar/sidebar-content.ts`).
+  It shows for as long as that place in the page exists. The column is 300px wide
+  and follows the page as it scrolls; content too tall to fit above the ad scrolls
+  on its own, so the ad stays in view. A hero page's YouTube videos are the example.
 - An ad is an `app-ad-slot` with a size id from `AD_SLOT_SIZES`. The slot
   reserves that size in CSS and knows no ad network; what fills it is the
   `AdProvider` behind the `AD_PROVIDER` token (the house ad by default). A
