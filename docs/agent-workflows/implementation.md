@@ -474,6 +474,7 @@ npx commitlint --edit <path-to-message-file> --verbose
 When it fails, look for a bare `#<number>` in the body first. That is the cause
 far more often than anything else.
 
-Never force-push, rewrite history, delete branches, bypass branch protection,
-or commit directly to `master`. Never close an issue by hand —
+Never force-push, rewrite history, delete remote branches, bypass branch
+protection, or commit directly to `master`. A local branch may be deleted only
+once `git branch --merged master` lists it, and only with `git branch -d`. Never close an issue by hand —
 the merge closes it through `Closes #n`.

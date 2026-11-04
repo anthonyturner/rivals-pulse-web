@@ -61,6 +61,6 @@ Return the issue URL, branch, commit(s), draft pull-request URL,
 verification evidence, and any remaining manual-test items. Note that QA
 review has not been performed and is a separate step if the user wants it.
 
-Never merge, force-push, rewrite history, delete branches, or commit
+Never merge, force-push, rewrite history, delete remote branches, or commit
 directly to `main`, `master`, or `develop`. Never skip an approval gate
 that standard mode requires.
