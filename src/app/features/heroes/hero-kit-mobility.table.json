@@ -116,7 +116,7 @@
         }
       ],
       "excluded": [
-        {"ability":"PHANTOM PURSUIT","reason":"Bought with Fortune, so not always available."},
+        {"ability":"PHANTOM PURSUIT","reason":"She flashes back to her starting position, so she ends up no farther on."},
         {"ability":"HELM OF HADES","reason":"Bought with Fortune, so not always available."},
         {"ability":"RING OF ZONA","reason":"Bought with Fortune, and the portal is shared with her team."}
       ]
