@@ -150,7 +150,13 @@ describe('hero kit mobility table', () => {
       const cells = [
         row.baseSpeed,
         row.movementModeFlight,
-        ...row.abilities.flatMap(({ distance, speed, cooldown, flight }) => [distance, speed, cooldown, flight]),
+        ...row.abilities.flatMap(({ distance, speed, cooldown, flight, jumps }) => [
+          distance,
+          speed,
+          cooldown,
+          flight,
+          jumps ?? null,
+        ]),
       ];
       for (const cell of cells) {
         if (cell) {
@@ -171,6 +177,8 @@ describe('hero kit mobility table', () => {
   });
 
   it('quotes the jump count from the source', () => {
+    const jumpWords: Record<number, string> = { 2: 'two', 3: 'three', 4: 'four' };
+
     for (const row of table.heroes) {
       for (const { ability: name, jumps } of row.abilities) {
         if (jumps) {
@@ -179,6 +187,7 @@ describe('hero kit mobility table', () => {
           );
 
           expect(described).withContext(`${row.heroId}: ${jumps.raw}`).toBeTrue();
+          expect(jumps.raw).withContext(row.heroId).toContain(jumpWords[jumps.value]);
         }
       }
     }

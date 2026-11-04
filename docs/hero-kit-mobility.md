@@ -31,9 +31,12 @@ things.
   empty. Where a page prints a range, the table uses the top of it.
 - **Only the hero's regular kit.** Ultimates, team-up abilities and normal
   attacks are left out. So is movement that only happens after hitting or catching
-  an enemy, and anything bought with a resource. Movement to something the hero
-  placed, such as Loki's swap with his illusion, stays in. A hero's `excluded` list
-  names the abilities this rules out, and any other left out, with the reason.
+  an enemy, and movement from a shop purchase, such as Black Cat's relics bought
+  with Fortune. Abilities paid for from a meter stay in, such as energy costs and
+  Thor's Thorforce, and so does a boost from a meter that fills in play, such as
+  Mister Fantastic's Elastic Strength. Movement to something the hero placed, such
+  as Loki's swap with his illusion, also stays in. A hero's `excluded` list names
+  the abilities this rules out, and any other left out, with the reason.
 
 ### Sources
 
@@ -120,8 +123,10 @@ the value:
 | Wolverine | Feral Leap: distance |
 
 Moon Knight's page does give a "Maximum Distance", but as `21.5m/s`, which is a
-speed unit, so it was not used. Thor's page gives a Thorforce cost rather than a
-cooldown.
+speed unit, beside a 25m hook length, so how far he travels is unclear and neither
+was used. Thor's page gives a Thorforce cost rather than a
+cooldown. Rogue's Chrono Kick Combo is undecided until checked in game: if her
+flight only follows a landed hit, the rule above moves it to `excluded`.
 
 Checked on 2026-11-04: the official hero pages, web searches of the official
 balance posts and of guide sites. The search results held none of these values.

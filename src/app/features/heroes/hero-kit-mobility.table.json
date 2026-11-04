@@ -403,18 +403,11 @@
           "speed": {"value":27.5,"unit":"m/s","raw":"27.5m/s","source":"official-kit","field":"HELIX ADVANCE > Max Dash Speed"},
           "cooldown": {"value":11,"raw":"11s","source":"official-kit","field":"HELIX ADVANCE > Cooldown"},
           "flight": null
-        },
-        {
-          "ability": "LIVING BULLET",
-          "kind": "sustained",
-          "distance": null,
-          "speed": {"value":40,"unit":"bonus %","raw":"Increase movement speed by 40% for 1s","source":"official-kit","field":"LIVING BULLET > Speed Boost"},
-          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"LIVING BULLET > Cooldown"},
-          "flight": null
         }
       ],
       "excluded": [
-        {"ability":"SMOKY SNARE","reason":"Dash only reaches an enemy caught in her trap."}
+        {"ability":"SMOKY SNARE","reason":"Dash only reaches an enemy caught in her trap."},
+        {"ability":"LIVING BULLET","reason":"The speed boost comes only from hitting marked targets."}
       ]
     },
     {
@@ -686,7 +679,7 @@
         }
       ],
       "excluded": [
-        {"ability":"Dazzling Detonation","reason":"The same 40% boost, so it adds no extra speed."}
+        {"ability":"Dazzling Detonation","reason":"The boost goes to allies."}
       ]
     },
     {
@@ -1006,7 +999,8 @@
           "distance": null,
           "speed": null,
           "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Chrono Kick Combo > Cooldown"},
-          "flight": {"value":true,"raw":"entering flight","source":"official-kit","field":"Chrono Kick Combo > description"}
+          "flight": {"value":true,"raw":"entering flight","source":"official-kit","field":"Chrono Kick Combo > description"},
+          "note": "Undecided until checked in game: the flight may follow only a landed hit, which would move this to excluded."
         }
       ]
     },
