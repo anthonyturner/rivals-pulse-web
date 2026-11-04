@@ -24,19 +24,24 @@ things.
   official values against the saved copy of the official pages, so a typo fails
   the tests.
 - **Only the hero's own movement.** Projectile speed, attack range and boosts
-  given to allies do not count, and the spec rejects them. A hook's speed and
-  length describe the hook, not the hero.
+  given to allies do not count, and the spec rejects those labels.
+- **A distance is how far the hero travels.** A dash to a chosen target uses its
+  largest target range, and a cable the hero rides to its end uses its length.
+  A swing's webbing length is the rope, not how far the swing goes, so it stays
+  empty. Where a page prints a range, the table uses the top of it.
 - **Only the hero's regular kit.** Ultimates, team-up abilities and normal
-  attacks are left out. A hero's `excluded` list names any other ability left out
-  and why, such as one bought with a resource or one that only moves the hero
-  when a target is marked. Abilities that need a setup the hero makes in normal
-  play, such as Loki's swap with his illusion, stay in.
+  attacks are left out. So is movement that only happens after hitting or catching
+  an enemy, and anything bought with a resource. Movement to something the hero
+  placed, such as Loki's swap with his illusion, stays in. A hero's `excluded` list
+  names the abilities this rules out, and any other left out, with the reason.
 
 ### Sources
 
 The official hero pages come first. They are read by the repository's own
-scraper, `scripts/official-heroes-source.mjs`. The rest of the table's sources
-are listed in its `sources` block.
+scraper, `scripts/official-heroes-source.mjs`. The spec checks values against the
+saved copy in `data/turso-cutover/106`, which has no per-hero links, so the spec
+checks only the shape of each `sourceUrl`. The rest of the table's sources are
+listed in its `sources` block.
 
 - **A speed of `600`.** Eleven kit pages print base speed as a bare `600` with no
   unit. The Version 20250411 balance post raises Hulk and Thor "from 600 to 650",
@@ -61,7 +66,7 @@ score = 1 + base + burst + sustained + flight + jumps, rounded, from 1 to 10
 | Burst | Metres per second of cooldown, added across dashes, leaps and teleports | 4 |
 | Sustained | (Fastest flight, glide, wall-run or speed boost, minus base speed) divided by 3 | 3 |
 | Flight | 3 if flying is how the hero normally moves, 1 if an ability flies | 3 |
-| Jumps | 0.25 per extra jump | no cap |
+| Jumps | 0.25 per extra jump, counting each jump where a row gives several | no cap |
 
 Why it has this shape:
 
@@ -92,29 +97,36 @@ them here and in the code together.
 
 ## What is still missing
 
-`heroKitMobilityCoverage()` gives the live count. As of 2026-11-04, 41 of 54
-heroes can be scored. These 13 cannot, because neither the official pages nor
-the public sources checked print the value:
+`heroKitMobilityCoverage()` gives the live count. As of 2026-11-04, 39 of 54
+heroes can be scored. These 15 cannot, because the sources checked do not print
+the value:
 
 | Hero | Missing |
 | --- | --- |
 | Angela | Wingblade Ascent: cooldown |
-| Black Cat | Stealthy Catwalk: speed |
-| Black Widow | Widow's Bite Slam: distance |
+| Black Cat | STEALTHY CATWALK: speed |
+| Black Widow | WIDOW'S BITE SLAM: distance |
 | Blade | Daywalker Dash: cooldown |
 | Devil Dinosaur | Savage Predation: distance |
-| Elsa Bloodstone | Ruthless Pursuit: distance; Helix Advance: distance |
+| Elsa Bloodstone | RUTHLESS PURSUIT: distance; HELIX ADVANCE: distance |
 | Hulk | Incredible Leap: distance and cooldown |
 | Human Torch | Flaming Meteor: distance |
 | Moon Knight | Moonlight Hook: distance |
 | Rogue | Chrono Kick Combo: speed |
+| Spider-Man | Web-Swing: distance |
 | Star-Lord | Stellar Shift: distance |
 | Thor | Storm Surge: cooldown |
+| Venom | Venom Swing: distance |
 | Wolverine | Feral Leap: distance |
 
 Moon Knight's page does give a "Maximum Distance", but as `21.5m/s`, which is a
 speed unit, so it was not used. Thor's page gives a Thorforce cost rather than a
 cooldown.
+
+Checked on 2026-11-04: the official hero pages, web searches of the official
+balance posts and of guide sites. The search results held none of these values.
+The live wiki and a Steam stats guide refused automated fetches, so neither was
+read, and either may hold some of them.
 
 Measuring them in the game's practice range is the likely way to fill these.
 Record such a value with its own entry in `sources`, saying who measured it, how

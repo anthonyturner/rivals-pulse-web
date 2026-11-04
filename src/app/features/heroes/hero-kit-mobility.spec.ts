@@ -61,6 +61,7 @@ describe('hero kit mobility table', () => {
   const rowOf = (heroId: string) => table.heroes.find((row) => row.heroId === heroId) as HeroKitMobilityHero;
   const numberCells = (row: HeroKitMobilityAbility) =>
     [row.distance, row.speed, row.cooldown].filter((cell): cell is SourcedValue<number> => cell !== null);
+  const numbersIn = (text: string) => (text.match(/\d+(?:\.\d+)?/g) ?? []).map(Number);
 
   it('has one row for every hero on the official site', () => {
     expect(table.heroes.map(({ heroId }) => heroId).sort()).toEqual(officialHeroes.map(({ id }) => id).sort());
@@ -79,7 +80,23 @@ describe('hero kit mobility table', () => {
 
           expect(cell.source).withContext(cell.field).toBe('official-kit');
           expect(printed).withContext(`${row.heroId}: ${cell.field}`).toContain(cell.raw);
-          expect(cell.raw).withContext(`${row.heroId}: ${cell.field}`).toContain(String(cell.value));
+          expect(numbersIn(cell.raw)).withContext(`${row.heroId}: ${cell.field}`).toContain(cell.value);
+        }
+      }
+    }
+  });
+
+  it('takes each column from text in that column\'s unit', () => {
+    for (const row of table.heroes) {
+      for (const { distance, speed, cooldown } of row.abilities) {
+        if (distance) {
+          expect(distance.raw).withContext(`${row.heroId}: ${distance.field}`).toMatch(/\d\s*m(?!\/)/);
+        }
+        if (speed) {
+          expect(speed.raw).withContext(`${row.heroId}: ${speed.field}`).toMatch(/m\/s|%/);
+        }
+        if (cooldown) {
+          expect(cooldown.raw).withContext(`${row.heroId}: ${cooldown.field}`).toMatch(/\d\s*s\b/);
         }
       }
     }
@@ -144,7 +161,7 @@ describe('hero kit mobility table', () => {
   });
 
   it('counts no projectile speed, attack range or boost given to allies as the hero moving', () => {
-    const notTheHeroMoving = /projectile|attack range|attack speed|\(ally\)|hook speed|hook length/i;
+    const notTheHeroMoving = /projectile|attack range|attack speed|\(ally\)|hook speed|hook length|webbing length/i;
 
     for (const row of table.heroes) {
       for (const cell of row.abilities.flatMap(numberCells)) {
@@ -153,7 +170,40 @@ describe('hero kit mobility table', () => {
     }
   });
 
-  it('takes rows only from abilities a hero always has, not ultimates, team-ups or normal attacks', () => {
+  it('quotes the jump count from the source', () => {
+    for (const row of table.heroes) {
+      for (const { ability: name, jumps } of row.abilities) {
+        if (jumps) {
+          const described = officialFor(row.heroId).abilities.some(
+            (entry) => entry.name === name && entry.description.includes(jumps.raw),
+          );
+
+          expect(described).withContext(`${row.heroId}: ${jumps.raw}`).toBeTrue();
+        }
+      }
+    }
+  });
+
+  it('gives the scores the documented formula works out for real heroes', () => {
+    const scores = Object.fromEntries(
+      ['groot', 'iron-man', 'storm', 'iron-fist', 'black-panther', 'captain-america', 'peni-parker'].map((heroId) => [
+        heroId,
+        heroKitMobilityScore(rowOf(heroId)),
+      ]),
+    );
+
+    expect(scores).toEqual({
+      groot: 1,
+      'iron-man': 6,
+      storm: 5,
+      'iron-fist': 4,
+      'black-panther': 8,
+      'captain-america': 5,
+      'peni-parker': 6,
+    });
+  });
+
+  it('takes rows only from the regular kit, not ultimates, team-ups or normal attacks', () => {
     for (const row of table.heroes) {
       for (const entry of row.abilities) {
         const types = officialFor(row.heroId)
@@ -211,11 +261,37 @@ describe('heroKitMobilityScore', () => {
     expect(heroKitMobilityScore(hero({ abilities: [{ ...burst(0, 10), flight: sourced(true) }] }))).toBe(2);
   });
 
+  it('does not add the flight points together', () => {
+    const flyingAbility = { ...burst(0, 10), flight: sourced(true) };
+
+    expect(heroKitMobilityScore(hero({ movementModeFlight: sourced(true), abilities: [flyingAbility] }))).toBe(4);
+  });
+
+  it('ignores a flight value of false', () => {
+    const notFlying = { ...burst(0, 10), flight: sourced(false) };
+
+    expect(heroKitMobilityScore(hero({ movementModeFlight: sourced(false), abilities: [notFlying] }))).toBe(1);
+  });
+
   it('adds a quarter point per extra jump, with no numbers needed', () => {
-    const jumps = Array.from({ length: 2 }, () => ability({ kind: 'extra-jump' }));
+    const jumps = Array.from({ length: 12 }, () => ability({ kind: 'extra-jump' }));
 
     expect(missingMobilityFields(hero({ abilities: jumps }))).toEqual([]);
-    expect(heroKitMobilityScore(hero({ abilities: jumps }))).toBe(2);
+    expect(heroKitMobilityScore(hero({ abilities: jumps }))).toBe(4);
+  });
+
+  it('counts each jump on a row that gives several', () => {
+    const row = ability({ kind: 'extra-jump', jumps: sourced(12) });
+
+    expect(heroKitMobilityScore(hero({ abilities: [row] }))).toBe(4);
+  });
+
+  it('caps sustained points at three', () => {
+    expect(heroKitMobilityScore(hero({ abilities: [sustained(30)] }))).toBe(4);
+  });
+
+  it('keeps the score at or above one', () => {
+    expect(heroKitMobilityScore(hero({ baseSpeed: sourced(4) }))).toBe(1);
   });
 
   it('keeps the score at or below ten', () => {

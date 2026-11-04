@@ -23,6 +23,8 @@ export interface HeroKitMobilityAbility {
   speed: SourcedValue<number> | null;
   cooldown: SourcedValue<number> | null;
   flight: SourcedValue<boolean> | null;
+  /** How many jumps an `extra-jump` row gives, where the source prints more than one. */
+  jumps?: SourcedValue<number>;
   note?: string;
 }
 
@@ -94,7 +96,7 @@ export function heroKitMobilityScore(hero: HeroKitMobilityHero): number | null {
     burstPoints(hero.abilities) +
     sustainedPoints(hero.abilities, baseSpeed) +
     flightPoints(hero) +
-    hero.abilities.filter(({ kind }) => kind === 'extra-jump').length * EXTRA_JUMP_POINTS;
+    extraJumps(hero.abilities) * EXTRA_JUMP_POINTS;
 
   return Math.min(10, Math.max(1, Math.round(1 + points)));
 }
@@ -155,9 +157,16 @@ function effectiveSpeed(speed: SourcedValue<number>, baseSpeed: number): number 
 }
 
 function flightPoints(hero: HeroKitMobilityHero): number {
-  if (hero.movementModeFlight) {
+  if (hero.movementModeFlight?.value) {
     return FLIGHT_MODE_POINTS;
   }
 
-  return hero.abilities.some(({ flight }) => flight) ? FLIGHT_ABILITY_POINTS : 0;
+  return hero.abilities.some(({ flight }) => flight?.value) ? FLIGHT_ABILITY_POINTS : 0;
+}
+
+function extraJumps(abilities: HeroKitMobilityAbility[]): number {
+  return abilities.reduce(
+    (sum, { kind, jumps }) => (kind === 'extra-jump' ? sum + (jumps?.value ?? 1) : sum),
+    0,
+  );
 }
