@@ -18,10 +18,13 @@ CLI keeps the link in `supabase/.temp/`, which git ignores along with
 
 The integration refuses to run if production has a migration that `master` does not. The `Supabase
 Preview` check then fails with `Remote migration versions not found in local migrations directory.`,
-and that merge deploys nothing, functions included. This happened from 2026-11-01 to 2026-11-04,
-because a migration pushed from a branch stayed unmerged. So merge a pull request soon after pushing
-its migration. If the check fails on `master`, a merged function change is not live: land the missing
-migration file, and deploy any function that merged in the meantime by hand.
+and that merge deploys no functions. This happened from 2026-11-01 to 2026-11-04, because a migration
+pushed from a branch stayed unmerged. So merge a pull request soon after pushing its migration.
+
+If the check fails on `master` with that message, land the missing migration file. The next merge that
+passes then deploys every function change merged during the outage, all at once, so make sure any
+migration or secret they need is in place first. Deploy a function by hand only if it cannot wait for
+that.
 
 ## Frozen for shipped overlays
 
@@ -232,9 +235,9 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
 | `sync-match-history` | yes, but not used by the release overlay |
 | `sync-hero-stats` | yes, but not used by the release overlay |
 | `marvel-rivals-proxy` | yes, but its source is not in this repo yet (it lives on the overlay branch `fix/381-api-key-server-side`) |
-| `issue-link-code` | yes, needs the secrets below. No shipped overlay calls it |
-| `refresh-linked-player` | yes. No shipped overlay calls it |
-| `link-status`, `unlink-player-app` | yes. No shipped overlay calls them |
+| `issue-link-code` | yes, needs the secrets below |
+| `refresh-linked-player` | yes, needs the secrets below |
+| `link-status`, `unlink-player-app` | yes, need the secrets below |
 
 The live deployments can be older than the source here. Check
 `npx supabase functions list` before assuming they match.
