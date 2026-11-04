@@ -1,10 +1,13 @@
 import {
   FIGURES_FUNCTION,
+  HERO_SCORES_FUNCTION,
   KILL_FEED_FUNCTION,
   getCommunityFigures,
+  getCommunityHeroScores,
   getCommunityKills,
   parseCommunityFiguresSource,
   parseCommunityKillsSource,
+  parseHeroScoresSource,
 } from './community-extended-read';
 import { fakeSupabaseClient, type FakeResponse } from '../../supabase/fake-supabase-client';
 
@@ -202,6 +205,106 @@ describe('getCommunityFigures', () => {
     const figures = await getCommunityFigures({ client, now: NOW, loadHeroRoles, halfSeason: 11 });
 
     expect(figures.halfSeason).toBeNull();
+  });
+});
+
+/** A hero below the rule as the database function returns it, plus keys no allow-list should let through. */
+const HERO_SCORES_ANSWER = {
+  half_seasons: HALF_SEASONS,
+  figures: [
+    {
+      half_season: 10.5,
+      play_mode_id: 1,
+      hero_id: 1024,
+      damage_n: 7,
+      damage_recorders: 2,
+      damage_busiest_above_half: false,
+      damage_qualifies: false,
+      damage_sum: 0,
+      damage_seconds: 0,
+      healing_n: 0,
+      healing_recorders: 0,
+      healing_busiest_above_half: false,
+      healing_qualifies: false,
+      healing_sum: 0,
+      healing_seconds: 0,
+      blocked_n: 0,
+      blocked_recorders: 0,
+      blocked_busiest_above_half: false,
+      blocked_qualifies: false,
+      blocked_sum: 0,
+      blocked_seconds: 0,
+      uid: 'secret-uid',
+    },
+  ],
+  abilities: [
+    {
+      half_season: 10.5,
+      play_mode_id: 1,
+      hero_id: 1024,
+      slot: 'ultimate',
+      segments: 3,
+      recorders: 1,
+      busiest_above_half: true,
+      qualifies: false,
+      uses_sum: 0,
+      uses_timed_sum: 0,
+      seconds_sum: 0,
+      kills_after_sum: 0,
+      kills_after_n: 0,
+      assists_after_sum: 0,
+      assists_after_n: 0,
+      name: 'a player',
+    },
+  ],
+};
+
+describe('parseHeroScoresSource', () => {
+  it('maps the function answer onto the derivation input and ignores any key it does not know', () => {
+    const source = parseHeroScoresSource(HERO_SCORES_ANSWER);
+
+    expect(source.figures[0].damage).toEqual({ lines: 7, contributors: 2, busiestAboveHalf: false, qualifies: false, sum: 0, seconds: 0 });
+    expect(source.abilities[0]).toEqual(jasmine.objectContaining({ gameHeroId: 1024, slot: 'ultimate', lines: 3, contributors: 1, busiestAboveHalf: true }));
+    expect(keysOf(source)).not.toContain('uid');
+    expect(keysOf(source)).not.toContain('name');
+  });
+
+  it('rejects an answer it cannot trust', () => {
+    const [figure] = HERO_SCORES_ANSWER.figures;
+
+    expect(() => parseHeroScoresSource(null)).toThrowError(/read_community_hero_scores/);
+    expect(() => parseHeroScoresSource({ ...HERO_SCORES_ANSWER, abilities: 'x' })).toThrowError(/abilities is not a list/);
+    expect(() => parseHeroScoresSource({ ...HERO_SCORES_ANSWER, figures: [{ ...figure, damage_qualifies: 1 }] })).toThrowError(/damage_qualifies is not true or false/);
+  });
+});
+
+describe('getCommunityHeroScores', () => {
+  it('calls the one read function and says how far along a hero below the rule is', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({ data: HERO_SCORES_ANSWER }));
+    const scores = await getCommunityHeroScores({ client, now: NOW });
+
+    expect(calls.length).toBe(1);
+    expect(calls[0].steps[0]).toEqual(['rpc', [HERO_SCORES_FUNCTION, undefined]]);
+    expect(scores.status).toBe('not-enough-data');
+    expect(scores.heroes[0].hero).toBe('hela');
+    expect(scores.heroes[0].damage).toEqual(jasmine.objectContaining({ status: 'collecting', score: null, matches: 7, contributors: 2 }));
+    expect(scores.heroes[0].ultimate).toEqual(jasmine.objectContaining({ status: 'collecting', matches: 3, contributors: 1, oneContributorAboveHalf: true }));
+    expect(keysOf(scores)).not.toContain('uid');
+    expect(keysOf(scores)).not.toContain('name');
+  });
+
+  it('is the designed empty state, not an error, while the read function is not there yet', async () => {
+    spyOn(console, 'warn');
+    const { client } = fakeSupabaseClient(() => failure('PGRST202'));
+    const scores = await getCommunityHeroScores({ client, now: NOW });
+
+    expect(scores).toEqual(jasmine.objectContaining({ status: 'not-enough-data', heroes: [], halfSeason: null }));
+  });
+
+  it('raises any other failure', async () => {
+    const { client } = fakeSupabaseClient(() => failure('500'));
+
+    await expectAsync(getCommunityHeroScores({ client, now: NOW })).toBeRejectedWithError(/read_community_hero_scores failed/);
   });
 });
 

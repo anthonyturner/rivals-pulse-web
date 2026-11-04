@@ -8,6 +8,7 @@ interface AggregatePayloadReader {
   list(value: unknown, what: string): Record<string, unknown>[];
   number(row: Record<string, unknown>, key: string): number;
   string(row: Record<string, unknown>, key: string): string;
+  boolean(row: Record<string, unknown>, key: string): boolean;
 }
 
 export function aggregatePayloadReader(functionName: string): AggregatePayloadReader {
@@ -42,6 +43,15 @@ export function aggregatePayloadReader(functionName: string): AggregatePayloadRe
 
       if (typeof value !== 'string') {
         throw new Error(`${functionName}: ${key} is not a string`);
+      }
+
+      return value;
+    },
+    boolean(row, key) {
+      const value = row[key];
+
+      if (typeof value !== 'boolean') {
+        throw new Error(`${functionName}: ${key} is not true or false`);
       }
 
       return value;

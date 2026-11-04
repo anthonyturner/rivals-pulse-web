@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-01T18:53:54.708Z",
+  "generatedAt": "2026-11-05T00:00:00.000Z",
   "files": [
     {
       "dataset": "heroes",
@@ -43,6 +43,12 @@
       "path": "pulse-atlas/v1/community-stats.json",
       "sha256": "6682549ed317bc2fe4763be63644bd1149420b465bb2787afc82f8173f865132",
       "bytes": 733
+    },
+    {
+      "dataset": "hero-scores",
+      "path": "pulse-atlas/v1/hero-scores.json",
+      "sha256": "211d4977c31a337f4c6ce134c71e7efd9dc17e5f3971068aba35586f6bdceaa9",
+      "bytes": 1148
     }
   ]
 }

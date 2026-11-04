@@ -83,6 +83,7 @@ repo's build. This is a move, not a redesign.
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
 | `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
 | `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
+| `20261105120000_hero_score_read.sql` | `read_community_hero_scores()` (service role only): what the 1 to 10 hero build scores are worked out from, including how far along a hero below the rule is |
 
 Link once per machine, check history, then apply:
 
@@ -401,6 +402,8 @@ The reply's `extended` gains `ability_uses` (rows written) only when the upload 
 `hero_figure_qualifies(matches, recorders, top)` is the one rule: 10 or more matches, 3 or more players, nobody above 50%. "Matches" means segments (one player on one hero in one match), so two uploaders in one lobby count twice. These are starting values. Restate that one function in a new migration to change them; nothing needs rebuilding, because the rule runs when the numbers are read. If the player minimum changes, change `COMMUNITY_FIGURES_MINIMUMS` and `COMMUNITY_KILLS_MINIMUMS` too, which only print it (a test compares them). To lower the 10, also lower the website's own `heroLines` and `pairMatches`, which filter again after pooling.
 
 The website reads through `read_community_hero_figures()` and `read_community_kill_feed()` (service role only). A figure that fails is sent as zero lines, sum and seconds, a hero whose three figures all fail is absent, and a kill pair that fails is absent. The rule is applied per half-season and mode before anything is summed.
+
+`read_community_hero_scores()` (service role only) is the third reader, behind the 1 to 10 scores in [hero-build-scores.md](hero-build-scores.md). It returns every row of `hero_figure_aggregates` and `hero_ability_aggregates`, because a hero below the rule must be able to say how far along it is. A row or figure that fails the rule keeps its line and player counts, and whether one player is above half, with every sum at 0. The busiest player's own count never leaves the database.
 
 A uid is the client's claim, as it is for figures (see "Reading a linked player's own dashboard"), so contributor counts trust it.
 

@@ -13,6 +13,59 @@ import { ABILITY_SLOTS } from './extended-payload.ts';
 const UPLOAD = '20261030120000_extended_upload.sql';
 const AGGREGATES = '20261030120100_extended_aggregates.sql';
 const CONTRIBUTORS = '20261104120000_hero_figure_contributors.sql';
+const HERO_SCORES = '20261105120000_hero_score_read.sql';
+
+describe('the hero score read migration', () => {
+  const sql = withoutComments(read(HERO_SCORES));
+  const code = sql.toLowerCase();
+
+  it('adds one function and nothing else', () => {
+    assert.deepEqual(createdFunctions(sql), ['public.read_community_hero_scores()']);
+    assert.deepEqual(createdTables(sql), []);
+    assert.doesNotMatch(code, /\b(alter|drop|delete|truncate|update)\b/);
+    assert.doesNotMatch(code, /\binsert\b/);
+  });
+
+  it('runs as its owner with an empty search path, for the service role alone', () => {
+    assert.match(code, /stable\s+security definer\s+set search_path = ''/);
+    assert.match(sql, /revoke execute on function public\.read_community_hero_scores\(\) from public, anon, authenticated/);
+    assert.match(sql, /grant execute on function public\.read_community_hero_scores\(\) to service_role/);
+    assert.doesNotMatch(sql, /grant [^;]* to [^;]*\b(anon|authenticated|public)\b/i);
+  });
+
+  it('applies the rule to each figure and each slot, and lets no sum out of a row that fails', () => {
+    for (const figure of ['damage', 'healing', 'blocked']) {
+      assert.match(sql, new RegExp(`hero_figure_qualifies\\(a\\.${figure}_n, a\\.${figure}_recorders, a\\.${figure}_top_recorder_n\\) as ${figure}`), figure);
+      for (const value of ['sum', 'seconds']) {
+        assert.match(sql, new RegExp(`'${figure}_${value}', case when s\\.${figure} then a\\.${figure}_${value} else 0 end`), `${figure} ${value}`);
+      }
+    }
+    assert.match(sql, /hero_figure_qualifies\(u\.segments, u\.recorders, u\.top_recorder_segments\) as ok/);
+    for (const value of ['uses_sum', 'uses_timed_sum', 'seconds_sum', 'kills_after_sum', 'kills_after_n', 'assists_after_sum', 'assists_after_n']) {
+      assert.match(sql, new RegExp(`'${value}', case when s\\.ok then u\\.${value} else 0 end`), value);
+    }
+  });
+
+  it('sends nobody and no busiest-player count', () => {
+    assert.doesNotMatch(code, /\b(uid|recorded_by|player_name|fingerprint)\b/);
+    assert.doesNotMatch(sql, /'[a-z_]*top_recorder[a-z_]*'/);
+  });
+
+  it('agrees with the minimums the website prints', () => {
+    const website = readFileSync(new URL('../../../src/server/community/extended/hero-scores.ts', import.meta.url), 'utf8');
+    const rule = readdirSync(MIGRATIONS)
+      .filter(name => name.endsWith('.sql'))
+      .sort()
+      .map(name => withoutComments(read(name)))
+      .filter(migration => migration.includes('function public.hero_figure_qualifies('))
+      .at(-1) ?? '';
+
+    assert.match(website, new RegExp(`matches: ${rule.match(/p_matches >= (\d+)/)?.[1]},`));
+    assert.match(website, new RegExp(`contributors: ${rule.match(/p_recorders >= (\d+)/)?.[1]},`));
+    assert.match(rule, /p_top_recorder_matches \* 2 <= p_matches/);
+    assert.match(website, /busiestContributorShare: 0\.5,/);
+  });
+});
 
 describe('the extended upload migrations', () => {
   for (const file of [UPLOAD, AGGREGATES]) {
