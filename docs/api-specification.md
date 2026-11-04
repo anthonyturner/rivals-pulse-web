@@ -4,6 +4,8 @@ GET /api/heroes
 GET /api/meta
 GET /api/hero-stats
 GET /api/community/insights
+GET /api/community/figures
+GET /api/community/kills
 GET /api/hero-matchups
 GET /api/hero-pairs
 POST /api/coach/analyze
@@ -77,3 +79,5 @@ false }` for an account with no link, otherwise `{ "linked": true, "player": { n
 
 No line, uid or recorder id is in the answer. It answers 401 with no valid session (clearing the cookie when the
 session has ended) and 503 when Supabase is unavailable, without signing the player out; a POST gets 405.
+
+`/api/community/figures` serves damage, healing and damage blocked per minute per role and per hero, and `/api/community/kills` the kill-feed counters (which heroes a hero is seen killing most, and is seen killed by most), from the extended upload. They read through the database functions `read_community_hero_figures` and `read_community_kill_feed`, which return only buckets at least 3 distinct players contributed to with no player above 50%. Rates are whole numbers and kill counts are volume bands. Until those functions exist in the database (issue 457) or enough matches carry the fields, both answer 200 with `status: "not-enough-data"`; any other failure keeps its error status. Both take the optional `halfSeason` query value.

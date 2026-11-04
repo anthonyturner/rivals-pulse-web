@@ -28,14 +28,15 @@ repo's build. This is a move, not a redesign.
   call; each function authorises callers itself).
 - Tables: `players`, `player_matches`, `matches`, `tracked_matches`,
   `match_history_sync_state`, `player_hero_profiles`, `player_hero_stats`,
-  `hero_stats_sync_state`, `jarvis_token_requests`, `participants`.
+  `hero_stats_sync_state`, `participants`.
 - Functions in the database: `claim_upload_slot`, `record_match_participants`,
   `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
   once it carries the extended upload, so renaming it or changing its arguments silently drops
   every newer overlay's extras; a signature change follows "Changing a database function's
-  signature" below).
+  signature" below), `record_match_ability_uses` (the same).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`) and `tracked_match_recorders` (written by `track-match-history` itself). The
+  `record_match_extras`), `participant_hero_ability_uses` (written by `record_match_ability_uses`), `tracked_match_recorders` (written by `track-match-history` itself) and
+  `voice_ai_token_requests` (written by `elevenlabs-agent-token`; the publishable key cannot reach it). The
   aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
   "Extended upload" below); a body without them is stored exactly as before, and a field added later
@@ -71,6 +72,7 @@ repo's build. This is a move, not a redesign.
 | `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
+| `20261031060000_extended_aggregates_gate.sql` | The first recorder gate on the extended aggregates, from PR 235; recovered from the live project's migration history, where it was already applied. `20261104120000` replaces its functions |
 | `20261101010000_profiles.sql` | `profiles`, one row per website account (RLS: the owner selects and inserts) |
 | `20261101020000_player_links.sql` | Linking an account to an in-game player: `player_links` (the owner selects), `link_codes` and `link_attempt_log` (service role and the functions only), and `link_code_hash`, `issue_link_code`, `redeem_link_code`, `unlink_player` |
 | `20261101030000_tracked_match_recorders.sql` | `tracked_match_recorders` (which verified recorder uploaded each `tracked_matches` row; service role only, deleted with the match) |
@@ -79,6 +81,8 @@ repo's build. This is a move, not a redesign.
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
+| `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
+| `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
 | `20261104130000_community_tabs_one_player.sql` | Lets one player's matches fill the Community Matches and Insights tabs: `insights_min_recorders()` 1, `insights_max_recorder_share_percent()` 100, `community_tab_bucket_shown`, and `read_community_matches` applying it |
 
 Link once per machine, check history, then apply:
@@ -261,7 +265,7 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
-| `PREMIUM_JARVIS_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
+| `PREMIUM_PULSA_PACKAGE_IDS` | `elevenlabs-agent-token` | Optional comma-separated Tebex package ids that count as premium. Unset means any package of the store; set to something with no valid id, the gate refuses everyone (500). |
 
 Deploy order for `track-match-history`: migration, then secrets, then
 function. A function deployed first fails closed (every upload is refused). The
@@ -277,10 +281,10 @@ Premium is dormant until configured, on both sides. The order matters:
 1. Deploy `elevenlabs-agent-token` with `TEBEX_STORE_PUBLIC_TOKEN` still unset.
    Nothing changes for anyone.
 2. Release the overlay with the store's public token, package-to-perk map and
-   package to sell set. The overlay now gates Jarvis and sends the Overwolf
+   package to sell set. The overlay now gates Pulsa and sends the Overwolf
    session; the function still accepts everyone.
-3. Set `TEBEX_STORE_PUBLIC_TOKEN` last. Setting it before step 2 stops Jarvis
-   for every player. Set `PREMIUM_JARVIS_PACKAGE_IDS` with it if only some
+3. Set `TEBEX_STORE_PUBLIC_TOKEN` last. Setting it before step 2 stops Pulsa
+   for every player. Set `PREMIUM_PULSA_PACKAGE_IDS` with it if only some
    packages should count.
 
 ## Hero aggregates
@@ -331,8 +335,8 @@ How a value is read (`supabase/functions/track-match-history/extended-payload.ts
   Nothing here can fail the upload: if the call that stores them errors, it is logged and the match,
   already stored, still succeeds.
 - **No match totals.** The app's per-match `damageDealt`, `healing` and `damageBlocked` are not sent:
-  they are the sum of the segments, and a total alone cannot be given to a hero. Accuracy, ultimate
-  data, and the damage or healing of any roster line are never read (ADR-0011 in the overlay repo).
+  they are the sum of the segments, and a total alone cannot be given to a hero. Accuracy, and the
+  damage, healing or ultimate data of any roster line, are never read (ADR-0011 in the overlay repo).
 - `banned_hero_ids` (overlay issue 1067) is a separate, unrelated field of `raw_payload` and is not
   touched by this contract.
 
@@ -375,6 +379,33 @@ frozen. `purge_expired_participants()` calls `freeze_extended_aggregates()` afte
 aggregates' freeze and before its first delete, so the counts are kept when the raw rows go. **Any
 later migration that restates `purge_expired_participants` must keep calling every freeze** (see
 [Hero pair aggregates](#hero-pair-aggregates)).
+
+### Ability and ultimate counts
+
+Issue 457. A newer overlay (overlay issue 1284) may add a third optional field. A body without it is
+stored exactly as before.
+
+`match.match_player.hero_ability_uses` is `[{ hero_id, slot, uses, kills_after, assists_after }]`:
+
+- `hero_id` is the game hero id as in `hero_segments`. Needs `match.match_player.player_uid`; without it the list is dropped. Roster lines are never read.
+- `slot` is `ability_0` to `ability_4` (the feed's `ability_cooldown_0` to `_4`), `team_up_0` or `team_up_1` (`additional_ability_cd_0` and `_1`), or `ultimate`. An unknown slot drops that entry.
+- `uses` is a whole number from 0 to 999. Send 0 for a slot the app watched and the player never used. Leave out a slot the app did not watch: no row means unknown, and it is not averaged as 0.
+- `kills_after` and `assists_after` are whole numbers from 0 to 999, or omitted when not counted. The window (the overlay's starting values are 5 seconds after an ability and 10 after an ultimate) belongs to the overlay.
+- At most 160 entries (20 heroes in 8 slots); a longer list is dropped whole. The first entry of a hero and slot wins, and a repeat of the match writes nothing.
+
+The reply's `extended` gains `ability_uses` (rows written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. `hero_ability_aggregates` keeps the counts, rebuilt and frozen with the other extended aggregates, and no read function publishes them yet.
+
+### Who contributed, and when a figure is published
+
+`hero_figure_aggregates` records `recorders` and `top_recorder_segments` per hero, and the same pair per figure. `hero_kill_aggregates` records `recorders` and `top_recorder_matches`. Numbers only, never who. A row frozen before these columns existed reads 0 and never qualifies.
+
+`hero_figure_qualifies(matches, recorders, top)` is the one rule: 10 or more matches, 3 or more players, nobody above 50%. "Matches" means segments (one player on one hero in one match), so two uploaders in one lobby count twice. These are starting values. Restate that one function in a new migration to change them; nothing needs rebuilding, because the rule runs when the numbers are read. If the player minimum changes, change `COMMUNITY_FIGURES_MINIMUMS` and `COMMUNITY_KILLS_MINIMUMS` too, which only print it (a test compares them). To lower the 10, also lower the website's own `heroLines` and `pairMatches`, which filter again after pooling.
+
+The website reads through `read_community_hero_figures()` and `read_community_kill_feed()` (service role only). A figure that fails is sent as zero lines, sum and seconds, a hero whose three figures all fail is absent, and a kill pair that fails is absent. The rule is applied per half-season and mode before anything is summed.
+
+A uid is the client's claim, as it is for figures (see "Reading a linked player's own dashboard"), so contributor counts trust it.
+
+The aggregates leave out a segment with time played and no figure above 0, which looks like figures the feed never sent (overlay issue 1161), and count a figure only on segments with a time played above 0. A half-season is corrected at its next rebuild; a frozen one is never rebuilt.
 
 ## Hero pair aggregates
 

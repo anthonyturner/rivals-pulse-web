@@ -81,7 +81,7 @@ describe('HomeFaqComponent', () => {
     });
   });
 
-  it('makes no claim about autostart, hotkeys, ranks or Jarvis', () => {
-    expect(text(element)).not.toMatch(/jarvis|hotkey|autostart|starts with the game|\branks?\b|premium/i);
+  it('makes no claim about autostart, hotkeys, ranks or Pulsa', () => {
+    expect(text(element)).not.toMatch(/pulsa|hotkey|autostart|starts with the game|\branks?\b|premium/i);
   });
 });

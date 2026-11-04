@@ -3,12 +3,8 @@ export interface UploadField {
   detail: string;
 }
 
-/**
- * Flip to 'uploaded' in the pull request that ships the extended upload (issue 176 server side,
- * overlay issue 1157 app side). The page then stops calling those fields "being added".
- */
 export type ExtendedUploadStatus = 'being-added' | 'uploaded';
-export const EXTENDED_UPLOAD_STATUS: ExtendedUploadStatus = 'being-added';
+export const EXTENDED_UPLOAD_STATUS: ExtendedUploadStatus = 'uploaded';
 
 /** What the desktop app uploads for a match it records: each human player's line plus the match facts. */
 export const TODAY_UPLOAD_FIELDS: readonly UploadField[] = [
@@ -32,7 +28,7 @@ export const TODAY_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'Match id', detail: 'The identifier the game gives the match.' },
 ];
 
-/** Figures the desktop app is adding to its upload, in the payload shape of issue 176. */
+/** Figures the desktop app also uploads, in the payload shape of issue 176. */
 export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'Damage', detail: 'Damage dealt by the uploading player.' },
   { label: 'Healing', detail: 'Healing done by the uploading player.' },
@@ -41,5 +37,14 @@ export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
   {
     label: 'Kill feed',
     detail: 'Which hero defeated which hero, and how many times, with no player names or ids.',
+  },
+];
+
+/** Planned after the extended upload, with overlay issue 1284 and issue 457, so it has no share in its status. */
+export const PLANNED_UPLOAD_FIELDS: readonly UploadField[] = [
+  {
+    label: 'Ability and ultimate use',
+    detail:
+      'How often the uploading player used each ability and their ultimate on each hero. This shows that an ability was used, not whether it hit anyone. Never uploaded for other players.',
   },
 ];

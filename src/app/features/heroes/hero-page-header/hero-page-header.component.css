@@ -19,6 +19,14 @@ h1 {
   line-height: 1.1;
 }
 
+/* Held to the token the sidebar starts at, so the columns under this header stay level with it. */
+@media (min-width: 1280px) {
+  .page-header {
+    box-sizing: border-box;
+    height: var(--columns-top);
+  }
+}
+
 .lede {
   color: var(--text-soft);
   font-size: var(--type-small);

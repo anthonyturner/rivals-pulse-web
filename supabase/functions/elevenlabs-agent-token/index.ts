@@ -1,5 +1,5 @@
 /**
- * Mints a short-lived ElevenLabs conversation token for the Jarvis voice assistant (issue 499).
+ * Mints a short-lived ElevenLabs conversation token for the Pulsa voice assistant (issue 499).
  *
  * This function exists for one reason: the app ships to players as a packed `.opk`, so anything
  * embedded in it is readable by anyone who installs it. An ElevenLabs API key in the client would
@@ -13,20 +13,20 @@
  *
  * Minting a token does not start a session and is not billed. The per-minute charge starts when
  * the client connects with it, which is why the client holds the session open on an idle timer
- * rather than reconnecting per question -- see `JarvisSessionService`.
+ * rather than reconnecting per question -- see the overlay's assistant session service.
  *
  * ## Who may call this (issue 569)
  *
  * Anyone who has the app can. The function's URL and the project's publishable key both ship in
  * the `.opk`, and there is no player sign-in to check instead. So keeping the API key on the
  * server protects the key but not the bill: a caller outside the app can mint a token, connect,
- * and hold a session open, and the client-side session ceiling (`JARVIS_MAX_SESSION_MS`) does not
+ * and hold a session open, and the overlay's client-side session ceiling does not
  * apply to code that is not this app.
  *
  * `verify_jwt` is deliberately `false` in `supabase/config.toml` and must stay that way. The
  * project uses the newer publishable key (`sb_publishable_…`), which is not a JWT, and the
  * platform's JWT check only understands the legacy JWT keys -- turning it on rejects the app's own
- * requests and silences Jarvis for every player. Supabase's guidance for these keys is to leave
+ * requests and silences Pulsa for every player. Supabase's guidance for these keys is to leave
  * the platform check off and authorize in the function, which is what the rate limit below does.
  *
  * The limit bounds the cost of a caller; it does not identify one. The other bound is the agent's
@@ -42,7 +42,7 @@ import { checkPremiumGate } from '../_shared/premium-gate.ts';
 /**
  * Tokens one IP address may mint per `TOKEN_WINDOW_MS`.
  *
- * Each token is one Jarvis session -- a hotkey press, or the match-end wrap-up. A player uses a
+ * Each token is one Pulsa session -- a hotkey press, or the match-end wrap-up. A player uses a
  * handful an hour; 30 leaves room for a few players sharing one household address without letting
  * a script open sessions without end.
  */
@@ -106,7 +106,7 @@ Deno.serve(async request => {
     return json({ token: body.token });
   } catch (error) {
     // Never log the error object itself: it can carry the request headers, and those carry the key.
-    console.error(`Jarvis token minting failed: ${getErrorMessage(error)}`);
+    console.error(`Pulsa token minting failed: ${getErrorMessage(error)}`);
     return json({ error: 'Could not mint a conversation token' }, 500);
   }
 });
@@ -139,7 +139,7 @@ type RateLimitDecision = { allowed: true } | { allowed: false; retryAfterSeconds
  * Records this token request and says whether the caller is still under `TOKEN_LIMIT`.
  *
  * **Fails open.** If the table cannot be read or written, the token is minted anyway and the
- * failure is logged. The alternative silences Jarvis for every player whenever the database
+ * failure is logged. The alternative silences Pulsa for every player whenever the database
  * hiccups -- or whenever this function is deployed before its migration, which is the order a
  * rushed rollout goes in. The cost of failing open is an unbounded window only while the
  * database is failing, and the agent's server-side duration cap still holds throughout.
@@ -157,7 +157,7 @@ async function checkRateLimit(ip: string): Promise<RateLimitDecision> {
     const windowStart = new Date(Date.now() - TOKEN_WINDOW_MS).toISOString();
 
     const { data: recent, error: readError } = await supabase
-      .from('jarvis_token_requests')
+      .from('voice_ai_token_requests')
       .select('requested_at')
       .eq('client_ip', ip)
       .gte('requested_at', windowStart)
@@ -173,21 +173,21 @@ async function checkRateLimit(ip: string): Promise<RateLimitDecision> {
     }
 
     const { error: insertError } = await supabase
-      .from('jarvis_token_requests')
+      .from('voice_ai_token_requests')
       .insert({ client_ip: ip });
     if (insertError) throw insertError;
 
     // Rows older than the window can never count again. Pruned across every address rather than
     // just this one, so an address that never returns does not leave its rows behind for good.
     const { error: pruneError } = await supabase
-      .from('jarvis_token_requests')
+      .from('voice_ai_token_requests')
       .delete()
       .lt('requested_at', windowStart);
-    if (pruneError) console.error(`Jarvis token rate-limit prune failed: ${getErrorMessage(pruneError)}`);
+    if (pruneError) console.error(`Pulsa token rate-limit prune failed: ${getErrorMessage(pruneError)}`);
 
     return { allowed: true };
   } catch (error) {
-    console.error(`Jarvis token rate limit unavailable, minting anyway: ${getErrorMessage(error)}`);
+    console.error(`Pulsa token rate limit unavailable, minting anyway: ${getErrorMessage(error)}`);
     return { allowed: true };
   }
 }

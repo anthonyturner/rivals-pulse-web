@@ -1,10 +1,19 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, SecurityContext } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DomSanitizer } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { of } from 'rxjs';
 
 import type { Hero } from './hero.model';
+import { SidebarContent } from '../../core/layout/sidebar/sidebar-content';
+import { CommunityKillsService } from '../insights/community-kills.service';
+import { HeroMatchupsService } from '../insights/hero-matchups.service';
+import { HeroStatsService } from '../insights/hero-stats.service';
+import { HeroDataService } from './hero-data.service';
+import { heroesMatcher } from './heroes.routes';
 import { HeroesPageComponent } from './heroes-page.component';
 
 const hero = (id: string, name: string, role: Hero['role']): Hero =>
@@ -109,5 +118,74 @@ describe('HeroesPageComponent', () => {
 
     expect(element.querySelector('.empty-state')).not.toBeNull();
     expect(element.querySelector('.hero-detail')).toBeNull();
+  });
+});
+
+describe('HeroesPageComponent videos in the sidebar', () => {
+  let harness: RouterTestingHarness;
+  let page: HeroesPageComponent;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([{ matcher: heroesMatcher, component: HeroesPageComponent }]),
+        {
+          provide: HeroDataService,
+          useValue: {
+            getHeroRoster: () => of([hero('mantis', 'Mantis', 'Strategist'), hero('luna', 'Luna', 'Strategist')]),
+            getHeroVideos: () => of([]),
+          },
+        },
+        { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
+        { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
+      ],
+    });
+    harness = await RouterTestingHarness.create();
+    page = await harness.navigateByUrl('/heroes/mantis', HeroesPageComponent);
+  });
+
+  it('supplies the videos on a hero page and not on the roster', async () => {
+    const content = TestBed.inject(SidebarContent);
+
+    expect(content.template()).not.toBeNull();
+
+    await harness.navigateByUrl('/heroes');
+
+    expect(content.template()).toBeNull();
+  });
+
+  it('removes the videos when the page goes away', () => {
+    const content = TestBed.inject(SidebarContent);
+
+    harness.fixture.destroy();
+
+    expect(content.template()).toBeNull();
+  });
+
+  it('keeps the same player address object for a video heroes of one role share, so the player does not reload', async () => {
+    const before = page.selectedHeroVideos()[0];
+
+    await harness.navigateByUrl('/heroes/luna');
+
+    expect(page.selectedHero()?.name).toBe('Luna');
+    expect(page.selectedHeroVideos()[0].player).toBe(before.player);
+  });
+
+  it('gives a single video a thumbnail from YouTube and a player on the privacy-enhanced host that autoplays', () => {
+    const player = page.selectedHeroVideos()[0].player;
+    const embed = TestBed.inject(DomSanitizer).sanitize(SecurityContext.RESOURCE_URL, player?.embedUrl ?? null);
+    const id = player?.thumbnailUrl.match(/^https:\/\/i\.ytimg\.com\/vi\/([\w-]+)\/hqdefault\.jpg$/)?.[1];
+
+    expect(id).toBeTruthy();
+    expect(embed).toBe(`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`);
+  });
+
+  it('gives a video that is only a YouTube search link no player', () => {
+    const [, gameplay] = page.selectedHeroVideos();
+
+    expect(gameplay.url).toContain('youtube.com/results');
+    expect(gameplay.player).toBeUndefined();
   });
 });

@@ -12,7 +12,7 @@ export interface HowItWorksStep {
 /**
  * Three things the app is known to do, and nothing more: it is installed from Overwolf, it runs
  * beside the game, and it records each match for this site's numbers. Whether the install step says
- * "coming soon" follows the Overwolf listing. Autostart, hotkeys and Jarvis stay out of the steps
+ * "coming soon" follows the Overwolf listing. Autostart, hotkeys and Pulsa stay out of the steps
  * because they are not what makes the numbers on this site.
  */
 export function buildHowItWorksSteps(listed: boolean): readonly HowItWorksStep[] {

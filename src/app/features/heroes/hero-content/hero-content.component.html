@@ -7,49 +7,11 @@
     </div>
 
     @for (shown of detailHeroes(); track shown.id) {
-      <div class="detail-layout">
-        <div class="detail-main">
-          @if (hasRoleKits()) {
-            <app-hero-role-switcher [hero]="shown" [controller]="controller()"></app-hero-role-switcher>
-          }
-          <app-hero-details [hero]="shown" [controller]="controller()"></app-hero-details>
-        </div>
-
-        <aside class="detail-side" aria-label="YouTube videos for selected hero">
-          <details class="video-searches">
-            <summary>YouTube videos ({{ videos().length }})</summary>
-            <div class="video-list">
-              @for (video of videos(); track video.label) {
-                <article class="video-card">
-                  @if (video.embedUrl) {
-                    <iframe
-                      class="video-embed"
-                      [src]="video.embedUrl"
-                      [title]="shown.name + ' ' + video.label"
-                      loading="lazy"
-                      allow="
-                        accelerometer;
-                        autoplay;
-                        clipboard-write;
-                        encrypted-media;
-                        gyroscope;
-                        picture-in-picture;
-                        web-share;
-                      "
-                      allowfullscreen
-                    ></iframe>
-                  }
-                  <span class="video-copy">
-                    <strong>{{ video.label }}</strong>
-                    <small>{{ video.query }}</small>
-                    <a [href]="video.url" target="_blank" rel="noopener noreferrer">Open on YouTube</a>
-                  </span>
-                </article>
-              }
-            </div>
-            <a class="video-all" [href]="youtubeUrl()" target="_blank" rel="noopener noreferrer">View all</a>
-          </details>
-        </aside>
+      <div class="detail-main">
+        @if (hasRoleKits()) {
+          <app-hero-role-switcher [hero]="shown" [controller]="controller()"></app-hero-role-switcher>
+        }
+        <app-hero-details [hero]="shown" [controller]="controller()"></app-hero-details>
       </div>
     }
   </section>

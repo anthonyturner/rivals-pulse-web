@@ -198,6 +198,8 @@
   /* The one size for a hero portrait in a list, tile or chip; large art (detail headers, guide portraits) keeps its own. */
   --hero-thumb: 40px;
   --nav-height: 56px;
+  /* Where the columns start under a page's header, for a page that fills the sidebar: the header's 36px of padding and gap plus its title and one-line lede. The sidebar uses it to start level with the page. */
+  --columns-top: calc(36px + 1.1 * var(--type-h2) + 1.4 * var(--type-small));
 }
 
 @media (max-width: 560px) {

@@ -5,5 +5,33 @@
 
 .sidebar {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.sidebar__ads {
+  display: flex;
+  flex: none;
+}
+
+/* The same width at which the app shell puts this column beside the page. */
+@media (min-width: 1280px) {
+  /* 300px is the ad slot's width. The 56px is the shell's 16px sticky offset and 24px top padding plus 16px of space below, so the ad stays above the window's bottom edge. */
+  .sidebar {
+    width: 300px;
+    max-height: calc(100dvh - var(--nav-height) - 56px);
+  }
+
+  /* The window less the header, the column's top offset and 16px below, so the ad is fully on screen before the page scrolls. */
+  :host(.sidebar--with-page-content) .sidebar {
+    max-height: calc(100dvh - var(--nav-height) - var(--columns-top) - 16px);
+  }
+
+  .sidebar__page-content {
+    width: 100%;
+    margin-inline: 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }

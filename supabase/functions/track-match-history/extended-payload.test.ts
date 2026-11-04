@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  ABILITY_SLOTS,
+  MAX_ABILITY_USES,
   MAX_HERO_FIGURES,
   MAX_HERO_KILL_PAIRS,
   MAX_KILLS_PER_PAIR,
@@ -39,6 +41,7 @@ describe('readExtendedUpload', () => {
         { hero_id: 1022, seconds: 120, damage_dealt: 400, healing: 7000, damage_blocked: 1200 },
       ],
       hero_kills: [{ killer: 'iron-man', victim: 'hulk', kills: 3 }],
+      hero_ability_uses: [],
     });
   });
 
@@ -130,6 +133,7 @@ describe('readExtendedUpload', () => {
       recorder_uid: null,
       hero_figures: [],
       hero_kills: [{ killer: 'iron-man', victim: 'hulk', kills: 1 }],
+      hero_ability_uses: [],
     });
   });
 
@@ -232,5 +236,48 @@ describe('a payload with the extended fields beside one without', () => {
   it('is read as extended only when the new fields are there', () => {
     assert.equal(readExtendedUpload(old()), null);
     assert.notEqual(readExtendedUpload(extended()), null);
+  });
+});
+
+describe('readExtendedUpload: ability and ultimate counts', () => {
+  const use = (overrides: JsonRecord = {}): JsonRecord => ({ hero_id: 1011, slot: 'ability_0', uses: 12, kills_after: 3, assists_after: 1, ...overrides });
+  const read = (uses: unknown, local: JsonRecord = {}) => readExtendedUpload(match({}, { hero_ability_uses: uses, ...local }));
+
+  it('reads an entry for every known slot, from the recorder only', () => {
+    const upload = read(ABILITY_SLOTS.map(slot => use({ slot })));
+
+    assert.deepEqual(upload?.hero_ability_uses.map(entry => entry.slot), [...ABILITY_SLOTS]);
+    assert.deepEqual(upload?.hero_figures, []);
+    assert.deepEqual(upload?.hero_kills, []);
+  });
+
+  it('is null for an overlay that sends no counts, so shipped overlays are unchanged', () => {
+    assert.equal(readExtendedUpload(match()), null);
+    assert.deepEqual(readExtendedUpload(match({}, { hero_segments: [segment()] }))?.hero_ability_uses, []);
+  });
+
+  it('keeps a real zero but never turns a missing count into one', () => {
+    const [entry] = read([use({ uses: 0, kills_after: undefined, assists_after: 'x' })])?.hero_ability_uses ?? [];
+
+    assert.equal(entry.uses, 0);
+    assert.equal(entry.kills_after, null);
+    assert.equal(entry.assists_after, null);
+  });
+
+  it('drops an entry with an unknown slot, a bad hero id or no usable uses', () => {
+    assert.equal(read([use({ slot: 'ability_9' }), use({ hero_id: 0 }), use({ uses: 1.5 }), use({ uses: -1 }), use({ uses: 1000 })]), null);
+  });
+
+  it('keeps the first entry of a hero and slot', () => {
+    assert.deepEqual(read([use({ uses: 1 }), use({ uses: 2 })])?.hero_ability_uses.map(entry => entry.uses), [1]);
+  });
+
+  it('distrusts a list longer than every slot of every hero', () => {
+    assert.equal(read(Array.from({ length: MAX_ABILITY_USES + 1 }, () => use())), null);
+  });
+
+  it('needs the recorder uid, and reads nothing from roster lines', () => {
+    assert.equal(read([use()], { player_uid: null }), null);
+    assert.equal(readExtendedUpload(match({ match_players: [{ player_uid: '100', hero_ability_uses: [use()] }] })), null);
   });
 });

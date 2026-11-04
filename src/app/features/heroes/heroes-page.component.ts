@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, filter, forkJoin, map, pairwise } from 'rxjs';
 
@@ -21,14 +21,17 @@ import {
   HERO_GUIDES,
   HeroUltimateGuide,
 } from '../learning/guides/hero-guides/hero-guide-data';
+import type { CommunityKills } from '../../../contracts/community-kills.model';
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
 import type { HeroStats } from '../../../contracts/hero-stats.model';
+import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
 import { HeroGridComponent, HeroGridLayout, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
+import { HeroVideosComponent } from './hero-videos/hero-videos.component';
 import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
   buildHeroBuildProfileRationale,
@@ -46,18 +49,14 @@ import {
   HeroRoleAbilityKit,
   HeroStrategyGuide,
   HeroVideo,
+  HeroVideoPlayer,
+  HeroVideoSearch,
   HeroVideoType,
 } from './hero.model';
 
+import { SidebarContentDirective } from '../../core/layout/sidebar/sidebar-content';
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
-
-interface HeroVideoSearch {
-  label: string;
-  query: string;
-  url: string;
-  embedUrl?: SafeResourceUrl;
-}
 
 interface UltimateStrategy {
   ability: HeroAbility;
@@ -98,6 +97,8 @@ interface FandomOverviewSection {
     HeroContentComponent,
     HeroGridComponent,
     HeroPageHeaderComponent,
+    HeroVideosComponent,
+    SidebarContentDirective,
     StatePanelComponent,
   ],
   templateUrl: './heroes-page.component.html',
@@ -107,6 +108,7 @@ export class HeroesPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
   private readonly heroStatsService = inject(HeroStatsService);
   private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly communityKillsService = inject(CommunityKillsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
@@ -115,6 +117,8 @@ export class HeroesPageComponent implements OnInit {
   private readonly content = viewChild(HeroContentComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
+  /** One player per video: Angular compares the address wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
+  private readonly players = new Map<string, HeroVideoPlayer>();
   private readonly routeHeroId = this.route.paramMap.pipe(
     map((params) => params.get('heroId')),
     distinctUntilChanged(),
@@ -127,6 +131,8 @@ export class HeroesPageComponent implements OnInit {
   readonly heroStats = signal<HeroStats | null | undefined>(undefined);
   /** RivalsPulse player matchups for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroMatchups = signal<HeroMatchups | null | undefined>(undefined);
+  /** RivalsPulse player kill-feed counters for every hero: `undefined` while loading, `null` when unreadable. */
+  readonly heroKills = signal<CommunityKills | null | undefined>(undefined);
   /** Every hero, for the counters section to name and picture the heroes in a matchup. */
   readonly heroRoster = this.heroes.asReadonly();
   readonly roles: HeroRoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist'];
@@ -515,6 +521,11 @@ export class HeroesPageComponent implements OnInit {
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.heroMatchups.set(matchups));
+
+    this.communityKillsService
+      .getKills()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((kills) => this.heroKills.set(kills));
 
     forkJoin({
       heroes: this.heroDataService.getHeroRoster(),
@@ -1339,7 +1350,7 @@ export class HeroesPageComponent implements OnInit {
       label: role === 'Duelist' ? 'Gefest DPS guide' : `Gefest ${role} guide`,
       query: video.title,
       url: `https://www.youtube.com/watch?v=${video.id}`,
-      embedUrl: this.youtubeVideoEmbedUrl(video.id),
+      player: this.youtubePlayer(video.id),
     };
   }
 
@@ -1378,7 +1389,7 @@ export class HeroesPageComponent implements OnInit {
       label,
       query: video.title,
       url: `https://www.youtube.com/watch?v=${video.youtubeId}`,
-      embedUrl: this.youtubeVideoEmbedUrl(video.youtubeId),
+      player: this.youtubePlayer(video.youtubeId),
     };
   }
 
@@ -1391,9 +1402,23 @@ export class HeroesPageComponent implements OnInit {
     );
   }
 
-  private youtubeVideoEmbedUrl(videoId: string): SafeResourceUrl {
-    const url = `https://www.youtube.com/embed/${videoId}`;
+  private youtubePlayer(videoId: string): HeroVideoPlayer {
+    const known = this.players.get(videoId);
 
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    if (known) {
+      return known;
+    }
+
+    const player: HeroVideoPlayer = {
+      // The privacy-enhanced YouTube host. Autoplay, because the player only exists once the visitor pressed play.
+      embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(
+        `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`,
+      ),
+      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    };
+
+    this.players.set(videoId, player);
+
+    return player;
   }
 }

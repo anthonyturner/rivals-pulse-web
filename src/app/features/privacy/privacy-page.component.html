@@ -30,6 +30,12 @@
         <a routerLink="." fragment="advertising">Advertising</a> below.
       </li>
       <li>
+        Hero pages fetch video pictures from <strong>YouTube</strong> (Google), and their players
+        load only when you press play. Players on hero guide, strategist guide and video tutorial
+        pages load without a press. See <a routerLink="." fragment="videos">YouTube videos</a>
+        below.
+      </li>
+      <li>
         The community pages show <strong>anonymous totals</strong> only: no names, no player ids
         and no individual matches.
       </li>
@@ -87,7 +93,10 @@
         server that receives it. They are not uploaded yet. This page will say so when they are.
       </p>
     } @else {
-      <p>The app uploads these fields in addition to the ones above.</p>
+      <p>
+        The app uploads these fields in addition to the ones above. Older versions of the app do not
+        send them.
+      </p>
     }
     <ul>
       @for (field of extendedFields; track field.label) {
@@ -103,6 +112,14 @@
       no player names or ids at all. These figures are used for community benchmarks, such as
       damage per minute, and for hero-against-hero counter numbers.
     </p>
+    <p>A further field is <strong>planned</strong>. It is not uploaded yet:</p>
+    <ul id="planned-fields">
+      @for (field of plannedFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
   </section>
 
   <section class="reading-section" id="public-numbers" aria-labelledby="public-numbers-title">
@@ -125,6 +142,12 @@
         one player's matches.
       </li>
       <li>A match recorded by two players is counted once, so one match cannot weigh twice.</li>
+      <li>
+        <strong>Hero averages</strong> and scores worked out from them are planned, built from each
+        uploading player's own figures. They will never show one player's numbers, and a hero will
+        be shown only once enough different players have contributed. They will appear on this site
+        and never in the game.
+      </li>
     </ul>
   </section>
 
@@ -134,7 +157,7 @@
       <li>
         Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
-        The figures being added above are kept for the same time.
+        The extra figures above are kept for the same time.
       </li>
       <li>
         The uploading player's own match history (their name, whole scoreboard line and the match
@@ -276,6 +299,32 @@
       <strong>Privacy and cookie settings</strong> button at the bottom of any page to see the
       message again and change your answer. The button appears only where the message applies to
       you.
+    </p>
+  </section>
+
+  <section class="reading-section" id="videos" aria-labelledby="videos-title">
+    <h2 id="videos-title">YouTube videos</h2>
+    <p>
+      Hero pages show their videos as a picture with a play button. Your browser fetches those
+      pictures from YouTube's image host, which Google runs, when the page shows them, so Google
+      receives your IP address and browser details then, before you press anything.
+    </p>
+    <p>
+      A hero page's video player loads from YouTube only when you press play on that video. Pressing
+      it starts the video, and from then on YouTube handles the data under Google's own policy,
+      <a href="https://policies.google.com/privacy" rel="noopener" target="_blank"
+        >Google's privacy policy</a
+      >. We see nothing about what you watch.
+    </p>
+    <p>
+      Hero guide, strategist guide and video tutorial pages still show YouTube players that load
+      without a press, when the page opens or as you scroll near the player, so on those pages
+      your browser contacts YouTube without a press.
+    </p>
+    <p>
+      A YouTube player may set or read YouTube's own cookies or similar browser storage. Google's
+      consent message covers the ad box only: these pictures and players do not wait for your
+      answer to it.
     </p>
   </section>
 

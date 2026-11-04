@@ -1,6 +1,5 @@
 :host {
   display: block;
-  container-type: inline-size;
 }
 
 .hero-detail {
@@ -39,89 +38,20 @@
   border-color: var(--accent);
   background: var(--bg-elevated);
 }
-.detail-action:focus-visible,
-.video-searches summary:focus-visible {
+.detail-action:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
-.detail-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-.detail-main,
-.detail-side {
+.detail-main {
   display: grid;
   gap: 12px;
   min-width: 0;
 }
-.video-searches {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
-}
-.video-searches summary {
-  color: var(--text);
-  font-size: var(--type-h3);
-  font-weight: 700;
-  cursor: pointer;
-}
-.video-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 10px;
-}
-.video-card {
-  display: grid;
-  gap: 8px;
-}
-.video-embed {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
-  border-radius: 6px;
-  background: var(--bg-elevated);
-}
-.video-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.video-copy strong {
-  color: var(--text);
-  font-size: var(--type-small);
-}
-.video-copy small {
-  overflow: hidden;
-  color: var(--text-soft);
-  font-size: var(--type-caption);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.video-copy a,
-.video-all {
-  width: fit-content;
-  color: var(--accent-strong);
-  font-size: var(--type-small);
-  font-weight: 700;
-  text-decoration: none;
-}
-.video-copy a:hover,
-.video-all:hover {
-  text-decoration: underline;
-}
-.video-all {
-  display: block;
-  margin-top: 10px;
-}
 
-/* The video column goes beside the details only when this panel is wide enough to leave them about 520px; the roster column and the sidebar take viewport width the panel never gets back. */
-@container (min-width: 900px) {
-  .detail-layout {
-    grid-template-columns: minmax(0, 1fr) 320px;
+/* Beside the roster the panel starts level with it; below that width the gap separates it from the strip. */
+@media (min-width: 920px) {
+  .hero-detail {
+    margin-top: 0;
   }
 }
 

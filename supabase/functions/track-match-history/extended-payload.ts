@@ -1,11 +1,13 @@
 /**
  * The optional part of an uploaded match that newer overlays add: the recorder's own damage,
- * healing, damage blocked and time per hero, and the match's kill feed (issue 176). Shipped
- * overlays send neither, and `readExtendedUpload` then returns null.
+ * healing, damage blocked and time per hero, the match's kill feed (issue 176), and the recorder's
+ * own ability and ultimate use counts (issue 457). Shipped overlays send none, and
+ * `readExtendedUpload` then returns null.
  *
  * A value that is malformed is dropped for that field alone; nothing here throws, so a bad new
  * field can never fail the match. Damage, healing and blocked are read from `match_player` only:
- * the same figures on any roster line are another player's and are never read (ADR-0011).
+ * the same figures on any roster line are another player's and are never read (ADR-0011). The same
+ * goes for ability counts.
  * No Deno or Supabase imports, so `node --test` runs its specs.
  */
 import { asRecord, readUid, type JsonRecord } from './match-payload.ts';
@@ -27,18 +29,45 @@ export interface HeroKill {
   kills: number;
 }
 
+/** How often the recorder used one ability slot on one hero, and what followed. No other player is named. */
+export interface HeroAbilityUse {
+  hero_id: number;
+  slot: AbilitySlot;
+  uses: number;
+  /** Null when absent or malformed, never 0 in its place. */
+  kills_after: number | null;
+  assists_after: number | null;
+}
+
 export interface ExtendedUpload {
   /** The recorder's uid, which ties their figures to their own scoreboard line; null without one. */
   recorder_uid: string | null;
   hero_figures: HeroFigure[];
   hero_kills: HeroKill[];
+  hero_ability_uses: HeroAbilityUse[];
 }
+
+/** The live game feed's timer slots, plus the ultimate. The table's check constraint holds the same list. */
+export const ABILITY_SLOTS = [
+  'ability_0',
+  'ability_1',
+  'ability_2',
+  'ability_3',
+  'ability_4',
+  'team_up_0',
+  'team_up_1',
+  'ultimate',
+] as const;
+export type AbilitySlot = (typeof ABILITY_SLOTS)[number];
 
 /** A player swaps hero a handful of times in a match; more than this is not a real list. */
 export const MAX_HERO_FIGURES = 20;
 /** A 6v6 lobby has at most 6 x 6 hero pairs fighting, and a hero can fight its own kind. */
 export const MAX_HERO_KILL_PAIRS = 150;
 export const MAX_KILLS_PER_PAIR = 999;
+/** Every hero a list can hold, in every slot. */
+export const MAX_ABILITY_USES = MAX_HERO_FIGURES * ABILITY_SLOTS.length;
+export const MAX_ABILITY_COUNT = 999;
 const MAX_INT4 = 2_147_483_647;
 /** Longest match a custom lobby can run, in seconds. */
 const MAX_SEGMENT_SECONDS = 7_200;
@@ -53,9 +82,45 @@ export function readExtendedUpload(match: JsonRecord): ExtendedUpload | null {
   // Without a uid the figures cannot be tied to the recorder's line, so they are not kept.
   const heroFigures = recorderUid === null ? [] : readHeroFigures(local?.['hero_segments']);
   const heroKills = readHeroKills(match['hero_kills']);
+  const heroAbilityUses = recorderUid === null ? [] : readHeroAbilityUses(local?.['hero_ability_uses']);
 
-  if (heroFigures.length === 0 && heroKills.length === 0) return null;
-  return { recorder_uid: recorderUid, hero_figures: heroFigures, hero_kills: heroKills };
+  if (heroFigures.length === 0 && heroKills.length === 0 && heroAbilityUses.length === 0) return null;
+  return { recorder_uid: recorderUid, hero_figures: heroFigures, hero_kills: heroKills, hero_ability_uses: heroAbilityUses };
+}
+
+function readHeroAbilityUses(value: unknown): HeroAbilityUse[] {
+  // A list longer than every slot of every hero is not a real one, so none of it is trusted.
+  if (!Array.isArray(value) || value.length > MAX_ABILITY_USES) return [];
+
+  const uses = new Map<string, HeroAbilityUse>();
+  for (const entry of value) {
+    const record = asRecord(entry);
+    const heroId = readId(record?.['hero_id']);
+    const slot = readSlot(record?.['slot']);
+    const count = readCount(record?.['uses']);
+    if (record === null || heroId === null || slot === null || count === null) continue;
+
+    const key = `${heroId} ${slot}`;
+    if (uses.has(key)) continue;
+    uses.set(key, {
+      hero_id: heroId,
+      slot,
+      uses: count,
+      kills_after: readCount(record['kills_after']),
+      assists_after: readCount(record['assists_after']),
+    });
+  }
+  return [...uses.values()];
+}
+
+function readSlot(value: unknown): AbilitySlot | null {
+  return ABILITY_SLOTS.find(slot => slot === value) ?? null;
+}
+
+/** A use count is counted, not measured: a fraction is a bad value, not a number to round. */
+function readCount(value: unknown): number | null {
+  const count = typeof value === 'string' && value.trim() ? Number(value) : value;
+  return typeof count === 'number' && Number.isInteger(count) && count >= 0 && count <= MAX_ABILITY_COUNT ? count : null;
 }
 
 function readHeroFigures(value: unknown): HeroFigure[] {

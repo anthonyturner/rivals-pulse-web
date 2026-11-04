@@ -86,7 +86,7 @@ describe('checkPremiumGate', () => {
   it('fails closed when the package list is set but names no usable id', async () => {
     const { fetchImpl, urls } = overwolf(Response.json([{ packageId: 7, state: 'ACTIVE' }]));
 
-    const decision = await gate({ ...gateOn, PREMIUM_JARVIS_PACKAGE_IDS: '12;34' }, sessionToken, fetchImpl);
+    const decision = await gate({ ...gateOn, PREMIUM_PULSA_PACKAGE_IDS: '12;34' }, sessionToken, fetchImpl);
 
     assert.equal(decision.allowed, false);
     assert.equal(urls.length, 0);
