@@ -18,3 +18,8 @@
   font-size: var(--type-small);
   font-weight: 800;
 }
+
+.figures {
+  display: block;
+  margin-top: 24px;
+}

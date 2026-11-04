@@ -9,6 +9,7 @@ import { of } from 'rxjs';
 
 import type { Hero } from './hero.model';
 import { SidebarContent } from '../../core/layout/sidebar/sidebar-content';
+import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
@@ -138,6 +139,7 @@ describe('HeroesPageComponent videos in the sidebar', () => {
         },
         { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
         { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
       ],
     });
     harness = await RouterTestingHarness.create();

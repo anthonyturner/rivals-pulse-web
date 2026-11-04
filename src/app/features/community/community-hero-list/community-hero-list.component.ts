@@ -3,10 +3,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { HeroCellView } from '../../insights/hero-identity';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 
-/** One hero in a ranked list: the figure the list is ordered by, and the sample behind it. */
+/** One hero in a ranked list: the figure the list is ordered by, and the sample behind it when the list states one. */
 export interface CommunityHeroRow extends HeroCellView {
   figure: string;
-  sample: string;
+  sample?: string;
 }
 
 /** A ranked list of heroes, each tile linking to its place on the Heroes page. */
