@@ -43,3 +43,12 @@ export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
     detail: 'Which hero defeated which hero, and how many times, with no player names or ids.',
   },
 ];
+
+/** Planned after the extended upload, with overlay issue 1284 and issue 457, so it has no share in its status. */
+export const PLANNED_UPLOAD_FIELDS: readonly UploadField[] = [
+  {
+    label: 'Ability and ultimate use',
+    detail:
+      'How often the uploading player used each ability and their ultimate on each hero. This shows that an ability was used, not whether it hit anyone. Never uploaded for other players.',
+  },
+];
