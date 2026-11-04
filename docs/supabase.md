@@ -556,7 +556,7 @@ reaches it.
   are added over half-seasons inside the function. A share is over the shown buckets of its dimension
   only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
   win rate is null with fewer than 30 results. One player's matches can fill the tab (issue 449); raise
-  the two recorder numbers before other players are invited.
+  the two recorder numbers, and `COMMUNITY_MATCHES_MINIMUMS.recorders` in code, before other players are invited.
 - The server calls it with the shared client and labels the answer in
   [`src/server/community/insights/community-insights.ts`](../src/server/community/insights/community-insights.ts), served by `GET /api/community/insights`.
   A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP
@@ -614,7 +614,7 @@ row.
   on `insights_min_recorders()` (1) and `insights_max_recorder_share_percent()` (100), the numbers the
   Insights tab uses. `read_community_matches()` applies it, so a hidden bucket never leaves the database,
   and every total the site shows is computed over the shown buckets only. One player's matches can fill
-  the tab (issue 449); raise the two numbers before other players are invited. `community_bucket_shown`
+  the tab (issue 449); raise the two numbers, and `COMMUNITY_MATCHES_MINIMUMS.recorders` in code, before other players are invited. `community_bucket_shown`
   (at least 3 recorders, none above 50%) stays as the hero pair rank-band gate.
 - `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
   frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
