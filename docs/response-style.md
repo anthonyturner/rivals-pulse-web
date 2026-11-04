@@ -38,6 +38,12 @@ dropped.
   blocks are unaffected by this rule.
 - **File and line references stay.** They are evidence, not prose — put them
   in parentheses after the plain-English claim so a reader can skip them.
+- **Give the title with every issue or pull request number.** When a response
+  mentions an issue or pull request by number, put its real GitHub title beside
+  the number, so the reader knows what it is at a glance: "#123, Let players
+  filter heroes by role". The title is enough; do not add the description. Look
+  the title up rather than guessing. A `Closes #123` line is exempt, because
+  GitHub reads it, not a person.
 
 [agent-workflows/refinement.md](agent-workflows/refinement.md) extends these
 rules for the refinement assessment, the one stage whose entire output is its
