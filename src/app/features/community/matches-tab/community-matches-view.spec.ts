@@ -33,6 +33,20 @@ function ready(view: CommunityMatchesView) {
 }
 
 describe('buildCommunityMatchesView', () => {
+  it('asks for no number of players and says so when one player is enough', () => {
+    const minimums = { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 1 };
+    const empty = buildCommunityMatchesView(matches({ status: 'not-enough-data', minimums }));
+    const ready = buildCommunityMatchesView(matches({ minimums }));
+
+    if (empty.kind !== 'not-enough-data' || ready.kind !== 'ready') {
+      throw new Error('expected the empty and the ready views');
+    }
+
+    expect(empty.summary).toContain('The first figures appear at 20 matches.');
+    expect(empty.summary).not.toContain('players');
+    expect(ready.sample).toContain('can come from a single player');
+  });
+
   it('is loading until the answer arrives and unavailable when it could not be read', () => {
     expect(buildCommunityMatchesView(undefined).kind).toBe('loading');
     expect(buildCommunityMatchesView(null).kind).toBe('unavailable');

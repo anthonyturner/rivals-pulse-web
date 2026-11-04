@@ -7,7 +7,7 @@ import { buildCommunityMatchesView } from './community-matches-view';
 
 const WHAT_THE_TAB_SHOWS = 'Win rate by map, mode mix, average length and matches per day.';
 
-/** The community's match totals: anonymous, counted once per match, never anyone's own matches. */
+/** The community's match totals: anonymous, counted once per match, and possibly from one player. */
 @Component({
   selector: 'app-community-matches-tab',
   imports: [CommunitySummaryComponent],

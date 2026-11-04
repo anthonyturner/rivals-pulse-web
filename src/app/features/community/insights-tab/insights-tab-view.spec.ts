@@ -25,6 +25,20 @@ function insights(overrides: Partial<CommunityInsights> = {}): CommunityInsights
 }
 
 describe('buildInsightsTabView', () => {
+  it('asks for no number of players and says so when one player is enough', () => {
+    const view = buildInsightsTabView({ ...insights(), minimumRecorders: 1, maxRecorderSharePercent: 100 });
+
+    if (view.kind !== 'ready') {
+      throw new Error('expected the ready view');
+    }
+
+    const notes = view.notes.join(' ');
+    expect(notes).toContain('once at least 30 matches are behind it');
+    expect(notes).toContain('can come from a single player');
+    expect(notes).not.toContain('at least 1 players');
+    expect(notes).not.toContain('no one player');
+  });
+
   it('is loading until the answer arrives', () => {
     expect(buildInsightsTabView(undefined)).toEqual({ kind: 'loading' });
   });
