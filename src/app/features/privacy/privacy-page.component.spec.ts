@@ -56,8 +56,8 @@ describe('PrivacyPageComponent', () => {
     );
   });
 
-  it('lists every extended field and marks them as being added', () => {
-    expect(EXTENDED_UPLOAD_STATUS).toBe('being-added');
+  it('lists every extended field and says the app uploads them', () => {
+    expect(EXTENDED_UPLOAD_STATUS).toBe('uploaded');
     const extended = section('extended-fields');
     const items = itemLabels('extended-fields');
 
@@ -66,7 +66,9 @@ describe('PrivacyPageComponent', () => {
         .withContext(field.label)
         .toBeTrue();
     }
-    expect(extended.textContent).toContain('being added');
+    expect(extended.querySelector('h2')?.textContent).toContain('What the app also uploads');
+    expect(extended.textContent).toContain('The app uploads these fields');
+    expect(extended.textContent).not.toContain('being added');
     expect(extended.textContent).toContain('no player');
   });
 
@@ -105,6 +107,7 @@ describe('PrivacyPageComponent', () => {
   it('states the retention rule', () => {
     const text = section('retention').textContent ?? '';
 
+    expect(text).not.toContain('being added');
     expect(text).toContain('six months');
     expect(text).toContain('half-season');
     expect(text).toContain('no time limit');
