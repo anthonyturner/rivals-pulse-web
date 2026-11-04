@@ -1,29 +1,67 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
-import { CommunityMatchesService } from './community-matches.service';
-import { buildCommunityMatchesView } from './community-matches-view';
+import { dayLabel } from '../own-activity/day-label';
+import { injectOwnActivity, ownActivityRows } from '../own-activity/own-activity';
+import { OwnActivityTableComponent } from '../own-activity/own-activity-table.component';
 
-const WHAT_THE_TAB_SHOWS = 'Win rate by map, mode mix, average length and matches per day.';
-
-/** The community's match totals: anonymous, counted once per match, never anyone's own matches. */
+/** The signed-in account's own matches, by map, mode and day. No other account can see them. */
 @Component({
   selector: 'app-community-matches-tab',
-  imports: [CommunitySummaryComponent],
-  templateUrl: './matches-tab.component.html',
-  styleUrl: './matches-tab.component.css',
+  imports: [CommunitySummaryComponent, OwnActivityTableComponent],
+  template: `
+    @let current = state();
+
+    <app-community-summary
+      [kind]="current.kind"
+      heading="My matches"
+      subject="your matches"
+      [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+      [link]="current.kind === 'not-enough-data' ? current.link : null"
+      [footnote]="
+        current.kind === 'ready'
+          ? 'Only your account can see this. Days are UTC.' + (current.truncated ? ' Your newest 2,000 matches.' : '')
+          : null
+      "
+    >
+      @if (tables(); as table) {
+        <div class="panels">
+          <app-own-activity-table title="Win rate by map" rowHeading="Map" [rows]="table.maps" />
+          <app-own-activity-table title="Game modes played" rowHeading="Mode" [rows]="table.modes" />
+          <app-own-activity-table title="Your last 30 days played" rowHeading="Day" [rows]="table.days" />
+        </div>
+      }
+    </app-community-summary>
+  `,
+  styles: `
+    .panels {
+      display: grid;
+      gap: 12px;
+    }
+
+    @media (min-width: 1024px) {
+      .panels {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MatchesTabComponent {
-  private readonly matches = toSignal(inject(CommunityMatchesService).getMatches(), {
-    initialValue: undefined,
-  });
+  protected readonly state = injectOwnActivity('/community/matches');
+  protected readonly tables = computed(() => {
+    const current = this.state();
 
-  protected readonly view = computed(() => buildCommunityMatchesView(this.matches()));
-  protected readonly emptyPreview = computed(() => {
-    const view = this.view();
+    if (current.kind !== 'ready') {
+      return null;
+    }
 
-    return view.kind === 'not-enough-data' ? `${WHAT_THE_TAB_SHOWS} ${view.summary}` : WHAT_THE_TAB_SHOWS;
+    const { maps, modes, days } = current.activity;
+
+    return {
+      maps: ownActivityRows(maps),
+      modes: ownActivityRows(modes),
+      days: ownActivityRows(days).map((row) => ({ ...row, label: dayLabel(row.label) })),
+    };
   });
 }

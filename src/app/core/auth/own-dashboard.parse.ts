@@ -53,6 +53,10 @@ const isKda = shape({
 const isRate = shape({ perMinute: isNumber, samples: isCount });
 const isRecord = shape({ value: isNumber, playedAt: isString, hero: nullable(isString) });
 
+const isActivityRows = listOf(
+  shape({ label: isString, matches: isCount, wins: isCount, losses: isCount, winRate: nullable(isNumber) }),
+);
+
 const isStats = shape({
   matches: isCount,
   wins: isCount,
@@ -93,6 +97,14 @@ const isStats = shape({
   ),
   firstPlayedAt: nullable(isString),
   lastPlayedAt: nullable(isString),
+  activity: shape({
+    maps: isActivityRows,
+    modes: isActivityRows,
+    days: isActivityRows,
+    weekdays: isActivityRows,
+    timesOfDay: isActivityRows,
+    sessionPlaces: isActivityRows,
+  }),
 });
 
 const isLinkedAnswer = shape({

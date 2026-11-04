@@ -528,6 +528,8 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 
 ## Play-time aggregates (Community Insights tab)
 
+The site no longer reads these: the My insights tab shows the account's own matches through `read_own_dashboard()`. The tables and jobs still run until they are dropped.
+
 `play_time_aggregates` keeps, per half-season, the matches and decided wins of the recorders' own
 matches by weekday (`weekday`, ISO 1 Monday to 7 Sunday), by four-hour block of the day
 (`time_of_day`, 0 is 00:00 to 03:59) and by place in a play session (`session_position`, 1 to 3 and
@@ -588,7 +590,9 @@ reads `read_hero_stats()` (so the same environment as above) and a role per hero
 
 ## Community match aggregates
 
-The Community Matches tab (issue 172) reads its own anonymous counts, kept apart from the hero
+The site no longer reads these: the My matches tab shows the account's own matches through `read_own_dashboard()`. The tables and jobs still run until they are dropped.
+
+The Community Matches tab (issue 172) read its own anonymous counts, kept apart from the hero
 aggregates so a change to one cannot break the other. The four tables have RLS on and no policy,
 nothing for `anon` or `authenticated`, and hold counts only: no uid, name, fingerprint or per-player
 row.

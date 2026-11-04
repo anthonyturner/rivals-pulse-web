@@ -5,24 +5,10 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
+import { AuthService } from '../../../core/auth/auth.service';
 import { communityRoutes } from '../community.routes';
 
-const TAB_LABELS = ['Heroes', 'Matches', 'Counters', 'Tier list', 'Stats', 'Insights'];
-
-// What /api/community/matches answers while no half-season has enough matches yet.
-const MATCHES_NOT_ENOUGH_DATA = {
-  status: 'not-enough-data',
-  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
-  halfSeasons: [],
-  halfSeason: null,
-  inPlaceOf: null,
-  matchesBand: null,
-  maps: [],
-  mapsBelowMinimum: [],
-  modeMix: null,
-  averageLengthMinutes: null,
-  perDay: null,
-};
+const TAB_LABELS = ['Heroes', 'My matches', 'Counters', 'Tier list', 'Stats', 'My insights'];
 
 describe('CommunityPageComponent', () => {
   let harness: RouterTestingHarness;
@@ -39,25 +25,9 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
   }
 
-  /** The Insights tab reads its numbers from the site's API; the API's own answer for "nothing yet". */
-  async function answerInsightsWithNoData(): Promise<void> {
-    TestBed.inject(HttpTestingController)
-      .expectOne('/api/community/insights')
-      .flush({
-        status: 'not-enough-data',
-        timeZone: 'UTC',
-        sessionGapMinutes: null,
-        minimumMatches: 30,
-        minimumRecorders: 3,
-        maxRecorderSharePercent: 50,
-        dimensions: [],
-      });
-    await harness.fixture.whenStable();
-    harness.detectChanges();
-  }
-
-  async function answerMatchesTab(): Promise<void> {
-    TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
+  /** The private tabs ask who is signed in; the answer for a visitor who is not. */
+  async function answerPrivateTab(): Promise<void> {
+    TestBed.inject(AuthService).state.set({ status: 'signedOut' });
     await harness.fixture.whenStable();
     harness.detectChanges();
   }
@@ -79,6 +49,7 @@ describe('CommunityPageComponent', () => {
         provideHttpClientTesting(),
       ],
     });
+    spyOn(TestBed.inject(AuthService), 'load').and.resolveTo({ status: 'signedOut' });
     harness = await RouterTestingHarness.create();
     router = TestBed.inject(Router);
   });
@@ -128,9 +99,9 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
 
     expect(router.url).toBe('/matches');
-    expect(selectedTab()?.textContent?.trim()).toBe('Matches');
-    await answerMatchesTab();
-    expect(panel().textContent).toContain('Community matches');
+    expect(selectedTab()?.textContent?.trim()).toBe('My matches');
+    await answerPrivateTab();
+    expect(panel().textContent).toContain('My matches');
   });
 
   it('moves to the next and previous tab with the arrow keys, wrapping at the ends', async () => {
@@ -188,20 +159,20 @@ describe('CommunityPageComponent', () => {
 
   // The Heroes, Counters, Tier list and Stats tabs load their numbers; their own specs cover their empty states.
   for (const [id, label] of [
-    ['matches', 'Matches'],
-    ['insights', 'Insights'],
+    ['matches', 'My matches'],
+    ['insights', 'My insights'],
   ]) {
-    it(`shows the designed empty state on the ${label} tab`, async () => {
+    it(`asks a signed-out visitor to sign in on the ${label} tab`, async () => {
       await open(`/${id}`);
       if (id === 'insights') {
-        await answerInsightsWithNoData();
+        await answerPrivateTab();
       }
       if (id === 'matches') {
-        await answerMatchesTab();
+        await answerPrivateTab();
       }
 
       const text = panel().textContent ?? '';
-      expect(text).toMatch(/enough data yet|first figures appear/);
+      expect(text).toMatch(/Sign in to see your own matches/);
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
       expect(panel().querySelector('app-state-panel')).toBeTruthy();
