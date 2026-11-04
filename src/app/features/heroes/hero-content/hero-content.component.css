@@ -48,7 +48,7 @@
   min-width: 0;
 }
 
-/* Beside the roster the panel starts level with it; above that width the gap separates it from the strip. */
+/* Beside the roster the panel starts level with it; below that width the gap separates it from the strip. */
 @media (min-width: 920px) {
   .hero-detail {
     margin-top: 0;
