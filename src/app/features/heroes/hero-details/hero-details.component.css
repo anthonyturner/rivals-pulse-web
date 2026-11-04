@@ -37,7 +37,6 @@
 
 .ultimate-strategies article,
 .deadpool-upgrades article,
-.build-profile-source,
 .abilities article {
   border: 1px solid var(--border-strong);
   border-radius: 8px;
@@ -643,7 +642,6 @@ details.collapsible {
 }
 
 .detail-hero-container .technical-details dt,
-.detail-hero-container .build-profile-source strong,
 .detail-hero-container .ultimate-strategies article span,
 .detail-hero-container .abilities article span,
 .detail-hero-container .abilities article h4,

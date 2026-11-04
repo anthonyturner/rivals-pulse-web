@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 import type { CommunityHeroScores } from '../../../../contracts/hero-scores.model';
 import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
-import { BuildSignalRowsComponent } from './build-signal-rows.component';
+import { BuildSignalRowsComponent } from './build-signal-rows/build-signal-rows.component';
 import { heroAbilityUseRows, heroBuildSignals, scoresSourceNote } from './hero-build-signals';
 
 /** The hero page's build signals: each score, the raw figures behind it, and per-ability use. */

@@ -17,14 +17,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { HeroDataService } from '../../heroes/hero-data.service';
-import { BuildSignalRowsComponent } from '../../heroes/hero-build-signals/build-signal-rows.component';
+import { BuildSignalRowsComponent } from '../../heroes/hero-build-signals/build-signal-rows/build-signal-rows.component';
 import {
   heroesWithScores,
   HeroScoresAnswer,
   heroSignalCard,
   scoresSourceNote,
 } from '../../heroes/hero-build-signals/hero-build-signals';
-import { HeroSignalCardComponent } from '../../heroes/hero-build-signals/hero-signal-card.component';
+import { HeroSignalCardComponent } from '../../heroes/hero-build-signals/hero-signal-card/hero-signal-card.component';
 import { HeroScoresService } from '../../heroes/hero-scores.service';
 import { Hero } from '../../heroes/hero.model';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
@@ -107,7 +107,7 @@ export class TeamBuilderPageComponent implements OnInit {
     const scores = this.scores();
     const roster = this.heroes()?.length ?? 0;
 
-    return scores && roster > 0 ? `${heroesWithScores(scores)} of ${roster} heroes have enough data so far` : null;
+    return scores && roster > 0 ? `${heroesWithScores(scores)} of ${roster} heroes have scores so far` : null;
   });
 
   protected readonly sourceNote = computed(() => scoresSourceNote(this.scores()));

@@ -44,7 +44,7 @@ describe('HeroDetailsComponent', () => {
     expect(sections.some((section) => section.open)).toBeFalse();
     expect(sections.map((section) => section.querySelector('summary h3')?.textContent?.trim())).toContain('Build Signals');
     expect(sections[0].querySelector('.collapsible-body > .section-note')?.textContent?.trim()).toBe(
-      'Scores out of 10 from matches recorded by RivalsPulse players',
+      "Scores out of 10. Mobility comes from the hero's kit, the rest from matches recorded by RivalsPulse players",
     );
   });
 

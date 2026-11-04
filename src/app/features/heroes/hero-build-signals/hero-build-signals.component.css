@@ -30,7 +30,7 @@ h4,
 }
 
 .table-scroll:focus-visible {
-  outline: 3px solid var(--link);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 

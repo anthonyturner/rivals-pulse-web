@@ -19,7 +19,7 @@
         <thead>
           <tr>
             <th scope="col">Ability</th>
-            <th scope="col">Counts toward</th>
+            <th scope="col">Type</th>
             <th scope="col">Uses per 10 min</th>
             <th scope="col">Kills or assists per use</th>
             <th scope="col">Matches</th>
@@ -29,7 +29,7 @@
           @for (ability of abilities(); track ability.slot) {
             <tr>
               <th scope="row">{{ ability.ability }} <span class="key">{{ ability.keyLabel }}</span></th>
-              <td>{{ ability.tag }}</td>
+              <td>{{ ability.type }}</td>
               <td>{{ ability.uses }}</td>
               <td>{{ ability.takedowns }}</td>
               <td>{{ ability.matches }}</td>

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { BuildSignalRow, BuildSignalSource } from './hero-build-signals';
+import { BuildSignalRow, BuildSignalSource } from '../hero-build-signals';
 
 const SOURCE_CLASSES: Record<BuildSignalSource, string> = {
   Measured: 'measured',
@@ -23,6 +23,7 @@ export class BuildSignalRowsComponent {
       ...row,
       sourceClass: SOURCE_CLASSES[row.source],
       percent: (row.value ?? 0) * 10,
+      roundedValue: Math.round((row.value ?? 0) * 10) / 10,
     })),
   );
 }

@@ -36,7 +36,7 @@
 
 .tile span {
   color: var(--text-soft);
-  font-size: 0.65rem;
+  font-size: var(--type-caption);
   font-weight: 700;
 }
 

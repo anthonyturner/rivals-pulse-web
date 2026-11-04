@@ -49,7 +49,8 @@ export interface HeroAbilityUseRow {
   slot: string;
   keyLabel: string;
   ability: string;
-  tag: string;
+  /** What kind of ability this is. It does not say which score the ability feeds. */
+  type: string;
   uses: string;
   takedowns: string;
   matches: string;
@@ -218,7 +219,7 @@ export function heroAbilityUseRows(heroId: string, answer: HeroScoresAnswer): He
     slot: ability.slot,
     keyLabel: KEY_LABELS[ability.slot] ?? ability.slot,
     ability: ability.ability ?? 'Several abilities on this key',
-    tag: ability.tag ?? 'None',
+    type: ability.slot === 'ultimate' ? 'Ultimate' : (ability.tag ?? 'Not tagged'),
     uses: ability.usesPerTenMinutes.toFixed(1),
     takedowns: ability.takedownsPerUse === null ? 'Not recorded' : ability.takedownsPerUse.toFixed(2),
     matches: String(ability.matches),
@@ -327,11 +328,14 @@ function withoutNumber(
 
 /**
  * Match counts arrive in steps of 5 while a hero is below the rule, so an exact count never shows.
- * The busiest player is only named as the reason once there are enough players for it to be one.
+ * One busy player can hold a hero back past both minimums, so the counts stop at each minimum. The
+ * busiest player is only named as the reason once there are enough players for it to be one.
  */
 function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores): string {
   const { matches, contributors } = answer.minimums;
-  const progress = `${stat?.matches ?? 0} of ${matches} matches, ${stat?.contributors ?? 0} of ${contributors} players`;
+  const matchesSoFar = Math.min(stat?.matches ?? 0, matches);
+  const playersSoFar = Math.min(stat?.contributors ?? 0, contributors);
+  const progress = `${matchesSoFar} of ${matches} matches, ${playersSoFar} of ${contributors} players`;
 
   return stat?.oneContributorAboveHalf && (stat.contributors ?? 0) >= contributors
     ? `${progress}. One player has more than half of these matches, so it needs more players.`

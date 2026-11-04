@@ -53,7 +53,7 @@ describe('HeroBuildSignalsComponent', () => {
     expect(text(element)).toContain('This is not a low score.');
     expect([...element.querySelectorAll('tbody th, tbody td')].map((cell) => text(cell as HTMLElement))).toEqual([
       'Goddess of Death Q',
-      'None',
+      'Ultimate',
       '1.6',
       '2.10',
       '42',

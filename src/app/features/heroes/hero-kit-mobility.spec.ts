@@ -374,6 +374,12 @@ describe('heroKitMobilityValue', () => {
     expect(heroKitMobilityValue('groot')).toBe(2);
   });
 
+  it('has a value for every hero but the four the hand-set list never had, so a mistyped id shows up', () => {
+    const withoutValue = table.heroes.filter(({ heroId }) => heroKitMobilityValue(heroId) === null);
+
+    expect(withoutValue.map(({ heroId }) => heroId)).toEqual(['cyclops', 'gorr-the-god-butcher', 'jubilee', 'the-hood']);
+  });
+
   it('has no value, and no guess, for a hero without one', () => {
     expect(heroKitMobilityValue('jubilee')).toBeNull();
     expect(heroKitMobilityValue('not-a-hero')).toBeNull();

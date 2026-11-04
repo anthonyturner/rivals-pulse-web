@@ -116,6 +116,16 @@ describe('heroBuildSignals', () => {
     expect(row(rows, 'Sustain').detail).toBe('5 of 10 matches, 1 of 3 players');
   });
 
+  it('stops the progress at each minimum when one busy player holds a hero back past them', () => {
+    const held = { ...magneto, damage: collecting(30, 1, true), sustain: collecting(30, 5, true) };
+    const rows = heroBuildSignals('magneto', answer([held]));
+
+    expect(row(rows, 'Damage').detail).toBe('10 of 10 matches, 1 of 3 players');
+    expect(row(rows, 'Sustain').detail).toBe(
+      '10 of 10 matches, 3 of 3 players. One player has more than half of these matches, so it needs more players.',
+    );
+  });
+
   it('says plainly that no measurable ability is not a low score', () => {
     const utility = row(heroBuildSignals('magneto', answer([magneto])), 'Utility');
 
@@ -273,17 +283,23 @@ describe('teamBuildSignals', () => {
 describe('heroAbilityUseRows', () => {
   it('names the key and the ability, and says when several share a key or takedowns were not counted', () => {
     expect(heroAbilityUseRows('hela', answer([hela]))).toEqual([
-      { slot: 'ability_2', keyLabel: 'E', ability: 'Soul Drainer', tag: 'Utility', uses: '31.0', takedowns: '0.38', matches: '42' },
+      { slot: 'ability_2', keyLabel: 'E', ability: 'Soul Drainer', type: 'Utility', uses: '31.0', takedowns: '0.38', matches: '42' },
       {
         slot: 'team_up_0',
         keyLabel: 'C',
         ability: 'Several abilities on this key',
-        tag: 'None',
+        type: 'Not tagged',
         uses: '2.5',
         takedowns: 'Not recorded',
         matches: '12',
       },
     ]);
+  });
+
+  it('calls the ultimate slot an ultimate, though the feed sends it no tag', () => {
+    const ultimate = { ...hela, abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', tag: null, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }] };
+
+    expect(heroAbilityUseRows('hela', answer([ultimate]))[0].type).toBe('Ultimate');
   });
 
   it('is empty for a hero with no entry, or no answer', () => {

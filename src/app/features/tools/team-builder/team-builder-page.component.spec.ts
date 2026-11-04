@@ -223,7 +223,7 @@ describe('TeamBuilderPageComponent', () => {
         'Ultimate 5.0 out of 10, estimated. Uses 2 of 6 heroes.',
         jasmine.stringMatching(/^Mobility \d\.\d out of 10, hero kit\. Uses 2 of 6 heroes\.$/),
       ]);
-      expect(text('.coverage')).toBe('2 of 7 heroes have enough data so far');
+      expect(text('.coverage')).toBe('2 of 7 heroes have scores so far');
       expect(text('.panels h2')).toBe('Sustain Balanced Comp');
       expect(root.querySelectorAll('.slots app-hero-signal-card .tile').length).toBe(10);
       expect(root.textContent).toContain('This team leans Sustain.');
@@ -243,7 +243,7 @@ describe('TeamBuilderPageComponent', () => {
       expect(text('.panels h2')).toBe('Balanced Comp');
       expect(root.textContent).not.toContain('This team leans');
       expect(root.textContent).toContain('Uses 0 of 6 heroes.');
-      expect(text('.coverage')).toBe('0 of 7 heroes have enough data so far');
+      expect(text('.coverage')).toBe('0 of 7 heroes have scores so far');
     });
 
     it('says the scores failed rather than that they are collecting', async () => {

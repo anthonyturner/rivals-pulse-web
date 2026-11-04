@@ -12,7 +12,7 @@
           role="meter"
           aria-valuemin="0"
           aria-valuemax="10"
-          [attr.aria-valuenow]="row.value"
+          [attr.aria-valuenow]="row.roundedValue"
           [attr.aria-label]="row.ariaLabel"
         >
           <i [style.width.%]="row.percent"></i>
