@@ -8,10 +8,10 @@
     @let current = view();
 
     @if (current.kind === 'loading') {
-    <p class="kill-feed__message">Loading Rivals Pulse kill-feed counters...</p>
+    <p class="kill-feed__message">Loading RivalsPulse kill-feed counters...</p>
     } @else if (current.kind === 'unavailable') {
     <p class="kill-feed__message">
-      Rivals Pulse kill-feed counters cannot be loaded right now. The rest of this page is not affected.
+      RivalsPulse kill-feed counters cannot be loaded right now. The rest of this page is not affected.
     </p>
     } @else {
     @if (current.halfSeasonLabel) {

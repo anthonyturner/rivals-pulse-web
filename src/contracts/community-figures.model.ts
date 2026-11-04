@@ -50,7 +50,7 @@ export interface CommunityFiguresMinimums {
 }
 
 /**
- * The per-minute figures of the Community Stats and Heroes tabs, from Rivals Pulse overlay uploads
+ * The per-minute figures of the Community Stats and Heroes tabs, from RivalsPulse overlay uploads
  * only. These are what recorders did with a hero, not the whole lobby, and a recorder's client only
  * knows its own player's figures.
  *

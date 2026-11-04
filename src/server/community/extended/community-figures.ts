@@ -20,15 +20,16 @@ import { ROLE_STATS_MIN_LINES } from '../../heroes/stats/role-stats.ts';
  * Every damage, healing and damage-blocked rate on the site is derived here and nowhere else, from
  * the counts in `hero_figure_aggregates` as `read_community_hero_figures()` returns them.
  *
- * Per minute is `sum * 60 / seconds`, where the seconds are those of exactly the lines that carry
- * the figure and the time played. A line from an older app, which carries neither, is in no sum and
- * no `n`, so it is left out rather than counted as 0. A role or a hero is pooled (sums and seconds
- * added, then divided), never an average of rates.
+ * Per minute is `sum * 60 / seconds`. That function's answer is what makes it true that the sum and
+ * the seconds cover the same lines, each carrying the figure and a time played, and that a line from
+ * an older app is left out rather than counted as 0: this code sees only totals. A role or a hero
+ * is pooled (sums and seconds added, then divided), never an average of rates.
  */
 
 /**
- * Lines that carry a figure before a rate is shown. A role needs as many lines as the Stats tab's
- * other role figures, and a hero as many as the hero numbers: about a dozen matches either way.
+ * Lines that carry a figure before a rate is shown. The numbers match the Stats tab's other role
+ * figures and the hero numbers, but these lines are only each recorder's own, so 50 lines can mean
+ * up to 50 matches.
  */
 export const COMMUNITY_FIGURES_MINIMUMS: CommunityFiguresMinimums = {
   roleLines: ROLE_STATS_MIN_LINES,

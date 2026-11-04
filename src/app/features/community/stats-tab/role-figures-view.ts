@@ -26,7 +26,7 @@ export type RoleFiguresView =
 export const NO_FIGURE = 'Not enough data';
 
 const NOTE =
-  'Per minute played, to the nearest whole number. These are the figures of the players who upload their matches with Rivals Pulse: each app only knows its own player, so this describes those players, not everyone in a lobby. A role shows a figure only once enough of their lines carry it.';
+  'Per minute played, to the nearest whole number. These are the figures of the players who upload their matches with RivalsPulse: each app only knows its own player, so this describes those players, not everyone in a lobby. A role shows a figure only once enough of their lines carry it.';
 
 /** A whole per-minute figure with thousands separators, or "Not enough data" for one that is not shown. */
 export function perMinuteLabel(value: number | null): string {
@@ -65,7 +65,7 @@ export function buildRoleFiguresView(
       kind: 'not-enough-data',
       summary:
         `Not enough data yet. How much damage, healing and damage blocked each role averages per minute${scope}, so you can compare your own. ` +
-        `A role's figure appears once ${lines} carry it, recorded by at least ${figures.minimums.recorders} different players.`,
+        `A role's figure appears once ${lines} (one player's figures on one hero for one match) carry it, recorded by at least ${figures.minimums.recorders} different players.`,
     };
   }
 

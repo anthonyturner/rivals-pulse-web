@@ -44,4 +44,4 @@ export function killPairMinimum(kills: CommunityKills): string {
 
 /** The sentence that keeps the kill feed apart from the win-rate records. */
 export const KILL_FEED_CAVEAT =
-  "Seen kills come from the kill feed a Rivals Pulse player's game showed them, so they miss kills that player did not see. They are not every kill, and they are a separate measure from the win-rate records.";
+  "Seen kills come from the kill feed a RivalsPulse player's game showed them, so they miss kills that player did not see. They are not every kill, and they are a separate measure from the win-rate records.";

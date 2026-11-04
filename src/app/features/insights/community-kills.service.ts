@@ -4,7 +4,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 
 import type { CommunityKills } from '../../../contracts/community-kills.model';
 
-/** The site's own `/api/community/kills`: Rivals Pulse kill-feed counters, with no outside request. */
+/** The site's own `/api/community/kills`: RivalsPulse kill-feed counters, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class CommunityKillsService {
   private readonly http = inject(HttpClient);
@@ -35,6 +35,8 @@ export function isCommunityKills(body: unknown): body is CommunityKills {
     isRecord(minimums) &&
     typeof minimums['pairMatches'] === 'number' &&
     Number.isFinite(minimums['pairMatches']) &&
+    typeof minimums['recorders'] === 'number' &&
+    Number.isFinite(minimums['recorders']) &&
     (body['halfSeason'] === null || isRecord(body['halfSeason'])) &&
     (body['inPlaceOf'] === null || isRecord(body['inPlaceOf'])) &&
     Array.isArray(body['pairs']) &&

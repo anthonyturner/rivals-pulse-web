@@ -3,7 +3,7 @@
 <app-community-summary
   [kind]="current.kind"
   heading="Damage, healing and damage blocked per minute"
-  subject="Community per-minute role figures"
+  subject="community per-minute role figures"
   [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
   [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
   [notice]="current.kind === 'ready' ? current.notice : null"

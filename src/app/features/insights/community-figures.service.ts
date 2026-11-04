@@ -4,7 +4,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 
 import type { CommunityFigures } from '../../../contracts/community-figures.model';
 
-/** The site's own `/api/community/figures`: Rivals Pulse upload numbers, with no outside request. */
+/** The site's own `/api/community/figures`: RivalsPulse upload numbers, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class CommunityFiguresService {
   private readonly http = inject(HttpClient);
@@ -35,6 +35,7 @@ export function isCommunityFigures(body: unknown): body is CommunityFigures {
     isRecord(minimums) &&
     isFiniteNumber(minimums['roleLines']) &&
     isFiniteNumber(minimums['heroLines']) &&
+    isFiniteNumber(minimums['recorders']) &&
     (body['halfSeason'] === null || isRecord(body['halfSeason'])) &&
     (body['inPlaceOf'] === null || isRecord(body['inPlaceOf'])) &&
     Array.isArray(body['modes']) &&

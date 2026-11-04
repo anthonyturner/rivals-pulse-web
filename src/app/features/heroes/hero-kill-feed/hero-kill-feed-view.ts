@@ -76,7 +76,7 @@ export function buildHeroKillFeedView(
       kind: 'not-enough-data',
       halfSeasonLabel,
       fallbackFor,
-      summary: `${subject} in enough kill feeds from Rivals Pulse players yet${where}. ${killPairMinimum(kills)}`,
+      summary: `${subject} in enough kill feeds from RivalsPulse players yet${where}. ${killPairMinimum(kills)}`,
     };
   }
 

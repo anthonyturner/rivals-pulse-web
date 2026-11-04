@@ -131,7 +131,7 @@ export class HeroesPageComponent implements OnInit {
   readonly heroStats = signal<HeroStats | null | undefined>(undefined);
   /** RivalsPulse player matchups for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroMatchups = signal<HeroMatchups | null | undefined>(undefined);
-  /** Rivals Pulse player kill-feed counters for every hero: `undefined` while loading, `null` when unreadable. */
+  /** RivalsPulse player kill-feed counters for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroKills = signal<CommunityKills | null | undefined>(undefined);
   /** Every hero, for the counters section to name and picture the heroes in a matchup. */
   readonly heroRoster = this.heroes.asReadonly();

@@ -59,7 +59,7 @@ export function buildHeroFiguresView(
     return {
       kind: 'not-enough-data',
       summary:
-        `Not enough data yet. A hero's damage, healing and damage blocked per minute appear once ${countLabel(figures.minimums.heroLines, 'line', 'lines')} ` +
+        `Not enough data yet. A hero's damage, healing and damage blocked per minute appear once ${countLabel(figures.minimums.heroLines, 'line', 'lines')} (one player's figures on the hero for one match) ` +
         `carry them, recorded by at least ${figures.minimums.recorders} different players.`,
     };
   }
