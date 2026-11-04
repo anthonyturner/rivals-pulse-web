@@ -62,10 +62,13 @@ the same tree.
 - **Install with `npm ci` and nothing else.** It installs exactly
   what the lockfile says and cannot change `package.json` or the lockfile, which
   is what makes it safe to run without asking. Everything that *can* change them
-  is off limits — for npm: `install`, `i`, `add`, `uninstall`, `remove`, `rm`,
+  is off limits — for npm: `install`, `i`, `add`, `remove`, `rm`,
   `update`, `upgrade`, `install-test`, `link`, `prune`, `rebuild` and
   `dedupe`, and `ng add` and `ng update` in an Angular project — and likewise
   every other package manager's equivalents.
+- **`npm uninstall <package>` is the one exception, and only when the task asks
+  for that package to be removed.** Run it in the task's own worktree. Hand
+  edits to the lockfile are still off limits.
 - **Every worktree gets its own `node_modules`, installed with
   `npm ci`.** A *worktree* is a second checkout of the repository,
   kept under `.claude/worktrees/`, so one task can work without disturbing
