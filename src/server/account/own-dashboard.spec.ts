@@ -31,6 +31,7 @@ describe('deriveOwnDashboard', () => {
     const stats = deriveOwnDashboard([]);
 
     it('counts nothing and claims no rate', () => {
+      expect(stats.activity.maps).toEqual([]);
       expect(stats.matches).toBe(0);
       expect(stats.wins).toBe(0);
       expect(stats.losses).toBe(0);

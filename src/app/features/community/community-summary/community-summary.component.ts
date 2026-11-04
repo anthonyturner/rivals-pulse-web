@@ -7,6 +7,7 @@ import { StatePanelComponent } from '../../../shared/components/state-panel/stat
 export interface CommunitySummaryLink {
   label: string;
   path: string;
+  queryParams?: Record<string, string>;
 }
 
 /**

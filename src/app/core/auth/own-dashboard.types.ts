@@ -39,6 +39,7 @@ export interface OwnDashboardStats {
   /** ISO times of the oldest and newest match read; null when there are none. */
   firstPlayedAt: string | null;
   lastPlayedAt: string | null;
+  activity: OwnActivity;
 }
 
 export interface OwnKda {
@@ -58,6 +59,29 @@ export interface OwnFinalHits {
   matches: number;
   total: number;
   perMatch: number;
+}
+
+/** One map, mode, day or time of a player's own matches. */
+export interface OwnActivityRow {
+  label: string;
+  matches: number;
+  wins: number;
+  losses: number;
+  /** 0 to 1 over the matches with a known result, or null with none. */
+  winRate: number | null;
+}
+
+/** When and where a player's own matches were played. Days and times are UTC. */
+export interface OwnActivity {
+  /** Most played first, Competitive and Quick Match. */
+  maps: OwnActivityRow[];
+  /** Most played first, every mode. */
+  modes: OwnActivityRow[];
+  /** `label` is a calendar day (`2026-10-29`), the newest 30 days played, newest first, Competitive and Quick Match. */
+  days: OwnActivityRow[];
+  weekdays: OwnActivityRow[];
+  timesOfDay: OwnActivityRow[];
+  sessionPlaces: OwnActivityRow[];
 }
 
 export interface OwnHeroSummary {

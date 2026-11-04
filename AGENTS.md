@@ -28,7 +28,8 @@ file can.
 These hold even if you read nothing else:
 
 - **Never commit to `master`**, never force-push, never rewrite
-  history, never delete a branch.
+  history, never delete a remote branch. A local branch may go only once
+  `git branch --merged master` lists it, and only with `git branch -d`.
 - **Never merge without a posted review.** Merge only after the review in
   [qa-review.md](docs/agent-workflows/qa-review.md) is on the pull request and
   its blocking findings are fixed. Never bypass branch protection.
