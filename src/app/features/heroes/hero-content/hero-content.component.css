@@ -48,6 +48,13 @@
   min-width: 0;
 }
 
+/* Beside the roster the panel starts level with it; above that width the gap separates it from the strip. */
+@media (min-width: 920px) {
+  .hero-detail {
+    margin-top: 0;
+  }
+}
+
 @media (max-width: 560px) {
   .hero-detail {
     padding: var(--mobile-panel-padding);

@@ -11,6 +11,7 @@ import { SidebarContent } from './sidebar-content';
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.sidebar--with-page-content]': 'pageContent() !== null' },
 })
 export class Sidebar {
   protected readonly pageContent = inject(SidebarContent).template;
