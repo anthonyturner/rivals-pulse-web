@@ -6,9 +6,7 @@ function insights(overrides: Partial<CommunityInsights> = {}): CommunityInsights
     status: 'ready',
     timeZone: 'UTC',
     sessionGapMinutes: 30,
-    minimumMatches: 30,
-    minimumRecorders: 3,
-    maxRecorderSharePercent: 50,
+    minimumMatches: 10,
     dimensions: [
       {
         id: 'weekday',
@@ -75,9 +73,8 @@ describe('buildInsightsTabView', () => {
     }
     expect(view.notes.join(' ')).toContain('UTC');
     expect(view.notes.join(' ')).toContain('30 minutes');
-    expect(view.notes.join(' ')).toContain('30 matches');
-    expect(view.notes.join(' ')).toContain('3 players');
-    expect(view.notes.join(' ')).toContain('more than 50%');
+    expect(view.notes.join(' ')).toContain('10 matches');
+    expect(view.notes.join(' ')).toContain('one player');
   });
 
   it('leaves the session sentence out when the gap is not known', () => {

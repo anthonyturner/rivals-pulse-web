@@ -11,9 +11,7 @@ const ready: CommunityInsights = {
   status: 'ready',
   timeZone: 'UTC',
   sessionGapMinutes: 30,
-  minimumMatches: 30,
-  minimumRecorders: 3,
-  maxRecorderSharePercent: 50,
+  minimumMatches: 10,
   dimensions: [
     {
       id: 'weekday',
@@ -65,7 +63,7 @@ describe('InsightsTabComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(host.textContent).toContain('Totals appear once enough different players have uploaded matches');
+    expect(host.textContent).toContain('Totals appear once enough matches have been uploaded');
     expect(host.querySelector('table')).toBeNull();
   });
 

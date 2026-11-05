@@ -35,9 +35,5 @@ export interface CommunityInsights {
   sessionGapMinutes: number | null;
   /** Matches a bucket needs, in one half-season, before it, or its win rate, is shown. Null when unknown. */
   minimumMatches: number | null;
-  /** Different players who recorded a bucket's matches in one half-season before it is shown. Null when unknown. */
-  minimumRecorders: number | null;
-  /** The most, as a percentage, of a shown bucket's matches that one player may have recorded. Null when unknown. */
-  maxRecorderSharePercent: number | null;
   dimensions: CommunityInsightsDimension[];
 }

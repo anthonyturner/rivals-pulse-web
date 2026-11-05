@@ -64,8 +64,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     return { kind: 'unavailable' };
   }
 
-  const { overviewMatches, mapMatches, lengthMatches, recorders } = data.minimums;
-  const fromPlayers = `from at least ${recorders} players`;
+  const { overviewMatches, mapMatches, lengthMatches } = data.minimums;
   const halfSeasonLabel = data.halfSeason?.label ?? null;
 
   if (data.status === 'not-enough-data') {
@@ -83,7 +82,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     kind: 'ready',
     halfSeasonLabel,
     notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
-    sample: `${data.matchesBand === null ? 'Matches' : `${data.matchesBand}+ matches`} in ${season}, each counted once however many players recorded it.`,
+    sample: `${data.matchesBand === null ? 'Matches' : `${data.matchesBand}+ matches`} in ${season}, each counted once however many players recorded it. While few players upload, these totals can come from one player.`,
     maps: {
       rows: data.maps.map((record) => ({
         map: record.map,
@@ -94,7 +93,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         data.mapsBelowMinimum.length === 0 ? null : `Not enough data yet for: ${data.mapsBelowMinimum.join(', ')}.`,
       note:
         data.maps.length === 0
-          ? `Not enough data yet. A map needs ${mapMatches} matches with a result ${fromPlayers} before its win rate shows.`
+          ? `Not enough data yet. A map needs ${mapMatches} matches in one game mode and ${mapMatches} with a result before its win rate shows.`
           : null,
     },
     modeMix: {
@@ -104,13 +103,13 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         lengthLabel: share.averageLengthMinutes === null ? null : minutesLabel(share.averageLengthMinutes),
         barPercent: share.share,
       })),
-      note: data.modeMix === null ? `Not enough data yet. The mix appears at ${overviewMatches} matches ${fromPlayers}.` : null,
+      note: data.modeMix === null ? `Not enough data yet. The mix appears at ${overviewMatches} matches.` : null,
     },
     averageLength:
       data.averageLengthMinutes === null
         ? {
             label: null,
-            note: `Not enough data yet. An average needs ${lengthMatches} matches with a known length ${fromPlayers}.`,
+            note: `Not enough data yet. An average needs ${lengthMatches} matches with a known length.`,
           }
         : { label: minutesLabel(data.averageLengthMinutes), note: null },
     perDay: {
@@ -119,7 +118,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         shareLabel: percentLabel(day.share),
         barPercent: (day.share / busiestDay) * 100,
       })),
-      note: data.perDay === null ? `Not enough data yet. Days appear at ${overviewMatches} matches ${fromPlayers}.` : null,
+      note: data.perDay === null ? `Not enough data yet. A day is listed once it has ${overviewMatches} matches.` : null,
     },
   };
 }

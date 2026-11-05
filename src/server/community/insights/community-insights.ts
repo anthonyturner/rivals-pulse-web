@@ -27,8 +27,6 @@ export interface InsightsBucketRow {
 export interface InsightsSource {
   sessionGapMinutes: number;
   minimumMatches: number;
-  minimumRecorders: number;
-  maxRecorderSharePercent: number;
   buckets: readonly InsightsBucketRow[];
 }
 
@@ -85,8 +83,6 @@ export function deriveCommunityInsights(source: InsightsSource | null): Communit
     timeZone: 'UTC',
     sessionGapMinutes: source?.sessionGapMinutes ?? null,
     minimumMatches: source?.minimumMatches ?? null,
-    minimumRecorders: source?.minimumRecorders ?? null,
-    maxRecorderSharePercent: source?.maxRecorderSharePercent ?? null,
     dimensions,
   };
 }

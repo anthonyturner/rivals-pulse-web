@@ -10,7 +10,7 @@ import { MatchesTabComponent } from './matches-tab.component';
 const SEASON = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
 const EMPTY: CommunityMatches = {
   status: 'not-enough-data',
-  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
+  minimums: { overviewMatches: 10, mapMatches: 10, lengthMatches: 10 },
   halfSeasons: [SEASON],
   halfSeason: SEASON,
   inPlaceOf: null,
@@ -74,7 +74,7 @@ describe('MatchesTabComponent', () => {
     await answer(EMPTY);
 
     expect(text()).toContain('Season 10.5 does not have enough data yet');
-    expect(text()).toContain('Totals appear once enough different players have uploaded matches');
+    expect(text()).toContain('Totals appear once enough matches have been uploaded');
     expect(text()).not.toMatch(/NaN|undefined|null|0/);
     expect(headings()).toEqual(['Community matches']);
   });
@@ -107,10 +107,10 @@ describe('MatchesTabComponent', () => {
   it('gives each section a note instead of a blank panel when it has no figures', async () => {
     await answer({ ...READY, modeMix: null, averageLengthMinutes: null, perDay: null, maps: [], mapsBelowMinimum: [] });
 
-    expect(text()).toContain('A map needs 10 matches with a result from at least 3 players');
-    expect(text()).toContain('The mix appears at 20 matches from at least 3 players');
-    expect(text()).toContain('An average needs 10 matches with a known length from at least 3 players');
-    expect(text()).toContain('Days appear at 20 matches from at least 3 players');
+    expect(text()).toContain('A map needs 10 matches in one game mode and 10 with a result');
+    expect(text()).toContain('The mix appears at 10 matches');
+    expect(text()).toContain('An average needs 10 matches with a known length');
+    expect(text()).toContain('A day is listed once it has 10 matches');
   });
 
   it('says the totals cannot be loaded when the request fails', async () => {

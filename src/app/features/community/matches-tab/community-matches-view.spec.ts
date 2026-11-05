@@ -10,7 +10,7 @@ const QUICK_MATCH_ONLY: CommunityModeShare[] = [
 function matches(parts: Partial<CommunityMatches> = {}): CommunityMatches {
   return {
     status: 'ready',
-    minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
+    minimums: { overviewMatches: 10, mapMatches: 10, lengthMatches: 10 },
     halfSeasons: [SEASON_10, SEASON_10_5],
     halfSeason: SEASON_10_5,
     inPlaceOf: null,
@@ -45,7 +45,7 @@ describe('buildCommunityMatchesView', () => {
     if (view.kind === 'not-enough-data') {
       expect(view.halfSeasonLabel).toBe('Season 10.5');
       expect(view.summary).toBe(
-        "Season 10.5 does not have enough data yet. Totals appear once enough different players have uploaded matches, so no one player's matches are shown as the community's.",
+        "Season 10.5 does not have enough data yet. Totals appear once enough matches have been uploaded.",
       );
     }
   });
@@ -56,7 +56,7 @@ describe('buildCommunityMatchesView', () => {
     );
 
     expect(view.kind === 'not-enough-data' && view.summary).toBe(
-      "No matches are counted yet. Totals appear once enough different players have uploaded matches, so no one player's matches are shown as the community's.",
+      "No matches are counted yet. Totals appear once enough matches have been uploaded.",
     );
   });
 
@@ -75,13 +75,13 @@ describe('buildCommunityMatchesView', () => {
     const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesBand: 100 })));
 
     expect(view.notice).toBeNull();
-    expect(view.sample).toBe('100+ matches in Season 10.5, each counted once however many players recorded it.');
+    expect(view.sample).toBe('100+ matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
   });
 
   it('states no volume when the sample is below the smallest band', () => {
     const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesBand: null })));
 
-    expect(view.sample).toBe('Matches in Season 10.5, each counted once however many players recorded it.');
+    expect(view.sample).toBe('Matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
   });
 
   it('shows each map with its whole-percentage rate and a bar, and names the thin ones without a count', () => {
@@ -102,7 +102,7 @@ describe('buildCommunityMatchesView', () => {
     expect(view.maps.rows).toEqual([]);
     expect(view.maps.pendingNote).toBeNull();
     expect(view.maps.note).toBe(
-      'Not enough data yet. A map needs 10 matches with a result from at least 3 players before its win rate shows.',
+      'Not enough data yet. A map needs 10 matches in one game mode and 10 with a result before its win rate shows.',
     );
   });
 
@@ -129,13 +129,13 @@ describe('buildCommunityMatchesView', () => {
     const view = ready(buildCommunityMatchesView(matches({ maps: [{ map: 'Tokyo 2099', winRate: 50 }] })));
 
     expect(view.modeMix.rows).toEqual([]);
-    expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 20 matches from at least 3 players.');
+    expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 10 matches.');
     expect(view.averageLength.label).toBeNull();
     expect(view.averageLength.note).toBe(
-      'Not enough data yet. An average needs 10 matches with a known length from at least 3 players.',
+      'Not enough data yet. An average needs 10 matches with a known length.',
     );
     expect(view.perDay.rows).toEqual([]);
-    expect(view.perDay.note).toBe('Not enough data yet. Days appear at 20 matches from at least 3 players.');
+    expect(view.perDay.note).toBe('Not enough data yet. A day is listed once it has 10 matches.');
   });
 
   it('shows the average length and the days as shares, with bars scaled to the busiest day', () => {

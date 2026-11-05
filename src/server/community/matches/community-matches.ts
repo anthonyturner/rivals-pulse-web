@@ -21,17 +21,14 @@ import {
  */
 
 /**
- * With one uploader most half-seasons start thin, so these are low on purpose: just enough that one
- * lucky evening does not read as "the community".
+ * Almost every upload comes from one player, so these are low on purpose: a figure shows as soon as
+ * a little data backs it, and steadies as more matches arrive. The database hides a map, mode or day
+ * under 10 matches, so every count here is already a count of shown buckets.
  */
 export const COMMUNITY_MATCHES_MINIMUMS: CommunityMatchesMinimums = {
-  overviewMatches: 20,
+  overviewMatches: 10,
   mapMatches: 10,
   lengthMatches: 10,
-  // Mirrors `community_bucket_shown` in the database, which is where the privacy rule is applied:
-  // a map, mode or day that fewer players recorded (or that one player mostly recorded) never
-  // reaches this code, so every count here is already a count of shown buckets.
-  recorders: 3,
 };
 
 /** One game mode in one half-season, as `read_community_matches()` returns it. */

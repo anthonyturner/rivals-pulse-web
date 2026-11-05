@@ -2,7 +2,7 @@ import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
 
 /*
  * Nothing in this payload is an exact count of matches. A hidden bucket (a map, a mode or a day with
- * too few recorders) could otherwise be worked out by subtracting the shown ones from a total, so the
+ * too few matches) could otherwise be worked out by subtracting the shown ones from a total, so the
  * tab gets whole-number percentages, minutes, and one coarse volume band instead.
  */
 
@@ -39,11 +39,6 @@ export interface CommunityMatchesMinimums {
   mapMatches: number;
   /** Matches with a known length before an average length shows. */
   lengthMatches: number;
-  /**
-   * Distinct players who must have recorded the matches of a map, mode or day before it shows. The
-   * database applies this (with a cap of half a bucket for any one player); it is here so the tab can say so.
-   */
-  recorders: number;
 }
 
 /**
