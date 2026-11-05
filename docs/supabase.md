@@ -94,6 +94,7 @@ repo's build. This is a move, not a redesign.
 | `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
 | `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
 | `20261104130000_hero_score_read.sql` | `read_community_hero_scores()` (service role only): what the 1 to 10 hero build scores are worked out from, including how far along a hero below the rule is |
+| `20261104140000_admins.sql` | `admins` (the site administrators, no grant to the API roles) and `is_admin()` (granted to `authenticated` only): the database half of the admin area |
 
 Link once per machine, check history, then apply:
 
@@ -865,6 +866,57 @@ action, never a broad table grant.
 - Deploy order: the migrations by hand, then `npx supabase functions deploy refresh-linked-player link-status
   unlink-player-app`. `issue-link-code` now runs on the same shared module, so redeploy it too. The secrets are the
   ones it already uses.
+
+### The site administrator role (issue 290)
+
+[ADR-0005](decisions/0005-gate-site-administration-behind-an-admin-table.md) is the design. `20261104140000_admins.sql` adds
+`public.admins` (`user_id` references `auth.users` on delete cascade, `granted_at`, `note`) with RLS on, no policy and no grant to
+`anon` or `authenticated`, and `public.is_admin()`: security definer, empty `search_path`, executable by `authenticated` only,
+true when `auth.uid()` has a row. Nothing in the website writes the table, and nothing is kept in the sign-in token, so
+**revoking takes effect on the admin's next request**: the API refuses at once, and the Admin link goes at the next page load.
+The service-role key is not used for any admin read or write.
+
+- The website asks `is_admin()` with the visitor's own token (`AuthGateway.isAdmin`), on `GET /api/auth/session` (the
+  `isAdmin` field, which only decides whether the header shows the Admin link) and in front of every `/api/admin/*` route
+  (401 signed out, 403 not an admin, 503 when the database cannot say). Until the migration is applied the function is
+  missing, so the session reads `isAdmin: false` and the admin routes answer 503; nothing else is affected.
+- The admin area works on `rivalspulse.com` and from `localhost` against the live project, as sign-in does. A preview
+  deployment has no sign-in, so none.
+
+**Granting and revoking admin is the owner's, by hand, outside the website.** There is no sign-up route to it. With the CLI
+linked to the project (see "Migrations"), after the account has signed in once:
+
+```sh
+# 1. Find the account's id (read-only). Match on the sign-in you made, then check the created date is right.
+npx supabase db query --linked "select id, email, created_at from auth.users where email = '<the account email>'"
+
+# 2. Grant admin. Safe to repeat.
+npx supabase db query --linked "insert into public.admins (user_id, note) values ('<id from step 1>', 'site owner') on conflict (user_id) do nothing"
+
+# See who is an admin.
+npx supabase db query --linked "select user_id, granted_at, note from public.admins"
+
+# Revoke admin. The account keeps its sign-in.
+npx supabase db query --linked "delete from public.admins where user_id = '<id>'"
+```
+
+Grant by the id from step 1, never by an email typed into the insert: an address is something Discord reports, not something this site verified. Deleting the account deletes its row.
+
+**Checks after the migration is applied.** CI starts no database, so `scripts/admin-migrations.test.ts` (part of
+`npm run test:functions`) reads the SQL for the rules, and these show them against the real project:
+
+- `npx supabase db query --linked -f supabase/checks/admins.sql` proves the rules in a transaction it rolls back, with two
+  throwaway users and no real account: a row makes an administrator, a signed-in account without one is not, `anon` cannot
+  call the function, neither role can read or write the table, revoking is seen on the next call and deleting the account
+  deletes the row.
+- By hand, once an admin is granted: signed out, `/api/admin/me` answers 401; signed in with an account that is not an admin,
+  403; signed in as the admin, 200 `{"admin":true}`; the header shows Admin for the admin only; `/admin` sends everyone else to
+  the home page. Then revoke, reload, and confirm the same account now gets 403 and no Admin link, and grant again.
+
+Adding an admin page or route: a page is one entry in `ADMIN_PAGES` (`src/app/features/admin/admin-pages.ts`); an API route
+is one entry in `ADMIN_ROUTES` (`src/server/admin/admin-routes.ts`) plus a two-line file under `api/admin/`. A database
+function it calls must be security definer, call `public.is_admin()` before it touches anything and be granted to
+`authenticated` only; the static test fails a migration that breaks that.
 
 ## Tests
 
