@@ -168,6 +168,15 @@ describe('HeroCommunityCountersComponent', () => {
     expect(root.textContent).not.toMatch(/\bban\b|\bbans\b|banned/i);
   });
 
+  it('stacks the two groups, even when the panel has room for them side by side', async () => {
+    const root = await show('thor', 'Thor', readyMatchups);
+    root.style.width = '1000px';
+    const [against, record] = [...root.querySelectorAll('section section')].map((group) => group.getBoundingClientRect());
+
+    expect(against.width).toBeGreaterThan(900);
+    expect(record.top).toBeGreaterThanOrEqual(against.bottom);
+  });
+
   it('names the section by its heading, and links to the counter lab', async () => {
     const root = await show('thor', 'Thor', readyMatchups);
     const section = root.querySelector('section') as HTMLElement;
