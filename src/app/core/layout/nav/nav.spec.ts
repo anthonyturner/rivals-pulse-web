@@ -198,6 +198,7 @@ describe('Nav', () => {
         status: 'signedIn',
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
         player: null,
+        isAdmin: false,
       });
       fixture.detectChanges();
       await go('/profile');
@@ -222,6 +223,7 @@ describe('Nav', () => {
       status: 'signedIn',
       account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
       player: null,
+      isAdmin: false,
     });
     fixture.detectChanges();
 
@@ -235,6 +237,7 @@ describe('Nav', () => {
         status: 'signedIn',
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
         player: { name, avatarUrl },
+        isAdmin: false,
       });
       fixture.detectChanges();
     };
@@ -284,6 +287,7 @@ describe('Nav', () => {
         status: 'signedIn',
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
         player: null,
+        isAdmin: false,
       });
       fixture.detectChanges();
 
@@ -308,6 +312,7 @@ describe('Nav', () => {
       status: 'signedIn',
       account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
       player: null,
+      isAdmin: false,
     });
     fixture.detectChanges();
 
@@ -318,6 +323,50 @@ describe('Nav', () => {
     fixture.detectChanges();
 
     expect(statsLink()).toBeUndefined();
+  });
+
+  describe('the Admin link', () => {
+    const adminLink = (): HTMLAnchorElement | undefined =>
+      Array.from(
+        fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
+      ).find((anchor) => anchor.textContent?.trim() === 'Admin');
+    const labels = (): (string | undefined)[] =>
+      Array.from(
+        fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
+      ).map((anchor) => anchor.textContent?.trim());
+    const show = (state: SessionState): void => {
+      sessionState.set(state);
+      fixture.detectChanges();
+    };
+    const ACCOUNT = { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' };
+
+    it('is shown to an administrator, between My stats and the account link', () => {
+      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true });
+
+      expect(adminLink()?.getAttribute('href')).toBe('/admin');
+      expect(labels().slice(-3)).toEqual(['My stats', 'Admin', 'Account']);
+    });
+
+    it('is not shown to a signed-in visitor who is not an administrator', () => {
+      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+
+      expect(adminLink()).toBeUndefined();
+    });
+
+    for (const status of ['signedOut', 'unavailable', 'loading'] as const) {
+      it(`is not shown to a visitor who is ${status}`, () => {
+        show({ status });
+
+        expect(adminLink()).toBeUndefined();
+      });
+    }
+
+    it('goes away when the administrator signs out', () => {
+      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true });
+      show({ status: 'signedOut' });
+
+      expect(adminLink()).toBeUndefined();
+    });
   });
 
   it('shows neither link while the session is still being read, but keeps its place', () => {

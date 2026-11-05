@@ -1,8 +1,9 @@
 import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Meta } from '@angular/platform-browser';
 import { provideRouter, Router, Routes, TitleStrategy } from '@angular/router';
 
-import { canonicalUrl, PageMetaTitleStrategy } from './page-meta-title.strategy';
+import { canonicalUrl, PageMetaTitleStrategy, ROUTE_NOINDEX } from './page-meta-title.strategy';
 import {
   HOME_TITLE,
   PREVIEW_IMAGE_PATH,
@@ -20,6 +21,12 @@ const routes: Routes = [
   { path: 'heroes', component: BlankComponent },
   { path: 'heroes/:heroId', component: BlankComponent },
   { path: 'elsewhere', redirectTo: 'heroes' },
+  {
+    path: 'admin',
+    title: 'Admin',
+    data: ROUTE_NOINDEX,
+    children: [{ path: 'overview', title: 'Overview', component: BlankComponent }],
+  },
 ];
 
 describe('PageMetaTitleStrategy', () => {
@@ -91,6 +98,70 @@ describe('PageMetaTitleStrategy', () => {
     expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
     expect(document.head.querySelectorAll('meta[property="og:title"]').length).toBe(1);
     expect(canonical()).toBe(`${SITE_ORIGIN}/`);
+  });
+});
+
+describe('PageMetaTitleStrategy on a route flagged with ROUTE_NOINDEX', () => {
+  let router: Router;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter(routes),
+        { provide: TitleStrategy, useExisting: PageMetaTitleStrategy },
+      ],
+    });
+    router = TestBed.inject(Router);
+  });
+
+  afterEach(() => {
+    document.head.querySelectorAll('meta[name="robots"]').forEach((element) => element.remove());
+  });
+
+  const robots = (): string[] =>
+    Array.from(document.head.querySelectorAll('meta[name="robots"]')).map(
+      (element) => element.getAttribute('content') ?? '',
+    );
+  const canonical = (): string | null =>
+    document.head.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
+
+  it('asks not to be indexed or followed, and claims no canonical address, on a child of the flagged route', async () => {
+    await router.navigateByUrl('/admin/overview');
+
+    expect(robots()).toEqual(['noindex, nofollow']);
+    expect(canonical()).toBeNull();
+    expect(document.title).toBe('Overview');
+  });
+
+  it('keeps a single robots tag across the flagged routes', async () => {
+    await router.navigateByUrl('/admin/overview');
+    await router.navigateByUrl('/admin/overview?x=1');
+
+    expect(robots()).toEqual(['noindex, nofollow']);
+  });
+
+  it('lets a public page be indexed again, with its canonical, once the visitor leaves', async () => {
+    await router.navigateByUrl('/admin/overview');
+    await router.navigateByUrl('/privacy');
+
+    expect(robots()).toEqual([]);
+    expect(canonical()).toBe(`${SITE_ORIGIN}/privacy`);
+  });
+
+  it('leaves a page that is not flagged without a robots tag', async () => {
+    await router.navigateByUrl('/privacy');
+
+    expect(robots()).toEqual([]);
+  });
+
+  it('does not remove a robots tag another page added', async () => {
+    const other = TestBed.inject(Meta).addTag({ name: 'robots', content: 'noindex' }, true);
+
+    await router.navigateByUrl('/privacy');
+
+    expect(robots()).toEqual(['noindex']);
+    other?.remove();
   });
 });
 

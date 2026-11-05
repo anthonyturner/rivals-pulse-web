@@ -16,7 +16,8 @@ export interface Account {
 export type SessionState =
   | { status: 'loading' }
   | { status: 'signedOut' }
-  | { status: 'signedIn'; account: Account; player: LinkedPlayer | null }
+  /** `isAdmin` only decides what is shown: the server and the database refuse everyone else on their own. */
+  | { status: 'signedIn'; account: Account; player: LinkedPlayer | null; isAdmin: boolean }
   /** The session could not be read; the visitor is treated as signed out. */
   | { status: 'unavailable' };
 
@@ -230,10 +231,15 @@ export class AuthService {
         return { status: 'unavailable' };
       }
 
-      const body = (await response.json()) as { signedIn?: boolean; account?: Account; player?: unknown };
+      const body = (await response.json()) as {
+        signedIn?: boolean;
+        account?: Account;
+        player?: unknown;
+        isAdmin?: unknown;
+      };
 
       return body.signedIn && body.account
-        ? { status: 'signedIn', account: body.account, player: playerOf(body.player) }
+        ? { status: 'signedIn', account: body.account, player: playerOf(body.player), isAdmin: body.isAdmin === true }
         : { status: 'signedOut' };
     } catch {
       return { status: 'unavailable' };

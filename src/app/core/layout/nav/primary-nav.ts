@@ -19,7 +19,10 @@ export const PRIMARY_NAV_ITEMS: readonly PrimaryNavItem[] = [
 /** The signed-in visitor's own stats page, linked beside the account item. */
 export const PROFILE_PATH = '/profile';
 
-const ACCOUNT_PATHS = ['/account', '/sign-in', PROFILE_PATH];
+/** The admin area, linked only for an administrator. */
+export const ADMIN_PATH = '/admin';
+
+const ACCOUNT_PATHS = ['/account', '/sign-in', PROFILE_PATH, ADMIN_PATH];
 
 const isAtOrBelow = (path: string, base: string): boolean => path === base || path.startsWith(`${base}/`);
 

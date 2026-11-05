@@ -1,10 +1,12 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard } from './core/auth/admin.guard';
 import { signedInGuard } from './core/auth/signed-in.guard';
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
 import { knownIdGuard } from './core/navigation/known-id.guard';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
+import { ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
 import { HOME_TITLE } from './core/seo/site-meta';
 import { heroesRoutes } from './features/heroes/heroes.routes';
 import { heroGuideRouteTitle, strategistGuideRouteTitle } from './features/learning/guides/guide-titles';
@@ -289,6 +291,13 @@ export const routes: Routes = [
       import('./features/profile/profile-page.component').then(
         (module) => module.ProfilePageComponent,
       ),
+  },
+  {
+    path: 'admin',
+    title: 'Admin | RivalsPulse',
+    data: { ...ROUTE_WITHOUT_SIDEBAR, ...ROUTE_NOINDEX },
+    canMatch: [adminGuard],
+    loadChildren: () => import('./features/admin/admin.routes').then((module) => module.adminRoutes),
   },
   {
     path: '**',

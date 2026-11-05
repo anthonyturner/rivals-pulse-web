@@ -42,7 +42,7 @@ describe('injectOwnActivity', () => {
   });
 
   it('hides the figures as soon as the account signs out', async () => {
-    auth.state.set({ status: 'signedIn', account: account('a@example.com'), player: null });
+    auth.state.set({ status: 'signedIn', account: account('a@example.com'), player: null, isAdmin: false });
     await settle();
     answers[0](ready);
     await settle();
@@ -54,9 +54,9 @@ describe('injectOwnActivity', () => {
   });
 
   it('ignores a late answer for the previous account after switching', async () => {
-    auth.state.set({ status: 'signedIn', account: account('a@example.com'), player: null });
+    auth.state.set({ status: 'signedIn', account: account('a@example.com'), player: null, isAdmin: false });
     await settle();
-    auth.state.set({ status: 'signedIn', account: account('b@example.com'), player: null });
+    auth.state.set({ status: 'signedIn', account: account('b@example.com'), player: null, isAdmin: false });
     await settle();
 
     answers[0](ready);

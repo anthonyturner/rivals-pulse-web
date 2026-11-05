@@ -25,6 +25,7 @@ describe('signedInGuard', () => {
       status: 'signedIn',
       account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
       player: null,
+      isAdmin: false,
     });
 
     expect(result).toBeTrue();

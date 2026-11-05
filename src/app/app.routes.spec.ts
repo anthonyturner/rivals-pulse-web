@@ -2,11 +2,13 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, Routes } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { routes } from './app.routes';
+import { adminGuard } from './core/auth/admin.guard';
 import { signedInGuard } from './core/auth/signed-in.guard';
+import { ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
 import { WinRatesPageComponent } from './features/insights/win-rates/win-rates-page.component';
 import { OverlayFaqPageComponent } from './features/overlay-faq/overlay-faq-page.component';
 
@@ -124,6 +126,39 @@ describe('profile route', () => {
   it('has its own title', () => {
     expect(profile?.title).toBe('Your stats | RivalsPulse');
   });
+});
+
+describe('admin route', () => {
+  const admin = routes.find((route) => route.path === 'admin');
+
+  it('is behind the admin guard and asks not to be indexed', () => {
+    expect(admin?.canMatch).toEqual([adminGuard]);
+    expect(admin?.data).toEqual(jasmine.objectContaining(ROUTE_NOINDEX));
+  });
+
+  it('is the only route, anywhere in the tree, that uses the admin guard or asks not to be indexed', () => {
+    const flagged: string[] = [];
+    const visit = (list: Routes, path: string): void => {
+      for (const route of list) {
+        const here = `${path}/${route.path ?? ''}`;
+
+        if (route.canMatch?.includes(adminGuard) || route.canActivate?.includes(adminGuard)) {
+          flagged.push(here);
+        }
+
+        if (route.data?.['noindex'] === true) {
+          flagged.push(`${here} (noindex)`);
+        }
+
+        visit(route.children ?? [], here);
+      }
+    };
+
+    visit(routes, '');
+
+    expect(flagged.sort()).toEqual(['/admin', '/admin (noindex)']);
+  });
+
 });
 
 describe('route titles', () => {

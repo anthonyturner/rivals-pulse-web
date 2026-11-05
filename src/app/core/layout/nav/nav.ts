@@ -18,7 +18,7 @@ import { AuthService } from '../../auth/auth.service';
 import type { LinkedPlayer } from '../../auth/linked-player.types';
 import { PlayerAvatarComponent } from '../../../shared/components/player-avatar/player-avatar.component';
 import { ThemeToggle } from '../theme-toggle/theme-toggle';
-import { HOME_NAV_ITEM, PRIMARY_NAV_ITEMS, PROFILE_PATH, activeNav } from './primary-nav';
+import { ADMIN_PATH, HOME_NAV_ITEM, PRIMARY_NAV_ITEMS, PROFILE_PATH, activeNav } from './primary-nav';
 
 interface AccountLink {
   label: string;
@@ -70,6 +70,16 @@ export class Nav {
 
   /** Only for a signed-in visitor: the page is theirs, and a signed-out visitor has nothing to open. */
   readonly statsLink = computed(() => (this.auth.state().status === 'signedIn' ? PROFILE_PATH : null));
+
+  /**
+   * Only for an administrator. Hiding the link is a courtesy: the admin pages and API refuse
+   * everyone else on their own.
+   */
+  readonly adminLink = computed(() => {
+    const state = this.auth.state();
+
+    return state.status === 'signedIn' && state.isAdmin ? ADMIN_PATH : null;
+  });
 
   /** Null until the server has answered, so a signed-in visitor never sees "Sign in" flash by. */
   readonly accountLink = computed<AccountLink | null>(() => {
