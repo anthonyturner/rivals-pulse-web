@@ -19,6 +19,16 @@ test('the tab gate needs 10 matches and the Insights read shares its numbers', (
   assert.match(migration, /p_matches >= public\.insights_min_matches\(\)/);
 });
 
+test('the website states the same match minimum as the database', () => {
+  const website = readFileSync(
+    new URL('../../../src/server/community/matches/community-matches.ts', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(website, /overviewMatches: 10,/);
+  assert.match(website, /mapMatches: 10,/);
+});
+
 test('the hero pair gate is not redefined', () => {
   assert.doesNotMatch(migration, /create or replace function public\.community_bucket_shown/);
 });

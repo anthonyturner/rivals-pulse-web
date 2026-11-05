@@ -102,7 +102,7 @@ describe('buildCommunityMatchesView', () => {
     expect(view.maps.rows).toEqual([]);
     expect(view.maps.pendingNote).toBeNull();
     expect(view.maps.note).toBe(
-      'Not enough data yet. A map needs 10 matches with a result before its win rate shows.',
+      'Not enough data yet. A map needs 10 matches in one game mode and 10 with a result before its win rate shows.',
     );
   });
 
@@ -135,7 +135,7 @@ describe('buildCommunityMatchesView', () => {
       'Not enough data yet. An average needs 10 matches with a known length.',
     );
     expect(view.perDay.rows).toEqual([]);
-    expect(view.perDay.note).toBe('Not enough data yet. Days appear at 10 matches.');
+    expect(view.perDay.note).toBe('Not enough data yet. A day is listed once it has 10 matches.');
   });
 
   it('shows the average length and the days as shares, with bars scaled to the busiest day', () => {

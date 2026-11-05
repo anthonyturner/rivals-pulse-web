@@ -107,10 +107,10 @@ describe('MatchesTabComponent', () => {
   it('gives each section a note instead of a blank panel when it has no figures', async () => {
     await answer({ ...READY, modeMix: null, averageLengthMinutes: null, perDay: null, maps: [], mapsBelowMinimum: [] });
 
-    expect(text()).toContain('A map needs 10 matches with a result');
+    expect(text()).toContain('A map needs 10 matches in one game mode and 10 with a result');
     expect(text()).toContain('The mix appears at 10 matches');
     expect(text()).toContain('An average needs 10 matches with a known length');
-    expect(text()).toContain('Days appear at 10 matches');
+    expect(text()).toContain('A day is listed once it has 10 matches');
   });
 
   it('says the totals cannot be loaded when the request fails', async () => {

@@ -93,7 +93,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         data.mapsBelowMinimum.length === 0 ? null : `Not enough data yet for: ${data.mapsBelowMinimum.join(', ')}.`,
       note:
         data.maps.length === 0
-          ? `Not enough data yet. A map needs ${mapMatches} matches with a result before its win rate shows.`
+          ? `Not enough data yet. A map needs ${mapMatches} matches in one game mode and ${mapMatches} with a result before its win rate shows.`
           : null,
     },
     modeMix: {
@@ -118,7 +118,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
         shareLabel: percentLabel(day.share),
         barPercent: (day.share / busiestDay) * 100,
       })),
-      note: data.perDay === null ? `Not enough data yet. Days appear at ${overviewMatches} matches.` : null,
+      note: data.perDay === null ? `Not enough data yet. A day is listed once it has ${overviewMatches} matches.` : null,
     },
   };
 }

@@ -22,9 +22,9 @@ function functionAnswer(): Record<string, unknown> {
 
   return {
     session_gap_minutes: 30,
-    minimum_matches: 30,
-    minimum_recorders: 3,
-    max_recorder_share_percent: 50,
+    minimum_matches: 10,
+    minimum_recorders: 1,
+    max_recorder_share_percent: 100,
     buckets: [bucket(1), bucket(2), bucket(3)],
   };
 }

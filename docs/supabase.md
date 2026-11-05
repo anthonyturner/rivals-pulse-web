@@ -571,8 +571,9 @@ reaches it.
   no one player over `insights_max_recorder_share_percent()` (100) of its matches, so today the player numbers hold nothing back; the rows that pass
   are added over half-seasons inside the function. A share is over the shown buckets of its dimension
   only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
-  win rate is null with fewer than 10 results. Raise the player numbers in a new migration to bring the
-  gate back; nothing needs rebuilding.
+  win rate is null with fewer than 10 results. Raising the player numbers in a new migration brings the
+  database gate back with no rebuild. The API's player minimum, the tab wording and the Privacy text went
+  with the old rule and must return with it (issue 480, before other players are invited).
 - The server calls it with the shared client and labels the answer in
   [`src/server/community/insights/community-insights.ts`](../src/server/community/insights/community-insights.ts), served by `GET /api/community/insights`.
   A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP

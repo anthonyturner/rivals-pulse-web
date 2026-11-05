@@ -2,7 +2,7 @@ import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
 
 /*
  * Nothing in this payload is an exact count of matches. A hidden bucket (a map, a mode or a day with
- * too few recorders) could otherwise be worked out by subtracting the shown ones from a total, so the
+ * too few matches) could otherwise be worked out by subtracting the shown ones from a total, so the
  * tab gets whole-number percentages, minutes, and one coarse volume band instead.
  */
 
