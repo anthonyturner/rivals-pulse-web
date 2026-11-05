@@ -41,12 +41,20 @@ function gateway(isAdmin: () => Promise<boolean>, calls: string[] = []): AuthGat
 
       return isAdmin();
     },
+    beginDataJob: async () => ({ status: 'started', runId: 1 }),
+    runRebuildJob: async () => 1,
+    finishDataJob: async () => true,
+    readDataJobs: async () => [],
   };
 }
+
+/** The body a POST route needs to get as far as running. A rebuild, so no sync reaches the network. */
+const BODIES: Record<string, unknown> = { 'admin/data-jobs-run': { job: 'recompute-hero-aggregates' } };
 
 const request = (route: string, method: string, signedIn: boolean): AccountRequest => ({
   method,
   route,
+  body: BODIES[route],
   query: new URLSearchParams(),
   host: 'rivalspulse.com',
   protocol: 'https',
@@ -90,7 +98,7 @@ describe('every admin route', () => {
         const response = await handleAdminRequest(request(route, method, true), () => gateway(async () => true, calls));
 
         assert.equal(response.status, 200);
-        assert.deepEqual(calls, ['resolve', 'isAdmin']);
+        assert.deepEqual(calls.slice(0, 2), ['resolve', 'isAdmin']);
       });
     });
   }

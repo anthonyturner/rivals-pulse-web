@@ -131,8 +131,14 @@ export function adminRuleViolations(migrations: readonly Migration[]): string[] 
       const needsGuard = !isTheCheck && !listed && (adminNamed || (reachable && (selected || version >= GUARDED_FROM)));
 
       if (needsPosture) {
-        if (!/security definer\s+set search_path = ''/.test(fn.header)) {
+        // A function callable by no API role (an internal helper) has no caller to run as; the rest run as their owner.
+        const needsDefiner = adminNamed || reachable;
+
+        if (needsDefiner && !/security definer\s+set search_path = ''/.test(fn.header)) {
           fail(`${fn.name} must run as its owner with an empty search path`);
+        }
+        if (!needsDefiner && !/set search_path = ''/.test(fn.header)) {
+          fail(`${fn.name} must have an empty search path`);
         }
         if (!revokes(statements, fn.name, 'public') || !revokes(statements, fn.name, 'anon')) {
           fail(`${fn.name} must revoke execute from public and anon`);

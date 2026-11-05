@@ -95,6 +95,7 @@ repo's build. This is a move, not a redesign.
 | `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
 | `20261104130000_hero_score_read.sql` | `read_community_hero_scores()` (service role only): what the 1 to 10 hero build scores are worked out from, including how far along a hero below the rule is |
 | `20261104140000_admins.sql` | `admins` (the site administrators, no grant to the API roles) and `is_admin()` (granted to `authenticated` only): the database half of the admin area |
+| `20261104150000_admin_data_jobs.sql` | Running the data jobs on demand: `admin_audit_log` (closed to every API role), `sync_runs.by_admin`, the helpers `data_job_cooldown`, `data_job_unfinished_after` and `data_job_wait` (callable by no API role, so neither security definer nor guarded), and `admin_begin_run`, `admin_run_rebuild`, `admin_finish_run` and `admin_data_jobs_status` (granted to `authenticated` only, each asking `is_admin()` first) |
 
 Link once per machine, check history, then apply:
 
@@ -919,12 +920,82 @@ Grant by the id from step 1, never by an email typed into the insert: an address
 
 Adding an admin page or route: a page is one entry in `ADMIN_PAGES` (`src/app/features/admin/admin-pages.ts`); an API route
 is one entry in `ADMIN_ROUTES` (`src/server/admin/admin-routes.ts`) plus a two-line file under `api/admin/`. A database
-function it calls must be security definer, call `public.is_admin()` before it touches anything and be granted to
+function it calls must be security definer (an internal helper that no API role can call needs only an empty `search_path`), call `public.is_admin()` before it touches anything and be granted to
 `authenticated` only. The static test enforces this for every migration from `20261104140000` on: any function a signed-in
 account can call (granted to `authenticated`, or not revoked from it, since Supabase grants new functions by default) must call
 `is_admin()` or be listed in `NOT_ADMIN_FUNCTIONS` (`scripts/admin-migration-rules.ts`), which is a decision for review.
 It also fails a later grant, policy or `disable row level security` on `public.admins`, and any table with `admin` in its name
 without RLS.
+
+### Running the data jobs on demand (issue 494)
+
+The admin page "Data jobs" (`/admin/data-jobs`) runs the seven background jobs sooner than their schedule: the five hourly
+rebuilds (`recompute-hero-aggregates`, `recompute-extended-aggregates`, `recompute-community-match-aggregates`,
+`recompute-play-time-aggregates`, `recompute-hero-pair-aggregates`, each named by its `pg_cron` job) and the two syncs the
+website runs on Vercel (`home-news`, `game-stats`). Player uploads cannot be forced, and the page says so. The list is in
+`src/contracts/admin-data-jobs.model.ts` and again in `data_job_cooldown()` (the allow-list: null for any other key);
+`scripts/admin-data-jobs.test.ts` fails when the two disagree or when a rebuild is not the function its cron job runs.
+`20261104150000_admin_data_jobs.sql` is the design:
+
+1. **`admin_begin_run(job)`** checks `is_admin()`, the allow-list, whether the job's latest run is open (started less than ten minutes
+   ago and not closed) and its cooldown (one minute; ten for `home-news`, counted from the start of the last run), under an advisory
+   lock so two clicks start one run. It answers `busy` with `reason` and `retryAt` and writes nothing, or writes the `admin_audit_log`
+   row (`actor_id`, `job`, `started_at`, outcome `running`) and returns its id. It is a call of its own, so the row is committed
+   before any work starts and a timeout cannot erase it.
+2. A rebuild is **`admin_run_rebuild(run_id)`**, for the administrator who began that open run: it runs the job's `recompute_*`
+   function (the one its cron job runs) and closes the row as `succeeded` in the same transaction. If the rebuild fails or the role's
+   `statement_timeout` (8 seconds for `authenticated`) stops it, that transaction rolls back and the row stays open. A sync is run
+   by the web server (`src/server/admin/sync-jobs.ts`), because only the server can reach Steam and the official site.
+3. **`admin_finish_run(run_id, outcome, detail)`** closes the administrator's own open row as `succeeded` or `failed`. The web server
+   calls it after a sync, and after a rebuild that threw. A row nobody closes reads as `unfinished` ("did not finish") once it is over
+   ten minutes old and no longer blocks the job.
+4. **`admin_data_jobs_status()`** gives each job's last scheduled run (a rebuild's from `cron.job_run_details`, a sync's from
+   `sync_runs` where `by_admin` is false), its last manual run (from the audit log) and any wait. A history it cannot read reads as none.
+
+The service-role key is used for the two syncs only, inside `runHomeNewsJob` and `runGameStatsJob`, after step 1 has succeeded
+(ADR-0005 decision 6, amended). `CRON_SECRET` is not read by the admin area. Scheduled runs are untouched: they leave
+`sync_runs.by_admin` at its default, and a manual sync passes `byAdmin` so the page can tell the two apart.
+
+**What a game stats run really did.** The hour's first capture wins (`record_game_stat_snapshot` ignores a second one in the same
+UTC hour), a game Steam does not answer for is stored with a built-in number, and a visit to the game stats page can also take the
+hour. So the page reports one of: a new capture stored from Steam, a new capture stored with N built-in fallback numbers (and that the
+hour now keeps them), or nothing stored because the hour was already captured, and when. The scheduled run's `sync_runs` message says
+the same. A `home-news` read has one 30-second deadline for every page it fetches, so a slow site fails the run before anything is
+saved and the earlier news stays. A page that answers but holds no news card also fails the run before anything is saved (the scheduled
+run too), instead of replacing the news with a placeholder.
+
+**Not done here:** a function-level `statement_timeout` for a rebuild that outgrows 8 seconds (the slowest took about 1.08 seconds on
+2026-11-04; whether PostgREST honours it is unverified, and `SET` in a function does not reliably cut off the statement that called it),
+and a `pg_cron` queue for one that passes about 60 seconds. Either is a follow-up when a rebuild gets near the limit.
+
+- **Release order for the migration** (it has never run anywhere, so it follows "Migrations" above, not the merge deploy alone):
+  `npx supabase migration list --linked` (the local and remote columns must match), `npx supabase db push` from the branch,
+  `npx supabase db query --linked -f supabase/checks/admin_data_jobs.sql`, then merge soon after (a migration pushed and left
+  unmerged makes the integration refuse every deploy). The Vercel deploy needs nothing else: the website and its secrets are
+  unchanged. Until the migration is applied the page answers 503 and nothing else is affected. The maintainer approves the push.
+  The check holds locks until it rolls back, so a scheduled rebuild can wait a few seconds behind it: do not run it in minutes :07,
+  :13, :17, :37 or :43.
+- `supabase/checks/admin_data_jobs.sql` proves the rules in a transaction it rolls back, with three throwaway users and throwaway
+  half-seasons (998.0 and 999.0, and 97.0 and 98.0 for play time, which reads tracked matches that name their own half-season):
+  only an administrator can use any of the four functions (a stranger, `anon` and the service role cannot); a key outside the
+  allow-list starts nothing; the audit row exists before the rebuild and survives a rolled-back one; a second click and a click inside
+  the cooldown write nothing; for all five rebuilds a manual run updates `computed_at` on an unfinished half-season and leaves a
+  frozen one's `computed_at` and `frozen_at` alone, and no real frozen half-season changed; only the administrator who began a run can
+  run or close it; a run over ten minutes old reads as unfinished; a pg_cron history row with no start time is left out; a rebuild's
+  scheduled run is shown when pg_cron has one; and deleting an account keeps its audit rows. **Judge it by its exit status.** Every
+  failure is an exception (`check failed: ...`) that stops the script with a non-zero exit; the notices are for reading, and the last
+  ("all admin data job checks passed") is reached only when nothing raised. Whether `supabase db query` shows the notices has not been
+  confirmed, so do not treat their absence or presence as the result.
+- By hand, once the migration is applied and an admin is granted: open `/admin/data-jobs` at desktop and phone width; run Hero stats
+  and see "Rebuilt N half-seasons" and a new "Last manual run"; click it again at once and see it refused with a time; run Game stats
+  twice in one hour and see "already captured" the second time; run Home news. The check's second click shares its transaction with
+  the first, so it does not prove two simultaneous requests: send two at once by hand (two tabs, or two `curl` calls with the
+  session cookie) and see that one starts and the other gets 409.
+- **What "during a run" means.** The cooldown and the open-run check look at the audit log, so they cover manual runs only. A click
+  while the *scheduled* run of the same job is going is not refused: a rebuild waits on its advisory lock and then rebuilds again
+  (harmless), a game stats run stores nothing if the scheduled one captured first, and a home news run is last-writer-wins.
+- The route that runs jobs has `maxDuration: 60` in `vercel.json` (`functions`), above the 30-second news deadline and within the
+  limit every plan allows, so it does not depend on the project default. `scripts/admin-routes.test.ts` holds it.
 
 ## Tests
 

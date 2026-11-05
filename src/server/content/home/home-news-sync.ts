@@ -103,25 +103,50 @@ const firstImage = (html: string) => StringUtility.firstImage(html, officialHome
 const titleCaseName = StringUtility.titleCase;
 const slugifyHeroName = StringUtility.heroSlug;
 
-const nodeProcess = process as typeof process & {
-  loadEnvFile?: (path?: string) => void;
-};
+// Looked up on globalThis because the specs load this module in a browser, which has no `process`.
+const nodeProcess = (globalThis as { process?: { loadEnvFile?: (path?: string) => void } }).process;
 
 try {
-  nodeProcess.loadEnvFile?.('.env');
+  nodeProcess?.loadEnvFile?.('.env');
 } catch {
   // Vercel and CI provide environment variables directly.
 }
 
+/** The longest the whole read of the official site may take. */
+export const HOME_NEWS_FETCH_TIMEOUT_MS = 30_000;
+
+interface HomeNewsSyncOptions {
+  /** Marks the `sync_runs` row as an administrator's run. */
+  byAdmin?: boolean;
+  /** A test shortens the wait. */
+  fetchTimeoutMs?: number;
+}
+
+/**
+ * Reads the official site and replaces the home page news. Every read shares one deadline; a read
+ * that passes it fails the run before anything is saved, so the earlier news stays as it was.
+ */
 export async function syncHomeNews(
   client: SupabaseClient = getSupabaseClient(),
+  options: HomeNewsSyncOptions = {},
 ): Promise<HomeNewsSyncResult> {
-  const runId = await startSyncRun(client, 'home-news', 'Refreshing home news content');
+  const timeoutMs = options.fetchTimeoutMs ?? HOME_NEWS_FETCH_TIMEOUT_MS;
+  const runId = await startSyncRun(client, 'home-news', 'Refreshing home news content', {
+    byAdmin: options.byAdmin,
+  });
+  const signal = AbortSignal.timeout(timeoutMs);
 
   try {
-    const officialHomeHtml = await fetchText(officialHomeSource.url);
+    const officialHomeHtml = await fetchText(officialHomeSource.url, signal);
     const fetchedAt = new Date().toISOString();
     const officialSnapshot = parseOfficialHomeSnapshot(officialHomeHtml);
+
+    // A page that answered but holds no news card (a redesign, a bot-check page) would otherwise
+    // overwrite the good news with nothing and look like a success.
+    if (officialSnapshot.news.length === 0) {
+      throw new Error('The official site answered with no news cards; the earlier news is kept');
+    }
+
     const battlePassSnapshot = officialSnapshot.battlePass;
     const latestTuning = officialSnapshot.news
       .find((item) => item.label === 'Balance Update');
@@ -129,9 +154,9 @@ export async function syncHomeNews(
       .find((item) => item.label === 'Patch Notes');
     const latestSeasonUpdate = officialSnapshot.news
       .find((item) => item.label === 'Season Update');
-    const latestPatchHtml = latestPatch ? await fetchText(latestPatch.sourceUrl) : undefined;
+    const latestPatchHtml = latestPatch ? await fetchText(latestPatch.sourceUrl, signal) : undefined;
     const latestSeasonUpdateHtml = latestSeasonUpdate
-      ? await fetchOptionalText(latestSeasonUpdate.sourceUrl)
+      ? await fetchOptionalText(latestSeasonUpdate.sourceUrl, signal)
       : undefined;
     const seasonUpdateVideo = latestSeasonUpdateHtml
       ? extractArticleVideo(latestSeasonUpdateHtml)
@@ -197,19 +222,23 @@ export async function syncHomeNews(
       seasonEvents,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const failure = isTimeout(error)
+      ? new Error(`Reading the official site took longer than ${timeoutMs / 1000} seconds; the earlier news is kept`)
+      : error;
+    const message = failure instanceof Error ? failure.message : String(failure);
 
     await finishSyncRun(client, runId, { status: 'error', message });
-    throw error;
+    throw failure;
   }
 }
 
-async function fetchText(url: string): Promise<string> {
+async function fetchText(url: string, signal: AbortSignal): Promise<string> {
   const response = await fetch(url, {
     headers: {
       accept: 'text/html,application/xhtml+xml',
       'user-agent': 'rivals-pulse-content-sync/1.0',
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -219,12 +248,22 @@ async function fetchText(url: string): Promise<string> {
   return response.text();
 }
 
-async function fetchOptionalText(url: string): Promise<string | undefined> {
+async function fetchOptionalText(url: string, signal: AbortSignal): Promise<string | undefined> {
   try {
-    return await fetchText(url);
-  } catch {
+    return await fetchText(url, signal);
+  } catch (error) {
+    // A missing optional page is skipped, but running out of time fails the whole run.
+    if (isTimeout(error)) {
+      throw error;
+    }
+
     return undefined;
   }
+}
+
+/** What `AbortSignal.timeout` aborts a read with. */
+function isTimeout(error: unknown): boolean {
+  return error instanceof Error && error.name === 'TimeoutError';
 }
 
 function buildLatestNewsCards(officialNews: NewsItem[]): NewsItem[] {
@@ -423,16 +462,7 @@ function parseOfficialNewsCards(html: string): NewsItem[] {
     });
   }
 
-  // Naming a season here would strand the home page on it whenever the official
-  // markup changes, so the placeholder card stays season-agnostic.
-  return cards.length > 0 ? cards : [{
-    label: 'Season Update',
-    title: 'Latest Marvel Rivals season',
-    description: 'Official Marvel Rivals season coverage is available on the Marvel Rivals site.',
-    sourceUrl: officialHomeSource.url,
-    thumbnailUrl: fallbackThumbnail,
-    thumbnailAlt: 'Marvel Rivals season update thumbnail',
-  }];
+  return cards;
 }
 
 function parseSeasonEvents(html: string): SeasonHighlight[] {

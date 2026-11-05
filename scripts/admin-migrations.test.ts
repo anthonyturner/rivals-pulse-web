@@ -124,6 +124,24 @@ describe('the rules catch', () => {
     assert.match(found, /admin_read must not be granted to anon or public/);
   });
 
+  it('a helper that no API role can call, which needs neither security definer nor a guard but does need an empty search path', () => {
+    const helper = (header: string, revoke: string): string => `
+      create or replace function public.data_job_cooldown(p_job text) returns interval language sql ${header} as $fn$
+        select interval '1 minute'
+      $fn$;
+      ${revoke}
+    `;
+    const ADMIN_AFTER = AFTER.replace('next', 'admin_next');
+    const closed = 'revoke execute on function public.data_job_cooldown(text) from public, anon, authenticated, service_role;';
+
+    assert.deepEqual(violationsOf(ADMIN_AFTER, helper("set search_path = ''", closed)), []);
+    assert.match(violationsOf(ADMIN_AFTER, helper('', closed)).join('\n'), /data_job_cooldown must have an empty search path/);
+    assert.match(
+      violationsOf(ADMIN_AFTER, helper("set search_path = ''", 'revoke execute on function public.data_job_cooldown(text) from public, anon;')).join('\n'),
+      /data_job_cooldown is callable by signed-in accounts/,
+    );
+  });
+
   it('a later grant on the admin table', () => {
     assert.match(violationsOf(AFTER, 'grant select on public.admins to authenticated;').join('\n'), /public\.admins must keep its posture/);
   });

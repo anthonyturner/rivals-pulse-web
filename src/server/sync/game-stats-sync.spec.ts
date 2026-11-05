@@ -4,7 +4,9 @@ import {
   GAME_STATS_SYNC_KEY,
   countGameStatSnapshotGames,
   countGameStatSnapshots,
+  describeGameStatsCapture,
   gameStatsRunResult,
+  runGameStatsCapture,
   runGameStatsSync,
   syncGameStats,
 } from './game-stats-sync';
@@ -180,16 +182,83 @@ describe('runGameStatsSync', () => {
 
     const response = await runGameStatsSync(client, record, { fetch: steam(60000), now: () => NOW });
 
-    expect(spy).toHaveBeenCalledWith(client, 'game-stats', jasmine.any(String), jasmine.any(Function), gameStatsRunResult);
+    expect(spy).toHaveBeenCalledWith(
+      client,
+      'game-stats',
+      jasmine.any(String),
+      jasmine.any(Function),
+      gameStatsRunResult,
+      { byAdmin: undefined },
+    );
     expect(GAME_STATS_SYNC_KEY).toBe('game-stats');
     expect(response.snapshot.persisted).toBeTrue();
     expect(recorded).toEqual([
       {
         status: 'success',
         message: "Captured 5 games; the hour's snapshot is 2218 (2026-10-31T12:10:03.279Z)",
-        details: { snapshotId: 2218, previousSnapshotId: 2217 },
+        details: { snapshotId: 2218, previousSnapshotId: 2217, result: 'stored', steamFallbacks: 0 },
       },
     ]);
+  });
+
+  it("marks the run as the administrator's when asked", async () => {
+    const { client } = fakeSupabaseClient(() => rpcAnswer(previousSnapshot));
+    const { record, spy } = recorder();
+
+    await runGameStatsSync(client, record, { fetch: steam(60000), now: () => NOW, byAdmin: true });
+
+    expect(spy.calls.mostRecent().args[5]).toEqual({ byAdmin: true });
+  });
+
+  it('says so when the hour already had a capture, and stores nothing new', async () => {
+    const { client } = fakeSupabaseClient(() => ({
+      data: {
+        current: { id: 2200, snapshotDate: 'October 31, 2026', capturedAt: '2026-10-31T12:01:00.000+00:00' },
+        previous: null,
+      },
+    }));
+    const { record, recorded } = recorder();
+
+    const capture = await runGameStatsCapture(client, record, { fetch: steam(60000), now: () => NOW });
+
+    expect(capture.alreadyCaptured).toBeTrue();
+    expect(describeGameStatsCapture(capture)).toEqual({
+      result: 'already-captured',
+      capturedAt: '2026-10-31T12:01:00.000Z',
+      games: 5,
+      fallbackGames: 0,
+    });
+    expect(recorded[0].status).toBe('success');
+    expect(recorded[0].message).toBe(
+      "Stored nothing: the hour's snapshot 2200 was already captured at 2026-10-31T12:01:00.000Z",
+    );
+  });
+
+  it('counts the games Steam did not answer for, and says their built-in numbers were stored', async () => {
+    const { client } = fakeSupabaseClient(() => rpcAnswer(null));
+    const { record, recorded } = recorder();
+
+    const capture = await runGameStatsCapture(client, record, { fetch: steam(undefined), now: () => NOW });
+
+    expect(capture.steamFallbacks).toBe(5);
+    expect(capture.alreadyCaptured).toBeFalse();
+    expect(describeGameStatsCapture(capture)).toEqual({
+      result: 'stored-with-fallbacks',
+      capturedAt: '2026-10-31T12:10:03.279Z',
+      games: 5,
+      fallbackGames: 5,
+    });
+    expect(recorded[0].message).toContain('Steam did not answer for 5 of 5 games, so their built-in numbers were stored');
+  });
+
+  it('counts a Steam answer with no player count as unavailable too', async () => {
+    const { client } = fakeSupabaseClient(() => rpcAnswer(null));
+    const noCount = (async () => ({ ok: true, json: async () => ({ response: {} }) })) as unknown as typeof fetch;
+    const { record } = recorder();
+
+    const capture = await runGameStatsCapture(client, record, { fetch: noCount, now: () => NOW });
+
+    expect(capture.steamFallbacks).toBe(5);
   });
 
   it('records a capture that could not be stored as a failed run, with the reason', async () => {

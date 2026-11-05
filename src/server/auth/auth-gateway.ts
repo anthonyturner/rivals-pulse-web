@@ -1,4 +1,6 @@
 import type { LinkedPlayer } from '../../app/core/auth/linked-player.types.ts';
+import type { DataJobDetail, DataJobKey, DataJobStatus } from '../../contracts/admin-data-jobs.model.ts';
+import { beginResultOf, dataJobStatusesOf, type BeginDataJobResult } from '../../contracts/admin-data-jobs.parse.ts';
 import type { SessionTokens } from './auth-cookies.ts';
 import type { OwnDashboardLine, OwnFigureLine } from '../account/own-dashboard.ts';
 
@@ -68,6 +70,27 @@ export interface AuthGateway {
    * Throws AuthUnavailableError when the database cannot answer, which is not the same as "no".
    */
   isAdmin(tokens: SessionTokens): Promise<boolean>;
+  /**
+   * Opens an audit row for a run of the job, or says why it cannot start (a run is open, or the
+   * cooldown has not passed). The row is committed when this returns, so nothing the job does
+   * afterwards can erase it. The database checks the administrator and the job key again.
+   */
+  beginDataJob(tokens: SessionTokens, job: DataJobKey): Promise<BeginDataJobResult>;
+  /**
+   * Runs the rebuild the open run names and closes the run, in one transaction. Resolves to the
+   * number of half-seasons rebuilt. A rebuild that fails, or that the database's time limit stops,
+   * throws, and the run stays open for `finishDataJob`.
+   */
+  runRebuildJob(tokens: SessionTokens, runId: number): Promise<number>;
+  /** Closes the administrator's own open run with how it ended. False when there was none to close. */
+  finishDataJob(
+    tokens: SessionTokens,
+    runId: number,
+    outcome: 'succeeded' | 'failed',
+    detail: DataJobDetail,
+  ): Promise<boolean>;
+  /** Each job's last scheduled run, last manual run, and whether it can start now. */
+  readDataJobs(tokens: SessionTokens): Promise<DataJobStatus[]>;
 }
 
 /** Supabase could not be asked: it is not configured, unreachable, or answered with a server error. */
@@ -81,6 +104,12 @@ export class AuthUnavailableError extends Error {
 type AuthEnv = Readonly<Record<string, string | undefined>>;
 
 const REQUEST_TIMEOUT_MS = 5000;
+/**
+ * A rebuild may take as long as the database lets it, which for the signed-in role is 8 seconds. Waiting
+ * a little longer than that means the answer is the database's own (done, or timed out) rather than a
+ * dropped connection.
+ */
+const REBUILD_TIMEOUT_MS = 12000;
 
 /**
  * Talks to Supabase Auth and PostgREST over plain `fetch` with the publishable key and the user's own
@@ -97,7 +126,12 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
     throw new AuthUnavailableError('Sign-in is not configured. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.');
   }
 
-  const call = async (path: string, init: RequestInit, accessToken?: string): Promise<Response> => {
+  const call = async (
+    path: string,
+    init: RequestInit,
+    accessToken?: string,
+    timeoutMs = REQUEST_TIMEOUT_MS,
+  ): Promise<Response> => {
     try {
       return await fetcher(`${baseUrl}${path}`, {
         ...init,
@@ -107,7 +141,7 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
           ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
           ...init.headers,
         },
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch {
       throw new AuthUnavailableError('Supabase Auth could not be reached');
@@ -190,11 +224,17 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
   };
 
   /** Calls a database function as the signed-in user, so row-level security and `auth.uid()` apply. */
-  const rpc = async (name: string, args: Record<string, unknown>, accessToken: string): Promise<unknown> => {
+  const rpc = async (
+    name: string,
+    args: Record<string, unknown>,
+    accessToken: string,
+    timeoutMs?: number,
+  ): Promise<unknown> => {
     const response = await call(
       `/rest/v1/rpc/${name}`,
       { method: 'POST', body: JSON.stringify(args) },
       accessToken,
+      timeoutMs,
     );
 
     if (!response.ok) {
@@ -308,6 +348,51 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
       }
 
       return answer;
+    },
+
+    async beginDataJob(tokens, job) {
+      const begun = beginResultOf(await rpc('admin_begin_run', { p_job: job }, tokens.accessToken));
+
+      if (!begun) {
+        throw new AuthUnavailableError('Supabase answered admin_begin_run with an unknown shape');
+      }
+
+      return begun;
+    },
+
+    async runRebuildJob(tokens, runId) {
+      const answer = await rpc('admin_run_rebuild', { p_run_id: runId }, tokens.accessToken, REBUILD_TIMEOUT_MS);
+      const halfSeasons = (answer as { halfSeasons?: unknown } | null)?.halfSeasons;
+
+      if (typeof halfSeasons !== 'number' || !Number.isInteger(halfSeasons) || halfSeasons < 0) {
+        throw new AuthUnavailableError('Supabase answered admin_run_rebuild with an unknown shape');
+      }
+
+      return halfSeasons;
+    },
+
+    async finishDataJob(tokens, runId, outcome, detail) {
+      const closed = await rpc(
+        'admin_finish_run',
+        { p_run_id: runId, p_outcome: outcome, p_detail: detail },
+        tokens.accessToken,
+      );
+
+      if (typeof closed !== 'boolean') {
+        throw new AuthUnavailableError('Supabase answered admin_finish_run with an unknown shape');
+      }
+
+      return closed;
+    },
+
+    async readDataJobs(tokens) {
+      const statuses = dataJobStatusesOf(await rpc('admin_data_jobs_status', {}, tokens.accessToken));
+
+      if (!statuses) {
+        throw new AuthUnavailableError('Supabase answered admin_data_jobs_status with an unknown shape');
+      }
+
+      return statuses;
     },
 
     async signOut(tokens) {

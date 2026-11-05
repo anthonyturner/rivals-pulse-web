@@ -1,5 +1,6 @@
 import { json, type AccountRequest, type AccountResponse } from '../account/account-session.ts';
 import type { AuthGateway, SessionTokens } from '../auth/index.ts';
+import { readDataJobs, runDataJob } from './data-jobs.ts';
 
 /** What an admin route is given. It is only ever built for a request the wrapper has let through. */
 export interface AdminContext {
@@ -25,4 +26,6 @@ export interface AdminRoute {
 export const ADMIN_ROUTES: Readonly<Record<string, AdminRoute>> = {
   // Proves the gate end to end: an admin gets 200, every other caller is refused before this runs.
   'admin/me': { method: 'GET', run: async () => json(200, { admin: true }) },
+  'admin/data-jobs': { method: 'GET', run: (context) => readDataJobs(context) },
+  'admin/data-jobs-run': { method: 'POST', run: (context) => runDataJob(context) },
 };

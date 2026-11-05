@@ -312,6 +312,105 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('the data job calls', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const gatewayFor = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, gateway: createSupabaseAuthGateway(ENV, fetcher) };
+    };
+
+    it('begins a run with the user token, sending only the job key', async () => {
+      const { calls, gateway } = gatewayFor({ status: 200, body: { status: 'started', runId: 41, startedAt: '2026-11-04T10:00:00+00:00' } });
+
+      expect(await gateway.beginDataJob(tokens, 'game-stats')).toEqual({ status: 'started', runId: 41 });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/admin_begin_run');
+      expect(calls[0].body).toEqual({ p_job: 'game-stats' });
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('reports a busy job with the time to try again, as an ISO instant', async () => {
+      const { gateway } = gatewayFor({ status: 200, body: { status: 'busy', reason: 'cooldown', retryAt: '2026-11-04T10:01:00.123456+00:00' } });
+
+      expect(await gateway.beginDataJob(tokens, 'home-news')).toEqual({
+        status: 'busy',
+        reason: 'cooldown',
+        retryAt: '2026-11-04T10:01:00.123Z',
+      });
+    });
+
+    it('treats an answer it does not recognise as unavailable, never as a started run', async () => {
+      for (const body of [{ status: 'started' }, { status: 'busy', reason: 'cooldown' }, 'ok', null]) {
+        await expectAsync(gatewayFor({ status: 200, body }).gateway.beginDataJob(tokens, 'game-stats')).toBeRejectedWithError(
+          AuthUnavailableError,
+        );
+      }
+    });
+
+    it('runs a rebuild by its run id and gives back the half-seasons rebuilt', async () => {
+      const { calls, gateway } = gatewayFor({ status: 200, body: { halfSeasons: 3 } });
+
+      expect(await gateway.runRebuildJob(tokens, 41)).toBe(3);
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/admin_run_rebuild');
+      expect(calls[0].body).toEqual({ p_run_id: 41 });
+    });
+
+    it('throws when the database stops a rebuild, so the run can be closed as failed', async () => {
+      spyOn(console, 'warn');
+
+      await expectAsync(gatewayFor({ status: 500 }).gateway.runRebuildJob(tokens, 41)).toBeRejectedWithError(AuthUnavailableError);
+      await expectAsync(gatewayFor({ status: 200, body: {} }).gateway.runRebuildJob(tokens, 41)).toBeRejectedWithError(
+        AuthUnavailableError,
+      );
+    });
+
+    it('closes a run with its outcome and detail', async () => {
+      const { calls, gateway } = gatewayFor({ status: 200, body: true });
+
+      expect(await gateway.finishDataJob(tokens, 41, 'failed', { result: 'failed', message: 'x' })).toBeTrue();
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/admin_finish_run');
+      expect(calls[0].body).toEqual({ p_run_id: 41, p_outcome: 'failed', p_detail: { result: 'failed', message: 'x' } });
+    });
+
+    it("reads each job's runs and wait", async () => {
+      const { calls, gateway } = gatewayFor({
+        status: 200,
+        body: [
+          {
+            job: 'home-news',
+            lastScheduled: { outcome: 'succeeded', startedAt: '2026-11-04T03:00:00+00:00', finishedAt: '2026-11-04T03:00:02+00:00', message: 'Synced 4 home news cards' },
+            lastManual: null,
+            wait: null,
+          },
+        ],
+      });
+
+      expect(await gateway.readDataJobs(tokens)).toEqual([
+        {
+          job: 'home-news',
+          lastScheduled: {
+            outcome: 'succeeded',
+            startedAt: '2026-11-04T03:00:00.000Z',
+            finishedAt: '2026-11-04T03:00:02.000Z',
+            detail: null,
+            message: 'Synced 4 home news cards',
+          },
+          lastManual: null,
+          wait: null,
+        },
+      ]);
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/admin_data_jobs_status');
+    });
+
+    it('leaves out a job that is not in the allow-list and refuses an answer that is not a list', async () => {
+      const body = [{ job: 'drop-everything', lastScheduled: null, lastManual: null, wait: null }];
+
+      expect(await gatewayFor({ status: 200, body }).gateway.readDataJobs(tokens)).toEqual([]);
+      await expectAsync(gatewayFor({ status: 200, body: {} }).gateway.readDataJobs(tokens)).toBeRejectedWithError(AuthUnavailableError);
+    });
+  });
+
   describe('readOwnDashboard', () => {
     const tokens = { accessToken: 'access', refreshToken: 'refresh' };
     const read = (answer: { status: number; body?: unknown }) => {

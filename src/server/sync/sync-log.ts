@@ -22,11 +22,20 @@ interface ExternalSource {
   error: string | null;
 }
 
+export interface SyncRunOptions {
+  /**
+   * True for a run an administrator started from the admin area, so the admin page can tell it from
+   * the scheduled ones. The column is only written when true: a scheduled run is the default.
+   */
+  byAdmin?: boolean;
+}
+
 /** Opens a `sync_runs` row and returns its id. */
 export async function startSyncRun(
   client: SupabaseClient,
   sourceKey: string,
   message: string,
+  options: SyncRunOptions = {},
 ): Promise<number> {
   const { data, error } = await client
     .from('sync_runs')
@@ -35,6 +44,7 @@ export async function startSyncRun(
       status: 'running',
       message,
       started_at: new Date().toISOString(),
+      ...(options.byAdmin ? { by_admin: true } : {}),
     })
     .select('id')
     .single<{ id: number }>();
@@ -76,8 +86,9 @@ export async function recordSyncRun<T>(
   startMessage: string,
   work: () => Promise<T>,
   describe: (value: T) => SyncRunResult,
+  options: SyncRunOptions = {},
 ): Promise<T> {
-  const runId = await startSyncRun(client, sourceKey, startMessage);
+  const runId = await startSyncRun(client, sourceKey, startMessage, options);
   let value: T;
 
   try {

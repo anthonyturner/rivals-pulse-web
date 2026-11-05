@@ -1,0 +1,128 @@
+<section class="jobs" aria-labelledby="data-jobs-title">
+  <h2 id="data-jobs-title" class="jobs__title">Data jobs</h2>
+  <p class="jobs__lede">
+    Run the background data work now instead of waiting for its next scheduled run. Nothing here adds a new
+    data source. Each run is written to an audit log, and a job cannot be started again for a short while.
+  </p>
+  <p class="jobs__note">
+    <strong>Player uploads cannot be forced.</strong> They arrive when a player's PC sends a finished match,
+    so there is nothing to run for them.
+  </p>
+
+  <p class="visually-hidden" role="status">{{ announcement() }}</p>
+
+  @switch (state()) {
+    @case ('loading') {
+      <app-state-panel kind="loading">Reading the jobs…</app-state-panel>
+    }
+    @case ('unavailable') {
+      <app-state-panel kind="error">
+        The jobs could not be read right now.
+        <button class="guide-button jobs__button" type="button" (click)="refresh()">Try again</button>
+      </app-state-panel>
+    }
+    @default {
+      @for (group of groups(); track group.kind) {
+        <section class="jobs__group" [attr.aria-labelledby]="'data-jobs-' + group.kind">
+          <h3 class="jobs__group-title" [id]="'data-jobs-' + group.kind">{{ group.title }}</h3>
+          <p class="jobs__group-intro">{{ group.intro }}</p>
+
+          <ul class="jobs__list">
+            @for (row of group.rows; track row.key) {
+              <li class="jobs__card">
+                <h4 class="jobs__name">{{ row.label }}</h4>
+                <p class="jobs__summary">{{ row.summary }}</p>
+
+                <dl class="jobs__runs">
+                  <div>
+                    <dt>Last scheduled run</dt>
+                    <dd>
+                      @if (row.scheduled; as run) {
+                        <span class="jobs__tone" [class]="run.toneClass">{{ run.headline }}</span>
+                        <time class="jobs__when" [attr.datetime]="run.startedAt">{{ run.startedLabel }}</time>
+                        @if (run.note) {
+                          <span class="jobs__detail">{{ run.note }}</span>
+                        }
+                      } @else {
+                        None recorded.
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Last manual run</dt>
+                    <dd>
+                      @if (row.manual; as run) {
+                        <span class="jobs__tone" [class]="run.toneClass">{{ run.headline }}</span>
+                        <time class="jobs__when" [attr.datetime]="run.startedAt">{{ run.startedLabel }}</time>
+                        @if (run.note) {
+                          <span class="jobs__detail">{{ run.note }}</span>
+                        }
+                      } @else {
+                        None yet.
+                      }
+                    </dd>
+                  </div>
+                </dl>
+
+                @if (row.result; as result) {
+                  <div class="jobs__result" [class]="result.toneClass">
+                    <strong>Just now:</strong> {{ result.headline }}
+                    @if (result.note) {
+                      <span class="jobs__detail">{{ result.note }}</span>
+                    }
+                  </div>
+                }
+
+                <div class="jobs__actions">
+                  <button
+                    class="guide-button jobs__button"
+                    type="button"
+                    [disabled]="row.running || row.hint !== null"
+                    [attr.aria-describedby]="row.hint ? 'hint-' + row.key : null"
+                    (click)="run(row.key)"
+                  >
+                    @if (row.running) {
+                      Running…
+                    } @else {
+                      Run now
+                    }
+                  </button>
+                  @if (row.hint; as hint) {
+                    <span class="jobs__hint" [id]="'hint-' + row.key">{{ hint }}</span>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="jobs__group" aria-labelledby="data-jobs-elsewhere">
+        <h3 class="jobs__group-title" id="data-jobs-elsewhere">Run from GitHub</h3>
+        <p class="jobs__group-intro">
+          These two are GitHub workflows, not jobs this page can start. Open one and choose "Run workflow".
+        </p>
+        <ul class="jobs__links">
+          <li>
+            <a
+              class="guide-link"
+              href="https://github.com/anthonyturner/rivals-pulse-web/actions/workflows/pulse-atlas.yml"
+              target="_blank"
+              rel="noopener"
+              >Publish Pulse Atlas<span class="visually-hidden"> (opens GitHub in a new tab)</span></a
+            >
+          </li>
+          <li>
+            <a
+              class="guide-link"
+              href="https://github.com/anthonyturner/rivals-pulse-web/actions/workflows/sync-new-heroes.yml"
+              target="_blank"
+              rel="noopener"
+              >Sync new heroes<span class="visually-hidden"> (opens GitHub in a new tab)</span></a
+            >
+          </li>
+        </ul>
+      </section>
+    }
+  }
+</section>
