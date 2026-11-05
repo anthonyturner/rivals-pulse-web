@@ -9,6 +9,8 @@ export type DataJobRunResult =
   | { status: 'finished'; run: DataJobRunAnswer['run'] }
   /** The job did not start because it is running or ran a moment ago. */
   | { status: 'busy'; busy: DataJobBusyAnswer }
+  /** The server refused the request (not signed in, not an administrator, or not a job), so nothing started. */
+  | { status: 'refused' }
   /** The request did not come back with an answer this page can read, so what happened is not known. */
   | { status: 'unknown' };
 
@@ -42,6 +44,10 @@ export class DataJobsService {
         body: JSON.stringify({ job }),
       });
       const body: unknown = await response.json().catch(() => undefined);
+
+      if ([400, 401, 403].includes(response.status)) {
+        return { status: 'refused' };
+      }
 
       if (response.status === 409) {
         const busy = dataJobBusyAnswerOf(body);

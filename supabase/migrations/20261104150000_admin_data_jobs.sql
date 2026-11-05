@@ -36,13 +36,17 @@ create index if not exists admin_audit_log_job_started_at_idx
 
 alter table public.admin_audit_log enable row level security;
 revoke all on public.admin_audit_log from anon, authenticated, service_role;
+revoke all on sequence public.admin_audit_log_id_seq from anon, authenticated, service_role;
+
+-- The three helpers below are callable by no API role (see the revokes at the end); the four admin
+-- functions call them, and a function called from a security definer function runs as its owner. So
+-- they are not security definer, and they do not call is_admin(): there is no caller to refuse.
 
 -- The allow-list: the cooldown of each job, and null for any key that is not a job. Every function
 -- below asks this, so adding a job (issue 495) is one line here and in the page's list.
 create or replace function public.data_job_cooldown(p_job text) returns interval
 language sql
 immutable
-security definer
 set search_path = ''
 as $$
   select case p_job
@@ -60,7 +64,6 @@ $$;
 create or replace function public.data_job_unfinished_after() returns interval
 language sql
 immutable
-security definer
 set search_path = ''
 as $$
   select interval '10 minutes'
@@ -70,7 +73,6 @@ $$;
 -- than the cooldown ago. The cooldown counts from the start of a run, finished or not.
 create or replace function public.data_job_wait(p_job text) returns jsonb
 language plpgsql
-security definer
 set search_path = ''
 as $$
 declare
@@ -210,6 +212,8 @@ $$;
 -- Each job's last scheduled run, last manual run, and whether it can start now. A rebuild's
 -- scheduled run is read from the pg_cron history, a sync's from `sync_runs`; both are kept apart
 -- from the manual runs, which come from the audit log. A history that cannot be read reads as none.
+-- pg_cron writes a history row before it fills in `start_time`, so a row without one is left out: it
+-- would sort first and have no start to show.
 create or replace function public.admin_data_jobs_status() returns jsonb
 language plpgsql
 security definer
@@ -264,7 +268,7 @@ begin
           into v_scheduled
           from cron.job_run_details d
           join cron.job j on j.jobid = d.jobid
-         where j.jobname = v_job
+         where j.jobname = v_job and d.start_time is not null
          order by d.start_time desc
          limit 1;
       exception when undefined_table or insufficient_privilege then

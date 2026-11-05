@@ -275,7 +275,10 @@ A reviewer checks a change against this ADR by looking for:
   execute revoked from `public` and `anon` (functions), and no `authenticated`
   grant on a table. A static test over the admin migrations asserts this, and
   asserts that every function they declare, other than `is_admin()` itself,
-  calls `is_admin()`. With database tests in CI (open question 2),
+  calls `is_admin()` or is callable by no API role (execute revoked from
+  `public`, `anon`, `authenticated` and `service_role`, as the internal helpers
+  of #494 are; the admin functions that call them run as their owner). With
+  database tests in CI (open question 2),
   a test signs in as a non-admin and gets no rows or a permission error from
   every admin table and function.
 - Every `/api/admin/*` endpoint answers 401 signed out and 403 for a signed-in

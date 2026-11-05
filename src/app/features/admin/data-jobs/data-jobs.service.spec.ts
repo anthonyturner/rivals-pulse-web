@@ -22,7 +22,7 @@ describe('DataJobsService', () => {
     expect(await service.read()).toEqual({ status: 'unavailable' });
 
     (globalThis.fetch as jasmine.Spy<typeof fetch>).and.resolveTo(
-      new Response(JSON.stringify({ jobs: [{ job: 'drop-everything' }] }), { status: 200 }),
+      new Response(JSON.stringify({ jobs: 'nope' }), { status: 200 }),
     );
     expect(await service.read()).toEqual({ status: 'unavailable' });
 
@@ -47,6 +47,16 @@ describe('DataJobsService', () => {
     expect(fetched.calls.mostRecent().args[1]).toEqual(
       jasmine.objectContaining({ method: 'POST', body: JSON.stringify({ job: 'game-stats' }) }),
     );
+  });
+
+  it('reads a 400, 401 or 403 as a refusal, so the job did not start', async () => {
+    const fetched = answer(400, { error: 'no' });
+
+    for (const status of [400, 401, 403]) {
+      fetched.and.resolveTo(new Response(JSON.stringify({ error: 'no' }), { status }));
+
+      expect(await service.run('game-stats')).toEqual({ status: 'refused' });
+    }
   });
 
   it('reads a 409 as a job that did not start', async () => {

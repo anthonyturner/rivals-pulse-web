@@ -6,18 +6,25 @@
 --   * the audit row exists before the rebuild runs, a rebuild that is rolled back (as a timeout does)
 --     leaves it open, and closing it as failed works once and only for the administrator who began it;
 --   * a manual rebuild updates computed_at on an unfinished half-season and leaves computed_at and
---     frozen_at as they were on a frozen one, for every rebuild family that raw rows can reach here;
+--     frozen_at as they were on a frozen one, for all five rebuild families (play time through a
+--     throwaway player and two throwaway matches);
 --   * no frozen half-season in any of the five families changed, real ones included;
 --   * a run open for over ten minutes reads as unfinished and no longer blocks the job;
---   * the status keeps a sync's scheduled runs apart from an administrator's, and the audit log keeps
---     its rows when the account is deleted.
+--   * the status keeps a sync's scheduled runs apart from an administrator's, reads a pg_cron history
+--     row with no start time without failing, and shows a rebuild's scheduled run when pg_cron has one;
+--   * the audit log keeps its rows when the account is deleted.
 --
 -- Run it against the project after the migration is applied; it changes nothing (it ends in a rollback):
 --   npx supabase db query --linked -f supabase/checks/admin_data_jobs.sql
--- It prints a notice per passing check and raises an exception at the first failure.
+-- Judge it by the exit status: every failure is an exception (`check failed: ...`), which stops the
+-- script with a non-zero exit. The notices are for reading, and are not the evidence; the last one,
+-- "all admin data job checks passed", is only reached when nothing raised.
+-- It holds locks until it rolls back, so a scheduled rebuild can wait a few seconds behind it. Do not
+-- run it in minutes :07, :13, :17, :37 or :43 of the hour.
 --
 -- It never grants admin to a real account: it makes three throwaway users inside the transaction, and
--- two throwaway half-seasons (998.0 and 999.0) with one match each. Every real unfrozen half-season is
+-- throwaway half-seasons (998.0 and 999.0, and 97.0 and 98.0 for play time, whose matches name their own
+-- half-season between 0 and 99) with one match each. Every real unfrozen half-season is
 -- rebuilt inside the transaction too, because a rebuild job rebuilds them all; that is rolled back.
 
 begin;
@@ -32,6 +39,9 @@ declare
   claims_stranger text;
   open_season constant numeric := 998.0;
   frozen_season constant numeric := 999.0;
+  play_open_season constant numeric := 97.0;
+  play_frozen_season constant numeric := 98.0;
+  play_player bigint;
   old_computed constant timestamptz := '2000-01-01T00:00:00Z';
   old_frozen constant timestamptz := '2000-01-02T00:00:00Z';
   frozen_sql constant text := $q$
@@ -49,6 +59,7 @@ declare
   seen integer;
   audit public.admin_audit_log%rowtype;
   half_season_row record;
+  cron_job bigint;
 begin
   insert into auth.users (id, email)
   values
@@ -87,6 +98,20 @@ begin
       family.tbl
     ) using open_season, old_computed, frozen_season, old_frozen;
   end loop;
+
+  -- Play time reads tracked matches, not participants: one player, one match in each of its half-seasons.
+  insert into public.players (provider, provider_player_uid, player_name, normalized_name)
+  values ('jobs-check', 'jobs-check-player', 'Jobs check', 'jobs check')
+  returning id into play_player;
+
+  insert into public.tracked_matches (player_id, provider, match_uid, played_at, raw_payload, performance)
+  select play_player, 'jobs-check', 'jobs-check-' || s::text, now() - interval '1 day',
+         jsonb_build_object('match_season', s, 'play_mode_id', 1),
+         jsonb_build_object('is_win', true, 'player_uid', 'jobs-check-player')
+  from unnest(array[play_open_season, play_frozen_season]) as s;
+
+  insert into public.play_time_aggregate_half_seasons (half_season, computed_at, frozen_at)
+  values (play_open_season, old_computed, null), (play_frozen_season, old_computed, old_frozen);
 
   execute 'create temp table jobs_check_frozen on commit drop as ' || frozen_sql;
 
@@ -198,7 +223,7 @@ begin
       ('recompute-extended-aggregates', 'extended_aggregate_half_seasons'),
       ('recompute-community-match-aggregates', 'community_match_half_seasons'),
       ('recompute-hero-pair-aggregates', 'hero_pair_aggregate_half_seasons'),
-      ('recompute-play-time-aggregates', null)
+      ('recompute-play-time-aggregates', 'play_time_aggregate_half_seasons')
     ) as f(job, tbl)
   loop
     set local role authenticated;
@@ -240,20 +265,20 @@ begin
     end if;
     raise notice 'ok: % writes its audit row first and closes it with the half-seasons rebuilt', family.job;
 
-    if family.tbl is not null then
-      execute format('select computed_at, frozen_at from public.%I where half_season = $1', family.tbl)
-        into half_season_row using open_season;
-      if half_season_row.computed_at <= old_computed or half_season_row.frozen_at is not null then
-        raise exception 'check failed: % did not update an unfinished half-season (%)', family.job, half_season_row;
-      end if;
-
-      execute format('select computed_at, frozen_at from public.%I where half_season = $1', family.tbl)
-        into half_season_row using frozen_season;
-      if half_season_row.computed_at <> old_computed or half_season_row.frozen_at <> old_frozen then
-        raise exception 'check failed: % changed a frozen half-season (%)', family.job, half_season_row;
-      end if;
-      raise notice 'ok: % updates computed_at on an unfinished half-season and leaves a frozen one alone', family.job;
+    execute format('select computed_at, frozen_at from public.%I where half_season = $1', family.tbl)
+      into half_season_row
+      using case when family.job = 'recompute-play-time-aggregates' then play_open_season else open_season end;
+    if half_season_row.computed_at <= old_computed or half_season_row.frozen_at is not null then
+      raise exception 'check failed: % did not update an unfinished half-season (%)', family.job, half_season_row;
     end if;
+
+    execute format('select computed_at, frozen_at from public.%I where half_season = $1', family.tbl)
+      into half_season_row
+      using case when family.job = 'recompute-play-time-aggregates' then play_frozen_season else frozen_season end;
+    if half_season_row.computed_at <> old_computed or half_season_row.frozen_at <> old_frozen then
+      raise exception 'check failed: % changed a frozen half-season (%)', family.job, half_season_row;
+    end if;
+    raise notice 'ok: % updates computed_at on an unfinished half-season and leaves a frozen one alone', family.job;
 
     set local role authenticated;
     answer := public.admin_begin_run(family.job);
@@ -277,6 +302,42 @@ begin
     raise exception 'check failed: % frozen half-seasons were changed or lost by the rebuilds', seen;
   end if;
   raise notice 'ok: no frozen half-season in any of the five families changed';
+
+  -- pg_cron's history is read inside the function. If it has runs of these jobs, the page must show one;
+  -- a permission failure would otherwise look like an empty state.
+  select count(*) into seen
+  from cron.job_run_details d join cron.job j on j.jobid = d.jobid
+  where j.jobname like 'recompute-%-aggregates' and d.start_time is not null;
+
+  set local role authenticated;
+  answer := public.admin_data_jobs_status();
+  reset role;
+
+  if seen > 0 and not exists (
+    select 1 from jsonb_array_elements(answer) e
+    where e ->> 'job' like 'recompute-%' and jsonb_typeof(e -> 'lastScheduled') = 'object'
+  ) then
+    raise exception 'check failed: pg_cron has % runs of the rebuild jobs but the status shows none of them', seen;
+  end if;
+  raise notice 'ok: a rebuild''s scheduled run is shown when pg_cron has one (% in its history)', seen;
+
+  -- pg_cron can leave a history row with no start time. It must not take the page down or be shown first.
+  select jobid into cron_job from cron.job where jobname = 'recompute-hero-aggregates';
+  if cron_job is not null then
+    insert into cron.job_run_details (jobid, runid, status, start_time)
+    values (cron_job, 9000000010, 'starting', null);
+
+    set local role authenticated;
+    answer := public.admin_data_jobs_status();
+    reset role;
+    select e into entry from jsonb_array_elements(answer) e where e ->> 'job' = 'recompute-hero-aggregates';
+
+    if jsonb_array_length(answer) <> 7
+       or (jsonb_typeof(entry -> 'lastScheduled') = 'object' and entry -> 'lastScheduled' ->> 'startedAt' is null) then
+      raise exception 'check failed: a history row with no start time broke or filled the status (%)', entry;
+    end if;
+    raise notice 'ok: a pg_cron history row with no start time is left out';
+  end if;
 
   -- A rebuild the database stops rolls back with its own transaction; the row written before it stays open.
   delete from public.admin_audit_log where job = 'recompute-hero-aggregates';
@@ -409,6 +470,7 @@ begin
     raise exception 'check failed: deleting the account did not keep the audit row with no actor (%)', audit;
   end if;
   raise notice 'ok: deleting an account keeps its audit rows and clears the actor';
+  raise notice 'all admin data job checks passed';
 end
 $$;
 

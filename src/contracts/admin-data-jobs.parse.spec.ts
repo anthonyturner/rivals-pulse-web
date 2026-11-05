@@ -140,15 +140,36 @@ describe('dataJobStatusesOf', () => {
     ]);
   });
 
-  it('refuses a list with an unknown job, an unknown outcome or a missing field, and the empty list is fine', () => {
-    const good = { job: 'game-stats', lastScheduled: null, lastManual: null, wait: null };
-
+  it('refuses an answer that is not a list, and the empty list is fine', () => {
     expect(dataJobStatusesOf([])).toEqual([]);
-    expect(dataJobStatusesOf([good])?.length).toBe(1);
     expect(dataJobStatusesOf({})).toBeUndefined();
-    expect(dataJobStatusesOf([{ ...good, job: 'drop-everything' }])).toBeUndefined();
-    expect(dataJobStatusesOf([{ ...good, lastManual: { ...run, outcome: 'nearly' } }])).toBeUndefined();
-    expect(dataJobStatusesOf([{ ...good, lastScheduled: { ...run, startedAt: 'soon' } }])).toBeUndefined();
-    expect(dataJobStatusesOf([{ job: 'game-stats', lastScheduled: null, lastManual: null }])).toBeUndefined();
+    expect(dataJobStatusesOf(null)).toBeUndefined();
+  });
+
+  it('leaves out only the job whose entry cannot be read, so one odd row does not hide the rest', () => {
+    const good = { job: 'game-stats', lastScheduled: null, lastManual: null, wait: null };
+    const other = { ...good, job: 'home-news' };
+
+    for (const bad of [
+      { ...good, job: 'drop-everything' },
+      { ...good, lastManual: { ...run, outcome: 'nearly' } },
+      { ...good, wait: { reason: 'cooldown', retryAt: 'soon' } },
+      { job: 'game-stats', lastScheduled: null, lastManual: null },
+    ]) {
+      expect(dataJobStatusesOf([bad, other])?.map((status) => status.job)).toEqual(['home-news']);
+    }
+  });
+
+  it('reads a scheduled run it cannot read, such as one with no start time, as no scheduled run', () => {
+    const noStart = { outcome: 'running', startedAt: null, finishedAt: null, message: null };
+    const statuses = dataJobStatusesOf([
+      { job: 'recompute-hero-aggregates', lastScheduled: noStart, lastManual: null, wait: null },
+      { job: 'game-stats', lastScheduled: { ...run, startedAt: 'soon' }, lastManual: null, wait: null },
+    ]);
+
+    expect(statuses?.map((status) => [status.job, status.lastScheduled])).toEqual([
+      ['recompute-hero-aggregates', null],
+      ['game-stats', null],
+    ]);
   });
 });

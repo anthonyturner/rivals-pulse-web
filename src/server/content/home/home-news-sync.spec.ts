@@ -39,6 +39,20 @@ describe('syncHomeNews', () => {
     expect('by_admin' in (await rowsOf({}))).toBeFalse();
   });
 
+  it('fails the run, and saves nothing, when the site answers with a page that holds no news card', async () => {
+    spyOn(globalThis, 'fetch').and.resolveTo(new Response('<html><body>Just a moment...</body></html>', { status: 200 }));
+    const { client, calls } = fakeSupabaseClient(() => ({ data: { id: 7 } }));
+
+    await expectAsync(syncHomeNews(client)).toBeRejectedWithError(
+      'The official site answered with no news cards; the earlier news is kept',
+    );
+
+    expect(calls.map((call) => call.table)).toEqual(['sync_runs', 'sync_runs']);
+    expect(calls[1].steps.find(([method]) => method === 'update')![1][0]).toEqual(
+      jasmine.objectContaining({ status: 'error', message: jasmine.stringMatching(/no news cards/) }),
+    );
+  });
+
   it('keeps a failure that is not a timeout as it was', async () => {
     spyOn(globalThis, 'fetch').and.resolveTo(new Response('nope', { status: 503, statusText: 'Unavailable' }));
     const { client } = fakeSupabaseClient(() => ({ data: { id: 7 } }));

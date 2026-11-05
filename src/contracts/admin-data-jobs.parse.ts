@@ -11,8 +11,10 @@ import {
 
 /**
  * Readers for what the admin database functions answer, and for what the admin routes answer the
- * page. A shape they do not recognise is refused whole (undefined), so nothing shows a guess; only a
- * run's `detail` may be missing, because it is the one part a row written by older code could lack.
+ * page. A shape they do not recognise is refused (undefined), so nothing shows a guess. The job list
+ * is the one place that gives way: a job whose entry cannot be read is left out, and a scheduled run
+ * that cannot be read reads as none, so one odd row never takes the other jobs down. A run's `detail`
+ * may also be missing, because it is the one part a row written by older code could lack.
  */
 
 /** The database's answer to starting a job. */
@@ -130,15 +132,15 @@ export function dataJobStatusesOf(answer: unknown): DataJobStatus[] | undefined 
   for (const entry of answer as unknown[]) {
     const status = recordOf(entry);
     const job = status?.['job'];
-    const lastScheduled = runOf(status?.['lastScheduled']);
+    // The scheduler's history is read from a table this code does not own, so one row it cannot read
+    // reads as no scheduled run. Anything else it cannot read leaves that one job out, not the page.
+    const lastScheduled = runOf(status?.['lastScheduled']) ?? null;
     const lastManual = runOf(status?.['lastManual']);
     const wait = status?.['wait'] === null ? null : waitOf(status?.['wait']);
 
-    if (!isDataJobKey(job) || lastScheduled === undefined || lastManual === undefined || wait === undefined) {
-      return undefined;
+    if (isDataJobKey(job) && lastManual !== undefined && wait !== undefined) {
+      statuses.push({ job, lastScheduled, lastManual, wait });
     }
-
-    statuses.push({ job, lastScheduled, lastManual, wait });
   }
 
   return statuses;

@@ -140,6 +140,13 @@ export async function syncHomeNews(
     const officialHomeHtml = await fetchText(officialHomeSource.url, signal);
     const fetchedAt = new Date().toISOString();
     const officialSnapshot = parseOfficialHomeSnapshot(officialHomeHtml);
+
+    // A page that answered but holds no news card (a redesign, a bot-check page) would otherwise
+    // overwrite the good news with nothing and look like a success.
+    if (officialSnapshot.news.length === 0) {
+      throw new Error('The official site answered with no news cards; the earlier news is kept');
+    }
+
     const battlePassSnapshot = officialSnapshot.battlePass;
     const latestTuning = officialSnapshot.news
       .find((item) => item.label === 'Balance Update');
@@ -455,16 +462,7 @@ function parseOfficialNewsCards(html: string): NewsItem[] {
     });
   }
 
-  // Naming a season here would strand the home page on it whenever the official
-  // markup changes, so the placeholder card stays season-agnostic.
-  return cards.length > 0 ? cards : [{
-    label: 'Season Update',
-    title: 'Latest Marvel Rivals season',
-    description: 'Official Marvel Rivals season coverage is available on the Marvel Rivals site.',
-    sourceUrl: officialHomeSource.url,
-    thumbnailUrl: fallbackThumbnail,
-    thumbnailAlt: 'Marvel Rivals season update thumbnail',
-  }];
+  return cards;
 }
 
 function parseSeasonEvents(html: string): SeasonHighlight[] {

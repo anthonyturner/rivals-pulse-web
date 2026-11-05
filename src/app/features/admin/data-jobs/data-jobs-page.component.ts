@@ -9,7 +9,7 @@ import {
   type DataJobStatus,
 } from '../../../../contracts/admin-data-jobs.model';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
-import { describeDetail, describeRun, utcLabel, type RunWords } from './data-jobs.describe';
+import { describeDetail, describeRun, utcLabel, utcTimeLabel, type RunWords } from './data-jobs.describe';
 import { DataJobsService, type DataJobRunResult } from './data-jobs.service';
 
 /** Words for a run, with the class that colours them and the time it began. */
@@ -80,8 +80,14 @@ function resultWords(result: DataJobRunResult): RunWords {
     case 'busy':
       return {
         tone: 'notice',
-        headline: `${result.busy.error} It did not start. Try again after ${utcLabel(result.busy.retryAt)}.`,
+        headline: `${result.busy.error} It did not start. Try again after ${utcTimeLabel(result.busy.retryAt)}.`,
         note: null,
+      };
+    case 'refused':
+      return {
+        tone: 'bad',
+        headline: 'The request was refused, so the job did not start.',
+        note: 'Your sign-in may have ended, or this account may no longer be an administrator. Sign in again and retry.',
       };
     case 'unknown':
       return {
@@ -136,7 +142,7 @@ export class DataJobsPageComponent {
           result: results[job.key] ?? null,
           running: running.has(job.key),
           hint: wait
-            ? `${wait.reason === 'running' ? 'Already running.' : 'Ran a moment ago.'} Available again after ${utcLabel(wait.retryAt)}.`
+            ? `${wait.reason === 'running' ? 'Already running.' : 'Ran a moment ago.'} Available again after ${utcTimeLabel(wait.retryAt)}.`
             : null,
         };
       }),
@@ -192,10 +198,9 @@ export class DataJobsPageComponent {
     const ends = jobs.flatMap((job) => (job.wait ? [Date.parse(job.wait.retryAt)] : [])).filter((end) => end > now);
 
     if (ends.length > 0) {
-      this.timer = setTimeout(() => {
-        this.now.set(this.service.now());
-        this.armWaitTimer(this.statuses());
-      }, Math.min(...ends) - now + 250);
+      // Read the jobs again rather than only moving the clock: a run that was "running" when the page
+      // loaded has ended by now, and the page should say how.
+      this.timer = setTimeout(() => void this.refresh(), Math.min(...ends) - now + 250);
     }
   }
 }

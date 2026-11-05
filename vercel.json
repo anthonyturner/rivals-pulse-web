@@ -12,6 +12,9 @@
       "destination": "/index.csr.html"
     }
   ],
+  "functions": {
+    "api/admin/data-jobs-run.ts": { "maxDuration": 60 }
+  },
   "crons": [
     {
       "path": "/api/sync/home-news",

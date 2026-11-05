@@ -169,8 +169,43 @@ describe('DataJobsPageComponent', () => {
     await settle();
 
     expect(card('Hero pairs').querySelector('.jobs__result')?.textContent).toContain(
-      'It did not start. Try again after 2026-11-04 10:01 UTC.',
+      'It did not start. Try again after 2026-11-04 10:01:00 UTC.',
     );
+  });
+
+  it('says a refused request did not start the job, and does not call it unknown', async () => {
+    await open();
+    runJob.and.resolveTo({ status: 'refused' });
+
+    button('Home news').click();
+    await settle();
+
+    const result = card('Home news').querySelector('.jobs__result') as HTMLElement;
+
+    expect(result.textContent).toContain('The request was refused, so the job did not start.');
+    expect(result.textContent).not.toContain('not known');
+  });
+
+  it('reads the jobs again when a wait ends, so a run that was running is shown as it ended', async () => {
+    jasmine.clock().install();
+
+    try {
+      await open(
+        DATA_JOBS.map((job) =>
+          job.key === 'game-stats'
+            ? status(job.key, { wait: { reason: 'running', retryAt: '2026-11-04T10:00:02.000Z' } })
+            : status(job.key),
+        ),
+      );
+      expect(read).toHaveBeenCalledTimes(1);
+
+      jasmine.clock().tick(2300);
+      await settle();
+
+      expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      jasmine.clock().uninstall();
+    }
   });
 
   it('does not claim a job ran when no readable answer came back', async () => {
@@ -193,7 +228,7 @@ describe('DataJobsPageComponent', () => {
     );
 
     expect(button('Home news').disabled).toBeTrue();
-    expect(card('Home news').textContent).toContain('Available again after 2026-11-04 10:05 UTC.');
+    expect(card('Home news').textContent).toContain('Available again after 2026-11-04 10:05:00 UTC.');
     expect(button('Home news').getAttribute('aria-describedby')).toBe('hint-home-news');
     expect(button('Game stats').disabled).toBeFalse();
   });

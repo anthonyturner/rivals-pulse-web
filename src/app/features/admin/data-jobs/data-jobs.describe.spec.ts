@@ -1,11 +1,17 @@
 import type { DataJobRun } from '../../../../contracts/admin-data-jobs.model';
-import { describeDetail, describeRun, utcLabel } from './data-jobs.describe';
+import { describeDetail, describeRun, utcLabel, utcTimeLabel } from './data-jobs.describe';
 
 const AT = '2026-11-04T10:10:00.000Z';
 
 describe('utcLabel', () => {
   it("writes the instant in UTC whatever the visitor's time zone", () => {
     expect(utcLabel('2026-11-04T09:07:31.123Z')).toBe('2026-11-04 09:07 UTC');
+  });
+});
+
+describe('utcTimeLabel', () => {
+  it('keeps the seconds, so a time to retry at is never named a minute too early', () => {
+    expect(utcTimeLabel('2026-11-05T05:26:43.900Z')).toBe('2026-11-05 05:26:43 UTC');
   });
 });
 

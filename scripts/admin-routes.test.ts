@@ -47,6 +47,18 @@ describe('the Vercel files for the admin routes', () => {
   }
 });
 
+describe('the time limit of the route that runs jobs', () => {
+  it('is set in vercel.json, above the 30-second news deadline and within the 60 seconds every plan allows, so it does not depend on the project default', () => {
+    const config = JSON.parse(readFileSync(new URL('vercel.json', root), 'utf8')) as {
+      functions?: Record<string, { maxDuration?: number }>;
+    };
+    const limit = config.functions?.['api/admin/data-jobs-run.ts']?.maxDuration;
+
+    assert.ok(typeof limit === 'number' && limit > 45 && limit <= 60, `maxDuration is ${limit}`);
+    assert.ok(routeFiles.includes('data-jobs-run.ts'), 'the configured file is a real route file');
+  });
+});
+
 describe('the Express mount', () => {
   it('sends the whole /api/admin/ prefix through the wrapper, and nothing else answers it', () => {
     const server = readFileSync(new URL('src/server.ts', root), 'utf8').replace(/\r\n/g, '\n');
@@ -86,6 +98,14 @@ describe('the admin handlers', () => {
       });
     }
   }
+
+  it('no admin file loads sync-jobs.ts at import time, so no request, and no test of the gate, loads the service-key module before a claim succeeds', () => {
+    for (const { name, source } of sources) {
+      const staticImports = withoutComments(source).match(/^import (?!type\b)[^;]*from ['"]\.\/sync-jobs\.ts['"]/gm) ?? [];
+
+      assert.deepEqual(staticImports, [], name);
+    }
+  });
 
   it(`${SYNC_JOBS} opens the service-key client only inside the two named sync job functions, once each`, () => {
     const code = withoutComments(sources.find(({ name }) => name === SYNC_JOBS)?.source ?? '');

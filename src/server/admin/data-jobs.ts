@@ -7,16 +7,25 @@ import {
 } from '../../contracts/admin-data-jobs.model.ts';
 import { json, type AccountResponse } from '../account/account-session.ts';
 import type { AdminContext } from './admin-routes.ts';
-import { runGameStatsJob, runHomeNewsJob, type SyncJobResult } from './sync-jobs.ts';
+import type { SyncJobResult } from './sync-jobs.ts';
 
-/** The syncs, by job key. A test passes stand-ins; the real ones are the only code that holds the service key. */
+/** The syncs, by job key. A test passes stand-ins. */
 export type SyncJobRunners = Readonly<Record<'home-news' | 'game-stats', () => Promise<SyncJobResult>>>;
 
-const SYNC_JOB_RUNNERS: SyncJobRunners = { 'home-news': runHomeNewsJob, 'game-stats': runGameStatsJob };
+/**
+ * The real syncs. `sync-jobs.ts` is loaded only when one is called, which is after `admin_begin_run`
+ * has said yes: no other request, and no test of the gate, loads the module that holds the
+ * service key, or the Supabase client behind it (which the install-free CI job cannot resolve).
+ */
+const SYNC_JOB_RUNNERS: SyncJobRunners = {
+  'home-news': async () => (await import('./sync-jobs.ts')).runHomeNewsJob(),
+  'game-stats': async () => (await import('./sync-jobs.ts')).runGameStatsJob(),
+};
 
 /** What a rebuild that failed or was stopped says. The cause stays in the server log. */
 const REBUILD_FAILED =
-  'The rebuild did not finish. The database either failed it or stopped it for taking too long, so nothing was changed.';
+  'The rebuild did not finish. The database either failed it or stopped it for taking too long. ' +
+  'If the answer was lost it may still have been applied, so check "Last manual run" before trying again.';
 
 /** Each job's last scheduled run, last manual run, and whether it can start now. */
 export async function readDataJobs({ tokens, gateway }: AdminContext): Promise<AccountResponse> {

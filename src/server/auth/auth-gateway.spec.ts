@@ -403,10 +403,11 @@ describe('createSupabaseAuthGateway', () => {
       expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/admin_data_jobs_status');
     });
 
-    it('refuses a job list with a job that is not in the allow-list', async () => {
+    it('leaves out a job that is not in the allow-list and refuses an answer that is not a list', async () => {
       const body = [{ job: 'drop-everything', lastScheduled: null, lastManual: null, wait: null }];
 
-      await expectAsync(gatewayFor({ status: 200, body }).gateway.readDataJobs(tokens)).toBeRejectedWithError(AuthUnavailableError);
+      expect(await gatewayFor({ status: 200, body }).gateway.readDataJobs(tokens)).toEqual([]);
+      await expectAsync(gatewayFor({ status: 200, body: {} }).gateway.readDataJobs(tokens)).toBeRejectedWithError(AuthUnavailableError);
     });
   });
 

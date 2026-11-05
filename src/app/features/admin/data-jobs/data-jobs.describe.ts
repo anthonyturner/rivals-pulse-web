@@ -19,6 +19,11 @@ export function utcLabel(iso: string): string {
   return `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
 }
 
+/** As `utcLabel` with the seconds, for a time to try again at: cutting them off would name a minute that is still too early. */
+export function utcTimeLabel(iso: string): string {
+  return `${iso.slice(0, 10)} ${iso.slice(11, 19)} UTC`;
+}
+
 const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
 
 export function describeDetail(detail: DataJobDetail): RunWords {
