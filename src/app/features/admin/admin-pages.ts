@@ -17,6 +17,11 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
     label: 'Overview',
     loadComponent: () => import('./overview/admin-overview.component').then((module) => module.AdminOverviewComponent),
   },
+  {
+    path: 'data-jobs',
+    label: 'Data jobs',
+    loadComponent: () => import('./data-jobs/data-jobs-page.component').then((module) => module.DataJobsPageComponent),
+  },
 ];
 
 /** What the shell shows. It is the list above; a test provides another to prove the shell follows it. */

@@ -128,6 +128,10 @@ The session lives on the server side of the boundary:
   Admin link read `isAdmin` from the session answer, and the lazily loaded `/admin` area (`src/app/features/admin/`, menu and
   routes from `ADMIN_PAGES`) is client-rendered and carries `robots: noindex, nofollow`. Those are conveniences; the API and
   the database are what refuse.
+- The admin "Data jobs" page (issue 494) runs the five hourly rebuilds and the two syncs on demand through `admin/data-jobs` and
+  `admin/data-jobs-run`: a database call under the admin's own token writes the audit row and checks the cooldown, then a rebuild
+  runs in the database and a sync runs in `src/server/admin/sync-jobs.ts`, the one place the admin area uses the service-role key
+  (ADR-0005, decision 6). See "Running the data jobs on demand" in [supabase.md](supabase.md).
 - An account can be linked to an in-game player with a one-time code (issue 264). The desktop app asks
   the Edge Function `issue-link-code` for a code, proving who it is with its Overwolf session; the
   player types it on the account page, `POST /api/account/link` calls the `redeem_link_code` database

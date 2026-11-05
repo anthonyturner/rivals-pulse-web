@@ -18,6 +18,8 @@ POST /api/account/link
 POST /api/account/unlink
 GET /api/account/dashboard
 GET /api/admin/me
+GET /api/admin/data-jobs
+POST /api/admin/data-jobs-run
 
 Static reference data for other tools is published separately as Pulse Atlas; see [pulse-atlas.md](pulse-atlas.md).
 
@@ -67,6 +69,15 @@ address with no file under `api/admin/` gets Vercel's own 404). Every answer, re
 included, carries `Cache-Control: private, no-store, max-age=0`. `GET /api/admin/me` answers 200 `{ "admin": true }` and
 exists to prove the gate. The routes are listed in `ADMIN_ROUTES` (`src/server/admin/admin-routes.ts`); to add one, see
 there.
+
+`GET /api/admin/data-jobs` answers `{ "jobs": [...] }`: for each of the seven data jobs, `lastScheduled` and `lastManual` (each
+`null` or `{ outcome: "succeeded" | "failed" | "running" | "unfinished", startedAt, finishedAt, detail, message }`) and `wait` (`null`, or
+`{ reason: "running" | "cooldown", retryAt }`). `POST /api/admin/data-jobs-run` takes `{ "job": "<key>" }` from that fixed list (400 for
+anything else) and answers when the job has finished: 200 `{ "run": { job, outcome: "succeeded" | "failed", detail, recorded } }`, where
+`detail.result` is `rebuilt`, `news-synced`, `stored`, `stored-with-fallbacks`, `already-captured` or `failed`, and `recorded` is false if
+its audit row could not be closed; or 409 `{ error, reason, retryAt }` when the job is running or in its cooldown, in which case it did
+not start. The types are in `src/contracts/admin-data-jobs.model.ts`; see "Running the data jobs on demand" in
+[supabase.md](supabase.md).
 
 `GET /api/account/dashboard` takes the `rp_session` cookie and answers the signed-in player's own stats,
 derived on the server from the lines the database can prove are theirs (the recorder and uid of their link;

@@ -23,6 +23,10 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     unlinkPlayer: async () => undefined,
     readOwnDashboard: async () => ({ linked: false }),
     isAdmin: async () => false,
+    beginDataJob: async () => ({ status: 'started', runId: 1 }),
+    runRebuildJob: async () => 1,
+    finishDataJob: async () => true,
+    readDataJobs: async () => [],
     ...overrides,
   };
 }

@@ -19,6 +19,10 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     unlinkPlayer: async () => undefined,
     readOwnDashboard: async () => ({ linked: false }),
     isAdmin: async () => true,
+    beginDataJob: async () => ({ status: 'started', runId: 1 }),
+    runRebuildJob: async () => 1,
+    finishDataJob: async () => true,
+    readDataJobs: async () => [],
     ...overrides,
   };
 }
@@ -38,6 +42,9 @@ function request(route: string, overrides: Partial<AccountRequest> = {}): Accoun
 const post = (route: string, overrides: Partial<AccountRequest> = {}): AccountRequest =>
   request(route, { method: 'POST', originHeader: 'https://rivalspulse.com', ...overrides });
 
+/** The body a POST route needs to get as far as running. A rebuild, so no sync reaches the network. */
+const BODIES: Record<string, unknown> = { 'admin/data-jobs-run': { job: 'recompute-hero-aggregates' } };
+
 describe('handleAdminRequest', () => {
   const routeNames = Object.keys(ADMIN_ROUTES);
 
@@ -48,7 +55,7 @@ describe('handleAdminRequest', () => {
   for (const name of routeNames) {
     const method = ADMIN_ROUTES[name].method;
     const asked = (overrides: Partial<AccountRequest> = {}): AccountRequest =>
-      method === 'POST' ? post(name, overrides) : request(name, overrides);
+      method === 'POST' ? post(name, { body: BODIES[name], ...overrides }) : request(name, overrides);
 
     describe(name, () => {
       it('answers 401 when signed out, without asking the database anything', async () => {

@@ -1,6 +1,7 @@
 # ADR-0005: Gate site administration behind an admin table and a database check
 
-- **Status:** Accepted on 2026-11-04. It was Proposed on 2026-11-01.
+- **Status:** Accepted on 2026-11-04. It was Proposed on 2026-11-01. Decision 6 was amended on 2026-11-05
+  for the two sync jobs (issue 494).
 - **Date:** 2026-11-04 (proposed 2026-11-01)
 - **Deciders:** Anthony (maintainer). Proposed from the engineering refinement
   of #290 (approach A1). He asked for the admin area on 2026-11-04, which
@@ -8,7 +9,8 @@
   it delivers were checked against the code and corrected in place; the open
   questions say how each came out.
 - **Related:** epic #289; this issue #293; #290 (admin role and gated admin
-  area), #291 (spike on `pg_cron`), #292 (refresh schedule page). Builds on
+  area), #291 (spike on `pg_cron`), #292 (refresh schedule page), #494 (run the
+  data jobs on demand). Builds on
   #270 (account foundation and Discord sign-in) and
   [ADR-0004](0004-add-player-accounts-private-to-the-owner.md).
 
@@ -132,10 +134,29 @@ field only decides what is shown; a database that cannot answer reads as `false`
 there. `GET /api/admin/me` is the first route in the list and proves the gate end
 to end.
 
-**6. The service-role key is never used for admin reads or writes.** It skips
-RLS (`docs/supabase.md`), so using it would remove the database check this
-record depends on. Admin handlers call the database with the admin's own
-session token, and RLS plus `is_admin()` decide.
+**6. The service-role key is not used for admin reads or writes, with one
+exception: the two sync jobs.** It skips RLS (`docs/supabase.md`), so using it
+would remove the database check this record depends on. Admin handlers call the
+database with the admin's own session token, and RLS plus `is_admin()` decide.
+
+*Amended 2026-11-05 (issue 494).* The home news and game stats syncs read an
+outside site and write the content tables, which only the service role may do,
+exactly as their Vercel cron routes do. The admin area may run them on demand,
+on these conditions, each held by a test:
+
+- The key is opened only inside two named functions, `runHomeNewsJob` and
+  `runGameStatsJob` (`src/server/admin/sync-jobs.ts`), and only after the
+  database has said yes to *this* administrator and *this* job: `admin_begin_run`
+  is called with the admin's own token, checks `is_admin()`, the allow-list and
+  the cooldown, and commits an audit row first. No other admin file may name the
+  key or open the client that holds it.
+- The jobs are chosen from a fixed allow-list of keys, in the database and in
+  code. Nothing free-form reaches either sync.
+- The key and its client never appear in an answer. The admin area calls the sync
+  code directly; it does not call the cron routes, so `CRON_SECRET` and
+  `SYNC_SECRET` are neither read, sent nor exposed by it.
+- The rebuilds need no key at all: they are database functions called under the
+  admin's own token, each of which checks `is_admin()` itself.
 
 **7. Admin pages are not indexed.** Admin routes set `robots: noindex,
 nofollow` through a per-route flag (`ROUTE_NOINDEX`) in
@@ -163,6 +184,11 @@ server refusal and the database check are what protect anything.
   private to the player who owns it. The operator role is a different subject
   with a different owner, and it should stay readable on its own. This record
   cites ADR-0004 where the two meet.
+- **Run a sync by calling its cron route with `CRON_SECRET` (issue 494).**
+  Rejected: it has the same power as calling the sync code directly, plus an extra
+  network hop, and it puts a secret that can start any sync into a second code
+  path. Calling the sync code directly, after the database says yes, keeps that
+  secret out of the admin area altogether.
 - **Trust the browser guard.** A route guard and a hidden link alone are
   rejected: anyone can call `/api/admin/*` directly (decision 7).
 
@@ -200,7 +226,11 @@ server refusal and the database check are what protect anything.
 - No admin table or function is reachable by `anon`, and none is reachable by
   `authenticated` without an `is_admin()` check.
 - No admin route exists outside the wrapper, and none sends a cacheable header.
-- The service-role key does not appear in any admin handler.
+- The service-role key appears in no admin handler, except that
+  `src/server/admin/sync-jobs.ts` opens the client that holds it inside its two
+  named functions (decision 6), and nothing in the admin area reads `CRON_SECRET`.
+- Every admin action that starts a job writes its audit row, and the row is
+  committed before the job begins, so a failure or a timeout cannot erase it.
 - Admin pages carry `noindex, nofollow`.
 - Any change to who may be admin goes through the owner, by hand.
 
@@ -230,9 +260,12 @@ owns it.
    choosing a refresh interval from a fixed list. Decide again when an admin page
    can do something destructive. ADR-0004 decision 7 already asks for a recent
    sign-in before account deletion, which is the precedent.
-4. **An audit log of admin changes.** None in #290 (it has no changes to log);
-   the default is a small one with #292. This is carried over from the refinement and is not one of the
-   three questions on #293.
+4. **An audit log of admin changes.** None in #290 (it has no changes to log).
+   Answered on 2026-11-05 by #494, the first admin action with something to log:
+   `public.admin_audit_log` (actor, job, start and end times, outcome and detail;
+   the actor is set null, not deleted, when the account goes). Closed to every API
+   role, written and read only by the admin functions. Later actions (#292, #495)
+   add their own `job` values to it.
 
 ## Compliance
 
@@ -250,7 +283,9 @@ A reviewer checks a change against this ADR by looking for:
   test covers each endpoint in the admin route list.
 - Admin routes are registered only through the wrapper, in both Express and the
   Vercel function.
-- No admin handler imports or reads the service-role key.
+- No admin handler imports or reads the service-role key, other than the single
+  use in `sync-jobs.ts` described in decision 6, which `scripts/admin-routes.test.ts`
+  holds to two named functions.
 - A test on `PageMetaTitleStrategy` shows admin routes set `noindex, nofollow`.
 - No public route gained the admin guard, and the Admin link renders only when
   the session says admin.

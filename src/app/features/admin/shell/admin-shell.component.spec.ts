@@ -70,13 +70,16 @@ describe('the admin shell', () => {
       'Extra settings',
     ]);
     expect(host().textContent).toContain('An extra admin page');
-    expect(menu()[1].getAttribute('aria-current')).toBe('page');
+    expect(menu()[ADMIN_PAGES.length].getAttribute('aria-current')).toBe('page');
     expect(menu()[0].getAttribute('aria-current')).toBeNull();
   });
 
   it('links each menu entry to its page under /admin', async () => {
     await open('/admin', [...ADMIN_PAGES, EXTRA_PAGE]);
 
-    expect(menu().map((link) => link.getAttribute('href'))).toEqual(['/admin/overview', '/admin/extra']);
+    expect(menu().map((link) => link.getAttribute('href'))).toEqual([
+      ...ADMIN_PAGES.map((page) => `/admin/${page.path}`),
+      '/admin/extra',
+    ]);
   });
 });
