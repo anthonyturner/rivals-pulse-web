@@ -89,7 +89,9 @@ describe('DataJobsPageComponent', () => {
       const more = jobCard.querySelector('details.jobs__more') as HTMLDetailsElement;
 
       expect(more.open).withContext(job.label).toBeFalse();
-      expect(more.querySelector('summary')?.textContent?.trim()).toBe('What this updates');
+      expect(more.querySelector('summary')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+        `What this updates (${job.label})`,
+      );
       expect(
         jobCard.querySelector('.jobs__runs')!.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).withContext(`${job.label} runs`).toBeTruthy();
@@ -125,7 +127,7 @@ describe('DataJobsPageComponent', () => {
 
     expect(links.map((link) => link.getAttribute('href'))).toContain('/win-rates');
     expect(links.map((link) => link.getAttribute('href'))).toContain('/community/counters');
-    expect(links.every((link) => link.target === '_blank')).toBeTrue();
+    expect(links.every((link) => link.target === '_blank' && link.rel === 'noopener')).toBeTrue();
     expect(links[0].textContent).toContain('(opens in a new tab)');
 
     for (const label of ['Community matches', 'Play time', 'Hero pairs']) {

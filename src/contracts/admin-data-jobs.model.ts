@@ -65,10 +65,11 @@ export const DATA_JOBS = [
     atlasFiles: ['hero-stats.json', 'tier-list.json', 'community-stats.json'],
     caveat:
       'A hero gets a win rate and a tier after 10 appearances, a matchup appears after 10 recorded matches, and a role ' +
-      'average after 50 appearances. Quick Match and Competitive are counted together unless a page lets you pick a mode.',
+      'average after 50 appearances. Until the current half-season has a hero with 10 appearances, the pages show the ' +
+      'previous half-season. Quick Match and Competitive are counted together unless a page lets you pick a mode.',
     example:
-      'If new Quick Match or Competitive matches with a result came in since the last run, the "Matches counted" figure ' +
-      'at the top of the home page goes up.',
+      'The "Matches counted" figure at the top of the home page goes up if new Quick Match or Competitive matches with a ' +
+      'result have come in, unless the page is still showing the previous half-season.',
   },
   {
     key: 'recompute-extended-aggregates',
@@ -77,7 +78,8 @@ export const DATA_JOBS = [
     summary: 'Rebuilds damage, healing, blocked and time-played figures, the kill feed and ability counts.',
     updates:
       "The counts behind each hero's damage, healing and damage blocked per minute, the kill feed (which heroes a hero " +
-      'is seen killing), and how often abilities and ultimates are used. The last two feed the 1 to 10 build scores.',
+      'is seen killing), and how often abilities and ultimates are used. The figures and the ability counts also feed the ' +
+      '1 to 10 build scores.',
     pages: [
       {
         name: 'Community, Heroes tab',
@@ -107,12 +109,13 @@ export const DATA_JOBS = [
     ],
     atlasFiles: ['hero-scores.json'],
     caveat:
-      "Nothing shows until 10 or more lines (one player's figures on one hero in one match) from at least 3 different players " +
-      'back it, with no single player above half of them. A build score also needs 5 heroes that pass. Until then the sections ' +
-      'say "Not enough data yet" or "Collecting data", so a run can leave every page as it was.',
+      "A figure or kill pair shows only after 10 or more lines (a player's figures on a hero in one match; for the kill feed, " +
+      'matches that showed the pair) from at least 3 different players, none above half. A role also needs 50 lines, and a ' +
+      'build score needs 5 heroes that pass ("Waiting for more heroes" until then). Until then the sections say "Not enough ' +
+      'data yet" or "Collecting data", so a run can leave every page as it was.',
     example:
-      'Once a hero passes that rule, its damage per minute appears under "Community hero damage, healing and damage blocked" ' +
-      'on the Community Heroes tab.',
+      'Once a role has 50 lines that pass the rule, its figure replaces "Not enough data" in its row under "Damage, healing and damage ' +
+      'blocked per minute" on the Community Stats tab. Until then a run changes nothing you can see.',
   },
   {
     key: 'recompute-community-match-aggregates',
@@ -151,7 +154,9 @@ export const DATA_JOBS = [
     caveat:
       'No page on the site shows hero pairs yet. They reach only the public Pulse Atlas file, which changes at its next ' +
       'publish (every six hours). A pair is counted after 10 matches with a result.',
-    example: 'In community-stats.json, the number of matches one hero beat another in goes up after the next Pulse Atlas publish.',
+    example:
+      'After the next Pulse Atlas publish, the "matches" and "wins" of a pair in community-stats.json change if new matches ' +
+      'with a result featured a pair that already has 10.',
   },
   {
     key: 'home-news',
@@ -166,7 +171,9 @@ export const DATA_JOBS = [
     caveat:
       'A block hides itself when the official site gives it nothing. "Events and rewards" is hidden while the latest patch ' +
       'notes list no events.',
-    example: 'The newest patch notes appear first under "Latest news and patch notes" in "What\'s new in the game".',
+    example:
+      'If the official site has posted something new since the last run, it appears first under "Latest news and patch ' +
+      'notes" in "What\'s new in the game".',
   },
   {
     key: 'game-stats',
@@ -179,13 +186,13 @@ export const DATA_JOBS = [
     pages: [{ name: 'Game stats', path: '/game-stats', section: 'Where Marvel Rivals sits in the pack' }],
     atlasFiles: [],
     caveat:
-      '"Players now" is read from Steam each time the page loads, so this job does not change it. The hour keeps the first ' +
-      'capture it gets, and a visit to the page can take it too. If Steam does not answer for a game, the capture stores a ' +
-      'built-in number for it. That number is then the figure the next hour\'s change is measured from, and it shows as ' +
-      '"Players now" if the page cannot reach Steam for that game either. The page does not mark it.',
+      '"Players now" comes from Steam and the page\'s answer is cached for up to 5 minutes, so this job does not change it, ' +
+      'and nothing on the page changes during the hour of the run. The hour keeps its first capture, which a visit to the ' +
+      'page can also take. If Steam does not answer for a game, a built-in number is stored for it; it becomes the next ' +
+      'hour\'s starting point, and it shows as "Players now" if the page\'s own Steam read fails too. The page does not mark it.',
     example:
-      'The "Compared with" time under the page title, and the up or down change under "Players now", are measured from the ' +
-      'capture before the current hour.',
+      'From the next hour, "Compared with" under the page title shows this hour\'s capture time, and the up or down changes ' +
+      'under "Players now" are measured from it.',
   },
 ] as const satisfies readonly DataJobDefinition[];
 

@@ -12,7 +12,8 @@
     <strong>A run shows on the site after the web cache lets go of it.</strong> A new answer can take up to 5 minutes
     to appear, and for up to an hour after that a visitor may still be handed the older copy once while the new one
     loads. A page that is already open needs a reload. The home news skips the cache, so a reload shows it at once.
-    Pulse Atlas files change only when it publishes, every six hours or when you run it by hand below.
+    Pulse Atlas files change when it publishes, normally every six hours (or when you run it by hand below), and it
+    reads the same cached answers.
   </p>
 
   <p class="visually-hidden" role="status">{{ announcement() }}</p>
@@ -99,7 +100,9 @@
                 </div>
 
                 <details class="jobs__more">
-                  <summary class="jobs__more-summary">What this updates</summary>
+                  <summary class="jobs__more-summary">
+                    What this updates<span class="visually-hidden"> ({{ row.label }})</span>
+                  </summary>
                   <dl class="jobs__feeds">
                     <div>
                       <dt>Updates</dt>
@@ -112,7 +115,7 @@
                           <ul class="jobs__pages">
                             @for (page of row.pages; track page.path + page.section) {
                               <li>
-                                <a class="guide-link" [routerLink]="page.path" target="_blank"
+                                <a class="guide-link" [routerLink]="page.path" target="_blank" rel="noopener"
                                   >{{ page.name }}<span class="visually-hidden"> (opens in a new tab)</span></a
                                 >: {{ page.section }}
                               </li>
