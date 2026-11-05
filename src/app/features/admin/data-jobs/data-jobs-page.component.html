@@ -8,6 +8,13 @@
     <strong>Player uploads cannot be forced.</strong> They arrive when a player's PC sends a finished match,
     so there is nothing to run for them.
   </p>
+  <p class="jobs__note">
+    <strong>A run shows on the site after the web cache lets go of it.</strong> A new answer can take up to 5 minutes
+    to appear, and for up to an hour after that a visitor may still be handed the older copy once while the new one
+    loads. A page that is already open needs a reload. The home news skips the cache, so a reload shows it at once.
+    Pulse Atlas files change when it publishes, normally every six hours (or when you run it by hand below), and it
+    reads the same cached answers.
+  </p>
 
   <p class="visually-hidden" role="status">{{ announcement() }}</p>
 
@@ -91,6 +98,52 @@
                     <span class="jobs__hint" [id]="'hint-' + row.key">{{ hint }}</span>
                   }
                 </div>
+
+                <details class="jobs__more">
+                  <summary class="jobs__more-summary">
+                    What this updates<span class="visually-hidden"> ({{ row.label }})</span>
+                  </summary>
+                  <dl class="jobs__feeds">
+                    <div>
+                      <dt>Updates</dt>
+                      <dd>{{ row.updates }}</dd>
+                    </div>
+                    <div>
+                      <dt>Shown on</dt>
+                      <dd>
+                        @if (row.pages.length > 0) {
+                          <ul class="jobs__pages">
+                            @for (page of row.pages; track page.path + page.section) {
+                              <li>
+                                <a class="guide-link" [routerLink]="page.path" target="_blank" rel="noopener"
+                                  >{{ page.name }}<span class="visually-hidden"> (opens in a new tab)</span></a
+                                >: {{ page.section }}
+                              </li>
+                            }
+                          </ul>
+                        } @else {
+                          No page on the site yet.
+                        }
+                      </dd>
+                    </div>
+                    @if (row.atlasFiles.length > 0) {
+                      <div>
+                        <dt>Public data files</dt>
+                        <dd>Pulse Atlas: {{ row.atlasList }}</dd>
+                      </div>
+                    }
+                    @if (row.caveat; as caveat) {
+                      <div>
+                        <dt>Good to know</dt>
+                        <dd>{{ caveat }}</dd>
+                      </div>
+                    }
+                    <div>
+                      <dt>Example</dt>
+                      <dd>{{ row.example }}</dd>
+                    </div>
+                  </dl>
+                </details>
               </li>
             }
           </ul>
