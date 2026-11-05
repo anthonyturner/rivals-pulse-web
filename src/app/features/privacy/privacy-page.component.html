@@ -37,8 +37,10 @@
       </li>
       <li>
         The community pages show <strong>anonymous totals</strong>: no names, no player ids and no
-        individual matches. The exceptions are the My matches and My insights tabs, which show a
-        signed-in player their own matches, to that account only.
+        individual matches. A total for a map, a day or a time shows only once enough different
+        players have uploaded matches behind it, so nobody's matches appear on their own. A
+        signed-in player's own matches and insights are on the <a routerLink="/profile">My stats</a>
+        page, which only that account can see.
       </li>
       <li>
         The totals come from matches uploaded by the RivalsPulse desktop app, a separate
@@ -128,7 +130,7 @@
     <ul>
       <li>
         Only <strong>anonymous aggregates</strong>: counts and sums over many matches, such as how
-        often a hero is picked or wins, or the average match length on a map.
+        often a hero is picked or wins, or the average match length of a game mode.
       </li>
       <li>
         <strong>Never</strong> in-game names, player ids, or the rows of any single player or
@@ -138,7 +140,25 @@
         A figure is shown only once it rests on a <strong>minimum number of matches</strong>.
         Below that the page says there is not enough data yet instead of showing a number.
       </li>
-      <li>A match recorded by two players is counted once, so one match cannot weigh twice.</li>
+      <li>
+        How a match that two players both uploaded is counted depends on the page:
+        <ul>
+          <li>
+            Hero win rates, pick rates, tiers and counters, the role averages, the kill feed and the
+            Community Matches tab count it <strong>once</strong>.
+          </li>
+          <li>
+            The damage, healing and damage blocked per minute count each uploading player's own
+            figures, so it counts once for each of them.
+          </li>
+          <li>
+            The Community Insights tab (day of the week, time of day, place in a play session) counts
+            it once for each player who uploaded it, because it uses that player's own result. One
+            match can therefore weigh twice there, and can count as a win for one player and a
+            loss for another.
+          </li>
+        </ul>
+      </li>
       <li>
         <strong>Hero averages</strong> and scores worked out from them are planned, built from each
         uploading player's own figures. They will never show one player's numbers, and a hero will
@@ -178,8 +198,8 @@
   <section class="reading-section" id="accounts" aria-labelledby="accounts-title">
     <h2 id="accounts-title">Accounts and signing in</h2>
     <p>
-      Signing in is optional and works with Discord only. On the community pages, only the My matches and
-      My insights tabs need an account.
+      Signing in is optional and works with Discord only. The community pages need no account. Only your
+      own stats, on the My stats page, do.
     </p>
     <ul>
       <li>
@@ -199,7 +219,7 @@
       <li>
         <strong>What it is used for.</strong> Signing you in and showing you your own account
         page (how you signed in, your email address and when you joined) and your own stats on
-        the My stats page and the My matches and My insights tabs. We send no email, and
+        the My stats page, which includes your My matches and My insights. We send no email, and
         there is no marketing.
       </li>
       <li>

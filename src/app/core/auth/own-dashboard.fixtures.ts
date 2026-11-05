@@ -1,4 +1,11 @@
-import type { OwnDashboardResponse, OwnDashboardStats, OwnKda, OwnRecentMatch } from './own-dashboard.types';
+import type {
+  OwnActivity,
+  OwnActivityRow,
+  OwnDashboardResponse,
+  OwnDashboardStats,
+  OwnKda,
+  OwnRecentMatch,
+} from './own-dashboard.types';
 
 const KDA: OwnKda = {
   matches: 18,
@@ -10,6 +17,23 @@ const KDA: OwnKda = {
   assistsPerMatch: 9,
   ratio: 4,
 };
+
+/** One activity row of 4 matches won 3 to 1. */
+export function activityRow(label: string): OwnActivityRow {
+  return { label, matches: 4, wins: 3, losses: 1, winRate: 0.75 };
+}
+
+/** An account's activity tables, one row each, with `map` naming the only map so two accounts differ. */
+export function activityOf(map: string): OwnActivity {
+  return {
+    maps: [activityRow(map)],
+    modes: [activityRow('Quick Match')],
+    days: [activityRow('2026-10-29')],
+    weekdays: [activityRow('Thursday')],
+    timesOfDay: [activityRow('08:00 to 11:59')],
+    sessionPlaces: [activityRow('Match 1')],
+  };
+}
 
 export function recentMatch(overrides: Partial<OwnRecentMatch> = {}): OwnRecentMatch {
   return {

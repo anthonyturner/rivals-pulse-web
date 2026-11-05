@@ -21,6 +21,7 @@ import { CommunityHeroListComponent } from '../community/community-hero-list/com
 import { HeroDataService } from '../heroes/hero-data.service';
 import { heroIdentities } from '../insights/hero-identity';
 import { ProfileFigureListComponent } from './figure-list/profile-figure-list.component';
+import { OwnActivityTablesComponent } from './own-activity/own-activity-tables.component';
 import { buildProfileView, DEPTH_NOTE } from './profile-view';
 
 /** The signed-in player's own stats, read from the matches their linked desktop app uploaded. */
@@ -29,6 +30,7 @@ import { buildProfileView, DEPTH_NOTE } from './profile-view';
   imports: [
     CommunityHeroListComponent,
     NoticeComponent,
+    OwnActivityTablesComponent,
     PageHeaderComponent,
     PlayerAvatarComponent,
     ProfileFigureListComponent,

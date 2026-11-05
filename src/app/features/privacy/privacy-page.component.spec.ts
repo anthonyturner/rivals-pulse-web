@@ -87,6 +87,16 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('never');
   });
 
+  it('does not promise that every figure counts a match once: Insights counts it once per uploading player', () => {
+    const text = (section('public-numbers').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).not.toContain('cannot weigh twice');
+    expect(text).toContain('The Community Insights tab');
+    expect(text).toContain('counts it once for each player who uploaded it');
+    expect(text).toContain('One match can therefore weigh twice there');
+    expect(text).toContain('Community Matches tab count it once');
+  });
+
   it('marks hero averages as planned, from own figures, and waiting for enough players', () => {
     const text = section('public-numbers').textContent ?? '';
     expect(text).toContain('are planned');

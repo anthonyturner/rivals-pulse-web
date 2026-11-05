@@ -123,25 +123,49 @@ export const DATA_JOBS = [
     kind: 'rebuild',
     summary: 'Rebuilds the match counts by map, mode and day.',
     updates: 'The counts of community matches by map, game mode and day.',
-    pages: [],
+    pages: [
+      {
+        name: 'Community, Matches tab',
+        path: '/community/matches',
+        section: 'Win rate by map, Game modes played, Average match length and Matches per day',
+      },
+    ],
     atlasFiles: [],
     caveat:
-      'Nothing shows these counts yet: no page or public file reads them. The "My matches" tab on Community now shows each ' +
-      "signed-in player's own matches, read from that player's own uploads, so this job does not change it.",
-    example: 'None yet. A run changes stored counts that no page shows.',
+      'The counts are kept per half-season. A map, game mode or day shows only when at least 3 different players recorded its ' +
+      'matches and none of them recorded more than half; a map is judged within one game mode. The win rate of a map also needs ' +
+      '10 matches with a result, and the mode mix and matches per day need 20 matches between the shown ones. Until something ' +
+      'passes, the tab says "Totals appear once enough different players have uploaded matches", so a run can leave it as it ' +
+      'was. Your own matches are on My stats, which this job does not feed.',
+    example:
+      'When a map, game mode or day first passes the rule, it appears on the Community Matches tab, under "Win rate by map", ' +
+      '"Game modes played" or "Matches per day" (each also needs its own minimum, above). Until something passes, a run ' +
+      'changes nothing you can see.',
   },
   {
     key: 'recompute-play-time-aggregates',
     label: 'Play time',
     kind: 'rebuild',
-    summary: 'Rebuilds the when-and-how-long-people-play counts.',
+    summary: 'Rebuilds the counts of when people play.',
     updates: 'The counts of when people play: by day of the week, time of day and place in a play session (all UTC).',
-    pages: [],
+    pages: [
+      {
+        name: 'Community, Insights tab',
+        path: '/community/insights',
+        section: 'Day of the week, Time of day and Place in a play session',
+      },
+    ],
     atlasFiles: [],
     caveat:
-      'Nothing shows these counts yet: no page or public file reads them. The "My insights" tab on Community now shows each ' +
-      "signed-in player's own play times, read from that player's own uploads, so this job does not change it.",
-    example: 'None yet. A run changes stored counts that no page shows.',
+      'The counts are kept per half-season. A row shows only when 30 or more matches from at least 3 different players are ' +
+      'behind it in one half-season and none of them recorded more than half; a match two players both played counts once for ' +
+      'each of them. Each group (day of the week, time of day, place in a play session) shows only when 3 of its rows pass, ' +
+      'and a group can pass before the others. Until something passes, the tab says "Totals appear once enough different ' +
+      'players have uploaded matches", so a run can leave it as it was. Your own times are on My stats, which this job does ' +
+      'not feed.',
+    example:
+      'When a group first has 3 rows that pass, it appears on the Community Insights tab under "Day of the week", "Time of day" ' +
+      'or "Place in a play session", with the share and win rate of each row. While no group passes, a run changes nothing you can see.',
   },
   {
     key: 'recompute-hero-pair-aggregates',

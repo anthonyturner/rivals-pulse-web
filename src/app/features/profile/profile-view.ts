@@ -13,6 +13,7 @@ import type {
 import { countLabel, percentLabel } from '../../shared/utilities/stat-labels';
 import type { CommunityHeroRow } from '../community/community-hero-list/community-hero-list.component';
 import { heroCell, type HeroIdentities } from '../insights/hero-identity';
+import { ownInsightTables, ownMatchTables, type OwnActivityTableView } from './own-activity/own-activity';
 
 /** Shown in place of a figure the desktop app did not record. Never 0. */
 export const NOT_COUNTED = 'Not counted';
@@ -61,6 +62,10 @@ export type ProfileView =
       perMinute: ProfileFigure[];
       records: ProfileFigure[];
       recent: ProfileRecentMatch[];
+      /** My matches: Competitive and Quick Match by map and day, every mode by mode. */
+      matchTables: OwnActivityTableView[];
+      /** My insights: weekday, time of day and place in a play session. */
+      insightTables: OwnActivityTableView[];
     };
 
 /**
@@ -120,6 +125,8 @@ export function buildProfileView(
       },
     ],
     recent: stats.recent.map((match, index) => recentRow(match, index, identities)),
+    matchTables: ownMatchTables(stats.activity),
+    insightTables: ownInsightTables(stats.activity),
   };
 }
 

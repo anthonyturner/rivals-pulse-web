@@ -5,10 +5,24 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-import { AuthService } from '../../../core/auth/auth.service';
 import { communityRoutes } from '../community.routes';
 
-const TAB_LABELS = ['Heroes', 'My matches', 'Counters', 'Tier list', 'Stats', 'My insights'];
+const TAB_LABELS = ['Heroes', 'Matches', 'Counters', 'Tier list', 'Stats', 'Insights'];
+
+// What /api/community/matches answers while no half-season has enough matches yet.
+const MATCHES_NOT_ENOUGH_DATA = {
+  status: 'not-enough-data',
+  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
+  halfSeasons: [],
+  halfSeason: null,
+  inPlaceOf: null,
+  matchesBand: null,
+  maps: [],
+  mapsBelowMinimum: [],
+  modeMix: null,
+  averageLengthMinutes: null,
+  perDay: null,
+};
 
 describe('CommunityPageComponent', () => {
   let harness: RouterTestingHarness;
@@ -25,9 +39,25 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
   }
 
-  /** The private tabs ask who is signed in; the answer for a visitor who is not. */
-  async function answerPrivateTab(): Promise<void> {
-    TestBed.inject(AuthService).state.set({ status: 'signedOut' });
+  /** The Insights tab reads its numbers from the site's API; the API's own answer for "nothing yet". */
+  async function answerInsightsWithNoData(): Promise<void> {
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/community/insights')
+      .flush({
+        status: 'not-enough-data',
+        timeZone: 'UTC',
+        sessionGapMinutes: null,
+        minimumMatches: 30,
+        minimumRecorders: 3,
+        maxRecorderSharePercent: 50,
+        dimensions: [],
+      });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
+  async function answerMatchesTab(): Promise<void> {
+    TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
     await harness.fixture.whenStable();
     harness.detectChanges();
   }
@@ -49,7 +79,6 @@ describe('CommunityPageComponent', () => {
         provideHttpClientTesting(),
       ],
     });
-    spyOn(TestBed.inject(AuthService), 'load').and.resolveTo({ status: 'signedOut' });
     harness = await RouterTestingHarness.create();
     router = TestBed.inject(Router);
   });
@@ -99,9 +128,9 @@ describe('CommunityPageComponent', () => {
     harness.detectChanges();
 
     expect(router.url).toBe('/matches');
-    expect(selectedTab()?.textContent?.trim()).toBe('My matches');
-    await answerPrivateTab();
-    expect(panel().textContent).toContain('My matches');
+    expect(selectedTab()?.textContent?.trim()).toBe('Matches');
+    await answerMatchesTab();
+    expect(panel().textContent).toContain('Community matches');
   });
 
   it('moves to the next and previous tab with the arrow keys, wrapping at the ends', async () => {
@@ -159,20 +188,21 @@ describe('CommunityPageComponent', () => {
 
   // The Heroes, Counters, Tier list and Stats tabs load their numbers; their own specs cover their empty states.
   for (const [id, label] of [
-    ['matches', 'My matches'],
-    ['insights', 'My insights'],
+    ['matches', 'Matches'],
+    ['insights', 'Insights'],
   ]) {
-    it(`asks a signed-out visitor to sign in on the ${label} tab`, async () => {
+    it(`shows the designed empty state on the ${label} tab`, async () => {
       await open(`/${id}`);
       if (id === 'insights') {
-        await answerPrivateTab();
+        await answerInsightsWithNoData();
       }
       if (id === 'matches') {
-        await answerPrivateTab();
+        await answerMatchesTab();
       }
 
       const text = panel().textContent ?? '';
-      expect(text).toMatch(/Sign in to see your own matches/);
+      expect(text).toMatch(/enough data yet|enough different players/);
+      expect(text).toContain('Totals appear once enough different players have uploaded matches');
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
       expect(panel().querySelector('app-state-panel')).toBeTruthy();
@@ -182,12 +212,42 @@ describe('CommunityPageComponent', () => {
   }
 
   for (const id of ['matches', 'insights']) {
-    it(`has no link out of the ${id} tab, because no page exists for it`, async () => {
+    it(`links the ${id} tab to My stats, where the account's own figures are`, async () => {
       await open(`/${id}`);
+      if (id === 'insights') {
+        await answerInsightsWithNoData();
+      } else {
+        await answerMatchesTab();
+      }
 
-      expect(panel().querySelector('a')).toBeNull();
+      const links = Array.from(panel().querySelectorAll('a'));
+
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/profile']);
+    });
+
+    it(`needs no sign-in and never reads an account's dashboard on the ${id} tab`, async () => {
+      const fetchSpy = spyOn(window, 'fetch').and.rejectWith(new Error('no request expected'));
+
+      await open(`/${id}`);
+      if (id === 'insights') {
+        await answerInsightsWithNoData();
+      } else {
+        await answerMatchesTab();
+      }
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(panel().textContent).not.toMatch(/sign in/i);
     });
   }
+
+  it('points to My stats from the intro, and no longer places My matches on Community', async () => {
+    await open('/heroes');
+
+    const link = host().querySelector<HTMLAnchorElement>('.community-page__intro a[href="/profile"]');
+
+    expect(link?.textContent?.trim()).toBe('My stats');
+    expect(host().querySelector('.community-page__intro')?.textContent).not.toMatch(/My matches|My insights|exceptions/);
+  });
 
   it('links the anonymity note to the privacy notes', async () => {
     await open('/heroes');
