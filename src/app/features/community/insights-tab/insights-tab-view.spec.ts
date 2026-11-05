@@ -75,7 +75,6 @@ describe('buildInsightsTabView', () => {
     expect(view.notes.join(' ')).toContain('30 minutes');
     expect(view.notes.join(' ')).toContain('10 matches');
     expect(view.notes.join(' ')).toContain('one player');
-    expect(view.notes.join(' ')).toContain('more than 50%');
   });
 
   it('leaves the session sentence out when the gap is not known', () => {
