@@ -22,7 +22,7 @@ export class CommunityInsightsService {
   }
 }
 
-/** Checks the parts the tab reads, so a malformed answer becomes the empty state, not a blank panel. */
+/** Checks the parts the tab reads, so a malformed answer becomes the failed state, not a blank panel. */
 export function isCommunityInsights(body: unknown): body is CommunityInsights {
   if (typeof body !== 'object' || body === null) {
     return false;

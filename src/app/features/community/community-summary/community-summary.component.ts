@@ -39,7 +39,7 @@ export class CommunitySummaryComponent {
   readonly halfSeasonLabel = input<string | null>(null);
   readonly notice = input<string | null>(null);
   readonly footnote = input<string | null>(null);
-  /** The full page this tab summarises, or null while no full page shows the same numbers. */
+  /** A page to go to from this tab: the full page it summarises, or where the visitor's own figures are. Null for none. */
   readonly link = input<CommunitySummaryLink | null>(null);
   /** A second page that holds the full numbers, when one page does not. */
   readonly secondLink = input<CommunitySummaryLink | null>(null);

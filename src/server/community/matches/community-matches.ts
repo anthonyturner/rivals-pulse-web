@@ -9,6 +9,7 @@ import { PLAY_MODE_NAMES } from '../../../contracts/play-modes.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
   PLAY_MODE_IDS,
+  chooseHalfSeason,
   halfSeasonTimeline,
   type HalfSeasonStart,
 } from '../../heroes/stats/hero-stats.ts';
@@ -107,11 +108,12 @@ export function deriveCommunityMatches(
   source: CommunityMatchesSource,
   options: DeriveCommunityMatchesOptions,
 ): CommunityMatches {
-  const { current, started, describe, previousOf } = halfSeasonTimeline(
+  const timeline = halfSeasonTimeline(
     source.halfSeasons,
     source.modes.map((row) => row.halfSeason),
     options.now,
   );
+  const { started, describe } = timeline;
 
   // Built field by field, so a field added to a snapshot can never reach the public response
   // without being named here.
@@ -133,21 +135,9 @@ export function deriveCommunityMatches(
     };
   };
 
-  if (current === undefined) {
-    return toResult(undefined, undefined);
-  }
+  const { shown, inPlaceOf } = chooseHalfSeason(timeline, options.halfSeason, (id) => hasEnoughMatches(source, id));
 
-  if (options.halfSeason !== undefined) {
-    return toResult(started.includes(options.halfSeason) ? options.halfSeason : undefined, undefined);
-  }
-
-  const previous = previousOf(current);
-
-  if (previous !== undefined && !hasEnoughMatches(source, current) && hasEnoughMatches(source, previous)) {
-    return toResult(previous, current);
-  }
-
-  return toResult(current, undefined);
+  return toResult(shown, inPlaceOf);
 }
 
 function snapshotOf(source: CommunityMatchesSource, halfSeason: number): Snapshot {
