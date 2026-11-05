@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import {
   DATA_JOBS,
@@ -25,6 +26,8 @@ interface ResultView extends RunWords {
 
 interface JobRow extends Omit<DataJobDefinition, 'key'> {
   key: DataJobKey;
+  /** The Pulse Atlas files as one line, joined here so the template calls no method. */
+  atlasList: string;
   scheduled: RunView | null;
   manual: RunView | null;
   /** What the job just did on this page, until the page is left. */
@@ -106,7 +109,7 @@ function resultWords(result: DataJobRunResult): RunWords {
  */
 @Component({
   selector: 'app-admin-data-jobs',
-  imports: [StatePanelComponent],
+  imports: [RouterLink, StatePanelComponent],
   templateUrl: './data-jobs-page.component.html',
   styleUrls: ['../../../shared/styles/guide-article.css', './data-jobs-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -137,6 +140,7 @@ export class DataJobsPageComponent {
 
         return {
           ...job,
+          atlasList: job.atlasFiles.join(', '),
           scheduled: status?.lastScheduled ? runView(describeRun(status.lastScheduled), status.lastScheduled.startedAt) : null,
           manual: status?.lastManual ? runView(describeRun(status.lastManual), status.lastManual.startedAt) : null,
           result: results[job.key] ?? null,

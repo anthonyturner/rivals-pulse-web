@@ -1,5 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { DATA_JOBS, type DataJobKey, type DataJobRun, type DataJobStatus } from '../../../../contracts/admin-data-jobs.model';
 import { DataJobsPageComponent } from './data-jobs-page.component';
@@ -35,6 +36,7 @@ describe('DataJobsPageComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter([]),
         { provide: DataJobsService, useValue: { now: () => NOW, read, run: runJob } },
       ],
     });
@@ -66,6 +68,72 @@ describe('DataJobsPageComponent', () => {
       'Syncs',
       'Run from GitHub',
     ]);
+  });
+
+  it('says when a change shows, once for the page', async () => {
+    await open();
+
+    const notes = Array.from(el().querySelectorAll('.jobs__note')).map((note) => note.textContent ?? '');
+
+    expect(notes.filter((text) => text.includes('web cache')).length).toBe(1);
+    expect(notes.join(' ')).toContain('up to 5 minutes');
+    expect(notes.join(' ')).toContain('up to an hour');
+    expect(notes.join(' ')).toContain('needs a reload');
+  });
+
+  it('keeps what each job updates closed, after the run status and the button', async () => {
+    await open();
+
+    for (const job of DATA_JOBS) {
+      const jobCard = card(job.label);
+      const more = jobCard.querySelector('details.jobs__more') as HTMLDetailsElement;
+
+      expect(more.open).withContext(job.label).toBeFalse();
+      expect(more.querySelector('summary')?.textContent?.trim()).toBe('What this updates');
+      expect(
+        jobCard.querySelector('.jobs__runs')!.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).withContext(`${job.label} runs`).toBeTruthy();
+      expect(
+        jobCard.querySelector('.jobs__actions')!.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).withContext(`${job.label} button`).toBeTruthy();
+    }
+  });
+
+  it('shows each job\'s own text: what it updates, where, the Atlas files, the caveat and an example', async () => {
+    await open();
+
+    for (const job of DATA_JOBS) {
+      const text = card(job.label).querySelector('.jobs__feeds')?.textContent ?? '';
+
+      expect(text).withContext(job.label).toContain(job.updates);
+      expect(text).withContext(job.label).toContain(job.example);
+
+      if (job.caveat) {
+        expect(text).withContext(job.label).toContain(job.caveat);
+      }
+
+      for (const file of job.atlasFiles) {
+        expect(text).withContext(job.label).toContain(file);
+      }
+    }
+  });
+
+  it('links each page a job feeds, in a new tab, and says plainly when no page shows a job\'s output', async () => {
+    await open();
+
+    const links = Array.from(card('Hero stats').querySelectorAll<HTMLAnchorElement>('.jobs__pages a'));
+
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/win-rates');
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/community/counters');
+    expect(links.every((link) => link.target === '_blank')).toBeTrue();
+    expect(links[0].textContent).toContain('(opens in a new tab)');
+
+    for (const label of ['Community matches', 'Play time', 'Hero pairs']) {
+      const text = card(label).querySelector('.jobs__feeds')?.textContent ?? '';
+
+      expect(card(label).querySelector('.jobs__pages')).withContext(label).toBeNull();
+      expect(text).withContext(label).toContain('No page on the site yet.');
+    }
   });
 
   it('shows each job\'s last scheduled and last manual run, and an unfinished one as not finished', async () => {
@@ -239,6 +307,7 @@ describe('DataJobsPageComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter([]),
         { provide: DataJobsService, useValue: { now: () => NOW, read, run: runJob } },
       ],
     });
