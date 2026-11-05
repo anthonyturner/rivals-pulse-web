@@ -13,10 +13,12 @@ create table if not exists public.admins (
   note text
 );
 
--- RLS on with no policy, and no grant to the API roles: nothing reaches the table except the
--- function below and the owner's own SQL. Supabase grants new tables to the API roles by default.
+-- RLS on with no policy, and no grant to any API role: nothing reaches the table except the
+-- function below and the owner's own SQL. Supabase grants new tables to the API roles by default,
+-- the service role included; it is revoked too, so the website's service key cannot read or write
+-- the table either (ADR-0005, decision 6).
 alter table public.admins enable row level security;
-revoke all on public.admins from anon, authenticated;
+revoke all on public.admins from anon, authenticated, service_role;
 
 -- Whether the signed-in account is an administrator. It reads the table on every call and keeps
 -- nothing in the sign-in token, so deleting the row takes effect on the admin's next request.

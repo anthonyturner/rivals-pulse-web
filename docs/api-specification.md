@@ -62,7 +62,8 @@ account routes.
 (`handleAdminRequest`, `src/server/admin/admin-api.ts`). It answers 401 with no valid session, 403 for a signed-in
 account that is not an administrator (`public.is_admin()`, asked of the database on every request), and 503 when the
 database cannot say; a POST also needs the same-site `Origin` the account routes ask for. Both refusals come before the
-route is looked up, so a caller who is not an admin gets the same answer for a made-up route. Every answer, refusals
+route is looked up, so on Express a caller who is not an admin gets the same answer for a made-up route (on Vercel an
+address with no file under `api/admin/` gets Vercel's own 404). Every answer, refusals
 included, carries `Cache-Control: private, no-store, max-age=0`. `GET /api/admin/me` answers 200 `{ "admin": true }` and
 exists to prove the gate. The routes are listed in `ADMIN_ROUTES` (`src/server/admin/admin-routes.ts`); to add one, see
 there.

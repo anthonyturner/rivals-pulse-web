@@ -75,8 +75,9 @@ checked, and how answers are kept out of the cache.
 **1. Admins are rows in a table.** We will add `public.admins`, with `user_id`
 referencing `auth.users` (`on delete cascade`), `granted_at` and `note`. RLS is
 on, there is no policy, and `anon` and `authenticated` hold no grant on it, the
-same posture as the other website-only tables (Context). Nothing reads the table
-except the check below.
+same posture as the other website-only tables (Context). The service role is
+revoked too, which the other tables do not do, so the website's service key cannot
+read or write it (decision 6). Nothing reads the table except the check below.
 
 **2. One database check.** We will add `public.is_admin()`, a security-definer
 function (runs with its owner's rights, with `search_path` set to empty as the
@@ -108,7 +109,11 @@ through a single wrapper that:
 - answers 401 when there is no session, and 403 when the session is not an
   admin's (the wrapper asks `is_admin()` once, with the request's own session,
   through `AuthGateway.isAdmin`). Both refusals come before the route is looked
-  up, so a caller who is not an admin cannot tell a real route from a made-up one;
+  up, so on Express a caller who is not an admin cannot tell a real route from a
+  made-up one. On Vercel an address with no file under `api/admin/` never reaches
+  the wrapper and gets Vercel's own 404, so the existence of a route file is not
+  hidden there; the files are in the public source anyway, and what a route does
+  stays behind the refusals;
 - answers 503, never 403, when the database cannot say, so an outage is not
   mistaken for a refusal;
 - sends `Cache-Control: private, no-store` on every answer, including errors and
@@ -210,11 +215,15 @@ owns it.
    answer, all reused. It does not use a per-request supabase-js client but
    `fetch` with the user's token, which does the same job (see Context).
 2. **Database tests in CI.** Answered on 2026-11-04: #270 did not add them, and
-   CI starts no database. #290 uses the fallback: a static test over the admin
-   migrations (`scripts/admin-migrations.test.ts`, run by CI as part of
-   `npm run test:functions`) and a check script,
-   `supabase/checks/admins.sql`, run against the linked project after the
-   migration is pushed. Real database tests remain a separate chore.
+   CI starts no database. The chore is filed as #496 (Run real database tests in
+   CI). Until it lands, #290 uses the fallback: a static test over every migration
+   (`scripts/admin-migrations.test.ts`, run by CI as part of
+   `npm run test:functions`) that, from migration `20261104140000` on, holds every
+   function a signed-in account can call to `is_admin()` or to an explicit list of
+   deliberately open functions, and a check script, `supabase/checks/admins.sql`,
+   run against the linked project after the migration is pushed. The Karma tests
+   (the browser half) do not run in CI either; that is #497 (Run the Karma tests in
+   CI).
 3. **Re-authenticating or two-factor sign-in before admin actions** (#292).
    Decided for #290 on 2026-11-04: none, because the area has no actions yet. The
    default for #292 is none in version 1, because the only power it gives is

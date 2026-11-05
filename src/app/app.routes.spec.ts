@@ -136,9 +136,9 @@ describe('admin route', () => {
     expect(admin?.data).toEqual(jasmine.objectContaining(ROUTE_NOINDEX));
   });
 
-  it('is the only route, anywhere in the tree, that uses the admin guard or asks not to be indexed', () => {
+  it('is the only route, anywhere in the tree (lazy children included), that uses the admin guard or asks not to be indexed', async () => {
     const flagged: string[] = [];
-    const visit = (list: Routes, path: string): void => {
+    const visit = async (list: Routes, path: string): Promise<void> => {
       for (const route of list) {
         const here = `${path}/${route.path ?? ''}`;
 
@@ -150,11 +150,17 @@ describe('admin route', () => {
           flagged.push(`${here} (noindex)`);
         }
 
-        visit(route.children ?? [], here);
+        await visit(route.children ?? [], here);
+
+        if (typeof route.loadChildren === 'function') {
+          const loaded = await route.loadChildren();
+
+          await visit(Array.isArray(loaded) ? loaded : [], here);
+        }
       }
     };
 
-    visit(routes, '');
+    await visit(routes, '');
 
     expect(flagged.sort()).toEqual(['/admin', '/admin (noindex)']);
   });

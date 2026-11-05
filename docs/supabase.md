@@ -871,7 +871,7 @@ action, never a broad table grant.
 
 [ADR-0005](decisions/0005-gate-site-administration-behind-an-admin-table.md) is the design. `20261104140000_admins.sql` adds
 `public.admins` (`user_id` references `auth.users` on delete cascade, `granted_at`, `note`) with RLS on, no policy and no grant to
-`anon` or `authenticated`, and `public.is_admin()`: security definer, empty `search_path`, executable by `authenticated` only,
+`anon`, `authenticated` or `service_role`, and `public.is_admin()`: security definer, empty `search_path`, executable by `authenticated` only,
 true when `auth.uid()` has a row. Nothing in the website writes the table, and nothing is kept in the sign-in token, so
 **revoking takes effect on the admin's next request**: the API refuses at once, and the Admin link goes at the next page load.
 The service-role key is not used for any admin read or write.
@@ -880,6 +880,10 @@ The service-role key is not used for any admin read or write.
   `isAdmin` field, which only decides whether the header shows the Admin link) and in front of every `/api/admin/*` route
   (401 signed out, 403 not an admin, 503 when the database cannot say). Until the migration is applied the function is
   missing, so the session reads `isAdmin: false` and the admin routes answer 503; nothing else is affected.
+- **Release order for the migration** (it has never run anywhere, so it follows "Migrations" above, not the merge deploy alone):
+  `npx supabase migration list --linked` (the local and remote columns must match), `npx supabase db push` from the branch,
+  `npx supabase db query --linked -f supabase/checks/admins.sql`, then merge soon after (a migration pushed and left unmerged makes
+  the integration refuse every deploy), then grant admin by hand and walk the checks below. The maintainer approves the push.
 - The admin area works on `rivalspulse.com` and from `localhost` against the live project, as sign-in does. A preview
   deployment has no sign-in, so none.
 
@@ -902,8 +906,8 @@ npx supabase db query --linked "delete from public.admins where user_id = '<id>'
 
 Grant by the id from step 1, never by an email typed into the insert: an address is something Discord reports, not something this site verified. Deleting the account deletes its row.
 
-**Checks after the migration is applied.** CI starts no database, so `scripts/admin-migrations.test.ts` (part of
-`npm run test:functions`) reads the SQL for the rules, and these show them against the real project:
+**Checks after the migration is applied.** CI starts no database (real database tests are a separate chore), so `scripts/admin-migrations.test.ts` (part of
+`npm run test:functions`) reads every migration for the rules, and these show them against the real project:
 
 - `npx supabase db query --linked -f supabase/checks/admins.sql` proves the rules in a transaction it rolls back, with two
   throwaway users and no real account: a row makes an administrator, a signed-in account without one is not, `anon` cannot
@@ -916,7 +920,11 @@ Grant by the id from step 1, never by an email typed into the insert: an address
 Adding an admin page or route: a page is one entry in `ADMIN_PAGES` (`src/app/features/admin/admin-pages.ts`); an API route
 is one entry in `ADMIN_ROUTES` (`src/server/admin/admin-routes.ts`) plus a two-line file under `api/admin/`. A database
 function it calls must be security definer, call `public.is_admin()` before it touches anything and be granted to
-`authenticated` only; the static test fails a migration that breaks that.
+`authenticated` only. The static test enforces this for every migration from `20261104140000` on: any function a signed-in
+account can call (granted to `authenticated`, or not revoked from it, since Supabase grants new functions by default) must call
+`is_admin()` or be listed in `NOT_ADMIN_FUNCTIONS` (`scripts/admin-migration-rules.ts`), which is a decision for review.
+It also fails a later grant, policy or `disable row level security` on `public.admins`, and any table with `admin` in its name
+without RLS.
 
 ## Tests
 

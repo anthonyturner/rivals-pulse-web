@@ -107,7 +107,17 @@ describe('handleAdminHttp', () => {
     expect(headers[0]['cache-control']).toBe(NO_STORE);
   });
 
-  it('builds the function Vercel serves for one route', () => {
-    expect(adminRouteHandler('admin/me')).toEqual(jasmine.any(Function));
+  it('builds the function Vercel serves for one route, which refuses a visitor with no session and marks it uncacheable', async () => {
+    const written: { status: number; headers: Record<string, unknown> }[] = [];
+    const req = { method: 'GET', url: '/api/admin/me', headers: { host: 'rivalspulse.com' } } as unknown as IncomingMessage;
+    const res = {
+      writeHead: (status: number, headers: Record<string, unknown>) => written.push({ status, headers }),
+      end: () => undefined,
+    } as unknown as ServerResponse;
+
+    await adminRouteHandler('admin/me')(req, res);
+
+    expect(written[0].status).toBe(401);
+    expect(written[0].headers['cache-control']).toBe(NO_STORE);
   });
 });

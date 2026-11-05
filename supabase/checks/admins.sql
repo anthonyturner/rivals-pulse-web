@@ -106,6 +106,17 @@ begin
     raise notice 'ok: the anon role cannot read the admin table';
   end;
 
+  -- The service role is closed out too, so the website's service key cannot touch the table.
+  reset role;
+  set local role service_role;
+
+  begin
+    perform 1 from public.admins limit 1;
+    raise exception 'check failed: the service role read public.admins';
+  exception when insufficient_privilege then
+    raise notice 'ok: the service role cannot read the admin table';
+  end;
+
   -- Revoking is a delete by the owner, and the next call sees it: nothing is kept in the token.
   reset role;
   delete from public.admins where user_id = admin_account;

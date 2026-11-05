@@ -10,7 +10,8 @@ const UNAVAILABLE = 'The admin area is unavailable right now. Try again in a mom
  * The one door to every `/api/admin/*` route (ADR-0005). Before a route in `ADMIN_ROUTES` runs, the
  * request has a valid session (401 if not) and the database has said the account is an admin
  * (403 if not). Both come before the route is even looked up, so a caller who is not an admin
- * cannot tell a real route from a made-up one. Nothing here reads the service-role key: the check
+ * cannot tell a real route from a made-up one (on Vercel an address with no file under
+ * `api/admin/` never gets here and has Vercel's own 404). Nothing here reads the service-role key: the check
  * and the routes run under the admin's own session, and the database decides.
  *
  * `routes` is the table to serve; only tests pass another.

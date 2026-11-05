@@ -72,7 +72,6 @@ export class PageMetaTitleStrategy extends TitleStrategy {
   private setRobots(noindex: boolean): void {
     if (noindex) {
       this.flaggedTag ??= this.meta.addTag({ name: 'robots', content: NOINDEX_CONTENT });
-      this.flaggedTag?.setAttribute('content', NOINDEX_CONTENT);
     } else if (this.flaggedTag) {
       this.meta.removeTagElement(this.flaggedTag);
       this.flaggedTag = null;

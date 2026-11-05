@@ -14,9 +14,17 @@ const root = new URL('../', import.meta.url);
 const ADMIN_API = new URL('api/admin/', root);
 const ADMIN_SERVER = new URL('src/server/admin/', root);
 
-const routeFiles = readdirSync(ADMIN_API).filter((name) => name.endsWith('.ts'));
+const everyEntry = readdirSync(ADMIN_API, { recursive: true }).map(String);
+const routeFiles = everyEntry.filter((name) => name.endsWith('.ts'));
 
 describe('the Vercel files for the admin routes', () => {
+  it('sit directly in api/admin/, never in a folder, so each is one route the wrapper knows', () => {
+    assert.deepEqual(
+      everyEntry.filter((name) => !/^[^/\\]+\.ts$/.test(name)),
+      [],
+    );
+  });
+
   it('are one per route in ADMIN_ROUTES, and no route lacks one', () => {
     assert.deepEqual(
       routeFiles.map((name) => `admin/${name.replace(/\.ts$/, '')}`).sort(),

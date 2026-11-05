@@ -2,7 +2,9 @@ import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Meta } from '@angular/platform-browser';
 import { provideRouter, Router, Routes, TitleStrategy } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 
+import { NotFoundComponent } from '../../shared/components/not-found/not-found.component';
 import { canonicalUrl, PageMetaTitleStrategy, ROUTE_NOINDEX } from './page-meta-title.strategy';
 import {
   HOME_TITLE,
@@ -15,12 +17,14 @@ import {
 @Component({ template: '' })
 class BlankComponent {}
 
+
 const routes: Routes = [
   { path: '', title: HOME_TITLE, component: BlankComponent },
   { path: 'privacy', title: 'Privacy notes', component: BlankComponent },
   { path: 'heroes', component: BlankComponent },
   { path: 'heroes/:heroId', component: BlankComponent },
   { path: 'elsewhere', redirectTo: 'heroes' },
+  { path: 'missing', component: NotFoundComponent },
   {
     path: 'admin',
     title: 'Admin',
@@ -153,6 +157,21 @@ describe('PageMetaTitleStrategy on a route flagged with ROUTE_NOINDEX', () => {
     await router.navigateByUrl('/privacy');
 
     expect(robots()).toEqual([]);
+  });
+
+  it('leaves the not-found page its own noindex tag when the visitor arrives from a flagged route', async () => {
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/admin/overview');
+    await harness.navigateByUrl('/missing');
+
+    expect(robots()).toEqual(['noindex']);
+    expect(canonical()).toBeNull();
+
+    await harness.navigateByUrl('/privacy');
+
+    expect(robots()).toEqual([]);
+    expect(canonical()).toBe(`${SITE_ORIGIN}/privacy`);
   });
 
   it('does not remove a robots tag another page added', async () => {
