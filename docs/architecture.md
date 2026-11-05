@@ -103,7 +103,8 @@ The session lives on the server side of the boundary:
 
 - The browser never holds a Supabase token or loads `@supabase/supabase-js`
   (`npm run check:browser-bundle` enforces it). It calls `/api/auth/*` and
-  `/api/account/*`, which are written once in `src/server/account/account-api.ts` and mounted by
+  `/api/account/*`, which are written once in `src/server/account/account-api.ts` (with the request, session and
+  Origin helpers the admin routes share in `account-session.ts`) and mounted by
   both Express (`src/server.ts`) and the Vercel functions (one file per route under `api/auth/` and `api/account/`)
   through `src/server/account/account-http.ts`.
 - The session is the `rp_session` cookie (`HttpOnly; Secure; SameSite=Lax;
@@ -119,6 +120,14 @@ The session lives on the server side of the boundary:
 - The browser asks `GET /api/auth/session` through `AuthService`
   (`src/app/core/auth/`) and the `/account` and `/profile` routes are guarded by `signedInGuard`.
 - `public.profiles` (one row per account, RLS on) is created at first sign-in.
+- Site administration (issue 290, [ADR-0005](decisions/0005-gate-site-administration-behind-an-admin-table.md)): an administrator is a row in
+  `public.admins`, put there by the owner by hand ([supabase.md](supabase.md), "The site administrator role"). Signed in never
+  means admin: the database function `public.is_admin()` is the only test. `/api/admin/*` is served by one wrapper
+  (`src/server/admin/`) that answers 401, 403 and `private, no-store` for every route in `ADMIN_ROUTES`, mounted in Express
+  as the whole prefix and as one file per route under `api/admin/`. In the browser, `adminGuard` (a `canMatch` guard) and the
+  Admin link read `isAdmin` from the session answer, and the lazily loaded `/admin` area (`src/app/features/admin/`, menu and
+  routes from `ADMIN_PAGES`) is client-rendered and carries `robots: noindex, nofollow`. Those are conveniences; the API and
+  the database are what refuse.
 - An account can be linked to an in-game player with a one-time code (issue 264). The desktop app asks
   the Edge Function `issue-link-code` for a code, proving who it is with its Overwolf session; the
   player types it on the account page, `POST /api/account/link` calls the `redeem_link_code` database

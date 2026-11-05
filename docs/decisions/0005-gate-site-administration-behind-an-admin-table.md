@@ -1,10 +1,12 @@
 # ADR-0005: Gate site administration behind an admin table and a database check
 
-- **Status:** Proposed
-- **Date:** 2026-11-01
+- **Status:** Accepted on 2026-11-04. It was Proposed on 2026-11-01.
+- **Date:** 2026-11-04 (proposed 2026-11-01)
 - **Deciders:** Anthony (maintainer). Proposed from the engineering refinement
-  of #290 (approach A1) and waiting for his confirmation, which is why the
-  status is Proposed.
+  of #290 (approach A1). He asked for the admin area on 2026-11-04, which
+  accepts it; #290 builds it. When #270 merged, the assumptions below about what
+  it delivers were checked against the code and corrected in place; the open
+  questions say how each came out.
 - **Related:** epic #289; this issue #293; #290 (admin role and gated admin
   area), #291 (spike on `pg_cron`), #292 (refresh schedule page). Builds on
   #270 (account foundation and Discord sign-in) and
@@ -24,27 +26,30 @@ by hand. There is no sign-up route to it.
 
 **What is true today**
 
-- The site has no sign-in yet (`docs/architecture.md`: "None. There is no
-  login, JWT, or OAuth"). #270 builds it, and `admin` appears nowhere in code,
-  migrations or docs. What #270 will deliver is taken from ADR-0004 decision 9
-  and is an assumption until #270 merges: a server-held session cookie, handlers
-  mounted once in both Express (`src/server.ts`) and the Vercel functions (one
-  file per route under `api/`), Supabase calls made per request with the publishable
-  key plus the user's own token (so row-level security, RLS, which are database
-  rules about who may read which row, is the real guard), an `Origin` check on
-  every POST, and `private, no-store` on every answer.
+- #270 built sign-in, and this record was checked against what it delivered.
+  The session is a server-held cookie the page cannot read (`src/server/auth/`).
+  The account routes are written once (`src/server/account/`), mounted in Express
+  (`src/server.ts`) and as one Vercel function per route under `api/`. Supabase is
+  called per request with plain `fetch`, the publishable key and the user's own token
+  (`AuthGateway` in `src/server/auth/auth-gateway.ts`; there is no per-request
+  supabase-js client), so row-level security (RLS, the database rules about who may
+  read which row) is the real guard. Every POST has an `Origin` check and every
+  answer is `private, no-store`. Before #290 `admin` appeared nowhere in code,
+  migrations or docs.
 - Anyone can register, so the `authenticated` database role no longer means
   "trusted" (ADR-0004, Consequences: "Sign-up is open to anyone on a public
   site ... no new grant may assume otherwise"). A check that only asks "is this
   user signed in?" would admit every stranger who registers.
-- The API accepts only GET today and answers anything else with 405
-  (`src/server/http/vercel-api.ts:36-39`). Admin changes need
-  POST, which #270 is expected to add.
+- The content routes accept only GET and answer anything else with 405
+  (`src/server/http/vercel-api.ts:36-39`). The account routes take POST (#270),
+  and the admin routes use the same request handling, so admin changes can POST.
 - Default API answers are cached by the CDN (the shared web cache) for five
   minutes, and a stale copy may be served for up to an hour
   (`src/server/http/vercel-api.ts:5`). A route that forgets to
   override that would hand one visitor's answer to the next. A `no-store`
-  variant exists today for a single route (`api/home/content.ts:11`).
+  variant exists for a single content route (`api/home/content.ts:11`); the account
+  routes set `private, no-store` where they write their answer (`respondPrivately` in
+  `src/server/account/account-http.ts`).
 - The database already has a posture for data the website alone may touch: RLS
   on, no policy, and all rights revoked from `anon` and `authenticated`
   (`supabase/migrations/20261030000000_hero_aggregates.sql:84-91`). Functions
@@ -70,8 +75,9 @@ checked, and how answers are kept out of the cache.
 **1. Admins are rows in a table.** We will add `public.admins`, with `user_id`
 referencing `auth.users` (`on delete cascade`), `granted_at` and `note`. RLS is
 on, there is no policy, and `anon` and `authenticated` hold no grant on it, the
-same posture as the other website-only tables (Context). Nothing reads the table
-except the check below.
+same posture as the other website-only tables (Context). The service role is
+revoked too, which the other tables do not do, so the website's service key cannot
+read or write it (decision 6). Nothing reads the table except the check below.
 
 **2. One database check.** We will add `public.is_admin()`, a security-definer
 function (runs with its owner's rights, with `search_path` set to empty as the
@@ -101,23 +107,41 @@ browser says about itself. The only test is `is_admin()` (ADR-0004: the
 through a single wrapper that:
 
 - answers 401 when there is no session, and 403 when the session is not an
-  admin's (the wrapper asks `is_admin()` once, using the request's own Supabase
-  client from #270);
+  admin's (the wrapper asks `is_admin()` once, with the request's own session,
+  through `AuthGateway.isAdmin`). Both refusals come before the route is looked
+  up, so on Express a caller who is not an admin cannot tell a real route from a
+  made-up one. On Vercel an address with no file under `api/admin/` never reaches
+  the wrapper and gets Vercel's own 404, so the existence of a route file is not
+  hidden there; the files are in the public source anyway, and what a route does
+  stays behind the refusals;
+- answers 503, never 403, when the database cannot say, so an outage is not
+  mistaken for a refusal;
 - sends `Cache-Control: private, no-store` on every answer, including errors and
-  refusals;
-- is the only way an admin route is registered, in both Express and the Vercel
-  function, so a new route cannot be added without it.
+  refusals, because the writer it shares with the account routes
+  (`respondPrivately`) sets it;
+- is the only way an admin route is registered: `ADMIN_ROUTES` lists the routes,
+  Express mounts the whole `/api/admin/` prefix through the wrapper, and each
+  Vercel file under `api/admin/` only hands its route to it. A test fails when a
+  file and the list disagree or when a file does anything else.
 
 Admin POSTs also get #270's `Origin` check.
 
+The browser learns whether it may show the Admin link from an `isAdmin` field on
+the session answer (`GET /api/auth/session`), read from the same `is_admin()`. The
+field only decides what is shown; a database that cannot answer reads as `false`
+there. `GET /api/admin/me` is the first route in the list and proves the gate end
+to end.
+
 **6. The service-role key is never used for admin reads or writes.** It skips
 RLS (`docs/supabase.md`), so using it would remove the database check this
-record depends on. Admin handlers use the per-request client, which runs under
-the admin's own session, and RLS plus `is_admin()` decide.
+record depends on. Admin handlers call the database with the admin's own
+session token, and RLS plus `is_admin()` decide.
 
 **7. Admin pages are not indexed.** Admin routes set `robots: noindex,
-nofollow` through a per-route flag in `PageMetaTitleStrategy`, and give link
-previews nothing to describe. The browser-side route guard and the hidden Admin
+nofollow` through a per-route flag (`ROUTE_NOINDEX`) in
+`PageMetaTitleStrategy`, and the admin area is rendered in the browser only, so
+a server render never describes it. Its link-preview tags are the site's generic
+ones with the title "Admin". The browser-side route guard and the hidden Admin
 link are cosmetic. Production renders in the browser (`vercel.json`), so the
 server refusal and the database check are what protect anything.
 
@@ -161,13 +185,12 @@ server refusal and the database check are what protect anything.
 - Every admin function must call `is_admin()` itself, because the functions are
   granted to `authenticated`. A missing call cannot be spotted by reading the
   grant list, so it needs a test (Compliance).
-- Admin endpoints must exist in two routers (Express and Vercel). They are
-  expected to share #270's handler module; if #270 does not provide one, that
-  work moves to #290 and enlarges it.
+- Admin endpoints must exist in two routers (Express and Vercel). They share
+  #270's request handling, and the wrapper plus a test over the `api/admin/` files
+  keep the two in step.
 - A route that forgets `no-store` would be cached for five minutes and could
   show an admin's answer to a stranger. This is the highest risk, and the
   single wrapper exists to make it hard to do.
-- Admin work waits on #270 (sign-in, POST handling, a session endpoint).
 - Until database tests run in CI (open question 2), the strongest proof that a
   non-admin is refused is a static check plus a manual check against the linked
   project.
@@ -186,24 +209,29 @@ server refusal and the database check are what protect anything.
 These are open. This ADR does not decide them. Each is carried to the issue that
 owns it.
 
-1. **What #270 delivers** (#290). This record assumes a per-request Supabase
-   client, POST and `Origin` handling, a handler module shared by both
-   routers, and a session or "me" answer the browser can ask whether the user
-   is an admin. If #270 differs (for example, a browser-side Supabase client),
-   the server half of #290 changes. Read #270 before writing #290's code.
-2. **Database tests in CI** (#270 or its own chore, ahead of #290). The usual
-   route is `npx supabase start` plus `npx supabase test db`, which needs the
-   installed CLI to support it and the CI runner to have Docker; both are
-   assumptions. ADR-0004 already asks for a database test on #270's own tables
-   (one user reads nothing of another's), so #270 should own the setup. If it
-   does not, file it as a separate chore and block #290 on it.
-3. **Re-authenticating or two-factor sign-in before admin actions** (#290,
-   #292). The default is none in version 1, because the only power #292 gives is
+1. **What #270 delivers** (#290). Answered on 2026-11-04 by reading the code:
+   a session cookie, POST and `Origin` handling in
+   `src/server/account/account-http.ts` and `account-session.ts`, and a session
+   answer, all reused. It does not use a per-request supabase-js client but
+   `fetch` with the user's token, which does the same job (see Context).
+2. **Database tests in CI.** Answered on 2026-11-04: #270 did not add them, and
+   CI starts no database. The chore is filed as #496 (Run real database tests in
+   CI). Until it lands, #290 uses the fallback: a static test over every migration
+   (`scripts/admin-migrations.test.ts`, run by CI as part of
+   `npm run test:functions`) that, from migration `20261104140000` on, holds every
+   function a signed-in account can call to `is_admin()` or to an explicit list of
+   deliberately open functions, and a check script, `supabase/checks/admins.sql`,
+   run against the linked project after the migration is pushed. The Karma tests
+   (the browser half) do not run in CI either; that is #497 (Run the Karma tests in
+   CI).
+3. **Re-authenticating or two-factor sign-in before admin actions** (#292).
+   Decided for #290 on 2026-11-04: none, because the area has no actions yet. The
+   default for #292 is none in version 1, because the only power it gives is
    choosing a refresh interval from a fixed list. Decide again when an admin page
    can do something destructive. ADR-0004 decision 7 already asks for a recent
    sign-in before account deletion, which is the precedent.
-4. **An audit log of admin changes.** The default is none in #290 and a small
-   one with #292. This is carried over from the refinement and is not one of the
+4. **An audit log of admin changes.** None in #290 (it has no changes to log);
+   the default is a small one with #292. This is carried over from the refinement and is not one of the
    three questions on #293.
 
 ## Compliance
@@ -227,5 +255,7 @@ A reviewer checks a change against this ADR by looking for:
 - No public route gained the admin guard, and the Admin link renders only when
   the session says admin.
 - `docs/supabase.md` describes how the owner grants and revokes admin, and one
-  grant and revoke has been done by hand on the live project.
+  grant and revoke has been done by hand on the live project. As of 2026-11-04
+  that last step is outstanding: it is the owner's, after the migration is
+  deployed.
 - No secret value appears in the repo; credentials are named only.

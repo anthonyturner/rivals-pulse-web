@@ -39,6 +39,7 @@ describe('the private Community tabs', () => {
       status: 'signedIn',
       account: { email: 'a@example.com', provider: 'discord', createdAt: '2026-01-01T00:00:00Z' },
       player: null,
+      isAdmin: false,
     });
 
     const fixture = TestBed.createComponent(component);

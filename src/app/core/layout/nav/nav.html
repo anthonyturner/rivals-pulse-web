@@ -21,6 +21,9 @@
   @if (statsLink(); as path) {
     <a class="nav-link" [routerLink]="path" [attr.aria-current]="current()[path] ?? null" (click)="closeMenu()">My stats</a>
   }
+  @if (adminLink(); as path) {
+    <a class="nav-link" [routerLink]="path" [attr.aria-current]="current()[path] ?? null" (click)="closeMenu()">Admin</a>
+  }
   @if (accountLink(); as link) {
     <a class="nav-link nav-account" [routerLink]="link.path" [attr.aria-current]="current()[link.path] ?? null"
       [attr.aria-label]="link.ariaLabel" [attr.title]="link.player ? link.label : null" (click)="closeMenu()">

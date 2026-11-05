@@ -13,6 +13,7 @@ const GATEWAY: AuthGateway = {
   redeemLinkCode: async () => ({ status: 'invalid' }),
   unlinkPlayer: async () => undefined,
   readOwnDashboard: async () => ({ linked: false }),
+  isAdmin: async () => false,
 };
 
 interface Sent {

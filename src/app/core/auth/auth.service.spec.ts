@@ -31,9 +31,23 @@ describe('AuthService', () => {
 
     await Promise.all([service.load(), service.load()]);
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
     expect(fetchSpy).toHaveBeenCalledOnceWith('/api/auth/session');
   });
+
+  it('is an admin when the server says true', async () => {
+    create(answer(200, { signedIn: true, account: ACCOUNT, isAdmin: true }));
+
+    expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true });
+  });
+
+  for (const claim of ['true', 1, 'admin', {}, null]) {
+    it(`is not an admin when the server says ${JSON.stringify(claim)}`, async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT, isAdmin: claim }));
+
+      expect(await service.load()).toEqual(jasmine.objectContaining({ isAdmin: false }));
+    });
+  }
 
   it('is signed out when the server says so', async () => {
     create(answer(200, { signedIn: false }));
@@ -83,7 +97,7 @@ describe('AuthService', () => {
 
     await service.load();
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
   });
 
   it('ignores a player the answer does not describe properly', async () => {
@@ -91,7 +105,7 @@ describe('AuthService', () => {
 
     await service.load();
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
   });
 
   describe('linking', () => {
@@ -108,8 +122,8 @@ describe('AuthService', () => {
         '/api/account/link',
         { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'abcd-efgh' }) },
       ]);
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
-      expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
+      expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 
@@ -121,7 +135,7 @@ describe('AuthService', () => {
         status: 'failed',
         message: 'That code is wrong or has expired. Get a new one from the desktop app.',
       });
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
     });
 
     it('gives a plain message when the answer has no readable error or the network is down', async () => {
@@ -152,7 +166,7 @@ describe('AuthService', () => {
       expect(await service.unlinkPlayer()).toEqual({ status: 'done' });
 
       expect(fetchSpy.calls.argsFor(1)[0]).toBe('/api/account/unlink');
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
     });
 
     it('keeps the player shown when unlinking fails', async () => {
@@ -160,7 +174,7 @@ describe('AuthService', () => {
       await service.load();
 
       expect(await service.unlinkPlayer()).toEqual({ status: 'failed', message: 'Linking is unavailable right now.' });
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
     });
   });
 

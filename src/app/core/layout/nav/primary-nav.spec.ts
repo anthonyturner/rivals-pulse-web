@@ -34,4 +34,9 @@ describe('activeNav', () => {
       expect(activeNav(path)).withContext(path).toEqual({ path, exact: true });
     }
   });
+
+  it('matches the admin area and every page under it to the Admin link', () => {
+    expect(activeNav('/admin')).toEqual({ path: '/admin', exact: true });
+    expect(activeNav('/admin/overview')).toEqual({ path: '/admin', exact: false });
+  });
 });

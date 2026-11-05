@@ -17,6 +17,7 @@ POST /api/account/delete
 POST /api/account/link
 POST /api/account/unlink
 GET /api/account/dashboard
+GET /api/admin/me
 
 Static reference data for other tools is published separately as Pulse Atlas; see [pulse-atlas.md](pulse-atlas.md).
 
@@ -31,8 +32,9 @@ Static reference data for other tools is published separately as Pulse Atlas; se
 The `/api/auth/*` and `/api/account/*` routes belong to the Discord sign-in and the account. They are
 never cached: every answer carries `Cache-Control: private, no-store, max-age=0`. `GET /api/auth/session`
 answers `{ "signedIn": false }` with no session, or `{ "signedIn": true, "account": { email, provider,
-createdAt }, "player": { name, avatarUrl } | null }` (`player` is the linked in-game player, null when
-none or when the link could not be read), and never returns the account id. `GET /api/auth/discord/start?next=/path` redirects to
+createdAt }, "player": { name, avatarUrl } | null, "isAdmin": boolean }` (`player` is the linked in-game player, null when
+none or when the link could not be read; `isAdmin` is what `public.is_admin()` says, false when it could not be read, and
+only decides whether the header shows the Admin link), and never returns the account id. `GET /api/auth/discord/start?next=/path` redirects to
 Discord through Supabase (`rivalspulse.com` and `localhost` only; `next` must be a path on this site)
 and `GET /api/auth/callback` finishes it, sets the `rp_session` cookie and redirects to `next`, or to
 `/sign-in?error=cancelled|failed`. `POST /api/auth/sign-out` ends the session and clears the cookie. A
@@ -55,6 +57,16 @@ never told apart); 429 `{ error, retryAfterSeconds }` after five wrong codes in 
 valid session; 503 when Supabase is unavailable. `POST /api/account/unlink` takes no body and answers 200
 `{ "player": null }`, with the same 401 and 503. Both obey the Origin check and `no-store` of the other
 account routes.
+
+`/api/admin/*` is the site administration API (ADR-0005), and every route in it goes through one wrapper
+(`handleAdminRequest`, `src/server/admin/admin-api.ts`). It answers 401 with no valid session, 403 for a signed-in
+account that is not an administrator (`public.is_admin()`, asked of the database on every request), and 503 when the
+database cannot say; a POST also needs the same-site `Origin` the account routes ask for. Both refusals come before the
+route is looked up, so on Express a caller who is not an admin gets the same answer for a made-up route (on Vercel an
+address with no file under `api/admin/` gets Vercel's own 404). Every answer, refusals
+included, carries `Cache-Control: private, no-store, max-age=0`. `GET /api/admin/me` answers 200 `{ "admin": true }` and
+exists to prove the gate. The routes are listed in `ADMIN_ROUTES` (`src/server/admin/admin-routes.ts`); to add one, see
+there.
 
 `GET /api/account/dashboard` takes the `rp_session` cookie and answers the signed-in player's own stats,
 derived on the server from the lines the database can prove are theirs (the recorder and uid of their link;

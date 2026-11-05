@@ -9,7 +9,7 @@ import { AccountPageComponent } from './account-page.component';
 import { SignInPageComponent } from './sign-in-page.component';
 
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
-const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT, player: null };
+const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false };
 
 function setup(
   session: SessionState,
@@ -72,7 +72,7 @@ describe('AccountPageComponent', () => {
   });
 
   it('says so when no email was shared', async () => {
-    setup({ status: 'signedIn', account: { ...ACCOUNT, email: null }, player: null });
+    setup({ status: 'signedIn', account: { ...ACCOUNT, email: null }, player: null, isAdmin: false });
 
     expect(page(await RouterTestingHarness.create('/account')).textContent).toContain('None shared with us');
   });
@@ -217,7 +217,7 @@ describe('AccountPageComponent deletion', () => {
 
 describe('AccountPageComponent linking', () => {
   const AURORA = { name: 'Aurora', avatarUrl: null };
-  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA };
+  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA, isAdmin: false };
   const codeInput = (harness: RouterTestingHarness): HTMLInputElement =>
     page(harness).querySelector('#link-code') as HTMLInputElement;
   const linkButton = (harness: RouterTestingHarness): HTMLButtonElement =>

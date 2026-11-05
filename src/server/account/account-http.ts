@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { handleAccountRequest, type AccountRequest } from './account-api.ts';
+import { handleAccountRequest } from './account-api.ts';
+import type { AccountRequest, AccountResponse } from './account-session.ts';
 import { createSupabaseAuthGateway, type AuthGateway } from '../auth/index.ts';
 
 /** An answer about one visitor must never be stored by a shared cache. */
@@ -23,7 +24,21 @@ export async function handleAccountHttp(
   route: string,
   getGateway: () => AuthGateway = () => createSupabaseAuthGateway(process.env),
 ): Promise<void> {
-  const response = await handleAccountRequest(await toAccountRequest(req, route), getGateway);
+  await respondPrivately(req, res, route, (request) => handleAccountRequest(request, getGateway));
+}
+
+/**
+ * Turns a Node request into an `AccountRequest`, runs `handle`, and writes what it answers. The
+ * answer is marked `private, no-store` here, once, so no route that goes through it can forget:
+ * the account routes and every admin route share this.
+ */
+export async function respondPrivately(
+  req: IncomingMessage,
+  res: ServerResponse,
+  route: string,
+  handle: (request: AccountRequest) => Promise<AccountResponse>,
+): Promise<void> {
+  const response = await handle(await toAccountRequest(req, route));
   const hasBody = response.body !== undefined;
 
   res.writeHead(response.status, {
