@@ -75,13 +75,14 @@ export function buildInsightsTabView(insights: CommunityInsights | null | undefi
 }
 
 function gateNotes(insights: CommunityInsights): string[] {
-  const { minimumMatches, minimumRecorders, maxRecorderSharePercent } = insights;
+  const { minimumMatches } = insights;
 
-  if (minimumMatches === null || minimumRecorders === null || maxRecorderSharePercent === null) {
+  if (minimumMatches === null) {
     return [];
   }
 
   return [
-    `A row appears once at least ${minimumMatches} matches from at least ${minimumRecorders} players are behind it in a half-season, and no one player recorded more than ${maxRecorderSharePercent}% of them. Shares are of the rows shown.`,
+    `A row appears once at least ${minimumMatches} matches are behind it in a half-season. Shares are of the rows shown.`,
+    'While few players upload, these totals can come from one player.',
   ];
 }

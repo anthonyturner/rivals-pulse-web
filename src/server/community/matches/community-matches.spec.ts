@@ -312,7 +312,7 @@ describe('deriveCommunityMatches', () => {
 
       expect(result.halfSeason?.id).toBe(10.5);
       expect(result.inPlaceOf).toBeNull();
-      expect(result.matchesBand).toBe(20);
+      expect(result.matchesBand).toBeNull();
     });
 
     it('stays on the current half-season when the previous one is no better', () => {
@@ -437,7 +437,7 @@ describe('deriveCommunityMatches', () => {
         'perDay',
         'status',
       ]);
-      expect(Object.keys(busy.minimums).sort()).toEqual(['lengthMatches', 'mapMatches', 'overviewMatches', 'recorders']);
+      expect(Object.keys(busy.minimums).sort()).toEqual(['lengthMatches', 'mapMatches', 'overviewMatches']);
       expect(Object.keys(busy.halfSeason!).sort()).toEqual(['endsAt', 'id', 'label', 'startsAt']);
       expect(Object.keys(busy.maps[0]).sort()).toEqual(['map', 'winRate']);
       expect(Object.keys(busy.modeMix![0]).sort()).toEqual(['averageLengthMinutes', 'mode', 'playModeId', 'share']);

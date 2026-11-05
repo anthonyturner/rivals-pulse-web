@@ -117,9 +117,7 @@ describe('getCommunityMatches', () => {
     for (const exact of ['1234', '1111', '777', '555', '1313', '600', 'secret-uid', 'a player']) {
       expect(text).withContext(exact).not.toContain(exact);
     }
-    // `minimums.recorders` is the rule (how many different players a bucket needs), not a count of anyone.
-    expect(text.match(/"[a-zA-Z]*ecorder[a-zA-Z]*"/g)).toEqual(['"recorders"']);
-    expect(result.minimums.recorders).toBe(3);
+    expect(text.match(/"[a-zA-Z]*ecorder[a-zA-Z]*"/g)).toBeNull();
   });
 
   it('is the designed empty state, not an error, while the aggregates are not there yet', async () => {

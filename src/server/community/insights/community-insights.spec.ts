@@ -8,9 +8,7 @@ function row(overrides: Partial<InsightsBucketRow>): InsightsBucketRow {
 function derive(buckets: InsightsBucketRow[]): CommunityInsights {
   return deriveCommunityInsights({
     sessionGapMinutes: 30,
-    minimumMatches: 30,
-    minimumRecorders: 3,
-    maxRecorderSharePercent: 50,
+    minimumMatches: 10,
     buckets,
   });
 }
@@ -68,15 +66,13 @@ describe('deriveCommunityInsights', () => {
 
   it('carries the gates and the session gap the database used, and null for each when there is no answer', () => {
     const known = derive([]);
-    expect([known.sessionGapMinutes, known.minimumMatches, known.minimumRecorders, known.maxRecorderSharePercent]).toEqual([
-      30, 30, 3, 50,
+    expect([known.sessionGapMinutes, known.minimumMatches]).toEqual([
+      30, 10,
     ]);
 
     const unknown = deriveCommunityInsights(null);
     expect(unknown.status).toBe('not-enough-data');
-    expect([unknown.sessionGapMinutes, unknown.minimumMatches, unknown.minimumRecorders, unknown.maxRecorderSharePercent]).toEqual([
-      null,
-      null,
+    expect([unknown.sessionGapMinutes, unknown.minimumMatches]).toEqual([
       null,
       null,
     ]);
@@ -139,9 +135,7 @@ describe('deriveCommunityInsights', () => {
     }
     expect(Object.keys(insights).sort()).toEqual([
       'dimensions',
-      'maxRecorderSharePercent',
       'minimumMatches',
-      'minimumRecorders',
       'sessionGapMinutes',
       'status',
       'timeZone',

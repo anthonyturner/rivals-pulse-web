@@ -12,7 +12,7 @@ const TAB_LABELS = ['Heroes', 'Matches', 'Counters', 'Tier list', 'Stats', 'Insi
 // What /api/community/matches answers while no half-season has enough matches yet.
 const MATCHES_NOT_ENOUGH_DATA = {
   status: 'not-enough-data',
-  minimums: { overviewMatches: 20, mapMatches: 10, lengthMatches: 10, recorders: 3 },
+  minimums: { overviewMatches: 10, mapMatches: 10, lengthMatches: 10 },
   halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,
@@ -47,9 +47,7 @@ describe('CommunityPageComponent', () => {
         status: 'not-enough-data',
         timeZone: 'UTC',
         sessionGapMinutes: null,
-        minimumMatches: 30,
-        minimumRecorders: 3,
-        maxRecorderSharePercent: 50,
+        minimumMatches: 10,
         dimensions: [],
       });
     await harness.fixture.whenStable();
@@ -201,8 +199,8 @@ describe('CommunityPageComponent', () => {
       }
 
       const text = panel().textContent ?? '';
-      expect(text).toMatch(/enough data yet|enough different players/);
-      expect(text).toContain('Totals appear once enough different players have uploaded matches');
+      expect(text).toMatch(/enough data yet|enough matches/);
+      expect(text).toContain('Totals appear once enough matches have been uploaded');
       expect(text).not.toMatch(/NaN|undefined|null/);
       expect(text).not.toMatch(/(^|\s)0(\s|$)/);
       expect(panel().querySelector('app-state-panel')).toBeTruthy();

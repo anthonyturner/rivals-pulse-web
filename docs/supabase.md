@@ -96,6 +96,7 @@ repo's build. This is a move, not a redesign.
 | `20261104130000_hero_score_read.sql` | `read_community_hero_scores()` (service role only): what the 1 to 10 hero build scores are worked out from, including how far along a hero below the rule is |
 | `20261104140000_admins.sql` | `admins` (the site administrators, no grant to the API roles) and `is_admin()` (granted to `authenticated` only): the database half of the admin area |
 | `20261104150000_admin_data_jobs.sql` | Running the data jobs on demand: `admin_audit_log` (closed to every API role), `sync_runs.by_admin`, the helpers `data_job_cooldown`, `data_job_unfinished_after` and `data_job_wait` (callable by no API role, so neither security definer nor guarded), and `admin_begin_run`, `admin_run_rebuild`, `admin_finish_run` and `admin_data_jobs_status` (granted to `authenticated` only, each asking `is_admin()` first) |
+| `20261105120000_community_tabs_ten_matches.sql` | The Community Matches and Insights tabs show a figure at 10 matches from any number of players: `insights_min_matches` 10, `insights_min_recorders` 1, `insights_max_recorder_share_percent` 100, and `community_tab_bucket_shown`, which `read_community_matches` now uses. `community_bucket_shown` is unchanged |
 
 Link once per machine, check history, then apply:
 
@@ -565,12 +566,13 @@ reaches it.
   per shown bucket, a whole-number `share_percent` and `win_rate_percent`. It returns no counts: every
   dimension adds up to the same matches, so an exact count would let a bucket hidden in another
   dimension be found by subtraction. A bucket is shown only if its own half-season row has at least
-  `insights_min_matches()` (30) matches, at least `insights_min_recorders()` (3) different players, and
-  no one player over `insights_max_recorder_share_percent()` (50) of its matches; the rows that pass
+  `insights_min_matches()` (10) matches, at least
+  `insights_min_recorders()` (1) player, and
+  no one player over `insights_max_recorder_share_percent()` (100) of its matches, so today the player numbers hold nothing back; the rows that pass
   are added over half-seasons inside the function. A share is over the shown buckets of its dimension
   only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
-  win rate is null with fewer than 30 results. With one main uploader nothing passes, and "not enough
-  data yet" is the expected state.
+  win rate is null with fewer than 10 results. Raise the player numbers in a new migration to bring the
+  gate back; nothing needs rebuilding.
 - The server calls it with the shared client and labels the answer in
   [`src/server/community/insights/community-insights.ts`](../src/server/community/insights/community-insights.ts), served by `GET /api/community/insights`.
   A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP
@@ -624,11 +626,11 @@ row.
   another match. When recorders on both teams uploaded the match, the earliest upload is the one that
   counts, so a match is never both a win and a loss. A match with no such row still counts as a match
   but is left out of win rates and averages.
-- **Privacy gate (epic 170).** `community_bucket_shown` lets a bucket (a map in a mode, a mode, a day)
-  through only with at least 3 distinct recorders and no recorder above 50% of its matches.
+- **Gate.** `community_tab_bucket_shown` lets a bucket (a map in a mode, a mode, a day) through at 10
+  matches, on the same numbers as the Insights read, from any number of players (issue 449).
   `read_community_matches()` applies it, so a hidden bucket never leaves the database, and every total
-  the site shows is computed over the shown buckets only. The migration asserts the gate's own cases
-  when it runs. With one or two uploaders nothing passes, and the tab shows "not enough data yet".
+  the site shows is computed over the shown buckets only. The stricter `community_bucket_shown` (3
+  players, none above 50%) now gates only the hero pair rank bands.
 - `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
   frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
   half-season a week after the next one began (uploads are refused once a match is a week old), or
@@ -648,9 +650,9 @@ row.
   and a map under its minimum is named without a count. `src/server/community/matches/community-matches.spec.ts` proves no
   number equal to a raw count is returned.
 - `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
-  `COMMUNITY_MATCHES_MINIMUMS`): 20 shown matches for the mode mix and matches per day,
+  `COMMUNITY_MATCHES_MINIMUMS`): 10 shown matches for the mode mix and matches per day,
   10 matches with a result for a map's win rate, 10 matches with a length for an average. While the
-  current half-season is below 20 matches and the previous one is not, the previous one is returned
+  current half-season is below 10 matches and the previous one is not, the previous one is returned
   with `inPlaceOf` naming the current one.
 
 After applying the migration, compare the tables with a direct count (replace `10.5` as needed); the

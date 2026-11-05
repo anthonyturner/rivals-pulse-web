@@ -53,8 +53,6 @@ export function parseInsightsSource(body: unknown): InsightsSource {
   return {
     sessionGapMinutes: numberOf(payload, 'session_gap_minutes'),
     minimumMatches: numberOf(payload, 'minimum_matches'),
-    minimumRecorders: numberOf(payload, 'minimum_recorders'),
-    maxRecorderSharePercent: numberOf(payload, 'max_recorder_share_percent'),
     buckets: recordsOf(payload['buckets'], 'buckets').map(
       (row): InsightsBucketRow => ({
         dimension: stringOf(row, 'dimension'),

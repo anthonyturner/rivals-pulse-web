@@ -10,9 +10,7 @@ const notEnoughData: CommunityInsights = {
   status: 'not-enough-data',
   timeZone: 'UTC',
   sessionGapMinutes: null,
-  minimumMatches: 30,
-  minimumRecorders: 3,
-  maxRecorderSharePercent: 50,
+  minimumMatches: 10,
   dimensions: [],
 };
 
