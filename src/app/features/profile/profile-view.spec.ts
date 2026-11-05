@@ -1,4 +1,4 @@
-import { dashboardStats, emptyDashboard, linkedDashboard, recentMatch } from '../../core/auth/own-dashboard.fixtures';
+import { activityOf, dashboardStats, emptyDashboard, linkedDashboard, recentMatch } from '../../core/auth/own-dashboard.fixtures';
 import { heroIdentities } from '../insights/hero-identity';
 import { buildProfileView, DEPTH_NOTE, NOT_COUNTED, type ProfileView } from './profile-view';
 
@@ -20,6 +20,29 @@ function ready(stats: Parameters<typeof linkedDashboard>[0] = {}, truncated = fa
 }
 
 const figure = (figures: Ready['overview'], label: string) => figures.find((f) => f.label === label);
+
+describe('buildProfileView activity', () => {
+  it('carries the own My matches and My insights tables of the account', () => {
+    const view = ready({ activity: activityOf('Tokyo 2099') });
+
+    expect(view.matchTables.map((table) => table.title)).toEqual([
+      'Win rate by map',
+      'Game modes played',
+      'Your last 30 days played',
+    ]);
+    expect(view.matchTables[0].rows).toEqual([{ label: 'Tokyo 2099', matches: 4, winRate: '75%', barPercent: 75 }]);
+    expect(view.insightTables.map((table) => table.title)).toEqual([
+      'Day of the week',
+      'Time of day',
+      'Place in a play session',
+    ]);
+  });
+
+  it('has no tables for an account with no link or no matches', () => {
+    expect(buildProfileView({ status: 'ready', dashboard: { linked: false } }, IDENTITIES).kind).toBe('not-linked');
+    expect(buildProfileView({ status: 'ready', dashboard: emptyDashboard() }, IDENTITIES).kind).toBe('no-matches');
+  });
+});
 
 describe('buildProfileView states', () => {
   it('waits while nothing has answered, and while a signed-out answer sends the visitor away', () => {

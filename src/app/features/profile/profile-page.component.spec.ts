@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
 import { AuthService, type DashboardResult } from '../../core/auth/auth.service';
-import { emptyDashboard, linkedDashboard } from '../../core/auth/own-dashboard.fixtures';
+import { activityOf, emptyDashboard, linkedDashboard } from '../../core/auth/own-dashboard.fixtures';
 import { heroOf } from '../insights/hero-matchup.fixtures';
 import { ProfilePageComponent } from './profile-page.component';
 import { DEPTH_NOTE } from './profile-view';
@@ -71,6 +71,11 @@ describe('ProfilePageComponent', () => {
       expect(host().querySelector('app-profile-figure-list')).toBeNull();
       expect(host().querySelector('app-player-avatar')).toBeNull();
     });
+
+    it('shows no My matches or My insights tables', () => {
+      expect(host().querySelector('app-own-activity-tables')).toBeNull();
+      expect(text()).not.toMatch(/My matches|My insights/);
+    });
   });
 
   describe('for a linked player with no matches', () => {
@@ -90,6 +95,11 @@ describe('ProfilePageComponent', () => {
     it('shows no zero figures', () => {
       expect(host().querySelector('app-profile-figure-list')).toBeNull();
     });
+
+    it('shows no My matches or My insights tables', () => {
+      expect(host().querySelector('app-own-activity-tables')).toBeNull();
+      expect(host().querySelector('table')).toBeNull();
+    });
   });
 
   describe('when the stats cannot be read', () => {
@@ -98,6 +108,10 @@ describe('ProfilePageComponent', () => {
     it('says so and offers to try again', () => {
       expect(host().querySelector('[role="status"] h2')?.textContent).toContain('unavailable');
       expect(host().querySelector('button')?.textContent).toContain('Try again');
+    });
+
+    it('shows no tables while it cannot read them', () => {
+      expect(host().querySelector('table')).toBeNull();
     });
 
     it('asks again, and shows the stats when the second answer is good', async () => {
@@ -122,7 +136,7 @@ describe('ProfilePageComponent', () => {
   });
 
   describe('for a linked player with matches', () => {
-    beforeEach(() => open({ status: 'ready', dashboard: linkedDashboard() }));
+    beforeEach(() => open({ status: 'ready', dashboard: linkedDashboard({ activity: activityOf('Tokyo 2099') }) }));
 
     it('shows the avatar and the in-game name', () => {
       expect(host().querySelector('.player-name')?.textContent).toBe('Aurora');
@@ -186,6 +200,37 @@ describe('ProfilePageComponent', () => {
       expect(text()).toContain('9 October 2026');
     });
 
+    it('lists My matches by map, mode and day, with the win rate of each', () => {
+      const section = host().querySelector('[aria-labelledby="profile-matches"]');
+      const titles = Array.from(section?.querySelectorAll('h3') ?? []).map((h) => h.textContent?.trim());
+
+      expect(section?.querySelector('h2')?.textContent).toBe('My matches');
+      expect(titles).toEqual(['Win rate by map', 'Game modes played', 'Your last 30 days played']);
+      expect(section?.textContent).toContain('Tokyo 2099');
+      expect(section?.textContent).toContain('Quick Match');
+      expect(section?.textContent).toContain('Thu 29 Oct');
+      expect(section?.textContent).toContain('75%');
+      expect(section?.textContent).toContain('Days are UTC.');
+    });
+
+    it('lists My insights by weekday, time of day and place in a play session', () => {
+      const section = host().querySelector('[aria-labelledby="profile-insights"]');
+      const titles = Array.from(section?.querySelectorAll('h3') ?? []).map((h) => h.textContent?.trim());
+
+      expect(section?.querySelector('h2')?.textContent).toBe('My insights');
+      expect(titles).toEqual(['Day of the week', 'Time of day', 'Place in a play session']);
+      expect(section?.textContent).toContain('Thursday');
+      expect(section?.textContent).toContain('08:00 to 11:59');
+      expect(section?.textContent).toContain('Match 1');
+    });
+
+    it('draws no NaN, undefined or null in the activity tables', () => {
+      const tables = Array.from(host().querySelectorAll('app-own-activity-tables')).map((el) => el.textContent);
+
+      expect(tables.length).toBe(2);
+      expect(tables.join(' ')).not.toMatch(/NaN|undefined|null/);
+    });
+
     it('has no truncation notice when everything was read', () => {
       expect(host().querySelector('app-notice')).toBeNull();
     });
@@ -230,6 +275,44 @@ describe('ProfilePageComponent', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('shows a second account only its own activity, never that of the first', async () => {
+    loadDashboard = jasmine.createSpy('loadDashboard').and.returnValues(
+      Promise.resolve({ status: 'ready', dashboard: linkedDashboard({ activity: activityOf('Hydra Base') }) }),
+      Promise.resolve({ status: 'ready', dashboard: linkedDashboard({ activity: activityOf('Klyntar') }) }),
+    );
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: { loadDashboard } },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+
+    // The hero names are read once and shared, so only the first page asks for them.
+    const render = async (askForHeroes: boolean): Promise<string> => {
+      fixture = TestBed.createComponent(ProfilePageComponent);
+      fixture.detectChanges();
+      if (askForHeroes) {
+        http.expectOne('/api/heroes').flush([heroOf('storm', 'Storm', 'Duelist'), heroOf('hela', 'Hela', 'Duelist')]);
+      }
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      return text();
+    };
+
+    const first = await render(true);
+    fixture.destroy();
+    const second = await render(false);
+
+    expect(first).toContain('Hydra Base');
+    expect(second).toContain('Klyntar');
+    expect(second).not.toContain('Hydra Base');
+  });
+
   it('sends a visitor whose session has ended to sign in, and back here after', async () => {
     loadDashboard = jasmine.createSpy('loadDashboard').and.resolveTo({ status: 'signedOut' });
     TestBed.configureTestingModule({
@@ -249,5 +332,7 @@ describe('ProfilePageComponent', () => {
     await fixture.whenStable();
 
     expect(navigate).toHaveBeenCalledOnceWith(['/sign-in'], { queryParams: { next: '/profile' } });
+    expect(host().querySelector('table')).toBeNull();
+    expect(text()).not.toMatch(/My matches|My insights/);
   });
 });

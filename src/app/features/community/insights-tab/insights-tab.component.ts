@@ -1,50 +1,23 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 
-import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
-import { injectOwnActivity, ownActivityRows, type OwnActivityTableView } from '../own-activity/own-activity';
-import { OwnActivityTablesComponent } from '../own-activity/own-activity-tables.component';
+import { COMMUNITY_EMPTY_RULE, CommunitySummaryComponent, MY_STATS_LINK } from '../community-summary/community-summary.component';
+import { CommunityInsightsService } from './community-insights.service';
+import { buildInsightsTabView } from './insights-tab-view';
 
-/** When the signed-in account plays and wins. No other account can see it. */
+/** When the community plays and wins, or the designed "not enough data yet" state. */
 @Component({
   selector: 'app-community-insights-tab',
-  imports: [CommunitySummaryComponent, OwnActivityTablesComponent],
-  template: `
-    @let current = state();
-
-    <app-community-summary
-      [kind]="current.kind"
-      heading="When I play and win"
-      subject="your insights"
-      [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
-      [link]="current.kind === 'not-enough-data' ? current.link : null"
-      [footnote]="
-        current.kind === 'ready'
-          ? 'Only your account can see this. Competitive and Quick Match; all days and times are UTC.' + (current.truncated ? ' Your newest 2,000 matches.' : '')
-          : null
-      "
-    >
-      @if (tables(); as list) {
-        <app-own-activity-tables [tables]="list" />
-      }
-    </app-community-summary>
-  `,
+  imports: [CommunitySummaryComponent],
+  templateUrl: './insights-tab.component.html',
+  styleUrl: './insights-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InsightsTabComponent {
-  protected readonly state = injectOwnActivity('/community/insights');
-  protected readonly tables = computed((): OwnActivityTableView[] | null => {
-    const current = this.state();
+  /** `undefined` while loading, `null` when the answer could not be read. */
+  private readonly insights = toSignal(inject(CommunityInsightsService).getInsights());
 
-    if (current.kind !== 'ready') {
-      return null;
-    }
-
-    const { weekdays, timesOfDay, sessionPlaces } = current.activity;
-
-    return [
-      { title: 'Day of the week', rowHeading: 'Day', rows: ownActivityRows(weekdays) },
-      { title: 'Time of day', rowHeading: 'Time', rows: ownActivityRows(timesOfDay) },
-      { title: 'Place in a play session', rowHeading: 'Place', rows: ownActivityRows(sessionPlaces) },
-    ];
-  });
+  protected readonly summary = `Win rate by day of the week and time of day, and how long play sessions last. ${COMMUNITY_EMPTY_RULE}`;
+  protected readonly link = MY_STATS_LINK;
+  protected readonly view = computed(() => buildInsightsTabView(this.insights()));
 }

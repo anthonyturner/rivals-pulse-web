@@ -86,6 +86,12 @@
   line-height: 1.2;
 }
 
+.block {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
 .recent {
   display: grid;
   gap: 8px;

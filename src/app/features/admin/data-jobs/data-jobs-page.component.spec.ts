@@ -130,12 +130,22 @@ describe('DataJobsPageComponent', () => {
     expect(links.every((link) => link.target === '_blank' && link.rel === 'noopener')).toBeTrue();
     expect(links[0].textContent).toContain('(opens in a new tab)');
 
-    for (const label of ['Community matches', 'Play time', 'Hero pairs']) {
-      const text = card(label).querySelector('.jobs__feeds')?.textContent ?? '';
+    for (const [label, path] of [
+      ['Community matches', '/community/matches'],
+      ['Play time', '/community/insights'],
+    ]) {
+      const hrefs = Array.from(card(label).querySelectorAll<HTMLAnchorElement>('.jobs__pages a')).map((link) =>
+        link.getAttribute('href'),
+      );
 
-      expect(card(label).querySelector('.jobs__pages')).withContext(label).toBeNull();
-      expect(text).withContext(label).toContain('No page on the site yet.');
+      expect(hrefs).withContext(label).toEqual([path]);
+      expect(card(label).querySelector('.jobs__feeds')?.textContent).withContext(label).not.toContain('No page on the site yet.');
     }
+
+    const pairs = card('Hero pairs');
+
+    expect(pairs.querySelector('.jobs__pages')).toBeNull();
+    expect(pairs.querySelector('.jobs__feeds')?.textContent).toContain('No page on the site yet.');
   });
 
   it('shows each job\'s last scheduled and last manual run, and an unfinished one as not finished', async () => {

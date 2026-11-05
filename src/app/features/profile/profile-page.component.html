@@ -102,6 +102,20 @@
           }
         </ol>
       </section>
+
+      <section class="block" aria-labelledby="profile-matches">
+        <h2 id="profile-matches" class="panel-title">My matches</h2>
+        <p class="caption">
+          Maps and days count Competitive and Quick Match; game modes count every mode. Days are UTC.
+        </p>
+        <app-own-activity-tables [tables]="current.matchTables" />
+      </section>
+
+      <section class="block" aria-labelledby="profile-insights">
+        <h2 id="profile-insights" class="panel-title">My insights</h2>
+        <p class="caption">When you play and win. Competitive and Quick Match; all days and times are UTC.</p>
+        <app-own-activity-tables [tables]="current.insightTables" />
+      </section>
     }
   }
 </div>

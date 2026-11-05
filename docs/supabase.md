@@ -543,8 +543,6 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 
 ## Play-time aggregates (Community Insights tab)
 
-The site no longer reads these: the My insights tab shows the account's own matches through `read_own_dashboard()`. The tables and jobs still run until they are dropped.
-
 `play_time_aggregates` keeps, per half-season, the matches and decided wins of the recorders' own
 matches by weekday (`weekday`, ISO 1 Monday to 7 Sunday), by four-hour block of the day
 (`time_of_day`, 0 is 00:00 to 03:59) and by place in a play session (`session_position`, 1 to 3 and
@@ -573,6 +571,10 @@ reaches it.
   only, a dimension with fewer than `insights_min_shown_buckets()` (3) shown buckets is left out, and a
   win rate is null with fewer than 30 results. With one main uploader nothing passes, and "not enough
   data yet" is the expected state.
+- The server calls it with the shared client and labels the answer in
+  [`src/server/community/insights/community-insights.ts`](../src/server/community/insights/community-insights.ts), served by `GET /api/community/insights`.
+  A function or table that does not exist yet (PGRST202, 42883, 42P01) gives the empty state with HTTP
+  200; any other failure keeps its error status (epic 170 error policy).
 
 ### Role benchmarks (Community Stats tab)
 
@@ -601,9 +603,7 @@ reads `read_hero_stats()` (so the same environment as above) and a role per hero
 
 ## Community match aggregates
 
-The site no longer reads these: the My matches tab shows the account's own matches through `read_own_dashboard()`. The tables and jobs still run until they are dropped.
-
-The Community Matches tab (issue 172) read its own anonymous counts, kept apart from the hero
+The Community Matches tab (issue 172) reads its own anonymous counts, kept apart from the hero
 aggregates so a change to one cannot break the other. The four tables have RLS on and no policy,
 nothing for `anon` or `authenticated`, and hold counts only: no uid, name, fingerprint or per-player
 row.
@@ -636,7 +636,22 @@ row.
   half-season is never rebuilt, and `purge_expired_participants()` is not touched: it deletes only
   after the next half-season has ended, long after this freeze.
 - `read_community_matches()` returns one jsonb value of counts and half-season start dates and is
-  granted to `service_role` only. Nothing in the site calls it now.
+  granted to `service_role` only. The server calls it through the shared client
+  ([`src/server/community/matches/community-matches-read.ts`](../src/server/community/matches/community-matches-read.ts)) and derives every rate, share
+  and average in [`src/server/community/matches/community-matches.ts`](../src/server/community/matches/community-matches.ts); until the migration is
+  applied the call fails with a "function not found" error, which the server turns into the empty
+  state.
+- **No exact counts leave the server.** A hidden bucket could be recovered by subtracting the shown
+  ones from a total, so `GET /api/community/matches` returns only whole-percentage win rates and
+  shares, average lengths rounded to the minute, and one volume band (`matchesBand`, such as 100 for
+  "100+ matches"; the bands are `MATCH_VOLUME_BANDS`). Maps are ordered by win rate, never by volume,
+  and a map under its minimum is named without a count. `src/server/community/matches/community-matches.spec.ts` proves no
+  number equal to a raw count is returned.
+- `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
+  `COMMUNITY_MATCHES_MINIMUMS`): 20 shown matches for the mode mix and matches per day,
+  10 matches with a result for a map's win rate, 10 matches with a length for an average. While the
+  current half-season is below 20 matches and the previous one is not, the previous one is returned
+  with `inPlaceOf` naming the current one.
 
 After applying the migration, compare the tables with a direct count (replace `10.5` as needed); the
 two matches columns must agree, and a second `select public.recompute_community_match_aggregates();`
