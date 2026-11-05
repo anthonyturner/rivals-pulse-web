@@ -7,9 +7,17 @@ import {
   serializePkceCookie,
   serializeSessionCookie,
   type AuthGateway,
-  type ResolvedSession,
-  type SessionTokens,
 } from '../auth/index.ts';
+import {
+  failureResponse,
+  isSameOrigin,
+  json,
+  methodNotAllowed,
+  refreshedCookies,
+  withSession,
+  type AccountRequest,
+  type AccountResponse,
+} from './account-session.ts';
 import { normalizeLinkCode } from './link-code.ts';
 import { deriveOwnDashboard } from './own-dashboard.ts';
 import {
@@ -18,35 +26,6 @@ import {
   type DeleteAccountRequest,
 } from '../../app/core/auth/account-deletion.types.ts';
 import type { OwnDashboardResponse } from '../../app/core/auth/own-dashboard.types.ts';
-
-/**
- * A request as the account routes see it, free of any server framework: Express and the Vercel
- * function both turn theirs into this (`account-http.ts`), so the rules below are written once.
- */
-export interface AccountRequest {
-  method: string;
-  /** The path after `/api/`, such as `auth/session`. */
-  route: string;
-  query: URLSearchParams;
-  cookieHeader?: string;
-  originHeader?: string;
-  /** The JSON body of a POST, already parsed. Undefined when there was none or it was not JSON. */
-  body?: unknown;
-  /** The time of the request in milliseconds; the adapter leaves it out and the routes read the clock. */
-  nowMs?: number;
-  /** The host the visitor used, with any port. */
-  host: string;
-  /** `http` or `https`, from the proxy when there is one. */
-  protocol?: string;
-}
-
-export interface AccountResponse {
-  status: number;
-  body?: unknown;
-  /** A redirect target. Always a path on this site or the sign-in address Supabase gave us. */
-  location?: string;
-  cookies: string[];
-}
 
 /** Sign-in is open on the live site and on a developer's machine only; a preview gets none. */
 const SIGN_IN_HOSTNAMES: readonly string[] = ['rivalspulse.com', 'localhost'];
@@ -57,7 +36,6 @@ const NEXT_BASE = new URL('https://site.invalid');
 const RECENT_SIGN_IN_SECONDS = 10 * 60;
 /** One message for a wrong, used or expired code, so the answer never says which one it was. */
 const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from the desktop app.';
-const SIGN_IN_UNAVAILABLE = 'Sign-in is unavailable right now. Try again in a moment.';
 const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
 const DASHBOARD_UNAVAILABLE = 'Your dashboard is unavailable right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
@@ -71,22 +49,6 @@ export async function handleAccountRequest(
   } catch (error) {
     return failureResponse(error);
   }
-}
-
-/**
- * The answer for a request that threw: 503 when Supabase could not be asked, otherwise a 500 that
- * says nothing of the cause. It carries no cookies; a route that has refreshed the session adds its own.
- */
-function failureResponse(error: unknown, unavailableMessage = SIGN_IN_UNAVAILABLE): AccountResponse {
-  if (error instanceof AuthUnavailableError) {
-    console.warn('Account request failed:', error.message);
-
-    return json(503, { error: unavailableMessage });
-  }
-
-  console.error('Account request failed', error);
-
-  return json(500, { error: 'Something went wrong.' });
 }
 
 async function route(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
@@ -131,59 +93,25 @@ async function readSession(request: AccountRequest, gateway: () => AuthGateway):
     return { ...json(200, { signedIn: false }), cookies: [clearSessionCookie()] };
   }
 
+  const [player, isAdmin] = await Promise.all([
+    gateway().linkedPlayer(resolved.tokens),
+    gateway().isAdmin(resolved.tokens).catch(adminCheckFailed),
+  ]);
+
   return {
-    ...json(200, {
-      signedIn: true,
-      account: resolved.account,
-      player: await gateway().linkedPlayer(resolved.tokens),
-    }),
+    ...json(200, { signedIn: true, account: resolved.account, player, isAdmin }),
     cookies: refreshedCookies(tokens, resolved.tokens),
   };
 }
 
-/** The cookie to set when Supabase handed back new tokens, keeping the original sign-in time. */
-function refreshedCookies(original: SessionTokens, current: SessionTokens): string[] {
-  const refreshed = current.accessToken !== original.accessToken || current.refreshToken !== original.refreshToken;
-
-  return refreshed ? [serializeSessionCookie({ ...current, signedInAt: original.signedInAt })] : [];
-}
-
 /**
- * Runs `act` for a signed-in visitor, with tokens Supabase has just confirmed. Linking and the
- * dashboard are conveniences, so a Supabase that cannot be reached is a 503 here and never signs
- * anyone out.
- *
- * When the tokens had expired and were refreshed, the new cookie rides on every answer from that
- * point on, failures included. Supabase rotates refresh tokens, so an answer that dropped it would
- * leave the browser holding a used one and sign the player out on the next request.
+ * The Admin link is a convenience, so a Supabase that cannot say reads as "not an admin". The
+ * admin routes ask again and answer 503 in that case; nothing is granted on this answer.
  */
-async function withSession(
-  request: AccountRequest,
-  gateway: () => AuthGateway,
-  { signedOutMessage, unavailableMessage }: { signedOutMessage: string; unavailableMessage: string },
-  act: (tokens: SessionTokens) => Promise<AccountResponse>,
-): Promise<AccountResponse> {
-  const tokens = readSessionTokens(request.cookieHeader);
+function adminCheckFailed(error: unknown): false {
+  console.warn('The admin check could not be read:', error instanceof Error ? error.message : error);
 
-  if (!tokens) {
-    return json(401, { error: signedOutMessage });
-  }
-
-  let resolved: ResolvedSession | undefined;
-
-  try {
-    resolved = await gateway().resolve(tokens);
-  } catch (error) {
-    return failureResponse(error, unavailableMessage);
-  }
-
-  if (!resolved) {
-    return { ...json(401, { error: signedOutMessage }), cookies: [clearSessionCookie()] };
-  }
-
-  const response = await act(resolved.tokens).catch((error: unknown) => failureResponse(error, unavailableMessage));
-
-  return { ...response, cookies: [...response.cookies, ...refreshedCookies(tokens, resolved.tokens)] };
+  return false;
 }
 
 async function linkPlayer(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
@@ -429,25 +357,4 @@ function originOf(request: AccountRequest): string {
   const protocol = request.protocol ?? (hostnameOf(request.host) === 'localhost' ? 'http' : 'https');
 
   return `${protocol}://${request.host}`;
-}
-
-/** A browser always sends `Origin` with a POST, so a missing or foreign one is not our page. */
-function isSameOrigin(request: AccountRequest): boolean {
-  if (!request.originHeader) {
-    return false;
-  }
-
-  try {
-    return new URL(request.originHeader).host.toLowerCase() === request.host.toLowerCase();
-  } catch {
-    return false;
-  }
-}
-
-function methodNotAllowed(): AccountResponse {
-  return json(405, { error: 'Method not allowed' });
-}
-
-function json(status: number, body: unknown): AccountResponse {
-  return { status, body, cookies: [] };
 }

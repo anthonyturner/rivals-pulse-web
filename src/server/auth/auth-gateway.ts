@@ -62,6 +62,12 @@ export interface AuthGateway {
    * has no link. The database decides whose lines these are; nothing here says whose to read.
    */
   readOwnDashboard(tokens: SessionTokens): Promise<OwnDashboardRead>;
+  /**
+   * Whether the database says the account is a site administrator (`public.is_admin()`, ADR-0005).
+   * Asked of the database on every call and never remembered, so a revoked admin is refused at once.
+   * Throws AuthUnavailableError when the database cannot answer, which is not the same as "no".
+   */
+  isAdmin(tokens: SessionTokens): Promise<boolean>;
 }
 
 /** Supabase could not be asked: it is not configured, unreachable, or answered with a server error. */
@@ -292,6 +298,16 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
 
     async readOwnDashboard(tokens) {
       return dashboardReadOf(await rpc('read_own_dashboard', {}, tokens.accessToken));
+    },
+
+    async isAdmin(tokens) {
+      const answer = await rpc('is_admin', {}, tokens.accessToken);
+
+      if (typeof answer !== 'boolean') {
+        throw new AuthUnavailableError('Supabase answered is_admin with an unknown shape');
+      }
+
+      return answer;
     },
 
     async signOut(tokens) {

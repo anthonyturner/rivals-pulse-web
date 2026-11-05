@@ -1,4 +1,5 @@
-import { handleAccountRequest, type AccountRequest, type AccountResponse } from './account-api';
+import { handleAccountRequest } from './account-api';
+import type { AccountRequest, AccountResponse } from './account-session';
 import { AuthUnavailableError, type AuthGateway, type OwnDashboardRead, type RedeemResult } from '../auth/auth-gateway';
 import type { OwnDashboardLine } from './own-dashboard';
 
@@ -21,6 +22,7 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     redeemLinkCode: async () => ({ status: 'invalid' }),
     unlinkPlayer: async () => undefined,
     readOwnDashboard: async () => ({ linked: false }),
+    isAdmin: async () => false,
     ...overrides,
   };
 }
@@ -63,9 +65,29 @@ describe('GET auth/session', () => {
   it('returns the account without any id when signed in', async () => {
     const response = await run(request('auth/session', { cookieHeader: SESSION_COOKIE }));
 
-    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null });
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false });
     expect(JSON.stringify(response.body)).not.toContain('"id"');
     expect(response.cookies).toEqual([]);
+  });
+
+  it('says isAdmin only when the database does, and asks it with the verified tokens', async () => {
+    const isAdmin = jasmine.createSpy('isAdmin').and.resolveTo(true);
+    const response = await run(request('auth/session', { cookieHeader: SESSION_COOKIE }), gateway({ isAdmin }));
+
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: true });
+    expect(isAdmin).toHaveBeenCalledOnceWith(TOKENS);
+  });
+
+  it('reads an admin check the database cannot answer as not an admin, and still signs the visitor in', async () => {
+    spyOn(console, 'warn');
+
+    const response = await run(
+      request('auth/session', { cookieHeader: SESSION_COOKIE }),
+      gateway({ isAdmin: async () => Promise.reject(new AuthUnavailableError('down')) }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false });
   });
 
   it('stores the new tokens when the access token had to be refreshed', async () => {
@@ -503,7 +525,7 @@ describe('GET auth/session with a linked player', () => {
       gateway({ linkedPlayer: async () => player }),
     );
 
-    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player });
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player, isAdmin: false });
   });
 
   it('reads the link with the tokens Supabase confirmed, not the ones in the cookie', async () => {

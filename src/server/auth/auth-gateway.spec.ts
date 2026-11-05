@@ -282,6 +282,36 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('isAdmin', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const ask = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).isAdmin(tokens) };
+    };
+
+    it('asks the database function with the publishable key and the user token, and passes nothing to say who', async () => {
+      const { calls, result } = ask({ status: 200, body: true });
+
+      expect(await result).toBeTrue();
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/is_admin');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({});
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('is false when the database says so', async () => {
+      expect(await ask({ status: 200, body: false }).result).toBeFalse();
+    });
+
+    it('reports a missing function, a refusal or an answer that is not true or false as unavailable, never as false', async () => {
+      for (const answer of [{ status: 404 }, { status: 401 }, { status: 500 }, { status: 200, body: 'yes' }, { status: 204 }]) {
+        await expectAsync(ask(answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
   describe('readOwnDashboard', () => {
     const tokens = { accessToken: 'access', refreshToken: 'refresh' };
     const read = (answer: { status: number; body?: unknown }) => {
