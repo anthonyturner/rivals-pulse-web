@@ -655,6 +655,26 @@ export class HeroesPageComponent implements OnInit {
     return hero.abilities.filter((ability) => ability.type === 'Team-Up Ability');
   }
 
+  hasTeamUpAbilities(hero: Hero): boolean {
+    const displayedAbilities = this.displayedAbilities(hero);
+
+    for (const ability of displayedAbilities) {
+      if (ability.type === 'Team-Up Ability') {
+        return true;
+      }
+    }
+
+    if (displayedAbilities !== hero.abilities) {
+      for (const ability of hero.abilities) {
+        if (ability.type === 'Team-Up Ability') {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   normalAbilities(hero: Hero): HeroAbility[] {
     return this.activeAbilities(hero).filter((ability) => ability.type !== 'Team-Up Ability');
   }

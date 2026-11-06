@@ -129,6 +129,20 @@ describe('HeroDetailsComponent', () => {
     expect(element.querySelectorAll('.hero-guide-grid .overview-panel').length).toBe(1);
   });
 
+  it('adds the team-up jump link only when the hero has a team-up section', () => {
+    const teamUpHero = {
+      ...mantis,
+      abilities: [{ name: 'Blind Verdict', type: 'Team-Up Ability', description: 'A shared attack.' }],
+    } as Hero;
+    const element = render(teamUpHero);
+    const link = [...element.querySelectorAll<HTMLAnchorElement>('.hero-jump-nav a')].find(
+      (candidate) => candidate.textContent?.trim() === 'Team-ups',
+    );
+
+    expect(link?.getAttribute('href')).toBe('#hero-team-ups-mantis');
+    expect(element.querySelector('#hero-team-ups-mantis h3')?.textContent?.trim()).toBe('Team-Up Abilities');
+  });
+
   it('shows guide cards in one row when wide and stacks them when narrow', () => {
     const element = render();
     element.style.width = '1000px';

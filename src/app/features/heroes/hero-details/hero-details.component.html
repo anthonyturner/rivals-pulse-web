@@ -53,7 +53,7 @@
     <a [attr.href]="'#hero-abilities-' + hero.id">Abilities</a>
     <a [attr.href]="'#hero-build-signals-' + hero.id">Build signals</a>
     <a [attr.href]="'#hero-matchups-' + hero.id">Matchups</a>
-    @if (controller.teamUpAbilities(hero).length > 0) {
+    @if (controller.hasTeamUpAbilities(hero)) {
     <a [attr.href]="'#hero-team-ups-' + hero.id">Team-ups</a>
     }
     @if (controller.selectedHeroVideos().length > 0) {
@@ -303,7 +303,7 @@
       </article>
       }
     </section>
-    @if (controller.teamUpAbilities(hero).length > 0) {
+    @if (controller.hasTeamUpAbilities(hero)) {
     <section class="abilities" [attr.id]="'hero-team-ups-' + hero.id">
       <div class="section-heading ability-heading">
         <h3>Team-Up Abilities</h3>
