@@ -18,6 +18,8 @@ export interface HeroMatchup {
   winRate: number;
   /** The win rate pulled toward 50%, so a short run cannot read as a clear edge. */
   shrunkWinRate: number;
+  /** The matchup's shrunk win rate minus this hero's overall shrunk win rate, as a fraction. */
+  edge: number;
 }
 
 /**

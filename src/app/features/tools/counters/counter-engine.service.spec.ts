@@ -33,15 +33,15 @@ describe('CounterEngineService', () => {
       matchup('angela', 'peni-parker', 2, 12),
     ]);
 
-    expect(engine.winningAgainst(angela, heroes, matchups).map((card) => card.hero.name)).toEqual(['Mantis', 'Peni Parker']);
+    expect(engine.winningAgainst(angela, heroes, matchups).map((card) => card.hero.name)).toEqual(['Peni Parker', 'Mantis']);
     expect(engine.winningFor(angela, heroes, matchups).map((card) => card.hero.name)).toEqual(['Hulk']);
-    expect(engine.winningAgainst(angela, heroes, matchups)[1].winRate).toBe('83.3%');
+    expect(engine.winningAgainst(angela, heroes, matchups)[0].winRate).toBe('83.3%');
   });
 
   it('counts matchups for the picker, with a plain line when there are none', () => {
     const matchups = matchupsOf([matchup('angela', 'hulk', 9, 12), matchup('angela', 'mantis', 3, 12)]);
 
-    expect(engine.matchupCountLabel(angela, matchups)).toBe('2 matchups');
+    expect(engine.matchupCountLabel(angela, matchups)).toBe('1 matchup');
     expect(engine.matchupCountLabel(hulk, matchups)).toBe('No matchup yet');
     expect(engine.matchupCountLabel(angela, matchupsOf([matchup('angela', 'hulk', 9, 12)]))).toBe('1 matchup');
   });

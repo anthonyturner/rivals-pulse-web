@@ -447,8 +447,8 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   purge must keep calling every freeze**; a test reads the latest definition and fails if one is gone
   or comes after a delete. Half-seasons whose raw rows were already purged before this migration ran
   have no pair counts and cannot be filled.
-- `read_hero_pairs(p_play_mode_ids)` (granted to `anon` and `service_role`, as `read_hero_matchups`
-  is) returns `half_season, rank_bucket, kind, hero_id, other_hero_id, decided_matches, decided_lines,
+- `read_hero_pairs(p_play_mode_ids)` (granted to `anon` and `service_role`) returns
+  `half_season, rank_bucket, kind, hero_id, other_hero_id, decided_matches, decided_lines,
   wins`, summed over the modes asked for (default Quick Match and Competitive), with the minimum
   applied again to the sum. Rank bucket -1 is returned without a recorder gate, as `hero_matchups` is
   today; a bucket of 0 or more only from the (half-season, mode, bucket) rows whose own totals pass
@@ -460,6 +460,11 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   `limit`, `offset` and `order=half_season,rank_bucket,kind,hero_id,other_hero_id` until a page comes
   back empty, for Competitive and Quick Match, and builds the "all" band from rank bucket -1 alone;
   Pulse Atlas publishes that answer as `community-stats` ([pulse-atlas.md](pulse-atlas.md)).
+- The older `hero_matchups` aggregate and `read_hero_matchups` function remain in the historical
+  schema, but are not a source for website or overlay community counters. `/api/hero-matchups` is a
+  compatibility response derived from `/api/hero-pairs`, including its hero baseline counts and prior.
+  The overlay and website both show a counter only when the shrunk pair rate exceeds the hero's
+  overall shrunk rate by at least 3 percentage points.
 - Once a rank source exists, an all-ranks total built by adding buckets would include a bucket that
   was hidden; whoever adds that must not publish it next to the visible ones. `read_hero_matchups`
   already publishes ungated all-ranks `vs` counts, so `vs` rank buckets of 0 or more cannot be

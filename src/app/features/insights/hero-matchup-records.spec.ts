@@ -1,7 +1,7 @@
 import { matchup, matchupsOf } from './hero-matchup.fixtures';
 import {
-  WINNING_RECORD_CUT_OFF,
-  hasWinningRecord,
+  MINIMUM_COUNTER_EDGE,
+  hasCounterAdvantage,
   matchupBetween,
   matchupCountOf,
   recordCards,
@@ -28,11 +28,12 @@ describe('hero matchup records', () => {
     matchup('hulk', 'storm', 6, 12),
   ]);
 
-  it('calls a record winning only when the shrunk win rate is above even', () => {
-    expect(WINNING_RECORD_CUT_OFF).toBe(50);
-    expect(hasWinningRecord(matchup('hulk', 'thor', 9, 12))).toBeTrue();
-    expect(hasWinningRecord(matchup('hulk', 'thor', 5, 10))).toBeFalse();
-    expect(hasWinningRecord(matchup('hulk', 'thor', 3, 12))).toBeFalse();
+  it('requires a three point edge over the hero overall baseline', () => {
+    expect(MINIMUM_COUNTER_EDGE).toBe(0.03);
+    expect(hasCounterAdvantage(matchup('hulk', 'thor', 9, 12))).toBeTrue();
+    expect(hasCounterAdvantage({ ...matchup('hulk', 'thor', 9, 12), edge: 0.03 })).toBeTrue();
+    expect(hasCounterAdvantage({ ...matchup('hulk', 'thor', 9, 12), edge: 0.03 - 5e-10 })).toBeTrue();
+    expect(hasCounterAdvantage({ ...matchup('hulk', 'thor', 9, 12), edge: 0.029 })).toBeFalse();
   });
 
   it('lists who has a winning record against a hero', () => {
@@ -46,7 +47,7 @@ describe('hero matchup records', () => {
   });
 
   it('counts and finds the records of a hero', () => {
-    expect(matchupCountOf(matchups, 'hulk')).toBe(2);
+    expect(matchupCountOf(matchups, 'hulk')).toBe(1);
     expect(matchupCountOf(matchups, 'deadpool')).toBe(0);
     expect(matchupBetween(matchups, 'hulk', 'thor')?.wins).toBe(9);
     expect(matchupBetween(matchups, 'storm', 'hulk')).toBeUndefined();
@@ -64,13 +65,13 @@ describe('hero matchup records', () => {
     const records = winningRecordsAgainst(matchups, 'thor');
     const cards = recordCards(records, 'hero', roster);
 
-    expect(cards.map((card) => card.hero.name)).toEqual(['Hulk', 'Storm']);
-    expect(cards[1].description).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
+    expect(cards.map((card) => card.hero.name)).toEqual(['Storm', 'Hulk']);
+    expect(cards[0].description).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
     expect(recordCards(records, 'enemy', roster).map((card) => card.hero.name)).toEqual(['Thor', 'Thor']);
     expect(recordCards(records, 'hero', roster.slice(1)).map((card) => card.hero.name)).toEqual(['Storm']);
   });
 
-  it('orders cards by sample size, then name, and never by how strong the record is', () => {
+  it('orders cards by edge, then sample size and name', () => {
     const records = [
       matchup('storm', 'thor', 11, 12),
       matchup('hulk', 'thor', 14, 20),
@@ -78,7 +79,7 @@ describe('hero matchup records', () => {
     ];
     const withMantis = [...roster, { id: 'mantis', name: 'Mantis', imageUrl: '/mantis.png' }];
 
-    expect(recordCards(records, 'hero', withMantis).map((card) => card.hero.name)).toEqual(['Hulk', 'Mantis', 'Storm']);
+    expect(recordCards(records, 'hero', withMantis).map((card) => card.hero.name)).toEqual(['Storm', 'Mantis', 'Hulk']);
   });
 
   it('never prints NaN, whatever the records hold', () => {
@@ -87,7 +88,7 @@ describe('hero matchup records', () => {
     expect(text).not.toMatch(/NaN|Infinity/);
   });
 
-  it('lists the strongest winning records first, by shrunk win rate, and never a losing one', () => {
+  it('lists the strongest counter edges first, and filters below-threshold matchups', () => {
     const strongest = strongestRecords(matchups, 10);
 
     expect(strongest.map((record) => `${record.hero}>${record.enemy}`)).toEqual([
