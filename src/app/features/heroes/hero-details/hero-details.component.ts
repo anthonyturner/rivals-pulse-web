@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
@@ -13,6 +13,7 @@ import { Hero } from '../hero.model';
   imports: [EyebrowComponent, HeroBuildSignalsComponent, HeroCommunityCountersComponent, HeroCommunityStatsComponent, HeroKillFeedComponent, RouterLink],
   templateUrl: './hero-details.component.html',
   styleUrl: './hero-details.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroDetailsComponent {
   @Input({ required: true }) hero!: Hero;
