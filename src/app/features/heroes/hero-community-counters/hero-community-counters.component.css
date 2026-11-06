@@ -7,13 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, transparent, var(--accent-soft)),
-    var(--bg-elevated);
-  box-shadow: var(--heroes-box-shadow);
+  padding: 0;
 }
 
 .community-counters__heading {
@@ -23,7 +17,7 @@
   justify-content: space-between;
   gap: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border);
 }
 
 .community-counters__heading h3,
@@ -71,10 +65,10 @@
   gap: 2px 8px;
   align-items: center;
   min-width: 0;
-  padding: 6px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--bg-panel);
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
 }
 
 .community-counters__cards img {
@@ -113,8 +107,8 @@
 .community-counters__none {
   grid-column: 1 / -1;
   padding: 8px;
-  border-radius: 6px;
-  background: var(--bg-panel);
+  border-radius: 0;
+  background: transparent;
 }
 
 .community-counters__none,

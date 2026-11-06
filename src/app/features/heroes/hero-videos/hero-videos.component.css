@@ -4,10 +4,7 @@
 }
 
 .hero-videos {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
+  padding: 0;
 }
 .hero-videos__heading {
   margin: 0;
@@ -15,7 +12,6 @@
   font-size: var(--type-h3);
   font-weight: 700;
 }
-/* One column in the sidebar beside the page; a row of cards when the sidebar stacks under it. */
 .hero-videos__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));

@@ -18,11 +18,7 @@
 .abilities {
   display: grid;
   gap: 14px;
-  padding: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
-  box-shadow: var(--heroes-box-shadow);
+  padding: 0;
 }
 
 .hero-build-profile>.section-heading,
@@ -30,16 +26,17 @@
 .deadpool-upgrades>.section-heading,
 .abilities>.section-heading {
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border);
 }
 
 .ultimate-strategies article,
 .deadpool-upgrades article,
 .abilities article {
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-panel);
-  box-shadow: inset 4px 0 var(--accent);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .hero-image {
@@ -137,18 +134,12 @@ h3 {
   position: relative;
   display: grid;
   gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
-  box-shadow:
-    inset 4px 0 var(--accent-line),
-    0 14px 28px var(--shadow-color);
+  padding: 0;
 }
 
 .overview-panel .section-heading {
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border);
 }
 
 .overview-section {
@@ -176,7 +167,7 @@ h3 {
 .ultimate-strategies article {
   display: grid;
   gap: 7px;
-  padding: 14px;
+  padding: 12px 0;
 }
 
 .ultimate-strategies article span {
@@ -193,10 +184,8 @@ h3 {
 }
 
 .ultimate-strategies .strategy-playstyle {
+  border-left-color: var(--accent);
   background: linear-gradient(135deg, transparent, var(--accent-soft));
-  box-shadow:
-    inset 4px 0 var(--accent),
-    var(--heroes-box-shadow);
 }
 
 .ultimate-strategies .strategy-playstyle p {
@@ -210,8 +199,8 @@ h3 {
 }
 
 .ultimate-strategies article .ultimate-source {
-  padding: 10px 12px;
-  border: 1px solid var(--border-strong);
+  padding: 8px 0 8px 10px;
+  border-left: 2px solid var(--border);
   color: var(--text-soft);
   font-size: 0.92rem;
 }
@@ -219,11 +208,7 @@ h3 {
 .ultimate-paths {
   display: grid;
   gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-panel);
-  box-shadow: inset 4px 0 var(--accent);
+  padding: 0;
 }
 
 .ultimate-paths .section-heading p {
@@ -264,10 +249,7 @@ h3 {
 .ultimate-path-panel {
   display: grid;
   gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-panel);
+  padding: 0;
 }
 
 .ultimate-path-panel>strong {
@@ -293,10 +275,12 @@ h3 {
 }
 
 .ultimate-path-grid section {
-  padding: 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-panel);
+  padding: 0;
+}
+
+.ultimate-path-grid section + section {
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
 }
 
 .ultimate-path-grid h4 {
@@ -318,7 +302,7 @@ h3 {
 }
 
 .aggressive-paths {
-  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
+  background: transparent;
 }
 
 .aggressive-path-tabs {
@@ -362,9 +346,6 @@ h3 {
   line-height: 1.5;
 }
 
-.deadpool-upgrades {
-}
-
 .deadpool-upgrades .section-heading p {
   margin-top: 4px;
   color: var(--text-soft);
@@ -391,10 +372,13 @@ h3 {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
   gap: 10px;
-  padding: 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-panel);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ultimate-path-grid section h4 {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
 }
 
 .deadpool-upgrades li>span {
@@ -455,11 +439,13 @@ h3 {
 
 .detail-columns section,
 .matchup-row section {
-  padding: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
-  box-shadow: var(--heroes-box-shadow);
+  padding: 0;
+}
+
+.detail-columns h3,
+.matchup-row h3 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
 }
 
 ul {
@@ -534,13 +520,11 @@ ul {
 }
 
 .passive-abilities {
-  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
+  background: transparent;
 }
 
 .passive-abilities article {
-  box-shadow:
-    inset 4px 0 var(--accent),
-    var(--heroes-box-shadow);
+  border-left-color: var(--accent);
 }
 
 .ability-heading {
@@ -759,7 +743,8 @@ details.collapsible {
   display: grid;
   overflow: hidden;
   gap: 10px;
-  padding: 16px;
+  padding: 12px 0 12px 12px;
+  border-left: 3px solid var(--accent-line);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   scroll-margin-top: 16px;
@@ -767,8 +752,8 @@ details.collapsible {
 
 .abilities article:target,
 .abilities article.highlighted {
-  border-color: var(--accent-line);
-  background: linear-gradient(110deg, var(--accent-soft), transparent 46%), var(--bg-elevated);
+  border-left-color: var(--accent);
+  background: linear-gradient(110deg, var(--accent-soft), transparent 46%);
   animation: ability-focus 900ms ease-out;
 }
 
@@ -997,6 +982,13 @@ details.collapsible {
   .aggressive-path-tabs {
     grid-template-columns: 1fr;
   }
+
+  .ultimate-path-grid section + section {
+    padding-top: 10px;
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
 }
 
 @media (max-width: 560px) {
@@ -1035,14 +1027,9 @@ details.collapsible {
   }
 }
 
-/* Beside a long overview, the portrait column leaves an empty block once the panel is too narrow to give the overview room; stack it instead and lay the base stats across. */
 @container (max-width: 720px) {
   .detail-hero-profile {
     padding: 14px;
-  }
-
-  .hero-guide-grid {
-    grid-template-columns: 1fr;
   }
 }
 
