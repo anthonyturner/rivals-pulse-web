@@ -94,6 +94,30 @@ describe('HeroDetailsComponent', () => {
     ).toEqual(['community-counters', 'community-stats']);
   });
 
+  it('places official health and movement speed with role and difficulty in the hero profile', () => {
+    const officialHero = {
+      ...mantis,
+      officialSource: {
+        sourceUrl: 'https://marvelrivals.com/hero/mantis',
+        baseStats: [
+          { label: 'Health', value: '250' },
+          { label: 'Movement Speed', value: '6 m/s' },
+        ],
+      },
+    } as Hero;
+    const element = render(officialHero);
+    const profileCopy = element.querySelector('.detail-hero-copy');
+
+    expect(profileCopy?.querySelector('app-eyebrow')?.textContent?.trim()).toBe('Strategist');
+    expect(profileCopy?.querySelector('.difficulty')).not.toBeNull();
+    expect(profileCopy?.querySelectorAll('.hero-base-stats .stat-card').length).toBe(2);
+    expect(profileCopy?.querySelector('.hero-base-stats')?.textContent).toContain('Health');
+    expect(profileCopy?.querySelector('.hero-base-stats')?.textContent).toContain('Movement Speed');
+    expect(element.querySelectorAll('.hero-base-stats').length).toBe(1);
+    expect(element.querySelector('.detail-hero-summary')).toBeNull();
+    expect(element.querySelector('.hero-section-stage .hero-base-stats')).toBeNull();
+  });
+
   it('labels the overview and source link from official hero source data', () => {
     const officialHero = {
       ...mantis,
