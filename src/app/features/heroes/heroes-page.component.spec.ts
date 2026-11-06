@@ -54,9 +54,15 @@ describe('HeroesPageComponent', () => {
   });
 
   async function loadRoster(): Promise<void> {
-    http.match('/api/heroes').forEach((request) =>
-      request.flush([hero('mantis', 'Mantis', 'Strategist'), hero('storm', 'Storm', 'Duelist'), hero('thor', 'Thor', 'Vanguard')]),
-    );
+    http
+      .match('/api/heroes')
+      .forEach((request) =>
+        request.flush([
+          hero('mantis', 'Mantis', 'Strategist'),
+          hero('storm', 'Storm', 'Duelist'),
+          hero('thor', 'Thor', 'Vanguard'),
+        ]),
+      );
     http.match('/api/hero-videos').forEach((request) => request.flush([]));
     fixture.detectChanges();
     await fixture.whenStable();
@@ -84,7 +90,9 @@ describe('HeroesPageComponent', () => {
 
     expect(element.querySelector('.hero-detail')).toBeNull();
     expect(element.querySelector('[aria-current="page"]')).toBeNull();
-    expect(element.querySelector('[data-testid="hero-count"]')?.textContent?.trim()).toBe('3 heroes');
+    expect(element.querySelector('[data-testid="hero-count"]')?.textContent?.trim()).toBe(
+      '3 heroes',
+    );
   });
 
   it('renders no profile window or open-profile button, even after Escape', async () => {
@@ -100,7 +108,9 @@ describe('HeroesPageComponent', () => {
 
   it('says so, and offers no roster, when the heroes could not be loaded', async () => {
     spyOn(console, 'error');
-    http.match('/api/heroes').forEach((request) => request.flush('down', { status: 500, statusText: 'Server Error' }));
+    http
+      .match('/api/heroes')
+      .forEach((request) => request.flush('down', { status: 500, statusText: 'Server Error' }));
     http.match('/api/hero-videos').forEach((request) => request.flush([]));
     fixture.detectChanges();
     await fixture.whenStable();
@@ -122,7 +132,7 @@ describe('HeroesPageComponent', () => {
   });
 });
 
-describe('HeroesPageComponent videos in the sidebar', () => {
+describe('HeroesPageComponent videos in hero tabs', () => {
   let harness: RouterTestingHarness;
   let page: HeroesPageComponent;
 
@@ -134,7 +144,8 @@ describe('HeroesPageComponent videos in the sidebar', () => {
         {
           provide: HeroDataService,
           useValue: {
-            getHeroRoster: () => of([hero('mantis', 'Mantis', 'Strategist'), hero('luna', 'Luna', 'Strategist')]),
+            getHeroRoster: () =>
+              of([hero('mantis', 'Mantis', 'Strategist'), hero('luna', 'Luna', 'Strategist')]),
             getHeroVideos: () => of([]),
           },
         },
@@ -148,17 +159,25 @@ describe('HeroesPageComponent videos in the sidebar', () => {
     page = await harness.navigateByUrl('/heroes/mantis', HeroesPageComponent);
   });
 
-  it('supplies the videos on a hero page and not on the roster', async () => {
+  it('renders videos in the hero details and not in the global sidebar or roster', async () => {
     const content = TestBed.inject(SidebarContent);
 
-    expect(content.template()).not.toBeNull();
+    expect(content.template()).toBeNull();
+    expect(page.selectedHeroVideos().length).toBeGreaterThan(0);
+    expect(
+      harness.routeNativeElement?.querySelector('.hero-section-tabs #hero-tab-videos-mantis'),
+    ).not.toBeNull();
+    expect(
+      harness.routeNativeElement?.querySelector('#hero-panel-videos-mantis app-hero-videos'),
+    ).not.toBeNull();
 
     await harness.navigateByUrl('/heroes');
 
     expect(content.template()).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('app-hero-videos')).toBeNull();
   });
 
-  it('removes the videos when the page goes away', () => {
+  it('keeps the sidebar empty when the hero page goes away', () => {
     const content = TestBed.inject(SidebarContent);
 
     harness.fixture.destroy();
@@ -177,8 +196,13 @@ describe('HeroesPageComponent videos in the sidebar', () => {
 
   it('gives a single video a thumbnail from YouTube and a player on the privacy-enhanced host that autoplays', () => {
     const player = page.selectedHeroVideos()[0].player;
-    const embed = TestBed.inject(DomSanitizer).sanitize(SecurityContext.RESOURCE_URL, player?.embedUrl ?? null);
-    const id = player?.thumbnailUrl.match(/^https:\/\/i\.ytimg\.com\/vi\/([\w-]+)\/hqdefault\.jpg$/)?.[1];
+    const embed = TestBed.inject(DomSanitizer).sanitize(
+      SecurityContext.RESOURCE_URL,
+      player?.embedUrl ?? null,
+    );
+    const id = player?.thumbnailUrl.match(
+      /^https:\/\/i\.ytimg\.com\/vi\/([\w-]+)\/hqdefault\.jpg$/,
+    )?.[1];
 
     expect(id).toBeTruthy();
     expect(embed).toBe(`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`);

@@ -21,16 +21,14 @@
   padding: 14px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, transparent, var(--accent-soft)),
-    var(--bg-elevated);
+  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
   box-shadow: var(--heroes-box-shadow);
 }
 
-.hero-build-profile>.section-heading,
-.ultimate-strategies>.section-heading,
-.deadpool-upgrades>.section-heading,
-.abilities>.section-heading {
+.hero-build-profile > .section-heading,
+.ultimate-strategies > .section-heading,
+.deadpool-upgrades > .section-heading,
+.abilities > .section-heading {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-strong);
 }
@@ -69,7 +67,11 @@
   border: 1px solid var(--ink-line);
   border-radius: 8px;
   background:
-    radial-gradient(ellipse at 85% 45%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 38%),
+    radial-gradient(
+      ellipse at 85% 45%,
+      color-mix(in srgb, var(--accent) 18%, transparent),
+      transparent 38%
+    ),
     var(--ink);
   color: var(--on-ink);
   min-width: 0;
@@ -138,9 +140,7 @@ h3 {
   padding: 14px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, transparent, var(--accent-soft)),
-    var(--bg-elevated);
+  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
   box-shadow:
     inset 4px 0 var(--accent-line),
     0 14px 28px var(--shadow-color);
@@ -270,7 +270,7 @@ h3 {
   background: var(--bg-panel);
 }
 
-.ultimate-path-panel>strong {
+.ultimate-path-panel > strong {
   color: var(--accent-strong);
   font-size: 0.95rem;
 }
@@ -318,9 +318,7 @@ h3 {
 }
 
 .aggressive-paths {
-  background:
-    linear-gradient(135deg, transparent, var(--accent-soft)),
-    var(--bg-elevated);
+  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
 }
 
 .aggressive-path-tabs {
@@ -355,16 +353,17 @@ h3 {
   gap: 10px;
 }
 
-.aggressive-path-panel>strong {
+.aggressive-path-panel > strong {
   color: var(--accent-strong);
 }
 
-.aggressive-path-panel>p {
+.aggressive-path-panel > p {
   color: var(--text);
   line-height: 1.5;
 }
 
-.deadpool-upgrades {}
+.deadpool-upgrades {
+}
 
 .deadpool-upgrades .section-heading p {
   margin-top: 4px;
@@ -398,7 +397,7 @@ h3 {
   background: var(--bg-panel);
 }
 
-.deadpool-upgrades li>span {
+.deadpool-upgrades li > span {
   display: grid;
   width: 30px;
   aspect-ratio: 1;
@@ -428,7 +427,7 @@ h3 {
   font-weight: 700;
 }
 
-.deadpool-upgrades article>a {
+.deadpool-upgrades article > a {
   color: var(--accent-strong);
   font-size: 0.78rem;
   font-weight: 750;
@@ -459,9 +458,7 @@ h3 {
   padding: 14px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, transparent, var(--accent-soft)),
-    var(--bg-elevated);
+  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
   box-shadow: var(--heroes-box-shadow);
 }
 
@@ -537,9 +534,7 @@ ul {
 }
 
 .passive-abilities {
-  background:
-    linear-gradient(135deg, transparent, var(--accent-soft)),
-    var(--bg-elevated);
+  background: linear-gradient(135deg, transparent, var(--accent-soft)), var(--bg-elevated);
 }
 
 .passive-abilities article {
@@ -678,57 +673,55 @@ details.collapsible {
   line-height: 1.25;
 }
 
-.hero-jump-nav {
+.hero-section-tabs {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 4px 2px 8px;
-  border-bottom: 1px solid var(--border);
+  padding: 4px 2px;
   scrollbar-width: thin;
 }
 
-.hero-jump-nav a {
+.hero-section-tabs button {
   flex: 0 0 auto;
-  padding: 7px 10px;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
   border-radius: 6px;
-  color: var(--link);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
   font-size: var(--type-caption);
   font-weight: 700;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.hero-jump-nav a:hover {
+.hero-section-tabs button:hover {
   background: var(--bg-panel-soft);
 }
 
-.hero-guide-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 10px;
+.hero-section-tabs button.active {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
-.hero-guide-card {
+.hero-section-stage {
   min-width: 0;
-  scroll-margin-block-start: 1rem;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel);
 }
 
-.hero-guide-card--matchups {
-  align-self: start;
+.hero-tab-panel {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
 }
 
-.hero-guide-card .section-heading {
-  margin: 0;
-}
-
-.hero-guide-card .overview-section p {
-  overflow-wrap: anywhere;
-}
-
-.hero-jump-nav,
-.hero-guide-grid,
-.abilities {
-  scroll-margin-block-start: 1rem;
+.hero-tab-panel[hidden] {
+  display: none;
 }
 
 .detail-hero-summary .hero-base-stats {
@@ -775,18 +768,19 @@ details.collapsible {
 .abilities article:target,
 .abilities article.highlighted {
   border-color: var(--accent-line);
-  background:
-    linear-gradient(110deg, var(--accent-soft), transparent 46%), var(--bg-elevated);
+  background: linear-gradient(110deg, var(--accent-soft), transparent 46%), var(--bg-elevated);
   animation: ability-focus 900ms ease-out;
 }
 
 .abilities article::after {
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg,
-      transparent 0 38%,
-      color-mix(in srgb, var(--text) 10%, transparent) 42%,
-      transparent 48%);
+  background: linear-gradient(
+    120deg,
+    transparent 0 38%,
+    color-mix(in srgb, var(--text) 10%, transparent) 42%,
+    transparent 48%
+  );
   content: '';
   pointer-events: none;
 }
@@ -921,7 +915,7 @@ details.collapsible {
   background: var(--bg-elevated) !important;
 }
 
-.gameplay-archetypes .section-heading>div {
+.gameplay-archetypes .section-heading > div {
   display: grid;
   gap: 3px;
 }
@@ -1006,7 +1000,6 @@ details.collapsible {
 }
 
 @media (max-width: 560px) {
-
   .detail-columns,
   .matchup-row,
   .ability-heading {

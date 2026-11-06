@@ -7,20 +7,20 @@
           <h2 tabindex="-1">{{ hero.name }}</h2>
           <div class="difficulty" [attr.aria-label]="'Difficulty ' + hero.difficulty + ' out of 5'">
             @for (pip of [1, 2, 3, 4, 5]; track pip) {
-            <span [class.filled]="pip <= hero.difficulty"></span>
+              <span [class.filled]="pip <= hero.difficulty"></span>
             }
           </div>
           @if (hero.summary) {
-          <p class="detail-hero-lede">{{ hero.summary }}</p>
+            <p class="detail-hero-lede">{{ hero.summary }}</p>
           }
           <ul class="detail-hero-tags" aria-label="Hero tags">
             <li>{{ controller.heroRoleLabel(hero) }}</li>
             @if (hero.gameplayArchetypes; as archetypes) {
-            @for (archetype of archetypes; track archetype.role + archetype.label) {
-            @if (archetype.role === controller.heroRoleLabel(hero)) {
-            <li>{{ archetype.label }}</li>
-            }
-            }
+              @for (archetype of archetypes; track archetype.role + archetype.label) {
+                @if (archetype.role === controller.heroRoleLabel(hero)) {
+                  <li>{{ archetype.label }}</li>
+                }
+              }
             }
             <li>Difficulty {{ hero.difficulty }}/5</li>
           </ul>
@@ -31,516 +31,806 @@
 
     <div class="detail-hero-summary">
       @if (controller.officialBaseStats(hero).length) {
-      <dl class="technical-details hero-base-stats" aria-label="Official base stats">
-        @for (detail of controller.officialBaseStats(hero); track detail.label + detail.value) {
-        <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
-          <span class="stat-icon" aria-hidden="true">
-            <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
-          </span>
-          <div class="stat-copy">
-            <dt>{{ detail.label }}</dt>
-            <dd>{{ detail.value }}</dd>
-          </div>
-        </div>
-        }
-      </dl>
+        <dl class="technical-details hero-base-stats" aria-label="Official base stats">
+          @for (detail of controller.officialBaseStats(hero); track detail.label + detail.value) {
+            <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
+              <span class="stat-icon" aria-hidden="true">
+                <img
+                  class="inline-icon"
+                  [src]="controller.technicalDetailIcon(detail.label)"
+                  alt=""
+                />
+              </span>
+              <div class="stat-copy">
+                <dt>{{ detail.label }}</dt>
+                <dd>{{ detail.value }}</dd>
+              </div>
+            </div>
+          }
+        </dl>
       }
     </div>
   </div>
 
-  <nav class="hero-jump-nav" aria-label="Hero sections">
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-overview-' + hero.id">Overview</a>
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-abilities-' + hero.id">Abilities</a>
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-build-signals-' + hero.id">Build signals</a>
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-matchups-' + hero.id">Matchups</a>
+  <div
+    class="hero-section-tabs"
+    role="tablist"
+    aria-label="Hero details"
+    aria-orientation="horizontal"
+    (keydown)="handleSectionTabKeydown($event)"
+  >
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-overview-' + hero.id"
+      [attr.aria-controls]="'hero-panel-overview-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'overview'"
+      [attr.tabindex]="selectedSection() === 'overview' ? 0 : -1"
+      [attr.data-section]="'overview'"
+      [class.active]="selectedSection() === 'overview'"
+      (click)="selectSection('overview')"
+    >
+      Overview
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-abilities-' + hero.id"
+      [attr.aria-controls]="'hero-panel-abilities-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'abilities'"
+      [attr.tabindex]="selectedSection() === 'abilities' ? 0 : -1"
+      [attr.data-section]="'abilities'"
+      [class.active]="selectedSection() === 'abilities'"
+      (click)="selectSection('abilities')"
+    >
+      Abilities
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-build-signals-' + hero.id"
+      [attr.aria-controls]="'hero-panel-build-signals-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'build-signals'"
+      [attr.tabindex]="selectedSection() === 'build-signals' ? 0 : -1"
+      [attr.data-section]="'build-signals'"
+      [class.active]="selectedSection() === 'build-signals'"
+      (click)="selectSection('build-signals')"
+    >
+      Build Signals
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-matchups-' + hero.id"
+      [attr.aria-controls]="'hero-panel-matchups-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'matchups'"
+      [attr.tabindex]="selectedSection() === 'matchups' ? 0 : -1"
+      [attr.data-section]="'matchups'"
+      [class.active]="selectedSection() === 'matchups'"
+      (click)="selectSection('matchups')"
+    >
+      Matchups
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-stats-' + hero.id"
+      [attr.aria-controls]="'hero-panel-stats-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'stats'"
+      [attr.tabindex]="selectedSection() === 'stats' ? 0 : -1"
+      [attr.data-section]="'stats'"
+      [class.active]="selectedSection() === 'stats'"
+      (click)="selectSection('stats')"
+    >
+      Stats
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-strategy-' + hero.id"
+      [attr.aria-controls]="
+        'hero-panel-strategy-' + hero.id + ' hero-panel-strategy-continuation-' + hero.id
+      "
+      [attr.aria-selected]="selectedSection() === 'strategy'"
+      [attr.tabindex]="selectedSection() === 'strategy' ? 0 : -1"
+      [attr.data-section]="'strategy'"
+      [class.active]="selectedSection() === 'strategy'"
+      (click)="selectSection('strategy')"
+    >
+      Strategy
+    </button>
     @if (controller.hasTeamUpAbilities(hero)) {
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-team-ups-' + hero.id">Team-ups</a>
+      <button
+        type="button"
+        role="tab"
+        [id]="'hero-tab-team-ups-' + hero.id"
+        [attr.aria-controls]="'hero-panel-team-ups-' + hero.id"
+        [attr.aria-selected]="selectedSection() === 'team-ups'"
+        [attr.tabindex]="selectedSection() === 'team-ups' ? 0 : -1"
+        [attr.data-section]="'team-ups'"
+        [class.active]="selectedSection() === 'team-ups'"
+        (click)="selectSection('team-ups')"
+      >
+        Team-Ups
+      </button>
     }
     @if (controller.selectedHeroVideos().length > 0) {
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-videos-' + hero.id">Videos</a>
+      <button
+        type="button"
+        role="tab"
+        [id]="'hero-tab-videos-' + hero.id"
+        [attr.aria-controls]="'hero-panel-videos-' + hero.id"
+        [attr.aria-selected]="selectedSection() === 'videos'"
+        [attr.tabindex]="selectedSection() === 'videos' ? 0 : -1"
+        [attr.data-section]="'videos'"
+        [class.active]="selectedSection() === 'videos'"
+        (click)="selectSection('videos')"
+      >
+        Videos
+      </button>
     }
-  </nav>
-
-  <section class="hero-guide-grid" aria-label="Hero quick guide">
-    <app-hero-community-counters
-      class="hero-guide-card hero-guide-card--matchups"
-      [attr.id]="'hero-matchups-' + hero.id"
-      [heroId]="hero.id"
-      [heroName]="hero.name"
-      [matchups]="controller.heroMatchups()"
-      [roster]="controller.heroRoster()"
-    />
-
-    <section
-      class="hero-build-profile hero-guide-card"
-      [attr.id]="'hero-build-signals-' + hero.id"
-      [attr.aria-labelledby]="'hero-build-signals-title-' + hero.id"
-    >
-      <div class="section-heading">
-        <h3 [id]="'hero-build-signals-title-' + hero.id">Build signals</h3>
-      </div>
-      <p class="section-note">Scores out of 10, from match data and the hero's kit.</p>
-      <app-hero-build-signals [heroId]="hero.id" [scores]="controller.heroScores()" />
-    </section>
-
-    <section
-      class="overview-panel hero-guide-card"
-      [attr.id]="'hero-overview-' + hero.id"
-      [attr.aria-labelledby]="'hero-overview-title-' + hero.id"
-    >
-      <div class="section-heading">
-        <h3 [id]="'hero-overview-title-' + hero.id">
-          {{ hero.officialSource ? 'Official Overview' : 'Fandom Overview' }}
-        </h3>
-        <a [href]="controller.officialHeroSourceUrl(hero)" target="_blank" rel="noopener noreferrer">Source</a>
-      </div>
-      @for (section of controller.fandomOverviewSections(hero); track section.title) {
-      <article class="overview-section">
-        @if (section.title !== 'Overview') {
-        <strong>{{ section.title }}</strong>
-        }
-        @for (paragraph of section.paragraphs; track paragraph) {
-        <p [innerHTML]="controller.highlightedOverviewText(hero, paragraph)"></p>
-        <br aria-hidden="true" />
-        }
-      </article>
-      }
-    </section>
-  </section>
-
-  <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
-
-  <app-hero-kill-feed
-    [heroId]="hero.id"
-    [heroName]="hero.name"
-    [kills]="controller.heroKills()"
-    [roster]="controller.heroRoster()"
-  />
-
-  @if (hero.gameplayArchetypes?.length) {
-  <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
-    <div class="section-heading">
-      <h3 id="gameplay-archetypes-title">Gameplay Archetype</h3>
-      <a routerLink="/win-rates">Hero win rates</a>
-    </div>
-
-    <div class="archetype-grid">
-      @for (archetype of hero.gameplayArchetypes; track archetype.role + archetype.label) {
-      <article>
-        <span>{{ archetype.role }}</span>
-        <strong>{{ archetype.label }}</strong>
-        <p>{{ archetype.description }}</p>
-        <a [href]="archetype.sourceUrl" target="_blank" rel="noopener noreferrer">
-          Video · {{ archetype.timestamp }}
-        </a>
-      </article>
-      }
-    </div>
-  </section>
-  }
-
-  @if (controller.strategyGuide(hero); as strategy) {
-  <section class="ultimate-strategies" aria-label="Hero strategy">
-    <div class="section-heading">
-      <h3>How to Play {{ hero.name }}</h3>
-      <a [href]="strategy.sourceUrl" target="_blank" rel="noopener noreferrer">Source</a>
-    </div>
-
-    <article class="strategy-playstyle">
-      <span>Playstyle</span>
-      <p
-        class="strategy-playstyle-lead"
-        [innerHTML]="controller.highlightedAbilityText(hero, controller.displayedPlaystyle(hero))"
-      ></p>
-      @for (paragraph of controller.strategyPlaystyleNotes(hero, strategy); track paragraph) {
-      <p [innerHTML]="controller.highlightedOverviewText(hero, paragraph)"></p>
-      }
-    </article>
-
-    <article>
-      <span>Situation jobs</span>
-      <ul>
-        @for (situation of strategy.situations; track situation.label) {
-        <li>
-          <strong>{{ situation.label }}</strong>
-          <p [innerHTML]="controller.highlightedOverviewText(hero, situation.description)"></p>
-        </li>
-        }
-      </ul>
-    </article>
-  </section>
-  }
-
-  <div class="detail-columns">
-    <section>
-      <h3>Strengths</h3>
-      <ul>
-        @for (strength of hero.strengths; track strength) {
-        <li>{{ strength }}</li>
-        }
-      </ul>
-    </section>
-
-    <section>
-      <h3>Weaknesses</h3>
-      <ul>
-        @for (weakness of hero.weaknesses; track weakness) {
-        <li>{{ weakness }}</li>
-        }
-      </ul>
-    </section>
   </div>
 
-  <div class="matchup-row">
-    <section>
-      <h3>Synergies</h3>
-      <div class="tag-list">
-        @for (synergy of hero.synergies; track synergy) {
-        @if (controller.heroByName(synergy); as synergyHero) {
-        <span class="hero-matchup-chip" [title]="synergyHero.name">
-          <img [src]="synergyHero.imageUrl" [alt]="synergyHero.name" />
-        </span>
-        } @else {
-        <span class="hero-matchup-chip icon-chip" [title]="synergy" [attr.aria-label]="synergy">
-          <img class="inline-icon" [src]="controller.synergyIcon(synergy)" alt="" aria-hidden="true" />
-        </span>
+  <div class="hero-section-stage">
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-overview-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-overview-' + hero.id"
+      [hidden]="selectedSection() !== 'overview'"
+    >
+      <section class="overview-panel" [attr.aria-labelledby]="'hero-overview-title-' + hero.id">
+        <div class="section-heading">
+          <h3 [id]="'hero-overview-title-' + hero.id">
+            {{ hero.officialSource ? 'Official Overview' : 'Fandom Overview' }}
+          </h3>
+          <a
+            [href]="controller.officialHeroSourceUrl(hero)"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Source</a
+          >
+        </div>
+        @for (section of controller.fandomOverviewSections(hero); track section.title) {
+          <article class="overview-section">
+            @if (section.title !== 'Overview') {
+              <strong>{{ section.title }}</strong>
+            }
+            @for (paragraph of section.paragraphs; track paragraph) {
+              <p [innerHTML]="controller.highlightedOverviewText(hero, paragraph)"></p>
+              <br aria-hidden="true" />
+            }
+          </article>
         }
-        }
+      </section>
+    </section>
+
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-build-signals-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-build-signals-' + hero.id"
+      [hidden]="selectedSection() !== 'build-signals'"
+    >
+      <section class="hero-build-profile">
+        <div class="section-heading">
+          <h3>Build signals</h3>
+        </div>
+        <p class="section-note">Scores out of 10, from match data and the hero's kit.</p>
+        <app-hero-build-signals [heroId]="hero.id" [scores]="controller.heroScores()" />
+      </section>
+    </section>
+
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-matchups-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-matchups-' + hero.id"
+      [hidden]="selectedSection() !== 'matchups'"
+    >
+      <app-hero-community-counters
+        [heroId]="hero.id"
+        [heroName]="hero.name"
+        [matchups]="controller.heroMatchups()"
+        [roster]="controller.heroRoster()"
+      />
+    </section>
+
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-stats-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-stats-' + hero.id"
+      [hidden]="selectedSection() !== 'stats'"
+    >
+      <app-hero-community-stats
+        [heroId]="hero.id"
+        [heroName]="hero.name"
+        [stats]="controller.heroStats()"
+      />
+      <app-hero-kill-feed
+        [heroId]="hero.id"
+        [heroName]="hero.name"
+        [kills]="controller.heroKills()"
+        [roster]="controller.heroRoster()"
+      />
+    </section>
+
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-strategy-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-strategy-' + hero.id"
+      [hidden]="selectedSection() !== 'strategy'"
+    >
+      @if (hero.gameplayArchetypes?.length) {
+        <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
+          <div class="section-heading">
+            <h3 id="gameplay-archetypes-title">Gameplay Archetype</h3>
+            <a routerLink="/win-rates">Hero win rates</a>
+          </div>
+
+          <div class="archetype-grid">
+            @for (archetype of hero.gameplayArchetypes; track archetype.role + archetype.label) {
+              <article>
+                <span>{{ archetype.role }}</span>
+                <strong>{{ archetype.label }}</strong>
+                <p>{{ archetype.description }}</p>
+                <a [href]="archetype.sourceUrl" target="_blank" rel="noopener noreferrer">
+                  Video · {{ archetype.timestamp }}
+                </a>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (controller.strategyGuide(hero); as strategy) {
+        <section class="ultimate-strategies" aria-label="Hero strategy">
+          <div class="section-heading">
+            <h3>How to Play {{ hero.name }}</h3>
+            <a [href]="strategy.sourceUrl" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+
+          <article class="strategy-playstyle">
+            <span>Playstyle</span>
+            <p
+              class="strategy-playstyle-lead"
+              [innerHTML]="
+                controller.highlightedAbilityText(hero, controller.displayedPlaystyle(hero))
+              "
+            ></p>
+            @for (paragraph of controller.strategyPlaystyleNotes(hero, strategy); track paragraph) {
+              <p [innerHTML]="controller.highlightedOverviewText(hero, paragraph)"></p>
+            }
+          </article>
+
+          <article>
+            <span>Situation jobs</span>
+            <ul>
+              @for (situation of strategy.situations; track situation.label) {
+                <li>
+                  <strong>{{ situation.label }}</strong>
+                  <p
+                    [innerHTML]="controller.highlightedOverviewText(hero, situation.description)"
+                  ></p>
+                </li>
+              }
+            </ul>
+          </article>
+        </section>
+      }
+
+      <div class="detail-columns">
+        <section>
+          <h3>Strengths</h3>
+          <ul>
+            @for (strength of hero.strengths; track strength) {
+              <li>{{ strength }}</li>
+            }
+          </ul>
+        </section>
+
+        <section>
+          <h3>Weaknesses</h3>
+          <ul>
+            @for (weakness of hero.weaknesses; track weakness) {
+              <li>{{ weakness }}</li>
+            }
+          </ul>
+        </section>
+      </div>
+
+      <div class="matchup-row">
+        <section>
+          <h3>Synergies</h3>
+          <div class="tag-list">
+            @for (synergy of hero.synergies; track synergy) {
+              @if (controller.heroByName(synergy); as synergyHero) {
+                <span class="hero-matchup-chip" [title]="synergyHero.name">
+                  <img [src]="synergyHero.imageUrl" [alt]="synergyHero.name" />
+                </span>
+              } @else {
+                <span
+                  class="hero-matchup-chip icon-chip"
+                  [title]="synergy"
+                  [attr.aria-label]="synergy"
+                >
+                  <img
+                    class="inline-icon"
+                    [src]="controller.synergyIcon(synergy)"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                </span>
+              }
+            }
+          </div>
+        </section>
       </div>
     </section>
-  </div>
 
-  <section class="abilities" [attr.id]="'hero-abilities-' + hero.id">
-    <div class="section-heading ability-heading">
-      <h3>Abilities</h3>
-    </div>
-    @if (controller.passiveAbilities(hero).length > 0) {
-    <section class="abilities passive-abilities">
-      <div class="section-heading ability-heading">
-        <h3>Passive Abilities</h3>
-      </div>
-
-      <div class="ability-tabs" role="tablist" aria-label="Passive ability tabs">
-        @for (ability of controller.passiveAbilities(hero); track ability.name) {
-        <button type="button" role="tab" [class.active]="
-                controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name === ability.name
-              " [attr.aria-selected]="
-                controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name === ability.name
-              " [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
-          (click)="controller.selectAbilityTab(hero, ability)">
-          <span>{{ ability.type }}</span>
-          <small>{{ ability.name }}</small>
-        </button>
-        }
-      </div>
-
-      @if (controller.selectedAbilityTab(hero, controller.passiveAbilities(hero)); as ability) {
-      <article [id]="controller.abilityAnchorId(hero, ability)" role="tabpanel"
-        [class.highlighted]="controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)">
-        <span>{{ ability.type }}</span>
-        <strong>{{ ability.name }}</strong>
-        <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
-        @if (ability.technicalDetails?.length) {
-        <h4>Stats & formulas</h4>
-        <dl class="technical-details" aria-label="Passive ability technical details">
-          @for (detail of ability.technicalDetails; track detail.label + detail.value) {
-          <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
-            <span class="stat-icon" aria-hidden="true">
-              <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
-            </span>
-            <div class="stat-copy">
-              <dt>{{ detail.label }}</dt>
-              <dd>{{ detail.value }}</dd>
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-abilities-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-abilities-' + hero.id"
+      [hidden]="selectedSection() !== 'abilities'"
+    >
+      <section class="abilities">
+        <div class="section-heading ability-heading">
+          <h3>Abilities</h3>
+        </div>
+        @if (controller.passiveAbilities(hero).length > 0) {
+          <section class="abilities passive-abilities">
+            <div class="section-heading ability-heading">
+              <h3>Passive Abilities</h3>
             </div>
-          </div>
-          }
-        </dl>
-        }
-      </article>
-      }
-    </section>
-    }
-    <section class="abilities">
-      <div class="section-heading ability-heading">
-        <h3>Normal Abilities</h3>
-      </div>
-      <div class="ability-tabs" role="tablist" aria-label="Ability tabs">
-        @for (ability of controller.normalAbilities(hero); track ability.name) {
-        <button type="button" role="tab" [class.active]="
-              controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name === ability.name
-            " [attr.aria-selected]="
-              controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name === ability.name
-            " [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
-          (click)="controller.selectAbilityTab(hero, ability)">
-          <span>{{ ability.type }}</span>
-          <small>{{ ability.name }}</small>
-        </button>
-        }
-      </div>
 
-      @if (controller.selectedAbilityTab(hero, controller.normalAbilities(hero)); as ability) {
-      <article [id]="controller.abilityAnchorId(hero, ability)" role="tabpanel"
-        [class.highlighted]="controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)">
-        <span>{{ ability.type }}</span>
-        <strong>{{ ability.name }}</strong>
-        <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
-        @if (ability.technicalDetails?.length) {
-        <h4>Stats & formulas</h4>
-        <dl class="technical-details" aria-label="Ability technical details">
-          @for (detail of ability.technicalDetails; track detail.label + detail.value) {
-          <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
-            <span class="stat-icon" aria-hidden="true">
-              <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
-            </span>
-            <div class="stat-copy">
-              <dt>{{ detail.label }}</dt>
-              <dd>{{ detail.value }}</dd>
+            <div class="ability-tabs" role="tablist" aria-label="Passive ability tabs">
+              @for (ability of controller.passiveAbilities(hero); track ability.name) {
+                <button
+                  type="button"
+                  role="tab"
+                  [class.active]="
+                    controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name ===
+                    ability.name
+                  "
+                  [attr.aria-selected]="
+                    controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name ===
+                    ability.name
+                  "
+                  [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
+                  (click)="controller.selectAbilityTab(hero, ability)"
+                >
+                  <span>{{ ability.type }}</span>
+                  <small>{{ ability.name }}</small>
+                </button>
+              }
             </div>
-          </div>
-          }
-        </dl>
+
+            @if (
+              controller.selectedAbilityTab(hero, controller.passiveAbilities(hero));
+              as ability
+            ) {
+              <article
+                [id]="controller.abilityAnchorId(hero, ability)"
+                role="tabpanel"
+                [class.highlighted]="
+                  controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)
+                "
+              >
+                <span>{{ ability.type }}</span>
+                <strong>{{ ability.name }}</strong>
+                <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
+                @if (ability.technicalDetails?.length) {
+                  <h4>Stats & formulas</h4>
+                  <dl class="technical-details" aria-label="Passive ability technical details">
+                    @for (detail of ability.technicalDetails; track detail.label + detail.value) {
+                      <div
+                        [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)"
+                      >
+                        <span class="stat-icon" aria-hidden="true">
+                          <img
+                            class="inline-icon"
+                            [src]="controller.technicalDetailIcon(detail.label)"
+                            alt=""
+                          />
+                        </span>
+                        <div class="stat-copy">
+                          <dt>{{ detail.label }}</dt>
+                          <dd>{{ detail.value }}</dd>
+                        </div>
+                      </div>
+                    }
+                  </dl>
+                }
+              </article>
+            }
+          </section>
         }
-      </article>
-      }
+        <section class="abilities">
+          <div class="section-heading ability-heading">
+            <h3>Normal Abilities</h3>
+          </div>
+          <div class="ability-tabs" role="tablist" aria-label="Ability tabs">
+            @for (ability of controller.normalAbilities(hero); track ability.name) {
+              <button
+                type="button"
+                role="tab"
+                [class.active]="
+                  controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-selected]="
+                  controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
+                (click)="controller.selectAbilityTab(hero, ability)"
+              >
+                <span>{{ ability.type }}</span>
+                <small>{{ ability.name }}</small>
+              </button>
+            }
+          </div>
+
+          @if (controller.selectedAbilityTab(hero, controller.normalAbilities(hero)); as ability) {
+            <article
+              [id]="controller.abilityAnchorId(hero, ability)"
+              role="tabpanel"
+              [class.highlighted]="
+                controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)
+              "
+            >
+              <span>{{ ability.type }}</span>
+              <strong>{{ ability.name }}</strong>
+              <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
+              @if (ability.technicalDetails?.length) {
+                <h4>Stats & formulas</h4>
+                <dl class="technical-details" aria-label="Ability technical details">
+                  @for (detail of ability.technicalDetails; track detail.label + detail.value) {
+                    <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
+                      <span class="stat-icon" aria-hidden="true">
+                        <img
+                          class="inline-icon"
+                          [src]="controller.technicalDetailIcon(detail.label)"
+                          alt=""
+                        />
+                      </span>
+                      <div class="stat-copy">
+                        <dt>{{ detail.label }}</dt>
+                        <dd>{{ detail.value }}</dd>
+                      </div>
+                    </div>
+                  }
+                </dl>
+              }
+            </article>
+          }
+        </section>
+      </section>
     </section>
     @if (controller.hasTeamUpAbilities(hero)) {
-    <section class="abilities" [attr.id]="'hero-team-ups-' + hero.id">
-      <div class="section-heading ability-heading">
-        <h3>Team-Up Abilities</h3>
-      </div>
-      <div class="ability-tabs" role="tablist" aria-label="Team-up ability tabs">
-        @for (ability of controller.teamUpAbilities(hero); track ability.name) {
-        <button type="button" role="tab" [class.active]="
-                controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name === ability.name
-              " [attr.aria-selected]="
-                controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name === ability.name
-              " [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
-          (click)="controller.selectAbilityTab(hero, ability)">
-          <span>{{ ability.type }}</span>
-          <small>{{ ability.name }}</small>
-        </button>
-        }
-      </div>
-
-      @if (controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero)); as ability) {
-      <article [id]="controller.abilityAnchorId(hero, ability)" role="tabpanel"
-        [class.highlighted]="controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)">
-        <span>{{ ability.type }}</span>
-        <strong>{{ ability.name }}</strong>
-        <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
-        @if (ability.technicalDetails?.length) {
-        <h4>Stats & formulas</h4>
-        <dl class="technical-details" aria-label="Team-up ability technical details">
-          @for (detail of ability.technicalDetails; track detail.label + detail.value) {
-          <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
-            <span class="stat-icon" aria-hidden="true">
-              <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
-            </span>
-            <div class="stat-copy">
-              <dt>{{ detail.label }}</dt>
-              <dd>{{ detail.value }}</dd>
-            </div>
+      <section
+        class="hero-tab-panel"
+        role="tabpanel"
+        tabindex="0"
+        [id]="'hero-panel-team-ups-' + hero.id"
+        [attr.aria-labelledby]="'hero-tab-team-ups-' + hero.id"
+        [hidden]="selectedSection() !== 'team-ups'"
+      >
+        <section class="abilities">
+          <div class="section-heading ability-heading">
+            <h3>Team-Up Abilities</h3>
           </div>
+          <div class="ability-tabs" role="tablist" aria-label="Team-up ability tabs">
+            @for (ability of controller.teamUpAbilities(hero); track ability.name) {
+              <button
+                type="button"
+                role="tab"
+                [class.active]="
+                  controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-selected]="
+                  controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
+                (click)="controller.selectAbilityTab(hero, ability)"
+              >
+                <span>{{ ability.type }}</span>
+                <small>{{ ability.name }}</small>
+              </button>
+            }
+          </div>
+
+          @if (controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero)); as ability) {
+            <article
+              [id]="controller.abilityAnchorId(hero, ability)"
+              role="tabpanel"
+              [class.highlighted]="
+                controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)
+              "
+            >
+              <span>{{ ability.type }}</span>
+              <strong>{{ ability.name }}</strong>
+              <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
+              @if (ability.technicalDetails?.length) {
+                <h4>Stats & formulas</h4>
+                <dl class="technical-details" aria-label="Team-up ability technical details">
+                  @for (detail of ability.technicalDetails; track detail.label + detail.value) {
+                    <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
+                      <span class="stat-icon" aria-hidden="true">
+                        <img
+                          class="inline-icon"
+                          [src]="controller.technicalDetailIcon(detail.label)"
+                          alt=""
+                        />
+                      </span>
+                      <div class="stat-copy">
+                        <dt>{{ detail.label }}</dt>
+                        <dd>{{ detail.value }}</dd>
+                      </div>
+                    </div>
+                  }
+                </dl>
+              }
+            </article>
           }
-        </dl>
-        }
-      </article>
+        </section>
+      </section>
+    }
+
+    <section
+      class="hero-tab-panel hero-tab-panel--strategy-continuation"
+      role="group"
+      tabindex="-1"
+      [id]="'hero-panel-strategy-continuation-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-strategy-' + hero.id"
+      [hidden]="selectedSection() !== 'strategy'"
+    >
+      @if (controller.displayedPlaystyleGuides(hero).length > 0) {
+        <details class="collapsible deadpool-upgrades">
+          <summary class="section-heading">
+            <h3>Playstyle Variants</h3>
+          </summary>
+          <div class="collapsible-body">
+            <p class="section-note">{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
+            @for (guide of controller.displayedPlaystyleGuides(hero); track guide.id) {
+              <article>
+                <strong>{{ guide.title }}</strong>
+                <p>{{ guide.whenToUse }}</p>
+
+                <ol>
+                  @for (idea of guide.coreIdeas; track idea.label; let index = $index) {
+                    <li>
+                      <span>{{ index + 1 }}</span>
+                      <div>
+                        <strong>{{ idea.label }}</strong>
+                        <p>{{ idea.description }}</p>
+                      </div>
+                    </li>
+                  }
+                </ol>
+
+                @if (guide.upgradeNotes.length > 0) {
+                  <p class="upgrade-source">Upgrade read: {{ guide.upgradeNotes.join(' ') }}</p>
+                }
+
+                @if (guide.ultimateNotes.length > 0) {
+                  <p class="upgrade-source">Ultimate read: {{ guide.ultimateNotes.join(' ') }}</p>
+                }
+
+                @if (guide.sourceUrl) {
+                  <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">{{
+                    guide.sourceTitle ??
+                      'Original
+          source'
+                  }}</a>
+                }
+              </article>
+            }
+          </div>
+        </details>
+      }
+      @if (controller.ultimateStrategies(hero).length > 0) {
+        <details class="collapsible ultimate-strategies">
+          <summary class="section-heading">
+            <h3>Ultimate Strategy</h3>
+          </summary>
+          <div class="collapsible-body">
+            @for (ultimate of controller.ultimateStrategies(hero); track ultimate.ability.name) {
+              <article>
+                <span>{{ ultimate.ability.name }}</span>
+                <p
+                  class="ultimate-source"
+                  [innerHTML]="controller.highlightedAbilityText(hero, ultimate.sourceDescription)"
+                ></p>
+                <p [innerHTML]="controller.highlightedAbilityText(hero, ultimate.strategy)"></p>
+              </article>
+            }
+
+            @if (
+              controller.deadpoolVanguardUltimatePaths(hero).length > 0 &&
+                controller.activeDeadpoolUltimatePath(hero);
+              as activePath
+            ) {
+              <section class="ultimate-paths" aria-labelledby="deadpool-ultimate-path-title">
+                <div class="section-heading">
+                  <div>
+                    <h3 id="deadpool-ultimate-path-title">Ultimate Path</h3>
+                    <p>Vanguard Deadpool fight plan</p>
+                  </div>
+                </div>
+
+                <div
+                  class="ultimate-path-tabs"
+                  role="tablist"
+                  aria-label="Vanguard Deadpool ultimate paths"
+                >
+                  @for (path of controller.deadpoolVanguardUltimatePaths(hero); track path.name) {
+                    <button
+                      type="button"
+                      role="tab"
+                      [class.active]="activePath.name === path.name"
+                      [attr.aria-selected]="activePath.name === path.name"
+                      (click)="controller.selectDeadpoolUltimatePath(path.name)"
+                    >
+                      {{ path.name }}
+                    </button>
+                  }
+                </div>
+
+                <article class="ultimate-path-panel" role="tabpanel">
+                  <strong>{{ activePath.name }}</strong>
+                  <p>{{ activePath.plan }}</p>
+                  <p class="ultimate-path-timing">{{ activePath.timing }}</p>
+
+                  <div class="ultimate-path-grid">
+                    <section>
+                      <h4>Execute</h4>
+                      <ul>
+                        @for (step of activePath.execution; track step) {
+                          <li>{{ step }}</li>
+                        }
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h4>Good Into</h4>
+                      <ul>
+                        @for (target of activePath.goodAgainst; track target) {
+                          <li>{{ target }}</li>
+                        }
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h4>Avoid Into</h4>
+                      <ul>
+                        @for (target of activePath.avoidInto; track target) {
+                          <li>{{ target }}</li>
+                        }
+                      </ul>
+                    </section>
+                  </div>
+                </article>
+              </section>
+            }
+
+            @if (
+              controller.deadpoolVanguardAggressivePaths(hero).length > 0 &&
+                controller.activeDeadpoolAggressivePath(hero);
+              as activePath
+            ) {
+              <section
+                class="deadpool-upgrades aggressive-paths"
+                aria-labelledby="deadpool-aggressive-path-title"
+              >
+                <div class="section-heading">
+                  <div>
+                    <h3 id="deadpool-aggressive-path-title">Aggressive Paths</h3>
+                    <p>Skill book routes from the rank-one Tankpool review</p>
+                  </div>
+                </div>
+
+                <div
+                  class="aggressive-path-tabs"
+                  role="tablist"
+                  aria-label="Vanguard Deadpool aggressive upgrade paths"
+                >
+                  @for (path of controller.deadpoolVanguardAggressivePaths(hero); track path.id) {
+                    <button
+                      type="button"
+                      role="tab"
+                      [class.active]="activePath.id === path.id"
+                      [attr.aria-selected]="activePath.id === path.id"
+                      (click)="controller.selectDeadpoolAggressivePath(path.id)"
+                    >
+                      {{ path.title }}
+                    </button>
+                  }
+                </div>
+
+                <article class="aggressive-path-panel" role="tabpanel">
+                  <strong>{{ activePath.title }}</strong>
+                  <p>{{ activePath.summary }}</p>
+                  <p class="upgrade-source">{{ activePath.whenToUse }}</p>
+
+                  <ol>
+                    @for (upgrade of activePath.upgrades; track upgrade.name) {
+                      <li>
+                        <span>{{ upgrade.rank }}</span>
+                        <div>
+                          <strong>{{ upgrade.name }}</strong>
+                          <p>{{ upgrade.reason }}</p>
+                          <small>{{ upgrade.note }}</small>
+                        </div>
+                      </li>
+                    }
+                  </ol>
+
+                  <p class="upgrade-source">{{ activePath.transcriptRead }}</p>
+                </article>
+              </section>
+            }
+          </div>
+        </details>
+      }
+
+      @if (
+        controller.deadpoolUpgradeOrder(hero).length > 0 &&
+        controller.deadpoolVanguardAggressivePaths(hero).length === 0
+      ) {
+        <details class="collapsible deadpool-upgrades">
+          <summary class="section-heading">
+            <h3>Upgrade Book Order</h3>
+          </summary>
+          <div class="collapsible-body">
+            <p class="section-note">{{ controller.deadpoolUpgradeRole(hero) }} default priority</p>
+            <ol>
+              @for (upgrade of controller.deadpoolUpgradeOrder(hero); track upgrade.name) {
+                <li>
+                  <span>{{ upgrade.rank }}</span>
+                  <div>
+                    <strong>{{ upgrade.name }}</strong>
+                    <p>{{ upgrade.reason }}</p>
+                    <small>{{ upgrade.note }}</small>
+                  </div>
+                </li>
+              }
+            </ol>
+
+            <p class="upgrade-source">
+              Recommended order based on the current Fandom upgrade stats and role win condition.
+            </p>
+          </div>
+        </details>
       }
     </section>
+    @if (controller.selectedHeroVideos().length > 0) {
+      <section
+        class="hero-tab-panel"
+        role="tabpanel"
+        tabindex="0"
+        [id]="'hero-panel-videos-' + hero.id"
+        [attr.aria-labelledby]="'hero-tab-videos-' + hero.id"
+        [hidden]="selectedSection() !== 'videos'"
+      >
+        <app-hero-videos
+          [heroName]="hero.name"
+          [videos]="controller.selectedHeroVideos()"
+          [youtubeUrl]="controller.selectedHeroYoutubeUrl()"
+        />
+      </section>
     }
-  </section>
-
-  @if (controller.displayedPlaystyleGuides(hero).length > 0) {
-  <details class="collapsible deadpool-upgrades">
-    <summary class="section-heading">
-      <h3>Playstyle Variants</h3>
-    </summary>
-    <div class="collapsible-body">
-      <p class="section-note">{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
-      @for (guide of controller.displayedPlaystyleGuides(hero); track guide.id) {
-      <article>
-        <strong>{{ guide.title }}</strong>
-        <p>{{ guide.whenToUse }}</p>
-
-        <ol>
-          @for (idea of guide.coreIdeas; track idea.label; let index = $index) {
-          <li>
-            <span>{{ index + 1 }}</span>
-            <div>
-              <strong>{{ idea.label }}</strong>
-              <p>{{ idea.description }}</p>
-            </div>
-          </li>
-          }
-        </ol>
-
-        @if (guide.upgradeNotes.length > 0) {
-        <p class="upgrade-source">Upgrade read: {{ guide.upgradeNotes.join(' ') }}</p>
-        }
-
-        @if (guide.ultimateNotes.length > 0) {
-        <p class="upgrade-source">Ultimate read: {{ guide.ultimateNotes.join(' ') }}</p>
-        }
-
-        @if (guide.sourceUrl) {
-        <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">{{
-          guide.sourceTitle ??
-          'Original
-          source'
-          }}</a>
-        }
-      </article>
-      }
-    </div>
-  </details>
-  }
-  @if (controller.ultimateStrategies(hero).length > 0) {
-  <details class="collapsible ultimate-strategies">
-    <summary class="section-heading">
-      <h3>Ultimate Strategy</h3>
-    </summary>
-    <div class="collapsible-body">
-      @for (ultimate of controller.ultimateStrategies(hero); track ultimate.ability.name) {
-      <article>
-        <span>{{ ultimate.ability.name }}</span>
-        <p class="ultimate-source" [innerHTML]="controller.highlightedAbilityText(hero, ultimate.sourceDescription)"></p>
-        <p [innerHTML]="controller.highlightedAbilityText(hero, ultimate.strategy)"></p>
-      </article>
-      }
-
-      @if (
-      controller.deadpoolVanguardUltimatePaths(hero).length > 0 && controller.activeDeadpoolUltimatePath(hero);
-      as activePath
-      ) {
-      <section class="ultimate-paths" aria-labelledby="deadpool-ultimate-path-title">
-        <div class="section-heading">
-          <div>
-            <h3 id="deadpool-ultimate-path-title">Ultimate Path</h3>
-            <p>Vanguard Deadpool fight plan</p>
-          </div>
-        </div>
-
-        <div class="ultimate-path-tabs" role="tablist" aria-label="Vanguard Deadpool ultimate paths">
-          @for (path of controller.deadpoolVanguardUltimatePaths(hero); track path.name) {
-          <button type="button" role="tab" [class.active]="activePath.name === path.name"
-            [attr.aria-selected]="activePath.name === path.name"
-            (click)="controller.selectDeadpoolUltimatePath(path.name)">
-            {{ path.name }}
-          </button>
-          }
-        </div>
-
-        <article class="ultimate-path-panel" role="tabpanel">
-          <strong>{{ activePath.name }}</strong>
-          <p>{{ activePath.plan }}</p>
-          <p class="ultimate-path-timing">{{ activePath.timing }}</p>
-
-          <div class="ultimate-path-grid">
-            <section>
-              <h4>Execute</h4>
-              <ul>
-                @for (step of activePath.execution; track step) {
-                <li>{{ step }}</li>
-                }
-              </ul>
-            </section>
-
-            <section>
-              <h4>Good Into</h4>
-              <ul>
-                @for (target of activePath.goodAgainst; track target) {
-                <li>{{ target }}</li>
-                }
-              </ul>
-            </section>
-
-            <section>
-              <h4>Avoid Into</h4>
-              <ul>
-                @for (target of activePath.avoidInto; track target) {
-                <li>{{ target }}</li>
-                }
-              </ul>
-            </section>
-          </div>
-        </article>
-      </section>
-      }
-
-      @if (
-      controller.deadpoolVanguardAggressivePaths(hero).length > 0 && controller.activeDeadpoolAggressivePath(hero);
-      as activePath
-      ) {
-      <section class="deadpool-upgrades aggressive-paths" aria-labelledby="deadpool-aggressive-path-title">
-        <div class="section-heading">
-          <div>
-            <h3 id="deadpool-aggressive-path-title">Aggressive Paths</h3>
-            <p>Skill book routes from the rank-one Tankpool review</p>
-          </div>
-        </div>
-
-        <div class="aggressive-path-tabs" role="tablist" aria-label="Vanguard Deadpool aggressive upgrade paths">
-          @for (path of controller.deadpoolVanguardAggressivePaths(hero); track path.id) {
-          <button type="button" role="tab" [class.active]="activePath.id === path.id"
-            [attr.aria-selected]="activePath.id === path.id" (click)="controller.selectDeadpoolAggressivePath(path.id)">
-            {{ path.title }}
-          </button>
-          }
-        </div>
-
-        <article class="aggressive-path-panel" role="tabpanel">
-          <strong>{{ activePath.title }}</strong>
-          <p>{{ activePath.summary }}</p>
-          <p class="upgrade-source">{{ activePath.whenToUse }}</p>
-
-          <ol>
-            @for (upgrade of activePath.upgrades; track upgrade.name) {
-            <li>
-              <span>{{ upgrade.rank }}</span>
-              <div>
-                <strong>{{ upgrade.name }}</strong>
-                <p>{{ upgrade.reason }}</p>
-                <small>{{ upgrade.note }}</small>
-              </div>
-            </li>
-            }
-          </ol>
-
-          <p class="upgrade-source">{{ activePath.transcriptRead }}</p>
-        </article>
-      </section>
-      }
-    </div>
-  </details>
-  }
-
-  @if (
-  controller.deadpoolUpgradeOrder(hero).length > 0 && controller.deadpoolVanguardAggressivePaths(hero).length === 0
-  ) {
-  <details class="collapsible deadpool-upgrades">
-    <summary class="section-heading">
-      <h3>Upgrade Book Order</h3>
-    </summary>
-    <div class="collapsible-body">
-      <p class="section-note">{{ controller.deadpoolUpgradeRole(hero) }} default priority</p>
-      <ol>
-        @for (upgrade of controller.deadpoolUpgradeOrder(hero); track upgrade.name) {
-        <li>
-          <span>{{ upgrade.rank }}</span>
-          <div>
-            <strong>{{ upgrade.name }}</strong>
-            <p>{{ upgrade.reason }}</p>
-            <small>{{ upgrade.note }}</small>
-          </div>
-        </li>
-        }
-      </ol>
-
-      <p class="upgrade-source">
-        Recommended order based on the current Fandom upgrade stats and role win condition.
-      </p>
-    </div>
-  </details>
-  }
-
+  </div>
 </div>

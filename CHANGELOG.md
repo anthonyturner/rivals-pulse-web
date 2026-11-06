@@ -34,6 +34,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Hero details now switch between Overview, Abilities, Build Signals, Matchups, Stats, Strategy, Team-Ups, and Videos in one panel beneath the hero profile, without jumping down the page ([#528](https://github.com/anthonyturner/rivals-pulse-web/pull/528)).
 - Hero profiles now lead with the selected hero's artwork, keep the sourced overview clear, and show community matchups in a compact scan near the top ([#522](https://github.com/anthonyturner/rivals-pulse-web/pull/522)).
 - Hero profiles now add section jump links, data-backed tags, and a three-card guide for overview, matchups, and build signals ([#524](https://github.com/anthonyturner/rivals-pulse-web/pull/524)).
 - The Community Matches and Insights tabs now show a figure once 10 matches back it, from any number of players, instead of waiting for 3 different players. While few players upload, a figure can come from one player, and both tabs and the Privacy notes say so ([#509](https://github.com/anthonyturner/rivals-pulse-web/pull/509)).
