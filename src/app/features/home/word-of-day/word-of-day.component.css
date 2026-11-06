@@ -5,8 +5,8 @@
 .word-of-day {
   position: fixed;
   z-index: 40;
-  top: 50%;
-  left: max(24px, calc((100vw - 1320px) / 2));
+  top: 88px;
+  right: 32px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(320px, calc(100vw - 48px));
@@ -14,12 +14,19 @@
   gap: 12px;
   overflow-y: auto;
   padding: 18px;
-  transform: translateY(-50%);
   border: 1px solid var(--border-strong);
   border-radius: 12px;
   background: var(--bg-panel);
   box-shadow: var(--shadow-soft);
   color: var(--text);
+}
+
+@media (min-width: 721px) and (max-width: 1100px) {
+  .word-of-day {
+    top: auto;
+    right: 24px;
+    bottom: 24px;
+  }
 }
 
 .word-of-day__heading {
@@ -89,6 +96,7 @@ h2 {
 @media (max-width: 720px) {
   .word-of-day {
     top: auto;
+    right: auto;
     bottom: calc(var(--mobile-page-gutter) + 215px);
     left: var(--mobile-page-gutter);
     width: min(360px, calc(100vw - (2 * var(--mobile-page-gutter))));

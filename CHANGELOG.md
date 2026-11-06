@@ -96,6 +96,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- The home page word of the day now sits below the sound control at the right of the hero on wide screens, and moves to the lower right on narrower desktop screens so it stays clear of the headline and description ([#519](https://github.com/anthonyturner/rivals-pulse-web/pull/519)).
 - The home page word of the day now selects from the full glossary, so Marvel Rivals terms listed under categories such as Positioning and Coach Term can appear ([#516](https://github.com/anthonyturner/rivals-pulse-web/pull/516)).
 - On a hero page the hero list, the hero details and the YouTube column now start at the same height, and from 1280px wide the list and the YouTube column stay level as you scroll. The YouTube column came down and the hero details moved up by 20px to meet the top of the hero list ([#464](https://github.com/anthonyturner/rivals-pulse-web/issues/464)).
 - On a hero page, when the hero panel is narrow (up to about 720px wide, as at 1280px, 1366px and 1920px screens, where the roster or the videos sit beside it), the portrait, name and base stats now sit above the overview instead of in a column beside it, so there is no tall empty space under the portrait; the base stats lay out side by side. Wider panels (around 1100px screens) and phones look as before ([#438](https://github.com/anthonyturner/rivals-pulse-web/issues/438)).
