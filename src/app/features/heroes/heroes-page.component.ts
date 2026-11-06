@@ -17,10 +17,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, filter, forkJoin, map, pairwise } from 'rxjs';
 
-import {
-  HERO_GUIDES,
-  HeroUltimateGuide,
-} from '../learning/guides/hero-guides/hero-guide-data';
+import { HERO_GUIDES, HeroUltimateGuide } from '../learning/guides/hero-guides/hero-guide-data';
 import type { CommunityKills } from '../../../contracts/community-kills.model';
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
 import type { CommunityHeroScores } from '../../../contracts/hero-scores.model';
@@ -31,9 +28,13 @@ import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroScoresService } from './hero-scores.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
-import { HeroGridComponent, HeroGridLayout, HeroGridMode, HeroRoleFilter } from './hero-grid/hero-grid.component';
+import {
+  HeroGridComponent,
+  HeroGridLayout,
+  HeroGridMode,
+  HeroRoleFilter,
+} from './hero-grid/hero-grid.component';
 import { HeroPageHeaderComponent } from './hero-page-header/hero-page-header.component';
-import { HeroVideosComponent } from './hero-videos/hero-videos.component';
 import { parseRoleFilter, ROLE_QUERY_PARAM, SEARCH_QUERY_PARAM } from './hero-roster-query';
 import {
   Hero,
@@ -49,7 +50,6 @@ import {
   HeroVideoType,
 } from './hero.model';
 
-import { SidebarContentDirective } from '../../core/layout/sidebar/sidebar-content';
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
 
@@ -92,8 +92,6 @@ interface FandomOverviewSection {
     HeroContentComponent,
     HeroGridComponent,
     HeroPageHeaderComponent,
-    HeroVideosComponent,
-    SidebarContentDirective,
     StatePanelComponent,
   ],
   templateUrl: './heroes-page.component.html',
@@ -145,9 +143,14 @@ export class HeroesPageComponent implements OnInit {
     initialValue: this.route.snapshot.paramMap.get('heroId') ?? '',
   });
   /** On a hero page the roster is the compact list that goes with the detail (a column, or a strip on narrow screens); on the landing it is the full grid. */
-  readonly gridLayout = computed<HeroGridLayout>(() => (this.selectedHeroId() === '' ? 'grid' : 'roster'));
+  readonly gridLayout = computed<HeroGridLayout>(() =>
+    this.selectedHeroId() === '' ? 'grid' : 'roster',
+  );
   /** Chosen role filter's kit when there is one; resets when the role filter or the hero changes. */
-  readonly selectedAbilityKitRole = linkedSignal<{ role: HeroRoleFilter; heroId: string }, HeroRole>({
+  readonly selectedAbilityKitRole = linkedSignal<
+    { role: HeroRoleFilter; heroId: string },
+    HeroRole
+  >({
     source: () => ({ role: this.selectedRole(), heroId: this.selectedHeroId() }),
     computation: ({ role }) => (role === 'All' ? 'Vanguard' : role),
   });

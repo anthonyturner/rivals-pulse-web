@@ -35,7 +35,11 @@
         @for (detail of controller.officialBaseStats(hero); track detail.label + detail.value) {
         <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
           <span class="stat-icon" aria-hidden="true">
-            <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
+                <img
+                  class="inline-icon"
+                  [src]="controller.technicalDetailIcon(detail.label)"
+                  alt=""
+                />
           </span>
           <div class="stat-copy">
             <dt>{{ detail.label }}</dt>
@@ -48,51 +52,145 @@
     </div>
   </div>
 
-  <nav class="hero-jump-nav" aria-label="Hero sections">
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-overview-' + hero.id">Overview</a>
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-abilities-' + hero.id">Abilities</a>
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-build-signals-' + hero.id">Build signals</a>
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-matchups-' + hero.id">Matchups</a>
+  <div
+    class="hero-section-tabs"
+    role="tablist"
+    aria-label="Hero details"
+    aria-orientation="horizontal"
+    (keydown)="handleSectionTabKeydown($event)"
+  >
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-overview-' + hero.id"
+      [attr.aria-controls]="'hero-panel-overview-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'overview'"
+      [attr.tabindex]="selectedSection() === 'overview' ? 0 : -1"
+      [attr.data-section]="'overview'"
+      [class.active]="selectedSection() === 'overview'"
+      (click)="selectSection('overview')"
+    >
+      Overview
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-abilities-' + hero.id"
+      [attr.aria-controls]="'hero-panel-abilities-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'abilities'"
+      [attr.tabindex]="selectedSection() === 'abilities' ? 0 : -1"
+      [attr.data-section]="'abilities'"
+      [class.active]="selectedSection() === 'abilities'"
+      (click)="selectSection('abilities')"
+    >
+      Abilities
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-build-signals-' + hero.id"
+      [attr.aria-controls]="'hero-panel-build-signals-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'build-signals'"
+      [attr.tabindex]="selectedSection() === 'build-signals' ? 0 : -1"
+      [attr.data-section]="'build-signals'"
+      [class.active]="selectedSection() === 'build-signals'"
+      (click)="selectSection('build-signals')"
+    >
+      Build Signals
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-matchups-' + hero.id"
+      [attr.aria-controls]="'hero-panel-matchups-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'matchups'"
+      [attr.tabindex]="selectedSection() === 'matchups' ? 0 : -1"
+      [attr.data-section]="'matchups'"
+      [class.active]="selectedSection() === 'matchups'"
+      (click)="selectSection('matchups')"
+    >
+      Matchups
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-stats-' + hero.id"
+      [attr.aria-controls]="'hero-panel-stats-' + hero.id"
+      [attr.aria-selected]="selectedSection() === 'stats'"
+      [attr.tabindex]="selectedSection() === 'stats' ? 0 : -1"
+      [attr.data-section]="'stats'"
+      [class.active]="selectedSection() === 'stats'"
+      (click)="selectSection('stats')"
+    >
+      Stats
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [id]="'hero-tab-strategy-' + hero.id"
+      [attr.aria-controls]="
+        'hero-panel-strategy-' + hero.id + ' hero-panel-strategy-continuation-' + hero.id
+      "
+      [attr.aria-selected]="selectedSection() === 'strategy'"
+      [attr.tabindex]="selectedSection() === 'strategy' ? 0 : -1"
+      [attr.data-section]="'strategy'"
+      [class.active]="selectedSection() === 'strategy'"
+      (click)="selectSection('strategy')"
+    >
+      Strategy
+    </button>
     @if (controller.hasTeamUpAbilities(hero)) {
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-team-ups-' + hero.id">Team-ups</a>
+      <button
+        type="button"
+        role="tab"
+        [id]="'hero-tab-team-ups-' + hero.id"
+        [attr.aria-controls]="'hero-panel-team-ups-' + hero.id"
+        [attr.aria-selected]="selectedSection() === 'team-ups'"
+        [attr.tabindex]="selectedSection() === 'team-ups' ? 0 : -1"
+        [attr.data-section]="'team-ups'"
+        [class.active]="selectedSection() === 'team-ups'"
+        (click)="selectSection('team-ups')"
+      >
+        Team-Ups
+      </button>
     }
     @if (controller.selectedHeroVideos().length > 0) {
-    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-videos-' + hero.id">Videos</a>
+      <button
+        type="button"
+        role="tab"
+        [id]="'hero-tab-videos-' + hero.id"
+        [attr.aria-controls]="'hero-panel-videos-' + hero.id"
+        [attr.aria-selected]="selectedSection() === 'videos'"
+        [attr.tabindex]="selectedSection() === 'videos' ? 0 : -1"
+        [attr.data-section]="'videos'"
+        [class.active]="selectedSection() === 'videos'"
+        (click)="selectSection('videos')"
+    >
+        Videos
+      </button>
     }
-  </nav>
-
-  <section class="hero-guide-grid" aria-label="Hero quick guide">
-    <app-hero-community-counters
-      class="hero-guide-card hero-guide-card--matchups"
-      [attr.id]="'hero-matchups-' + hero.id"
-      [heroId]="hero.id"
-      [heroName]="hero.name"
-      [matchups]="controller.heroMatchups()"
-      [roster]="controller.heroRoster()"
-    />
-
-    <section
-      class="hero-build-profile hero-guide-card"
-      [attr.id]="'hero-build-signals-' + hero.id"
-      [attr.aria-labelledby]="'hero-build-signals-title-' + hero.id"
-    >
-      <div class="section-heading">
-        <h3 [id]="'hero-build-signals-title-' + hero.id">Build signals</h3>
       </div>
-      <p class="section-note">Scores out of 10, from match data and the hero's kit.</p>
-      <app-hero-build-signals [heroId]="hero.id" [scores]="controller.heroScores()" />
-    </section>
 
+  <div class="hero-section-stage">
     <section
-      class="overview-panel hero-guide-card"
-      [attr.id]="'hero-overview-' + hero.id"
-      [attr.aria-labelledby]="'hero-overview-title-' + hero.id"
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-overview-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-overview-' + hero.id"
+      [hidden]="selectedSection() !== 'overview'"
     >
+      <section class="overview-panel" [attr.aria-labelledby]="'hero-overview-title-' + hero.id">
       <div class="section-heading">
         <h3 [id]="'hero-overview-title-' + hero.id">
           {{ hero.officialSource ? 'Official Overview' : 'Fandom Overview' }}
         </h3>
-        <a [href]="controller.officialHeroSourceUrl(hero)" target="_blank" rel="noopener noreferrer">Source</a>
+          <a
+            [href]="controller.officialHeroSourceUrl(hero)"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Source</a
+          >
       </div>
       @for (section of controller.fandomOverviewSections(hero); track section.title) {
       <article class="overview-section">
@@ -108,15 +206,68 @@
     </section>
   </section>
 
-  <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-build-signals-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-build-signals-' + hero.id"
+      [hidden]="selectedSection() !== 'build-signals'"
+    >
+      <section class="hero-build-profile">
+        <div class="section-heading">
+          <h3>Build signals</h3>
+        </div>
+        <p class="section-note">Scores out of 10, from match data and the hero's kit.</p>
+        <app-hero-build-signals [heroId]="hero.id" [scores]="controller.heroScores()" />
+      </section>
+    </section>
 
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-matchups-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-matchups-' + hero.id"
+      [hidden]="selectedSection() !== 'matchups'"
+    >
+      <app-hero-community-counters
+        [heroId]="hero.id"
+        [heroName]="hero.name"
+        [matchups]="controller.heroMatchups()"
+        [roster]="controller.heroRoster()"
+      />
+    </section>
+
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-stats-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-stats-' + hero.id"
+      [hidden]="selectedSection() !== 'stats'"
+    >
+      <app-hero-community-stats
+        [heroId]="hero.id"
+        [heroName]="hero.name"
+        [stats]="controller.heroStats()"
+      />
   <app-hero-kill-feed
     [heroId]="hero.id"
     [heroName]="hero.name"
     [kills]="controller.heroKills()"
     [roster]="controller.heroRoster()"
   />
+    </section>
 
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-strategy-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-strategy-' + hero.id"
+      [hidden]="selectedSection() !== 'strategy'"
+    >
   @if (hero.gameplayArchetypes?.length) {
   <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
     <div class="section-heading">
@@ -150,7 +301,9 @@
       <span>Playstyle</span>
       <p
         class="strategy-playstyle-lead"
-        [innerHTML]="controller.highlightedAbilityText(hero, controller.displayedPlaystyle(hero))"
+              [innerHTML]="
+                controller.highlightedAbilityText(hero, controller.displayedPlaystyle(hero))
+              "
       ></p>
       @for (paragraph of controller.strategyPlaystyleNotes(hero, strategy); track paragraph) {
       <p [innerHTML]="controller.highlightedOverviewText(hero, paragraph)"></p>
@@ -163,7 +316,9 @@
         @for (situation of strategy.situations; track situation.label) {
         <li>
           <strong>{{ situation.label }}</strong>
-          <p [innerHTML]="controller.highlightedOverviewText(hero, situation.description)"></p>
+                  <p
+                    [innerHTML]="controller.highlightedOverviewText(hero, situation.description)"
+                  ></p>
         </li>
         }
       </ul>
@@ -201,16 +356,34 @@
           <img [src]="synergyHero.imageUrl" [alt]="synergyHero.name" />
         </span>
         } @else {
-        <span class="hero-matchup-chip icon-chip" [title]="synergy" [attr.aria-label]="synergy">
-          <img class="inline-icon" [src]="controller.synergyIcon(synergy)" alt="" aria-hidden="true" />
+                <span
+                  class="hero-matchup-chip icon-chip"
+                  [title]="synergy"
+                  [attr.aria-label]="synergy"
+                >
+                  <img
+                    class="inline-icon"
+                    [src]="controller.synergyIcon(synergy)"
+                    alt=""
+                    aria-hidden="true"
+                  />
         </span>
         }
         }
       </div>
     </section>
   </div>
+    </section>
 
-  <section class="abilities" [attr.id]="'hero-abilities-' + hero.id">
+    <section
+      class="hero-tab-panel"
+      role="tabpanel"
+      tabindex="0"
+      [id]="'hero-panel-abilities-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-abilities-' + hero.id"
+      [hidden]="selectedSection() !== 'abilities'"
+    >
+      <section class="abilities">
     <div class="section-heading ability-heading">
       <h3>Abilities</h3>
     </div>
@@ -222,21 +395,37 @@
 
       <div class="ability-tabs" role="tablist" aria-label="Passive ability tabs">
         @for (ability of controller.passiveAbilities(hero); track ability.name) {
-        <button type="button" role="tab" [class.active]="
-                controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name === ability.name
-              " [attr.aria-selected]="
-                controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name === ability.name
-              " [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
-          (click)="controller.selectAbilityTab(hero, ability)">
+                <button
+                  type="button"
+                  role="tab"
+                  [class.active]="
+                    controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name ===
+                    ability.name
+                  "
+                  [attr.aria-selected]="
+                    controller.selectedAbilityTab(hero, controller.passiveAbilities(hero))?.name ===
+                    ability.name
+                  "
+                  [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
+                  (click)="controller.selectAbilityTab(hero, ability)"
+                >
           <span>{{ ability.type }}</span>
           <small>{{ ability.name }}</small>
         </button>
         }
       </div>
 
-      @if (controller.selectedAbilityTab(hero, controller.passiveAbilities(hero)); as ability) {
-      <article [id]="controller.abilityAnchorId(hero, ability)" role="tabpanel"
-        [class.highlighted]="controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)">
+            @if (
+              controller.selectedAbilityTab(hero, controller.passiveAbilities(hero));
+              as ability
+            ) {
+              <article
+                [id]="controller.abilityAnchorId(hero, ability)"
+                role="tabpanel"
+                [class.highlighted]="
+                  controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)
+                "
+              >
         <span>{{ ability.type }}</span>
         <strong>{{ ability.name }}</strong>
         <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
@@ -244,9 +433,15 @@
         <h4>Stats & formulas</h4>
         <dl class="technical-details" aria-label="Passive ability technical details">
           @for (detail of ability.technicalDetails; track detail.label + detail.value) {
-          <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
+                      <div
+                        [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)"
+                      >
             <span class="stat-icon" aria-hidden="true">
-              <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
+                          <img
+                            class="inline-icon"
+                            [src]="controller.technicalDetailIcon(detail.label)"
+                            alt=""
+                          />
             </span>
             <div class="stat-copy">
               <dt>{{ detail.label }}</dt>
@@ -266,12 +461,20 @@
       </div>
       <div class="ability-tabs" role="tablist" aria-label="Ability tabs">
         @for (ability of controller.normalAbilities(hero); track ability.name) {
-        <button type="button" role="tab" [class.active]="
-              controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name === ability.name
-            " [attr.aria-selected]="
-              controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name === ability.name
-            " [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
-          (click)="controller.selectAbilityTab(hero, ability)">
+              <button
+                type="button"
+                role="tab"
+                [class.active]="
+                  controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-selected]="
+                  controller.selectedAbilityTab(hero, controller.normalAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
+                (click)="controller.selectAbilityTab(hero, ability)"
+              >
           <span>{{ ability.type }}</span>
           <small>{{ ability.name }}</small>
         </button>
@@ -279,8 +482,13 @@
       </div>
 
       @if (controller.selectedAbilityTab(hero, controller.normalAbilities(hero)); as ability) {
-      <article [id]="controller.abilityAnchorId(hero, ability)" role="tabpanel"
-        [class.highlighted]="controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)">
+            <article
+              [id]="controller.abilityAnchorId(hero, ability)"
+              role="tabpanel"
+              [class.highlighted]="
+                controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)
+              "
+            >
         <span>{{ ability.type }}</span>
         <strong>{{ ability.name }}</strong>
         <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
@@ -290,7 +498,11 @@
           @for (detail of ability.technicalDetails; track detail.label + detail.value) {
           <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
             <span class="stat-icon" aria-hidden="true">
-              <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
+                        <img
+                          class="inline-icon"
+                          [src]="controller.technicalDetailIcon(detail.label)"
+                          alt=""
+                        />
             </span>
             <div class="stat-copy">
               <dt>{{ detail.label }}</dt>
@@ -303,19 +515,37 @@
       </article>
       }
     </section>
+      </section>
+    </section>
     @if (controller.hasTeamUpAbilities(hero)) {
-    <section class="abilities" [attr.id]="'hero-team-ups-' + hero.id">
+      <section
+        class="hero-tab-panel"
+        role="tabpanel"
+        tabindex="0"
+        [id]="'hero-panel-team-ups-' + hero.id"
+        [attr.aria-labelledby]="'hero-tab-team-ups-' + hero.id"
+        [hidden]="selectedSection() !== 'team-ups'"
+      >
+        <section class="abilities">
       <div class="section-heading ability-heading">
         <h3>Team-Up Abilities</h3>
       </div>
       <div class="ability-tabs" role="tablist" aria-label="Team-up ability tabs">
         @for (ability of controller.teamUpAbilities(hero); track ability.name) {
-        <button type="button" role="tab" [class.active]="
-                controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name === ability.name
-              " [attr.aria-selected]="
-                controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name === ability.name
-              " [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
-          (click)="controller.selectAbilityTab(hero, ability)">
+              <button
+                type="button"
+                role="tab"
+                [class.active]="
+                  controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-selected]="
+                  controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero))?.name ===
+                  ability.name
+                "
+                [attr.aria-controls]="controller.abilityAnchorId(hero, ability)"
+                (click)="controller.selectAbilityTab(hero, ability)"
+              >
           <span>{{ ability.type }}</span>
           <small>{{ ability.name }}</small>
         </button>
@@ -323,8 +553,13 @@
       </div>
 
       @if (controller.selectedAbilityTab(hero, controller.teamUpAbilities(hero)); as ability) {
-      <article [id]="controller.abilityAnchorId(hero, ability)" role="tabpanel"
-        [class.highlighted]="controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)">
+            <article
+              [id]="controller.abilityAnchorId(hero, ability)"
+              role="tabpanel"
+              [class.highlighted]="
+                controller.activeAbilityAnchorId() === controller.abilityAnchorId(hero, ability)
+              "
+            >
         <span>{{ ability.type }}</span>
         <strong>{{ ability.name }}</strong>
         <p [innerHTML]="controller.highlightedAbilityText(hero, ability.description)"></p>
@@ -334,7 +569,11 @@
           @for (detail of ability.technicalDetails; track detail.label + detail.value) {
           <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
             <span class="stat-icon" aria-hidden="true">
-              <img class="inline-icon" [src]="controller.technicalDetailIcon(detail.label)" alt="" />
+                        <img
+                          class="inline-icon"
+                          [src]="controller.technicalDetailIcon(detail.label)"
+                          alt=""
+                        />
             </span>
             <div class="stat-copy">
               <dt>{{ detail.label }}</dt>
@@ -347,9 +586,17 @@
       </article>
       }
     </section>
-    }
   </section>
+    }
 
+    <section
+      class="hero-tab-panel hero-tab-panel--strategy-continuation"
+      role="group"
+      tabindex="-1"
+      [id]="'hero-panel-strategy-continuation-' + hero.id"
+      [attr.aria-labelledby]="'hero-tab-strategy-' + hero.id"
+      [hidden]="selectedSection() !== 'strategy'"
+    >
   @if (controller.displayedPlaystyleGuides(hero).length > 0) {
   <details class="collapsible deadpool-upgrades">
     <summary class="section-heading">
@@ -403,13 +650,17 @@
       @for (ultimate of controller.ultimateStrategies(hero); track ultimate.ability.name) {
       <article>
         <span>{{ ultimate.ability.name }}</span>
-        <p class="ultimate-source" [innerHTML]="controller.highlightedAbilityText(hero, ultimate.sourceDescription)"></p>
+                <p
+                  class="ultimate-source"
+                  [innerHTML]="controller.highlightedAbilityText(hero, ultimate.sourceDescription)"
+                ></p>
         <p [innerHTML]="controller.highlightedAbilityText(hero, ultimate.strategy)"></p>
       </article>
       }
 
       @if (
-      controller.deadpoolVanguardUltimatePaths(hero).length > 0 && controller.activeDeadpoolUltimatePath(hero);
+              controller.deadpoolVanguardUltimatePaths(hero).length > 0 &&
+                controller.activeDeadpoolUltimatePath(hero);
       as activePath
       ) {
       <section class="ultimate-paths" aria-labelledby="deadpool-ultimate-path-title">
@@ -420,11 +671,19 @@
           </div>
         </div>
 
-        <div class="ultimate-path-tabs" role="tablist" aria-label="Vanguard Deadpool ultimate paths">
+                <div
+                  class="ultimate-path-tabs"
+                  role="tablist"
+                  aria-label="Vanguard Deadpool ultimate paths"
+                >
           @for (path of controller.deadpoolVanguardUltimatePaths(hero); track path.name) {
-          <button type="button" role="tab" [class.active]="activePath.name === path.name"
+                    <button
+                      type="button"
+                      role="tab"
+                      [class.active]="activePath.name === path.name"
             [attr.aria-selected]="activePath.name === path.name"
-            (click)="controller.selectDeadpoolUltimatePath(path.name)">
+                      (click)="controller.selectDeadpoolUltimatePath(path.name)"
+                    >
             {{ path.name }}
           </button>
           }
@@ -468,10 +727,14 @@
       }
 
       @if (
-      controller.deadpoolVanguardAggressivePaths(hero).length > 0 && controller.activeDeadpoolAggressivePath(hero);
+              controller.deadpoolVanguardAggressivePaths(hero).length > 0 &&
+                controller.activeDeadpoolAggressivePath(hero);
       as activePath
       ) {
-      <section class="deadpool-upgrades aggressive-paths" aria-labelledby="deadpool-aggressive-path-title">
+              <section
+                class="deadpool-upgrades aggressive-paths"
+                aria-labelledby="deadpool-aggressive-path-title"
+              >
         <div class="section-heading">
           <div>
             <h3 id="deadpool-aggressive-path-title">Aggressive Paths</h3>
@@ -479,10 +742,19 @@
           </div>
         </div>
 
-        <div class="aggressive-path-tabs" role="tablist" aria-label="Vanguard Deadpool aggressive upgrade paths">
+                <div
+                  class="aggressive-path-tabs"
+                  role="tablist"
+                  aria-label="Vanguard Deadpool aggressive upgrade paths"
+                >
           @for (path of controller.deadpoolVanguardAggressivePaths(hero); track path.id) {
-          <button type="button" role="tab" [class.active]="activePath.id === path.id"
-            [attr.aria-selected]="activePath.id === path.id" (click)="controller.selectDeadpoolAggressivePath(path.id)">
+                    <button
+                      type="button"
+                      role="tab"
+                      [class.active]="activePath.id === path.id"
+                      [attr.aria-selected]="activePath.id === path.id"
+                      (click)="controller.selectDeadpoolAggressivePath(path.id)"
+                    >
             {{ path.title }}
           </button>
           }
@@ -515,7 +787,8 @@
   }
 
   @if (
-  controller.deadpoolUpgradeOrder(hero).length > 0 && controller.deadpoolVanguardAggressivePaths(hero).length === 0
+        controller.deadpoolUpgradeOrder(hero).length > 0 &&
+        controller.deadpoolVanguardAggressivePaths(hero).length === 0
   ) {
   <details class="collapsible deadpool-upgrades">
     <summary class="section-heading">
@@ -542,5 +815,22 @@
     </div>
   </details>
   }
-
+    </section>
+    @if (controller.selectedHeroVideos().length > 0) {
+      <section
+        class="hero-tab-panel"
+        role="tabpanel"
+        tabindex="0"
+        [id]="'hero-panel-videos-' + hero.id"
+        [attr.aria-labelledby]="'hero-tab-videos-' + hero.id"
+        [hidden]="selectedSection() !== 'videos'"
+      >
+        <app-hero-videos
+          [heroName]="hero.name"
+          [videos]="controller.selectedHeroVideos()"
+          [youtubeUrl]="controller.selectedHeroYoutubeUrl()"
+        />
+      </section>
+    }
+  </div>
 </div>

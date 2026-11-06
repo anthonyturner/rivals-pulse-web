@@ -22,21 +22,7 @@
         (filtersReset)="resetHeroFilters()"
       ></app-hero-grid>
 
-      <app-hero-content
-        [hero]="selectedHero()"
-        [controller]="detailsController"
-      ></app-hero-content>
+      <app-hero-content [hero]="selectedHero()" [controller]="detailsController"></app-hero-content>
     </div>
-
-    @if (selectedHero(); as hero) {
-      <ng-template appSidebarContent>
-        <app-hero-videos
-          [attr.id]="'hero-videos-' + hero.id"
-          [heroName]="hero.name"
-          [videos]="selectedHeroVideos()"
-          [youtubeUrl]="selectedHeroYoutubeUrl()"
-        ></app-hero-videos>
-      </ng-template>
-    }
   }
 </section>
