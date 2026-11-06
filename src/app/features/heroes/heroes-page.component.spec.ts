@@ -62,7 +62,7 @@ describe('HeroesPageComponent', () => {
           hero('storm', 'Storm', 'Duelist'),
           hero('thor', 'Thor', 'Vanguard'),
         ]),
-      );
+    );
     http.match('/api/hero-videos').forEach((request) => request.flush([]));
     fixture.detectChanges();
     await fixture.whenStable();

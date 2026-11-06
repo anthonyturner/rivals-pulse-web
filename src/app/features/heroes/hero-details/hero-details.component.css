@@ -25,10 +25,10 @@
   box-shadow: var(--heroes-box-shadow);
 }
 
-.hero-build-profile > .section-heading,
-.ultimate-strategies > .section-heading,
-.deadpool-upgrades > .section-heading,
-.abilities > .section-heading {
+.hero-build-profile>.section-heading,
+.ultimate-strategies>.section-heading,
+.deadpool-upgrades>.section-heading,
+.abilities>.section-heading {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-strong);
 }
@@ -270,7 +270,7 @@ h3 {
   background: var(--bg-panel);
 }
 
-.ultimate-path-panel > strong {
+.ultimate-path-panel>strong {
   color: var(--accent-strong);
   font-size: 0.95rem;
 }
@@ -353,11 +353,11 @@ h3 {
   gap: 10px;
 }
 
-.aggressive-path-panel > strong {
+.aggressive-path-panel>strong {
   color: var(--accent-strong);
 }
 
-.aggressive-path-panel > p {
+.aggressive-path-panel>p {
   color: var(--text);
   line-height: 1.5;
 }
@@ -397,7 +397,7 @@ h3 {
   background: var(--bg-panel);
 }
 
-.deadpool-upgrades li > span {
+.deadpool-upgrades li>span {
   display: grid;
   width: 30px;
   aspect-ratio: 1;
@@ -427,7 +427,7 @@ h3 {
   font-weight: 700;
 }
 
-.deadpool-upgrades article > a {
+.deadpool-upgrades article>a {
   color: var(--accent-strong);
   font-size: 0.78rem;
   font-weight: 750;
@@ -777,8 +777,8 @@ details.collapsible {
   inset: 0;
   background: linear-gradient(
     120deg,
-    transparent 0 38%,
-    color-mix(in srgb, var(--text) 10%, transparent) 42%,
+      transparent 0 38%,
+      color-mix(in srgb, var(--text) 10%, transparent) 42%,
     transparent 48%
   );
   content: '';
@@ -915,7 +915,7 @@ details.collapsible {
   background: var(--bg-elevated) !important;
 }
 
-.gameplay-archetypes .section-heading > div {
+.gameplay-archetypes .section-heading>div {
   display: grid;
   gap: 3px;
 }

@@ -211,7 +211,7 @@ describe('HeroDetailsComponent', () => {
 
     expect(element.querySelector('#hero-tab-overview-mantis')?.getAttribute('aria-selected')).toBe(
       'true',
-    );
+        );
   });
 
   it('returns to Overview when a different hero is selected', () => {
