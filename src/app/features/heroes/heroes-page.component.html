@@ -31,6 +31,7 @@
     @if (selectedHero(); as hero) {
       <ng-template appSidebarContent>
         <app-hero-videos
+          [attr.id]="'hero-videos-' + hero.id"
           [heroName]="hero.name"
           [videos]="selectedHeroVideos()"
           [youtubeUrl]="selectedHeroYoutubeUrl()"

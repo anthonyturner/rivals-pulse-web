@@ -659,6 +659,78 @@ details.collapsible {
   line-height: 1.5;
 }
 
+.detail-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-hero-tags li {
+  padding: 5px 9px;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: var(--ink-raised);
+  color: var(--on-ink-muted);
+  font-size: var(--type-caption);
+  line-height: 1.25;
+}
+
+.hero-jump-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
+}
+
+.hero-jump-nav a {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--link);
+  font-size: var(--type-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hero-jump-nav a:hover {
+  background: var(--bg-panel-soft);
+}
+
+.hero-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 10px;
+}
+
+.hero-guide-card {
+  min-width: 0;
+  scroll-margin-block-start: 1rem;
+}
+
+.hero-guide-card--matchups {
+  align-self: start;
+}
+
+.hero-guide-card .section-heading {
+  margin: 0;
+}
+
+.hero-guide-card .overview-section p {
+  overflow-wrap: anywhere;
+}
+
+.hero-jump-nav,
+.hero-guide-grid,
+.abilities {
+  scroll-margin-block-start: 1rem;
+}
+
 .detail-hero-summary .hero-base-stats {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
 }
@@ -974,6 +1046,10 @@ details.collapsible {
 @container (max-width: 720px) {
   .detail-hero-profile {
     padding: 14px;
+  }
+
+  .hero-guide-grid {
+    grid-template-columns: 1fr;
   }
 }
 

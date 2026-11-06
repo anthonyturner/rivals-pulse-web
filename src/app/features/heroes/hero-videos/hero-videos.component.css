@@ -1,5 +1,6 @@
 :host {
   display: block;
+  scroll-margin-block-start: 1rem;
 }
 
 .hero-videos {

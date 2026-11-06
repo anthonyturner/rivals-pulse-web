@@ -37,15 +37,12 @@ describe('HeroDetailsComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('starts the long sections collapsed', () => {
-    const sections = Array.from(render().querySelectorAll<HTMLDetailsElement>('details.collapsible'));
+  it('renders build signals once in the quick guide', () => {
+    const element = render();
 
-    expect(sections.length).toBeGreaterThan(0);
-    expect(sections.some((section) => section.open)).toBeFalse();
-    expect(sections.map((section) => section.querySelector('summary h3')?.textContent?.trim())).toContain('Build Signals');
-    expect(sections[0].querySelector('.collapsible-body > .section-note')?.textContent?.trim()).toBe(
-      "Scores out of 10. Mobility comes from the hero's kit, the rest from matches recorded by RivalsPulse players",
-    );
+    expect(element.querySelector('.hero-build-profile h3')?.textContent?.trim()).toBe('Build signals');
+    expect(element.querySelector('.hero-build-profile app-hero-build-signals')).not.toBeNull();
+    expect(element.querySelectorAll('app-hero-build-signals').length).toBe(1);
   });
 
   it('drops the repeated "Overview" label under the overview heading, and makes the hero name focusable', () => {
@@ -75,8 +72,95 @@ describe('HeroDetailsComponent', () => {
     const element = render(officialHero);
 
     expect(element.querySelector('.overview-panel h3')?.textContent?.trim()).toBe('Official Overview');
-    expect(element.querySelector('.overview-panel')?.getAttribute('aria-label')).toBe('Marvel Rivals official overview');
+    expect(element.querySelector('.overview-panel')?.getAttribute('aria-labelledby')).toBe(
+      'hero-overview-title-mantis',
+    );
     expect(element.querySelector('.overview-panel a')?.getAttribute('href')).toBe(officialHero.officialSource?.sourceUrl);
+  });
+
+  it('shows role, matching archetype, and difficulty as data-backed profile tags', () => {
+    const taggedHero = {
+      ...mantis,
+      gameplayArchetypes: [
+        {
+          role: 'Strategist',
+          label: 'Tempo setter',
+          description: 'Controls the pace of a fight.',
+          sourceTitle: 'Guide',
+          sourceUrl: 'https://example.com/guide',
+          timestamp: '1:00',
+        },
+        {
+          role: 'Duelist',
+          label: 'Flanker',
+          description: 'Attacks from the side.',
+          sourceTitle: 'Guide',
+          sourceUrl: 'https://example.com/guide',
+          timestamp: '2:00',
+        },
+      ],
+    } as Hero;
+    const element = render(taggedHero);
+    const tags = element.querySelector('.detail-hero-tags')?.textContent ?? '';
+
+    expect(tags).toContain('Strategist');
+    expect(tags).toContain('Tempo setter');
+    expect(tags).toContain('Difficulty 3/5');
+    expect(tags).not.toContain('Flanker');
+  });
+
+  it('connects jump links to the three guide cards and available hero sections', () => {
+    const element = render();
+    const navigation = element.querySelector('.hero-jump-nav');
+    const links = [...(navigation?.querySelectorAll<HTMLAnchorElement>('a') ?? [])];
+    const localLinks = links.filter((link) => !link.textContent?.includes('Videos'));
+    const cardIds = [...element.querySelectorAll('.hero-guide-grid > [id]')].map((card) => card.id);
+
+    expect(localLinks.map((link) => link.textContent?.trim())).toEqual([
+      'Overview',
+      'Abilities',
+      'Build signals',
+      'Matchups',
+    ]);
+    expect(localLinks.every((link) => element.querySelector(link.getAttribute('href') ?? '') !== null)).toBeTrue();
+    expect(cardIds).toEqual(['hero-matchups-mantis', 'hero-build-signals-mantis', 'hero-overview-mantis']);
+    expect(element.querySelectorAll('.hero-guide-grid app-hero-community-counters').length).toBe(1);
+    expect(element.querySelectorAll('.hero-guide-grid app-hero-build-signals').length).toBe(1);
+    expect(element.querySelectorAll('.hero-guide-grid .overview-panel').length).toBe(1);
+  });
+
+  it('adds the team-up jump link only when the hero has a team-up section', () => {
+    const teamUpHero = {
+      ...mantis,
+      abilities: [{ name: 'Blind Verdict', type: 'Team-Up Ability', description: 'A shared attack.' }],
+    } as Hero;
+    const element = render(teamUpHero);
+    const link = [...element.querySelectorAll<HTMLAnchorElement>('.hero-jump-nav a')].find(
+      (candidate) => candidate.textContent?.trim() === 'Team-ups',
+    );
+
+    expect(link?.getAttribute('href')).toBe('#hero-team-ups-mantis');
+    expect(element.querySelector('#hero-team-ups-mantis h3')?.textContent?.trim()).toBe('Team-Up Abilities');
+  });
+
+  it('shows guide cards in one row when wide and stacks them when narrow', () => {
+    const element = render();
+    element.style.width = '1000px';
+    const getCards = (): DOMRect[] =>
+      [...element.querySelectorAll<HTMLElement>('.hero-guide-grid > [id]')].map((card) => card.getBoundingClientRect());
+    const wideCards = getCards();
+
+    expect(wideCards[1].left).toBeGreaterThan(wideCards[0].left);
+    expect(wideCards[1].top).toBe(wideCards[0].top);
+    expect(wideCards[2].left).toBeGreaterThan(wideCards[1].left);
+
+    element.style.width = '520px';
+    const narrowCards = getCards();
+
+    expect(narrowCards[1].left).toBe(narrowCards[0].left);
+    expect(narrowCards[2].left).toBe(narrowCards[0].left);
+    expect(narrowCards[1].top).toBeGreaterThanOrEqual(narrowCards[0].bottom);
+    expect(narrowCards[2].top).toBeGreaterThanOrEqual(narrowCards[1].bottom);
   });
 
   it("puts the hero's role above the name, and nowhere else", () => {
