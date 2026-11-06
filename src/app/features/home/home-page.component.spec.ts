@@ -33,6 +33,7 @@ describe('HomePageComponent', () => {
       tiers: [],
       belowMinimum: [],
     });
+    http.expectOne('/api/glossary').flush([]);
     await settle();
   });
 

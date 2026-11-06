@@ -28,6 +28,7 @@ import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
+import { WordOfDayComponent } from './word-of-day/word-of-day.component';
 
 /** Tells `styles.css` to leave room below the footer for the minimized tab, which would otherwise cover its last line. */
 const RESERVE_CLASS = 'has-minimized-video';
@@ -50,6 +51,7 @@ type VideoPlacement = 'hero' | 'floating' | 'minimized' | 'foreground';
     OverlaySectionComponent,
     RouterLink,
     ToolsRowComponent,
+    WordOfDayComponent,
   ],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css',
