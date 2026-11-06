@@ -122,7 +122,19 @@ describe('HeroDetailsComponent', () => {
       'Build signals',
       'Matchups',
     ]);
-    expect(localLinks.every((link) => element.querySelector(link.getAttribute('href') ?? '') !== null)).toBeTrue();
+    expect(
+      localLinks.every((link) => {
+        const href = link.getAttribute('href') ?? '';
+        const fragment = new URL(href, document.baseURI).hash;
+
+        return (
+          link.getAttribute('routerlink') === '.' &&
+          link.getAttribute('queryparamshandling') === 'preserve' &&
+          fragment !== '' &&
+          element.querySelector(fragment) !== null
+        );
+      }),
+    ).toBeTrue();
     expect(cardIds).toEqual(['hero-matchups-mantis', 'hero-build-signals-mantis', 'hero-overview-mantis']);
     expect(element.querySelectorAll('.hero-guide-grid app-hero-community-counters').length).toBe(1);
     expect(element.querySelectorAll('.hero-guide-grid app-hero-build-signals').length).toBe(1);
@@ -139,7 +151,8 @@ describe('HeroDetailsComponent', () => {
       (candidate) => candidate.textContent?.trim() === 'Team-ups',
     );
 
-    expect(link?.getAttribute('href')).toBe('#hero-team-ups-mantis');
+    expect(link?.getAttribute('routerlink')).toBe('.');
+    expect(new URL(link?.getAttribute('href') ?? '', document.baseURI).hash).toBe('#hero-team-ups-mantis');
     expect(element.querySelector('#hero-team-ups-mantis h3')?.textContent?.trim()).toBe('Team-Up Abilities');
   });
 
