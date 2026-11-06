@@ -192,6 +192,17 @@
   padding-top: clamp(18px, 3vw, 40px);
 }
 
+@media (min-width: 721px) and (max-width: 1200px) {
+  .season-hero {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    column-gap: 24px;
+  }
+
+  .hero-copy {
+    max-width: none;
+  }
+}
+
 h1,
 h2,
 h3,
