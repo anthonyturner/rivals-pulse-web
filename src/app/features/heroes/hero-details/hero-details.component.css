@@ -90,11 +90,16 @@
   --eyebrow-color: var(--on-ink-muted);
 }
 
-.detail-hero-summary {
+.detail-hero-facts {
   display: grid;
-  gap: 12px;
-  min-width: 0;
-  padding: 4px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.detail-hero-facts .difficulty {
+  margin-top: 0;
 }
 
 app-eyebrow {
@@ -708,14 +713,6 @@ details.collapsible {
   display: none;
 }
 
-.detail-hero-summary .hero-base-stats {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-}
-
-.detail-hero-summary .hero-base-stats .stat-card {
-  grid-column: auto;
-}
-
 .detail-hero-container .overview-section p,
 .detail-hero-container .strategy-playstyle p {
   max-width: 70ch;
@@ -803,7 +800,8 @@ details.collapsible {
 }
 
 .hero-base-stats {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .technical-details .stat-card {
@@ -817,13 +815,6 @@ details.collapsible {
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: var(--bg-panel);
-}
-
-.hero-base-stats .stat-card,
-.hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 1),
-.hero-base-stats .stat-card:nth-last-child(2):nth-child(3n + 1),
-.hero-base-stats .stat-card:nth-last-child(1):nth-child(3n + 2) {
-  grid-column: 1 / -1;
 }
 
 .technical-details .stat-card:nth-last-child(1):nth-child(3n + 1) {
@@ -1031,6 +1022,33 @@ details.collapsible {
   .detail-hero-profile {
     padding: 14px;
   }
+
+  .detail-hero-facts {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}
+
+.detail-hero-facts .hero-base-stats .stat-card:nth-child(n) {
+  grid-column: auto;
+  border: 0;
+  border-left: 2px solid var(--ink-accent);
+  border-radius: 4px;
+  background: var(--ink-raised);
+}
+
+.detail-hero-facts .hero-base-stats dt {
+  color: var(--on-ink-muted);
+}
+
+.detail-hero-facts .hero-base-stats dd {
+  color: var(--on-ink);
+}
+
+.detail-hero-facts .hero-base-stats .stat-icon {
+  border-color: var(--ink-line);
+  background: var(--ink);
+  color: var(--ink-accent);
 }
 
 @keyframes ability-focus {
