@@ -2,39 +2,39 @@ import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups
 import { countLabel, percentLabel } from '../../shared/utilities/stat-labels';
 
 /**
- * The reads both counter surfaces share. They describe a record: who has a winning one against a
- * hero, and who that hero has one against. Nothing here scores a hero or says whom to ban.
+ * The counter surfaces share these reads: pair performance compared with each hero's overall
+ * performance. Nothing here scores a hero or says whom to ban.
  */
 
-/** A shrunk win rate above this is a winning record; it is an even one at 50. */
-export const WINNING_RECORD_CUT_OFF = 50;
+/** Minimum advantage over a hero's overall shrunk win rate, matching the overlay. */
+export const MINIMUM_COUNTER_EDGE = 0.03;
+const EDGE_ROUNDING_TOLERANCE = 1e-9;
 
-/** Whether `hero` wins more than it loses against `enemy`, once a short run is pulled toward even. */
-export function hasWinningRecord(matchup: HeroMatchup): boolean {
-  return matchup.shrunkWinRate > WINNING_RECORD_CUT_OFF;
+/** Whether the matchup outperforms this hero's overall record by the shared community threshold. */
+export function hasCounterAdvantage(matchup: HeroMatchup): boolean {
+  return matchup.edge >= MINIMUM_COUNTER_EDGE - EDGE_ROUNDING_TOLERANCE;
 }
 
-/** The matchups of a hero that has a winning record against `enemyId`. */
+/** The counter advantages against `enemyId`. */
 export function winningRecordsAgainst(matchups: HeroMatchups, enemyId: string): HeroMatchup[] {
-  return matchups.matchups.filter((matchup) => matchup.enemy === enemyId && hasWinningRecord(matchup));
+  return matchups.matchups.filter((matchup) => matchup.enemy === enemyId && hasCounterAdvantage(matchup));
 }
 
-/** `heroId`'s own matchups where it has a winning record. */
+/** `heroId`'s own counter advantages against other heroes. */
 export function winningRecordsOf(matchups: HeroMatchups, heroId: string): HeroMatchup[] {
-  return matchups.matchups.filter((matchup) => matchup.hero === heroId && hasWinningRecord(matchup));
+  return matchups.matchups.filter((matchup) => matchup.hero === heroId && hasCounterAdvantage(matchup));
 }
 
 /**
- * The `limit` winning records with the clearest edge: highest shrunk win rate first, then the larger
- * sample, then hero ids so the order never changes between reads. A short run cannot lead the list,
- * because the shrunk rate pulls it toward even.
+ * The `limit` counter advantages with the clearest edge, then the larger sample and hero ids for a
+ * stable order.
  */
 export function strongestRecords(matchups: HeroMatchups, limit: number): HeroMatchup[] {
   return matchups.matchups
-    .filter(hasWinningRecord)
+    .filter(hasCounterAdvantage)
     .sort(
       (a, b) =>
-        b.shrunkWinRate - a.shrunkWinRate ||
+        b.edge - a.edge ||
         b.matches - a.matches ||
         a.hero.localeCompare(b.hero) ||
         a.enemy.localeCompare(b.enemy),
@@ -42,9 +42,9 @@ export function strongestRecords(matchups: HeroMatchups, limit: number): HeroMat
     .slice(0, Math.max(0, limit));
 }
 
-/** How many enemy heroes `heroId` has a record against that is large enough to show. */
+/** How many enemy heroes `heroId` has a counter advantage against. */
 export function matchupCountOf(matchups: HeroMatchups, heroId: string): number {
-  return matchups.matchups.filter((matchup) => matchup.hero === heroId).length;
+  return matchups.matchups.filter((matchup) => matchup.hero === heroId && hasCounterAdvantage(matchup)).length;
 }
 
 /** The record against one enemy hero, or undefined when it is below the minimum. */
@@ -77,8 +77,9 @@ export interface RosterHero {
 /** One hero on a record, with the figures and sentence its card shows. */
 export interface RecordCard<H extends RosterHero> {
   hero: H;
-  /** Matches behind the record: what cards are ordered by. */
+  /** Matches behind the record, used as the first tie-breaker after edge. */
   matches: number;
+  edge: number;
   winRate: string;
   sample: string;
   /** The record in words, for the card's tooltip. */
@@ -86,10 +87,9 @@ export interface RecordCard<H extends RosterHero> {
 }
 
 /**
- * Turns records into cards, largest sample first and then by hero name, so the order says how much
- * a card rests on and never which record is strongest. `shown` picks which hero of the record the card
- * pictures; the sentence always reads winner against loser. A record naming a hero the roster does
- * not know is left out rather than shown half-blank.
+ * Turns records into cards, strongest shared edge first and then by sample and hero name. `shown`
+ * picks which hero of the record the card pictures; the sentence always reads winner against loser.
+ * A record naming a hero the roster does not know is left out rather than shown half-blank.
  */
 export function recordCards<H extends RosterHero>(
   rows: readonly HeroMatchup[],
@@ -109,6 +109,7 @@ export function recordCards<H extends RosterHero>(
           {
             hero: portrait,
             matches: matchup.matches,
+            edge: matchup.edge,
             winRate: recordWinRateLabel(matchup),
             sample: recordSampleLabel(matchup),
             description: recordSentence(matchup, winner.name, loser.name),
@@ -116,5 +117,5 @@ export function recordCards<H extends RosterHero>(
         ];
   });
 
-  return cards.sort((a, b) => b.matches - a.matches || a.hero.name.localeCompare(b.hero.name));
+  return cards.sort((a, b) => b.edge - a.edge || b.matches - a.matches || a.hero.name.localeCompare(b.hero.name));
 }

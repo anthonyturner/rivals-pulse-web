@@ -178,7 +178,7 @@ describe('CountersPageComponent', () => {
       const beats = panels(root)[1].textContent ?? '';
 
       expect(text(root, '.result-head')).toContain('Angela');
-      expect(text(root, '.result-head')).toContain('2 matchups');
+      expect(text(root, '.result-head')).toContain('1 matchup');
       expect(against).toContain('Heroes that beat Angela');
       expect(against).toContain('Peni Parker');
       expect(against).toContain('83.3%');
@@ -224,7 +224,7 @@ describe('CountersPageComponent', () => {
       expect(text(root, '.result')).toContain('Pick a hero to see its matchups');
     });
 
-    it('lists cards by matches, then name', async () => {
+    it('lists cards by shared counter edge', async () => {
       const root = await open(
         matchupsOf([
           matchup('peni-parker', 'angela', 10, 12),
@@ -233,7 +233,7 @@ describe('CountersPageComponent', () => {
         ]),
       );
 
-      expect(names(panels(root)[0], '.tiles')).toEqual(['Mantis', 'Black Cat', 'Peni Parker']);
+      expect(names(panels(root)[0], '.tiles')).toEqual(['Peni Parker', 'Black Cat', 'Mantis']);
     });
 
     it('lets a card pivot to that hero, marking it in the list', async () => {

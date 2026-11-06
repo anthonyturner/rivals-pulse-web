@@ -52,7 +52,7 @@ describe('HeroCommunityCountersComponent', () => {
 
     expect(text).toContain('RivalsPulse players');
     expect(text).toContain('Half-season: Season 10.5');
-    expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
+    expect(names(root, 0)).toEqual(['Storm', 'Hulk']);
     expect(names(root, 1)).toEqual([]);
     expect(text).toContain('Thor has no winning record against another hero yet.');
     expect(text).toContain('91.7%');
@@ -64,7 +64,7 @@ describe('HeroCommunityCountersComponent', () => {
     const root = await show('thor', 'Thor', readyMatchups);
     const titles = [...root.querySelectorAll('li[title]')].map((card) => card.getAttribute('title'));
 
-    expect(titles[1]).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
+    expect(titles[0]).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
   });
 
   it('says no hero has a winning record when the hero has matchups but none are winning', async () => {
@@ -109,7 +109,7 @@ describe('HeroCommunityCountersComponent', () => {
 
     expect(text).toContain('Previous half-season.');
     expect(text).toContain("Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.");
-    expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
+    expect(names(root, 0)).toEqual(['Storm', 'Hulk']);
   });
 
   it('keeps the empty state labelled when a stand-in half-season has nothing for the hero', async () => {

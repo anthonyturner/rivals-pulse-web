@@ -15,6 +15,7 @@ export function matchup(hero: string, enemy: string, wins: number, appearances: 
     wins,
     winRate: (wins / appearances) * 100,
     shrunkWinRate: ((wins + 5) / (appearances + 10)) * 100,
+    edge: ((wins + 5) / (appearances + 10)) - 0.5,
   };
 }
 
