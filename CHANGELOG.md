@@ -98,6 +98,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- Hero detail section links now stay on the selected hero and scroll to the chosen section ([#526](https://github.com/anthonyturner/rivals-pulse-web/pull/526)).
 - The home page word of the day now sits below the sound control at the right of the hero, with a reserved column that keeps it clear of the headline and description on tablet widths; the existing mobile placement remains unchanged ([#519](https://github.com/anthonyturner/rivals-pulse-web/pull/519)).
 - The home page word of the day now selects from the full glossary, so Marvel Rivals terms listed under categories such as Positioning and Coach Term can appear ([#516](https://github.com/anthonyturner/rivals-pulse-web/pull/516)).
 - On a hero page the hero list, the hero details and the YouTube column now start at the same height, and from 1280px wide the list and the YouTube column stay level as you scroll. The YouTube column came down and the hero details moved up by 20px to meet the top of the hero list ([#464](https://github.com/anthonyturner/rivals-pulse-web/issues/464)).

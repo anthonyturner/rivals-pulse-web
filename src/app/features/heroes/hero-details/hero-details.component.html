@@ -49,15 +49,15 @@
   </div>
 
   <nav class="hero-jump-nav" aria-label="Hero sections">
-    <a [attr.href]="'#hero-overview-' + hero.id">Overview</a>
-    <a [attr.href]="'#hero-abilities-' + hero.id">Abilities</a>
-    <a [attr.href]="'#hero-build-signals-' + hero.id">Build signals</a>
-    <a [attr.href]="'#hero-matchups-' + hero.id">Matchups</a>
+    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-overview-' + hero.id">Overview</a>
+    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-abilities-' + hero.id">Abilities</a>
+    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-build-signals-' + hero.id">Build signals</a>
+    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-matchups-' + hero.id">Matchups</a>
     @if (controller.hasTeamUpAbilities(hero)) {
-    <a [attr.href]="'#hero-team-ups-' + hero.id">Team-ups</a>
+    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-team-ups-' + hero.id">Team-ups</a>
     }
     @if (controller.selectedHeroVideos().length > 0) {
-    <a [attr.href]="'#hero-videos-' + hero.id">Videos</a>
+    <a routerLink="." queryParamsHandling="preserve" [fragment]="'hero-videos-' + hero.id">Videos</a>
     }
   </nav>
 
