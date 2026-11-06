@@ -6,18 +6,16 @@ export function selectWordOfDay(
   terms: readonly GlossaryTerm[],
   date: Date,
 ): GlossaryTerm | null {
-  const eligibleTerms = terms
-    .filter((term) => term.category === 'marvel-rivals')
-    .sort((left, right) => {
-      const leftName = left.term.trim().toLowerCase();
-      const rightName = right.term.trim().toLowerCase();
+  const eligibleTerms = [...terms].sort((left, right) => {
+    const leftName = left.term.trim().toLowerCase();
+    const rightName = right.term.trim().toLowerCase();
 
-      if (leftName !== rightName) {
-        return leftName < rightName ? -1 : 1;
-      }
+    if (leftName !== rightName) {
+      return leftName < rightName ? -1 : 1;
+    }
 
-      return left.id < right.id ? -1 : left.id === right.id ? 0 : 1;
-    });
+    return left.id < right.id ? -1 : left.id === right.id ? 0 : 1;
+  });
 
   if (eligibleTerms.length === 0) {
     return null;
