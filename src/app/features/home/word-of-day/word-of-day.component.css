@@ -5,7 +5,7 @@
 .word-of-day {
   position: fixed;
   z-index: 40;
-  top: 88px;
+  top: calc(var(--nav-height) + 88px);
   right: 32px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
