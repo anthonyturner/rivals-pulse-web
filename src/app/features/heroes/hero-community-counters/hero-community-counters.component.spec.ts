@@ -168,12 +168,21 @@ describe('HeroCommunityCountersComponent', () => {
     expect(root.textContent).not.toMatch(/\bban\b|\bbans\b|banned/i);
   });
 
-  it('stacks the two groups, even when the panel has room for them side by side', async () => {
+  it('shows the two matchup directions side by side when there is room', async () => {
     const root = await show('thor', 'Thor', readyMatchups);
     root.style.width = '1000px';
     const [against, record] = [...root.querySelectorAll('section section')].map((group) => group.getBoundingClientRect());
 
-    expect(against.width).toBeGreaterThan(900);
+    expect(record.left).toBeGreaterThan(against.left);
+    expect(record.top).toBeLessThan(against.bottom);
+  });
+
+  it('stacks the matchup directions when the panel is narrow', async () => {
+    const root = await show('thor', 'Thor', readyMatchups);
+    root.style.width = '520px';
+    const [against, record] = [...root.querySelectorAll('section section')].map((group) => group.getBoundingClientRect());
+
+    expect(record.left).toBe(against.left);
     expect(record.top).toBeGreaterThanOrEqual(against.bottom);
   });
 
@@ -182,7 +191,8 @@ describe('HeroCommunityCountersComponent', () => {
     const section = root.querySelector('section') as HTMLElement;
     const heading = root.querySelector(`#${section.getAttribute('aria-labelledby')}`);
 
-    expect(heading?.textContent).toContain('Thor');
+    expect(heading?.textContent).toContain('Community matchups');
+    expect(root.querySelector('.community-counters__heading p')?.textContent).toContain('Thor');
     expect(root.querySelector('a')?.getAttribute('href')).toBe('/counters?hero=thor');
   });
 });

@@ -1,6 +1,9 @@
 <section class="community-counters" [attr.aria-labelledby]="'community-counters-title-' + heroId()">
   <div class="community-counters__heading">
-    <h3 [id]="'community-counters-title-' + heroId()">{{ heroName() }} against other heroes, per RivalsPulse players</h3>
+    <div>
+      <h3 [id]="'community-counters-title-' + heroId()">Community matchups</h3>
+      <p>Win rates from RivalsPulse players for {{ heroName() }}</p>
+    </div>
     <a routerLink="/counters" [queryParams]="{ hero: heroId() }">Counter lab</a>
   </div>
 

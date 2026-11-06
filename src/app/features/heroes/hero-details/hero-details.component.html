@@ -2,8 +2,7 @@
   <div class="detail-hero">
     <div class="detail-hero-profile">
       <div class="detail-hero-media">
-        <img class="hero-image large" [src]="hero.imageUrl" [alt]="hero.name" />
-        <div>
+        <div class="detail-hero-copy">
           <app-eyebrow>{{ controller.heroRoleLabel(hero) }}</app-eyebrow>
           <h2 tabindex="-1">{{ hero.name }}</h2>
           <div class="difficulty" [attr.aria-label]="'Difficulty ' + hero.difficulty + ' out of 5'">
@@ -11,9 +10,15 @@
             <span [class.filled]="pip <= hero.difficulty"></span>
             }
           </div>
+          @if (hero.summary) {
+          <p class="detail-hero-lede">{{ hero.summary }}</p>
+          }
         </div>
+        <img class="hero-image large" [src]="hero.imageUrl" [alt]="hero.name" />
       </div>
+    </div>
 
+    <div class="detail-hero-summary">
       @if (controller.officialBaseStats(hero).length) {
       <dl class="technical-details hero-base-stats" aria-label="Official base stats">
         @for (detail of controller.officialBaseStats(hero); track detail.label + detail.value) {
@@ -29,10 +34,10 @@
         }
       </dl>
       }
-    </div>
-
-    <div class="detail-hero-summary">
-      <section class="overview-panel" aria-label="Marvel Rivals Fandom overview">
+      <section
+        class="overview-panel"
+        [attr.aria-label]="'Marvel Rivals ' + (hero.officialSource ? 'official' : 'Fandom') + ' overview'"
+      >
         <div class="section-heading">
           <h3>{{ hero.officialSource ? 'Official Overview' : 'Fandom Overview' }}</h3>
           <a [href]="controller.officialHeroSourceUrl(hero)" target="_blank" rel="noopener noreferrer">Source</a>
@@ -52,14 +57,14 @@
     </div>
   </div>
 
-  <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
-
   <app-hero-community-counters
     [heroId]="hero.id"
     [heroName]="hero.name"
     [matchups]="controller.heroMatchups()"
     [roster]="controller.heroRoster()"
   />
+
+  <app-hero-community-stats [heroId]="hero.id" [heroName]="hero.name" [stats]="controller.heroStats()" />
 
   <app-hero-kill-feed
     [heroId]="hero.id"
