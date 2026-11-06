@@ -8,6 +8,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Changed
+
+- Hero profiles now lead with the selected hero's artwork, keep the sourced overview clear, and show community matchups in a compact scan near the top ([#522](https://github.com/anthonyturner/rivals-pulse-web/pull/522)).
+
 ### Added
 
 - The home page now shows a dismissible word of the day from the Marvel Rivals glossary in a floating card that stays visible as you scroll ([#514](https://github.com/anthonyturner/rivals-pulse-web/pull/514)).
