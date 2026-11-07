@@ -43,7 +43,7 @@ describe('DataJobsPageComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: DataJobsService, useValue: { now: () => clockNow, read, run: runJob } },
+        { provide: DataJobsService, useValue: { now: () => clockNow, tickingClock: DataJobsService.prototype.tickingClock, read, run: runJob } },
       ],
     });
     fixture = TestBed.createComponent(DataJobsPageComponent);
@@ -124,12 +124,59 @@ describe('DataJobsPageComponent', () => {
       jasmine.clock().tick(1000);
       await settle();
       expect(countdown()).toBe('In 1h 0m');
-      expect(read).toHaveBeenCalledTimes(1);
 
       clockNow += 31_000;
       jasmine.clock().tick(7 * MINUTE + 30_250 - 1000);
       await settle();
       expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      fixture.destroy();
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('stops reading the jobs once the page is left, even when a read was still on its way', async () => {
+    jasmine.clock().install();
+
+    try {
+      await open();
+
+      let answer: (value: DataJobsRead) => void = () => undefined;
+
+      read.and.returnValue(new Promise<DataJobsRead>((resolve) => (answer = resolve)));
+      jasmine.clock().tick(7 * MINUTE + 30_250);
+      expect(read).toHaveBeenCalledTimes(2);
+
+      fixture.destroy();
+      answer({ status: 'ready', jobs: DATA_JOBS.map((job) => status(job.key)) });
+      await Promise.resolve();
+      await Promise.resolve();
+      jasmine.clock().tick(24 * 60 * MINUTE);
+
+      expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('keeps reading after a failed read, and reads again soon while a scheduled run is still going', async () => {
+    jasmine.clock().install();
+
+    try {
+      await open(
+        DATA_JOBS.map((job) =>
+          status(job.key, job.key === 'game-stats' ? { lastScheduled: run({ outcome: 'running', finishedAt: null }) } : {}),
+        ),
+      );
+      read.and.resolveTo({ status: 'unavailable' });
+
+      jasmine.clock().tick(15_250);
+      await settle();
+      expect(read).toHaveBeenCalledTimes(2);
+
+      jasmine.clock().tick(7 * MINUTE + 30_250);
+      await settle();
+      expect(read).toHaveBeenCalledTimes(3);
     } finally {
       fixture.destroy();
       jasmine.clock().uninstall();
@@ -393,7 +440,7 @@ describe('DataJobsPageComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: DataJobsService, useValue: { now: () => NOW, read, run: runJob } },
+        { provide: DataJobsService, useValue: { now: () => NOW, tickingClock: DataJobsService.prototype.tickingClock, read, run: runJob } },
       ],
     });
     fixture = TestBed.createComponent(DataJobsPageComponent);

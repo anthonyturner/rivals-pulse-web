@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, PLATFORM_ID, computed, inject, signal, type Signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import {
@@ -18,6 +18,8 @@ import { DataJobsService, type DataJobRunResult } from './data-jobs.service';
 
 /** How long after a run is due the page reads the jobs again, so "Last scheduled run" has caught up. */
 const SCHEDULED_RUN_GRACE_MS = 30_000;
+/** How soon the page reads again while a scheduled run is still going, so its end shows promptly. */
+const RUNNING_RECHECK_MS = 15_000;
 
 /** Words for a run, with the class that colours them and the time it began. */
 interface RunView extends RunWords {
@@ -41,7 +43,6 @@ interface JobRow extends Omit<DataJobDefinition, 'key'> {
   key: DataJobKey;
   /** The Pulse Atlas files as one line, joined here so the template calls no method. */
   atlasList: string;
-  next: NextRunView;
   scheduled: RunView | null;
   manual: RunView | null;
   /** What the job just did on this page, until the page is left. */
@@ -137,8 +138,14 @@ function resultWords(result: DataJobRunResult): RunWords {
 })
 export class DataJobsPageComponent {
   private readonly service = inject(DataJobsService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly statuses = signal<readonly DataJobStatus[]>([]);
+  /** The time of the last read. Only the countdowns follow the ticking clock, so no row is rebuilt every second. */
   private readonly now = signal(this.service.now());
+  private readonly clock: Signal<number> = this.browser
+    ? this.service.tickingClock(this.destroyRef)
+    : signal(this.service.now()).asReadonly();
   private readonly runningJobs = signal<ReadonlySet<DataJobKey>>(new Set());
   private readonly results = signal<Readonly<Partial<Record<DataJobKey, ResultView>>>>({});
   private refreshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -162,7 +169,6 @@ export class DataJobsPageComponent {
         return {
           ...job,
           atlasList: job.atlasFiles.join(', '),
-          next: nextRunView(job.schedule, now),
           scheduled: status?.lastScheduled ? runView(describeRun(status.lastScheduled), status.lastScheduled.startedAt) : null,
           manual: status?.lastManual ? runView(describeRun(status.lastManual), status.lastManual.startedAt) : null,
           result: results[job.key] ?? null,
@@ -175,23 +181,24 @@ export class DataJobsPageComponent {
     }));
   });
 
-  readonly githubJobs = computed(() =>
-    GITHUB_JOBS.map((job) => ({
-      ...job,
-      url: `https://github.com/anthonyturner/rivals-pulse-web/actions/workflows/${job.workflow}`,
-      next: nextRunView(job.schedule, this.now()),
-    })),
-  );
+  readonly githubJobs = GITHUB_JOBS.map((job) => ({
+    ...job,
+    url: `https://github.com/anthonyturner/rivals-pulse-web/actions/workflows/${job.workflow}`,
+  }));
+
+  /** Each job's next scheduled run, by key, on the ticking clock. */
+  readonly nextRuns = computed(() => {
+    const clock = this.clock();
+
+    return Object.fromEntries(
+      [...DATA_JOBS, ...GITHUB_JOBS].map((job) => [job.key, nextRunView(job.schedule, clock)]),
+    ) as Readonly<Record<string, NextRunView>>;
+  });
 
   constructor() {
-    const destroyRef = inject(DestroyRef);
+    this.destroyRef.onDestroy(() => clearTimeout(this.refreshTimer));
 
-    destroyRef.onDestroy(() => clearTimeout(this.refreshTimer));
-
-    if (isPlatformBrowser(inject(PLATFORM_ID))) {
-      const clock = setInterval(() => this.now.set(this.service.now()), 1000);
-
-      destroyRef.onDestroy(() => clearInterval(clock));
+    if (this.browser) {
       void this.refresh();
     }
   }
@@ -240,10 +247,17 @@ export class DataJobsPageComponent {
   private armRefreshTimer(): void {
     clearTimeout(this.refreshTimer);
 
+    // A read that was in flight when the page was left must not start the timer again.
+    if (this.destroyRef.destroyed) {
+      return;
+    }
+
     const now = this.now();
-    const waitEnds = this.statuses().flatMap((job) => (job.wait ? [Date.parse(job.wait.retryAt)] : []));
+    const statuses = this.statuses();
+    const waitEnds = statuses.flatMap((job) => (job.wait ? [Date.parse(job.wait.retryAt)] : []));
     const scheduledRuns = DATA_JOBS.map((job) => nextRunAt(job.schedule, now - SCHEDULED_RUN_GRACE_MS) + SCHEDULED_RUN_GRACE_MS);
-    const nearest = Math.min(...[...waitEnds, ...scheduledRuns].filter((end) => end > now));
+    const stillRunning = statuses.some((job) => job.lastScheduled?.outcome === 'running') ? [now + RUNNING_RECHECK_MS] : [];
+    const nearest = Math.min(...[...waitEnds, ...scheduledRuns, ...stillRunning].filter((end) => end > now));
 
     this.refreshTimer = setTimeout(() => void this.refresh(), nearest - now + 250);
   }

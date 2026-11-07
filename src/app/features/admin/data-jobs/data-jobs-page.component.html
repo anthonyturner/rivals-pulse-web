@@ -12,8 +12,7 @@
     <strong>A run shows on the site after the web cache lets go of it.</strong> A new answer can take up to 5 minutes
     to appear, and for up to an hour after that a visitor may still be handed the older copy once while the new one
     loads. A page that is already open needs a reload. The home news skips the cache, so a reload shows it at once.
-    Pulse Atlas files change when it publishes, scheduled every six hours but often later, because GitHub starts it when it can (or when you run
-    it by hand below), and it reads the same cached answers.
+    Pulse Atlas files change when it publishes, scheduled every six hours, though GitHub often starts it later, or when you run it by hand below. It reads the same cached answers.
   </p>
 
   <p class="visually-hidden" role="status">{{ announcement() }}</p>
@@ -36,6 +35,7 @@
 
           <ul class="jobs__list">
             @for (row of group.rows; track row.key) {
+              @let next = nextRuns()[row.key];
               <li class="jobs__card">
                 <h4 class="jobs__name">{{ row.label }}</h4>
                 <p class="jobs__summary">{{ row.summary }}</p>
@@ -44,8 +44,8 @@
                   <div>
                     <dt>Next scheduled run</dt>
                     <dd>
-                      <span class="jobs__countdown">In {{ row.next.timeLeft }}</span>
-                      <time class="jobs__when" [attr.datetime]="row.next.at">{{ row.next.atLabel }}</time>
+                      <span class="jobs__countdown">In {{ next.timeLeft }}</span>
+                      <time class="jobs__when" [attr.datetime]="next.at">{{ next.atLabel }}</time>
                     </dd>
                   </div>
                   <div>
@@ -164,14 +164,15 @@
           start a scheduled run hours late or skip it, so treat each time as the earliest it can start.
         </p>
         <ul class="jobs__links">
-          @for (job of githubJobs(); track job.key) {
+          @for (job of githubJobs; track job.key) {
+            @let next = nextRuns()[job.key];
             <li class="jobs__link">
               <a class="guide-link" [href]="job.url" target="_blank" rel="noopener"
                 >{{ job.label }}<span class="visually-hidden"> (opens GitHub in a new tab)</span></a
               >
               <span>
-                Next scheduled run in <span class="jobs__countdown">{{ job.next.timeLeft }}</span>,
-                <time class="jobs__when" [attr.datetime]="job.next.at">{{ job.next.atLabel }}</time>
+                Next scheduled run in <span class="jobs__countdown">{{ next.timeLeft }}</span>,
+                <time class="jobs__when" [attr.datetime]="next.at">{{ next.atLabel }}</time>
               </span>
             </li>
           }
