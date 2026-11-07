@@ -8,12 +8,6 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
-### Changed
-
-- Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
-
-- Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
-
 ### Added
 
 - The home page now shows a dismissible word of the day from the Marvel Rivals glossary in a floating card that stays visible as you scroll ([#514](https://github.com/anthonyturner/rivals-pulse-web/pull/514)).
@@ -39,6 +33,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 - You can delete your account yourself. The Account page has a "Delete your account" section: you choose what to remove, type `delete my account` and confirm; if you signed in more than ten minutes ago you are asked to sign in again first. It deletes your sign-in details and our row for you and signs you out; signing in with Discord again starts a new, empty account. "Remove account and forget me" is shown but switched off until you can link the desktop app ([#283](https://github.com/anthonyturner/rivals-pulse-web/pull/283)).
 
 ### Changed
+
+- Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
 
 - Every build signal now keeps a visible 0-10 scale, with scores shown out of ten and a separate match-collection progress bar while a hero is waiting on data ([#536](https://github.com/anthonyturner/rivals-pulse-web/pull/536)).
 - Hero build signals temporarily accept 10 matches from one player, even when that player supplies all matches, so solo testing can unlock figures. Scores still need five qualifying heroes ([#534](https://github.com/anthonyturner/rivals-pulse-web/pull/534)).
