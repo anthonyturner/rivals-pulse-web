@@ -72,6 +72,7 @@ const GROUPS: LibraryGroup[] = [
       ['neutral-game-fundamentals', 'All roles'],
       ['survival-discipline', 'All roles'],
       ['engagement-discipline', 'All roles'],
+      ['tempo-and-ultimate-economy', 'All roles'],
       ['season-8-5-discipline', 'All roles'],
       ['presence-pressure', 'All roles'],
       ['tank-fundamentals-turns-space', 'Vanguard'],

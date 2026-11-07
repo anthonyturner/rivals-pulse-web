@@ -95,5 +95,26 @@
         </div>
       </section>
     }
+
+    @if (guide.articleSources; as articles) {
+      <section class="guide-section">
+        <h2>Sources and further reading</h2>
+        <p class="guide-text">
+          This guide is written in our own words. Claims credited to a site are that site's advice, not
+          RivalsPulse data.
+        </p>
+        <ul class="guide-text article-sources">
+          @for (article of articles; track article.url) {
+            <li>
+              <a class="guide-link" [href]="article.url" target="_blank" rel="noopener noreferrer">
+                {{ article.label }}
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>.
+              {{ article.note }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
   }
 </div>

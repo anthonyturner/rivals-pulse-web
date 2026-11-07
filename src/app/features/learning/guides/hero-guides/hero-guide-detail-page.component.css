@@ -46,6 +46,14 @@ iframe {
   margin-top: 12px;
 }
 
+.article-sources {
+  padding-left: 20px;
+}
+
+.article-sources li + li {
+  margin-top: 6px;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
