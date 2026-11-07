@@ -35,6 +35,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Hero profiles have clearer summaries, larger section tabs and supporting copy, and lighter labels for easier reading ([#547, fix(heroes): improve typography and readability](https://github.com/anthonyturner/rivals-pulse-web/pull/547)).
+
 - Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
 
 - Every build signal now keeps a visible 0-10 scale, with scores shown out of ten and a separate match-collection progress bar while a hero is waiting on data ([#536](https://github.com/anthonyturner/rivals-pulse-web/pull/536)).

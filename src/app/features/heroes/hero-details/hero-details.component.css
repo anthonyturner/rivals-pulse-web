@@ -114,8 +114,8 @@ h2 {
 
 h3 {
   color: var(--text);
-  font-size: 0.78rem;
-  text-transform: uppercase;
+  font-size: var(--type-small);
+  text-transform: none;
 }
 
 .difficulty {
@@ -154,15 +154,15 @@ h3 {
 
 .overview-section strong {
   color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .overview-section p {
   color: var(--text);
-  line-height: 1.55;
+  line-height: 1.65;
 }
 
 .hero-build-profile .section-heading {
@@ -177,15 +177,15 @@ h3 {
 
 .ultimate-strategies article span {
   color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .ultimate-strategies article p {
   color: var(--text);
-  line-height: 1.55;
+  line-height: 1.65;
 }
 
 .ultimate-strategies .strategy-playstyle {
@@ -219,9 +219,9 @@ h3 {
 .ultimate-paths .section-heading p {
   margin-top: 4px;
   color: var(--text-soft);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-transform: none;
 }
 
 .ultimate-path-tabs {
@@ -238,8 +238,8 @@ h3 {
   background: var(--accent-soft);
   color: var(--text);
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 850;
+  font-size: var(--type-small);
+  font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
 }
@@ -270,7 +270,7 @@ h3 {
 .ultimate-path-timing {
   padding-left: 10px;
   border-left: 3px solid var(--accent);
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .ultimate-path-grid {
@@ -291,10 +291,10 @@ h3 {
 .ultimate-path-grid h4 {
   margin: 0;
   color: var(--accent-strong);
-  font-size: 0.7rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .ultimate-path-grid ul {
@@ -324,8 +324,8 @@ h3 {
   background: var(--bg-panel);
   color: var(--text);
   font: inherit;
-  font-size: 0.76rem;
-  font-weight: 850;
+  font-size: var(--type-small);
+  font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
 }
@@ -354,9 +354,9 @@ h3 {
 .deadpool-upgrades .section-heading p {
   margin-top: 4px;
   color: var(--text-soft);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-transform: none;
 }
 
 .deadpool-upgrades ol {
@@ -394,8 +394,8 @@ h3 {
   border-radius: 7px;
   background: var(--accent);
   color: var(--accent-ink);
-  font-size: 0.86rem;
-  font-weight: 900;
+  font-size: var(--type-small);
+  font-weight: 700;
 }
 
 .deadpool-upgrades strong {
@@ -418,17 +418,17 @@ h3 {
 
 .deadpool-upgrades article>a {
   color: var(--accent-strong);
-  font-size: 0.78rem;
-  font-weight: 750;
+  font-size: var(--type-small);
+  font-weight: 600;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .upgrade-source {
   padding-left: 10px;
   border-left: 3px solid var(--accent);
-  font-size: 0.82rem;
-  font-weight: 750;
+  font-size: var(--type-small);
+  font-weight: 600;
 }
 
 .detail-columns,
@@ -510,17 +510,17 @@ ul {
 
 .ability-tabs button span {
   color: var(--accent-strong);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
+  font-size: var(--type-caption);
+  font-weight: 700;
+  letter-spacing: normal;
   line-height: 1.1;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .ability-tabs button small {
   color: var(--text);
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-size: var(--type-small);
+  font-weight: 700;
   line-height: 1.25;
 }
 
@@ -546,10 +546,10 @@ ul {
 
 .section-heading a {
   color: var(--link);
-  font-size: 0.78rem;
-  font-weight: 750;
+  font-size: var(--type-small);
+  font-weight: 600;
   text-decoration: underline;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .section-heading a:hover {
@@ -601,9 +601,9 @@ details.collapsible {
 
 .section-note {
   margin: 0;
-  color: var(--text-soft);
-  font-size: 0.78rem;
-  line-height: 1.35;
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.5;
 }
 
 .detail-hero-container h2 {
@@ -638,9 +638,9 @@ details.collapsible {
 
 .detail-hero-lede {
   margin: 12px 0 0;
-  color: var(--on-ink-muted);
-  font-size: var(--type-small);
-  line-height: 1.5;
+  color: var(--on-ink);
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 .detail-hero-tags {
@@ -679,8 +679,8 @@ details.collapsible {
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-size: var(--type-caption);
-  font-weight: 700;
+  font-size: var(--type-small);
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -720,7 +720,7 @@ details.collapsible {
 
 .detail-hero-container .section-heading a,
 .detail-hero-container .section-note {
-  font-size: var(--type-caption);
+  font-size: var(--type-small);
   text-transform: none;
 }
 
@@ -769,10 +769,10 @@ details.collapsible {
 
 .abilities article span {
   color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .abilities article strong {
@@ -781,16 +781,16 @@ details.collapsible {
 
 .abilities article p {
   color: var(--text);
-  line-height: 1.58;
+  line-height: 1.65;
 }
 
 .abilities article h4 {
   margin: 4px 0 0;
   color: var(--accent-strong);
-  font-size: 0.68rem;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .technical-details {
@@ -808,7 +808,7 @@ details.collapsible {
   --stat-color: var(--accent-strong);
   display: grid;
   grid-column: span 2;
-  grid-template-columns: 30px 1fr;
+  grid-template-columns: 30px minmax(0, 1fr);
   gap: 9px;
   align-items: start;
   padding: 10px;
@@ -836,8 +836,8 @@ details.collapsible {
   border-radius: 7px;
   background: color-mix(in srgb, var(--stat-color) 13%, var(--bg-elevated));
   color: var(--stat-color);
-  font-size: 0.78rem;
-  font-weight: 900;
+  font-size: var(--type-small);
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -912,9 +912,9 @@ details.collapsible {
 
 .archetype-grid span {
   color: var(--accent-strong);
-  font-size: 0.66rem;
-  font-weight: 900;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 700;
+  text-transform: none;
 }
 
 .archetype-grid p,
@@ -925,20 +925,25 @@ details.collapsible {
 
 .archetype-grid a {
   color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 850;
+  font-size: var(--type-caption);
+  font-weight: 600;
   text-decoration: none;
 }
 
 .archetype-note {
-  font-size: 0.72rem;
+  font-size: var(--type-small);
+}
+
+.stat-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .technical-details dt {
   color: var(--accent-strong);
-  font-size: 0.66rem;
-  font-weight: 850;
-  text-transform: uppercase;
+  font-size: var(--type-caption);
+  font-weight: 600;
+  text-transform: none;
 }
 
 .technical-details .stat-card dt {
@@ -948,7 +953,7 @@ details.collapsible {
 .technical-details dd {
   margin: 0;
   color: var(--text);
-  font-size: 0.86rem;
+  font-size: var(--type-small);
   font-weight: 700;
   line-height: 1.3;
 }

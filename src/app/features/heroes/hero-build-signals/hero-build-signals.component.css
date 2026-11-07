@@ -15,8 +15,7 @@
   color: var(--text-muted);
   font-size: var(--type-caption);
   font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  letter-spacing: normal;
 }
 
 .playstyle {
@@ -182,8 +181,8 @@ h4,
 
 .note,
 .empty {
-  color: var(--text-soft);
-  font-size: var(--type-caption);
+  color: var(--text-muted);
+  font-size: var(--type-small);
   line-height: 1.5;
 }
 
