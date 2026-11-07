@@ -84,8 +84,9 @@
 }
 
 .detail {
-  color: var(--text-soft);
-  font-size: var(--type-caption);
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 

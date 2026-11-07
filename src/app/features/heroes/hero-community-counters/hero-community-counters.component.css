@@ -84,7 +84,7 @@
   grid-column: 2;
   grid-row: 1;
   color: var(--text);
-  font-size: var(--type-caption);
+  font-size: var(--type-small);
   font-weight: 700;
   overflow-wrap: anywhere;
 }
