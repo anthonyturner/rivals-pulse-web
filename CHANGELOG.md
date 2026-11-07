@@ -36,6 +36,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Subpages now use compact, plain titles instead of decorative banners, leaving more room for guides, tools and stats ([#552](https://github.com/anthonyturner/rivals-pulse-web/pull/552)).
+
 - The admin "Data jobs" page shows its times in US Eastern time (EST or EDT) instead of UTC ([#549](https://github.com/anthonyturner/rivals-pulse-web/pull/549)).
 - Hero profiles have clearer summaries, larger section tabs and supporting copy, and lighter labels for easier reading ([#547, fix(heroes): improve typography and readability](https://github.com/anthonyturner/rivals-pulse-web/pull/547)).
 - Build-signal score, Mobility and match-collection bars now use a yellow gradient in both themes, with estimated scores still patterned ([#545](https://github.com/anthonyturner/rivals-pulse-web/pull/545)).
