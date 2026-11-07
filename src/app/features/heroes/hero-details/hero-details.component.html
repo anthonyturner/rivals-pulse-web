@@ -96,7 +96,7 @@
       [class.active]="selectedSection() === 'build-signals'"
       (click)="selectSection('build-signals')"
     >
-      Build Signals
+      Team fit
     </button>
     <button
       type="button"
@@ -216,10 +216,9 @@
     >
       <section class="hero-build-profile">
         <div class="section-heading">
-          <h3>Build signals</h3>
+          <h3>Team fit</h3>
         </div>
-        <p class="section-note">Scores out of 10, from match data and the hero's kit.</p>
-        <app-hero-build-signals [heroId]="hero.id" [scores]="controller.heroScores()" />
+        <app-hero-build-signals [hero]="hero" [scores]="controller.heroScores()" />
       </section>
     </section>
 

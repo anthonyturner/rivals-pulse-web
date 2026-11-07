@@ -34,6 +34,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
+
 - Every build signal now keeps a visible 0-10 scale, with scores shown out of ten and a separate match-collection progress bar while a hero is waiting on data ([#536](https://github.com/anthonyturner/rivals-pulse-web/pull/536)).
 - Hero build signals temporarily accept 10 matches from one player, even when that player supplies all matches, so solo testing can unlock figures. Scores still need five qualifying heroes ([#534](https://github.com/anthonyturner/rivals-pulse-web/pull/534)).
 - Hero profiles now show official health and movement speed alongside role and difficulty above the detail tabs ([#532](https://github.com/anthonyturner/rivals-pulse-web/pull/532)).
