@@ -11,6 +11,11 @@ describe('easternLabel', () => {
   it('says EDT while daylight saving applies', () => {
     expect(easternLabel('2026-07-04T16:30:00.000Z')).toBe('Jul 4, 2026, 12:30 PM EDT');
   });
+
+  it('tells the repeated hour apart when daylight saving ends', () => {
+    expect(easternLabel('2026-11-01T05:30:00.000Z')).toBe('Nov 1, 2026, 1:30 AM EDT');
+    expect(easternLabel('2026-11-01T06:30:00.000Z')).toBe('Nov 1, 2026, 1:30 AM EST');
+  });
 });
 
 describe('easternTimeLabel', () => {
