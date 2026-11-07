@@ -1133,7 +1133,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     category: 'fundamentals',
     role: 'Fundamentals',
     image: '/images/heroes/doctor-strange.png',
-    sourceLabel: 'Three outside articles, linked at the end of this guide',
+    sourceLabel: 'Two outside articles, linked at the end of this guide',
     articleSources: [
       {
         label: 'The Importance of Tempo and Fight Timing in Overwatch, XTREME PS',
@@ -1143,7 +1143,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         label: 'Ultimate Economy 101, Boostroom',
         url: 'https://boostroom.com/blog/ultimate-economy-101-marvel-rivals-when-to-hold-when-to-stack-when-to-commit',
-        note: 'Advice from a commercial site.',
+        note: 'Further reading only. We could not read this article, so nothing in this guide is based on it.',
       },
       {
         label: 'Ultimate Economy in Marvel Rivals, MetaBot',
@@ -1211,11 +1211,10 @@ export const HERO_GUIDES: HeroGuide[] = [
         ],
       },
       {
-        title: 'Hold, stack or commit',
+        title: 'Hold, combine or commit',
         points: [
-          'Boostroom frames ultimate economy as turning ultimates into objective progress while making the enemy spend more of theirs.',
-          'Boostroom suggests stacking, meaning several ultimates in one fight, only when losing that fight would lose the round.',
-          'It suggests holding a counter ultimate while the enemy still has their fight-winner, and committing once they have wasted it.',
+          'MetaBot’s default is to hold: it says waiting usually beats using an ultimate the moment it is ready.',
+          'Its time to commit is when the enemy has spent a key ultimate, so yours meets less resistance.',
           'MetaBot adds that a setup ultimate can make a follow-up land cleanly, but a misfire wastes both, so the order has to be agreed.',
           'MetaBot also treats keeping one ultimate back as a sound habit, because grouping up can leave your team open to a counter.',
         ],

@@ -86,6 +86,16 @@ describe('HeroGuideDetailPageComponent', () => {
       }
     });
 
+    it('lists Boostroom as further reading and credits no advice to it', () => {
+      const boostroom = sourceLinks()[1].closest('li');
+
+      expect(boostroom?.textContent).toContain('Further reading only');
+      expect(boostroom?.textContent).toContain('nothing in this guide is based on it');
+      for (const section of Array.from(element.querySelectorAll('section.guide-tile'))) {
+        expect(section.textContent).not.toContain('Boostroom');
+      }
+    });
+
     it('does not offer a video or claim its source is on YouTube', () => {
       expect(element.querySelector('iframe')).toBeNull();
       expect(pageText()).not.toContain('YouTube');
