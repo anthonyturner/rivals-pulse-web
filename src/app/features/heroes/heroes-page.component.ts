@@ -575,16 +575,6 @@ export class HeroesPageComponent implements OnInit {
     return role.toLowerCase();
   }
 
-  gameplayArchetype(hero: Hero): string {
-    const selectedRole = this.heroRoleLabel(hero);
-
-    return (
-      hero.gameplayArchetypes?.find((archetype) => archetype.role === selectedRole)?.label ??
-      hero.gameplayArchetypes?.[0]?.label ??
-      ''
-    );
-  }
-
   heroInitials(hero: Hero): string {
     return hero.name
       .split(' ')
