@@ -114,8 +114,12 @@ export function scoresSourceNote(answer: HeroScoresAnswer): string | null {
     return null;
   }
 
-  const { matches, contributors } = answer.minimums;
+  const { matches, contributors, busiestContributorShare } = answer.minimums;
   const from = answer.halfSeason ? `${answer.halfSeason.label} ` : '';
+
+  if (contributors === 1 && busiestContributorShare === 1) {
+    return `Built from ${from}Quick Match and Competitive matches recorded by RivalsPulse players. During solo testing, one player can supply all matches. Figures appear after at least ${matches} matches per hero and mode; scores need ${answer.minimums.rankedHeroes} qualifying heroes.`;
+  }
 
   return `Built from ${from}Quick Match and Competitive matches recorded by RivalsPulse players. A hero gets a score once it has at least ${matches} matches from at least ${contributors} players, with no single player making up more than half.`;
 }
@@ -332,9 +336,14 @@ function withoutNumber(
  * busiest player is only named as the reason once there are enough players for it to be one.
  */
 function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores): string {
-  const { matches, contributors } = answer.minimums;
+  const { matches, contributors, busiestContributorShare } = answer.minimums;
   const matchesSoFar = Math.min(stat?.matches ?? 0, matches);
   const playersSoFar = Math.min(stat?.contributors ?? 0, contributors);
+
+  if (contributors === 1 && busiestContributorShare === 1) {
+    return `${matchesSoFar} of ${matches} matches`;
+  }
+
   const progress = `${matchesSoFar} of ${matches} matches, ${playersSoFar} of ${contributors} players`;
 
   return stat?.oneContributorAboveHalf && (stat.contributors ?? 0) >= contributors

@@ -98,6 +98,8 @@ repo's build. This is a move, not a redesign.
 | `20261104150000_admin_data_jobs.sql` | Running the data jobs on demand: `admin_audit_log` (closed to every API role), `sync_runs.by_admin`, the helpers `data_job_cooldown`, `data_job_unfinished_after` and `data_job_wait` (callable by no API role, so neither security definer nor guarded), and `admin_begin_run`, `admin_run_rebuild`, `admin_finish_run` and `admin_data_jobs_status` (granted to `authenticated` only, each asking `is_admin()` first) |
 | `20261105120000_community_tabs_ten_matches.sql` | The Community Matches and Insights tabs show a figure at 10 matches from any number of players: `insights_min_matches` 10, `insights_min_recorders` 1, `insights_max_recorder_share_percent` 100, and `community_tab_bucket_shown`, which `read_community_matches` now uses. `community_bucket_shown` is unchanged |
 
+Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
+
 Link once per machine, check history, then apply:
 
 ```sh

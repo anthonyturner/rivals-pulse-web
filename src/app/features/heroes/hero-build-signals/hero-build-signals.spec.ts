@@ -320,3 +320,26 @@ describe('the summary lines', () => {
     expect(scoresSourceNote(null)).toBeNull();
   });
 });
+
+describe('solo build-signal testing', () => {
+  const soloAnswer = (): CommunityHeroScores => ({
+    ...answer([]),
+    minimums: { matches: 10, contributors: 1, busiestContributorShare: 1, rankedHeroes: 5 },
+  });
+
+  it('explains that one player can supply every match during testing', () => {
+    const note = scoresSourceNote(soloAnswer());
+    expect(note).toContain('at least 10 matches');
+    expect(note).toContain('one player can supply all matches');
+    expect(note).not.toContain('more than half');
+  });
+
+  it('does not ask a solo contributor for more players on either display', () => {
+    const data = { ...soloAnswer(), heroes: [{ ...magneto, hero: 'hela', damage: collecting(5, 1, true) }] };
+    expect(heroBuildSignals('hela', data)[0].detail).toBe('5 of 10 matches');
+    expect(heroSignalCard('hela', data)).toEqual({
+      kind: 'waiting', heading: 'Collecting data', progress: '5 of 10 matches', percent: 50,
+    });
+    expect(heroBuildSignals('groot', soloAnswer())[0].detail).toBe('0 of 10 matches');
+  });
+});

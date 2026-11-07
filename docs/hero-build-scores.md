@@ -59,7 +59,9 @@ change.
 
 ## Who gets a score
 
-The rule is `hero_figure_qualifies` in the database: 10 or more lines (one player
+During solo testing, `read_community_hero_scores` allows 10 or more lines from one player, including when that player supplied every line. This temporary exception applies only to build signals and their ability figures; other community readers still use the shared rule below. Figures can therefore describe a single tester and are not representative community benchmarks. To restore the shared rule, add a new migration restoring this reader from `20261104130000_hero_score_read.sql` and set `HERO_SCORE_MINIMUMS` back to 3 contributors and a 0.5 share.
+
+The shared rule is `hero_figure_qualifies` in the database: 10 or more lines (one player
 on one hero in one match), 3 or more players, nobody above half. It is applied
 per half-season and per mode, before anything is added up, and on each input on
 its own.

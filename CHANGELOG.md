@@ -34,6 +34,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Hero build signals temporarily accept 10 matches from one player, even when that player supplies all matches, so solo testing can unlock figures. Scores still need five qualifying heroes ([#534](https://github.com/anthonyturner/rivals-pulse-web/pull/534)).
 - Hero profiles now show official health and movement speed alongside role and difficulty above the detail tabs ([#532](https://github.com/anthonyturner/rivals-pulse-web/pull/532)).
 - Hero detail tabs now use fewer nested card borders so the content is easier to scan ([#530](https://github.com/anthonyturner/rivals-pulse-web/pull/530)).
 - Hero details now switch between Overview, Abilities, Build Signals, Matchups, Stats, Strategy, Team-Ups, and Videos in one panel beneath the hero profile, without jumping down the page ([#528](https://github.com/anthonyturner/rivals-pulse-web/pull/528)).

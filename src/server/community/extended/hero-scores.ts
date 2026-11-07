@@ -15,11 +15,11 @@ import { heroAbilitySlots, type HeroAbilitySlot } from './hero-ability-tags.ts';
  */
 
 export const HERO_SCORE_MINIMUMS: HeroScoreMinimums = {
-  // The first three mirror `hero_figure_qualifies`, which is where the rule is applied. They are here
+  // The first three mirror `read_community_hero_scores`, which is where the rule is applied. They are here
   // so the output can say how far along a hero is.
   matches: 10,
-  contributors: 3,
-  busiestContributorShare: 0.5,
+  contributors: 1,
+  busiestContributorShare: 1,
   // A ranking of two heroes would call one of them 10 and the other 1.
   rankedHeroes: 5,
 };
