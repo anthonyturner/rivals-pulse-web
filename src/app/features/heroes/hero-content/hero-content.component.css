@@ -1,0 +1,79 @@
+:host {
+  display: block;
+}
+
+.hero-detail {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  scroll-margin-top: 16px;
+  animation: fade-in 400ms ease-out;
+}
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+.detail-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: none;
+}
+.detail-action:hover {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+.detail-action:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.detail-main {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Beside the roster the panel starts level with it; below that width the gap separates it from the strip. */
+@media (min-width: 920px) {
+  .hero-detail {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero-detail {
+    padding: var(--mobile-panel-padding);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-detail {
+    animation: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,25 @@
+<div class="library page-container page-container--wide">
+  <app-page-header
+    title="Guides"
+    description="Hero playbooks, fundamentals and strategist lessons for Marvel Rivals."
+  />
+
+  @for (group of groups; track group.title) {
+    <section>
+      <h2>{{ group.title }}</h2>
+      <ul class="grid">
+        @for (card of group.cards; track card.title) {
+          <li>
+            <app-guide-card
+              [title]="card.title"
+              [route]="card.route"
+              [imageUrl]="card.imageUrl"
+              [caption]="card.caption"
+              [blurb]="card.blurb"
+            />
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

@@ -1,0 +1,143 @@
+<div class="insight-page win-rates-page page-container page-container--wide">
+  <header class="intro">
+    <h1>Marvel Rivals hero win rates</h1>
+    <p class="lede">
+      How each hero is winning in matches RivalsPulse players recorded, all ranks together. For
+      tiers, see the <a routerLink="/tier-list">tier list</a>.
+      <a routerLink="/how-we-count">How we count</a>
+    </p>
+  </header>
+
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+  @if (showModePicker() || meta()) {
+    <div class="toolbar">
+      @if (showModePicker()) {
+        <app-filter-select
+          label="Mode"
+          [options]="modeChoices()"
+          [value]="selectedMode()"
+          (valueChange)="chooseMode($event)"
+        />
+      }
+      @if (meta()) {
+        <p class="meta">{{ meta() }}</p>
+      }
+    </div>
+  }
+
+  @if (failed()) {
+    <app-state-panel kind="error" heading="Win rates could not be loaded" [announce]="false">
+      <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (loading()) {
+    <app-state-panel kind="loading" heading="Loading win rates" [announce]="false">
+      <p>Fetching the latest counted matches.</p>
+    </app-state-panel>
+  } @else if (view(); as v) {
+    @if (v.modeCaveat; as caveat) {
+      <app-notice>{{ caveat }}</app-notice>
+    }
+
+    @if (v.fallbackNotice; as notice) {
+      <app-notice>{{ notice }}</app-notice>
+    }
+
+    @switch (v.state) {
+      @case ('unavailable-season') {
+        <app-state-panel heading="{{ v.requestedLabel }} is not shown here">
+          <p>
+            This page shows win rates for the latest half-season only, so
+            {{ v.requestedLabel }}'s numbers are not shown here. The
+            <a routerLink="/tier-list">tier list</a> has a half-season picker.
+          </p>
+          @if (v.season; as season) {
+            <a routerLink="/win-rates">See {{ season.label }} win rates</a>
+          }
+        </app-state-panel>
+      }
+      @case ('empty') {
+        <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
+          <p>
+            No matches are counted {{ v.scopeLabel }} yet. Win rates appear here as RivalsPulse
+            players record matches, once a hero has {{ v.minimumLabel }}.
+          </p>
+        </app-state-panel>
+      }
+      @case ('partial') {
+        <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
+          <p>
+            {{ v.matchesCountedLabel }} counted {{ v.scopeLabel }} so far, but no hero has reached
+            {{ v.minimumLabel }}. A hero's win rate appears once it has.
+          </p>
+        </app-state-panel>
+      }
+      @case ('full') {
+        <div class="card">
+          <h2 id="rates-title">Heroes, highest win rate first</h2>
+          <table aria-labelledby="rates-title">
+            <thead>
+              <tr>
+                <th scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
+                <th scope="col">Hero</th>
+                <th scope="col" class="col-role">Role</th>
+                <th scope="col" class="col-rate">Win rate</th>
+                <th scope="col" class="col-games">Wins / games</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of v.ranked; track row.hero) {
+                <tr>
+                  <td class="col-rank">{{ row.rank }}</td>
+                  <th scope="row">
+                    <a class="hero-link" [routerLink]="['/heroes', row.hero]">
+                      <img appHeroImageFallback [src]="row.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                      <span class="hero-name">{{ row.name }}</span>
+                    </a>
+                    @if (row.role) {
+                      <span class="role-under">{{ row.role }}</span>
+                    }
+                  </th>
+                  <td class="col-role">{{ row.role }}</td>
+                  <td class="col-rate">
+                    <div class="rate" [attr.data-tone]="row.tone">
+                      <strong>{{ row.winRateLabel }}</strong>
+                      <span class="bar" aria-hidden="true">
+                        <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="col-games">
+                    <span class="visually-hidden">{{ row.winsGamesSpoken }}</span>
+                    <span aria-hidden="true">{{ row.winsGamesLabel }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    @if ((v.state === 'full' || v.state === 'partial') && v.building.length > 0) {
+      <section class="building" aria-labelledby="building-title">
+        <div class="section-heading">
+          <h2 id="building-title">Progress toward {{ v.minimumLabel }}</h2>
+          <p>Heroes need {{ v.minimumLabel }} before they get a win rate.</p>
+        </div>
+
+        <app-hero-progress-list [rows]="v.building" />
+      </section>
+    }
+
+    @if (v.state !== 'unavailable-season') {
+      <p class="method-note">
+        RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match
+        and Competitive are counted together unless you pick a single mode. A game is one hero on
+        the scoreboard of one match, so a hero on both teams of one match is counted twice. Matches
+        without a win or a loss, and matches where the game did not say which mode they were, are
+        left out.
+      </p>
+    }
+  }
+</div>

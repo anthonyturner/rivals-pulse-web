@@ -1,0 +1,118 @@
+import type { SafeResourceUrl } from '@angular/platform-browser';
+
+export type HeroRole = 'Vanguard' | 'Duelist' | 'Strategist' | 'Multi-Role';
+
+export interface HeroGameplayArchetype {
+  role: HeroRole;
+  label: string;
+  description: string;
+  sourceTitle: string;
+  sourceUrl: string;
+  timestamp: string;
+}
+
+export interface HeroAbilityTechnicalDetail {
+  label: string;
+  value: string;
+}
+
+export interface HeroAbility {
+  name: string;
+  type: string;
+  description: string;
+  technicalDetails?: HeroAbilityTechnicalDetail[];
+}
+
+export interface HeroOfficialSource {
+  id?: string;
+  sourceUrl: string;
+  subtitle?: string;
+  fetchedFrom?: string;
+  baseStats?: HeroAbilityTechnicalDetail[];
+  baseStatKits?: {
+    role?: HeroRole;
+    label: string;
+    stats: HeroAbilityTechnicalDetail[];
+  }[];
+}
+
+export interface HeroRoleAbilityKit {
+  role: HeroRole;
+  label: string;
+  abilities: HeroAbility[];
+}
+
+export interface HeroPlaystyleGuide {
+  id: string;
+  role?: HeroRole;
+  title: string;
+  sourceTitle?: string;
+  sourceUrl?: string;
+  summary: string;
+  whenToUse: string;
+  coreIdeas: {
+    label: string;
+    description: string;
+  }[];
+  upgradeNotes: string[];
+  ultimateNotes: string[];
+}
+
+export interface HeroStrategySituation {
+  label: string;
+  description: string;
+}
+
+export interface HeroStrategyGuide {
+  sourceTitle: string;
+  sourceUrl: string;
+  summary: string;
+  paragraphs: string[];
+  situations: HeroStrategySituation[];
+}
+
+export type HeroVideoType = 'paz-gameplay' | 'paz-counters-combos';
+
+export interface HeroVideo {
+  heroId: string | null;
+  /** Null for a hero's own video; set for a role's fallback video. */
+  role?: HeroRole | null;
+  videoType: HeroVideoType;
+  youtubeId: string;
+  title: string;
+}
+
+/** How one YouTube video is shown: its still picture, and the player that replaces the picture when pressed. */
+export interface HeroVideoPlayer {
+  embedUrl: SafeResourceUrl;
+  thumbnailUrl: string;
+}
+
+/** A video offered on a hero page: `player` is missing when the link is a YouTube search rather than one video. */
+export interface HeroVideoSearch {
+  label: string;
+  query: string;
+  url: string;
+  player?: HeroVideoPlayer;
+}
+
+export interface Hero {
+  id: string;
+  name: string;
+  role: HeroRole;
+  difficulty: number;
+  summary: string;
+  overview?: string;
+  strategyGuide?: HeroStrategyGuide;
+  playstyle: string;
+  strengths: string[];
+  weaknesses: string[];
+  counters: string[];
+  synergies: string[];
+  abilities: HeroAbility[];
+  roleAbilityKits?: HeroRoleAbilityKit[];
+  playstyles?: HeroPlaystyleGuide[];
+  gameplayArchetypes?: HeroGameplayArchetype[];
+  officialSource?: HeroOfficialSource;
+  imageUrl: string;
+}

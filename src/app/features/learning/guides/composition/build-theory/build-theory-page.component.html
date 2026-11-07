@@ -1,0 +1,65 @@
+<div class="guide-article page-container">
+  <header class="guide-header">
+    <nav class="guide-nav" aria-label="Breadcrumb">
+      <a class="guide-link" routerLink="/hero-guides">Guides</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Build theory</span>
+    </nav>
+    <app-eyebrow>Composition</app-eyebrow>
+    <h1>Utility builds and how they differ from damage, sustain, mobility, and ultimate plans.</h1>
+    <p class="guide-lede">
+      Marvel Rivals does not ask you to buy items mid-match. A build is the way you shape a hero
+      around their strongest fight pattern: which cooldowns you protect, which angles you take, what
+      your team plays around, and how you turn one advantage into a won fight.
+    </p>
+  </header>
+
+  <app-notice>
+    <strong>Utility wins by changing choices.</strong> Protect the key tool, force the bad path, then
+    let your team cash out.
+  </app-notice>
+
+  <section class="guide-section">
+    <h2>Utility builds are about control, not raw output.</h2>
+    <p class="guide-text">
+      A damage build asks how quickly you can threaten a target. A sustain build asks how long your
+      team can survive pressure. A mobility build asks where the fight should happen. An ultimate
+      build asks how to create the fight-winning cast. A utility build asks what tool removes the
+      enemy's best option.
+    </p>
+    <ul class="guide-grid">
+      @for (build of buildTypes; track build.name) {
+        <li class="guide-tile">
+          <div class="guide-tile-head">
+            <img appHeroImageFallback [src]="build.image" alt="" width="40" height="40" loading="lazy" />
+            <h3>{{ build.name }}</h3>
+          </div>
+          <p class="guide-text">{{ build.summary }}</p>
+          <p class="guide-text"><strong>Priority:</strong> {{ build.priority }}</p>
+          <p class="guide-text"><strong>Example:</strong> {{ build.example }}</p>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="guide-section">
+    <h2>How to recognize a real utility build.</h2>
+    <ul class="guide-grid">
+      @for (signal of utilitySignals; track signal.label) {
+        <li class="guide-tile">
+          <h3>{{ signal.label }}</h3>
+          <p class="guide-text">{{ signal.copy }}</p>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="guide-section">
+    <h2>Four questions before you call something a build.</h2>
+    <ol class="guide-steps">
+      @for (question of decisionQuestions; track question) {
+        <li>{{ question }}</li>
+      }
+    </ol>
+  </section>
+</div>

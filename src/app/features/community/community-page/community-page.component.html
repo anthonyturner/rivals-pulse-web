@@ -1,0 +1,36 @@
+<section class="community-page page-container page-container--wide">
+  <header class="community-page__header">
+    <h1 class="community-page__title">Community totals</h1>
+    <p class="community-page__intro">
+      Anonymous totals from players' uploads: no names or ids, and a number shows only once enough matches back it, and while few players upload it can come from one player. Read the <a class="community-page__link" routerLink="/privacy">privacy notes</a> or <a class="community-page__link" routerLink="/how-we-count">how we count</a>. Your own matches and insights are on <a class="community-page__link" routerLink="/profile">My stats</a>, for your account only.
+    </p>
+  </header>
+
+  <div #tabList class="community-page__tabs" role="tablist" aria-label="Community totals by app screen">
+    @for (tab of tabs(); track tab.id; let index = $index) {
+      <a
+        #tabLink
+        class="community-page__tab"
+        role="tab"
+        [id]="tab.tabId"
+        [routerLink]="['..', tab.id]"
+        [attr.aria-selected]="tab.selected"
+        aria-controls="community-panel"
+        [attr.tabindex]="tab.selected ? 0 : -1"
+        (keydown)="onTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </a>
+    }
+  </div>
+
+  <div
+    id="community-panel"
+    class="community-page__panel"
+    role="tabpanel"
+    tabindex="0"
+    [attr.aria-labelledby]="selectedTab().tabId"
+  >
+    <ng-container [ngComponentOutlet]="selectedTab().component" />
+  </div>
+</section>

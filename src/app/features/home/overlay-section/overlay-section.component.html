@@ -1,0 +1,52 @@
+<app-home-band
+  tone="dark"
+  heading="The overlay does the work while you play"
+  headingId="overlay-section-title"
+  lede="RivalsPulse runs beside Marvel Rivals through Overwolf. It reads the match and puts what matters on screen: no typing, no alt-tabbing."
+>
+  <div class="overlay-section">
+    <ul class="features">
+      @for (feature of features; track feature.title) {
+        <li class="feature">
+          <span class="feature-icon" aria-hidden="true">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path [attr.d]="feature.iconPath" />
+            </svg>
+          </span>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+          @if (feature.link; as link) {
+            <a class="feature-link" [routerLink]="link.path">{{ link.label }}<span aria-hidden="true"> →</span></a>
+          }
+        </li>
+      }
+    </ul>
+
+    <ul class="shots">
+      @for (shot of screenshots; track shot.src) {
+        <li>
+          <figure class="shot">
+            <img
+              class="shot__image"
+              [src]="shot.src"
+              [attr.width]="shot.width"
+              [attr.height]="shot.height"
+              [alt]="shot.alt"
+              loading="lazy"
+            />
+            <figcaption class="shot__caption">{{ shot.caption }}</figcaption>
+          </figure>
+        </li>
+      }
+    </ul>
+  </div>
+</app-home-band>

@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.house-ad {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.house-ad__title {
+  font-size: var(--type-h3);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.house-ad__text {
+  color: var(--on-ink);
+  font-size: var(--type-small);
+  line-height: 1.5;
+}
+
+app-get-app-button {
+  --get-app-focus: var(--ink-focus);
+}

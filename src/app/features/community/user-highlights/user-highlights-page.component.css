@@ -1,0 +1,77 @@
+.clip,
+.review,
+.submit {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+.clip-player,
+.clip-summary,
+.takeaways {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--type-small);
+}
+
+video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: #000;
+}
+
+.clip-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.guide-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.clip-summary > h2 {
+  font-size: var(--type-title);
+}
+
+.timeline {
+  display: grid;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-small);
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  padding-block: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.timeline span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+@media (min-width: 860px) {
+  .clip {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .review {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+
+  .submit {
+    grid-template-columns: 1fr 1fr;
+  }
+}

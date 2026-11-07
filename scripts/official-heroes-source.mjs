@@ -1,13 +1,22 @@
 const officialHeroesUrl = 'https://www.marvelrivals.com/heroes/index.html';
+const officialHomeUrl = 'https://www.marvelrivals.com/index.html';
 
 export async function scrapeOfficialHeroes() {
   const indexHtml = await fetchText(officialHeroesUrl);
   const heroCards = parseHeroCards(indexHtml);
+  // The hero index no longer ships portraits, so they are read from the hero
+  // list on the official home page, which still carries one per hero.
+  const portraits = heroCards.some((card) => !card.imageUrl)
+    ? parseHeroPortraits(await fetchText(officialHomeUrl))
+    : new Map();
   const heroes = [];
 
   for (const card of heroCards) {
     const articleHtml = await fetchText(card.url);
-    heroes.push(parseOfficialHeroArticle(card, articleHtml));
+    heroes.push(parseOfficialHeroArticle(
+      { ...card, imageUrl: card.imageUrl || portraits.get(card.slug) || '' },
+      articleHtml,
+    ));
   }
 
   return {
@@ -42,6 +51,24 @@ export function parseHeroCards(html) {
   }
 
   return uniqueBy(cards, (card) => card.id || card.slug);
+}
+
+export function parseHeroPortraits(html) {
+  const portraits = new Map();
+  const anchorPattern = /<a\b([^>]*\bdata-name="[^"]+"[^>]*)>([\s\S]*?)<\/a>/gi;
+  let match;
+
+  while ((match = anchorPattern.exec(html))) {
+    const attrs = parseAttributes(match[1]);
+    const slug = slugify(attrs['data-name'] ?? '');
+    const imageUrl = firstImage(match[2]);
+
+    if (slug && imageUrl && !portraits.has(slug)) {
+      portraits.set(slug, imageUrl);
+    }
+  }
+
+  return portraits;
 }
 
 export function parseOfficialHeroArticle(card, html) {
@@ -112,7 +139,7 @@ export function parseOfficialHeroArticle(card, html) {
 }
 
 export function stableOfficialPayload(payload) {
-  return JSON.stringify({
+  return {
     sourceUrl: payload.sourceUrl,
     heroes: payload.heroes.map((hero) => ({
       id: hero.id,
@@ -130,7 +157,7 @@ export function stableOfficialPayload(payload) {
         technicalDetails: ability.technicalDetails,
       })),
     })).sort((a, b) => a.id.localeCompare(b.id)),
-  }, null, 2);
+  };
 }
 
 export function diffOfficialPayloads(previousPayload, nextPayload) {
@@ -164,7 +191,7 @@ async function fetchText(url) {
   const response = await fetch(url, {
     headers: {
       accept: 'text/html,application/xhtml+xml',
-      'user-agent': 'marvel-rivals-coach-official-hero-sync/1.0',
+      'user-agent': 'rivals-pulse-official-hero-sync/1.0',
     },
   });
 
@@ -442,8 +469,10 @@ function uniqueBy(items, getKey) {
   return unique;
 }
 
+// Stored payloads come back from a jsonb column, which does not keep key order, so the
+// comparison must not depend on it.
 function stableHero(hero) {
-  return JSON.stringify({
+  return canonicalJson({
     name: hero.name,
     role: hero.role,
     summary: hero.summary,
@@ -457,6 +486,14 @@ function stableHero(hero) {
       technicalDetails: ability.technicalDetails,
     })),
   });
+}
+
+function canonicalJson(value) {
+  return JSON.stringify(value, (_key, item) =>
+    item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0)))
+      : item,
+  );
 }
 
 function escapeRegExp(value) {

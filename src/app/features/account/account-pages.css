@@ -1,0 +1,101 @@
+:host {
+  display: block;
+}
+
+.account {
+  display: grid;
+  gap: 16px;
+  padding-block: 16px 32px;
+}
+
+.panel {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.panel > * + *,
+form > * + * {
+  margin-top: 12px;
+}
+
+h2 {
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.message > * {
+  margin-bottom: 12px;
+}
+
+.note {
+  font-size: var(--type-small);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 12px 0 0;
+}
+
+dt {
+  font-size: var(--type-small);
+  font-weight: 800;
+}
+
+dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.actions,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.actions a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+}
+
+.guide-button {
+  min-height: 44px;
+  justify-content: center;
+}
+
+.danger:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger-ink);
+}
+
+input {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-wrap: anywhere;
+  --player-avatar-size: 40px;
+}
+
+@media (max-width: 560px) {
+  .guide-button {
+    width: 100%;
+  }
+}

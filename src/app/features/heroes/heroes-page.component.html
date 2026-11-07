@@ -1,0 +1,28 @@
+<section class="heroes-page page-container page-container--wide">
+  <app-hero-page-header></app-hero-page-header>
+
+  @if (isRosterFailed()) {
+    <app-state-panel kind="error" heading="Heroes could not be loaded">
+      Try again in a few minutes.
+    </app-state-panel>
+  } @else {
+    <div class="workspace" [class.workspace--with-hero]="gridLayout() === 'roster'">
+      <app-hero-grid
+        [layout]="gridLayout()"
+        [heroes]="filteredHeroes()"
+        [roles]="roles"
+        [selectedRole]="selectedRole()"
+        [selectedHeroId]="selectedHeroId()"
+        [searchTerm]="searchTerm()"
+        [gridMode]="heroGridMode()"
+        [loading]="!isRosterLoaded()"
+        (roleSelected)="selectRole($event)"
+        (searchChanged)="updateSearchTerm($event)"
+        (gridModeSelected)="selectHeroGridMode($event)"
+        (filtersReset)="resetHeroFilters()"
+      ></app-hero-grid>
+
+      <app-hero-content [hero]="selectedHero()" [controller]="detailsController"></app-hero-content>
+    </div>
+  }
+</section>

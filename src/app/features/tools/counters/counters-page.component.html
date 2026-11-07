@@ -1,0 +1,108 @@
+<div class="counters page-container page-container--wide">
+  <app-page-header
+    title="Hero Counters"
+    description="How each hero fares against every other in RivalsPulse players’ matches."
+  />
+  @if (sourceLine(); as line) {
+    <p class="source">{{ line }}</p>
+  }
+  @if (scopeNotice(); as notice) {
+    <app-notice>{{ notice }}</app-notice>
+  }
+  <p class="to-planner">Facing several divers? <a routerLink="/dive-planner">Use the dive planner.</a></p>
+
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+  <div class="workspace">
+    <section class="picker" aria-label="Choose a hero">
+      <div class="controls">
+        <label class="search">
+          <span>Search heroes</span>
+          <input type="search" placeholder="Hero name" [value]="searchTerm()" (input)="updateSearch($event)" />
+        </label>
+        <app-filter-select label="Role" [options]="roleOptions" [value]="selectedRole()" (valueChange)="selectRole($event)" />
+      </div>
+
+      @if (!heroesLoaded()) {
+        <app-state-panel kind="loading" [announce]="false">Loading heroes…</app-state-panel>
+      } @else if (pickerRows().length > 0) {
+        <ul class="hero-list" aria-label="Heroes">
+          @for (row of pickerRows(); track row.hero.id) {
+            <li>
+              <button
+                type="button"
+                class="pick"
+                [attr.aria-current]="row.hero.id === selectedHeroId() ? 'true' : null"
+                (click)="selectHero(row.hero.id)"
+              >
+                <app-hero-tile
+                  selectable
+                  [selected]="row.hero.id === selectedHeroId()"
+                  [name]="row.hero.name"
+                  [imageUrl]="row.hero.imageUrl"
+                >
+                  <span class="detail">{{ row.detail }}</span>
+                </app-hero-tile>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-state-panel>{{ pickerEmptyMessage() }}</app-state-panel>
+      }
+    </section>
+
+    <div class="result">
+      @if (selected(); as current) {
+        <header class="result-head">
+          <img appHeroImageFallback [src]="current.hero.imageUrl" alt="" width="56" height="56" />
+          <div>
+            <h2 #resultHeading tabindex="-1">{{ current.hero.name }}</h2>
+            <p class="detail">{{ current.detail }}</p>
+          </div>
+          <a class="link" [routerLink]="['/heroes', current.hero.id]">Open in Heroes</a>
+        </header>
+
+        @if (matchupNotice(); as notice) {
+          <app-state-panel [kind]="notice.kind" [heading]="notice.heading" [headingLevel]="3" [announce]="false">
+            {{ notice.message }}
+          </app-state-panel>
+        } @else {
+          @for (panel of panels(); track panel.key) {
+            <section class="panel">
+              <div class="panel-head">
+                <h3>{{ panel.title }}</h3>
+                <span class="count"><span class="visually-hidden">Count: </span>{{ panel.cards.length }}</span>
+              </div>
+              @if (panel.cards.length > 0) {
+                <ul class="tiles">
+                  @for (card of panel.cards; track card.hero.id) {
+                    <li>
+                      <button type="button" class="pick" (click)="pivotTo(card.hero.id)">
+                        <app-hero-tile selectable [name]="card.hero.name" [imageUrl]="card.hero.imageUrl">
+                          <span tileFigure class="figure"><span class="visually-hidden">, win rate </span>{{ card.winRate }}</span>
+                          <span class="detail">{{ card.sample }}</span>
+                        </app-hero-tile>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <app-state-panel>{{ panel.empty }}</app-state-panel>
+              }
+            </section>
+          }
+          <p class="note">
+            Each card is a record from matches RivalsPulse players recorded: how often that hero won when the two
+            faced each other. A short run is pulled toward even, and a pairing appears only once it has
+            {{ minimumMatches() }} recorded matches.
+          </p>
+        }
+      } @else if (heroesLoaded()) {
+        <app-state-panel>Pick a hero to see its matchups.</app-state-panel>
+      } @else {
+        <app-state-panel kind="loading" [announce]="false">Loading matchups…</app-state-panel>
+      }
+    </div>
+  </div>
+</div>

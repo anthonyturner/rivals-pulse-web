@@ -1,0 +1,116 @@
+/* Six columns do not fit a phone, so the table scrolls inside its own region. Its focus ring sits outside the region, because the sticky first column would paint over an inset one. */
+.scroll {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  font-size: var(--type-small);
+  line-height: 1.3;
+}
+
+tr {
+  background: var(--bg-elevated);
+}
+
+th,
+td {
+  padding: 6px 8px;
+  box-shadow: inset 0 1px 0 var(--border);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: right;
+}
+
+thead th {
+  box-shadow: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+th:first-child {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  text-align: left;
+}
+
+.subject {
+  background: var(--surface-2);
+}
+
+.game-name {
+  display: block;
+  font-weight: 700;
+}
+
+.subject .game-name {
+  font-weight: 850;
+}
+
+th small {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 400;
+}
+
+.delta {
+  display: block;
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.rank .delta {
+  display: inline;
+  margin-left: 4px;
+}
+
+[data-trend='up'] {
+  color: var(--win-ink);
+}
+
+[data-trend='down'] {
+  color: var(--loss-ink);
+}
+
+.milestones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.milestones div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+dt,
+.note {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+dd {
+  font-size: var(--type-title);
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.note {
+  margin-top: 8px;
+}
+
+.sources {
+  margin-top: 12px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.sources span[aria-hidden] {
+  margin-inline: 6px;
+}

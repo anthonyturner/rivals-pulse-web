@@ -7,20 +7,26 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 
+import { handleAccountHttp } from './server/account';
+import { handleAdminHttp } from './server/admin';
 import {
   getContentStatusFromDatabase,
   getExternalSourceFromDatabase,
   getGlossaryTermsFromDatabase,
-  getHeroFromDatabase,
   getHeroVideosFromDatabase,
   getHeroesFromDatabase,
   getHomeContentBlocksFromDatabase,
   getHomePortalsFromDatabase,
-  getTierListFromDatabase,
-} from './content-database';
-import { syncHomeNews } from './home-news-sync';
-import { syncGameStats } from './game-stats-sync';
-import { syncTierList } from './tier-list-sync';
+} from './server/content';
+import { getCommunityFigures, getCommunityHeroScores, getCommunityKills } from './server/community/extended';
+import { getCommunityInsights } from './server/community/insights';
+import { getCommunityMatches } from './server/community/matches';
+import { getHeroMatchups } from './server/heroes/matchups';
+import { getHeroPairs } from './server/heroes/pairs';
+import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
+import { syncHomeNews } from './server/content/home';
+import { recordSyncRun, runGameStatsSync, syncGameStats } from './server/sync';
+import { getSupabaseClient } from './server/supabase';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -31,22 +37,56 @@ app.get('/api/content/status', (_req, res) => {
   handleApiResponse(res, () => getContentStatusFromDatabase());
 });
 
-app.get('/api/heroes', (_req, res) => {
-  handleApiResponse(res, () => getHeroesFromDatabase());
+app.get('/api/hero-stats', (req, res) => {
+  const read = (name: string): string | undefined => (typeof req.query[name] === 'string' ? req.query[name] : undefined);
+
+  handleApiResponse(res, () => getHeroStats(heroStatsQueryFrom(read)));
 });
 
-app.get('/api/heroes/:id', (req, res) => {
-  handleApiResponse(res, () => {
-    const hero = getHeroFromDatabase(req.params.id);
+app.get('/api/community/matches', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
-    if (!hero) {
-      res.status(404);
+  handleApiResponse(res, () => getCommunityMatches({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
 
-      return { message: `Hero not found: ${req.params.id}` };
-    }
+app.get('/api/community/figures', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
-    return hero;
-  });
+  handleApiResponse(res, () => getCommunityFigures({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/community/hero-scores', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
+
+  handleApiResponse(res, () => getCommunityHeroScores({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/community/insights', (_req, res) => {
+  handleApiResponse(res, () => getCommunityInsights());
+});
+
+app.get('/api/community/kills', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
+
+  handleApiResponse(res, () => getCommunityKills({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/hero-matchups', (_req, res) => {
+  handleApiResponse(res, () => getHeroMatchups());
+});
+
+app.get('/api/hero-pairs', (_req, res) => {
+  handleApiResponse(res, () => getHeroPairs());
+});
+
+app.get('/api/community/stats', (req, res) => {
+  const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
+
+  handleApiResponse(res, () => getRoleStats({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/heroes', (_req, res) => {
+  handleApiResponse(res, () => getHeroesFromDatabase());
 });
 
 app.get('/api/hero-videos', (_req, res) => {
@@ -75,7 +115,7 @@ app.get('/api/glossary', (_req, res) => {
 });
 
 app.get('/api/game-stats', (_req, res) => {
-  handleApiResponse(res, () => syncGameStats());
+  handleApiResponse(res, () => syncGameStats(getSupabaseClient()));
 });
 
 app.get('/api/sync/game-stats', (req, res) => {
@@ -84,25 +124,7 @@ app.get('/api/sync/game-stats', (req, res) => {
     return;
   }
 
-  handleApiResponse(res, () => syncGameStats());
-});
-
-app.get('/api/tier-list', (req, res) => {
-  handleApiResponse(res, () => {
-    const season = typeof req.query['season'] === 'string' ? Number(req.query['season']) : undefined;
-    const rank = typeof req.query['rank'] === 'string' ? req.query['rank'] : '5+';
-
-    return getTierListFromDatabase(Number.isFinite(season) ? season : undefined, rank);
-  });
-});
-
-app.get('/api/sync/tier-list', (req, res) => {
-  if (!isAuthorizedSyncRequest(req)) {
-    res.status(401).json({ message: 'Missing sync authorization' });
-    return;
-  }
-
-  handleApiResponse(res, () => syncTierList());
+  handleApiResponse(res, () => runGameStatsSync(getSupabaseClient(), recordSyncRun));
 });
 
 app.get('/api/external-sources/:sourceKey', (req, res) => {
@@ -117,6 +139,14 @@ app.get('/api/external-sources/:sourceKey', (req, res) => {
 
     return source;
   });
+});
+
+app.all(['/api/auth/*splat', '/api/account/*splat'], (req, res, next) => {
+  handleAccountHttp(req, res, req.path.replace(/^\/api\//, '')).catch(next);
+});
+
+app.all('/api/admin/*splat', (req, res, next) => {
+  handleAdminHttp(req, res, req.path.replace(/^\/api\//, '')).catch(next);
 });
 
 /**
@@ -173,15 +203,16 @@ async function handleApiResponse(res: express.Response, getBody: () => unknown |
 }
 
 function isAuthorizedSyncRequest(req: express.Request): boolean {
-  if (req.headers['x-vercel-cron'] === '1') {
-    return true;
-  }
+  const syncSecrets = [
+    process.env['CRON_SECRET'],
+    process.env['SYNC_SECRET'],
+  ].filter((value): value is string => Boolean(value));
 
-  const syncSecret = process.env['SYNC_SECRET'];
-
-  if (!syncSecret) {
+  if (syncSecrets.length === 0) {
     return req.hostname === 'localhost' || req.hostname === '127.0.0.1';
   }
 
-  return req.headers.authorization === `Bearer ${syncSecret}`;
+  return syncSecrets.some(
+    (secret) => req.headers.authorization === `Bearer ${secret}`,
+  );
 }

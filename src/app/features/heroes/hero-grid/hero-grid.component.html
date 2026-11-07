@@ -1,0 +1,105 @@
+<section class="hero-browser" aria-label="Hero browser">
+  <div class="toolbar">
+    <label class="search-field">
+      <span class="visually-hidden">Search heroes</span>
+      <input
+        type="search"
+        placeholder="Name, strength, or note"
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </label>
+
+    <div class="chip-group" role="group" aria-label="Filter by role">
+      @for (role of roles(); track role) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="selectedRole() === role"
+          (click)="roleSelected.emit(role)"
+        >
+          {{ role }}
+        </button>
+      }
+    </div>
+
+    <p class="count" aria-live="polite" data-testid="hero-count">{{ countLabel() }}</p>
+
+    @if (hasActiveFilters()) {
+      <button type="button" class="chip chip--clear" data-testid="clear-filters" (click)="filtersReset.emit()">
+        Clear filters
+      </button>
+    }
+
+    @if (isGrid()) {
+      <div class="chip-group view-toggle" role="group" aria-label="Hero card layout">
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="gridMode() === 'rows'"
+          (click)="gridModeSelected.emit('rows')"
+        >
+          Rows
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="gridMode() === 'thumbs'"
+          (click)="gridModeSelected.emit('thumbs')"
+        >
+          Thumbs
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (loading()) {
+    <ul class="hero-grid" aria-busy="true" aria-label="Loading heroes">
+      @for (placeholder of placeholders; track placeholder) {
+        <li class="hero-card hero-card--placeholder" aria-hidden="true"></li>
+      }
+    </ul>
+  } @else if (cards().length === 0) {
+    <div class="empty-state" role="status">
+      <p>No heroes match your filters.</p>
+      @if (hasActiveFilters()) {
+        <button type="button" class="chip chip--clear" (click)="filtersReset.emit()">Clear filters</button>
+      }
+    </div>
+  } @else {
+    <ul class="hero-grid" [class.hero-grid--rows]="showsRows()" aria-label="Hero list">
+      @for (card of cards(); track card.id) {
+        <li>
+          <a
+            class="hero-card"
+            [routerLink]="['/heroes', card.id]"
+            queryParamsHandling="preserve"
+            [class.selected]="card.selected"
+            [attr.data-hero-id]="card.id"
+            [attr.aria-current]="card.selected ? 'page' : null"
+            [attr.aria-label]="card.label"
+          >
+            <img
+              class="hero-image"
+              [src]="card.imageUrl"
+              alt=""
+              width="40"
+              height="40"
+              [attr.loading]="card.lazy ? 'lazy' : null"
+            />
+            <span class="hero-card-copy">
+              <span class="hero-card-name">{{ card.name }}</span>
+              <span class="role-pill" [class]="card.roleClass">{{ card.roleLabel }}</span>
+              @if (showsRows()) {
+                <span class="hero-card-summary">{{ card.summary }}</span>
+                @if (card.archetype) {
+                  <span class="archetype-label">{{ card.archetype }}</span>
+                }
+              }
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

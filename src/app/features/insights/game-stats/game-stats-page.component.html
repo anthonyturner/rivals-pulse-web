@@ -1,0 +1,100 @@
+<div class="insight-page page-container page-container--wide">
+  <header class="intro">
+    <h1>Marvel Rivals vs other major games</h1>
+    <p class="lede">
+      Steam player counts and rankings for Marvel Rivals next to other major games. A Steam-only
+      snapshot, not a count of everyone who plays.
+    </p>
+    @if (view(); as v) {
+      <p class="meta">{{ v.meta }}</p>
+    }
+  </header>
+
+  @if (view(); as v) {
+    @if (v.saved) {
+      <app-notice>
+        Live numbers could not be loaded. Showing a saved snapshot from {{ v.snapshotDate }}.
+      </app-notice>
+    }
+
+    @if (v.rows.length === 0) {
+      <app-state-panel heading="No games to compare yet">
+        <p>Player counts appear here once the first snapshot is captured.</p>
+      </app-state-panel>
+    } @else {
+      <div class="card">
+        <h2 id="comparison-title">Where Marvel Rivals sits in the pack</h2>
+        <div class="scroll" role="region" tabindex="0" aria-labelledby="comparison-title">
+          <table aria-describedby="comparison-note">
+            <caption class="visually-hidden">Steam players, peaks and ranks for each game</caption>
+            <thead>
+              <tr>
+                <th scope="col">Game</th>
+                <th scope="col">Players now</th>
+                <th scope="col">24h peak</th>
+                <th scope="col">All-time peak</th>
+                <th scope="col">Daily rank</th>
+                <th scope="col">Top sellers</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of v.rows; track row.name) {
+                <tr [class.subject]="row.subject">
+                  <th scope="row">
+                    <span class="game-name">{{ row.name }}</span>
+                    <small>{{ row.category }}</small>
+                  </th>
+                  @for (cell of row.cells; track $index) {
+                    <td [class.rank]="cell.kind === 'rank'">
+                      {{ cell.value }}
+                      @if (cell.delta; as delta) {
+                        <small class="delta" [attr.data-trend]="delta.trend">
+                          <span aria-hidden="true">{{ delta.text }}</span>
+                          <span class="visually-hidden">{{ delta.spoken }}</span>
+                        </small>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="note" id="comparison-note">
+          Changes compare with the previous snapshot. Daily rank is by daily active players on
+          Steam.
+        </p>
+      </div>
+    }
+  } @else {
+    <app-state-panel kind="loading" heading="Loading game stats" [announce]="false">
+      <p>Fetching the latest Steam numbers.</p>
+    </app-state-panel>
+  }
+
+  <div class="card">
+    <h2>Launch milestones</h2>
+    <dl class="milestones">
+      @for (milestone of milestones; track milestone.label) {
+        <div>
+          <dt>{{ milestone.label }}</dt>
+          <dd>{{ milestone.value }}</dd>
+        </div>
+      }
+    </dl>
+    <p class="note">
+      Steam is only one slice of the player base: Marvel Rivals also runs on console, so Steam
+      numbers are best for comparing trends, not for counting everyone who plays.
+    </p>
+  </div>
+
+  <p class="sources">
+    Sources:
+    @for (source of sources; track source.url) {
+      <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.label }}<span class="visually-hidden"> (opens in a new tab)</span></a>
+      @if (!$last) {
+        <span aria-hidden="true">&middot;</span>
+      }
+    }
+  </p>
+</div>

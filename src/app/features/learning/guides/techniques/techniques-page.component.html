@@ -1,0 +1,83 @@
+<div class="guide-article page-container page-container--wide">
+  <header class="guide-header">
+    <nav class="guide-nav" aria-label="Breadcrumb">
+      <a class="guide-link" routerLink="/hero-guides">Guides</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Techniques</span>
+    </nav>
+    <h1>Marvel Rivals fundamentals from Gefest's workbook.</h1>
+    <p class="guide-lede">
+      A curated training guide for cover, high ground, lane control, roles, mindset, VOD review, and
+      hero-specific coaching material.
+    </p>
+  </header>
+
+  <section class="library">
+    <div class="guide-toolbar">
+      <label class="guide-search">
+        <span class="visually-hidden">Search technique guides</span>
+        <input
+          #search
+          type="search"
+          placeholder="Cover, timing, Strategist, VOD review..."
+          [value]="searchTerm()"
+          (input)="updateSearch($event)"
+        />
+      </label>
+      <app-filter-select
+        label="Category"
+        [options]="categoryOptions"
+        [value]="category()"
+        (valueChange)="category.set($event)"
+      />
+    </div>
+
+    <p class="guide-count" role="status">{{ countLabel() }}</p>
+
+    <h2 class="visually-hidden">Technique guides</h2>
+    @if (tiles().length > 0) {
+      <ul class="guide-grid">
+        @for (tile of tiles(); track tile.title) {
+          <li><app-technique-tile [tile]="tile" /></li>
+        }
+      </ul>
+    } @else {
+      <app-state-panel heading="No guides match" [headingLevel]="3">
+        <p>Try another word or topic, or pick All.</p>
+        <button type="button" class="guide-button" (click)="clearFilters()">Clear search and category</button>
+      </app-state-panel>
+    }
+  </section>
+
+  <section class="guide-section">
+    <h2>How a fight flows</h2>
+    <ol class="guide-steps">
+      @for (step of fightFlow; track step.label) {
+        <li>
+          <span class="guide-text"><strong>{{ step.label }}.</strong> {{ step.note }}</span>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="guide-section">
+    <h2>Character examples from the workbook</h2>
+    <ul class="guide-grid">
+      @for (workshop of workshops; track workshop.title) {
+        <li><app-technique-tile [tile]="workshop" /></li>
+      }
+    </ul>
+  </section>
+
+  <section class="guide-section">
+    <h2>Workbook hero coverage by role</h2>
+    <ul class="guide-grid">
+      @for (role of roles; track role.role) {
+        <li class="guide-tile">
+          <h3>{{ role.role }}</h3>
+          <p class="guide-text">{{ role.heroes }}</p>
+        </li>
+      }
+    </ul>
+  </section>
+</div>

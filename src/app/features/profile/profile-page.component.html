@@ -1,0 +1,121 @@
+<div class="profile-page page-container page-container--wide">
+  <app-page-header
+    title="Your stats"
+    description="Your own matches, worked out from what your RivalsPulse desktop app uploaded. Only you can see this page."
+  />
+
+  @let current = view();
+
+  @switch (current.kind) {
+    @case ('loading') {
+      <app-state-panel kind="loading" heading="Loading your stats">
+        <p>Reading the matches your desktop app uploaded.</p>
+      </app-state-panel>
+    }
+    @case ('unavailable') {
+      <app-state-panel kind="error" heading="Your stats are unavailable right now">
+        <p>Your account is fine, we just could not read your matches. Try again in a moment.</p>
+        <button class="action" type="button" (click)="load(true)">Try again</button>
+      </app-state-panel>
+    }
+    @case ('not-linked') {
+      <app-state-panel heading="Link the desktop app to see your stats">
+        <p>
+          Your stats come from the matches the RivalsPulse desktop app uploads. Open the app, ask it
+          for a link code, and type the code on your account page. Linking connects this account to
+          your in-game player.
+        </p>
+        <a class="action" routerLink="/account">Go to your account</a>
+      </app-state-panel>
+    }
+    @case ('no-matches') {
+      <section class="player" aria-labelledby="profile-player">
+        <app-player-avatar [name]="current.player.name" [avatarUrl]="current.player.avatarUrl" />
+        <h2 id="profile-player" class="player-name">{{ current.player.name }}</h2>
+      </section>
+      <app-state-panel heading="No matches yet">
+        <p>Matches appear here after the desktop app uploads one.</p>
+        <p>{{ depthNote }}</p>
+      </app-state-panel>
+    }
+    @case ('ready') {
+      <section class="player" aria-labelledby="profile-player">
+        <app-player-avatar [name]="current.player.name" [avatarUrl]="current.player.avatarUrl" />
+        <div class="player-text">
+          <h2 id="profile-player" class="player-name">{{ current.player.name }}</h2>
+          <p class="caption">{{ current.sample }}</p>
+        </div>
+      </section>
+
+      @if (current.notice; as notice) {
+        <app-notice>{{ notice }}</app-notice>
+      }
+      <p class="caption">{{ depthNote }}</p>
+
+      <section class="panel" aria-labelledby="profile-overview">
+        <h2 id="profile-overview" class="panel-title">Overview</h2>
+        <app-profile-figure-list [figures]="current.overview" />
+      </section>
+
+      <div class="panels">
+        <section class="panel" aria-labelledby="profile-heroes">
+          <h2 id="profile-heroes" class="panel-title">Most played heroes</h2>
+          <p class="caption">The hero you finished each match on, with your win rate on it.</p>
+          <app-community-hero-list [heroes]="current.topHeroes" figureLabel="Your win rate" />
+        </section>
+
+        <div class="column">
+          <section class="panel" aria-labelledby="profile-rates">
+            <h2 id="profile-rates" class="panel-title">Per minute</h2>
+            <p class="caption">
+              From the hero-by-hero figures the app recorded, so they cover fewer matches than the totals above.
+            </p>
+            <app-profile-figure-list [figures]="current.perMinute" />
+          </section>
+
+          <section class="panel" aria-labelledby="profile-records">
+            <h2 id="profile-records" class="panel-title">Records</h2>
+            <app-profile-figure-list [figures]="current.records" />
+          </section>
+        </div>
+      </div>
+
+      <section class="panel" aria-labelledby="profile-recent">
+        <h2 id="profile-recent" class="panel-title">Latest matches</h2>
+        <p class="caption">Newest first. Times are UTC.</p>
+        <ol class="recent">
+          @for (match of current.recent; track match.key) {
+            <li class="match">
+              <span class="match-result match-result--{{ match.outcome }}">{{ match.result }}</span>
+              <span class="match-hero">{{ match.hero }}</span>
+              <span class="match-when">{{ match.playedAt }}</span>
+              <span class="match-line">
+                <span class="match-term">K / D / A</span> {{ match.kda }}
+              </span>
+              <span class="match-line">
+                <span class="match-term">Final hits</span> {{ match.finalHits }}
+              </span>
+              @if (match.where; as where) {
+                <span class="match-line">{{ where }}</span>
+              }
+            </li>
+          }
+        </ol>
+      </section>
+
+      <section class="block" aria-labelledby="profile-matches">
+        <h2 id="profile-matches" class="panel-title">My matches</h2>
+        <p class="caption">
+          Maps and days count Competitive and Quick Match; game modes count every mode. Days are UTC.
+        </p>
+        <app-own-activity-tables [tables]="current.matchTables" />
+      </section>
+
+      <section class="block" aria-labelledby="profile-insights">
+        <h2 id="profile-insights" class="panel-title">My insights</h2>
+        <p class="caption">When you play and win. Competitive and Quick Match; all days and times are UTC.</p>
+        <app-own-activity-tables [tables]="current.insightTables" />
+      </section>
+    }
+  }
+</div>

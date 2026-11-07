@@ -5,10 +5,7 @@ import { dirname, extname, join } from 'node:path';
 import { scrapeOfficialHeroes } from './official-heroes-source.mjs';
 
 const force = process.argv.includes('--force');
-const heroImageRoots = [
-  join(process.cwd(), 'public', 'images', 'heroes'),
-  join(process.cwd(), 'src', 'public', 'images', 'heroes'),
-];
+const heroImagesPath = join(process.cwd(), 'public', 'images', 'heroes');
 
 const payload = await scrapeOfficialHeroes();
 const downloaded = [];
@@ -25,26 +22,18 @@ for (const hero of payload.heroes) {
 
   const extension = imageExtension(sourceUrl);
   const fileName = `${hero.id}${extension}`;
-  const targets = heroImageRoots.map((root) => join(root, fileName));
-  const targetsToWrite = force ? targets : targets.filter((target) => !existsSync(target));
+  const target = join(heroImagesPath, fileName);
 
-  if (targetsToWrite.length === 0) {
+  if (!force && existsSync(target)) {
     skipped.push(hero.name);
     continue;
   }
 
   const bytes = await fetchImage(sourceUrl);
 
-  for (const target of targetsToWrite) {
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, bytes);
-  }
-
-  downloaded.push({
-    hero: hero.name,
-    fileName,
-    targets: targetsToWrite.length,
-  });
+  await mkdir(dirname(target), { recursive: true });
+  await writeFile(target, bytes);
+  downloaded.push({ hero: hero.name, fileName });
 }
 
 console.log(`Official hero image sync complete.`);
@@ -57,7 +46,7 @@ if (missingSource.length > 0) {
 
 if (downloaded.length > 0) {
   for (const item of downloaded) {
-    console.log(`- ${item.hero}: ${item.fileName} (${item.targets} target${item.targets === 1 ? '' : 's'})`);
+    console.log(`- ${item.hero}: ${item.fileName}`);
   }
 }
 
@@ -65,7 +54,7 @@ async function fetchImage(url) {
   const response = await fetch(url, {
     headers: {
       accept: 'image/avif,image/webp,image/png,image/jpeg,*/*',
-      'user-agent': 'marvel-rivals-coach-official-image-sync/1.0',
+      'user-agent': 'rivals-pulse-official-image-sync/1.0',
     },
   });
 

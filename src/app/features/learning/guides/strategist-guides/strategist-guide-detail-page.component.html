@@ -1,0 +1,148 @@
+<div class="guide-article page-container">
+  @if (guide(); as currentGuide) {
+    <header class="guide-header">
+      <nav class="guide-nav" aria-label="Breadcrumb">
+        <a class="guide-link" routerLink="/strategist-guides">Strategist guides</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ currentGuide.shortTitle }}</span>
+      </nav>
+      <app-eyebrow>
+        {{ currentGuide.category }} · {{ currentGuide.duration }} · {{ currentGuide.heroFocus }}
+      </app-eyebrow>
+      <h1>{{ currentGuide.title }}</h1>
+      <p class="guide-lede">{{ currentGuide.summary }}</p>
+      <img
+        class="guide-portrait"
+        appHeroImageFallback
+        [src]="currentGuide.heroImage"
+        alt=""
+        width="96"
+        height="96"
+      />
+    </header>
+
+    <div class="watch">
+      @if (embedUrl(); as source) {
+        <div class="video">
+          <iframe
+            [src]="source"
+            [title]="currentGuide.title"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      }
+      <div class="outcome">
+        <p>{{ currentGuide.outcome }}</p>
+        <a class="guide-link" [href]="videoUrl()" target="_blank" rel="noopener">
+          Open source video
+          <span class="visually-hidden">(opens YouTube in a new tab)</span>
+        </a>
+      </div>
+    </div>
+
+    <app-notice><strong>Patch-aware note.</strong> {{ currentGuide.sourceEra }}</app-notice>
+
+    @if (currentGuide.principles.length > 0) {
+      <section class="guide-section">
+        <h2>Carry into your next match</h2>
+        <ul class="guide-grid pairs">
+          @for (principle of currentGuide.principles; track principle.title) {
+            <li class="guide-tile">
+              <h3>{{ principle.title }}</h3>
+              <p class="guide-text">{{ principle.body }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (currentGuide.decisionRules.length > 0) {
+      <section class="guide-section">
+        <h2>Read the state, take the action</h2>
+        <table class="rules" role="table">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col">When</th>
+              <th role="columnheader" scope="col">Do</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            @for (rule of currentGuide.decisionRules; track rule.when) {
+              <tr role="row">
+                <th role="rowheader" scope="row">{{ rule.when }}</th>
+                <td role="cell">{{ rule.action }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+
+    @if (checkpoints().length > 0) {
+      <section class="guide-section">
+        <h2>Jump to the key moments</h2>
+        <ul class="checkpoints">
+          @for (checkpoint of checkpoints(); track checkpoint.time) {
+            <li>
+              <a class="checkpoint" [href]="checkpoint.url" target="_blank" rel="noopener">
+                <time>{{ checkpoint.time }}</time>
+                <span>
+                  <strong>{{ checkpoint.label }}</strong>
+                  <span class="note">{{ checkpoint.note }}</span>
+                </span>
+                <span aria-hidden="true">↗</span>
+                <span class="visually-hidden">(opens YouTube in a new tab)</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (currentGuide.drills.length > 0) {
+      <section class="guide-section">
+        <h2>Turn it into a habit</h2>
+        <ul class="guide-grid triples">
+          @for (drill of currentGuide.drills; track drill.title) {
+            <li class="guide-tile">
+              <h3>{{ drill.title }}</h3>
+              <p class="guide-text">{{ drill.instructions }}</p>
+              <p class="success"><strong>Success check:</strong> {{ drill.success }}</p>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (currentGuide.reviewQuestions.length > 0) {
+      <section class="guide-section">
+        <h2>Questions for your next replay</h2>
+        <ol class="guide-steps">
+          @for (question of currentGuide.reviewQuestions; track question) {
+            <li>{{ question }}</li>
+          }
+        </ol>
+      </section>
+    }
+
+    @if (relatedGuides().length > 0) {
+      <section class="guide-section">
+        <h2>Related guides</h2>
+        <ul class="guide-grid triples">
+          @for (related of relatedGuides(); track related.id) {
+            <li>
+              <app-guide-card
+                [headingLevel]="3"
+                [title]="related.title"
+                [route]="related.route"
+                [imageUrl]="related.imageUrl"
+                [caption]="related.caption"
+              />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>

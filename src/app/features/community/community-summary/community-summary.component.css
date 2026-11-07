@@ -1,0 +1,49 @@
+:host {
+  display: grid;
+  gap: 12px;
+}
+
+.tab-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.tab-title {
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.tab-scope {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 700;
+}
+
+.footnote {
+  max-width: 70ch;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.link {
+  padding-block: 2px;
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}

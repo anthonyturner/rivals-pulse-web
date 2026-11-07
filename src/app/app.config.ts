@@ -1,16 +1,18 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { provideRouter, TitleStrategy, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideAdSense } from './shared/components/ad-slot/adsense/adsense.provider';
+import { PageMetaTitleStrategy } from './core/seo/page-meta-title.strategy';
 import { provideClientHydration, withEventReplay, withHttpTransferCacheOptions } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled' })),
+    { provide: TitleStrategy, useExisting: PageMetaTitleStrategy },
     provideHttpClient(withFetch()),
     provideClientHydration(
       withEventReplay(),
@@ -18,6 +20,6 @@ export const appConfig: ApplicationConfig = {
         filter: (req) => !req.url.startsWith('/api/'),
       }),
     ),
-    provideAnimationsAsync(),
+    provideAdSense(),
   ]
 };

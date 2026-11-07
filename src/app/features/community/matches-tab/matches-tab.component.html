@@ -1,0 +1,147 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Community matches"
+  subject="the community's matches"
+  [summary]="emptyPreview()"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+  [link]="link"
+>
+  @if (current.kind === 'ready') {
+    <p class="caption">{{ current.sample }}</p>
+
+    <div class="panels">
+      <section class="panel" aria-labelledby="matches-maps-title">
+        <h3 id="matches-maps-title" class="panel-title">Win rate by map</h3>
+        <p class="caption">
+          Competitive and Quick Match together, from the side of the player who recorded each match.
+        </p>
+        @if (current.maps.rows.length > 0) {
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">Win rate on each map, as a whole percentage</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Map</th>
+                  <th scope="col">Win rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of current.maps.rows; track row.map) {
+                  <tr>
+                    <th scope="row">{{ row.map }}</th>
+                    <td>
+                      <div class="rate">
+                        <strong>{{ row.winRateLabel }}</strong>
+                        <span class="bar" aria-hidden="true">
+                          <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (current.maps.note) {
+          <p class="caption">{{ current.maps.note }}</p>
+        }
+        @if (current.maps.pendingNote) {
+          <p class="caption">{{ current.maps.pendingNote }}</p>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="matches-modes-title">
+        <h3 id="matches-modes-title" class="panel-title">Game modes played</h3>
+        @if (current.modeMix.rows.length > 0) {
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">Each game mode's share of the matches, with its average length</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Mode</th>
+                  <th scope="col">Share</th>
+                  <th scope="col">Average length</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of current.modeMix.rows; track row.mode) {
+                  <tr>
+                    <th scope="row">{{ row.mode }}</th>
+                    <td>
+                      <div class="rate">
+                        <strong>{{ row.shareLabel }}</strong>
+                        <span class="bar" aria-hidden="true">
+                          <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                        </span>
+                      </div>
+                    </td>
+                    <td>{{ row.lengthLabel ?? 'Not enough data yet' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (current.modeMix.note) {
+          <p class="caption">{{ current.modeMix.note }}</p>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="matches-length-title">
+        <h3 id="matches-length-title" class="panel-title">Average match length</h3>
+        @if (current.averageLength.label) {
+          <div class="figure-row">
+            <p class="figure">{{ current.averageLength.label }}</p>
+            <p class="caption">Over the matches that reported how long they lasted.</p>
+          </div>
+        }
+        @if (current.averageLength.note) {
+          <p class="caption">{{ current.averageLength.note }}</p>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="matches-days-title">
+        <h3 id="matches-days-title" class="panel-title">Matches per day</h3>
+        <p class="caption">
+          Each day's share of the matches shown. Days are counted in UTC, and a day is listed only when enough matches were
+          recorded on it.
+        </p>
+        @if (current.perDay.rows.length > 0) {
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">Each day's share of the matches</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Day</th>
+                  <th scope="col">Share of matches</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of current.perDay.rows; track row.day) {
+                  <tr>
+                    <th scope="row">{{ row.day }}</th>
+                    <td>
+                      <div class="rate">
+                        <strong>{{ row.shareLabel }}</strong>
+                        <span class="bar" aria-hidden="true">
+                          <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (current.perDay.note) {
+          <p class="caption">{{ current.perDay.note }}</p>
+        }
+      </section>
+    </div>
+  }
+</app-community-summary>

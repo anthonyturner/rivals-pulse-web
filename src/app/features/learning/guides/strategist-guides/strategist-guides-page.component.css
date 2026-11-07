@@ -1,0 +1,43 @@
+.hub {
+  display: grid;
+  gap: 16px;
+  padding-block: 16px 32px;
+}
+
+.hub-header {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+h1 {
+  font-size: var(--type-page-title);
+  font-weight: 850;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 80ch;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grid li {
+  display: grid;
+}

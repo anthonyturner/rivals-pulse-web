@@ -1,0 +1,16 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Community tier list"
+  subject="the tier list"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+  [footnote]="current.kind === 'ready' ? current.footnote : null"
+  [link]="link"
+>
+  @if (current.kind === 'ready') {
+    <app-tier-rows [tiers]="current.tiers" [linkHeroes]="true" [headingLevel]="3" />
+  }
+</app-community-summary>

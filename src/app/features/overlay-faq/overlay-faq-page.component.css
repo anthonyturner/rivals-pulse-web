@@ -1,0 +1,31 @@
+h2 button {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq .sources {
+  padding: 0;
+  font-size: var(--type-small);
+  list-style: none;
+}
+
+.faq .sources li + li {
+  margin-top: 0;
+}
+
+.faq .sources a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+}

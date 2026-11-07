@@ -1,0 +1,57 @@
+<div class="guide-article page-container page-container--narrow">
+  <header class="guide-header">
+    <nav class="guide-nav" aria-label="Breadcrumb">
+      <a class="guide-link" routerLink="/hero-guides">Guides</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">First-time guide</span>
+    </nav>
+    <h1>How to play Marvel Rivals when hero shooters are new to you.</h1>
+    <p class="guide-lede">
+      This is the plain-English version: what the game is asking from you, what each role is supposed
+      to do, how fights work, and what to focus on in your first matches.
+    </p>
+    <p class="guide-text">
+      Prefer to learn by doing? Try the
+      <a class="guide-link" routerLink="/beginner-interactive-guide">interactive version</a>, or
+      <a class="guide-link" routerLink="/media-tutorials">continue learning</a> with the media
+      tutorials.
+    </p>
+    <img
+      class="guide-portrait"
+      appHeroImageFallback
+      src="/images/heroes/captain-america.png"
+      alt=""
+      width="96"
+      height="96"
+    />
+  </header>
+
+  <section class="guide-tile">
+    <h2>The five rules</h2>
+    <ol class="guide-steps">
+      @for (rule of quickRules; track rule) {
+        <li>{{ rule }}</li>
+      }
+    </ol>
+  </section>
+
+  @for (section of sections; track section.title) {
+    <section class="guide-section">
+      <h2>{{ section.title }}</h2>
+      <p class="guide-text">{{ section.summary }}</p>
+      @if (section.sequence) {
+        <ol class="guide-steps">
+          @for (point of section.points; track point) {
+            <li>{{ point }}</li>
+          }
+        </ol>
+      } @else {
+        <ul class="guide-bullets">
+          @for (point of section.points; track point) {
+            <li>{{ point }}</li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

@@ -1,0 +1,289 @@
+:host {
+  display: block;
+}
+
+.home-page {
+  /* The popout and the foreground player are fixed at z-index 50 and 1000: this keeps them above the bands. */
+  isolation: isolate;
+  /* The floating player and its controls are placed from the same two sizes, so they cannot drift apart. */
+  --popout-width: min(420px, calc(100vw - 48px));
+  --popout-gap: 24px;
+  min-height: 100%;
+  background: var(--bg);
+}
+
+/* Sizes the video to the hero alone, so it ends where the first band begins. */
+.hero-stage {
+  position: relative;
+}
+
+.home-page-background {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ink) url('/images/site/heroes-banner.jpg') center / cover no-repeat;
+  cursor: zoom-in;
+}
+
+.home-page-background::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ink) 76%, transparent), color-mix(in srgb, var(--ink) 28%, transparent) 60%, color-mix(in srgb, var(--ink) 70%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 48%, transparent) 72%, var(--ink-raised) 100%);
+}
+
+.home-page-background-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+.home-page-background.is-foreground {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  height: 100dvh;
+  place-items: center;
+  padding: clamp(16px, 4vw, 56px);
+  background: color-mix(in srgb, var(--ink) 94%, transparent);
+  cursor: zoom-out;
+}
+
+.home-page-background.is-foreground::after {
+  display: none;
+}
+
+.home-page-background.is-foreground .home-page-background-video {
+  width: min(1280px, 100%);
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  border-radius: 8px;
+  object-fit: contain;
+  pointer-events: auto;
+  box-shadow: 0 30px 100px color-mix(in srgb, var(--ink) 70%, transparent);
+}
+
+.home-page-background.is-popout {
+  position: fixed;
+  z-index: 50;
+  inset: auto var(--popout-gap) var(--popout-gap) auto;
+  width: var(--popout-width);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--ink-control-border);
+  border-radius: 8px;
+  background: var(--ink);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--ink) 48%, transparent);
+  animation: video-popout-in 220ms ease-out both;
+}
+
+.home-page-background.is-popout::after {
+  background: linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--ink) 46%, transparent));
+}
+
+.home-page-background.is-minimized {
+  display: none;
+}
+
+.home-page-video-close,
+.home-page-video-control,
+.home-page-video-tab,
+.home-page-sound-toggle {
+  border: 1px solid var(--ink-control-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 74%, transparent);
+  color: var(--on-ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 820;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+/* Covers the floating player exactly and lets clicks through, so the buttons sit in its top-right corner however tall they grow. */
+.home-page-video-controls {
+  position: fixed;
+  z-index: 51;
+  right: var(--popout-gap);
+  bottom: var(--popout-gap);
+  display: flex;
+  width: var(--popout-width);
+  aspect-ratio: 16 / 9;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px;
+  pointer-events: none;
+}
+
+.home-page-video-control {
+  min-height: 36px;
+  padding: 0 12px;
+  pointer-events: auto;
+}
+
+.home-page-video-tab {
+  position: fixed;
+  z-index: 50;
+  right: var(--popout-gap);
+  bottom: 0;
+  min-height: var(--floating-video-tab-height);
+  padding: 0 16px;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+}
+
+.home-page-video-close {
+  position: fixed;
+  z-index: 1001;
+  top: 20px;
+  right: 24px;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.home-page-sound-toggle {
+  position: absolute;
+  z-index: 3;
+  top: 24px;
+  right: 32px;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.home-page-video-close:hover,
+.home-page-video-control:hover,
+.home-page-video-tab:hover,
+.home-page-sound-toggle:hover {
+  border-color: var(--ink-accent);
+  background: color-mix(in srgb, var(--ink) 94%, transparent);
+}
+
+.home-page-video-close:focus-visible,
+.home-page-video-control:focus-visible,
+.home-page-video-tab:focus-visible,
+.home-page-sound-toggle:focus-visible {
+  outline: 3px solid var(--ink-focus);
+  outline-offset: 3px;
+}
+
+.season-hero {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: min(520px, calc(100dvh - 80px));
+  /* The side padding lines the copy up with the 1320px column of the bands below. */
+  padding: clamp(70px, 4vw, 144px) max(32px, calc((100% - 1320px) / 2)) 56px;
+  color: var(--on-ink);
+}
+
+.hero-copy {
+  --eyebrow-color: var(--ink-accent);
+  display: grid;
+  align-content: start;
+  max-width: 810px;
+  padding-top: clamp(18px, 3vw, 40px);
+}
+
+@media (min-width: 721px) and (max-width: 1200px) {
+  .season-hero {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    column-gap: 24px;
+  }
+
+  .hero-copy {
+    max-width: none;
+  }
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  max-width: 760px;
+  margin-top: 14px;
+  font-size: var(--type-hero);
+  font-weight: 750;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  text-shadow: 0 20px 50px color-mix(in srgb, var(--ink) 48%, transparent);
+}
+
+.lede {
+  max-width: 710px;
+  margin-top: 28px;
+  color: var(--on-ink);
+  font-size: 1.13rem;
+  line-height: 1.68;
+}
+
+.lede-link {
+  color: var(--on-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lede-link:hover {
+  color: var(--ink-accent);
+}
+
+.lede-link:focus-visible {
+  outline: 3px solid var(--ink-focus);
+  outline-offset: 3px;
+}
+
+@keyframes video-popout-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 720px) {
+  .home-page {
+    --popout-width: min(340px, calc(100vw - (2 * var(--mobile-page-gutter))));
+    --popout-gap: var(--mobile-page-gutter);
+  }
+
+  .home-page-sound-toggle {
+    top: 16px;
+    right: 16px;
+  }
+
+  .season-hero {
+    min-height: auto;
+    padding: 110px 16px 64px;
+  }
+
+  .hero-copy {
+    padding-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page-background-video {
+    display: block;
+  }
+
+  .home-page-background.is-popout {
+    animation: none;
+  }
+}

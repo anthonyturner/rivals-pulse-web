@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  --heroes-box-shadow: inset 1px 0 var(--accent-strong);
+}
+
+.heroes-page {
+  min-height: 100%;
+  padding-bottom: 40px;
+}
+
+/* On a hero page the roster is a column beside the detail from this width; below it, it is a portrait strip above the detail. */
+@media (min-width: 920px) {
+  .workspace--with-hero {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+}

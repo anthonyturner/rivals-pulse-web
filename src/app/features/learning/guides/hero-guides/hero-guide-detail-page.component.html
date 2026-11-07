@@ -1,0 +1,120 @@
+<div class="guide-article page-container">
+  @if (guide(); as guide) {
+    <div class="intro">
+      <header class="guide-header">
+        <p class="guide-nav"><a class="guide-link" routerLink="/hero-guides">Back to hero guides</a></p>
+        <app-eyebrow>{{ guide.role }} guide</app-eyebrow>
+        <h1>{{ guide.heroName }}</h1>
+        <p class="guide-lede">{{ guide.summary }}</p>
+        <img
+          class="guide-portrait"
+          appHeroImageFallback
+          [src]="guide.image"
+          alt=""
+          width="96"
+          height="96"
+        />
+      </header>
+
+      <dl class="quick-read">
+        <div>
+          <dt>Pool job</dt>
+          <dd>{{ guide.poolJob }}</dd>
+        </div>
+        <div>
+          <dt>Pick when</dt>
+          <dd>{{ guide.pickWhen }}</dd>
+        </div>
+      </dl>
+
+      <div class="source">
+        @if (sourceEmbedUrl(); as embedUrl) {
+          <div class="video">
+            <iframe
+              [src]="embedUrl"
+              [title]="guide.heroName + ' guide video'"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
+        }
+        <p class="guide-caption">
+          Source:
+          @if (guide.sourceUrl) {
+            <a class="guide-link" [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">
+              {{ guide.sourceLabel }}
+              <span class="visually-hidden">(opens YouTube in a new tab)</span>
+            </a>
+          } @else {
+            {{ guide.sourceLabel }}
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="guide-grid">
+      @for (section of guide.sections; track section.title) {
+        <section class="guide-tile">
+          <h2>{{ section.title }}</h2>
+          <ul class="guide-bullets">
+            @for (point of section.points; track point) {
+              <li>{{ point }}</li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+
+    @if (guide.ultimates.length > 0) {
+      <section class="guide-section">
+        <h2>Ultimates and matchups</h2>
+        <div class="guide-grid">
+          @for (ultimate of guide.ultimates; track ultimate.name) {
+            <article class="guide-tile">
+              <h3>{{ ultimate.name }}</h3>
+              <p class="guide-text">{{ ultimate.plan }}</p>
+              @if (ultimate.goodAgainst.length > 0) {
+                <p class="matchup-label">Good against</p>
+                <ul class="chips">
+                  @for (hero of ultimate.goodAgainst; track hero) {
+                    <li>{{ hero }}</li>
+                  }
+                </ul>
+              }
+              @if (ultimate.avoidInto.length > 0) {
+                <p class="matchup-label">Be careful into</p>
+                <ul class="chips">
+                  @for (hero of ultimate.avoidInto; track hero) {
+                    <li>{{ hero }}</li>
+                  }
+                </ul>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (guide.articleSources; as articles) {
+      <section class="guide-section">
+        <h2>Sources and further reading</h2>
+        <p class="guide-text">
+          This guide is written in our own words. Claims credited to a site are that site's advice, not
+          RivalsPulse data.
+        </p>
+        <ul class="guide-text article-sources">
+          @for (article of articles; track article.url) {
+            <li>
+              <a class="guide-link" [href]="article.url" target="_blank" rel="noopener noreferrer">
+                {{ article.label }}
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>.
+              {{ article.note }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</div>

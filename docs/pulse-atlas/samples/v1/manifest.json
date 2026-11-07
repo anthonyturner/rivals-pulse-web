@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-05T00:00:00.000Z",
+  "files": [
+    {
+      "dataset": "heroes",
+      "path": "pulse-atlas/v1/heroes.json",
+      "sha256": "9984a4be97c978556594eeb765dd4bf096fad1ca104b617c068b909009ef8470",
+      "bytes": 20099
+    },
+    {
+      "dataset": "tier-list",
+      "path": "pulse-atlas/v1/tier-list.json",
+      "sha256": "a00d7765bcde10e6e8975a950ad49a3ad7c76fb7c06e7a97fa0d14820ce3d3d2",
+      "bytes": 1780
+    },
+    {
+      "dataset": "glossary",
+      "path": "pulse-atlas/v1/glossary.json",
+      "sha256": "5f24cdf51aef691bfc015c75dba5e669dc6bb713f9b06fca31ff820c683a046d",
+      "bytes": 1661
+    },
+    {
+      "dataset": "maps",
+      "path": "pulse-atlas/v1/maps.json",
+      "sha256": "95d3f61f93434fe72d46f3c5462597e7a9d0803fbcb598aefe17cbe1c72b75f3",
+      "bytes": 2156
+    },
+    {
+      "dataset": "hero-styles",
+      "path": "pulse-atlas/v1/hero-styles.json",
+      "sha256": "53ff6d4c746872d5f236bc95d17ca31331cb176e7a12301fb585c60a60171690",
+      "bytes": 220
+    },
+    {
+      "dataset": "hero-stats",
+      "path": "pulse-atlas/v1/hero-stats.json",
+      "sha256": "d1f67a6c37e0f86c264076ccee57df597692076293b669f8c884103c60a037b5",
+      "bytes": 798
+    },
+    {
+      "dataset": "community-stats",
+      "path": "pulse-atlas/v1/community-stats.json",
+      "sha256": "6682549ed317bc2fe4763be63644bd1149420b465bb2787afc82f8173f865132",
+      "bytes": 733
+    },
+    {
+      "dataset": "hero-scores",
+      "path": "pulse-atlas/v1/hero-scores.json",
+      "sha256": "42ef15d26ca5fa6cad78e53db0e6cafcf6aeefd7eae9f6ea8b5d8f316169cb28",
+      "bytes": 1148
+    }
+  ]
+}

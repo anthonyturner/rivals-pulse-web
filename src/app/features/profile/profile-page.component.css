@@ -1,0 +1,156 @@
+:host {
+  display: block;
+}
+
+.profile-page {
+  display: grid;
+  gap: 16px;
+  padding-block: 32px;
+}
+
+.caption {
+  max-width: 70ch;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.action {
+  display: inline-grid;
+  min-height: 42px;
+  place-items: center;
+  padding: 0 18px;
+  border: 1px solid var(--accent-line);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: var(--accent-soft);
+}
+
+.action:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  --player-avatar-size: 48px;
+}
+
+.player-text {
+  min-width: 0;
+}
+
+.player-name {
+  font-size: var(--type-title);
+  font-weight: 850;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.panels {
+  display: grid;
+  gap: 16px;
+}
+
+.column {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.panel {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+.panel-title {
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.block {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.recent {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  font-size: var(--type-small);
+  overflow-wrap: anywhere;
+}
+
+.match-result {
+  min-width: 4ch;
+  font-weight: 850;
+}
+
+.match-result--win {
+  color: var(--win-ink);
+}
+
+.match-result--loss {
+  color: var(--loss-ink);
+}
+
+.match-result--unknown {
+  color: var(--text-soft);
+}
+
+.match-hero {
+  font-weight: 800;
+}
+
+.match-when,
+.match-line {
+  color: var(--text-soft);
+}
+
+.match-term {
+  font-size: var(--type-caption);
+  font-weight: 800;
+}
+
+@media (min-width: 900px) {
+  .panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel {
+    padding: 16px;
+  }
+}

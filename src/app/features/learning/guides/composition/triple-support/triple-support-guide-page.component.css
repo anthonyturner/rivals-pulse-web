@@ -1,0 +1,41 @@
+.core .guide-tile-head {
+  margin: 0;
+}
+
+.weak {
+  margin-top: 12px;
+}
+
+.weak-list li:first-child {
+  font-weight: 400;
+}
+
+.plans {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 8px 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.picks .guide-tile-head {
+  margin: 0;
+}
+
+@media (min-width: 700px) {
+  .weak-list {
+    columns: 2;
+    column-gap: 32px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

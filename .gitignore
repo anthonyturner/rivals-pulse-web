@@ -46,7 +46,12 @@ testem.log
 __screenshots__/
 dev-server*.log
 tmp-*
+.claude/tmp/
 
 # System files
 .DS_Store
 Thumbs.db
+
+# Supabase CLI local state (holds the linked project ref)
+supabase/.temp/
+supabase/.branches/

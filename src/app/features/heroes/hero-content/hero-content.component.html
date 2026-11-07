@@ -1,0 +1,18 @@
+@if (hero()) {
+  <section class="hero-detail" aria-label="Selected hero details">
+    <div class="detail-actions">
+      <a class="detail-action" routerLink="/heroes" queryParamsHandling="preserve">
+        <span aria-hidden="true">&larr;</span> All heroes
+      </a>
+    </div>
+
+    @for (shown of detailHeroes(); track shown.id) {
+      <div class="detail-main">
+        @if (hasRoleKits()) {
+          <app-hero-role-switcher [hero]="shown" [controller]="controller()"></app-hero-role-switcher>
+        }
+        <app-hero-details [hero]="shown" [controller]="controller()"></app-hero-details>
+      </div>
+    }
+  </section>
+}

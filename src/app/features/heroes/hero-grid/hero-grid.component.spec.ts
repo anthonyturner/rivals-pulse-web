@@ -1,0 +1,321 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { HeroGridComponent } from './hero-grid.component';
+import { Hero } from '../hero.model';
+
+describe('HeroGridComponent', () => {
+  let fixture: ComponentFixture<HeroGridComponent>;
+  let element: HTMLElement;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HeroGridComponent],
+      providers: [provideZonelessChangeDetection(), provideRouter([])],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HeroGridComponent);
+    element = fixture.nativeElement;
+
+    setInputs({});
+  });
+
+  function setInputs(inputs: Partial<Record<string, unknown>>): void {
+    const defaults: Record<string, unknown> = {
+      heroes: [createHero('storm', 'Storm', 'Vanguard'), createHero('mantis', 'Mantis', 'Strategist')],
+      roles: ['All', 'Vanguard', 'Duelist', 'Strategist'],
+      selectedRole: 'All',
+      selectedHeroId: 'storm',
+      searchTerm: '',
+      gridMode: 'thumbs',
+      ...inputs,
+    };
+
+    for (const [name, value] of Object.entries(defaults)) {
+      fixture.componentRef.setInput(name, value);
+    }
+    fixture.detectChanges();
+  }
+
+  const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+
+  it('shows a clear-filters action when filters are active and emits a reset event', () => {
+    setInputs({ selectedRole: 'Vanguard', searchTerm: 'storm' });
+    const emitSpy = spyOn(fixture.componentInstance.filtersReset, 'emit');
+    const button = element.querySelector('[data-testid="clear-filters"]') as HTMLButtonElement;
+
+    expect(button).not.toBeNull();
+
+    button.click();
+
+    expect(emitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the clear-filters action while no filter is active', () => {
+    expect(element.querySelector('[data-testid="clear-filters"]')).toBeNull();
+  });
+
+  it('counts the visible heroes inline in a polite live region', () => {
+    const count = element.querySelector('[data-testid="hero-count"]') as HTMLElement;
+
+    expect(text(count)).toBe('2 heroes');
+    expect(count.getAttribute('aria-live')).toBe('polite');
+
+    setInputs({ heroes: [createHero('storm', 'Storm', 'Vanguard')] });
+
+    expect(text(count)).toBe('1 hero');
+  });
+
+  it('keeps the search label for assistive technology only and has no "Showing" box', () => {
+    const label = element.querySelector('.search-field span') as HTMLElement;
+
+    expect(text(label)).toBe('Search heroes');
+    expect(label.classList).toContain('visually-hidden');
+    expect(text(element)).not.toContain('Showing');
+  });
+
+  it('marks the selected card as the current page, and the active role and layout with aria-pressed', () => {
+    setInputs({ selectedRole: 'Vanguard' });
+    const cards = Array.from(element.querySelectorAll<HTMLAnchorElement>('.hero-card'));
+    const pressed = (label: string): string | null =>
+      Array.from(element.querySelectorAll('.chip')).find((chip) => text(chip) === label)?.getAttribute('aria-pressed') ??
+      null;
+
+    expect(cards.map((card) => card.getAttribute('aria-current'))).toEqual(['page', null]);
+    expect(pressed('Vanguard')).toBe('true');
+    expect(pressed('All')).toBe('false');
+    expect(pressed('Thumbs')).toBe('true');
+    expect(pressed('Rows')).toBe('false');
+  });
+
+  it('names each card with the hero and the role it is shown under, and hides the decorative image', () => {
+    setInputs({ selectedRole: 'Strategist' });
+    const [, mantis] = Array.from(element.querySelectorAll<HTMLAnchorElement>('.hero-card'));
+
+    expect(mantis.getAttribute('aria-label')).toBe('Mantis, Strategist');
+    expect(mantis.querySelector('img')?.getAttribute('alt')).toBe('');
+  });
+
+  it('shows only the name and role on a thumb card, and adds the summary and archetype in rows mode', () => {
+    expect(element.querySelector('.hero-card-summary')).toBeNull();
+    expect(element.querySelector('.archetype-label')).toBeNull();
+
+    setInputs({ gridMode: 'rows' });
+
+    expect(text(element.querySelector('.hero-card-summary'))).toBe('Summary of Storm');
+    expect(text(element.querySelector('.archetype-label'))).toBe('Brawl');
+  });
+
+  it('links each card to its hero, so the address can be shared and opened in a new tab', () => {
+    const hrefs = Array.from(element.querySelectorAll('.hero-card')).map((card) => card.getAttribute('href'));
+
+    expect(hrefs).toEqual(['/heroes/storm', '/heroes/mantis']);
+  });
+
+  describe('in the roster layout', () => {
+    beforeEach(() => setInputs({ layout: 'roster', gridMode: 'rows' }));
+
+    it('marks the host as the roster and keeps the search, role filters and count on top', () => {
+      expect(element.getAttribute('layout')).toBe('roster');
+      expect(element.querySelector('.search-field input')).not.toBeNull();
+      expect(element.querySelectorAll('.chip-group .chip').length).toBe(4);
+      expect(text(element.querySelector('[data-testid="hero-count"]'))).toBe('2 heroes');
+    });
+
+    it('leaves out the Rows/Thumbs choice and the row summaries, even if rows were chosen', () => {
+      expect(element.querySelector('.view-toggle')).toBeNull();
+      expect(element.querySelector('.hero-grid--rows')).toBeNull();
+      expect(element.querySelector('.hero-card-summary')).toBeNull();
+      expect(element.querySelector('.archetype-label')).toBeNull();
+    });
+
+    it('shows a portrait, the name and the role on each row, and marks the selected hero as the current page', () => {
+      const [storm, mantis] = Array.from(element.querySelectorAll<HTMLAnchorElement>('.hero-card'));
+
+      expect(storm.querySelector('img')).not.toBeNull();
+      expect(text(storm.querySelector('.hero-card-name'))).toBe('Storm');
+      expect(text(storm.querySelector('.role-pill'))).toBe('Vanguard');
+      expect(storm.getAttribute('aria-current')).toBe('page');
+      expect(mantis.getAttribute('aria-current')).toBeNull();
+    });
+
+    it('still emits the filter events, so a filter changes the visible rows without choosing a hero', () => {
+      const roleSpy = spyOn(fixture.componentInstance.roleSelected, 'emit');
+      const searchSpy = spyOn(fixture.componentInstance.searchChanged, 'emit');
+      const duelist = Array.from(element.querySelectorAll<HTMLButtonElement>('.chip')).find(
+        (chip) => text(chip) === 'Duelist',
+      ) as HTMLButtonElement;
+      const input = element.querySelector('.search-field input') as HTMLInputElement;
+
+      duelist.click();
+      input.value = 'sto';
+      input.dispatchEvent(new Event('input'));
+
+      expect(roleSpy).toHaveBeenCalledOnceWith('Duelist');
+      expect(searchSpy).toHaveBeenCalledOnceWith('sto');
+    });
+  });
+
+  describe('keeping the chosen hero in view inside its own scrolling list', () => {
+    let geometry: HTMLStyleElement;
+    let spacer: HTMLElement;
+
+    /** Pins the list's geometry whatever the Karma window width is, because the stylesheet picks column or strip by viewport. */
+    beforeEach(() => {
+      geometry = document.createElement('style');
+      geometry.textContent = `
+        .test-list-vertical { display: block !important; max-height: 200px !important; overflow: auto !important; }
+        .test-list-horizontal { display: flex !important; width: 300px !important; padding: 0 !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: none !important; }
+        .test-list-horizontal > li { flex: none !important; width: 68px !important; }
+      `;
+      document.head.appendChild(geometry);
+      spacer = document.createElement('div');
+      spacer.style.height = '5000px';
+      document.body.appendChild(spacer);
+    });
+
+    afterEach(() => {
+      geometry.remove();
+      spacer.remove();
+      window.scrollTo(0, 0);
+    });
+
+    const manyHeroes = (): Hero[] =>
+      Array.from({ length: 40 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
+
+    it('scrolls the list down to the chosen hero when the list scrolls vertically', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-vertical');
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
+      await fixture.whenStable();
+      const listBox = list.getBoundingClientRect();
+      const cardBox = (element.querySelector('.hero-card.selected') as HTMLElement).getBoundingClientRect();
+
+      expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+      expect(list.scrollTop).toBeGreaterThan(0);
+      expect(cardBox.top).toBeGreaterThanOrEqual(listBox.top);
+      expect(cardBox.bottom).toBeLessThanOrEqual(listBox.bottom);
+    });
+
+    it('scrolls the list sideways to the chosen hero when the list scrolls horizontally', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-horizontal');
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
+      await fixture.whenStable();
+      const listBox = list.getBoundingClientRect();
+      const cardBox = (element.querySelector('.hero-card.selected') as HTMLElement).getBoundingClientRect();
+
+      expect(list.scrollWidth).toBeGreaterThan(list.clientWidth);
+      expect(list.scrollLeft).toBeGreaterThan(0);
+      expect(cardBox.left).toBeGreaterThanOrEqual(listBox.left);
+      expect(cardBox.right).toBeLessThanOrEqual(listBox.right);
+    });
+
+    it('leaves the page scroll position where it was while it reveals the chosen hero', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-horizontal');
+      window.scrollTo(0, 120);
+      expect(window.scrollY).toBe(120);
+
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
+      await fixture.whenStable();
+
+      expect(list.scrollLeft).toBeGreaterThan(0);
+      expect(window.scrollY).toBe(120);
+    });
+
+    it('brings the chosen hero back into view when the window crosses the column/strip width, and stops listening once destroyed', async () => {
+      let onChange: (() => void) | undefined;
+      const addSpy = jasmine.createSpy('addEventListener').and.callFake((_type: string, handler: () => void) => {
+        onChange = handler;
+      });
+      const removeSpy = jasmine.createSpy('removeEventListener');
+      spyOn(window, 'matchMedia').and.returnValue({
+        matches: false,
+        addEventListener: addSpy,
+        removeEventListener: removeSpy,
+      } as unknown as MediaQueryList);
+      const second = TestBed.createComponent(HeroGridComponent);
+      second.componentRef.setInput('heroes', manyHeroes());
+      second.componentRef.setInput('roles', ['All']);
+      second.componentRef.setInput('selectedRole', 'All');
+      second.componentRef.setInput('selectedHeroId', 'hero-35');
+      second.componentRef.setInput('searchTerm', '');
+      second.componentRef.setInput('gridMode', 'thumbs');
+      second.componentRef.setInput('layout', 'roster');
+      second.detectChanges();
+      const secondList = second.nativeElement.querySelector('.hero-grid') as HTMLElement;
+      secondList.classList.add('test-list-horizontal');
+      await second.whenStable();
+
+      expect(addSpy).toHaveBeenCalledOnceWith('change', jasmine.any(Function));
+      secondList.scrollLeft = 0;
+      onChange?.();
+
+      expect(secondList.scrollLeft).toBeGreaterThan(0);
+
+      second.destroy();
+
+      expect(removeSpy).toHaveBeenCalledOnceWith('change', onChange);
+    });
+
+    it('does not move a list that already shows the chosen hero', async () => {
+      const list = element.querySelector('.hero-grid') as HTMLElement;
+      list.classList.add('test-list-horizontal');
+      setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-1' });
+      await fixture.whenStable();
+
+      expect(list.scrollLeft).toBe(0);
+    });
+  });
+
+  it('is the full grid, with the Rows/Thumbs choice, by default', () => {
+    expect(element.getAttribute('layout')).toBe('grid');
+    expect(element.querySelector('.view-toggle')).not.toBeNull();
+  });
+
+  it('loads images beyond the first two rows lazily', () => {
+    const heroes = Array.from({ length: 22 }, (_, index) => createHero(`hero-${index}`, `Hero ${index}`, 'Duelist'));
+    setInputs({ heroes });
+    const images = Array.from(element.querySelectorAll('.hero-image'));
+
+    expect(images[19].getAttribute('loading')).toBeNull();
+    expect(images[20].getAttribute('loading')).toBe('lazy');
+  });
+
+  it('shows fixed-size placeholders and no empty message while the roster loads', () => {
+    setInputs({ heroes: [], loading: true });
+
+    expect(element.querySelector('[aria-busy="true"]')).not.toBeNull();
+    expect(element.querySelectorAll('.hero-card--placeholder').length).toBe(20);
+    expect(element.querySelector('.empty-state')).toBeNull();
+  });
+
+  it('says plainly when no hero matches and offers to clear the filters', () => {
+    setInputs({ heroes: [], searchTerm: 'zzz' });
+    const empty = element.querySelector('.empty-state') as HTMLElement;
+
+    expect(empty.getAttribute('role')).toBe('status');
+    expect(text(empty)).toContain('No heroes match your filters.');
+    expect(empty.querySelector('button')).not.toBeNull();
+  });
+
+  function createHero(id: string, name: string, role: Hero['role']): Hero {
+    return {
+      id,
+      name,
+      role,
+      difficulty: 2,
+      summary: `Summary of ${name}`,
+      playstyle: 'Control',
+      strengths: ['Team control'],
+      weaknesses: ['Mobility'],
+      counters: [],
+      synergies: [],
+      abilities: [],
+      gameplayArchetypes: [{ role, label: 'Brawl', description: '', sourceTitle: '', sourceUrl: '', timestamp: '' }],
+      imageUrl: `/images/heroes/${id}.png`,
+    } as Hero;
+  }
+});

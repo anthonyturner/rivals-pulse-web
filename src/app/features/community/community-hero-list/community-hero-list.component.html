@@ -1,0 +1,16 @@
+@if (heroes().length > 0) {
+  <ol class="hero-list">
+    @for (hero of heroes(); track hero.hero) {
+      <li>
+        <app-hero-tile [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="hero.hero">
+          <span tileFigure class="figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>
+          @if (hero.sample) {
+            <span class="sample">{{ hero.sample }}</span>
+          }
+        </app-hero-tile>
+      </li>
+    }
+  </ol>
+} @else {
+  <p class="empty">No hero here yet.</p>
+}

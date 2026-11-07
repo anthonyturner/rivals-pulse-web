@@ -1,0 +1,61 @@
+<div class="hub page-container page-container--wide">
+  <header class="hub-header">
+    <h1>Turn support decisions into repeatable wins.</h1>
+    <p class="lede">
+      Ten transcript-built guides covering positioning, healing priorities, damage windows, ultimate
+      economy, anti-dive survival and Rocket Raccoon mastery: about 4½ hours of video distilled into
+      drills and decision rules.
+    </p>
+    <div class="actions">
+      <a class="guide-button guide-button--primary" [href]="playlistUrl" target="_blank" rel="noopener">
+        Watch the full playlist
+        <span class="visually-hidden">(opens YouTube in a new tab)</span>
+      </a>
+      <a class="guide-button" routerLink="/techniques">Review all techniques</a>
+    </div>
+  </header>
+
+  <div class="guide-toolbar">
+    <label class="guide-search">
+      <span class="visually-hidden">Search guides</span>
+      <input
+        #search
+        type="search"
+        placeholder="Rocket, positioning, ultimates..."
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </label>
+    <app-filter-select
+      label="Category"
+      [options]="categoryOptions"
+      [value]="category()"
+      (valueChange)="category.set($event)"
+    />
+  </div>
+
+  <p class="guide-count" role="status">{{ countLabel() }}</p>
+
+  @if (cards().length > 0) {
+    <ul class="grid">
+      @for (card of cards(); track card.id) {
+        <li>
+          <app-guide-card
+            size="large"
+            [headingLevel]="2"
+            [title]="card.title"
+            [route]="card.route"
+            [imageUrl]="card.imageUrl"
+            [caption]="card.caption"
+            [blurb]="card.blurb"
+          />
+        </li>
+      }
+    </ul>
+  } @else {
+    <app-state-panel heading="No guides match">
+      <p>Try another hero, topic or category.</p>
+      <button type="button" class="guide-button" (click)="clearFilters()">Clear search and category</button>
+    </app-state-panel>
+  }
+</div>

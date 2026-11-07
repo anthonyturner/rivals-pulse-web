@@ -1,0 +1,93 @@
+.intro {
+  display: grid;
+  gap: 16px;
+}
+
+.quick-read {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  margin: 0;
+}
+
+dt,
+.matchup-label {
+  font-size: var(--type-small);
+  font-weight: 800;
+}
+
+dd {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ink);
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.source {
+  display: grid;
+  max-width: 720px;
+  gap: 4px;
+}
+
+.matchup-label {
+  margin-top: 12px;
+}
+
+.article-sources {
+  padding-left: 20px;
+}
+
+.article-sources li + li {
+  margin-top: 6px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: var(--type-small);
+}
+
+@media (min-width: 1000px) {
+  .intro {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+    gap: 16px 24px;
+  }
+
+  .intro > .guide-header {
+    grid-column: 1 / -1;
+  }
+}
+
+/* On a phone the intro already fills the screen (header, quick read, video), so a tighter gap lets the first card start above the fold. */
+@media (max-width: 560px) {
+  .guide-article {
+    gap: 16px;
+  }
+
+  .intro {
+    gap: 12px;
+  }
+}

@@ -1,0 +1,26 @@
+<div class="hero-actions">
+  <app-get-app-button />
+
+  <a class="cta cta-ghost" routerLink="/community">See hero stats</a>
+</div>
+
+<p class="platform-note">Free on Windows · installs through Overwolf</p>
+
+<div class="stat-row">
+  <dl class="stats">
+    @for (stat of statRow(); track stat.id) {
+      <div class="stat" [class.is-pending]="stat.pending">
+        <dt class="stat__label">{{ stat.label }}</dt>
+        <dd class="stat__value">{{ stat.value }}</dd>
+      </div>
+    }
+    @if (loading()) {
+      <div class="stat is-loading" aria-busy="true">
+        <dt class="visually-hidden">Matches counted</dt>
+        <dd class="stat__value"><span class="skeleton" aria-hidden="true"></span></dd>
+      </div>
+    }
+  </dl>
+
+  <a class="how-we-count" routerLink="/how-we-count">How we count</a>
+</div>

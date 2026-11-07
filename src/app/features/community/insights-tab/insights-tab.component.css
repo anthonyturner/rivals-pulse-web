@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.notes {
+  display: grid;
+  gap: 4px;
+}
+
+.note {
+  max-width: 62ch;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.groups {
+  display: grid;
+  gap: 12px;
+}
+
+.group {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.group-title {
+  margin-bottom: 8px;
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-small);
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-soft);
+  text-align: left;
+  vertical-align: middle;
+}
+
+thead th {
+  border-top: 0;
+  font-size: var(--type-caption);
+  font-weight: 800;
+}
+
+tbody th {
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bar {
+  display: inline-block;
+  width: 56px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  vertical-align: middle;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent-strong);
+}
+
+@media (min-width: 1024px) {
+  .groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
