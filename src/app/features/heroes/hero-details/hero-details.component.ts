@@ -15,6 +15,7 @@ import { HeroCommunityStatsComponent } from '../hero-community-stats/hero-commun
 import { HeroKillFeedComponent } from '../hero-kill-feed/hero-kill-feed.component';
 import { HeroVideosComponent } from '../hero-videos/hero-videos.component';
 import { Hero, HeroAbilityTechnicalDetail, HeroRole } from '../hero.model';
+import type { HeroesPageComponent } from '../heroes-page.component';
 
 const HERO_DETAIL_SECTIONS = [
   'overview',
@@ -65,7 +66,7 @@ interface HeroBanner {
 })
 export class HeroDetailsComponent implements OnChanges {
   @Input({ required: true }) hero!: Hero;
-  @Input({ required: true }) controller!: any;
+  @Input({ required: true }) controller!: HeroesPageComponent;
 
   readonly selectedSection = signal<HeroDetailSection>('overview');
 

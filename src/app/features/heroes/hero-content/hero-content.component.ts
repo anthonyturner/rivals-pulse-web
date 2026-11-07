@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input
 import { RouterLink } from '@angular/router';
 
 import { HeroDetailsComponent } from '../hero-details/hero-details.component';
+import type { HeroesPageComponent } from '../heroes-page.component';
 import { Hero } from '../hero.model';
 import { HeroRoleSwitcherComponent } from '../hero-role-switcher/hero-role-switcher.component';
 
@@ -16,7 +17,7 @@ export class HeroContentComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly hero = input<Hero>();
-  readonly controller = input.required<any>();
+  readonly controller = input.required<HeroesPageComponent>();
 
   /** The selected hero as a one-item list: tracking by id gives each hero fresh details with the long sections collapsed. */
   readonly detailHeroes = computed(() => {

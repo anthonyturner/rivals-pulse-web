@@ -136,6 +136,11 @@ export class HeroGridComponent {
     this.searchChanged.emit((event.target as HTMLInputElement).value);
   }
 
+  /** Puts keyboard focus in the search field, for a caller that has just brought the roster back. */
+  focusSearch(): void {
+    this.host.nativeElement.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+  }
+
   /**
    * Scrolls the roster's own list, never the page, so the chosen hero is in view on a direct load. The list
    * scrolls down in the column and sideways in the strip; an axis that does not scroll is left alone.
