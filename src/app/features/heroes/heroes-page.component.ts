@@ -109,6 +109,7 @@ export class HeroesPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
   private readonly content = viewChild(HeroContentComponent);
+  private readonly grid = viewChild(HeroGridComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
   /** One player per video: Angular compares the address wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
@@ -138,6 +139,17 @@ export class HeroesPageComponent implements OnInit {
   readonly isRosterLoaded = signal(false);
   /** True when the roster could not be loaded or came back empty; both show the load-error state. */
   readonly isRosterFailed = signal(false);
+  private readonly hasRetriedRoster = signal(false);
+  /** What the load-error panel says: it changes with each outcome, so the panel's status region announces it. */
+  readonly rosterFailureMessage = computed(() => {
+    if (!this.isRosterLoaded()) {
+      return 'Asking for the heroes again.';
+    }
+
+    return this.hasRetriedRoster()
+      ? 'Still unavailable. Try again in a moment.'
+      : 'The roster is unavailable right now.';
+  });
   /** The hero in the address; empty on the roster-only landing. */
   readonly selectedHeroId = toSignal(this.routeHeroId.pipe(map((heroId) => heroId ?? '')), {
     initialValue: this.route.snapshot.paramMap.get('heroId') ?? '',
@@ -540,6 +552,7 @@ export class HeroesPageComponent implements OnInit {
       return;
     }
 
+    this.hasRetriedRoster.set(true);
     this.isRosterLoaded.set(false);
     this.loadRoster();
   }
@@ -555,6 +568,11 @@ export class HeroesPageComponent implements OnInit {
         this.heroVideos.set(heroVideos);
         this.isRosterFailed.set(heroes === null);
         this.isRosterLoaded.set(true);
+
+        // The retry button that held focus is gone once the roster shows, so focus would drop to the page.
+        if (heroes !== null && this.hasRetriedRoster()) {
+          afterNextRender(() => this.grid()?.focusSearch(), { injector: this.injector });
+        }
       });
   }
 

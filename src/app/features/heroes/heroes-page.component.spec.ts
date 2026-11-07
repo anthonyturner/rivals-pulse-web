@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 
 import type { Hero } from './hero.model';
 import { SidebarContent } from '../../core/layout/sidebar/sidebar-content';
@@ -221,8 +221,10 @@ describe('HeroesPageComponent when the hero service fails', () => {
   let element: HTMLElement;
   let rosters: (Hero[] | null)[];
   let requests: number;
+  let held: Subject<Hero[] | null> | null;
 
   beforeEach(() => {
+    held = null;
     rosters = [null, [hero('mantis', 'Mantis', 'Strategist'), hero('thor', 'Thor', 'Vanguard')]];
     requests = 0;
     TestBed.configureTestingModule({
@@ -232,7 +234,11 @@ describe('HeroesPageComponent when the hero service fails', () => {
         {
           provide: HeroDataService,
           useValue: {
-            getHeroRoster: () => of(rosters[Math.min(requests++, rosters.length - 1)]),
+            getHeroRoster: () => {
+              const attempt = requests++;
+
+              return held ?? of(rosters[Math.min(attempt, rosters.length - 1)]);
+            },
             getHeroVideos: () => of([]),
           },
         },
@@ -278,5 +284,47 @@ describe('HeroesPageComponent when the hero service fails', () => {
     expect(requests).toBe(2);
     expect(element.textContent).toContain('Heroes could not be loaded');
     expect(retryButton()?.textContent?.trim()).toBe('Try again');
+  });
+
+  it('says the retry is running, and ignores another click, until the answer arrives', async () => {
+    held = new Subject<Hero[] | null>();
+    await retry();
+
+    expect(requests).toBe(2);
+    expect(retryButton()?.textContent?.trim()).toBe('Retrying…');
+    expect(retryButton()?.getAttribute('aria-disabled')).toBe('true');
+    expect(element.textContent).toContain('Asking for the heroes again.');
+
+    await retry();
+
+    expect(requests).toBe(2);
+
+    held.next([hero('thor', 'Thor', 'Vanguard')]);
+    held.complete();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(element.querySelectorAll('.hero-card').length).toBe(1);
+  });
+
+  it('puts focus in the roster search field after a retry brings the roster back', async () => {
+    retryButton()?.focus();
+    await retry();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(element.querySelector('input[type="search"]'));
+  });
+
+  it('changes the message when the retry fails, so the status region announces a result', async () => {
+    rosters = [null, null];
+    const status = element.querySelector('app-state-panel[role="status"]');
+
+    expect(status?.textContent).toContain('The roster is unavailable right now.');
+
+    await retry();
+
+    expect(status?.textContent).toContain('Still unavailable. Try again in a moment.');
+    expect(status?.textContent).not.toContain('The roster is unavailable right now.');
   });
 });

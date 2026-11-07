@@ -418,7 +418,7 @@ describe('HeroDetailsComponent', () => {
 });
 
 describe('HeroDetailsComponent collapsible sections', () => {
-  it('names each disclosure by its heading, which is the only thing in its summary', () => {
+  it('puts one h3 and nothing else in each collapsible summary, so the summary is named by its heading', () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),

@@ -3,7 +3,7 @@
 
   @if (isRosterFailed()) {
     <app-state-panel kind="error" heading="Heroes could not be loaded">
-      <p>The roster is unavailable right now.</p>
+      <p>{{ rosterFailureMessage() }}</p>
       <button
         type="button"
         class="retry"
