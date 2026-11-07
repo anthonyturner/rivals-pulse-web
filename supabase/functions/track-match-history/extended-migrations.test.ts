@@ -51,19 +51,23 @@ describe('the hero score read migration', () => {
     assert.doesNotMatch(sql, /'[a-z_]*top_recorder[a-z_]*'/);
   });
 
-  it('agrees with the minimums the website prints', () => {
+  it('keeps the temporary solo reader aligned with the website minimums', () => {
     const website = readFileSync(new URL('../../../src/server/community/extended/hero-scores.ts', import.meta.url), 'utf8');
-    const rule = readdirSync(MIGRATIONS)
-      .filter(name => name.endsWith('.sql'))
-      .sort()
-      .map(name => withoutComments(read(name)))
-      .filter(migration => migration.includes('function public.hero_figure_qualifies('))
-      .at(-1) ?? '';
-
-    assert.match(website, new RegExp(`matches: ${rule.match(/p_matches >= (\d+)/)?.[1]},`));
-    assert.match(website, new RegExp(`contributors: ${rule.match(/p_recorders >= (\d+)/)?.[1]},`));
-    assert.match(rule, /p_top_recorder_matches \* 2 <= p_matches/);
-    assert.match(website, /busiestContributorShare: 0\.5,/);
+    const solo = withoutComments(read('20261106170000_solo_hero_build_signals.sql'));
+    assert.deepEqual(createdFunctions(solo), ['public.read_community_hero_scores()']);
+    assert.deepEqual(createdTables(solo), []);
+    assert.doesNotMatch(solo, /\b(alter|drop|delete|truncate|update|insert)\b/i);
+    assert.match(website, /matches: 10,/);
+    assert.match(website, /contributors: 1,/);
+    assert.match(website, /busiestContributorShare: 1,/);
+    assert.match(website, /rankedHeroes: 5,/);
+    for (const figure of ['damage', 'healing', 'blocked']) {
+      assert.ok(solo.includes(`(a.${figure}_n >= 10 and a.${figure}_recorders >= 1) as ${figure}`));
+    }
+    assert.ok(solo.includes('(u.segments >= 10 and u.recorders >= 1) as ok'));
+    assert.doesNotMatch(solo, /public\.hero_figure_qualifies/);
+    assert.match(solo, /revoke execute on function public\.read_community_hero_scores\(\) from public, anon, authenticated/);
+    assert.match(solo, /grant execute on function public\.read_community_hero_scores\(\) to service_role/);
   });
 });
 
