@@ -1,17 +1,26 @@
 import type { DataJobRun } from '../../../../contracts/admin-data-jobs.model';
-import { describeDetail, describeRun, utcLabel, utcTimeLabel } from './data-jobs.describe';
+import { describeDetail, describeRun, easternLabel, easternTimeLabel } from './data-jobs.describe';
 
 const AT = '2026-11-04T10:10:00.000Z';
 
-describe('utcLabel', () => {
-  it("writes the instant in UTC whatever the visitor's time zone", () => {
-    expect(utcLabel('2026-11-04T09:07:31.123Z')).toBe('2026-11-04 09:07 UTC');
+describe('easternLabel', () => {
+  it("writes the instant in US Eastern time whatever the visitor's time zone", () => {
+    expect(easternLabel('2026-11-04T09:07:31.123Z')).toBe('Nov 4, 2026, 4:07 AM EST');
+  });
+
+  it('says EDT while daylight saving applies', () => {
+    expect(easternLabel('2026-07-04T16:30:00.000Z')).toBe('Jul 4, 2026, 12:30 PM EDT');
+  });
+
+  it('tells the repeated hour apart when daylight saving ends', () => {
+    expect(easternLabel('2026-11-01T05:30:00.000Z')).toBe('Nov 1, 2026, 1:30 AM EDT');
+    expect(easternLabel('2026-11-01T06:30:00.000Z')).toBe('Nov 1, 2026, 1:30 AM EST');
   });
 });
 
-describe('utcTimeLabel', () => {
+describe('easternTimeLabel', () => {
   it('keeps the seconds, so a time to retry at is never named a minute too early', () => {
-    expect(utcTimeLabel('2026-11-05T05:26:43.900Z')).toBe('2026-11-05 05:26:43 UTC');
+    expect(easternTimeLabel('2026-11-05T05:26:43.900Z')).toBe('Nov 5, 2026, 12:26:43 AM EST');
   });
 });
 
@@ -34,7 +43,7 @@ describe('describeDetail', () => {
     const words = describeDetail({ result: 'already-captured', capturedAt: '2026-11-04T10:02:00.000Z', games: 5, fallbackGames: 0 });
 
     expect(words.tone).toBe('notice');
-    expect(words.headline).toBe('Nothing new was stored: this hour was already captured at 2026-11-04 10:02 UTC.');
+    expect(words.headline).toBe('Nothing new was stored: this hour was already captured at Nov 4, 2026, 5:02 AM EST.');
   });
 
   it('adds that Steam also missed, and was not kept, when the hour was taken', () => {

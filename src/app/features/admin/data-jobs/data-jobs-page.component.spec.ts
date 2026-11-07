@@ -82,10 +82,10 @@ describe('DataJobsPageComponent', () => {
     const next = (label: string): string[] =>
       [card(label).querySelector('.jobs__countdown'), card(label).querySelector('.jobs__runs time')].map((item) => item?.textContent?.trim() ?? '');
 
-    expect(next('Hero stats')).toEqual(['In 7m 0s', '2026-11-04 10:07 UTC']);
-    expect(next('Hero pairs')).toEqual(['In 43m 0s', '2026-11-04 10:43 UTC']);
-    expect(next('Game stats')).toEqual(['In 10m 0s', '2026-11-04 10:10 UTC']);
-    expect(next('Home news')).toEqual(['In 17h 0m', '2026-11-05 03:00 UTC']);
+    expect(next('Hero stats')).toEqual(['In 7m 0s', 'Nov 4, 2026, 5:07 AM EST']);
+    expect(next('Hero pairs')).toEqual(['In 43m 0s', 'Nov 4, 2026, 5:43 AM EST']);
+    expect(next('Game stats')).toEqual(['In 10m 0s', 'Nov 4, 2026, 5:10 AM EST']);
+    expect(next('Home news')).toEqual(['In 17h 0m', 'Nov 4, 2026, 10:00 PM EST']);
     expect(card('Hero stats').querySelector('.jobs__runs time')?.getAttribute('datetime')).toBe('2026-11-04T10:07:00.000Z');
   });
 
@@ -95,8 +95,8 @@ describe('DataJobsPageComponent', () => {
     const links = Array.from(el().querySelectorAll<HTMLElement>('.jobs__link'));
 
     expect(links.map((link) => link.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Publish Pulse Atlas (opens GitHub in a new tab) Next scheduled run in 2h 17m, 2026-11-04 12:17 UTC',
-      'Sync new heroes (opens GitHub in a new tab) Next scheduled run in 18h 30m, 2026-11-05 04:30 UTC',
+      'Publish Pulse Atlas (opens GitHub in a new tab) Next scheduled run in 2h 17m, Nov 4, 2026, 7:17 AM EST',
+      'Sync new heroes (opens GitHub in a new tab) Next scheduled run in 18h 30m, Nov 4, 2026, 11:30 PM EST',
     ]);
     expect(links[0].querySelector('a')?.getAttribute('href')).toBe(
       'https://github.com/anthonyturner/rivals-pulse-web/actions/workflows/pulse-atlas.yml',
@@ -287,7 +287,7 @@ describe('DataJobsPageComponent', () => {
     expect(text).toContain('Could not store the game stats');
     expect(text).toContain('Last manual run');
     expect(text).toContain('Did not finish.');
-    expect(text).toContain('2026-11-04 08:00 UTC');
+    expect(text).toContain('Nov 4, 2026, 3:00 AM EST');
     expect(card('Hero stats').textContent).toContain('None yet.');
   });
 
@@ -332,7 +332,7 @@ describe('DataJobsPageComponent', () => {
     await settle();
 
     expect(card('Game stats').querySelector('.jobs__result')?.textContent).toContain(
-      'Nothing new was stored: this hour was already captured at 2026-11-04 10:02 UTC.',
+      'Nothing new was stored: this hour was already captured at Nov 4, 2026, 5:02 AM EST.',
     );
   });
 
@@ -369,7 +369,7 @@ describe('DataJobsPageComponent', () => {
     await settle();
 
     expect(card('Hero pairs').querySelector('.jobs__result')?.textContent).toContain(
-      'It did not start. Try again after 2026-11-04 10:01:00 UTC.',
+      'It did not start. Try again after Nov 4, 2026, 5:01:00 AM EST.',
     );
   });
 
@@ -428,7 +428,7 @@ describe('DataJobsPageComponent', () => {
     );
 
     expect(button('Home news').disabled).toBeTrue();
-    expect(card('Home news').textContent).toContain('Available again after 2026-11-04 10:05:00 UTC.');
+    expect(card('Home news').textContent).toContain('Available again after Nov 4, 2026, 5:05:00 AM EST.');
     expect(button('Home news').getAttribute('aria-describedby')).toBe('hint-home-news');
     expect(button('Game stats').disabled).toBeFalse();
   });
