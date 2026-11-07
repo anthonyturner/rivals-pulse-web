@@ -24,6 +24,11 @@ export class BuildSignalRowsComponent {
       sourceClass: SOURCE_CLASSES[row.source],
       percent: (row.value ?? 0) * 10,
       roundedValue: Math.round((row.value ?? 0) * 10) / 10,
+      collection: row.collection ? {
+        value: Math.min(row.collection.matches, row.collection.minimum),
+        max: row.collection.minimum,
+        percent: Math.min(100, (row.collection.matches / row.collection.minimum) * 100),
+      } : null,
     })),
   );
 }
