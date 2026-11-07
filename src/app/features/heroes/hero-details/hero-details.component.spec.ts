@@ -58,7 +58,7 @@ describe('HeroDetailsComponent', () => {
     const element = render();
 
     expect(element.querySelector('.hero-build-profile h3')?.textContent?.trim()).toBe(
-      'Build signals',
+      'Team fit',
     );
     expect(element.querySelector('.hero-build-profile app-hero-build-signals')).not.toBeNull();
     expect(element.querySelectorAll('app-hero-build-signals').length).toBe(1);
@@ -177,7 +177,7 @@ describe('HeroDetailsComponent', () => {
     expect(tabs.map((tab) => tab.textContent?.trim())).toEqual([
       'Overview',
       'Abilities',
-      'Build Signals',
+      'Team fit',
       'Matchups',
       'Stats',
       'Strategy',

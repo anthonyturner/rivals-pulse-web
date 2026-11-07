@@ -1,15 +1,62 @@
+<div class="team-intro">
+  <p class="eyebrow">{{ hero().name }} / {{ hero().role }}</p>
+  <h4>Their place on your team</h4>
+  <p class="playstyle">{{ hero().playstyle || hero().summary || 'Team-fit guidance is not available yet.' }}</p>
+</div>
+
+<div class="team-cards">
+  <article class="team-gains">
+    <p class="eyebrow">What your team gains</p>
+    <h4>Build around their strengths</h4>
+    @if (hero().strengths.length) {
+      <ul>@for (strength of hero().strengths; track $index) {<li>{{ strength }}</li>}</ul>
+    } @else {
+      <p class="note">Team contribution notes are not available yet.</p>
+    }
+  </article>
+  <article class="team-cover">
+    <p class="eyebrow">What to plan around</p>
+    <h4>Cover the gaps together</h4>
+    @if (hero().weaknesses.length) {
+      <ul>@for (weakness of hero().weaknesses; track $index) {<li>{{ weakness }}</li>}</ul>
+    } @else {
+      <p class="note">Team coverage notes are not available yet.</p>
+    }
+  </article>
+</div>
+
+<div class="evidence-heading">
+  <h4>Check the profile</h4>
+  <p class="note">Select a signal to see its evidence. Scores describe recorded output and kit tools, not team compatibility.</p>
+</div>
+
 @if (fallbackNotice(); as notice) {
   <p class="notice"><strong>Previous half-season.</strong> {{ notice }}</p>
 }
 
-<app-build-signal-rows [rows]="rows()" />
+<div class="signal-choices" role="group" aria-label="Hero build signals">
+  @for (row of rows(); track row.type) {
+    <button type="button" class="signal-choice" [class.estimate]="row.source === 'Estimated'"
+      [attr.aria-pressed]="selectedType() === row.type"
+      [attr.aria-label]="row.ariaLabel" (click)="selectedType.set(row.type)">
+      <span class="signal-name">{{ row.type }}</span>
+      <strong>{{ row.value === null ? '—' : row.valueLabel }}@if (row.value !== null) {<small> / 10</small>}</strong>
+      <span class="signal-source">{{ row.source }}</span>
+      @if (row.value === null) {<span class="signal-state">{{ row.valueLabel }}</span>}
+    </button>
+  }
+</div>
+<div class="signal-evidence" aria-live="polite" aria-atomic="true">
+  <app-build-signal-rows [rows]="selectedRows()" />
+</div>
 
 @if (sourceNote(); as note) {
   <p class="note">{{ note }}</p>
 }
 
 @if (isAnswered()) {
-  <h4>How players use each ability</h4>
+  <details class="ability-usage">
+  <summary>How players use each ability</summary>
   <p class="note">
     Read from each ability's cooldown. The game shows an ability was used, not whether it hit anyone.
   </p>
@@ -41,4 +88,5 @@
   } @else {
     <p class="empty">Collecting data: no ability has enough matches yet.</p>
   }
+  </details>
 }
