@@ -16,10 +16,15 @@ export interface DataJobPage {
   section: string;
 }
 
+/** A UTC cron schedule, due at a set minute of every hour, of every nth hour or of one hour a day. */
+export type DataJobSchedule = `${number} ${'*' | `*/${number}` | number} * * *`;
+
 export interface DataJobDefinition {
   key: string;
   label: string;
   kind: DataJobKind;
+  /** When it runs by itself. `scripts/data-job-schedules.test.ts` holds this to what really schedules it. */
+  schedule: DataJobSchedule;
   /** One line on what the job does, for the page. */
   summary: string;
   /** In plain words, the numbers or content the job refreshes. */
@@ -40,6 +45,7 @@ export interface DataJobDefinition {
 export const DATA_JOBS = [
   {
     key: 'recompute-hero-aggregates',
+    schedule: '7 * * * *',
     label: 'Hero stats',
     kind: 'rebuild',
     summary: 'Rebuilds the anonymous win, pick, kill, death and assist counts per hero, and how each hero does against every other.',
@@ -73,6 +79,7 @@ export const DATA_JOBS = [
   },
   {
     key: 'recompute-extended-aggregates',
+    schedule: '13 * * * *',
     label: 'Hero figures and kill feed',
     kind: 'rebuild',
     summary: 'Rebuilds damage, healing, blocked and time-played figures, the kill feed and ability counts.',
@@ -119,6 +126,7 @@ export const DATA_JOBS = [
   },
   {
     key: 'recompute-community-match-aggregates',
+    schedule: '17 * * * *',
     label: 'Community matches',
     kind: 'rebuild',
     summary: 'Rebuilds the match counts by map, mode and day.',
@@ -144,6 +152,7 @@ export const DATA_JOBS = [
   },
   {
     key: 'recompute-play-time-aggregates',
+    schedule: '37 * * * *',
     label: 'Play time',
     kind: 'rebuild',
     summary: 'Rebuilds the counts of when people play.',
@@ -168,6 +177,7 @@ export const DATA_JOBS = [
   },
   {
     key: 'recompute-hero-pair-aggregates',
+    schedule: '43 * * * *',
     label: 'Hero pairs',
     kind: 'rebuild',
     summary: 'Rebuilds the counts of heroes against and with each other.',
@@ -176,13 +186,14 @@ export const DATA_JOBS = [
     atlasFiles: ['community-stats.json'],
     caveat:
       'No page on the site shows hero pairs yet. They reach only the public Pulse Atlas file, which changes at its next ' +
-      'publish (every six hours). A pair is counted after 10 matches with a result.',
+      'publish (scheduled every six hours, though GitHub can start it late). A pair is counted after 10 matches with a result.',
     example:
       'After the next Pulse Atlas publish, the "matches" and "wins" of a pair in community-stats.json change if new matches ' +
       'with a result featured a pair that already has 10.',
   },
   {
     key: 'home-news',
+    schedule: '0 3 * * *',
     label: 'Home news',
     kind: 'sync',
     summary: 'Reads the official Marvel Rivals site and replaces the home page news. A failed read keeps the earlier news.',
@@ -200,6 +211,7 @@ export const DATA_JOBS = [
   },
   {
     key: 'game-stats',
+    schedule: '10 * * * *',
     label: 'Game stats',
     kind: 'sync',
     summary: 'Reads the Steam player counts and stores them as this hour\'s capture.',
@@ -220,6 +232,20 @@ export const DATA_JOBS = [
 ] as const satisfies readonly DataJobDefinition[];
 
 export type DataJobKey = (typeof DATA_JOBS)[number]['key'];
+
+/** A scheduled GitHub workflow. The admin page links to it and cannot start it. */
+export interface GitHubJobDefinition {
+  key: string;
+  label: string;
+  /** The workflow's file under `.github/workflows`. */
+  workflow: string;
+  schedule: DataJobSchedule;
+}
+
+export const GITHUB_JOBS = [
+  { key: 'pulse-atlas', label: 'Publish Pulse Atlas', workflow: 'pulse-atlas.yml', schedule: '17 */6 * * *' },
+  { key: 'sync-new-heroes', label: 'Sync new heroes', workflow: 'sync-new-heroes.yml', schedule: '30 4 * * *' },
+] as const satisfies readonly GitHubJobDefinition[];
 
 export function isDataJobKey(value: unknown): value is DataJobKey {
   return DATA_JOBS.some((job) => job.key === value);
