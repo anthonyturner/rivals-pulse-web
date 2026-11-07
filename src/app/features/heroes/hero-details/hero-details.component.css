@@ -1069,3 +1069,14 @@ details.collapsible {
     transform: scale(1);
   }
 }
+
+@container (max-width: 480px) {
+  .detail-hero-media {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-hero-media .hero-image.large {
+    grid-row: 1;
+    justify-self: start;
+  }
+}
