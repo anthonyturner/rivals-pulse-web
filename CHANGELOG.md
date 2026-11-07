@@ -12,6 +12,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 - Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
 
+- Hero pages now lead with how each hero fits a team, with strengths and coverage needs above selectable build-signal evidence and expandable ability usage ([#543](https://github.com/anthonyturner/rivals-pulse-web/pull/543)).
+
 ### Added
 
 - The home page now shows a dismissible word of the day from the Marvel Rivals glossary in a floating card that stays visible as you scroll ([#514](https://github.com/anthonyturner/rivals-pulse-web/pull/514)).
