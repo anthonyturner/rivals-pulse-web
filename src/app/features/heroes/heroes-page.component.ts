@@ -575,16 +575,6 @@ export class HeroesPageComponent implements OnInit {
     return role.toLowerCase();
   }
 
-  gameplayArchetype(hero: Hero): string {
-    const selectedRole = this.heroRoleLabel(hero);
-
-    return (
-      hero.gameplayArchetypes?.find((archetype) => archetype.role === selectedRole)?.label ??
-      hero.gameplayArchetypes?.[0]?.label ??
-      ''
-    );
-  }
-
   heroInitials(hero: Hero): string {
     return hero.name
       .split(' ')
@@ -632,6 +622,11 @@ export class HeroesPageComponent implements OnInit {
     const kits = this.roleAbilityKits(hero);
 
     return kits.find((kit) => kit.role === this.selectedAbilityKitRole()) ?? kits[0];
+  }
+
+  /** The role the detail page is showing: the selected kit's, else the hero's role for the filter. */
+  displayedRole(hero: Hero): HeroRole {
+    return this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
   }
 
   displayedAbilities(hero: Hero): HeroAbility[] {
@@ -683,7 +678,7 @@ export class HeroesPageComponent implements OnInit {
   }
 
   officialBaseStats(hero: Hero): HeroAbilityTechnicalDetail[] {
-    const selectedRole = this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+    const selectedRole = this.displayedRole(hero);
     const roleKit = hero.officialSource?.baseStatKits?.find((kit) => kit.role === selectedRole);
 
     return roleKit?.stats ?? hero.officialSource?.baseStats ?? [];
@@ -727,7 +722,7 @@ export class HeroesPageComponent implements OnInit {
   }
 
   displayedPlaystyleGuides(hero: Hero): HeroPlaystyleGuide[] {
-    const role = this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+    const role = this.displayedRole(hero);
 
     return (hero.playstyles ?? []).filter(
       (playstyle) => !playstyle.role || playstyle.role === role,
@@ -736,7 +731,7 @@ export class HeroesPageComponent implements OnInit {
 
   ultimateStrategies(hero: Hero): UltimateStrategy[] {
     const abilities = this.displayedAbilities(hero);
-    const role = this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+    const role = this.displayedRole(hero);
     const hasExplicitUltimate = abilities.some((ability) => this.hasUltimateSignal(ability));
     const ultimate = this.findPrimaryUltimate(abilities, hasExplicitUltimate);
 

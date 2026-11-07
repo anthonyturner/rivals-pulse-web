@@ -586,7 +586,7 @@
       <h3>Playstyle Variants</h3>
     </summary>
     <div class="collapsible-body">
-      <p class="section-note">{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
+      <p class="section-note">{{ controller.displayedRole(hero) }} plans from hero guides</p>
       @for (guide of controller.displayedPlaystyleGuides(hero); track guide.id) {
       <article>
         <strong>{{ guide.title }}</strong>
