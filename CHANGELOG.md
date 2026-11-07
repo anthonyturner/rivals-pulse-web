@@ -112,6 +112,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- If the Heroes page cannot load the hero list, it says "Heroes could not be loaded" and now has a "Try again" button that asks for the list again, so you no longer have to reload the page ([#556](https://github.com/anthonyturner/rivals-pulse-web/pull/556)).
 - On a hero that can play several roles, such as Deadpool, the banner's role name and colour now follow the ability kit you pick, along with the stats, instead of showing "Multi-Role" over one role's stats ([#555](https://github.com/anthonyturner/rivals-pulse-web/pull/555)).
 - Hero detail section links now stay on the selected hero and scroll to the chosen section ([#526](https://github.com/anthonyturner/rivals-pulse-web/pull/526)).
 - The home page word of the day now sits below the sound control at the right of the hero, with a reserved column that keeps it clear of the headline and description on tablet widths; the existing mobile placement remains unchanged ([#519](https://github.com/anthonyturner/rivals-pulse-web/pull/519)).
