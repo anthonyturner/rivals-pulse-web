@@ -31,7 +31,7 @@ type HeroDetailSection = (typeof HERO_DETAIL_SECTIONS)[number];
 
 const DIFFICULTY_PIPS = [1, 2, 3, 4, 5] as const;
 
-/** What the banner reads from the page controller. */
+/** The two controller reads that depend on the selected role, which is why the banner is a `computed()`. */
 interface HeroBannerSource {
   heroRoleLabel(hero: Hero): HeroRole;
   officialBaseStats(hero: Hero): HeroAbilityTechnicalDetail[];

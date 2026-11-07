@@ -150,6 +150,44 @@ describe('HeroDetailsComponent', () => {
     expect(roleClass('Multi-Role')).toEqual(['role-multi-role']);
   });
 
+  it('shows only the difficulty cell for a hero with no official stats', () => {
+    const element = render();
+    const cells = [...element.querySelectorAll('.poster-stats .poster-stat')];
+
+    expect(cells.length).toBe(1);
+    expect(cells[0].querySelector('dt')?.textContent?.trim()).toBe('Difficulty');
+  });
+
+  it('follows the selected ability kit when the banner stats depend on the role', async () => {
+    const kitHero = {
+      ...mantis,
+      roleAbilityKits: [
+        { role: 'Vanguard', label: 'Vanguard kit', abilities: [] },
+        { role: 'Duelist', label: 'Duelist kit', abilities: [] },
+      ],
+      officialSource: {
+        sourceUrl: 'https://marvelrivals.com/hero/mantis',
+        baseStatKits: [
+          { role: 'Vanguard', label: 'Vanguard', stats: [{ label: 'Health', value: '650' }] },
+          { role: 'Duelist', label: 'Duelist', stats: [{ label: 'Health', value: '250' }] },
+        ],
+      },
+    } as Hero;
+    const fixture = renderFixture(kitHero);
+    const element = fixture.nativeElement as HTMLElement;
+    const health = (): string | undefined =>
+      element.querySelector('.poster-stats .poster-stat dd')?.textContent?.trim();
+
+    expect(health()).toBe('650');
+
+    const controller = fixture.componentInstance.controller as HeroesPageComponent;
+    controller.selectAbilityKit('Duelist');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(health()).toBe('250');
+  });
+
   it('labels the overview and source link from official hero source data', () => {
     const officialHero = {
       ...mantis,
@@ -194,7 +232,7 @@ describe('HeroDetailsComponent', () => {
     const kicker = element.querySelector('.poster-kicker')?.textContent?.trim();
 
     expect(kicker).toBe('Strategist · Tempo setter');
-    expect(element.querySelector('.poster-difficulty')?.textContent).toContain('3');
+    expect(kicker).not.toContain('Flanker');
   });
 
   it('shows a single shared panel beneath the available hero detail tabs', () => {

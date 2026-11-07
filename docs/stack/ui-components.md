@@ -110,7 +110,7 @@ This section always applies, whatever the styling conventions above. The site ha
 | Supporting emphasis | `--secondary`, `--tertiary`, each with `-ink` and `-soft` |
 | Match outcome, and nothing else | `--win`, `--loss`, each with `-ink` and `-soft` |
 | Warnings and errors | `--danger`, `--danger-ink`, `--danger-soft` |
-| Hero roles | `--role-vanguard`, `--role-duelist`, `--role-strategist` |
+| Hero roles | `--role-vanguard`, `--role-duelist`, `--role-strategist`, each with `-ink` (as text) |
 | Shadows | `--shadow-color`, `--shadow-soft` |
 | Bands that stay dark in both themes (the home hero over its photo, the overlay section, the closing call to action, the house ad; also small dark chips and icon tiles) | `--ink`, `--ink-raised`, `--ink-line`, `--ink-control-border`, `--on-ink`, `--on-ink-muted`, `--ink-accent`, `--on-ink-accent`, `--ink-focus` |
 
