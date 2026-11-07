@@ -14,14 +14,31 @@ export interface RunWords {
   note: string | null;
 }
 
-/** `2026-11-04 10:10 UTC`, read off the ISO instant so it does not depend on the visitor's time zone. */
-export function utcLabel(iso: string): string {
-  return `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
+/** The site owner reads this page in US Eastern time, whatever time zone the browser is in. */
+const EASTERN = {
+  timeZone: 'America/New_York',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+} as const satisfies Intl.DateTimeFormatOptions;
+
+const easternMinutes = new Intl.DateTimeFormat('en-US', EASTERN);
+const easternSeconds = new Intl.DateTimeFormat('en-US', { ...EASTERN, second: '2-digit' });
+
+/** Newer browsers put a narrow no-break space before AM and PM; plain spaces read and match the same everywhere. */
+const plainSpaces = (text: string): string => text.replace(/\s/g, ' ');
+
+/** `Nov 4, 2026, 5:10 AM EST`, or EDT while daylight saving applies. */
+export function easternLabel(iso: string): string {
+  return plainSpaces(easternMinutes.format(new Date(iso)));
 }
 
-/** As `utcLabel` with the seconds, for a time to try again at: cutting them off would name a minute that is still too early. */
-export function utcTimeLabel(iso: string): string {
-  return `${iso.slice(0, 10)} ${iso.slice(11, 19)} UTC`;
+/** As `easternLabel` with the seconds, for a time to try again at: cutting them off would name a minute that is still too early. */
+export function easternTimeLabel(iso: string): string {
+  return plainSpaces(easternSeconds.format(new Date(iso)));
 }
 
 const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
@@ -41,7 +58,7 @@ export function describeDetail(detail: DataJobDetail): RunWords {
     case 'stored':
       return {
         tone: 'good',
-        headline: `Stored a new capture for ${utcLabel(detail.capturedAt)}, with all ${detail.games} player counts read from Steam.`,
+        headline: `Stored a new capture for ${easternLabel(detail.capturedAt)}, with all ${detail.games} player counts read from Steam.`,
         note: null,
       };
     case 'stored-with-fallbacks':
@@ -55,7 +72,7 @@ export function describeDetail(detail: DataJobDetail): RunWords {
     case 'already-captured':
       return {
         tone: 'notice',
-        headline: `Nothing new was stored: this hour was already captured at ${utcLabel(detail.capturedAt)}.`,
+        headline: `Nothing new was stored: this hour was already captured at ${easternLabel(detail.capturedAt)}.`,
         note:
           (detail.fallbackGames > 0
             ? `Steam did not answer for ${detail.fallbackGames} of ${detail.games} games on this run, and none of what it read was kept. `

@@ -12,7 +12,7 @@ import {
   type DataJobStatus,
 } from '../../../../contracts/admin-data-jobs.model';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
-import { describeDetail, describeRun, utcLabel, utcTimeLabel, type RunWords } from './data-jobs.describe';
+import { describeDetail, describeRun, easternLabel, easternTimeLabel, type RunWords } from './data-jobs.describe';
 import { nextRunAt, timeLeftLabel } from './data-jobs.schedule';
 import { DataJobsService, type DataJobRunResult } from './data-jobs.service';
 
@@ -78,13 +78,13 @@ function nextRunView(schedule: DataJobSchedule, now: number): NextRunView {
   const next = nextRunAt(schedule, now);
   const at = new Date(next).toISOString();
 
-  return { timeLeft: timeLeftLabel(next - now), at, atLabel: utcLabel(at) };
+  return { timeLeft: timeLeftLabel(next - now), at, atLabel: easternLabel(at) };
 }
 
 const toneClass = (words: RunWords): string => `jobs__tone--${words.tone}`;
 
 function runView(words: RunWords, startedAt: string): RunView {
-  return { ...words, toneClass: toneClass(words), startedAt, startedLabel: utcLabel(startedAt) };
+  return { ...words, toneClass: toneClass(words), startedAt, startedLabel: easternLabel(startedAt) };
 }
 
 /** What a click came to, in words. A job that did not start or whose fate is unknown never reads as a run. */
@@ -105,7 +105,7 @@ function resultWords(result: DataJobRunResult): RunWords {
     case 'busy':
       return {
         tone: 'notice',
-        headline: `${result.busy.error} It did not start. Try again after ${utcTimeLabel(result.busy.retryAt)}.`,
+        headline: `${result.busy.error} It did not start. Try again after ${easternTimeLabel(result.busy.retryAt)}.`,
         note: null,
       };
     case 'refused':
@@ -174,7 +174,7 @@ export class DataJobsPageComponent {
           result: results[job.key] ?? null,
           running: running.has(job.key),
           hint: wait
-            ? `${wait.reason === 'running' ? 'Already running.' : 'Ran a moment ago.'} Available again after ${utcTimeLabel(wait.retryAt)}.`
+            ? `${wait.reason === 'running' ? 'Already running.' : 'Ran a moment ago.'} Available again after ${easternTimeLabel(wait.retryAt)}.`
             : null,
         };
       }),
