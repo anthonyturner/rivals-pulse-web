@@ -180,7 +180,7 @@ describe('HeroDetailsComponent', () => {
 
     expect(health()).toBe('650');
 
-    const controller = fixture.componentInstance.controller as HeroesPageComponent;
+    const controller = fixture.componentInstance.controller;
     controller.selectAbilityKit('Duelist');
     await fixture.whenStable();
     fixture.detectChanges();
@@ -209,7 +209,7 @@ describe('HeroDetailsComponent', () => {
     } as Hero;
     const fixture = renderFixture(multiRoleHero);
     const element = fixture.nativeElement as HTMLElement;
-    const controller = fixture.componentInstance.controller as HeroesPageComponent;
+    const controller = fixture.componentInstance.controller;
     const banner = (): { kicker?: string; roleClasses: string[]; health?: string } => {
       const poster = element.querySelector('.hero-poster') as HTMLElement;
 
@@ -414,5 +414,51 @@ describe('HeroDetailsComponent', () => {
     expect(heading.textContent?.trim()).toBe('Mantis');
     expect(element.querySelectorAll('.poster-kicker').length).toBe(1);
     expect(element.querySelector('.hero-role')).toBeNull();
+  });
+});
+
+describe('HeroDetailsComponent collapsible sections', () => {
+  it('names each disclosure by its heading, which is the only thing in its summary', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    const hero = {
+      ...mantis,
+      abilities: [{ name: 'Cosmic Ray', type: 'Ultimate', description: 'A beam.' }],
+      playstyles: [
+        {
+          id: 'guide',
+          title: 'Backline healer',
+          summary: 'Heal from range.',
+          whenToUse: 'Against dive.',
+          coreIdeas: [],
+          upgradeNotes: [],
+          ultimateNotes: [],
+        },
+      ],
+    } as Hero;
+    const controller = TestBed.runInInjectionContext(() => new HeroesPageComponent());
+    const fixture = TestBed.createComponent(HeroDetailsComponent);
+    fixture.componentRef.setInput('hero', hero);
+    fixture.componentRef.setInput('controller', controller);
+    fixture.detectChanges();
+
+    const summaries = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll('details.collapsible > summary'),
+    ];
+
+    expect(summaries.map((summary) => summary.textContent?.trim())).toEqual([
+      'Playstyle Variants',
+      'Ultimate Strategy',
+    ]);
+    for (const summary of summaries) {
+      expect(summary.children.length).toBe(1);
+      expect(summary.firstElementChild?.tagName).toBe('H3');
+    }
   });
 });

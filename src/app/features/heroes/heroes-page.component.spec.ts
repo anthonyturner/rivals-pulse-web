@@ -215,3 +215,68 @@ describe('HeroesPageComponent videos in hero tabs', () => {
     expect(gameplay.player).toBeUndefined();
   });
 });
+
+describe('HeroesPageComponent when the hero service fails', () => {
+  let fixture: ComponentFixture<HeroesPageComponent>;
+  let element: HTMLElement;
+  let rosters: (Hero[] | null)[];
+  let requests: number;
+
+  beforeEach(() => {
+    rosters = [null, [hero('mantis', 'Mantis', 'Strategist'), hero('thor', 'Thor', 'Vanguard')]];
+    requests = 0;
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        {
+          provide: HeroDataService,
+          useValue: {
+            getHeroRoster: () => of(rosters[Math.min(requests++, rosters.length - 1)]),
+            getHeroVideos: () => of([]),
+          },
+        },
+        { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
+        { provide: HeroScoresService, useValue: { getHeroScores: () => of(null) } },
+        { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
+      ],
+    });
+    fixture = TestBed.createComponent(HeroesPageComponent);
+    element = fixture.nativeElement;
+    fixture.detectChanges();
+  });
+
+  const retryButton = (): HTMLButtonElement | null =>
+    element.querySelector<HTMLButtonElement>('button.retry');
+
+  async function retry(): Promise<void> {
+    retryButton()?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  it('says the heroes could not be loaded, not that no hero matches, and offers a retry', () => {
+    expect(element.textContent).toContain('Heroes could not be loaded');
+    expect(element.querySelector('.empty-state')).toBeNull();
+    expect(element.querySelector('app-hero-grid')).toBeNull();
+    expect(retryButton()?.textContent?.trim()).toBe('Try again');
+  });
+
+  it('shows the roster once a retry succeeds', async () => {
+    await retry();
+
+    expect(requests).toBe(2);
+    expect(element.textContent).not.toContain('Heroes could not be loaded');
+    expect(element.querySelectorAll('.hero-card').length).toBe(2);
+  });
+
+  it('keeps the failure state, and the retry, when the retry fails too', async () => {
+    rosters = [null, null];
+    await retry();
+
+    expect(requests).toBe(2);
+    expect(element.textContent).toContain('Heroes could not be loaded');
+    expect(retryButton()?.textContent?.trim()).toBe('Try again');
+  });
+});

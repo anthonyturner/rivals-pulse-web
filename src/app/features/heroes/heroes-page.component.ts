@@ -531,6 +531,20 @@ export class HeroesPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((kills) => this.heroKills.set(kills));
 
+    this.loadRoster();
+  }
+
+  /** Asks for the roster again after a failed load; ignored while a request is still running. */
+  retryRoster(): void {
+    if (!this.isRosterLoaded()) {
+      return;
+    }
+
+    this.isRosterLoaded.set(false);
+    this.loadRoster();
+  }
+
+  private loadRoster(): void {
     forkJoin({
       heroes: this.heroDataService.getHeroRoster(),
       heroVideos: this.heroDataService.getHeroVideos(),
