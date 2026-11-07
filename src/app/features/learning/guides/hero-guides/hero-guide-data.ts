@@ -10,6 +10,12 @@ export interface HeroUltimateGuide {
   avoidInto: string[];
 }
 
+export interface GuideArticleSource {
+  label: string;
+  url: string;
+  note: string;
+}
+
 export interface HeroGuide {
   heroId: string;
   heroName: string;
@@ -18,6 +24,8 @@ export interface HeroGuide {
   image: string;
   sourceLabel: string;
   sourceUrl?: string;
+  /** Written articles behind a guide that has no single video source. */
+  articleSources?: GuideArticleSource[];
   summary: string;
   poolJob: string;
   pickWhen: string;
@@ -1114,6 +1122,129 @@ export const HERO_GUIDES: HeroGuide[] = [
           'Let your Vanguard or frontline pressure create attention before you expose yourself.',
           'When the window appears, execute decisively instead of hesitating.',
           'When the window is not there, wait, reposition, and preserve your resources.',
+        ],
+      },
+    ],
+    ultimates: [],
+  },
+  {
+    heroId: 'tempo-and-ultimate-economy',
+    heroName: 'Tempo, Fight Timing and Ultimate Economy',
+    category: 'fundamentals',
+    role: 'Fundamentals',
+    image: '/images/heroes/doctor-strange.png',
+    sourceLabel: 'Three outside articles, linked at the end of this guide',
+    articleSources: [
+      {
+        label: 'The Importance of Tempo and Fight Timing in Overwatch, XTREME PS',
+        url: 'https://www.xtremeps3.com/2026/03/06/the-importance-of-tempo-and-fight-timing-in-overwatch',
+        note: 'Written about Overwatch, not Marvel Rivals. We kept only the ideas that fit any team fight.',
+      },
+      {
+        label: 'Ultimate Economy 101, Boostroom',
+        url: 'https://boostroom.com/blog/ultimate-economy-101-marvel-rivals-when-to-hold-when-to-stack-when-to-commit',
+        note: 'Advice from a commercial site.',
+      },
+      {
+        label: 'Ultimate Economy in Marvel Rivals, MetaBot',
+        url: 'https://metabot.gg/en/marvelrivals/guides/marvel-rivals-ultimate-economy-guide',
+        note: 'Advice from a commercial site.',
+      },
+    ],
+    summary:
+      'Tempo is about who sets the pace of a fight. Ultimate economy is about how a team earns and spends its ultimates. Between them, they help explain why some fights feel lost before anyone takes a shot.',
+    poolJob:
+      'Pick the moment to fight, and only spend an ultimate when you can say what it will buy.',
+    pickWhen:
+      'Use this guide when your team loses fights it looked ready to win, or when ultimates keep landing on nothing.',
+    sections: [
+      {
+        title: 'Tempo: who sets the pace',
+        points: [
+          'The team that sets the pace makes the other team respond to it.',
+          'This idea comes from an XTREME PS article about Overwatch, not Marvel Rivals. Both games build team fights around cooldowns and ultimates, so we carried over the general ideas and left its hero examples behind.',
+          'That article describes two styles: a fast team closes the gap and forces the fight, and a slow team holds good ground and waits to punish errors.',
+          'It rates neither as better by default, but warns that a slow team may need to speed up when the enemy presses harder.',
+        ],
+      },
+      {
+        title: 'Fight when you have a reason',
+        points: [
+          'Before you commit, name the advantage you are committing on.',
+          'The Overwatch article from XTREME PS lists three good reasons: your team already got a pick, you have more ultimates ready, or the enemy is coming back from spawn a few at a time.',
+          'It says most timing errors come from going in too early, and that without one of those reasons you are fighting on the enemy’s terms.',
+        ],
+      },
+      {
+        title: 'The three stages of a fight',
+        points: [
+          'XTREME PS splits an Overwatch team fight into poke, engagement and cleanup. The same split works for a Marvel Rivals fight.',
+          'Poke: both teams test each other and nobody has committed. Big cooldowns spent now buy very little.',
+          'Engagement: one team spots an opening and goes in together. This is when the pace changes hands.',
+          'Cleanup: the winners finish the job without chasing survivors toward their spawn or spending ultimates on a team that is already leaving.',
+          'Poke also tells you things. Note what the enemy spends early, because that tool is gone when the real fight starts, and call out the big ones even in solo queue.',
+        ],
+      },
+      {
+        title: 'Keep the pace after a good moment',
+        points: [
+          'Enemies who die at different times come back at different times, so a won fight can roll into the next one with your team ahead on numbers.',
+          'XTREME PS calls this staggering in its Overwatch article. The part that carries over is simple: be ready for the first enemy back, and do not follow them into their spawn.',
+          'The pace can also turn mid-fight. A Strategist going down, a Vanguard out of tools or a key hero backing off are all openings worth acting on quickly.',
+        ],
+      },
+      {
+        title: 'Treat ultimates as a budget',
+        points: [
+          'MetaBot compares ultimates to currency: teams earn them, hold them and spend them, and it argues the better spender usually takes the objective.',
+          'Its test is what you get back. A strong ultimate catches several grouped enemies with no way out. A weak one goes on a lone target who survives, or on a kill your team would have got anyway.',
+          'MetaBot suggests naming the value before you press the button. If you cannot name it, hold.',
+          'Holding has a limit too. XTREME PS warns, again about Overwatch, that sitting on ultimates for too long gives the enemy time to build theirs.',
+        ],
+      },
+      {
+        title: 'What to do with the ultimate count',
+        points: [
+          'Compare what each team has ready before the fight, then let that choose your plan.',
+          'XTREME PS offers this simple guide in its Overwatch article. Ahead on ultimates: go in. Even: get a pick first. Behind: stall. All spent: reset.',
+          'Treat it as a starting point, not a rule. Enemy charge is hidden in Marvel Rivals, so your count is always an estimate.',
+        ],
+      },
+      {
+        title: 'Hold, stack or commit',
+        points: [
+          'Boostroom frames ultimate economy as turning ultimates into objective progress while making the enemy spend more of theirs.',
+          'Boostroom suggests stacking, meaning several ultimates in one fight, only when losing that fight would lose the round.',
+          'It suggests holding a counter ultimate while the enemy still has their fight-winner, and committing once they have wasted it.',
+          'MetaBot adds that a setup ultimate can make a follow-up land cleanly, but a misfire wastes both, so the order has to be agreed.',
+          'MetaBot also treats keeping one ultimate back as a sound habit, because grouping up can leave your team open to a counter.',
+        ],
+      },
+      {
+        title: 'Read the enemy’s ultimates',
+        points: [
+          'You cannot see enemy charge, so MetaBot suggests estimating it from what you can see and hear.',
+          'Its cues: voice lines tell you an ultimate was just used, the time since then tells you how close the next may be, and heavy healing or damage suggests charge is building quickly.',
+          'It advises planning as if the dangerous ultimate is ready, and treating it as a bonus when it is not.',
+          'MetaBot also describes baiting: let a tough or mobile hero draw the ultimate, survive it with cover or a defensive tool, then commit while the enemy has nothing left.',
+          'It warns against the opposite error too: burning every cooldown to prepare for an ultimate that never comes.',
+        ],
+      },
+      {
+        title: 'Practise it in one match',
+        points: [
+          'Pick one habit per match rather than trying all of this at once.',
+          'MetaBot suggests tracking every enemy ultimate for a whole match, then looking back at losses for spending errors, such as an ultimate traded for a single kill.',
+          'XTREME PS suggests watching your own footage to learn the moments when a fight turns, so you can spot them live.',
+        ],
+      },
+      {
+        title: 'What the RivalsPulse overlay can show',
+        points: [
+          'The RivalsPulse overlay, coming soon to the Overwolf store, has a live tempo chip on its in-game top bar in Quick Match and Ranked.',
+          'The chip shows Quiet, Rising, Fast or Reset, based on deaths on both teams over the last 20 seconds.',
+          'It does not use cooldowns or ultimate charge, because the game does not send those for other players. Reading enemy ultimates stays your job.',
+          'It is an early version. Nobody has checked it in a real match yet and its thresholds are still guesses, so treat it as a rough hint.',
         ],
       },
     ],

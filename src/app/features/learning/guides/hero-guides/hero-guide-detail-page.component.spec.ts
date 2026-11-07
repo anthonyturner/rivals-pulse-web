@@ -66,6 +66,46 @@ describe('HeroGuideDetailPageComponent', () => {
     expect(caption?.querySelector('a')?.textContent).toContain('opens YouTube in a new tab');
   });
 
+  describe('a guide built from written articles', () => {
+    const pageText = () => element.textContent?.replace(/\s+/g, ' ') ?? '';
+    const sourceLinks = () =>
+      Array.from(element.querySelectorAll<HTMLAnchorElement>('.article-sources a'));
+
+    beforeEach(() => open('tempo-and-ultimate-economy'));
+
+    it('credits each source with a visible link that opens in a new tab', () => {
+      expect(sourceLinks().map((link) => link.hostname)).toEqual([
+        'www.xtremeps3.com',
+        'boostroom.com',
+        'metabot.gg',
+      ]);
+      for (const link of sourceLinks()) {
+        expect(link.target).toBe('_blank');
+        expect(link.rel).toContain('noopener');
+        expect(link.textContent).toContain('opens in a new tab');
+      }
+    });
+
+    it('does not offer a video or claim its source is on YouTube', () => {
+      expect(element.querySelector('iframe')).toBeNull();
+      expect(pageText()).not.toContain('YouTube');
+    });
+
+    it('says the tempo article is about Overwatch', () => {
+      expect(sourceLinks()[0].closest('li')?.textContent).toContain('about Overwatch, not Marvel Rivals');
+    });
+
+    it('describes the overlay chip as untested, with no store link', () => {
+      expect(pageText()).toContain('coming soon to the Overwolf store');
+      expect(pageText()).toContain('Nobody has checked it in a real match');
+      expect(element.querySelector('a[href*="overwolf"]')).toBeNull();
+    });
+  });
+
+  it('shows no article sources on a guide that has a video source', () => {
+    expect(element.querySelector('.article-sources')).toBeNull();
+  });
+
   it('leaves the main landmark to the shell and has an h1', () => {
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelector('h1')).not.toBeNull();
