@@ -28,6 +28,7 @@ export interface BuildSignalRow {
   /** The figures behind the score, once the hero has passed the rule. */
   figures: string | null;
   ariaLabel: string;
+  collection?: { matches: number; minimum: number };
 }
 
 export interface HeroSignalTile {
@@ -309,7 +310,10 @@ function matchSignalRow(type: MatchSignal, heroId: string, answer: HeroScoresAns
     );
   }
 
-  return withoutNumber(type, COLLECTING, progressLabel(stat ?? null, answer), null);
+  return {
+    ...withoutNumber(type, COLLECTING, progressLabel(stat ?? null, answer), null),
+    collection: { matches: stat?.matches ?? 0, minimum: answer.minimums.matches },
+  };
 }
 
 function withoutNumber(

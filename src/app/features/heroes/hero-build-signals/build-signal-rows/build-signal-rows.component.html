@@ -4,11 +4,13 @@
       <div class="signal-head">
         <strong>{{ row.type }}</strong>
         <span class="source">{{ row.source }}</span>
-        <strong class="value" [class.no-number]="row.value === null">{{ row.valueLabel }}</strong>
+        <strong class="value" [class.no-number]="row.value === null">
+          {{ row.valueLabel }}@if (row.value !== null) {<span class="out-of"> / 10</span>}
+        </strong>
       </div>
       @if (row.value !== null) {
         <div
-          class="bar"
+          class="bar score-track"
           role="meter"
           aria-valuemin="0"
           aria-valuemax="10"
@@ -16,6 +18,22 @@
           [attr.aria-label]="row.ariaLabel"
         >
           <i [style.width.%]="row.percent"></i>
+        </div>
+      } @else {
+        <div class="bar score-track empty-track" aria-hidden="true"></div>
+      }
+      <div class="scale" aria-hidden="true"><span>0</span><span>5</span><span>10</span></div>
+      @if (row.collection; as collection) {
+        <span class="collection-label">Match collection: {{ collection.value }} / {{ collection.max }}</span>
+        <div
+          class="bar collection-track"
+          role="progressbar"
+          aria-valuemin="0"
+          [attr.aria-valuemax]="collection.max"
+          [attr.aria-valuenow]="collection.value"
+          [attr.aria-label]="row.type + ' match collection'"
+        >
+          <i [style.width.%]="collection.percent"></i>
         </div>
       }
       @if (row.figures) {

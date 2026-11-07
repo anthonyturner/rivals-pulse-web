@@ -85,3 +85,34 @@
   font-size: var(--type-caption);
   overflow-wrap: anywhere;
 }
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.out-of,
+.collection-label {
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 400;
+}
+
+.empty-track {
+  border-style: dashed;
+}
+
+.collection-track {
+  height: 6px;
+}
+
+.collection-track i {
+  background: var(--secondary);
+}
+
+.estimated .collection-track i {
+  background: var(--secondary);
+}

@@ -69,10 +69,59 @@ describe('HeroBuildSignalsComponent', () => {
     expect(element.querySelector('table')).toBeNull();
   });
 
+  it('shows five score tracks with a visible scale and separates collection from scores', () => {
+    const element = render(scored);
+    expect(element.querySelectorAll('.score-track').length).toBe(5);
+    expect(text(element)).toContain('9 / 10');
+    const damage = element.querySelector('[role="meter"]');
+    expect(damage?.getAttribute('aria-valuenow')).toBe('9');
+    expect(damage?.getAttribute('aria-valuemax')).toBe('10');
+    const progress = element.querySelector('[role="progressbar"]');
+    expect(progress?.getAttribute('aria-label')).toBe('Sustain match collection');
+    expect(progress?.getAttribute('aria-valuenow')).toBe('5');
+    expect(progress?.getAttribute('aria-valuemax')).toBe('10');
+    expect(progress?.querySelector<HTMLElement>('i')?.style.width).toBe('50%');
+    expect(element.querySelectorAll('.score-track[aria-hidden="true"]').length).toBe(2);
+  });
+
+  it('shows empty collection bars at launch and no collection bars on failure', () => {
+    const element = render(launch);
+    expect(element.querySelectorAll('[role="progressbar"]').length).toBe(4);
+    expect(element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('0');
+  });
+
+  it('caps match progress when another collection rule still holds a signal back', () => {
+    const hero = scored.heroes[0];
+    const element = render({ ...scored, heroes: [{ ...hero, sustain: { ...hero.sustain, matches: 30 } }] });
+    const progress = element.querySelector('[role="progressbar"]');
+    expect(progress?.getAttribute('aria-valuenow')).toBe('10');
+    expect(progress?.querySelector<HTMLElement>('i')?.style.width).toBe('100%');
+  });
+
+  it('keeps the signal rows within narrow and desktop containers', () => {
+    const element = render(scored);
+    document.body.appendChild(element);
+    try {
+      for (const width of [280, 900]) {
+        element.style.width = `${width}px`;
+        const rows = element.querySelector<HTMLElement>('.signals');
+        expect(rows).not.toBeNull();
+        expect(rows?.scrollWidth).toBeLessThanOrEqual(width);
+        for (const bar of element.querySelectorAll<HTMLElement>('.bar')) {
+          expect(bar.getBoundingClientRect().width).toBeGreaterThan(0);
+          expect(bar.getBoundingClientRect().width).toBeLessThanOrEqual(width);
+        }
+      }
+    } finally {
+      element.remove();
+    }
+  });
+
   it('says the scores failed, and offers no ability section, when they cannot be read', () => {
     const element = render(null);
 
     expect(text(element)).toContain('Scores cannot be loaded right now.');
+    expect(element.querySelector('[role="progressbar"]')).toBeNull();
     expect(element.querySelector('h4')).toBeNull();
   });
 
