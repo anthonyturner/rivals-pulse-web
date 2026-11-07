@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   Input,
   OnChanges,
   SimpleChanges,
@@ -8,13 +9,12 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
 import { HeroBuildSignalsComponent } from '../hero-build-signals/hero-build-signals.component';
 import { HeroCommunityCountersComponent } from '../hero-community-counters/hero-community-counters.component';
 import { HeroCommunityStatsComponent } from '../hero-community-stats/hero-community-stats.component';
 import { HeroKillFeedComponent } from '../hero-kill-feed/hero-kill-feed.component';
 import { HeroVideosComponent } from '../hero-videos/hero-videos.component';
-import { Hero } from '../hero.model';
+import { Hero, HeroAbilityTechnicalDetail, HeroRole } from '../hero.model';
 
 const HERO_DETAIL_SECTIONS = [
   'overview',
@@ -29,10 +29,29 @@ const HERO_DETAIL_SECTIONS = [
 
 type HeroDetailSection = (typeof HERO_DETAIL_SECTIONS)[number];
 
+const DIFFICULTY_PIPS = [1, 2, 3, 4, 5] as const;
+
+/** The two controller reads that depend on the selected role, which is why the banner is a `computed()`. */
+interface HeroBannerSource {
+  heroRoleLabel(hero: Hero): HeroRole;
+  officialBaseStats(hero: Hero): HeroAbilityTechnicalDetail[];
+}
+
+interface HeroBanner {
+  /** The hero's last name word in capitals, drawn behind the header as decoration. */
+  watermark: string;
+  /** Sets the banner's role colour; see `.hero-poster.role-*` in the stylesheet. */
+  roleClass: string;
+  kicker: string;
+  stats: HeroAbilityTechnicalDetail[];
+  difficulty: number;
+  difficultyLabel: string;
+  pips: readonly number[];
+}
+
 @Component({
   selector: 'app-hero-details',
   imports: [
-    EyebrowComponent,
     HeroBuildSignalsComponent,
     HeroCommunityCountersComponent,
     HeroCommunityStatsComponent,
@@ -50,7 +69,36 @@ export class HeroDetailsComponent implements OnChanges {
 
   readonly selectedSection = signal<HeroDetailSection>('overview');
 
+  private readonly bannerSource = signal<{ hero: Hero; controller: HeroBannerSource } | null>(null);
+
+  /** Read through a computed so the banner follows the controller's selected role as well as the inputs. */
+  readonly banner = computed<HeroBanner | null>(() => {
+    const source = this.bannerSource();
+
+    if (!source) {
+      return null;
+    }
+
+    const { hero, controller } = source;
+    const role = controller.heroRoleLabel(hero);
+    const archetype = hero.gameplayArchetypes?.find((candidate) => candidate.role === role);
+
+    return {
+      watermark: hero.name.trim().split(/\s+/).at(-1)?.toUpperCase() ?? '',
+      roleClass: `role-${role.toLowerCase()}`,
+      kicker: archetype ? `${role} · ${archetype.label}` : role,
+      stats: controller.officialBaseStats(hero),
+      difficulty: hero.difficulty,
+      difficultyLabel: `Difficulty ${hero.difficulty} out of 5`,
+      pips: DIFFICULTY_PIPS,
+    };
+  });
+
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['hero'] || changes['controller']) {
+      this.bannerSource.set({ hero: this.hero, controller: this.controller });
+    }
+
     if (changes['hero'] && !changes['hero'].firstChange) {
       this.selectedSection.set('overview');
     }

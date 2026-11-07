@@ -36,6 +36,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The hero page banner is redesigned as a type poster: a flat panel with the hero's surname as a faint watermark, a smaller sharp round portrait ringed in the hero's role colour, the role and archetype above a large name, and a bar along the bottom with the official base stats and the difficulty as a number (such as 3 / 5) with five pips. It works in both themes and wraps to two columns on a phone ([#553](https://github.com/anthonyturner/rivals-pulse-web/pull/553)).
 - The admin "Data jobs" page shows its times in US Eastern time (EST or EDT) instead of UTC ([#549](https://github.com/anthonyturner/rivals-pulse-web/pull/549)).
 - Hero profiles have clearer summaries, larger section tabs and supporting copy, and lighter labels for easier reading ([#547, fix(heroes): improve typography and readability](https://github.com/anthonyturner/rivals-pulse-web/pull/547)).
 - Build-signal score, Mobility and match-collection bars now use a yellow gradient in both themes, with estimated scores still patterned ([#545](https://github.com/anthonyturner/rivals-pulse-web/pull/545)).
