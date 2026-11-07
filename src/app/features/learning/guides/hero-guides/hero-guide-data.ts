@@ -1141,14 +1141,14 @@ export const HERO_GUIDES: HeroGuide[] = [
         note: 'Written about Overwatch, not Marvel Rivals. We kept only the ideas that fit any team fight.',
       },
       {
-        label: 'Ultimate Economy 101, Boostroom',
-        url: 'https://boostroom.com/blog/ultimate-economy-101-marvel-rivals-when-to-hold-when-to-stack-when-to-commit',
-        note: 'Further reading only. We could not read this article, so nothing in this guide is based on it.',
-      },
-      {
         label: 'Ultimate Economy in Marvel Rivals, MetaBot',
         url: 'https://metabot.gg/en/marvelrivals/guides/marvel-rivals-ultimate-economy-guide',
         note: 'Advice from a commercial site.',
+      },
+      {
+        label: 'Ultimate Economy 101, Boostroom',
+        url: 'https://boostroom.com/blog/ultimate-economy-101-marvel-rivals-when-to-hold-when-to-stack-when-to-commit',
+        note: 'Further reading only. We could not read this article, so nothing in this guide is based on it.',
       },
     ],
     summary:
@@ -1161,7 +1161,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Tempo: who sets the pace',
         points: [
-          'The team that sets the pace makes the other team respond to it.',
+          'Tempo belongs to whichever team is choosing when things happen. The other team is left answering.',
           'This idea comes from an XTREME PS article about Overwatch, not Marvel Rivals. Both games build team fights around cooldowns and ultimates, so we carried over the general ideas and left its hero examples behind.',
           'That article describes two styles: a fast team closes the gap and forces the fight, and a slow team holds good ground and waits to punish errors.',
           'It rates neither as better by default, but warns that a slow team may need to speed up when the enemy presses harder.',
@@ -1172,17 +1172,17 @@ export const HERO_GUIDES: HeroGuide[] = [
         points: [
           'Before you commit, name the advantage you are committing on.',
           'The Overwatch article from XTREME PS lists three good reasons: your team already got a pick, you have more ultimates ready, or the enemy is coming back from spawn a few at a time.',
-          'It says most timing errors come from going in too early, and that without one of those reasons you are fighting on the enemy’s terms.',
+          'It singles out going in too early as the big timing mistake, and says that without one of those reasons you are fighting on the enemy’s terms.',
         ],
       },
       {
         title: 'The three stages of a fight',
         points: [
           'XTREME PS splits an Overwatch team fight into poke, engagement and cleanup. The same split works for a Marvel Rivals fight.',
-          'Poke: both teams test each other and nobody has committed. Big cooldowns spent now buy very little.',
-          'Engagement: one team spots an opening and goes in together. This is when the pace changes hands.',
-          'Cleanup: the winners finish the job without chasing survivors toward their spawn or spending ultimates on a team that is already leaving.',
-          'Poke also tells you things. Note what the enemy spends early, because that tool is gone when the real fight starts, and call out the big ones even in solo queue.',
+          'Poke: both teams trade from range and neither side is all in. Big cooldowns spent now buy very little.',
+          'Engagement: a team sees its chance and everyone moves on it at once. Whichever side handles this stage better usually comes out with the pace.',
+          'Cleanup: the winners close out the fight without chasing survivors toward their spawn, and keep their ultimates once the result is clear.',
+          'Poke also tells you things. Note which big abilities the enemy uses early, since they may still be on cooldown when the fight starts, and tell your team, whoever you queued with.',
         ],
       },
       {
@@ -1190,15 +1190,15 @@ export const HERO_GUIDES: HeroGuide[] = [
         points: [
           'Enemies who die at different times come back at different times, so a won fight can roll into the next one with your team ahead on numbers.',
           'XTREME PS calls this staggering in its Overwatch article. The part that carries over is simple: be ready for the first enemy back, and do not follow them into their spawn.',
-          'The pace can also turn mid-fight. A Strategist going down, a Vanguard out of tools or a key hero backing off are all openings worth acting on quickly.',
+          'The pace can also turn mid-fight. The Overwatch examples are a support going down or a tank using up its kit. In Marvel Rivals terms, think of a Strategist or a Vanguard. Moments like these are worth acting on quickly.',
         ],
       },
       {
         title: 'Treat ultimates as a budget',
         points: [
-          'MetaBot compares ultimates to currency: teams earn them, hold them and spend them, and it argues the better spender usually takes the objective.',
-          'Its test is what you get back. A strong ultimate catches several grouped enemies with no way out. A weak one goes on a lone target who survives, or on a kill your team would have got anyway.',
-          'MetaBot suggests naming the value before you press the button. If you cannot name it, hold.',
+          'MetaBot’s comparison is money: ultimates are something a team saves and spends, and in its view good spending is what wins objectives.',
+          'Its test is what you get back. A good one hits several enemies at once, at a moment they cannot get away. A weak one goes on a lone target who survives, or on a kill your team would have got anyway.',
+          'Before using one, MetaBot suggests saying what it should achieve. Without a good answer, it says to wait.',
           'Holding has a limit too. XTREME PS warns, again about Overwatch, that sitting on ultimates for too long gives the enemy time to build theirs.',
         ],
       },
@@ -1207,16 +1207,16 @@ export const HERO_GUIDES: HeroGuide[] = [
         points: [
           'Compare what each team has ready before the fight, then let that choose your plan.',
           'XTREME PS offers this simple guide in its Overwatch article. Ahead on ultimates: go in. Even: get a pick first. Behind: stall. All spent: reset.',
-          'Treat it as a starting point, not a rule. Enemy charge is hidden in Marvel Rivals, so your count is always an estimate.',
+          'Treat it as a starting point, not a rule. MetaBot, writing about Marvel Rivals, points out that you never see the enemy’s exact charge, so your count is an estimate.',
         ],
       },
       {
-        title: 'Hold, combine or commit',
+        title: 'When to spend an ultimate',
         points: [
-          'MetaBot’s default is to hold: it says waiting usually beats using an ultimate the moment it is ready.',
+          'On whether to hold, MetaBot’s answer is usually yes: waiting tends to beat using an ultimate as soon as it is ready.',
           'Its time to commit is when the enemy has spent a key ultimate, so yours meets less resistance.',
-          'MetaBot adds that a setup ultimate can make a follow-up land cleanly, but a misfire wastes both, so the order has to be agreed.',
-          'MetaBot also treats keeping one ultimate back as a sound habit, because grouping up can leave your team open to a counter.',
+          'MetaBot adds that one ultimate can set up another, but without coordination both can be lost, so agree the order first.',
+          'MetaBot also treats keeping one ultimate back as a sound habit, so your team still has an answer if the enemy counters.',
         ],
       },
       {
@@ -1224,16 +1224,16 @@ export const HERO_GUIDES: HeroGuide[] = [
         points: [
           'You cannot see enemy charge, so MetaBot suggests estimating it from what you can see and hear.',
           'Its cues: voice lines tell you an ultimate was just used, the time since then tells you how close the next may be, and heavy healing or damage suggests charge is building quickly.',
-          'It advises planning as if the dangerous ultimate is ready, and treating it as a bonus when it is not.',
+          'Its advice is to assume the dangerous ultimate is available until you know otherwise.',
           'MetaBot also describes baiting: let a tough or mobile hero draw the ultimate, survive it with cover or a defensive tool, then commit while the enemy has nothing left.',
-          'It warns against the opposite error too: burning every cooldown to prepare for an ultimate that never comes.',
+          'It also warns against overreacting: using all your cooldowns against an ultimate the enemy does not have.',
         ],
       },
       {
         title: 'Practise it in one match',
         points: [
           'Pick one habit per match rather than trying all of this at once.',
-          'MetaBot suggests tracking every enemy ultimate for a whole match, then looking back at losses for spending errors, such as an ultimate traded for a single kill.',
+          'MetaBot suggests tracking every enemy ultimate for a whole match, then looking back at losses for spending errors, such as a whole ultimate used on one easy kill.',
           'XTREME PS, writing about Overwatch, suggests watching your own footage to learn the moments when a fight turns, so you can spot them live.',
         ],
       },
@@ -1242,7 +1242,7 @@ export const HERO_GUIDES: HeroGuide[] = [
         points: [
           'The RivalsPulse overlay, coming soon to the Overwolf store, has a live tempo chip on its in-game top bar in Quick Match and Ranked.',
           'The chip shows Quiet, Rising, Fast or Reset, based on deaths on both teams over the last 20 seconds.',
-          'It does not use cooldowns or ultimate charge, because the game does not send those for other players. Reading enemy ultimates stays your job.',
+          'It does not use cooldowns or ultimate charge. Reading enemy ultimates stays your job.',
           'It is an early version. Nobody has checked it in a real match yet and its thresholds are still guesses, so treat it as a rough hint.',
         ],
       },

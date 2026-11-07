@@ -76,8 +76,8 @@ describe('HeroGuideDetailPageComponent', () => {
     it('credits each source with a visible link that opens in a new tab', () => {
       expect(sourceLinks().map((link) => link.hostname)).toEqual([
         'www.xtremeps3.com',
-        'boostroom.com',
         'metabot.gg',
+        'boostroom.com',
       ]);
       for (const link of sourceLinks()) {
         expect(link.target).toBe('_blank');
@@ -87,7 +87,7 @@ describe('HeroGuideDetailPageComponent', () => {
     });
 
     it('lists Boostroom as further reading and credits no advice to it', () => {
-      const boostroom = sourceLinks()[1].closest('li');
+      const boostroom = sourceLinks()[2].closest('li');
 
       expect(boostroom?.textContent).toContain('Further reading only');
       expect(boostroom?.textContent).toContain('nothing in this guide is based on it');
