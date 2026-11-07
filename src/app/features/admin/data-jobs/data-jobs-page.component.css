@@ -138,6 +138,16 @@
   overflow-wrap: anywhere;
 }
 
+.jobs__link {
+  display: grid;
+  gap: 2px;
+}
+
+.jobs__countdown {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .jobs__when,
 .jobs__detail {
   color: var(--text-muted);

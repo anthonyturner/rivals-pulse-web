@@ -7,6 +7,7 @@ import { DataJobsPageComponent } from './data-jobs-page.component';
 import { DataJobsService, type DataJobRunResult, type DataJobsRead } from './data-jobs.service';
 
 const NOW = Date.parse('2026-11-04T10:00:00.000Z');
+const MINUTE = 60_000;
 
 const run = (overrides: Partial<DataJobRun> = {}): DataJobRun => ({
   outcome: 'succeeded',
@@ -29,6 +30,11 @@ describe('DataJobsPageComponent', () => {
   let read: jasmine.Spy<() => Promise<DataJobsRead>>;
   let runJob: jasmine.Spy<(job: DataJobKey) => Promise<DataJobRunResult>>;
   let fixture: ComponentFixture<DataJobsPageComponent>;
+  let clockNow: number;
+
+  beforeEach(() => {
+    clockNow = NOW;
+  });
 
   async function open(jobs: DataJobStatus[] = DATA_JOBS.map((job) => status(job.key))): Promise<void> {
     read = jasmine.createSpy('read').and.resolveTo({ status: 'ready', jobs } satisfies DataJobsRead);
@@ -37,7 +43,7 @@ describe('DataJobsPageComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: DataJobsService, useValue: { now: () => NOW, read, run: runJob } },
+        { provide: DataJobsService, useValue: { now: () => clockNow, tickingClock: DataJobsService.prototype.tickingClock, read, run: runJob } },
       ],
     });
     fixture = TestBed.createComponent(DataJobsPageComponent);
@@ -68,6 +74,120 @@ describe('DataJobsPageComponent', () => {
       'Syncs',
       'Run from GitHub',
     ]);
+  });
+
+  it('shows the time left and the time of the next scheduled run on every job', async () => {
+    await open();
+
+    const next = (label: string): string[] =>
+      [card(label).querySelector('.jobs__countdown'), card(label).querySelector('.jobs__runs time')].map((item) => item?.textContent?.trim() ?? '');
+
+    expect(next('Hero stats')).toEqual(['In 7m 0s', '2026-11-04 10:07 UTC']);
+    expect(next('Hero pairs')).toEqual(['In 43m 0s', '2026-11-04 10:43 UTC']);
+    expect(next('Game stats')).toEqual(['In 10m 0s', '2026-11-04 10:10 UTC']);
+    expect(next('Home news')).toEqual(['In 17h 0m', '2026-11-05 03:00 UTC']);
+    expect(card('Hero stats').querySelector('.jobs__runs time')?.getAttribute('datetime')).toBe('2026-11-04T10:07:00.000Z');
+  });
+
+  it('shows the next run of the GitHub workflows, says they can run late, and links to them', async () => {
+    await open();
+
+    const links = Array.from(el().querySelectorAll<HTMLElement>('.jobs__link'));
+
+    expect(links.map((link) => link.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Publish Pulse Atlas (opens GitHub in a new tab) Next scheduled run in 2h 17m, 2026-11-04 12:17 UTC',
+      'Sync new heroes (opens GitHub in a new tab) Next scheduled run in 18h 30m, 2026-11-05 04:30 UTC',
+    ]);
+    expect(links[0].querySelector('a')?.getAttribute('href')).toBe(
+      'https://github.com/anthonyturner/rivals-pulse-web/actions/workflows/pulse-atlas.yml',
+    );
+    expect(el().textContent).toContain('GitHub can start a scheduled run hours late or skip it');
+  });
+
+  it('counts down while open, moves on to the following run, and reads the jobs again after one is due', async () => {
+    jasmine.clock().install();
+
+    try {
+      await open();
+
+      const countdown = (): string | null | undefined => card('Hero stats').querySelector('.jobs__countdown')?.textContent;
+
+      expect(countdown()).toBe('In 7m 0s');
+      expect(read).toHaveBeenCalledTimes(1);
+
+      clockNow += MINUTE;
+      jasmine.clock().tick(1000);
+      await settle();
+      expect(countdown()).toBe('In 6m 0s');
+
+      clockNow = Date.parse('2026-11-04T10:07:00.000Z');
+      jasmine.clock().tick(1000);
+      await settle();
+      expect(countdown()).toBe('In 1h 0m');
+
+      clockNow += 31_000;
+      jasmine.clock().tick(7 * MINUTE + 30_250 - 1000);
+      await settle();
+      expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      fixture.destroy();
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('stops reading the jobs once the page is left, even when a read was still on its way', async () => {
+    jasmine.clock().install();
+
+    try {
+      await open();
+
+      let answer: (value: DataJobsRead) => void = () => undefined;
+
+      read.and.returnValue(new Promise<DataJobsRead>((resolve) => (answer = resolve)));
+      jasmine.clock().tick(7 * MINUTE + 30_250);
+      expect(read).toHaveBeenCalledTimes(2);
+
+      fixture.destroy();
+      answer({ status: 'ready', jobs: DATA_JOBS.map((job) => status(job.key)) });
+      await Promise.resolve();
+      await Promise.resolve();
+      jasmine.clock().tick(24 * 60 * MINUTE);
+
+      expect(read).toHaveBeenCalledTimes(2);
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('keeps reading after a failed read, and reads again soon while a scheduled run is still going', async () => {
+    jasmine.clock().install();
+
+    try {
+      await open(
+        DATA_JOBS.map((job) =>
+          status(job.key, job.key === 'game-stats' ? { lastScheduled: run({ outcome: 'running', finishedAt: null }) } : {}),
+        ),
+      );
+      read.and.resolveTo({ status: 'unavailable' });
+
+      jasmine.clock().tick(15_250);
+      await settle();
+      expect(read).toHaveBeenCalledTimes(2);
+
+      jasmine.clock().tick(7 * MINUTE + 30_250);
+      await settle();
+      expect(read).toHaveBeenCalledTimes(3);
+    } finally {
+      fixture.destroy();
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('marks up the countdown without a live region, so it is not read out every second', async () => {
+    await open();
+
+    expect(el().querySelector('.jobs__countdown')?.closest('[role], [aria-live]')).toBeNull();
+    expect(el().querySelectorAll('[role="status"]').length).toBe(1);
   });
 
   it('says when a change shows, once for the page', async () => {
@@ -320,7 +440,7 @@ describe('DataJobsPageComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: DataJobsService, useValue: { now: () => NOW, read, run: runJob } },
+        { provide: DataJobsService, useValue: { now: () => NOW, tickingClock: DataJobsService.prototype.tickingClock, read, run: runJob } },
       ],
     });
     fixture = TestBed.createComponent(DataJobsPageComponent);

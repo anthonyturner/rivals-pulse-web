@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, type DestroyRef, type Signal } from '@angular/core';
 
 import type { DataJobBusyAnswer, DataJobKey, DataJobRunAnswer, DataJobStatus } from '../../../../contracts/admin-data-jobs.model';
 import { dataJobBusyAnswerOf, dataJobRunAnswerOf, dataJobStatusesOf } from '../../../../contracts/admin-data-jobs.parse';
@@ -23,6 +23,16 @@ export class DataJobsService {
   /** The clock, apart so a test can set the time. */
   now(): number {
     return Date.now();
+  }
+
+  /** A clock that moves every second until `destroyRef` ends. */
+  tickingClock(destroyRef: DestroyRef): Signal<number> {
+    const clock = signal(this.now());
+    const timer = setInterval(() => clock.set(this.now()), 1000);
+
+    destroyRef.onDestroy(() => clearInterval(timer));
+
+    return clock.asReadonly();
   }
 
   async read(): Promise<DataJobsRead> {

@@ -995,6 +995,8 @@ and a `pg_cron` queue for one that passes about 60 seconds. Either is a follow-u
   unchanged. Until the migration is applied the page answers 503 and nothing else is affected. The maintainer approves the push.
   The check holds locks until it rolls back, so a scheduled rebuild can wait a few seconds behind it: do not run it in minutes :07,
   :13, :17, :37 or :43.
+- **Next scheduled run:** the page counts down from the `schedule` of each job in `src/contracts/admin-data-jobs.model.ts`, not from the
+  scheduler. `scripts/data-job-schedules.test.ts` fails if a migration, `vercel.json` or a workflow file says otherwise, so change them together.
 - `supabase/checks/admin_data_jobs.sql` proves the rules in a transaction it rolls back, with three throwaway users and throwaway
   half-seasons (998.0 and 999.0, and 97.0 and 98.0 for play time, which reads tracked matches that name their own half-season):
   only an administrator can use any of the four functions (a stranger, `anon` and the service role cannot); a key outside the
