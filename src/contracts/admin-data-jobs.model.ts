@@ -106,7 +106,7 @@ export const DATA_JOBS = [
       {
         name: 'Heroes (any hero)',
         path: '/heroes',
-        section: 'A hero in the kill feed, and the Damage, Sustain, Ultimate and Utility scores in the closed Build Signals panel',
+        section: 'A hero in the kill feed, and the Damage, Sustain, Ultimate and Utility scores in the Team fit tab',
       },
       {
         name: 'Team builder',

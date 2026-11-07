@@ -30,8 +30,12 @@ describe('HeroGuidesPageComponent', () => {
   it('gives every guide link its own name', () => {
     const names = links().map((link) => link.textContent?.trim());
 
-    expect(names.length).toBe(26);
+    expect(names.length).toBe(27);
     expect(new Set(names).size).toBe(names.length);
+  });
+
+  it('lists the tempo and ultimate economy guide under its own address', () => {
+    expect(links().map((link) => link.getAttribute('href'))).toContain('/hero-guides/tempo-and-ultimate-economy');
   });
 
   it('links the strategist lessons', () => {
