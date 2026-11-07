@@ -112,6 +112,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- On a hero that can play several roles, such as Deadpool, the banner's role name and colour now follow the ability kit you pick, along with the stats, instead of showing "Multi-Role" over one role's stats ([#554](https://github.com/anthonyturner/rivals-pulse-web/issues/554)).
 - Hero detail section links now stay on the selected hero and scroll to the chosen section ([#526](https://github.com/anthonyturner/rivals-pulse-web/pull/526)).
 - The home page word of the day now sits below the sound control at the right of the hero, with a reserved column that keeps it clear of the headline and description on tablet widths; the existing mobile placement remains unchanged ([#519](https://github.com/anthonyturner/rivals-pulse-web/pull/519)).
 - The home page word of the day now selects from the full glossary, so Marvel Rivals terms listed under categories such as Positioning and Coach Term can appear ([#516](https://github.com/anthonyturner/rivals-pulse-web/pull/516)).

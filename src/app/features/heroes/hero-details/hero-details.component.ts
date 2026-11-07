@@ -31,9 +31,9 @@ type HeroDetailSection = (typeof HERO_DETAIL_SECTIONS)[number];
 
 const DIFFICULTY_PIPS = [1, 2, 3, 4, 5] as const;
 
-/** The two controller reads that depend on the selected role, which is why the banner is a `computed()`. */
+/** The two controller reads that depend on the selected kit, which is why the banner is a `computed()`. */
 interface HeroBannerSource {
-  heroRoleLabel(hero: Hero): HeroRole;
+  displayedRole(hero: Hero): HeroRole;
   officialBaseStats(hero: Hero): HeroAbilityTechnicalDetail[];
 }
 
@@ -71,7 +71,7 @@ export class HeroDetailsComponent implements OnChanges {
 
   private readonly bannerSource = signal<{ hero: Hero; controller: HeroBannerSource } | null>(null);
 
-  /** Read through a computed so the banner follows the controller's selected role as well as the inputs. */
+  /** Read through a computed so the banner follows the controller's selected kit as well as the inputs. */
   readonly banner = computed<HeroBanner | null>(() => {
     const source = this.bannerSource();
 
@@ -80,7 +80,7 @@ export class HeroDetailsComponent implements OnChanges {
     }
 
     const { hero, controller } = source;
-    const role = controller.heroRoleLabel(hero);
+    const role = controller.displayedRole(hero);
     const archetype = hero.gameplayArchetypes?.find((candidate) => candidate.role === role);
 
     return {

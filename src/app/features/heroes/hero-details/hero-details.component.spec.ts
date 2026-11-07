@@ -188,6 +188,57 @@ describe('HeroDetailsComponent', () => {
     expect(health()).toBe('250');
   });
 
+  it('moves the banner role label, colour and stats together when the kit changes on a multi-role hero', async () => {
+    const multiRoleHero = {
+      ...mantis,
+      name: 'Deadpool',
+      role: 'Multi-Role',
+      roleAbilityKits: [
+        { role: 'Vanguard', label: 'Vanguard kit', abilities: [] },
+        { role: 'Duelist', label: 'Duelist kit', abilities: [] },
+        { role: 'Strategist', label: 'Strategist kit', abilities: [] },
+      ],
+      officialSource: {
+        sourceUrl: 'https://marvelrivals.com/hero/deadpool',
+        baseStatKits: [
+          { role: 'Vanguard', label: 'Vanguard', stats: [{ label: 'Health', value: '650' }] },
+          { role: 'Duelist', label: 'Duelist', stats: [{ label: 'Health', value: '250' }] },
+          { role: 'Strategist', label: 'Strategist', stats: [{ label: 'Health', value: '300' }] },
+        ],
+      },
+    } as Hero;
+    const fixture = renderFixture(multiRoleHero);
+    const element = fixture.nativeElement as HTMLElement;
+    const controller = fixture.componentInstance.controller as HeroesPageComponent;
+    const banner = (): { kicker?: string; roleClasses: string[]; health?: string } => {
+      const poster = element.querySelector('.hero-poster') as HTMLElement;
+
+      return {
+        kicker: element.querySelector('.poster-kicker')?.textContent?.trim(),
+        roleClasses: [...poster.classList].filter((name) => name.startsWith('role-')),
+        health: element.querySelector('.poster-stats .poster-stat dd')?.textContent?.trim(),
+      };
+    };
+
+    expect(banner()).toEqual({ kicker: 'Vanguard', roleClasses: ['role-vanguard'], health: '650' });
+
+    for (const [role, health] of [
+      ['Duelist', '250'],
+      ['Strategist', '300'],
+      ['Vanguard', '650'],
+    ] as const) {
+      controller.selectAbilityKit(role);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(banner()).toEqual({
+        kicker: role,
+        roleClasses: [`role-${role.toLowerCase()}`],
+        health,
+      });
+    }
+  });
+
   it('labels the overview and source link from official hero source data', () => {
     const officialHero = {
       ...mantis,
