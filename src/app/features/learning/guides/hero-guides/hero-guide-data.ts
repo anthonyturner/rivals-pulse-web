@@ -1235,7 +1235,7 @@ export const HERO_GUIDES: HeroGuide[] = [
         points: [
           'Pick one habit per match rather than trying all of this at once.',
           'MetaBot suggests tracking every enemy ultimate for a whole match, then looking back at losses for spending errors, such as an ultimate traded for a single kill.',
-          'XTREME PS suggests watching your own footage to learn the moments when a fight turns, so you can spot them live.',
+          'XTREME PS, writing about Overwatch, suggests watching your own footage to learn the moments when a fight turns, so you can spot them live.',
         ],
       },
       {
