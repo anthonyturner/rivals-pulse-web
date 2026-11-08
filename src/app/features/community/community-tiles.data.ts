@@ -31,7 +31,7 @@ export const COMMUNITY_TILES: readonly HubTileConfig[] = [
     size: 'feature',
     chip: COMMUNITY,
     preview: CommunityTotalsPreviewComponent,
-    imageUrl: '/images/site/heroes-banner.jpg',
+    imageUrl: '/images/site/banners/community-banner.webp',
   },
   { path: '/privacy', size: 'third', chip: PRIVACY, preview: null, imageUrl: null },
   { path: '/profile', size: 'third', chip: ACCOUNT, preview: null, imageUrl: null },
