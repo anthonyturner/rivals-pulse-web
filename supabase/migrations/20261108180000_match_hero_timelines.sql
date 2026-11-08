@@ -77,7 +77,7 @@ begin
     return 0;
   end if;
 
-  -- A different lock seed from the two other match writers, so none of them waits on another.
+  -- A different lock seed from the three other match writers (seeds 0, 1 and 2), so none of them waits on another.
   perform pg_advisory_xact_lock(hashtextextended(p_fingerprint, 3));
 
   -- The same 4 minute window `record_match_participants` uses to call two uploads one match.
