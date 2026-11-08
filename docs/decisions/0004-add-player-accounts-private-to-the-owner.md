@@ -150,6 +150,12 @@ switching it off clears it. To leave room for sharing later without a rewrite:
 - a later sharing feature needs the owner's own opt-in per data kind and can be
   withdrawn at any time. That feature is out of scope here.
 
+*Amended 2026-11-07 ([ADR-0006](0006-publish-opted-in-player-names-on-pulse-records.md)).*
+"Nobody else" no longer holds for one thing: the in-game name in a player's
+link may appear on the public Pulse Records page, only while the owner has
+switched "Show me in Pulse Records" on (off by default, withdrawable at any
+time). Everything else in this decision stands.
+
 Live status is the current state of one match, not history. It holds only what
 the owner already sees on their own overlay and what the privacy policy allows
 us to store: never an opponent's ultimate data, never another player's damage,

@@ -38,6 +38,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Privacy notes and the Account page now say what the planned Pulse Records page will publish, before it opens: the highest single-match figures, shown with a player's name only if that player linked their account and switched it on (off by default, withdrawable at any time), and otherwise as "Anonymous". The notes say plainly that anonymous entries are published lines from players who never agreed, and how to be taken off. The home and Overwolf FAQ answers no longer say the site never shows a name. Nothing is published yet ([#572](https://github.com/anthonyturner/rivals-pulse-web/pull/572)).
 - Subpages now use compact, plain titles instead of decorative banners, leaving more room for guides, tools and stats ([#552](https://github.com/anthonyturner/rivals-pulse-web/pull/552)).
 - The hero page banner is redesigned as a type poster: a flat panel with the hero's surname as a faint watermark, a smaller sharp round portrait ringed in the hero's role colour, the role and archetype above a large name, and a bar along the bottom with the official base stats and the difficulty as a number (such as 3 / 5) with five pips. It works in both themes and wraps to two columns on a phone ([#553](https://github.com/anthonyturner/rivals-pulse-web/pull/553)).
 - The admin "Data jobs" page shows its times in US Eastern time (EST or EDT) instead of UTC ([#549](https://github.com/anthonyturner/rivals-pulse-web/pull/549)).

@@ -243,6 +243,31 @@ describe('AccountPageComponent linking', () => {
     expect(unlinkButton(harness)).toBeUndefined();
   });
 
+  it('says only the player sees the page, and that a public name on Pulse Records is a choice', async () => {
+    setup(SIGNED_IN);
+    const harness = await RouterTestingHarness.create('/account');
+    const text = (page(harness).textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).not.toContain('Nothing here is shown to anyone else');
+    expect(text).toContain('Only you see this page');
+    expect(text).toContain('only if you choose that');
+    expect(text).toContain('Linking publishes nothing');
+  });
+
+  it('says the linked name and avatar are for the player only, with the name on Pulse Records a choice', async () => {
+    setup(SIGNED_IN, undefined, { status: 'done' }, AURORA);
+    const harness = await RouterTestingHarness.create('/account');
+
+    await typeCode(harness, 'abcd-efgh');
+    linkButton(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    const text = (page(harness).textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('to you only');
+    expect(text).toContain('Your name goes on the public Pulse Records page only if you choose that, and your avatar never does');
+  });
+
   it('keeps Link off until something is typed, and sends the code as typed', async () => {
     const { auth } = setup(SIGNED_IN);
     const harness = await RouterTestingHarness.create('/account');

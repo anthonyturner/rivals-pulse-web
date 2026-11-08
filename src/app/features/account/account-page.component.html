@@ -1,7 +1,7 @@
 <div class="account page-container page-container--narrow">
   <app-page-header
     title="Your account"
-    description="What RivalsPulse holds about your sign-in. Nothing here is shown to anyone else."
+    description="What RivalsPulse holds about your sign-in. Only you see this page. Your in-game name can appear on the public Pulse Records page only if you choose that."
   />
 
   @if (account(); as details) {
@@ -40,7 +40,8 @@
         </p>
         <p>
           Your in-game name and Overwolf avatar show here and in the site header, to you only.
-          Unlinking removes the link. To link a different player, get a new code from the desktop
+          Your name goes on the public Pulse Records page only if you choose that, and your avatar
+          never does. Unlinking removes the link. To link a different player, get a new code from the desktop
           app on that account.
         </p>
         @if (unlinkError(); as message) {
@@ -59,7 +60,8 @@
         <p>
           Open the RivalsPulse desktop app, ask it for a link code, and type the code here. A code
           works once and for ten minutes. Linking shows your in-game name and Overwolf avatar here
-          and in the site header, to you only.
+          and in the site header, to you only. Linking publishes nothing: your name goes on the
+          public Pulse Records page only if you choose that.
         </p>
         <form [attr.aria-busy]="linking() ? 'true' : null" (submit)="linkPlayer($event)">
           <label for="link-code">Link code</label>

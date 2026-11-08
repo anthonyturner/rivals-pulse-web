@@ -165,7 +165,8 @@ describe('OverlayFaqPageComponent', () => {
   describe('data', () => {
     it("points to this site's privacy notes and How we count", () => {
       expect(hrefs('data')).toEqual(['/privacy', '/how-we-count']);
-      expect(flat(section('data'))).toContain('only anonymous totals');
+      expect(flat(section('data'))).toContain('only anonymous totals and never player ids');
+      expect(flat(section('data'))).toContain("shows a player's name only if that player chose to show it");
     });
 
     it("does not lean on Overwolf's privacy policy", () => {
