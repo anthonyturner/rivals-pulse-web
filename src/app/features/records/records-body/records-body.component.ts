@@ -24,10 +24,6 @@ export class RecordsContentDirective {
  * Everything a Pulse Records page shows under its header: the loading or error panel while there are
  * no numbers, then either the page's own content or the "not enough data yet" panel, and the note on
  * where the records come from.
- *
- * The page passes its records state, whether the loaded view has anything for it to show, its content
- * as an `appRecordsContent` template (given the view), and the body of its "not enough data yet" panel
- * as projected content.
  */
 @Component({
   selector: 'app-records-body',
