@@ -161,10 +161,15 @@ describe('HeroGridComponent', () => {
     let geometry: HTMLStyleElement;
     let spacer: HTMLElement;
 
-    /** Pins the list's geometry whatever the Karma window width is, because the stylesheet picks column or strip by viewport. */
+    /**
+     * Pins the list's geometry whatever the Karma window width is, because the stylesheet picks column or strip by
+     * viewport. It also pins the page to a plain scrolling document, so a page-scroll spec reaches the position it
+     * asks for whatever an earlier spec left in the shared Karma page.
+     */
     beforeEach(() => {
       geometry = document.createElement('style');
       geometry.textContent = `
+        html, body { display: block !important; height: auto !important; max-height: none !important; overflow: visible !important; scroll-behavior: auto !important; scroll-snap-type: none !important; }
         .test-list-vertical { display: block !important; max-height: 200px !important; overflow: auto !important; }
         .test-list-horizontal { display: flex !important; width: 300px !important; padding: 0 !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: none !important; }
         .test-list-horizontal > li { flex: none !important; width: 68px !important; }
@@ -216,6 +221,8 @@ describe('HeroGridComponent', () => {
       const list = element.querySelector('.hero-grid') as HTMLElement;
       list.classList.add('test-list-horizontal');
       window.scrollTo(0, 120);
+
+      expect(document.documentElement.scrollHeight - window.innerHeight).toBeGreaterThanOrEqual(120);
       expect(window.scrollY).toBe(120);
 
       setInputs({ heroes: manyHeroes(), layout: 'roster', selectedHeroId: 'hero-35' });
