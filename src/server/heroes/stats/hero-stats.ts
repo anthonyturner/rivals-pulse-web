@@ -9,6 +9,7 @@ import type {
 } from '../../../contracts/hero-stats.model.ts';
 import { PLAY_MODE_IDS } from '../../../contracts/play-modes.ts';
 import type { TierName } from '../../../contracts/tier-list.model.ts';
+import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../../community/community-minimums.ts';
 
 /**
  * Every hero number on the site is derived here and nowhere else, from the counts in
@@ -92,6 +93,12 @@ export interface HeroAggregateRow {
   assistsN: number;
   finalHitsSum: number;
   finalHitsN: number;
+  /**
+   * Different players who recorded the matches this hero appeared in, in this half-season and mode.
+   * Null where nobody counted: a half-season frozen before the count existed. Rows of two modes are
+   * never added, as one player can record in both.
+   */
+  recorders: number | null;
 }
 
 /** Matches with a win or a loss in one half-season and mode. */
@@ -164,6 +171,17 @@ export interface Tally {
   assistsN: number;
   finalHitsSum: number;
   finalHitsN: number;
+}
+
+/**
+ * How many players are known to back a hero in the modes counted: the most any one mode row has. The
+ * same player records in more than one mode, so rows are never added, and the figure can only fall
+ * short of the true count, never exceed it. Undefined when any row was never counted.
+ */
+function playersBehind(rows: readonly HeroAggregateRow[]): number | undefined {
+  return rows.some((row) => row.recorders === null)
+    ? undefined
+    : rows.reduce((most, row) => Math.max(most, row.recorders ?? 0), 0);
 }
 
 interface HalfSeasonSnapshot {
@@ -280,6 +298,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
     stats: {
       status: result !== undefined && result.tiers.length > 0 ? 'ready' : 'not-enough-data',
       minimumMatches: HERO_STATS_MIN_MATCHES,
+      minimumPlayers: COMMUNITY_BUCKET_MIN_PLAYERS,
       halfSeasons: timeline.started.map(timeline.describe),
       halfSeason: shown === undefined ? null : timeline.describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
@@ -345,6 +364,7 @@ function snapshotOf(
 ): HalfSeasonSnapshot {
   const matchesCounted = decidedMatchesOf(source, halfSeason, playModeIds);
   const tallies = new Map<string, Tally>();
+  const rowsBySlug = new Map<string, HeroAggregateRow[]>();
   const excludedGameIds = new Set<number>();
   const counted = source.heroes.filter((row) => row.halfSeason === halfSeason && playModeIds.includes(row.playModeId));
 
@@ -359,6 +379,7 @@ function snapshotOf(
     const tally = tallies.get(slug) ?? emptyTally();
     addRow(tally, row);
     tallies.set(slug, tally);
+    rowsBySlug.set(slug, [...(rowsBySlug.get(slug) ?? []), row]);
   }
 
   const lines = [...tallies]
@@ -379,7 +400,11 @@ function snapshotOf(
     tiers: TIER_ORDER.filter((name) => byTier.has(name)).map((name) => ({ name, heroes: byTier.get(name) ?? [] })),
     belowMinimum: lines
       .filter(({ tally }) => tally.appearances < HERO_STATS_MIN_MATCHES)
-      .map(({ hero, tally }) => ({ hero, appearances: tally.appearances }))
+      .map(({ hero, tally }): HeroStatsBelowMinimum => {
+        const players = playersBehind(rowsBySlug.get(hero) ?? []);
+
+        return { hero, appearances: tally.appearances, ...(players === undefined ? {} : { players }) };
+      })
       .sort((a, b) => b.appearances - a.appearances || a.hero.localeCompare(b.hero)),
     excludedGameIds,
   };
