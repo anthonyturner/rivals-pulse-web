@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection, RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, TitleStrategy } from '@angular/router';
@@ -16,6 +18,8 @@ describe('NotFoundComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter(routes),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: TitleStrategy, useExisting: PageMetaTitleStrategy },
       ],
     });

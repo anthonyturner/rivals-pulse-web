@@ -38,6 +38,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Resources page is now a grid of mixed-size tiles instead of a list of text cards. Media Tutorials is the large lead tile with game art, and each other tile carries a coloured tag (learn, stats or reference, community) and a small preview of what is inside: the top heroes of the S, A and B tiers, the three best win rates, today's glossary word, the roster size, the topics and heroes of the strategist guides, and the best duo in each role. A preview shows only real figures and is left out when its data cannot be loaded. The grid has two columns on tablets and one on phones ([#573](https://github.com/anthonyturner/rivals-pulse-web/pull/573)).
 - Subpages now use compact, plain titles instead of decorative banners, leaving more room for guides, tools and stats ([#552](https://github.com/anthonyturner/rivals-pulse-web/pull/552)).
 - The hero page banner is redesigned as a type poster: a flat panel with the hero's surname as a faint watermark, a smaller sharp round portrait ringed in the hero's role colour, the role and archetype above a large name, and a bar along the bottom with the official base stats and the difficulty as a number (such as 3 / 5) with five pips. It works in both themes and wraps to two columns on a phone ([#553](https://github.com/anthonyturner/rivals-pulse-web/pull/553)).
 - The admin "Data jobs" page shows its times in US Eastern time (EST or EDT) instead of UTC ([#549](https://github.com/anthonyturner/rivals-pulse-web/pull/549)).
