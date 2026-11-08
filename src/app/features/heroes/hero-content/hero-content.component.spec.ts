@@ -2,7 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+
+import { ReturnTrail, type ReturnPoint } from '../../../core/navigation/return-trail';
 
 import type { Hero } from '../hero.model';
 import { HeroesPageComponent } from '../heroes-page.component';
@@ -119,5 +121,53 @@ describe('HeroContentComponent', () => {
   it('offers no way to open a profile window', () => {
     expect(element.querySelector('[data-testid="open-profile"]')).toBeNull();
     expect(element.textContent).not.toContain('Open profile');
+  });
+});
+
+describe('HeroContentComponent breadcrumb', () => {
+  function render(origin: { url: string; label: string } | null): HTMLElement {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: ReturnTrail,
+          useFactory: (router: Router) => ({
+            originOutside: (): ReturnPoint | null =>
+              origin && { url: router.parseUrl(origin.url), label: origin.label },
+          }),
+          deps: [Router],
+        },
+      ],
+    });
+    const controller = TestBed.runInInjectionContext(() => new HeroesPageComponent());
+    const fixture = TestBed.createComponent(HeroContentComponent);
+    fixture.componentRef.setInput('hero', mantis);
+    fixture.componentRef.setInput('controller', controller);
+    fixture.detectChanges();
+
+    return fixture.nativeElement;
+  }
+
+  function links(element: HTMLElement): { href: string | null; text: string }[] {
+    return Array.from(element.querySelectorAll('nav[aria-label="Breadcrumb"] a'), (link) => ({
+      href: link.getAttribute('href'),
+      text: link.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+    }));
+  }
+
+  it('leads with a link back to the page the reader came from', () => {
+    const element = render({ url: '/community/heroes?season=9', label: 'Community' });
+
+    expect(links(element)).toEqual([
+      { href: '/community/heroes?season=9', text: '← Community' },
+      { href: '/heroes', text: 'All heroes' },
+    ]);
+  });
+
+  it('offers only all heroes when the reader started on the Heroes page', () => {
+    expect(links(render(null))).toEqual([{ href: '/heroes', text: '← All heroes' }]);
   });
 });
