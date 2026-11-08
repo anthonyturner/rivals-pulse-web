@@ -109,6 +109,13 @@ export interface HeroAggregateRow {
    * never added, as one player can record in both.
    */
   recorders: number | null;
+  /**
+   * Different players who recorded the matches this hero appeared in across Quick Match and
+   * Competitive together, each counted once whichever of the two they played. Stored on the hero's
+   * row of each of those two modes with the same value; null on any other mode's row, and where
+   * nobody counted (a half-season frozen before the count existed).
+   */
+  blendedRecorders: number | null;
 }
 
 /** Matches with a win or a loss in one half-season and mode. */
@@ -184,14 +191,23 @@ export interface Tally {
 }
 
 /**
- * How many players are known to back a hero in the modes counted: the most any one mode row has. The
- * same player records in more than one mode, so rows are never added, and the figure can only fall
- * short of the true count, never exceed it. Undefined when any row was never counted.
+ * How many different players back a hero in the modes counted. A single mode reads that mode's
+ * count. The blended modes read the count the database made over both, so a player who recorded in
+ * each counts once and two players who each recorded in a different mode count as two. Where the
+ * blended count was never made (a half-season frozen after the per-mode count but before the blended
+ * one), the blend reads the largest per-mode count instead: one player can record in both modes, so
+ * that can only undercount. Undefined when a row has neither count. A hero whose rows are split
+ * across game ids takes the most any one row has, which can also only undercount.
  */
-function playersBehind(rows: readonly HeroAggregateRow[]): number | undefined {
-  return rows.some((row) => row.recorders === null)
+function playersBehind(rows: readonly HeroAggregateRow[], playModeIds: readonly number[]): number | undefined {
+  const isBlend =
+    playModeIds.length === BLENDED_PLAY_MODE_IDS.length && BLENDED_PLAY_MODE_IDS.every((id) => playModeIds.includes(id));
+  const countOf = (row: HeroAggregateRow): number | null =>
+    isBlend ? (row.blendedRecorders ?? row.recorders) : row.recorders;
+
+  return rows.some((row) => countOf(row) === null)
     ? undefined
-    : rows.reduce((most, row) => Math.max(most, row.recorders ?? 0), 0);
+    : rows.reduce((most, row) => Math.max(most, countOf(row) ?? 0), 0);
 }
 
 interface HalfSeasonSnapshot {
@@ -398,7 +414,7 @@ function snapshotOf(
       hero,
       tally,
       shrunk: shrunkWinRate(tally.wins, tally.appearances),
-      players: playersBehind(rowsBySlug.get(hero) ?? []),
+      players: playersBehind(rowsBySlug.get(hero) ?? [], playModeIds),
     }));
 
   const byTier = new Map<TierName, HeroStatsHero[]>();

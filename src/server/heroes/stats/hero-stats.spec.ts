@@ -61,6 +61,7 @@ function heroRow(
     finalHitsSum: 0,
     finalHitsN: 0,
     recorders: null,
+    blendedRecorders: null,
     ...extra,
   };
 }
@@ -128,8 +129,12 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
     const QUICK = PLAY_MODE_IDS.quickMatch;
     const COMPETITIVE = PLAY_MODE_IDS.competitive;
     const LINES = 3;
-    const row = (playModeId: number, recorders: number | null, gameHeroId = HERO_A) =>
-      heroRow(gameHeroId, LINES, 1, { playModeId, recorders });
+    const row = (
+      playModeId: number,
+      recorders: number | null,
+      gameHeroId = HERO_A,
+      blendedRecorders: number | null = recorders,
+    ) => heroRow(gameHeroId, LINES, 1, { playModeId, recorders, blendedRecorders });
     const belowOf = (heroes: HeroAggregateRow[], mode?: string) =>
       deriveHeroStats(sourceOf([{ heroes, matches: MIN }]), {
         now: NOW,
@@ -145,14 +150,30 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
       expect(belowOf([row(COMPETITIVE, 1)])).toEqual([{ hero: 'hulk', appearances: LINES, players: 1 }]);
     });
 
-    it('never adds two modes: the same player records in both, so the most any one mode has is the count', () => {
-      expect(belowOf([row(QUICK, 2), row(COMPETITIVE, 1)])).toEqual([
+    it('reads the count made across both blended modes, never the sum or the larger of the two modes', () => {
+      // One player recorded Quick Match and a different one Competitive: 2 players, though each mode has 1.
+      expect(belowOf([row(QUICK, 1, HERO_A, 2), row(COMPETITIVE, 1, HERO_A, 2)])).toEqual([
         { hero: 'hulk', appearances: 2 * LINES, players: 2 },
       ]);
+      // The same player in both modes: 1 player, though the modes' counts sum to 2.
+      expect(belowOf([row(QUICK, 1, HERO_A, 1), row(COMPETITIVE, 1, HERO_A, 1)])[0].players).toBe(1);
     });
 
-    it('counts only the mode asked for', () => {
-      expect(belowOf([row(QUICK, 2), row(COMPETITIVE, 1)], 'competitive')[0].players).toBe(1);
+    it('reads the blended count of a hero seen in one blended mode only', () => {
+      expect(belowOf([row(COMPETITIVE, 1, HERO_A, 1)])[0].players).toBe(1);
+    });
+
+    it('counts only the mode asked for, from that mode alone', () => {
+      const rows = [row(QUICK, 1, HERO_A, 2), row(COMPETITIVE, 1, HERO_A, 2)];
+
+      expect(belowOf(rows, 'competitive')[0].players).toBe(1);
+      expect(belowOf(rows, 'quick-match')[0].players).toBe(1);
+    });
+
+    it('does not read the blended count for a single mode, even where it is the only one counted', () => {
+      const [hero] = belowOf([row(COMPETITIVE, null, HERO_A, 3)], 'competitive');
+
+      expect('players' in hero).toBeFalse();
     });
 
     it('carries no count for a hero any of whose rows was never counted, and never reads null as 0', () => {
@@ -162,13 +183,25 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
       expect('players' in hero).toBeFalse();
     });
 
+    it('falls back in the blend to the largest per-mode count where no blended count was made', () => {
+      expect(belowOf([row(QUICK, 2, HERO_A, null), row(COMPETITIVE, 1, HERO_A, null)])[0].players).toBe(2);
+    });
+
+    it('carries no count in the blend where a row has neither a blended nor a per-mode count', () => {
+      const [hero] = belowOf([row(QUICK, 2, HERO_A, null), row(COMPETITIVE, null, HERO_A, null)]);
+
+      expect('players' in hero).toBeFalse();
+    });
+
     it('gives the rows of one hero split across game ids the most any one row has', () => {
       expect(belowOf([row(COMPETITIVE, 1, 1057), row(COMPETITIVE, 3, 10571)])[0].players).toBe(3);
     });
 
     describe('the player gate', () => {
       const withRecorders = (recorders: number | null, extra: Partial<HeroAggregateRow> = {}) =>
-        derive(sourceOf([{ heroes: [heroRow(HERO_A, MIN, MIN, { recorders, ...extra })], matches: MIN }])).stats;
+        derive(
+          sourceOf([{ heroes: [heroRow(HERO_A, MIN, MIN, { recorders, blendedRecorders: recorders, ...extra })], matches: MIN }]),
+        ).stats;
 
       it('holds a hero with enough matches and one player below the minimum, with both counts', () => {
         const stats = withRecorders(COMMUNITY_BUCKET_MIN_PLAYERS - 1);
@@ -189,6 +222,19 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
         expect(JSON.stringify(stats.tiers)).not.toContain('players');
       });
 
+      it('gates the blend on the largest per-mode count where no blended count was made', () => {
+        const heroes = (recorders: number) => [
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders, blendedRecorders: null }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1, blendedRecorders: null }),
+        ];
+        const stats = (recorders: number) =>
+          deriveHeroStats(sourceOf([{ heroes: heroes(recorders), matches: 2 * MIN }]), { now: NOW, heroSlugByGameId: SLUGS })
+            .stats;
+
+        expect(stats(2).tiers.flatMap((tier) => tier.heroes)).toHaveSize(1);
+        expect(stats(1).belowMinimum).toEqual([{ hero: 'hulk', appearances: 2 * MIN, players: 1 }]);
+      });
+
       it('places on the matches alone where nobody counted the players (a frozen half-season)', () => {
         const stats = withRecorders(null);
 
@@ -198,7 +244,9 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
 
       it('still needs the matches when the players are enough', () => {
         const stats = deriveHeroStats(
-          sourceOf([{ heroes: [heroRow(HERO_A, MIN - 1, MIN - 1, { recorders: 5 })], matches: MIN - 1 }]),
+          sourceOf([
+            { heroes: [heroRow(HERO_A, MIN - 1, MIN - 1, { recorders: 5, blendedRecorders: 5 })], matches: MIN - 1 },
+          ]),
           { now: NOW, heroSlugByGameId: SLUGS },
         ).stats;
 
@@ -206,10 +254,34 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
         expect(stats.belowMinimum).toEqual([{ hero: 'hulk', appearances: MIN - 1, players: 5 }]);
       });
 
+      it('places in the blend a hero whose two players each recorded in a different mode', () => {
+        const heroes = [
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders: 1, blendedRecorders: 2 }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1, blendedRecorders: 2 }),
+        ];
+        const heroesIn = (mode: string) =>
+          deriveHeroStats(sourceOf([{ heroes, matches: 2 * MIN }]), { now: NOW, heroSlugByGameId: SLUGS, mode }).stats;
+
+        expect(heroesIn('all').tiers.flatMap((tier) => tier.heroes)).toHaveSize(1);
+        expect(heroesIn('quick-match').belowMinimum).toEqual([{ hero: 'hulk', appearances: MIN, players: 1 }]);
+        expect(heroesIn('competitive').belowMinimum).toEqual([{ hero: 'hulk', appearances: MIN, players: 1 }]);
+      });
+
+      it('holds in the blend a hero one player recorded in both modes', () => {
+        const heroes = [
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders: 1, blendedRecorders: 1 }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1, blendedRecorders: 1 }),
+        ];
+        const stats = deriveHeroStats(sourceOf([{ heroes, matches: 2 * MIN }]), { now: NOW, heroSlugByGameId: SLUGS }).stats;
+
+        expect(stats.tiers).toEqual([]);
+        expect(stats.belowMinimum).toEqual([{ hero: 'hulk', appearances: 2 * MIN, players: 1 }]);
+      });
+
       it('reads the players of the modes asked for, so one mode can hold a hero the blend places', () => {
         const heroes = [
-          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders: 2 }),
-          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1 }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders: 2, blendedRecorders: 2 }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1, blendedRecorders: 2 }),
         ];
         const heroesIn = (mode: string) =>
           deriveHeroStats(sourceOf([{ heroes, matches: 2 * MIN }]), { now: NOW, heroSlugByGameId: SLUGS, mode }).stats;
@@ -221,7 +293,7 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
 
       it('falls back to the previous half-season while the current one has no hero with enough players', () => {
         const previous = heroRow(HERO_A, MIN, MIN, { halfSeason: 10, recorders: null });
-        const current = heroRow(HERO_A, MIN, MIN, { recorders: 1 });
+        const current = heroRow(HERO_A, MIN, MIN, { recorders: 1, blendedRecorders: 1 });
         const stats = derive(
           sourceOf([{ heroes: [previous, current], matches: MIN }], {
             totals: [
