@@ -124,3 +124,10 @@ jobs:
         env:
           SUMMARY: ${{ steps.roster.outputs.summary }}
         run: echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check hero_game_roles against the roster
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run check:hero-game-roles
