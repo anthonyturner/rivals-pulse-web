@@ -22,6 +22,8 @@ const PLAIN_TILE: Omit<HubTileConfig, 'path'> = { size: 'third', chip: null, pre
 export class HubBentoComponent {
   readonly links = input.required<readonly HubLink[]>();
   readonly config = input.required<readonly HubTileConfig[]>();
+  /** The level of each tile's title: 2 when the grid sits under the page title, 3 under a section heading. */
+  readonly headingLevel = input<2 | 3>(2);
 
   protected readonly tiles = computed(() => {
     const config = this.config();
