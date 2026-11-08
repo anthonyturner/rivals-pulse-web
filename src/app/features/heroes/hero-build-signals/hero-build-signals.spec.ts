@@ -316,7 +316,7 @@ describe('the summary lines', () => {
 
   it('states the rule from the answer, not a copy of it', () => {
     expect(scoresSourceNote(answer([]))).toContain('Season 10.5 Quick Match and Competitive');
-    expect(scoresSourceNote(answer([]))).toContain('at least 10 matches from at least 3 players');
+    expect(scoresSourceNote(answer([]))).toContain('at least 10 matches from at least 3 players, with no single player making up more than half');
     expect(scoresSourceNote(null)).toBeNull();
   });
 });
@@ -341,5 +341,23 @@ describe('solo build-signal testing', () => {
       kind: 'waiting', heading: 'Collecting data', progress: '5 of 10 matches', percent: 50,
     });
     expect(heroBuildSignals('groot', soloAnswer())[0].detail).toBe('0 of 10 matches');
+  });
+});
+
+describe('two players with no cap on one player\'s share', () => {
+  const twoPlayers = (): CommunityHeroScores => ({
+    ...answer([]),
+    minimums: { matches: 10, contributors: 2, busiestContributorShare: 1, rankedHeroes: 5 },
+  });
+
+  it('states the player minimum and no cap on one player', () => {
+    const note = scoresSourceNote(twoPlayers());
+    expect(note).toContain('at least 10 matches from at least 2 players.');
+    expect(note).not.toContain('more than half');
+  });
+
+  it('shows the player progress without blaming one busy player', () => {
+    const data = { ...twoPlayers(), heroes: [{ ...magneto, hero: 'hela', damage: collecting(30, 2, true) }] };
+    expect(heroBuildSignals('hela', data)[0].detail).toBe('10 of 10 matches, 2 of 2 players');
   });
 });

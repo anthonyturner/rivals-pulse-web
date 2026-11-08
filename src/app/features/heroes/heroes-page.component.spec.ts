@@ -145,7 +145,8 @@ describe('HeroesPageComponent videos in hero tabs', () => {
           useValue: {
             getHeroRoster: () =>
               of([hero('mantis', 'Mantis', 'Strategist'), hero('luna', 'Luna', 'Strategist')]),
-            getHeroVideos: () => of([]),
+            getHeroVideos: () =>
+              of([{ heroId: 'luna', videoType: 'paz-gameplay', youtubeId: 'lunaPaz', title: 'Luna PAZ' }]),
           },
         },
         { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
@@ -189,6 +190,24 @@ describe('HeroesPageComponent videos in hero tabs', () => {
 
     expect(video.url).toBe(`https://www.youtube.com/watch?v=${video.youtubeId}`);
     expect(video.youtubeId).toMatch(/^[\w-]+$/);
+  });
+
+  it('gives the poster a muted, looping backdrop of the hero\'s own PAZ gameplay video', async () => {
+    await harness.navigateByUrl('/heroes/luna');
+
+    const backdrop = TestBed.inject(DomSanitizer).sanitize(
+      SecurityContext.RESOURCE_URL,
+      page.selectedHeroPosterVideoUrl(),
+    );
+
+    expect(backdrop).toBe(
+      'https://www.youtube-nocookie.com/embed/lunaPaz?autoplay=1&mute=1&loop=1&playlist=lunaPaz&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3',
+    );
+  });
+
+  it('gives the poster no backdrop video when the hero has no PAZ gameplay video of their own', () => {
+    expect(page.selectedHeroPosterVideoUrl()).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.backdrop-switch')).toBeNull();
   });
 
   it('gives a video that is only a YouTube search link no player', () => {

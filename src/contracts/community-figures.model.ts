@@ -4,7 +4,7 @@ import type { HeroRole } from './role-stats.model.js';
 /*
  * Nothing in this payload is a sum, a count of lines or a count of players. A figure is a rate
  * rounded to a whole number, and a figure that is not shown is null. The database has already left
- * out every hero that too few players (or one player mostly) recorded, so a total here would hide
+ * out every hero that too few players recorded, so a total here would hide
  * what it leaves out; only the rounded rate leaves the server.
  */
 

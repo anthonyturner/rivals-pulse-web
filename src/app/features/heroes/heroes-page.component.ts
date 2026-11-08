@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, filter, forkJoin, map, pairwise } from 'rxjs';
 
@@ -111,7 +111,6 @@ export class HeroesPageComponent implements OnInit {
   private readonly grid = viewChild(HeroGridComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
-  /** One player per video: Angular compares the address wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
   private readonly routeHeroId = this.route.paramMap.pipe(
     map((params) => params.get('heroId')),
     distinctUntilChanged(),
@@ -499,6 +498,23 @@ export class HeroesPageComponent implements OnInit {
     const countersAndCombos = this.pazCountersCombosVideo(hero);
 
     return [guide, gameplay, countersAndCombos];
+  });
+
+  /** The selected hero's own PAZ gameplay video as a muted, looping backdrop. A role fallback video shows another hero, so it is not used. */
+  readonly selectedHeroPosterVideoUrl = computed<SafeResourceUrl | null>(() => {
+    const hero = this.selectedHero();
+    const video = hero && this.findHeroVideo(hero, 'paz-gameplay');
+
+    if (!video || video.heroId !== hero.id) {
+      return null;
+    }
+
+    const id = video.youtubeId;
+
+    // `playlist` set to the video itself is what makes YouTube loop a single video.
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3`,
+    );
   });
 
   readonly selectedHeroYoutubeUrl = computed(() =>
