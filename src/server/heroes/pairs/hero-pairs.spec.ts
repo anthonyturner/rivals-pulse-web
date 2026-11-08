@@ -60,6 +60,7 @@ function heroRow(gameHeroId: number, lines: number, wins: number, extra: Partial
     finalHitsSum: 0,
     finalHitsN: 0,
     recorders: null,
+    blendedRecorders: null,
     ...extra,
   };
 }
