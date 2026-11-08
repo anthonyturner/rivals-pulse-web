@@ -132,6 +132,7 @@ export function parseOfficialHeroArticle(card, html) {
     lore: cleanText(extractByClass(content, 'd1')),
     sourceUrl: card.url,
     listImageUrl: card.imageUrl,
+    articleImageUrls: allImages(html),
     baseStats: uniqueStats(baseStats),
     baseStatKits: compactBaseStatKits(baseStatKits),
     abilities: mergeDuplicateOfficialAbilities(abilities),
@@ -361,6 +362,14 @@ function firstImage(html = '') {
   const match = html.match(/<img\b[^>]*\bsrc="([^"]+)"/i);
 
   return match ? absoluteUrl(decodeHtml(match[1])) : '';
+}
+
+function allImages(html = '') {
+  const urls = [...html.matchAll(/<img\b[^>]*\bsrc=["']([^"']+)["']/gi)]
+    .map((match) => absoluteUrl(decodeHtml(match[1])))
+    .filter(Boolean);
+
+  return [...new Set(urls)];
 }
 
 function absoluteUrl(value = '') {
