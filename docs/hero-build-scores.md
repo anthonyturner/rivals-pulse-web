@@ -67,7 +67,7 @@ per half-season and per mode, before anything is added up, and on each input on
 its own.
 
 - **Below the rule there is no score, and never a guess.** The stat's `status` is
-  `collecting`, and `matches`, `contributors` and `oneContributorAboveHalf` say how
+  `collecting`, and `matches`, `contributors` and `oneContributorAboveHalf` (above the published busiest-player share, not always half) say how
   far along it is. Because the rule is per mode, these show the closest single mode;
   6 lines in Quick Match and 8 in Competitive reads as the 8.
 - **Progress counts matches in steps of 5.** 8 lines reads as 5, so a display says

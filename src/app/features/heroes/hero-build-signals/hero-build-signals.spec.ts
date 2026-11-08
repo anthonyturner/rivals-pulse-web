@@ -116,6 +116,28 @@ describe('heroBuildSignals', () => {
     expect(row(rows, 'Sustain').detail).toBe('5 of 10 matches, 1 of 3 players');
   });
 
+  it('names the published share as the limit on the busiest player, not always half', () => {
+    const held = { ...magneto, damage: collecting(10, 3, true) };
+    const at = (busiestContributorShare: number) => ({
+      ...answer([held]),
+      minimums: { matches: 10, contributors: 3, busiestContributorShare, rankedHeroes: 5 },
+    });
+
+    expect(row(heroBuildSignals('magneto', at(0.5)), 'Damage').detail).toContain('One player has more than half of these matches');
+    expect(row(heroBuildSignals('magneto', at(0.75)), 'Damage').detail).toContain('One player has more than 75% of these matches');
+    expect(row(heroBuildSignals('magneto', at(0.75)), 'Damage').detail).not.toContain('half');
+  });
+
+  it('names no busiest player when the minimums put no limit on one', () => {
+    const held = { ...magneto, damage: collecting(10, 3, true) };
+    const unlimited = {
+      ...answer([held]),
+      minimums: { matches: 10, contributors: 3, busiestContributorShare: 1, rankedHeroes: 5 },
+    };
+
+    expect(row(heroBuildSignals('magneto', unlimited), 'Damage').detail).toBe('10 of 10 matches, 3 of 3 players');
+  });
+
   it('stops the progress at each minimum when one busy player holds a hero back past them', () => {
     const held = { ...magneto, damage: collecting(30, 1, true), sustain: collecting(30, 5, true) };
     const rows = heroBuildSignals('magneto', answer([held]));

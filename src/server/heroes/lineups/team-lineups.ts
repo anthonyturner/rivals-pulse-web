@@ -14,7 +14,7 @@ import {
 
 /**
  * Teams a shape needs in a half-season before its figures are shown. Keep it equal to
- * `public.team_lineup_min_teams()`, which the database applies first (it withholds the counts of a
+ * `public.team_lineup_min_teams()`, which the database applies first (it withholds the wins of a
  * thinner shape); applying it again here keeps a thinner shape's figures out if that function changes.
  */
 export const TEAM_LINEUP_MIN_TEAMS = 50;
@@ -41,7 +41,7 @@ export interface TeamLineupRow {
   halfSeason: number;
   rankBucket: number;
   shape: ShapeCounts | null;
-  /** Null while the database withholds the figures of a shape under its minimum. */
+  /** Null only when the database reports no team count; for a shape under its minimum it is the count so far, and its wins are withheld. */
   teams: number | null;
   wins: number | null;
   enoughData: boolean;
@@ -131,7 +131,18 @@ function shapeOf(row: TeamLineupRow, counts: ShapeCounts): TeamLineupShape {
   const { teams, wins } = row;
 
   if (!row.enoughData || teams === null || wins === null || teams < TEAM_LINEUP_MIN_TEAMS) {
-    return { shape, vanguards, duelists, strategists, status: 'not-enough-data', teams: null, wins: null, pickRate: null, winRate: null };
+    // The count so far is released so a reader can show progress; the wins stay out.
+    return {
+      shape,
+      vanguards,
+      duelists,
+      strategists,
+      status: 'not-enough-data',
+      teams: teams !== null && teams < TEAM_LINEUP_MIN_TEAMS ? teams : null,
+      wins: null,
+      pickRate: null,
+      winRate: null,
+    };
   }
 
   return {
