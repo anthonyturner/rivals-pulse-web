@@ -240,7 +240,7 @@ describe('DataJobsPageComponent', () => {
     }
   });
 
-  it('links each page a job feeds, in a new tab, and says plainly when no page shows a job\'s output', async () => {
+  it('links each page a job feeds, in a new tab', async () => {
     await open();
 
     const links = Array.from(card('Hero stats').querySelectorAll<HTMLAnchorElement>('.jobs__pages a'));
@@ -253,6 +253,7 @@ describe('DataJobsPageComponent', () => {
     for (const [label, path] of [
       ['Community matches', '/community/matches'],
       ['Play time', '/community/insights'],
+      ['Hero pairs', '/team-comps'],
     ]) {
       const hrefs = Array.from(card(label).querySelectorAll<HTMLAnchorElement>('.jobs__pages a')).map((link) =>
         link.getAttribute('href'),
@@ -261,11 +262,6 @@ describe('DataJobsPageComponent', () => {
       expect(hrefs).withContext(label).toEqual([path]);
       expect(card(label).querySelector('.jobs__feeds')?.textContent).withContext(label).not.toContain('No page on the site yet.');
     }
-
-    const pairs = card('Hero pairs');
-
-    expect(pairs.querySelector('.jobs__pages')).toBeNull();
-    expect(pairs.querySelector('.jobs__feeds')?.textContent).toContain('No page on the site yet.');
   });
 
   it('shows each job\'s last scheduled and last manual run, and an unfinished one as not finished', async () => {

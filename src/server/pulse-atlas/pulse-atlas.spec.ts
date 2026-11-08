@@ -1,5 +1,6 @@
 import curatedHeroGameIds from '../../../data/pulse-atlas/hero-game-ids.json';
 import curatedHeroStyles from '../../../data/pulse-atlas/hero-styles.json';
+import curatedStrategistTags from '../../../data/pulse-atlas/strategist-tags.json';
 import {
   assembleCommunityHeroStats,
   assembleCommunityStats,
@@ -17,6 +18,7 @@ import {
   assembleHeroScores,
   verifyPulseAtlas,
 } from './pulse-atlas';
+import { findStrategistTagProblems } from './strategist-tags';
 
 const GENERATED_AT = '2026-10-26T12:00:00.000Z';
 // Covers the whole text, so a one-character change anywhere changes the hash.
@@ -184,6 +186,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'glossary', source: 'test', data: [{ id: 'dive', term: 'Dive' }] },
     { dataset: 'maps', source: 'test', data: [{ id: 1032, name: 'Yggdrasill Path' }] },
     { dataset: 'hero-styles', source: 'test', data: [{ heroId: 'thor', poke: 10, dive: 20, brawl: 70 }] },
+    { dataset: 'strategist-tags', source: 'test', data: [{ heroId: 'luna-snow', tag: 'healer' }, { heroId: 'deadpool', tag: 'healer' }] },
     { dataset: 'hero-stats', source: 'test', data: heroStatsTable() },
     { dataset: 'community-stats', source: 'test', data: communityStatsData() },
     { dataset: 'hero-scores', source: 'test', data: heroScoresData() },
@@ -212,6 +215,7 @@ describe('buildPulseAtlas', () => {
       'pulse-atlas/v1/glossary.json',
       'pulse-atlas/v1/maps.json',
       'pulse-atlas/v1/hero-styles.json',
+      'pulse-atlas/v1/strategist-tags.json',
       'pulse-atlas/v1/hero-stats.json',
       'pulse-atlas/v1/community-stats.json',
       'pulse-atlas/v1/hero-scores.json',
@@ -985,12 +989,24 @@ describe('hero game ids', () => {
   const HERO_IDS = ['thor', 'deadpool'];
   const complete = (): object[] => [thorEntry, DEADPOOL];
 
-  function build(map: unknown, warnings: string[] = []): PulseAtlasFile[] {
+  // Deadpool has a Strategist form only through his game-id entry, and is tagged only then.
+  function build(map: unknown, warnings: string[] = [], tagDeadpool = true): PulseAtlasFile[] {
+    const tags = [{ heroId: 'luna-snow', tag: 'healer' }, ...(tagDeadpool ? [{ heroId: 'deadpool', tag: 'healer' }] : [])];
+
     return buildPulseAtlas(
       withData('heroes', [
         { id: 'thor', name: 'Thor' },
         { id: 'deadpool', name: 'Deadpool' },
-      ]).map((input) => (input.dataset === 'hero-game-ids' ? { ...input, data: map } : input)),
+      ]).map((input) => {
+        switch (input.dataset) {
+          case 'hero-game-ids':
+            return { ...input, data: map };
+          case 'strategist-tags':
+            return { ...input, data: tags };
+          default:
+            return input;
+        }
+      }),
       GENERATED_AT,
       fakeSha256,
       [],
@@ -1023,7 +1039,7 @@ describe('hero game ids', () => {
   it('publishes every dataset, with a warning, when a hero has no gameId', () => {
     const warnings: string[] = [];
 
-    expect(publishedHeroes(build([thorEntry], warnings))).toEqual([
+    expect(publishedHeroes(build([thorEntry], warnings, false))).toEqual([
       { id: 'thor', name: 'Thor', gameId: THOR_GAME_ID },
       { id: 'deadpool', name: 'Deadpool' },
     ]);
@@ -1120,6 +1136,119 @@ describe('hero game ids', () => {
     const dangling = curatedHeroGameIds.map((entry) => entry.id).filter((slug) => !styled.includes(slug));
 
     expect(dangling).toEqual([]);
+  });
+});
+
+describe('strategist tags', () => {
+  const UTILITY = { heroId: 'mantis', tag: 'utility' };
+  const HEALER = { heroId: 'luna-snow', tag: 'healer' };
+  const strategist = (id: string): Record<string, unknown> => ({ id, name: id, role: 'Strategist' });
+  const vanguard = { id: 'thor', name: 'Thor', role: 'Vanguard' };
+
+  function inputsWith(heroes: unknown[], tags: unknown): PulseAtlasInput[] {
+    return validInputs().map((input) => {
+      switch (input.dataset) {
+        case 'heroes':
+          return { ...input, data: heroes };
+        case 'strategist-tags':
+          return { ...input, data: tags };
+        default:
+          return input;
+      }
+    });
+  }
+
+  it('makes exactly Mantis, Adam Warlock and Ultron utility, and every other entry names a hero with a game id', () => {
+    const utility = curatedStrategistTags.filter((entry) => entry.tag === 'utility');
+    const gameIdSlugs = curatedHeroGameIds.map((entry) => entry.id);
+
+    expect(utility.map((entry) => entry.heroId).sort()).toEqual(['adam-warlock', 'mantis', 'ultron']);
+    expect(curatedStrategistTags.every((entry) => gameIdSlugs.includes(entry.heroId))).toBeTrue();
+    expect(curatedStrategistTags.filter((entry) => entry.tag !== 'utility').every((entry) => entry.tag === 'healer')).toBeTrue();
+    expect(findStrategistTagProblems(curatedStrategistTags)).toEqual([]);
+  });
+
+  it('tags Loki, White Fox and the Strategist form of Deadpool as healers', () => {
+    for (const heroId of ['loki', 'white-fox', 'deadpool']) {
+      expect(curatedStrategistTags).toContain({ heroId, tag: 'healer' });
+    }
+  });
+
+  it('accepts a list that tags every Strategist once and nobody else', () => {
+    const heroes = [strategist('mantis'), strategist('luna-snow'), vanguard];
+
+    expect(findStrategistTagProblems([UTILITY, HEALER], heroes, [])).toEqual([]);
+  });
+
+  it('refuses a Strategist with no tag', () => {
+    const heroes = [strategist('mantis'), strategist('luna-snow'), strategist('loki')];
+
+    expect(findStrategistTagProblems([UTILITY, HEALER], heroes, [])).toEqual([
+      'loki: a Strategist needs exactly one entry in strategist-tags.json',
+    ]);
+  });
+
+  it('counts a hero with a Strategist form as a Strategist, and refuses it without a tag', () => {
+    const heroes = [{ id: 'deadpool', name: 'Deadpool', role: 'Vanguard' }];
+    const gameIds = [{ id: 'deadpool', gameId: 1057, gameIdVariants: [{ gameId: 10573, role: 'Strategist' }] }];
+
+    expect(findStrategistTagProblems([UTILITY], heroes, gameIds)).toContain(
+      'deadpool: a Strategist needs exactly one entry in strategist-tags.json',
+    );
+    expect(findStrategistTagProblems([{ heroId: 'deadpool', tag: 'healer' }], heroes, gameIds)).toEqual([]);
+  });
+
+  it('refuses a tag on a hero who is not a Strategist', () => {
+    expect(findStrategistTagProblems([{ heroId: 'thor', tag: 'healer' }], [vanguard], [])).toEqual([
+      'thor: is not a Strategist, so it must not have a tag',
+    ]);
+  });
+
+  it('refuses a hero listed twice, a tag that is neither, a stray key and an entry with no hero', () => {
+    const errors = findStrategistTagProblems([
+      HEALER,
+      HEALER,
+      { heroId: 'a', tag: 'tank' },
+      { heroId: 'b', tag: 'healer', extra: 1 },
+      {},
+    ]);
+
+    expect(errors).toEqual([
+      'luna-snow: listed more than once',
+      'a: tag must be healer or utility',
+      'b: unknown key extra; an entry holds only heroId, tag',
+      'entry 4 needs a non-empty string heroId',
+    ]);
+  });
+
+  it('refuses an empty list', () => {
+    expect(findStrategistTagProblems([])).toEqual(['expected a non-empty list']);
+    expect(findStrategistTagProblems(null)).toEqual(['expected a non-empty list']);
+  });
+
+  it('ignores a tag for a hero that is not in heroes.json, so a removed hero cannot freeze the feed', () => {
+    expect(findStrategistTagProblems([UTILITY, HEALER], [strategist('luna-snow')], [])).toEqual([]);
+  });
+
+  it('publishes the tags as strategist-tags.json, unchanged, and leaves heroes.json alone', () => {
+    const files = buildPulseAtlas(inputsWith([strategist('mantis'), strategist('luna-snow'), vanguard], [UTILITY, HEALER]), GENERATED_AT, fakeSha256);
+    const published = (name: string): { data: unknown } =>
+      JSON.parse(files.find((file) => file.path === `pulse-atlas/v1/${name}.json`)?.content ?? 'null');
+
+    expect(published('strategist-tags').data).toEqual([UTILITY, HEALER]);
+    expect(JSON.stringify(published('heroes').data)).not.toContain('utility');
+  });
+
+  it('refuses to build when a Strategist has no tag, and publishes nothing', () => {
+    expect(() =>
+      buildPulseAtlas(inputsWith([strategist('mantis'), strategist('luna-snow'), strategist('loki')], [UTILITY, HEALER]), GENERATED_AT, fakeSha256),
+    ).toThrowError(/strategist-tags: loki: a Strategist needs exactly one entry/);
+  });
+
+  it('refuses to build without the dataset', () => {
+    expect(() =>
+      buildPulseAtlas(validInputs().filter((input) => input.dataset !== 'strategist-tags'), GENERATED_AT, fakeSha256),
+    ).toThrowError(/strategist-tags: expected exactly one input, got 0/);
   });
 });
 
