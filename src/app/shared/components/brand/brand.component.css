@@ -10,20 +10,13 @@
   text-decoration: none;
 }
 
-/* The desktop app's lockup. */
+/* The logo carries its own dark panel, so it reads on both themes; the radius and ring only soften its square corners. */
 .brand-mark {
-  display: grid;
   flex: none;
   width: 32px;
-  aspect-ratio: 1;
-  place-items: center;
+  height: 32px;
   border-radius: 8px;
-  background: linear-gradient(145deg, var(--surface-2) 0 68%, var(--accent) 69%);
-  box-shadow: inset 0 0 0 1px var(--border);
-  color: var(--text);
-  font-size: var(--type-caption);
-  font-weight: 900;
-  letter-spacing: 0.02em;
+  box-shadow: 0 0 0 1px var(--border);
 }
 
 .brand-name {

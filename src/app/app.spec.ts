@@ -26,16 +26,17 @@ describe('App', () => {
     expect(compiled.querySelector('.brand')?.textContent).toContain('RivalsPulse');
   });
 
-  it('shows the RP badge as a decorative mark beside the name, and no tagline', () => {
+  it('shows the logo as a decorative image beside the name, and no tagline', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const brand = (fixture.nativeElement as HTMLElement).querySelector('.brand') as HTMLElement;
-    const mark = brand.querySelector('.brand-mark');
+    const mark = brand.querySelector('img.brand-mark');
 
-    expect(mark?.textContent?.trim()).toBe('RP');
+    expect(mark?.getAttribute('src')).toBe('/images/site/rivals-pulse-logo.svg');
+    expect(mark?.getAttribute('alt')).toBe('');
+    expect(mark?.getAttribute('width')).toBe('32');
+    expect(mark?.getAttribute('height')).toBe('32');
     expect(brand.querySelector('.brand-name')?.textContent).toBe('RivalsPulse');
-    expect(mark?.getAttribute('aria-hidden')).toBe('true');
-    expect(brand.querySelector('img')).toBeNull();
     expect(brand.getAttribute('aria-label')).toBe('RivalsPulse home');
     expect(brand.textContent).not.toContain('Draft smarter');
   });
