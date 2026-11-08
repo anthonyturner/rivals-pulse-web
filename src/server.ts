@@ -21,6 +21,7 @@ import {
 import { getCommunityFigures, getCommunityHeroScores, getCommunityKills } from './server/community/extended';
 import { getCommunityInsights } from './server/community/insights';
 import { getCommunityMatches } from './server/community/matches';
+import { handlePulseRecordsRequest } from './server/records';
 import { getHeroMatchups } from './server/heroes/matchups';
 import { getHeroPairs, getHeroSynergies } from './server/heroes/pairs';
 import { getTeamLineups } from './server/heroes/lineups';
@@ -71,6 +72,10 @@ app.get('/api/community/kills', (req, res) => {
   const halfSeason = typeof req.query['halfSeason'] === 'string' ? req.query['halfSeason'] : undefined;
 
   handleApiResponse(res, () => getCommunityKills({ halfSeason: halfSeasonFromQuery(halfSeason) }));
+});
+
+app.get('/api/records', (req, res) => {
+  void handlePulseRecordsRequest(req, res);
 });
 
 app.get('/api/hero-matchups', (_req, res) => {

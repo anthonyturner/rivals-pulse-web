@@ -10,6 +10,7 @@ GET /api/community/kills
 GET /api/community/hero-scores
 GET /api/hero-matchups
 GET /api/hero-pairs
+GET /api/records
 GET /api/triple-support-trios
 GET /api/team-lineups
 GET /api/hero-synergies
@@ -123,3 +124,5 @@ session has ended) and 503 when Supabase is unavailable, without signing the pla
 `/api/community/figures` serves damage, healing and damage blocked per minute per role and per hero, and `/api/community/kills` the kill-feed counters (which heroes a hero is seen killing most, and is seen killed by most), from the extended upload. They read through the database functions `read_community_hero_figures` and `read_community_kill_feed`, which return only buckets at least 3 distinct players contributed to with no player above 50%. Rates are whole numbers and kill counts are volume bands. Until those functions exist in the database (issue 457) or enough matches carry the fields, both answer 200 with `status: "not-enough-data"`; any other failure keeps its error status. Both take the optional `halfSeason` query value.
 
 `/api/community/hero-scores` serves each hero's 1 to 10 Damage, Sustain, Ultimate and Utility scores, with the label, the match count and the figures behind them, or how far along a hero below the rule is, from the Quick Match and Competitive blend. It reads through the database function `read_community_hero_scores`. Scores and rules are in [hero-build-scores.md](hero-build-scores.md) and the shape in `src/contracts/hero-scores.model.ts`. Heroes are named by their id in `heroes.json`. Until the function exists it answers 200 with `status: "not-enough-data"`, and so does an answer in which no hero has a score yet; any other failure keeps its error status. It takes the optional `halfSeason` query value. Pulse Atlas publishes it as `hero-scores`; see [pulse-atlas.md](pulse-atlas.md).
+
+`/api/records` serves the Pulse Records boards as `{ status, coveredFrom, categories: [{ key, title, rows: [{ heroId, value, name }] }] }`: kills, assists, final hits, damage, healing and damage blocked, up to 50 rows each, best first. `name` is the link's player name for a player who switched naming on, otherwise null (anonymous). `coveredFrom` is the UTC day of the oldest line the boards can draw on. A row carries no uid, recorder, line id or match time. It answers `status: "not-enough-data"` with six empty boards before any line qualifies or before the database function is applied; any other failure keeps its error status. It is cached for 60 seconds at most with no stale window, so a name is gone within two minutes of its owner switching naming off. See "Pulse Records read" in [supabase.md](supabase.md).
