@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { StrategistGuidesPageComponent } from './strategist-guides-page.component';
-import { STRATEGIST_GUIDES } from './strategist-guides.data';
+import { STRATEGIST_GUIDES, STRATEGIST_PLAYLIST_URL } from './strategist-guides.data';
 
 describe('StrategistGuidesPageComponent', () => {
   let fixture: ComponentFixture<StrategistGuidesPageComponent>;
@@ -29,6 +29,32 @@ describe('StrategistGuidesPageComponent', () => {
     fixture = TestBed.createComponent(StrategistGuidesPageComponent);
     fixture.detectChanges();
     element = fixture.nativeElement;
+  });
+
+  it('opens with the plain page header, then a lead tile of key art', () => {
+    expect(element.querySelector('app-page-header h1')?.textContent?.trim()).toBe('Strategist guides');
+    expect(element.querySelector('.hub-header')).toBeNull();
+
+    const tile = element.querySelector('app-hub-tile') as HTMLElement;
+    const art = tile.querySelector('img.art__image') as HTMLImageElement;
+
+    expect(tile.classList).toContain('featured');
+    expect(art.getAttribute('src')).toBe('/images/site/banners/strategist-guides-banner.webp');
+    expect(art.getAttribute('alt')).toBe('');
+    expect(art.hasAttribute('loading')).toBeFalse();
+  });
+
+  it('puts the playlist and techniques links in the lead tile, outside the hidden preview', () => {
+    const tile = element.querySelector('app-hub-tile') as HTMLElement;
+    const playlist = tile.querySelector('a[target="_blank"]') as HTMLAnchorElement;
+    const techniques = tile.querySelector('a[href="/techniques"]');
+
+    expect(playlist.getAttribute('href')).toBe(STRATEGIST_PLAYLIST_URL);
+    expect(playlist.getAttribute('rel')).toContain('noopener');
+    expect(playlist.textContent).toContain('Watch the full playlist');
+    expect(playlist.querySelector('.visually-hidden')?.textContent).toContain('opens YouTube in a new tab');
+    expect(techniques?.textContent?.trim()).toBe('Review all techniques');
+    expect(tile.querySelector('[aria-hidden="true"] a')).toBeNull();
   });
 
   it('lists every guide once, each under its own link name', () => {
