@@ -30,13 +30,13 @@
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
-  background: var(--ink);
+  background: var(--bg-panel);
 }
 
 .shot__caption {
-  color: var(--on-ink-muted);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -49,9 +49,9 @@
   gap: 8px;
   align-content: start;
   padding: 20px;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--border-strong);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--on-ink) 4%, transparent);
+  background: var(--bg-panel);
 }
 
 .feature-icon {
@@ -60,8 +60,8 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--ink-accent) 14%, transparent);
-  color: var(--ink-accent);
+  background: color-mix(in srgb, var(--accent-strong) 14%, transparent);
+  color: var(--accent-strong);
 }
 
 .feature h3 {
@@ -73,14 +73,14 @@
 
 .feature p {
   margin: 0;
-  color: var(--on-ink-muted);
+  color: var(--text-muted);
   font-size: 0.9375rem;
 }
 
 .feature-link {
   justify-self: start;
   margin-top: 4px;
-  color: var(--ink-accent);
+  color: var(--accent-strong);
   font-size: 0.875rem;
   font-weight: 750;
   text-decoration: none;
@@ -92,7 +92,7 @@
 }
 
 .feature-link:focus-visible {
-  outline: 3px solid var(--ink-focus);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
