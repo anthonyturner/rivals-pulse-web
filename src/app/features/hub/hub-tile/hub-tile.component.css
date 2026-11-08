@@ -188,12 +188,29 @@
     var(--bg-panel);
 }
 
-/* A full-width strip: the text on the left and the preview centred beside it. */
+/*
+ * A full-width strip: the text on the left, centred in the strip's height, and the preview beside
+ * it. The text sits in the three middle rows; the flexible rows above and below take up whatever
+ * height the preview adds, so the text stays together.
+ */
 :host(.split) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 1fr auto auto auto 1fr;
   column-gap: 24px;
-  align-items: center;
+}
+
+:host(.split) .chip {
+  grid-row: 2;
+  justify-self: start;
+}
+
+:host(.split) .title {
+  grid-row: 3;
+}
+
+:host(.split) .description {
+  grid-row: 4;
 }
 
 :host(.split) .chip,
@@ -204,18 +221,26 @@
 
 :host(.split) .preview {
   grid-column: 2;
-  grid-row: 1 / span 3;
+  grid-row: 1 / -1;
+  align-self: center;
   margin-top: 0;
 }
 
 @media (max-width: 860px) {
   :host(.split) {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
   }
 
+  :host(.split) .chip,
+  :host(.split) .title,
+  :host(.split) .description,
   :host(.split) .preview {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  :host(.split) .preview {
     margin-top: 12px;
   }
 }

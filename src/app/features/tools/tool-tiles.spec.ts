@@ -142,7 +142,7 @@ describe('The Tools hub', () => {
     const counters = tile('Counters');
 
     expect(portraits(counters.querySelector('.enemy') as HTMLElement)).toEqual(['/images/heroes/angela.png']);
-    expect(flat(counters.querySelector('.enemy')?.parentElement)).toContain('Enemy');
+    expect(flat(counters.querySelector('.enemy')?.parentElement ?? null)).toContain('Enemy');
     // Largest sample first, as the Counters page lists them, and three at most.
     expect(portraits(counters.querySelector('.answers') as HTMLElement)).toEqual([
       '/images/heroes/mantis.png',

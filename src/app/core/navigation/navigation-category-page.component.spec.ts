@@ -54,7 +54,7 @@ describe('NavigationCategoryPageComponent', () => {
   it('lists coming-soon items under one heading and drops "coming soon" from their descriptions', () => {
     const element = renderCategory('Tools');
 
-    expect(element.querySelector('h2')?.textContent).toBe('Coming soon');
+    expect(element.querySelector('#coming-soon-title')?.textContent).toBe('Coming soon');
     expect(element.textContent).not.toContain('are coming soon');
     expect(element.textContent).not.toContain('is coming soon');
   });
