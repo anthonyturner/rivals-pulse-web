@@ -22,5 +22,9 @@
 <div class="preview" aria-hidden="true"><ng-content /></div>
 
 <ng-template #link>
-  <a class="link" [routerLink]="route()">{{ title() }}</a>
+  @if (route(); as path) {
+    <a class="link" [routerLink]="path">{{ title() }}</a>
+  } @else {
+    {{ title() }}
+  }
 </ng-template>

@@ -22,6 +22,29 @@
         <p>Player counts appear here once the first snapshot is captured.</p>
       </app-state-panel>
     } @else {
+      @if (v.headline.length) {
+        <app-hub-tile
+          class="lead"
+          title="Marvel Rivals on Steam"
+          description="Players now, peaks and ranks from the latest snapshot."
+          [imageUrl]="leadImage"
+          [chip]="leadChip"
+        />
+        <dl class="stats">
+          @for (tile of v.headline; track tile.label) {
+            <div class="stat">
+              <dt><app-kind-chip kind="secondary" [label]="tile.label" /></dt>
+              <dd>
+                <span class="stat__value">{{ tile.value }}</span>
+                @if (tile.delta; as delta) {
+                  <app-stat-delta [delta]="delta" />
+                }
+              </dd>
+            </div>
+          }
+        </dl>
+      }
+
       <div class="card">
         <h2 id="comparison-title">Where Marvel Rivals sits in the pack</h2>
         <div class="scroll" role="region" tabindex="0" aria-labelledby="comparison-title">
@@ -30,11 +53,9 @@
             <thead>
               <tr>
                 <th scope="col">Game</th>
-                <th scope="col">Players now</th>
-                <th scope="col">24h peak</th>
-                <th scope="col">All-time peak</th>
-                <th scope="col">Daily rank</th>
-                <th scope="col">Top sellers</th>
+                @for (column of v.columns; track column) {
+                  <th scope="col">{{ column }}</th>
+                }
               </tr>
             </thead>
             <tbody>
@@ -48,10 +69,7 @@
                     <td [class.rank]="cell.kind === 'rank'">
                       {{ cell.value }}
                       @if (cell.delta; as delta) {
-                        <small class="delta" [attr.data-trend]="delta.trend">
-                          <span aria-hidden="true">{{ delta.text }}</span>
-                          <span class="visually-hidden">{{ delta.spoken }}</span>
-                        </small>
+                        <app-stat-delta [delta]="delta" />
                       }
                     </td>
                   }
@@ -74,11 +92,11 @@
 
   <div class="card">
     <h2>Launch milestones</h2>
-    <dl class="milestones">
+    <dl class="stats stats--milestones">
       @for (milestone of milestones; track milestone.label) {
-        <div>
-          <dt>{{ milestone.label }}</dt>
-          <dd>{{ milestone.value }}</dd>
+        <div class="stat">
+          <dt><app-kind-chip kind="secondary" [label]="milestone.label" /></dt>
+          <dd><span class="stat__value">{{ milestone.value }}</span></dd>
         </div>
       }
     </dl>

@@ -12,7 +12,7 @@
   isolation: isolate;
 }
 
-:host(:hover) {
+:host(:not(.static):hover) {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-soft);
 }
@@ -25,7 +25,7 @@
       box-shadow 160ms ease;
   }
 
-  :host(:hover) {
+  :host(:not(.static):hover) {
     transform: translateY(-3px);
   }
 }

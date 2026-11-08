@@ -12,7 +12,8 @@ import { KindChipComponent } from '../kind-chip/kind-chip.component';
  * behind a scrim, which makes the card the hub's lead tile, and `playMarker` to add a play button
  * over it for a card that opens video; `imageFit` says how the art sits, and `lazyArt` defers loading
  * it for a card that starts below the fold. A card with no key art can
- * give `thumbnailUrl` for a small square picture beside its text.
+ * give `thumbnailUrl` for a small square picture beside its text. With no `route` the card is not a
+ * link: the title is plain text and the card does not lift on hover.
  */
 @Component({
   selector: 'app-hub-tile',
@@ -25,12 +26,13 @@ import { KindChipComponent } from '../kind-chip/kind-chip.component';
     '[class.portrait]': '!!imageUrl() && imageFit() === "portrait"',
     '[class.thumbed]': '!imageUrl() && !!thumbnailUrl()',
     '[class.split]': 'split()',
+    '[class.static]': '!route()',
     '[attr.data-tint]': 'tint()',
   },
 })
 export class HubTileComponent {
   readonly title = input.required<string>();
-  readonly route = input.required<string>();
+  readonly route = input<string | null>(null);
   readonly description = input.required<string>();
   readonly chip = input<TileChip | null>(null);
   readonly imageUrl = input<string | null>(null);
