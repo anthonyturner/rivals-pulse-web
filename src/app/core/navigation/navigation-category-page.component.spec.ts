@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -16,6 +18,8 @@ describe('NavigationCategoryPageComponent', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { snapshot: { data: { category } } } },
       ],
     });
@@ -59,8 +63,22 @@ describe('NavigationCategoryPageComponent', () => {
   it('leaves out the coming-soon section when everything is released', () => {
     const element = renderCategory('Resources');
 
-    expect(element.querySelector('h2')).toBeNull();
-    expect(element.querySelectorAll('app-guide-card').length).toBe(9);
+
+    expect(element.querySelector('#coming-soon-title')).toBeNull();
+    expect(element.querySelectorAll('app-resource-tile').length).toBe(9);
+  });
+
+  it('draws Resources as a bento grid and the other hubs as plain cards', () => {
+    const resources = renderCategory('Resources');
+
+    expect(resources.querySelector('app-resource-bento')).not.toBeNull();
+    expect(resources.querySelector('app-guide-card')).toBeNull();
+
+    TestBed.resetTestingModule();
+    const tools = renderCategory('Tools');
+
+    expect(tools.querySelector('app-resource-bento')).toBeNull();
+    expect(tools.querySelectorAll('app-guide-card').length).toBe(3);
   });
 
   it('is not a landmark of its own and has no live region', () => {
@@ -72,7 +90,9 @@ describe('NavigationCategoryPageComponent', () => {
 
 describe('category routes', () => {
   it('title each page after its nav label', async () => {
-    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter(routes)] });
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
+    });
     const harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/resources');

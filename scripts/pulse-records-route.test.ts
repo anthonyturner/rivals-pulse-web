@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, it } from 'node:test';
 
-import { handlePulseRecordsRequest, PULSE_RECORDS_CACHE_CONTROL } from '../src/server/records/index.ts';
+import { PULSE_RECORDS_CACHE_CONTROL, respondWithPulseRecords } from '../src/server/records/pulse-records-http.ts';
 
 /**
  * A name stays on the boards only while its owner has naming on, so the answer must leave a shared
@@ -73,7 +73,7 @@ async function send(read: () => Promise<unknown>): Promise<{ status: number; hea
     },
   } as unknown as ServerResponse;
 
-  await handlePulseRecordsRequest({ method: 'GET' } as IncomingMessage, res, read);
+  await respondWithPulseRecords({ method: 'GET' } as IncomingMessage, res, read);
 
   return sent;
 }

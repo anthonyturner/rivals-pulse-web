@@ -2,11 +2,15 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, shareReplay } from 'rxjs';
 
 import type { HeroStats } from '../../../contracts/hero-stats.model';
-import { HeroStatsService } from '../insights/hero-stats.service';
+import { HeroStatsService } from './hero-stats.service';
 
-/** The hero stats the home page's sections share, fetched once however many of them ask. */
+/**
+ * The current hero stats (the default half-season and mode), fetched once and kept for the life of
+ * the app however many pages or sections ask. For a half-season or mode the caller chooses, use
+ * `HeroStatsService` directly.
+ */
 @Injectable({ providedIn: 'root' })
-export class HomeHeroStatsService {
+export class CurrentHeroStatsService {
   private readonly heroStats = inject(HeroStatsService);
   private readonly stats$ = this.heroStats.getHeroStats().pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
