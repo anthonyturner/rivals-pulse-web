@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection, RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Title } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
@@ -126,6 +127,8 @@ describe('the Pulse Records pages', () => {
       expect(page).toContain('Matches since September 20, 2026');
       expect(page).toContain('Records come only from matches the Rivals Pulse desktop app uploaded');
       expect(page).toContain("Damage, healing and damage blocked come only from the uploader's own line");
+      expect(page).toContain('each figure is the best on one hero in one match, not a total across heroes');
+      expect(page).toContain('For kills, assists and final hits the hero is the one the game recorded');
     });
 
     it('holds back a board with fewer than five rows and keeps the others', async () => {
@@ -184,9 +187,15 @@ describe('the Pulse Records pages', () => {
     it('uses the readable address of a board whose name has two words', async () => {
       const { element } = await open('/records/damage-blocked', recordsOf({ blocked: recordRows(8, 30000) }));
 
-      expect(text(element.querySelector('h1') as Element)).toBe('Most damage blocked in one match');
+      expect(text(element.querySelector('h1') as Element)).toBe('Most damage blocked on one hero in one match');
       expect(element.querySelector('th.value')?.textContent).toContain('Damage Blocked');
       expect(element.querySelectorAll('tbody tr').length).toBe(8);
+    });
+
+    it('titles the tab after the list', async () => {
+      await open('/records/final-hits', allBoards);
+
+      expect(TestBed.inject(Title).getTitle()).toBe('Pulse Records: Final Hits | RivalsPulse');
     });
 
     it('links to the other lists and marks the current one', async () => {

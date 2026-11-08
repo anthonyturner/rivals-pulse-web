@@ -1,5 +1,7 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
+import { PULSE_RECORDS_PAGES } from './features/records/pulse-records.data';
+
 export const serverRoutes: ServerRoute[] = [
   {
     path: 'sign-in',
@@ -25,10 +27,11 @@ export const serverRoutes: ServerRoute[] = [
     path: 'records',
     renderMode: RenderMode.Client
   },
-  {
-    path: 'records/**',
+  // Only the known lists, so an unknown one falls through to the server-rendered page and its 404 status.
+  ...PULSE_RECORDS_PAGES.map((page): ServerRoute => ({
+    path: `records/${page.slug}`,
     renderMode: RenderMode.Client
-  },
+  })),
   {
     path: '**',
     renderMode: RenderMode.Server

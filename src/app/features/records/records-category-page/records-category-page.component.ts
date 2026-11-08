@@ -7,12 +7,12 @@ import { PULSE_RECORDS_BOARD_SIZE } from '../../../../contracts/pulse-records.mo
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { injectRecordsView } from '../inject-records-view';
-import { findPulseRecordsPage, PULSE_RECORDS_PAGES } from '../pulse-records.data';
+import { PULSE_RECORDS_PAGES, type PulseRecordsPage } from '../pulse-records.data';
 import { PULSE_RECORDS_MIN_ROWS } from '../pulse-records-view';
 import { RecordsCoverageComponent } from '../records-coverage/records-coverage.component';
 import { RecordTableComponent } from '../record-table/record-table.component';
 
-/** `/records/:category`: one board in full. The route's `knownIdGuard` has already checked the category. */
+/** `/records/<list>`: one board in full. Each list has its own route, which carries the list in its `data`. */
 @Component({
   selector: 'app-records-category-page',
   imports: [
@@ -32,11 +32,10 @@ export class RecordsCategoryPageComponent {
   protected readonly minimumRows = PULSE_RECORDS_MIN_ROWS;
   protected readonly pages = PULSE_RECORDS_PAGES;
 
-  private readonly slug = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('category'))), {
-    initialValue: null,
-  });
-
-  /** What the address names, known before the numbers arrive. */
-  protected readonly page = computed(() => findPulseRecordsPage(this.slug()) ?? null);
+  /** What the address names, known before the numbers arrive. The route's `data` carries it. */
+  protected readonly page = toSignal(
+    inject(ActivatedRoute).data.pipe(map((data) => (data['recordsPage'] as PulseRecordsPage | undefined) ?? null)),
+    { initialValue: null },
+  );
   protected readonly board = computed(() => this.state.view()?.boards.find((board) => board.page === this.page()) ?? null);
 }

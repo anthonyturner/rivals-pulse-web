@@ -19,7 +19,7 @@ import { RouterLink } from '@angular/router';
         <li>
           Damage, healing and damage blocked come only from the uploader's own line, because the app
           uploads those figures for nobody else. Those lists hold only players who chose to show their
-          name.
+          name, and each figure is the best on one hero in one match, not a total across heroes.
         </li>
         <li>
           A name appears only when the player linked their account and chose to show it. A line from a
@@ -27,8 +27,9 @@ import { RouterLink } from '@angular/router';
           figures, so a record is not proof that the match happened as shown.
         </li>
         <li>
-          Each player and each uploader appears once per list. The hero is the one the game recorded
-          for that player in the match, so a player who switched heroes shows one icon.
+          Each player and each uploader appears once per list. For kills, assists and final hits the
+          hero is the one the game recorded for that player in the match, so a player who switched
+          heroes shows one icon.
         </li>
       </ul>
       <p>

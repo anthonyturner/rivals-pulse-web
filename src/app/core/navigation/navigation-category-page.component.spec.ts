@@ -63,7 +63,6 @@ describe('NavigationCategoryPageComponent', () => {
   it('leaves out the coming-soon section when everything is released', () => {
     const element = renderCategory('Resources');
 
-
     expect(element.querySelector('#coming-soon-title')).toBeNull();
     expect(element.querySelectorAll('app-resource-tile').length).toBe(9);
   });
