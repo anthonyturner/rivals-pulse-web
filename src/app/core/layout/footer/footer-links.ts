@@ -20,6 +20,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { label: 'Community stats', path: '/community' },
       { label: 'Tier list', path: '/tier-list' },
       { label: 'Win rates', path: '/win-rates' },
+      { label: 'Team comps', path: '/team-comps' },
       { label: 'Game stats', path: '/game-stats' },
       { label: 'Counters', path: '/counters' },
       { label: 'Dive planner', path: '/dive-planner' },

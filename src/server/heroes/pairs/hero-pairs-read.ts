@@ -1,5 +1,6 @@
 import type { HeroPairs } from '../../../contracts/hero-pairs.model.ts';
-import { baseGameIdByGameId } from '../catalog/index.ts';
+import type { HeroSynergies } from '../../../contracts/hero-synergies.model.ts';
+import { baseGameIdByGameId, heroSlugByGameId } from '../catalog/index.ts';
 import {
   deriveHeroPairs,
   HERO_PAIR_PLAY_MODE_IDS,
@@ -7,6 +8,7 @@ import {
   type HeroPairKind,
   type HeroPairRow,
 } from './hero-pairs.ts';
+import { deriveHeroSynergies } from './hero-synergies.ts';
 import { readHeroStatsSource } from '../stats/index.ts';
 import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.ts';
 
@@ -123,4 +125,9 @@ export async function getHeroPairs(options: HeroPairsReadOptions = {}): Promise<
   }
 
   return pairs;
+}
+
+/** The pairs that played together, named by hero and with their rates; see `deriveHeroSynergies`. */
+export async function getHeroSynergies(options: HeroPairsReadOptions = {}): Promise<HeroSynergies> {
+  return deriveHeroSynergies(await getHeroPairs(options), heroSlugByGameId);
 }

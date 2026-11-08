@@ -1,0 +1,111 @@
+<div class="insight-page team-comps-page page-container page-container--wide">
+  <app-page-header
+    title="Marvel Rivals team comps"
+    description="What RivalsPulse players are running, all ranks together: the best duos in each role, triple-support trios and line-up shapes. For single heroes, see the win rates."
+  />
+
+  @if (meta()) {
+    <p class="meta">{{ meta() }}</p>
+  }
+
+  @if (failed()) {
+    <app-state-panel kind="error" heading="Team comps could not be loaded">
+      <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (loading()) {
+    <app-state-panel kind="loading" heading="Loading team comps" [announce]="false">
+      <p>Fetching the latest counted matches.</p>
+    </app-state-panel>
+  } @else if (view(); as v) {
+    @if (v.fallbackNotice; as notice) {
+      <app-notice>{{ notice }}</app-notice>
+    }
+
+    <section class="comps-section" aria-labelledby="pairs-title">
+      <div class="section-heading">
+        <h2 id="pairs-title">Top duos by role</h2>
+        <p>Two heroes of the same role on one team, highest win rate first.</p>
+      </div>
+
+      @for (section of v.rolePairs; track section.role) {
+        <div class="card">
+          <h3 [id]="section.id">{{ section.heading }}</h3>
+          @if (section.rows.length > 0) {
+            <table [attr.aria-labelledby]="section.id">
+              <thead>
+                <tr>
+                  <th scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
+                  <th scope="col">Pair</th>
+                  <th scope="col" class="col-matches">Matches together</th>
+                  <th scope="col" class="col-rate">Win rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of section.rows; track row.first.hero + row.second.hero) {
+                  <tr>
+                    <td class="col-rank">{{ row.rank }}</td>
+                    <th scope="row">
+                      <span class="pair">
+                        <a class="hero-link" [routerLink]="['/heroes', row.first.hero]">
+                          <img appHeroImageFallback [src]="row.first.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                          <span class="hero-name">{{ row.first.name }}</span>
+                        </a>
+                        <span class="plus" aria-hidden="true">+</span>
+                        <span class="visually-hidden">and</span>
+                        <a class="hero-link" [routerLink]="['/heroes', row.second.hero]">
+                          <img appHeroImageFallback [src]="row.second.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                          <span class="hero-name">{{ row.second.name }}</span>
+                        </a>
+                      </span>
+                    </th>
+                    <td class="col-matches">{{ row.matches }}</td>
+                    <td class="col-rate">{{ row.winRateLabel }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="empty">
+              Not enough data yet. A pair is listed once it has {{ v.minimumLabel }} together.
+            </p>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="comps-section" aria-labelledby="triple-title">
+      <div class="section-heading">
+        <h2 id="triple-title">Triple supports</h2>
+        <p>
+          Teams with three Strategists, and how each variant is doing. For how to play against them, see
+          the <a routerLink="/triple-support-counter">triple-support guide</a>.
+        </p>
+      </div>
+      @if (v.tripleSupport.state === 'not-enough-data') {
+        <app-state-panel heading="Not enough data yet" [headingLevel]="3">
+          <p>Triple-support trios appear here once RivalsPulse players have recorded enough of them.</p>
+        </app-state-panel>
+      }
+    </section>
+
+    <section class="comps-section" aria-labelledby="lineups-title">
+      <div class="section-heading">
+        <h2 id="lineups-title">Line-ups</h2>
+        <p>How teams split between Vanguards, Duelists and Strategists, such as 2-2-2 or 1-2-3.</p>
+      </div>
+      @if (v.lineups.state === 'not-enough-data') {
+        <app-state-panel heading="Not enough data yet" [headingLevel]="3">
+          <p>Line-up shapes appear here once RivalsPulse players have recorded enough matches of each.</p>
+        </app-state-panel>
+      }
+    </section>
+
+    <p class="method-note">
+      RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match and
+      Competitive are counted together. Pairs are ranked by win rate pulled toward 50%, so a short
+      run cannot top a list; the rate shown is the plain one. A pair is counted once for each team
+      that fields it, so a pair on both teams of one match counts twice. Matches without a win or a
+      loss are left out. <a routerLink="/how-we-count">How we count</a>
+    </p>
+  }
+</div>
