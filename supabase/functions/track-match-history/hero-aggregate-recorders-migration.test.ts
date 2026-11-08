@@ -78,12 +78,15 @@ describe('the hero recorder count migration', () => {
 
     assert.match(bodyOf(base, 'rebuild_hero_aggregates'), /perform public\.fill_hero_aggregates\(p_half_season\)/);
     assert.match(bodyOf(purge, 'purge_expired_participants'), /perform public\.rebuild_hero_aggregates\(due\.half_season, true\)/);
-    assert.deepEqual(
-      readdirSync(MIGRATIONS)
-        .filter((name) => name > RECORDERS && withoutComments(read(name)).includes('function public.purge_expired_participants(')),
-      [],
-      'a later migration that restates the purge must keep the freeze that calls the fill',
-    );
+    const restated = readdirSync(MIGRATIONS)
+      .filter((name) => name > RECORDERS && withoutComments(read(name)).includes('function public.purge_expired_participants('));
+    for (const name of restated) {
+      assert.match(
+        bodyOf(withoutComments(read(name)), 'purge_expired_participants'),
+        /perform public\.rebuild_hero_aggregates\(due\.half_season, true\)/,
+        `${name} must keep the freeze that calls the fill`,
+      );
+    }
   });
 
   it('fills the half-seasons that are not frozen once the column exists', () => {
