@@ -84,6 +84,8 @@ test('the dark bands hold the dark palette in both themes', () => {
     'ink-accent': 'accent',
     'on-ink-accent': 'on-accent',
     'ink-focus': 'secondary',
+    'ink-secondary': 'secondary',
+    'ink-tertiary': 'tertiary',
   };
   for (const [band, token] of Object.entries(fixed)) {
     assert.equal(roles.get(`--${band}`), dark.get(`--aurora-${token}`), `--${band} differs from the dark ${token}`);

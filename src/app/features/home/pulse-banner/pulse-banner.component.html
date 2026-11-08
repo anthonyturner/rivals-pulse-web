@@ -1,0 +1,36 @@
+<div class="pulse-banner" [class.pulse-banner--paused]="playback() === 'paused'" [class.pulse-banner--still]="playback() === 'still'">
+  <canvas class="pulse-banner__grid" #grid aria-hidden="true"></canvas>
+
+  <svg class="pulse-banner__clash" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="pulse-banner-glow" x="-20%" y="-50%" width="140%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge><feMergeNode in="blur" /><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>
+      <!-- White here is mask brightness (fully shown), not a theme colour. -->
+      <linearGradient id="pulse-banner-tail-left" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0" />
+        <stop offset="0.45" stop-color="#fff" />
+      </linearGradient>
+      <linearGradient id="pulse-banner-tail-right" x1="1" x2="0" y1="0" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0" />
+        <stop offset="0.45" stop-color="#fff" />
+      </linearGradient>
+      <mask id="pulse-banner-reveal-left" maskUnits="userSpaceOnUse" x="0" y="-10" width="500" height="170">
+        <rect class="pulse-banner__window pulse-banner__window--left" x="-150" y="-10" width="150" height="170" fill="url(#pulse-banner-tail-left)" />
+      </mask>
+      <mask id="pulse-banner-reveal-right" maskUnits="userSpaceOnUse" x="500" y="-10" width="500" height="170">
+        <rect class="pulse-banner__window pulse-banner__window--right" x="1000" y="-10" width="150" height="170" fill="url(#pulse-banner-tail-right)" />
+      </mask>
+    </defs>
+    <path class="pulse-banner__line" d="M0 118 H180 L196 118 L208 100 L222 134 L240 82 L256 124 L268 118 H500 H732 L744 112 L760 154 L778 100 L792 136 L804 118 H1000" />
+    <path class="pulse-banner__pulse pulse-banner__pulse--left" mask="url(#pulse-banner-reveal-left)" d="M0 118 H180 L196 118 L208 100 L222 134 L240 82 L256 124 L268 118 H500" />
+    <path class="pulse-banner__pulse pulse-banner__pulse--right" mask="url(#pulse-banner-reveal-right)" d="M1000 118 H804 L792 136 L778 100 L760 154 L744 112 L732 118 H500" />
+  </svg>
+
+  <span class="pulse-banner__spark"></span>
+
+  <p class="pulse-banner__name">
+    <span class="pulse-banner__name-text">Rivals <span class="pulse-banner__name-accent">Pulse</span></span>
+  </p>
+</div>
