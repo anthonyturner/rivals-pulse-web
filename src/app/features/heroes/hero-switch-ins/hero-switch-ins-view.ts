@@ -12,8 +12,6 @@ export interface SwitchInRow {
   sample: string;
   /** The hero's overall record against that enemy, or why there is none to compare. */
   overall: string;
-  /** The whole row in words, for its tooltip. */
-  description: string;
 }
 
 export type HeroSwitchInsView =
@@ -21,7 +19,10 @@ export type HeroSwitchInsView =
   | { kind: 'unavailable' }
   | {
       kind: 'not-enough-data';
-      /** The designed empty state: what to wait for, with the minimums the server states. */
+      /**
+       * The designed empty state. Nothing recorded anywhere says to wait for overlays; some recorded
+       * elsewhere says what this hero's pairings are waiting for.
+       */
       summary: string;
     }
   | {
@@ -42,6 +43,7 @@ export type HeroSwitchInsView =
 export function buildHeroSwitchInsView(
   switchIns: HeroSwitchIns | null | undefined,
   heroId: string,
+  heroName: string,
   roster: readonly RosterHero[],
 ): HeroSwitchInsView {
   if (switchIns === undefined) {
@@ -57,11 +59,14 @@ export function buildHeroSwitchInsView(
   const switchedAgainst = rowsOf(switchIns.switchIns.filter((line) => line.enemy === heroId), 'hero', byId);
 
   if (switchedTo.length === 0 && switchedAgainst.length === 0) {
+    const needed = `${switchIns.minimumMatches} matches from ${switchIns.minimumPlayers} players`;
+
     return {
       kind: 'not-enough-data',
       summary:
-        'No switch-ins recorded yet. This fills in once RivalsPulse overlays send hero switches and a pairing reaches ' +
-        `${switchIns.minimumMatches} matches from ${switchIns.minimumPlayers} players.`,
+        switchIns.switchIns.length === 0
+          ? `No switch-ins recorded yet. This fills in once RivalsPulse overlays send hero switches and a pairing reaches ${needed}.`
+          : `No switch-in pairing for ${heroName} has reached ${needed} yet.`,
     };
   }
 
@@ -93,7 +98,7 @@ function rowsOf(
 
     return portrait === undefined || switchedTo === undefined || enemy === undefined
       ? []
-      : [{ matches: line.matches, row: rowOf(line, portrait, switchedTo, enemy) }];
+      : [{ matches: line.matches, row: rowOf(line, portrait, enemy) }];
   });
 
   return rows
@@ -101,25 +106,12 @@ function rowsOf(
     .map(({ row }) => row);
 }
 
-function rowOf(line: HeroSwitchIn, portrait: RosterHero, switchedTo: RosterHero, enemy: RosterHero): SwitchInRow {
+function rowOf(line: HeroSwitchIn, portrait: RosterHero, enemy: RosterHero): SwitchInRow {
   const winRate = percentLabel(line.winRate);
   const sample = `${countLabel(line.switches, 'switch', 'switches')} in ${countLabel(line.matches, 'match', 'matches')}`;
   const overall =
     line.overall === null
       ? `No overall record against ${enemy.name} to compare`
       : `Overall ${percentLabel(line.overall.winRate)} in ${countLabel(line.overall.matches, 'match', 'matches')}`;
-  const comparison =
-    line.overall === null
-      ? `${switchedTo.name} has no overall record against ${enemy.name} to compare with yet.`
-      : `${switchedTo.name} wins ${percentLabel(line.overall.winRate)} of ${countLabel(line.overall.appearances, 'game', 'games')} against ${enemy.name} overall.`;
-
-  return {
-    hero: portrait,
-    winRate,
-    sample,
-    overall,
-    description:
-      `Players switched to ${switchedTo.name} ${countLabel(line.switches, 'time', 'times')} while ${enemy.name} was on the other team ` +
-      `and won ${line.wins} (${winRate}) in ${countLabel(line.matches, 'match', 'matches')}. ${comparison}`,
-  };
+  return { hero: portrait, winRate, sample, overall };
 }

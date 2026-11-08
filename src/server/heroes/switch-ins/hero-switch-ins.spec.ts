@@ -25,7 +25,7 @@ function row(
   wins: number,
   extra: Partial<HeroSwitchInRow> = {},
 ): HeroSwitchInRow {
-  return { halfSeason: 10.5, gameHeroId, enemyGameHeroId, matches, switches: matches, wins, ...extra };
+  return { halfSeason: 10.5, gameHeroId, enemyGameHeroId, decidedMatches: matches, decidedSwitches: matches, wins, ...extra };
 }
 
 function matchup(
@@ -49,7 +49,7 @@ describe('deriveHeroSwitchIns', () => {
   });
 
   it('names the hero switched to and the enemy, with the rate over switches, not matches', () => {
-    const { switchIns } = derive([row(HULK, THOR, 12, 9, { switches: 16 })]);
+    const { switchIns } = derive([row(HULK, THOR, 12, 9, { decidedSwitches: 16 })]);
 
     expect(switchIns.status).toBe('ready');
     expect(switchIns.minimumMatches).toBe(SWITCH_IN_MIN_MATCHES);
@@ -121,7 +121,7 @@ describe('deriveHeroSwitchIns', () => {
   });
 
   it('answers with the empty state, and no NaN, when nothing qualifies', () => {
-    const { switchIns } = derive([row(HULK, THOR, 0, 0, { switches: 0 })]);
+    const { switchIns } = derive([row(HULK, THOR, 0, 0, { decidedSwitches: 0 })]);
 
     expect(switchIns.status).toBe('not-enough-data');
     expect(switchIns.halfSeason?.id).toBe(10.5);

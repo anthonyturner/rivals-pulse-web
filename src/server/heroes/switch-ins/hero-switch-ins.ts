@@ -28,8 +28,10 @@ export interface HeroSwitchInRow {
   /** The game's hero id, not the site's slug. */
   gameHeroId: number;
   enemyGameHeroId: number;
-  matches: number;
-  switches: number;
+  /** Matches with a switch whose team won or lost. */
+  decidedMatches: number;
+  /** Switches (one per enemy hero on the field) whose team won or lost: what `wins` and the rate are counted over. */
+  decidedSwitches: number;
   wins: number;
 }
 
@@ -118,14 +120,14 @@ function snapshotOf(
     }
 
     // A hero against itself (a mirror, or one Deadpool form against another) says nothing about a counter.
-    if (hero === enemy || row.switches <= 0) {
+    if (hero === enemy || row.decidedSwitches <= 0) {
       continue;
     }
 
     const key = `${hero}|${enemy}`;
     const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, switches: 0, wins: 0 } };
-    entry.tally.matches += row.matches;
-    entry.tally.switches += row.switches;
+    entry.tally.matches += row.decidedMatches;
+    entry.tally.switches += row.decidedSwitches;
     entry.tally.wins += row.wins;
     tallies.set(key, entry);
   }

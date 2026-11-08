@@ -25,13 +25,20 @@ begin
   --    1033, so each is credited to 1033 once.
   --  * Team 2's player X goes from 1033 to 1034 at second 200, when team 1 fields 1020 and 1015, so
   --    1034 is credited to both.
-  -- Matches 11 to 14 must count for nothing: no enemy timeline, a repeat of the same hero, no result,
-  -- and an enemy who has not picked yet. Match 15 has the enemy's first pick in the same second as the
-  -- switch, which counts (at or before).
-  for n in 1..15 loop
+  -- Matches 11, 12 and 14 must count for nothing: no enemy timeline, a repeat of the same hero, and an
+  -- enemy who has not picked yet. Match 13 has the same switches as 1 to 10 but no result: its switches
+  -- and matches are counted, its decided figures are not. Match 15 has the enemy's first pick in the
+  -- same second as the switch, which counts (at or before).
+  -- Matches 16 to 24 are nine decided matches of one more switch (1017 against 1033), recorded by
+  -- three different players: under 10 matches, so the reader must never return them.
+  for n in 1..24 loop
     played := now() - make_interval(hours => n);
-    recorder := case when n between 7 and 14 then 'tst-switch-b' else 'tst-switch-a' end;
-    team_one_wins := n <= 6 or n = 15 or n in (11, 12, 14);
+    recorder := case
+      when n between 16 and 24 then 'tst-nine-' || (n % 3)
+      when n between 7 and 14 then 'tst-switch-b'
+      else 'tst-switch-a'
+    end;
+    team_one_wins := n <= 6 or n = 15 or n in (11, 12, 14) or n >= 16;
 
     select jsonb_agg(jsonb_build_object(
              'uid', 'tst-' || n || '-' || t.team || '-' || t.ord,
@@ -53,6 +60,8 @@ begin
                         {"team": 2, "picks": [{"hero_id": 1033, "at_second": 0}]}]'
       when n = 14 then '[{"team": 1, "picks": [{"hero_id": 1011, "at_second": 0}, {"hero_id": 1020, "at_second": 10}]},
                         {"team": 2, "picks": [{"hero_id": 1033, "at_second": 50}]}]'
+      when n >= 16 then '[{"team": 1, "picks": [{"hero_id": 1011, "at_second": 0}, {"hero_id": 1017, "at_second": 100}]},
+                        {"team": 2, "picks": [{"hero_id": 1033, "at_second": 0}]}]'
       when n = 15 then '[{"team": 1, "picks": [{"hero_id": 1011, "at_second": 0}, {"hero_id": 1020, "at_second": 50}]},
                         {"team": 2, "picks": [{"hero_id": 1033, "at_second": 50}]}]'
       else '[{"team": 1, "picks": [{"hero_id": 1011, "at_second": 0}, {"hero_id": 1020, "at_second": 100}]},
@@ -68,15 +77,18 @@ begin
     raise exception 'a half-season with raw rows must be rebuilt';
   end if;
 
-  if (select count(*) from public.hero_switch_ins where half_season = 997) <> 4 then
-    raise exception 'exactly four switch-ins must be stored (a first pick, a repeat, a team with no enemy timeline, no result and an enemy not yet picked count for nothing): %',
+  if (select count(*) from public.hero_switch_ins where half_season = 997) <> 5 then
+    raise exception 'exactly five switch-ins must be stored (a first pick, a repeat, a team with no enemy timeline and an enemy not yet picked count for nothing): %',
       (select jsonb_agg(to_jsonb(s)) from public.hero_switch_ins s where s.half_season = 997);
   end if;
-  raise notice 'ok: only switches with a known enemy and a result are counted';
+  raise notice 'ok: only switches with a known enemy are counted';
 
   select * into stored from public.hero_switch_ins where half_season = 997 and hero_id = 1020 and enemy_hero_id = 1033;
-  if not found or stored.play_mode_id <> 1 or stored.matches <> 11 or stored.switches <> 11 or stored.wins <> 7 then
+  if not found or stored.play_mode_id <> 1 or stored.decided_matches <> 11 or stored.decided_switches <> 11 or stored.wins <> 7 then
     raise exception 'a switch must be credited once to an enemy hero two players had, an enemy picking in the same second must count, and the switching team''s result is the outcome: %', stored;
+  end if;
+  if stored.matches <> 12 or stored.switches <> 12 then
+    raise exception 'a switch with no result must stay in matches and switches: %', stored;
   end if;
   if stored.recorders <> 2 or stored.top_recorder_matches <> 7 then
     raise exception 'wrong recorder counts: %', stored;
@@ -84,7 +96,8 @@ begin
   raise notice 'ok: a switch is credited once per distinct enemy hero, with its own team''s result';
 
   select * into stored from public.hero_switch_ins where half_season = 997 and hero_id = 1034 and enemy_hero_id = 1020;
-  if not found or stored.matches <> 10 or stored.switches <> 10 or stored.wins <> 4 then
+  if not found or stored.decided_matches <> 10 or stored.decided_switches <> 10 or stored.wins <> 4
+     or stored.matches <> 11 or stored.switches <> 11 then
     raise exception 'a switch by team 2 must take team 2''s result, and be credited to the enemy''s pick of that second: %', stored;
   end if;
   if not exists (select 1 from public.hero_switch_ins where half_season = 997 and hero_id = 1034 and enemy_hero_id = 1015)
@@ -95,11 +108,22 @@ begin
 
   select * into read_back
   from jsonb_to_recordset(public.read_hero_switch_ins(array[1]::smallint[]) -> 'switch_ins')
-       as r(half_season numeric, hero_id integer, enemy_hero_id integer, matches integer, switches integer, wins integer)
+       as r(half_season numeric, hero_id integer, enemy_hero_id integer, decided_matches integer, decided_switches integer, wins integer)
   where r.half_season = 997 and r.hero_id = 1020;
-  if not found or read_back.matches <> 11 or read_back.wins <> 7 then
+  if not found or read_back.decided_matches <> 11 or read_back.decided_switches <> 11 or read_back.wins <> 7 then
     raise exception 'the reader must return the switch-in that passes the gate: %', read_back;
   end if;
+  select * into stored from public.hero_switch_ins where half_season = 997 and hero_id = 1017 and enemy_hero_id = 1033;
+  if not found or stored.decided_matches <> 9 or stored.recorders <> 3 then
+    raise exception 'the nine-match fixture must be stored with three recorders: %', stored;
+  end if;
+  if exists (
+    select 1 from jsonb_to_recordset(public.read_hero_switch_ins(array[1]::smallint[]) -> 'switch_ins') as r(half_season numeric, hero_id integer)
+    where r.half_season = 997 and r.hero_id = 1017
+  ) then
+    raise exception 'nine matches from three players must stay hidden';
+  end if;
+  raise notice 'ok: under 10 matches stays hidden whoever recorded it';
   if exists (
     select 1 from jsonb_to_recordset(public.read_hero_switch_ins(array[0]::smallint[]) -> 'switch_ins') as r(half_season numeric)
     where r.half_season = 997

@@ -39,8 +39,8 @@ export function parseHeroSwitchInRows(body: unknown): HeroSwitchInRow[] {
       halfSeason: numberOf(row, 'half_season'),
       gameHeroId: numberOf(row, 'hero_id'),
       enemyGameHeroId: numberOf(row, 'enemy_hero_id'),
-      matches: numberOf(row, 'matches'),
-      switches: numberOf(row, 'switches'),
+      decidedMatches: numberOf(row, 'decided_matches'),
+      decidedSwitches: numberOf(row, 'decided_switches'),
       wins: numberOf(row, 'wins'),
     }),
   );

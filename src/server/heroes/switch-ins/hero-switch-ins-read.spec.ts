@@ -10,8 +10,9 @@ function switchInAnswer(): { switch_ins: Record<string, unknown>[] } {
     half_season: 10.5,
     hero_id: heroId,
     enemy_hero_id: enemyId,
-    matches,
-    switches,
+    decided_matches: matches,
+    decided_switches: switches,
+    switches: switches + 3,
     wins,
     uid: 'secret-uid',
     name: 'a player',
@@ -188,6 +189,13 @@ describe('parseHeroSwitchInRows', () => {
   it('keeps the known fields and nothing else', () => {
     const [first] = parseHeroSwitchInRows(switchInAnswer());
 
-    expect(Object.keys(first).sort()).toEqual(['enemyGameHeroId', 'gameHeroId', 'halfSeason', 'matches', 'switches', 'wins']);
+    expect(Object.keys(first).sort()).toEqual([
+      'decidedMatches',
+      'decidedSwitches',
+      'enemyGameHeroId',
+      'gameHeroId',
+      'halfSeason',
+      'wins',
+    ]);
   });
 });

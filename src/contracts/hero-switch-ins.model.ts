@@ -22,7 +22,10 @@ export interface HeroSwitchIn {
   enemy: string;
   /** Matches with a win or a loss in which a switch to `hero` met `enemy`. */
   matches: number;
-  /** The switches counted. One switch faced with two enemy heroes is one switch for each. */
+  /**
+   * The switches with a win or a loss: what `wins` and `winRate` are counted over. One switch faced with two
+   * enemy heroes is one switch for each. A switch whose team has no result yet is not counted.
+   */
   switches: number;
   /** Switches after which the switching player's team won. */
   wins: number;

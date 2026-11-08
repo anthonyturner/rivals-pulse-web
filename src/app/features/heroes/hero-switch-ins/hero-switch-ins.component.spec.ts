@@ -67,14 +67,10 @@ describe('HeroSwitchInsComponent', () => {
     ]);
   });
 
-  it('describes a row in its tooltip, with the overall record to compare', async () => {
+  it('keeps every figure in visible text, with no tooltip a keyboard or screen reader would miss', async () => {
     const root = await show('hulk', 'Hulk', readySwitchIns);
-    const titles = [...root.querySelectorAll('li[title]')].map((row) => row.getAttribute('title'));
 
-    expect(titles[1]).toBe(
-      'Players switched to Hulk 12 times while Thor was on the other team and won 5 (41.7%) in 12 matches. ' +
-        'Hulk wins 65.0% of 40 games against Thor overall.',
-    );
+    expect(root.querySelector('[title]')).toBeNull();
   });
 
   it('names the half-season and explains why switch-in rates run low', async () => {
@@ -105,20 +101,21 @@ describe('HeroSwitchInsComponent', () => {
     expect(root.textContent).toContain('No one has switched to a hero against Hulk often enough yet.');
   });
 
-  it('shows the designed empty state, with the minimums, when nothing involves the hero', async () => {
+  it('names the hero, and does not say to wait for overlays, when others have switch-ins but nothing involves it', async () => {
     const root = await show('storm', 'Storm', switchInsOf([switchIn('hulk', 'thor', 5, 12)]));
 
-    expect(root.textContent).toContain(
-      'No switch-ins recorded yet. This fills in once RivalsPulse overlays send hero switches and a pairing reaches 10 matches from 2 players.',
-    );
+    expect(root.textContent).toContain('No switch-in pairing for Storm has reached 10 matches from 2 players yet.');
+    expect(root.textContent).not.toContain('overlays');
     expect(root.querySelector('.hero-switch-ins__row')).toBeNull();
     expect(root.textContent).not.toContain('NaN');
   });
 
-  it('shows the same empty state when there are no switch-ins at all', async () => {
+  it('shows the designed empty state, with the minimums, when there are no switch-ins at all', async () => {
     const root = await show('hulk', 'Hulk', switchInsOf([]));
 
-    expect(root.textContent).toContain('No switch-ins recorded yet.');
+    expect(root.textContent).toContain(
+      'No switch-ins recorded yet. This fills in once RivalsPulse overlays send hero switches and a pairing reaches 10 matches from 2 players.',
+    );
   });
 
   it('leaves out a row that names a hero the roster does not know', async () => {

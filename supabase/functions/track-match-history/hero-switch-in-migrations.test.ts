@@ -62,7 +62,7 @@ describe('the switch-in migration', () => {
   it('stores a switch-in as counts keyed by half-season, mode, the hero switched to and the enemy hero', () => {
     assert.deepEqual(columnsOf(sql, 'public.hero_switch_ins'), [
       'half_season', 'play_mode_id', 'hero_id', 'enemy_hero_id',
-      'matches', 'switches', 'wins', 'recorders', 'top_recorder_matches',
+      'matches', 'decided_matches', 'switches', 'decided_switches', 'wins', 'recorders', 'top_recorder_matches',
     ]);
     assert.match(sql, /primary key \(half_season, play_mode_id, hero_id, enemy_hero_id\)/);
   });
@@ -93,18 +93,34 @@ describe('the switch-in migration', () => {
 
     it('reads only the half-season it was asked for, from the scoreboard and the timelines', () => {
       assert.match(fill, /from public\.participants p\s+where p\.half_season = p_half_season\s+group by p\.fingerprint, p\.played_at/);
-      assert.match(fill, /from public\.match_hero_timelines t\s+where t\.half_season = p_half_season/);
+      assert.match(fill, /from public\.match_hero_timelines k\s+where k\.half_season = p_half_season/);
     });
 
     it('takes a switch to be a pick after the first that names a different hero', () => {
-      assert.match(fill, /lag\(t\.hero_id\) over \(\s*partition by t\.fingerprint, t\.played_at, t\.timeline_no order by t\.pick_no\s*\) as previous_hero_id/);
+      assert.match(fill, /lag\(k\.hero_id\) over \(\s*partition by k\.fingerprint, k\.played_at, k\.timeline_no order by k\.pick_no\s*\) as previous_hero_id/);
       assert.match(fill, /s\.previous_hero_id is not null and s\.hero_id <> s\.previous_hero_id/);
     });
 
-    it('takes the outcome from the switching team and drops a switch whose team has no result', () => {
+    it('takes the outcome from the switching team and keeps a switch whose team has no result out of the decided figures only', () => {
       assert.match(fill, /join teams t on t\.fingerprint = s\.fingerprint and t\.played_at = s\.played_at and t\.team = s\.team/);
-      assert.match(fill, /and t\.is_win is not null/);
       assert.match(fill, /case when bool_and\(p\.is_win\) then true when not bool_or\(p\.is_win\) then false end as is_win/);
+      assert.doesNotMatch(fill, /t\.is_win is not null/);
+      assert.match(fill, /count\(\*\) as switches,\s+count\(\*\) filter \(where c\.is_win is not null\) as decided_switches,\s+count\(\*\) filter \(where c\.is_win\) as wins/);
+      assert.match(fill, /count\(distinct m\.match_no\) filter \(where c\.is_win is not null\) as decided_matches/);
+    });
+
+    it('looks up the enemy picks in the table, so its unique index serves each switch, not in a CTE that is scanned once per switch', () => {
+      const lateral = fill.slice(fill.indexOf('cross join lateral ('));
+      assert.match(lateral, /from public\.match_hero_timelines k\s+where k\.fingerprint = s\.fingerprint and k\.played_at = s\.played_at/);
+      assert.doesNotMatch(lateral, /from picks k/);
+      assert.doesNotMatch(fill, /picks as materialized/);
+      assert.match(sql, /unique \(fingerprint, played_at, timeline_no, pick_no\)|public\.match_hero_timelines/);
+      assert.match(read('20261108180000_match_hero_timelines.sql'), /unique \(fingerprint, played_at, timeline_no, pick_no\)/);
+    });
+
+    it('counts the recorders of the decided matches only, so a row with none is 0 and never passes the gate', () => {
+      assert.match(fill, /\(count\(\*\) filter \(where r\.decided_matches > 0\)\)::integer, max\(r\.decided_matches\)::integer/);
+      assert.match(sql, /recorders between 0 and decided_matches and top_recorder_matches between 0 and decided_matches/);
     });
 
     it('credits a switch once to each distinct enemy hero on the field, by each enemy timeline\'s latest pick at or before it', () => {
@@ -120,7 +136,6 @@ describe('the switch-in migration', () => {
 
     it('counts recorders as the other families do, from the scoreboard\'s recorder, and keeps the busiest one\'s matches', () => {
       assert.match(fill, /min\(p\.recorded_by\) as recorder/);
-      assert.match(fill, /count\(\*\)::integer, max\(r\.matches\)::integer/);
       assert.match(fill, /count\(distinct m\.match_no\) as matches/);
     });
   });
@@ -137,12 +152,12 @@ describe('the switch-in migration', () => {
 
     it('returns the figures and no recorder count', () => {
       const keys = [...reader.matchAll(/'(\w+)', r\./g)].map(match => match[1]);
-      assert.deepEqual(keys, ['half_season', 'hero_id', 'enemy_hero_id', 'matches', 'switches', 'wins']);
+      assert.deepEqual(keys, ['half_season', 'hero_id', 'enemy_hero_id', 'decided_matches', 'decided_switches', 'wins']);
       assert.doesNotMatch(reader, /'recorders'|'top_recorder_matches'/);
     });
 
     it('gates each row of each mode on its own recorders before summing, never on a combined figure', () => {
-      assert.match(reader, /public\.hero_figure_qualifies\(x\.matches, x\.recorders, x\.top_recorder_matches\)/);
+      assert.match(reader, /public\.hero_figure_qualifies\(x\.decided_matches, x\.recorders, x\.top_recorder_matches\)/);
       assert.ok(reader.indexOf('hero_figure_qualifies') < reader.indexOf('group by x.half_season'));
       assert.doesNotMatch(reader, /(max|sum)\(x\.(recorders|top_recorder_matches)\)/);
     });
@@ -171,8 +186,9 @@ describe('the switch-in migration', () => {
 
   it('checks the gate when it runs: a hidden fixture must not come back, and the fixtures are rolled back', () => {
     assert.match(sql, /assert not one_recorder_returned/);
+    assert.match(sql, /assert not nine_matches_returned/);
     assert.match(sql, /assert three_recorders_matches = 10/);
-    assert.match(sql, /assert both_modes_matches = 10/);
+    assert.match(sql, /assert all_modes_matches = 10/);
     assert.match(sql, /raise exception 'roll back the gate fixtures' using errcode = 'P0042'/);
     assert.match(sql, /exception when sqlstate 'P0042' then\s+null;/);
   });

@@ -18,5 +18,5 @@ export class HeroSwitchInsComponent {
   readonly switchIns = input<HeroSwitchIns | null | undefined>(undefined);
   readonly roster = input<readonly RosterHero[]>([]);
 
-  protected readonly view = computed(() => buildHeroSwitchInsView(this.switchIns(), this.heroId(), this.roster()));
+  protected readonly view = computed(() => buildHeroSwitchInsView(this.switchIns(), this.heroId(), this.heroName(), this.roster()));
 }
