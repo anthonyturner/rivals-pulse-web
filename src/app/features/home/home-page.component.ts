@@ -22,7 +22,6 @@ import { RouterLink } from '@angular/router';
 import { EyebrowComponent } from '../../shared/components/eyebrow/eyebrow.component';
 import { ClosingCtaComponent } from './closing-cta/closing-cta.component';
 import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
-import { ReleaseMediaOnDestroyDirective } from './release-media-on-destroy.directive';
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
 import { HomeFaqComponent } from './home-faq/home-faq.component';
 import { HomeContentService } from './home-content.service';
@@ -31,6 +30,7 @@ import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
 import { PulseBannerComponent, PulseBannerLayout } from './pulse-banner/pulse-banner.component';
+import { ReleaseMediaOnDestroyDirective } from './release-media-on-destroy.directive';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 import { WordOfDayComponent } from './word-of-day/word-of-day.component';
 
