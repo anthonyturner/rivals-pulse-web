@@ -117,21 +117,30 @@ function cooldownOf(ability) {
   return match && Number(match[1]) > 0 ? { value: Number(match[1]), raw: String(row.value) } : null;
 }
 
+// A page can print one ability twice with differently worded descriptions. A row that matches an
+// earlier one in everything the scores read adds nothing, so only the first is kept.
+const sameRow = (one, other) =>
+  ['ability', 'type', 'slot', 'tag'].every((field) => one[field] === other[field]) &&
+  one.keys.join() === other.keys.join() &&
+  one.cooldown?.raw === other.cooldown?.raw;
+
 const heroes = official.heroes.map((hero) => ({
   heroId: hero.id,
   name: hero.name,
-  abilities: hero.abilities.map((ability) => {
-    const slots = [...new Set(keysOf(ability).map((key) => SLOT_BY_KEY.get(key.toLowerCase())).filter(Boolean))];
+  abilities: hero.abilities
+    .map((ability) => {
+      const slots = [...new Set(keysOf(ability).map((key) => SLOT_BY_KEY.get(key.toLowerCase())).filter(Boolean))];
 
-    return {
-      ability: ability.name,
-      type: ability.type,
-      keys: keysOf(ability),
-      slot: slots.length === 1 ? slots[0] : null,
-      cooldown: cooldownOf(ability),
-      ...decideTag(hero, ability),
-    };
-  }),
+      return {
+        ability: ability.name,
+        type: ability.type,
+        keys: keysOf(ability),
+        slot: slots.length === 1 ? slots[0] : null,
+        cooldown: cooldownOf(ability),
+        ...decideTag(hero, ability),
+      };
+    })
+    .filter((row, index, rows) => !rows.slice(0, index).some((earlier) => sameRow(row, earlier))),
 }));
 
 const table = {

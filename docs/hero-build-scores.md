@@ -132,15 +132,21 @@ so nothing maps to them.
 
 - **A slot the hero's page does not list is ignored.** The overlay sends every slot,
   at 0 when unused, so this is what stops a hero's empty slots counting.
-- **A slot with several abilities is only as certain as all of them.** A team-up, a
-  form or an upgrade can share a key, and a count cannot say which one it was. The
-  slot has a tag only if they all agree, and a cooldown only if they all print the
-  same one. Most team-up slots stay untagged for this reason.
+- **A slot with one base ability is that ability.** A team-up only replaces the base
+  ability (an `Ability` or `Ultimate`) while its partner is on the team, so a slot
+  with exactly one base ability takes its name, tag and cooldown, and lists the
+  team-ups on the key in `alsoIncludes`.
+- **Otherwise a slot is only as certain as all of its abilities.** Several forms or
+  upgrades can share a key, and a count cannot say which one it was. The slot is
+  named only if they all share a name, has a tag only if they all agree, and a
+  cooldown only if they all print the same one.
+- **An ability the page prints twice unchanged is kept once.** A repeat with the
+  same name, type, keys, cooldown and tag adds nothing, so the script drops it.
 - **Utility counts a slot only with a plain cooldown.** Without one there is no way
   to say how often it was available. A printed cooldown such as "3s after it breaks"
   does not count. Use above 100% of the cooldown is capped, as cooldown cuts allow it.
-  A team-up on a shared key is taken as available for all time played, which it may
-  not be.
+  A slot is taken as available at its base ability's cooldown for all time played,
+  even while a team-up with another cooldown replaces it.
 
 ## Known limits
 

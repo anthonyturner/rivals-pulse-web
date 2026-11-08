@@ -404,7 +404,7 @@ shown, listed in the manifest:
       "sustain": { "status": "ranking-too-small", "score": null, "label": "measured", "matches": 42, "contributors": null, "oneContributorAboveHalf": null, "measures": { "healingPerMinute": 0, "blockedPerMinute": 412.5, "sustainPerMinute": 412.5 } },
       "ultimate": { "status": "collecting", "score": null, "label": "estimated", "matches": 5, "contributors": 1, "oneContributorAboveHalf": false, "measures": null },
       "utility": { "status": "no-measurable-ability", "score": null, "label": "estimated", "matches": 0, "contributors": null, "oneContributorAboveHalf": null, "measures": null },
-      "abilities": [{ "slot": "ability_1", "ability": "Bionic Spider-Nest", "tag": null, "usesPerTenMinutes": 12.5, "takedownsPerUse": 0.4, "matches": 42 }]
+      "abilities": [{ "slot": "ability_1", "ability": "Bionic Spider-Nest", "alsoIncludes": [], "tag": null, "usesPerTenMinutes": 12.5, "takedownsPerUse": 0.4, "matches": 42 }]
     }
   ]
 }
@@ -442,8 +442,16 @@ shown, listed in the manifest:
   the generator refuses anything else, because an exact count could be one person's own
   games. A reader takes progress from it, such as "5 of 10 matches, 1 of 2 players".
 - **`abilities`** lists a slot only once that slot passes the rule on its own.
-  `ability` is null when the slot holds several abilities. `tag` is null when the
-  ability is untagged, when several disagree and, for `ultimate`, always.
+  `ability` is the slot's base ability (an `Ability` or `Ultimate` in the hero's kit),
+  named even when team-ups share the key, because a team-up only replaces it while
+  its partner is on the team. It is null only when the slot holds no single base
+  ability and its abilities do not all share one name. `alsoIncludes` lists every
+  other name on the slot, once each, such as the team-up variants, whose uses are
+  counted in with the base ability's; it is empty when there are none. It is
+  additive: an answer or file from before it existed has none and still passes, and
+  a reader that does not know the key ignores it, so `schemaVersion` stays 1. `tag`
+  is the base ability's (or, with no single base ability, the one all of them
+  share), null when untagged or they disagree and, for `ultimate`, always.
 - **The season** works as in `community-stats`, including `inPlaceOfSeasonId`.
 - **Only these keys are published.** The generator allows exactly the keys above
   (`readHeroScores` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and

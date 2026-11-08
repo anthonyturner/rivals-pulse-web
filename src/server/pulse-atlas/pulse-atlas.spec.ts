@@ -171,7 +171,7 @@ function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<
         sustain: heroScoreCollecting('measured'),
         ultimate: heroScoreCollecting('estimated'),
         utility: { status: 'no-measurable-ability', score: null, label: 'estimated', matches: 0, contributors: null, oneContributorAboveHalf: null, measures: null },
-        abilities: [{ slot: 'ability_0', ability: 'Hammer Throw', tag: 'Damage', usesPerTenMinutes: 12.5, takedownsPerUse: 0.4, matches: 42 }],
+        abilities: [{ slot: 'ability_0', ability: 'Hammer Throw', alsoIncludes: ['Vibranium Volley'], tag: 'Damage', usesPerTenMinutes: 12.5, takedownsPerUse: 0.4, matches: 42 }],
       },
     ],
     ...overrides,
@@ -2189,6 +2189,23 @@ describe('the hero-scores dataset', () => {
     const { qualifiedHeroes: _omitted, ...without } = heroScoresData();
 
     expect(buildWith(without)).not.toThrow();
+  });
+
+  it('may omit alsoIncludes on an ability, as an answer or file from before it existed does', () => {
+    const hero = (heroScoresData()['heroes'] as Record<string, unknown>[])[0];
+    const [{ alsoIncludes: _omitted, ...ability }] = hero['abilities'] as Record<string, unknown>[];
+
+    expect(buildWith(heroScoresData({ heroes: [{ ...hero, abilities: [ability] }] }))).not.toThrow();
+  });
+
+  it('refuses alsoIncludes that is not a list of ability names', () => {
+    const hero = (heroScoresData()['heroes'] as Record<string, unknown>[])[0];
+    const [ability] = hero['abilities'] as Record<string, unknown>[];
+    const withAlsoIncludes = (alsoIncludes: unknown) => heroScoresData({ heroes: [{ ...hero, abilities: [{ ...ability, alsoIncludes }] }] });
+
+    expect(buildWith(withAlsoIncludes('Vibranium Volley'))).toThrowError(/is not a slot, ability, alsoIncludes/);
+    expect(buildWith(withAlsoIncludes(['']))).toThrowError(/is not a slot, ability, alsoIncludes/);
+    expect(buildWith(withAlsoIncludes(null))).toThrowError(/is not a slot, ability, alsoIncludes/);
   });
 
   it('refuses qualifiedHeroes that is not four counts of heroes', () => {
