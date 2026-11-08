@@ -1,4 +1,4 @@
-<ol class="tiers">
+<ol class="tiers" [class.raised]="raised()">
   @for (tier of tiers(); track tier.name) {
     <li class="tier-row tier-{{ tier.name }}">
       <ng-template #label>
@@ -28,6 +28,9 @@
                     ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
                   </span>
                 </span>
+                @if (showRoles() && hero.role; as role) {
+                  <app-hero-role-chip class="hero-role" [role]="role" />
+                }
               </app-hero-tile>
             </li>
           }

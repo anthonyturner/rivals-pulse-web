@@ -28,6 +28,7 @@ const TIERS: TierRowView[] = [
     <app-tier-rows id="plain" [tiers]="tiers" />
     <app-tier-rows id="linked" [tiers]="tiers" [linkHeroes]="true" [headingLevel]="3" />
     <app-tier-rows id="art" [tiers]="tiers" [linkHeroes]="true" artLed />
+    <app-tier-rows id="roles" [tiers]="tiers" artLed raised showRoles />
   `,
 })
 class HostComponent {
@@ -79,5 +80,15 @@ describe('TierRowsComponent', () => {
     expect(rows('plain').querySelector('h3')).toBeNull();
     expect(rows('linked').querySelector('h3.tier-label')).toBeTruthy();
     expect(rows('linked').querySelector('h2')).toBeNull();
+  });
+
+  it('raises the rows only when asked', () => {
+    expect(rows('art').querySelector('.tiers')?.classList).not.toContain('raised');
+    expect(rows('roles').querySelector('.tiers')?.classList).toContain('raised');
+  });
+
+  it('shows the hero role as a chip only when asked', () => {
+    expect(rows('art').querySelector('app-hero-role-chip')).toBeNull();
+    expect(rows('roles').querySelector('app-hero-role-chip')?.textContent?.trim()).toBe('Duelist');
   });
 });

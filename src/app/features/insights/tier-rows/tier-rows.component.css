@@ -88,11 +88,43 @@ ul {
   white-space: nowrap;
 }
 
+.hero-role {
+  margin-top: 4px;
+}
+
 .empty-tier {
   align-self: center;
   padding: 0 12px;
   color: var(--text-soft);
   font-size: var(--type-small);
+}
+
+.raised {
+  gap: 12px;
+}
+
+.raised .tier-row {
+  border-radius: 12px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.raised .tier-label {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--tier-color) 48%, var(--bg-panel)),
+    color-mix(in srgb, var(--tier-color) 20%, var(--bg-panel))
+  );
+}
+
+.raised .hero-grid {
+  gap: 10px;
+  padding: 10px;
+  background: var(--surface);
+}
+
+.raised .empty-tier {
+  padding-block: 12px;
 }
 
 @media (max-width: 560px) {
@@ -118,7 +150,8 @@ ul {
     clip-path: none;
   }
 
-  .hero-grid {
+  .hero-grid,
+  .raised .hero-grid {
     grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
     gap: 6px;
     padding: 6px;
