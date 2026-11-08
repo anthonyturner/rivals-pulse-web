@@ -114,7 +114,6 @@ describe('the switch-in migration', () => {
       assert.match(lateral, /from public\.match_hero_timelines k\s+where k\.fingerprint = s\.fingerprint and k\.played_at = s\.played_at/);
       assert.doesNotMatch(lateral, /from picks k/);
       assert.doesNotMatch(fill, /picks as materialized/);
-      assert.match(sql, /unique \(fingerprint, played_at, timeline_no, pick_no\)|public\.match_hero_timelines/);
       assert.match(read('20261108180000_match_hero_timelines.sql'), /unique \(fingerprint, played_at, timeline_no, pick_no\)/);
     });
 

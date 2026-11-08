@@ -27,7 +27,7 @@
 --
 -- Recorder diversity. A row records how many distinct recorders (the user whose upload stored the
 -- match's scoreboard, as in the other families; the timelines carry no recorder of their own) its
--- matches came from and how many matches the busiest one did: counts only, never who.
+-- decided matches came from and how many of them the busiest one did: counts only, never who.
 -- `read_hero_switch_ins` returns a row only when `hero_figure_qualifies` passes for it, per half-season
 -- and mode, checked before any modes are summed so one list of modes cannot be subtracted from another
 -- to recover a hidden one. Unlike the pair tables, the rows are kept whatever their size and the gate
