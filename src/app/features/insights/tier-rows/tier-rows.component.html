@@ -28,8 +28,8 @@
                     ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
                   </span>
                 </span>
-                @if (showRoles() && hero.roleChip; as chip) {
-                  <app-kind-chip class="hero-role" [kind]="chip.kind" [label]="chip.label" />
+                @if (showRoles() && hero.role; as role) {
+                  <app-hero-role-chip class="hero-role" [role]="role" />
                 }
               </app-hero-tile>
             </li>

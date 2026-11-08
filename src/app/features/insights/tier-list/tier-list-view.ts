@@ -2,8 +2,6 @@ import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.
 import type { TierName } from '../../../../contracts/tier-list.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
-import { heroRoleChip } from '../../hub/hero-role-chip';
-import type { TileChip } from '../../hub/hub-tile.types';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
@@ -15,8 +13,6 @@ export interface TierHeroView extends HeroCellView {
   winRateLabel: string;
   pickRateLabel: string;
   appearancesLabel: string;
-  /** The hero's role as a tinted chip; null when the roster has no single role for the hero. */
-  roleChip: TileChip | null;
 }
 
 export interface TierRowView {
@@ -96,14 +92,11 @@ export function tierRowsOf(
 }
 
 function tierHero(hero: HeroStatsHero, identities: HeroIdentities): TierHeroView {
-  const cell = heroCell(hero.hero, identities);
-
   return {
-    ...cell,
+    ...heroCell(hero.hero, identities),
     winRateLabel: percentLabel(hero.winRate),
     pickRateLabel: percentLabel(hero.pickRate),
     appearancesLabel: String(hero.appearances),
-    roleChip: heroRoleChip(cell.role),
   };
 }
 

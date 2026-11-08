@@ -88,6 +88,10 @@ ul {
   white-space: nowrap;
 }
 
+.hero-role {
+  margin-top: 4px;
+}
+
 .empty-tier {
   align-self: center;
   padding: 0 12px;
@@ -95,7 +99,6 @@ ul {
   font-size: var(--type-small);
 }
 
-/* Raised rows: a rounder row with a shadow whose letter strip fades from the tier colour. */
 .raised {
   gap: 12px;
 }
@@ -118,10 +121,6 @@ ul {
   gap: 10px;
   padding: 10px;
   background: var(--surface);
-}
-
-.raised .hero-role {
-  margin-top: 4px;
 }
 
 .raised .empty-tier {

@@ -14,7 +14,6 @@ function hero(id: string, name: string): TierHeroView {
     winRateLabel: '66.7%',
     pickRateLabel: '10.0%',
     appearancesLabel: '12',
-    roleChip: { kind: 'tertiary', label: 'Duelist' },
   };
 }
 
@@ -88,12 +87,8 @@ describe('TierRowsComponent', () => {
     expect(rows('roles').querySelector('.tiers')?.classList).toContain('raised');
   });
 
-  it('shows the hero role as a tinted kind chip only when asked', () => {
-    expect(rows('art').querySelector('app-kind-chip')).toBeNull();
-
-    const chip = rows('roles').querySelector('app-kind-chip');
-
-    expect(chip?.textContent?.trim()).toBe('Duelist');
-    expect(chip?.getAttribute('data-kind')).toBe('tertiary');
+  it('shows the hero role as a chip only when asked', () => {
+    expect(rows('art').querySelector('app-hero-role-chip')).toBeNull();
+    expect(rows('roles').querySelector('app-hero-role-chip')?.textContent?.trim()).toBe('Duelist');
   });
 });
