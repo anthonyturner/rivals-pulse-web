@@ -1,9 +1,11 @@
 ﻿<div class="detail-hero-container">
   @if (banner(); as poster) {
   <div class="hero-poster" [class]="poster.roleClass">
-    <span class="poster-watermark" aria-hidden="true">{{ poster.watermark }}</span>
+    <span class="poster-art" aria-hidden="true">
+      <img class="poster-art__image" [src]="hero.imageUrl" alt="" width="320" height="320" decoding="async" />
+    </span>
     <div class="poster-header">
-      <img class="poster-portrait" [src]="hero.imageUrl" [alt]="hero.name" width="72" height="72" />
+      <img class="poster-portrait" [src]="hero.imageUrl" [alt]="hero.name" width="320" height="320" />
       <div class="poster-identity">
         <p class="poster-kicker">{{ poster.kicker }}</p>
         <h2 class="poster-name" tabindex="-1">{{ hero.name }}</h2>
