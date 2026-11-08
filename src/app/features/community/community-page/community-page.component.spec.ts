@@ -272,6 +272,7 @@ describe('CommunityPageComponent', () => {
     expect(host().querySelector('app-page-header')?.querySelector('img')).toBeNull();
     expect(art?.getAttribute('aria-hidden')).toBe('true');
     expect(art?.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(art?.querySelector('img')?.getAttribute('src')).toBe('/images/site/banners/community-banner.webp');
     expect(lead?.querySelector('h2')?.textContent?.trim()).toBe('How we count');
   });
 
