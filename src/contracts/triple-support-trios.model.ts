@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
+import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero-stats.model.ts';
 
 /**
  * What a trio is called. A trio with utility Strategists (Mantis, Adam Warlock, Ultron) is named for
@@ -15,6 +15,8 @@ export interface TripleSupportVariant {
 export interface TripleSupportTrio {
   /** The three Strategists' game hero ids, ascending, with Deadpool's role forms under 1057. */
   heroIds: [number, number, number];
+  /** The same three heroes by their id in `heroes.json`, in the order of `heroIds`, for pages that cannot map the game's ids. */
+  heroes: [string, string, string];
   variant: TripleSupportVariant;
   /** Matches with a win or a loss in which a team ran exactly this trio. */
   matches: number;
@@ -27,8 +29,8 @@ export interface TripleSupportTrio {
 }
 
 /**
- * The teams that ran exactly three Strategists in Quick Match and Competitive, from RivalsPulse app
- * matches only. Counts only: a win rate is the reader's to compute from `wins` and `teams`.
+ * The teams that ran exactly three Strategists in Quick Match and Competitive (or the one `mode`
+ * asked for), from RivalsPulse app matches only. Counts only: a win rate is the reader's to compute from `wins` and `teams`.
  *
  * `ready` means at least one trio reached `minimumMatches`; `not-enough-data` is a designed state,
  * not an error, and then `trios` is empty. A trio below the minimum is never listed. The team counts
@@ -41,6 +43,12 @@ export interface TripleSupportTrios {
   halfSeason: HeroStatsHalfSeason | null;
   /** Set only when `halfSeason` is the previous one, shown while the current one has no trio at the minimum. */
   inPlaceOf: HeroStatsHalfSeason | null;
+  /** Every half-season that has started, oldest first: the seasons a client can ask for. Absent only in an answer the CDN cached before this field existed. */
+  halfSeasons?: HeroStatsHalfSeason[];
+  /** The mode the counts use, or null when the request named a mode that does not exist (then nothing is counted). Absent only in an answer the CDN cached before this field existed. */
+  mode?: HeroStatsModeId | null;
+  /** Every mode a client can ask for, counted in the half-season shown. Absent when `mode` is. */
+  modes?: HeroStatsMode[];
   /** Teams in matches with a win or a loss whose heroes all have a known role: the denominator of `share`. */
   classifiedTeams: number;
   /** Teams in those matches with a hero no role is known for (no hero recorded, an unknown id): never counted as a trio. */

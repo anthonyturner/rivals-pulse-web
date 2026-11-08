@@ -110,8 +110,9 @@ RLS is on with no policy; only the service role reads the tables, and the site r
 | `triple_support_trios` | Key: `half_season`, `play_mode_id`, `rank_bucket` (-1 = unknown), and the trio `hero_a <= hero_b <= hero_c` (base game ids). Counts: `matches` (distinct matches), `teams` (team occurrences, so a match where both teams ran it adds two) and `wins`. Only trios with 10 or more matches over the half-season are stored. |
 | `triple_support_totals` | Key: `half_season`, `play_mode_id`, `rank_bucket`. `matches`, `decided_matches`, `recorders` and `top_recorder_matches` (numbers only, for the recorder gate) and the team counts of matches with a result: `classified_teams` (every hero's role known: a trio's denominator), `unclassified_teams` (a hero with no role: id 0, 1057, an unknown id) and `four_plus_teams` (classified, four or more Strategists, counted as a shape only). |
 | `triple_support_aggregate_half_seasons` | Which half-seasons were built, when, and when frozen by the purge. |
+| `team_lineup_shapes` | Team line-ups, written by the same rebuild. Key: `half_season`, `play_mode_id`, `rank_bucket` (-1 = unknown) and the shape `vanguards`, `duelists`, `strategists` (counts of one team's roles). Counts: `teams` (classified teams with a result that ran the shape) and `wins`. Every shape seen is stored; no hero id is kept. The pick rate's denominator is `triple_support_totals.classified_teams`, which is the sum of a bucket's `teams`. |
 
-No table holds a uid, name, fingerprint or recorder. `hero_id` in `participants` is the hero each
+No table holds a uid, name, fingerprint or recorder (`team_lineup_shapes` holds no hero either). `hero_id` in `participants` is the hero each
 player ended the match on, so a trio is the heroes the team finished on.
 
 ## API Routes
@@ -127,6 +128,7 @@ The Express SSR server exposes read-only routes:
 - `GET /api/external-sources/:sourceKey`
 - `GET /api/game-stats`
 - `GET /api/triple-support-trios`
+- `GET /api/team-lineups`
 - `GET /api/sync/game-stats` (cron or authorized manual sync)
 
 ## Update Flow

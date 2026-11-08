@@ -7,11 +7,11 @@ import { RouterTestingHarness } from '@angular/router/testing';
 
 import { routes } from '../../app.routes';
 import { NavigationCategoryPageComponent } from './navigation-category-page.component';
-import { NAVIGATION_CATEGORIES } from './navigation-category.data';
+import { NAVIGATION_CATEGORIES, type NavigationCategory } from './navigation-category.data';
 
 describe('NavigationCategoryPageComponent', () => {
-  function renderCategory(label: string): HTMLElement {
-    const category = NAVIGATION_CATEGORIES.find((entry) => entry.label === label);
+  function renderCategory(label: string, override?: NavigationCategory): HTMLElement {
+    const category = override ?? NAVIGATION_CATEGORIES.find((entry) => entry.label === label);
 
     TestBed.configureTestingModule({
       imports: [NavigationCategoryPageComponent],
@@ -41,13 +41,12 @@ describe('NavigationCategoryPageComponent', () => {
     );
   });
 
-  it('shows the released tools as linked cards and the rest as plain text', () => {
+  it('shows the released tools as linked tiles and the rest as plain text', () => {
     const element = renderCategory('Tools');
-    const cards = element.querySelectorAll('app-guide-card a');
+    const links = element.querySelectorAll('app-hub-tile a');
 
-    expect(texts(cards)).toEqual(['Counters', 'Dive Planner', 'Team Builder']);
-    expect(Array.from(cards).map((node) => node.getAttribute('href'))).toEqual(['/counters', '/dive-planner', '/team-builder']);
-    expect(element.querySelector('app-guide-card img')).toBeNull();
+    expect(texts(links)).toEqual(['Counters', 'Dive Planner', 'Team Builder']);
+    expect(Array.from(links).map((node) => node.getAttribute('href'))).toEqual(['/counters', '/dive-planner', '/team-builder']);
     expect(texts(element.querySelectorAll('.soon strong'))).toEqual(['Learning Paths', 'Watch Next Quiz', 'AI Coach']);
     expect(element.querySelectorAll('.soon a, [aria-disabled]').length).toBe(0);
   });
@@ -55,7 +54,7 @@ describe('NavigationCategoryPageComponent', () => {
   it('lists coming-soon items under one heading and drops "coming soon" from their descriptions', () => {
     const element = renderCategory('Tools');
 
-    expect(element.querySelector('h2')?.textContent).toBe('Coming soon');
+    expect(element.querySelector('#coming-soon-title')?.textContent).toBe('Coming soon');
     expect(element.textContent).not.toContain('are coming soon');
     expect(element.textContent).not.toContain('is coming soon');
   });
@@ -64,20 +63,30 @@ describe('NavigationCategoryPageComponent', () => {
     const element = renderCategory('Resources');
 
     expect(element.querySelector('#coming-soon-title')).toBeNull();
-    expect(element.querySelectorAll('app-resource-tile').length).toBe(8);
+    expect(element.querySelectorAll('app-hub-tile').length).toBe(8);
   });
 
-  it('draws Resources as a bento grid and the other hubs as plain cards', () => {
+  it('draws Resources and Tools as bento grids, each with its own tiles', () => {
     const resources = renderCategory('Resources');
 
-    expect(resources.querySelector('app-resource-bento')).not.toBeNull();
+    expect(resources.querySelector('app-hub-bento')).not.toBeNull();
     expect(resources.querySelector('app-guide-card')).toBeNull();
+    expect(texts(resources.querySelectorAll('app-hub-tile h2'))[0]).toBe('Media Tutorials');
 
     TestBed.resetTestingModule();
     const tools = renderCategory('Tools');
 
-    expect(tools.querySelector('app-resource-bento')).toBeNull();
-    expect(tools.querySelectorAll('app-guide-card').length).toBe(3);
+    expect(tools.querySelector('app-hub-bento')).not.toBeNull();
+    expect(tools.querySelector('app-guide-card')).toBeNull();
+    expect(texts(tools.querySelectorAll('app-hub-tile h2'))[0]).toBe('Counters');
+  });
+
+  it('draws a hub with no tile config as plain cards', () => {
+    const tools = NAVIGATION_CATEGORIES.find((entry) => entry.label === 'Tools') as NavigationCategory;
+    const element = renderCategory('Tools', { ...tools, path: '/untiled' });
+
+    expect(element.querySelector('app-hub-bento')).toBeNull();
+    expect(element.querySelectorAll('app-guide-card').length).toBe(3);
   });
 
   it('is not a landmark of its own and has no live region', () => {

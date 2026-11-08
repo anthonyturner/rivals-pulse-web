@@ -1,7 +1,20 @@
 import type { HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
+import type { HeroSynergies, HeroSynergy } from '../../../../contracts/hero-synergies.model';
+import type { HeroRole } from '../../../../contracts/role-stats.model';
+import type { TeamLineups } from '../../../../contracts/team-lineups.model';
+import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import type { HeroIdentities } from '../hero-identity';
 import { synergiesOf, synergy } from '../hero-synergies.fixtures';
-import { PAIRS_PER_ROLE, buildTeamCompsView } from './team-comps-view';
+import { lineupShape, lineupsOf } from '../team-lineups.fixtures';
+import { triosOf } from '../triple-support-trios.fixtures';
+import { PAIRS_PER_ROLE, buildTeamCompsView as buildView } from './team-comps-view';
+
+const buildTeamCompsView = (
+  synergies: HeroSynergies,
+  identities: HeroIdentities,
+  trios: TripleSupportTrios | null = triosOf([]),
+  lineups: TeamLineups | null = lineupsOf([]),
+) => buildView(synergies, trios, lineups, identities);
 
 const identities: HeroIdentities = new Map([
   ['hulk', { name: 'Hulk', role: 'Vanguard', imageUrl: '/images/heroes/hulk.png' }],
@@ -44,6 +57,86 @@ describe('buildTeamCompsView role pairs', () => {
     expect(rowsOf(view, 'Vanguard')).toEqual(['hulk+thor']);
     expect(rowsOf(view, 'Duelist')).toEqual([]);
     expect(rowsOf(view, 'Strategist')).toEqual([]);
+  });
+
+  describe('for Deadpool, whom the game splits by role', () => {
+    const asForm = (hero: 'hero' | 'ally', role: HeroRole, pair: HeroSynergy): HeroSynergy => ({
+      ...pair,
+      [hero === 'hero' ? 'heroRole' : 'allyRole']: role,
+    });
+
+    it('files a pair under the role of the form played, once per form', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([
+          asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12)),
+          asForm('ally', 'Duelist', synergy('hela', 'deadpool', 8, 12)),
+          asForm('ally', 'Strategist', synergy('mantis', 'deadpool', 7, 12)),
+        ]),
+        identities,
+      );
+
+      expect(rowsOf(view, 'Vanguard')).toEqual(['hulk+deadpool']);
+      expect(rowsOf(view, 'Duelist')).toEqual(['hela+deadpool']);
+      expect(rowsOf(view, 'Strategist')).toEqual(['mantis+deadpool']);
+    });
+
+    it('names him with the form and gives the form as his role', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([asForm('hero', 'Strategist', synergy('deadpool', 'luna-snow', 9, 12))]),
+        identities,
+      );
+      const [row] = view.rolePairs[2].rows;
+
+      expect(row.first).toEqual(
+        jasmine.objectContaining({ hero: 'deadpool', name: 'Deadpool (Strategist)', role: 'Strategist' }),
+      );
+      expect(row.second.name).toBe('Luna Snow');
+    });
+
+    it('draws his portrait from the roster, and the one the site keeps for him when the roster has none', () => {
+      const pair = synergiesOf([asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12))]);
+      const withPortrait: HeroIdentities = new Map(identities).set('deadpool', {
+        name: 'Deadpool',
+        role: 'Multi-Role',
+        imageUrl: '/images/roster/deadpool-headshot.png',
+      });
+
+      expect(buildTeamCompsView(pair, withPortrait).rolePairs[0].rows[0].second.imageUrl).toBe(
+        '/images/roster/deadpool-headshot.png',
+      );
+      expect(buildTeamCompsView(pair, identities).rolePairs[0].rows[0].second.imageUrl).toBe('/images/heroes/deadpool.png');
+    });
+
+    it('keeps a form out of a role it was not played in', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([asForm('ally', 'Strategist', synergy('hulk', 'deadpool', 9, 12))]),
+        identities,
+      );
+
+      expect(rowsOf(view, 'Vanguard')).toEqual([]);
+      expect(rowsOf(view, 'Strategist')).toEqual([]);
+    });
+
+    it('lists two forms with the same partner as separate rows', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([
+          asForm('ally', 'Strategist', synergy('mantis', 'deadpool', 9, 12)),
+          asForm('ally', 'Strategist', synergy('luna-snow', 'deadpool', 7, 12)),
+        ]),
+        identities,
+      );
+
+      expect(rowsOf(view, 'Strategist')).toEqual(['mantis+deadpool', 'luna-snow+deadpool']);
+    });
+
+    it('leaves the base id, which has no form, out of every list', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([synergy('hulk', 'deadpool', 9, 12), synergy('mantis', 'deadpool', 9, 12), synergy('hela', 'deadpool', 9, 12)]),
+        identities,
+      );
+
+      expect(view.rolePairs.map(({ rows }) => rows.length)).toEqual([0, 0, 0]);
+    });
   });
 
   it('always lists the three roles in order, each with its heading', () => {
@@ -110,11 +203,18 @@ describe('buildTeamCompsView sections and labels', () => {
     endsAt,
   });
 
-  it('keeps the triple-support and line-up sections pending until they have a source', () => {
-    const view = buildTeamCompsView(synergiesOf([synergy('hulk', 'thor', 8, 12)]), identities);
+  it('builds the line-up section from the line-ups, and says so when they could not be loaded', () => {
+    const pairs = synergiesOf([synergy('hulk', 'thor', 8, 12)]);
+    const ready = buildTeamCompsView(pairs, identities, triosOf([]), lineupsOf([lineupShape(2, 2, 2, 600, 330)]));
 
-    expect(view.tripleSupport).toEqual({ state: 'not-enough-data' });
-    expect(view.lineups).toEqual({ state: 'not-enough-data' });
+    expect(ready.lineups.state).toBe('ready');
+    expect(buildTeamCompsView(pairs, identities).lineups).toEqual({
+      state: 'not-enough-data',
+      notice: null,
+      minimumLabel: '50 teams',
+    });
+    expect(buildTeamCompsView(pairs, identities, triosOf([]), null).lineups).toEqual({ state: 'unavailable' });
+    expect(buildTeamCompsView(pairs, identities, triosOf([]), null).lineupsNote).toBeNull();
   });
 
   it('says what is counted in the toolbar, with the minimum', () => {
@@ -123,11 +223,29 @@ describe('buildTeamCompsView sections and labels', () => {
       identities,
     );
 
-    expect(view.metaParts).toEqual(['Season 10.5', 'Started Oct 9, 2026', 'Pairs need 10 matches together to be listed']);
+    expect(view.metaParts).toEqual([
+      'All ranks counted',
+      'Season 10.5',
+      'Started Oct 9, 2026',
+      'Pairs need 10 matches together to be listed',
+    ]);
   });
 
-  it('has no toolbar facts when no duo is listed', () => {
-    expect(buildTeamCompsView(synergiesOf([]), identities).metaParts).toEqual([]);
+  it('still says all ranks are counted when no duo is listed, and nothing else', () => {
+    expect(buildTeamCompsView(synergiesOf([]), identities).metaParts).toEqual(['All ranks counted']);
+  });
+
+  it('names the mode counted, with a caveat for one whose numbers do not compare', () => {
+    const competitive = buildTeamCompsView(synergiesOf([]), identities);
+    const arcade = buildTeamCompsView(synergiesOf([], { mode: 'arcade' }), identities);
+
+    expect([competitive.modeLabel, competitive.modeCaveat]).toEqual(['Competitive', null]);
+    expect(arcade.modeLabel).toBe('Arcade');
+    expect(arcade.modeCaveat).toContain('Arcade has custom lobbies');
+  });
+
+  it('names the mode and half-season an empty state is about', () => {
+    expect(buildTeamCompsView(synergiesOf([]), identities).scopeLabel).toBe('in Competitive for Season 10.5');
   });
 
   it('explains when the previous half-season stands in for the current one', () => {
@@ -136,7 +254,9 @@ describe('buildTeamCompsView sections and labels', () => {
       identities,
     );
 
-    expect(view.fallbackNotice).toBe("Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.");
+    expect(view.fallbackNotice).toBe(
+      "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
+    );
   });
 
   it('has no notice and no season before any half-season exists', () => {

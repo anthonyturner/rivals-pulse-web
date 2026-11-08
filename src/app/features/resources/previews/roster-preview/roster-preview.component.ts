@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
-import { previewRoster } from '../preview-data';
+import { previewRoster } from '../../../hub/preview-data';
 
 /** How many heroes are on the roster. Draws nothing until the roster has loaded. */
 @Component({

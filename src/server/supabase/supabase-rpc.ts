@@ -165,6 +165,29 @@ export function answerReader(functionName: string) {
 
       return value;
     },
+    /** A number, or null where the function leaves the column null (a figure it withholds). */
+    nullableNumberOf(row: Record<string, unknown>, key: string): number | null {
+      const value = row[key];
+
+      if (value === null) {
+        return null;
+      }
+
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        throw new Error(`${functionName}: ${key} is not a number or null`);
+      }
+
+      return value;
+    },
+    booleanOf(row: Record<string, unknown>, key: string): boolean {
+      const value = row[key];
+
+      if (typeof value !== 'boolean') {
+        throw new Error(`${functionName}: ${key} is not a boolean`);
+      }
+
+      return value;
+    },
     stringOf(row: Record<string, unknown>, key: string): string {
       const value = row[key];
 

@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.dive {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding-top: 12px;
+}
+
+.group {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.arrow {
+  margin-left: 10px;
+  color: var(--text-muted);
+}
+
+.heroes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each portrait is outlined in its side's colour: the enemy red, and the green of a winning record. */
+.heroes li {
+  padding: 2px;
+  border: 2px solid var(--danger);
+  border-radius: 10px;
+}
+
+.heroes--answer li {
+  border-color: var(--win);
+}

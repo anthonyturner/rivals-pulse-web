@@ -1,4 +1,10 @@
-import { buildBaseGameIdByGameId, buildHeroRoleByGameId, heroGameIdEntries, type HeroGameIdEntry } from './hero-game-ids';
+import {
+  buildBaseGameIdByGameId,
+  buildHeroPlacementByGameId,
+  buildHeroRoleByGameId,
+  heroGameIdEntries,
+  type HeroGameIdEntry,
+} from './hero-game-ids';
 
 const ENTRIES: HeroGameIdEntry[] = [
   { id: 'hulk', gameId: 1011 },
@@ -33,6 +39,39 @@ describe('buildBaseGameIdByGameId', () => {
 
   it('has no entry for a game id that belongs to no hero', () => {
     expect(bases.has(0)).toBeFalse();
+  });
+});
+
+describe('buildHeroPlacementByGameId', () => {
+  const placements = buildHeroPlacementByGameId(ENTRIES);
+
+  it('names a hero by its id and gives it no role', () => {
+    expect(placements.get(1011)).toEqual({ hero: 'hulk' });
+    expect(placements.get(1057)).toEqual({ hero: 'deadpool' });
+  });
+
+  it("gives each of Deadpool's role forms the role it is played in", () => {
+    expect(placements.get(10571)).toEqual({ hero: 'deadpool', role: 'Vanguard' });
+    expect(placements.get(10572)).toEqual({ hero: 'deadpool', role: 'Duelist' });
+  });
+
+  it('gives a variant with no role of its own no role, rather than its hero', () => {
+    expect(placements.get(10573)).toEqual({ hero: 'deadpool', role: undefined });
+  });
+
+  it('has no entry for a game id that belongs to no hero', () => {
+    expect(placements.has(0)).toBeFalse();
+  });
+
+  it("covers Deadpool's three curated forms with a role each", () => {
+    const curated = buildHeroPlacementByGameId(heroGameIdEntries);
+
+    expect([10571, 10572, 10573].map((gameId) => curated.get(gameId))).toEqual([
+      { hero: 'deadpool', role: 'Vanguard' },
+      { hero: 'deadpool', role: 'Duelist' },
+      { hero: 'deadpool', role: 'Strategist' },
+    ]);
+    expect(curated.get(1057)).toEqual({ hero: 'deadpool' });
   });
 });
 
