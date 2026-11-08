@@ -160,13 +160,13 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('Community Matches tab count it once');
   });
 
-  it('marks hero averages as planned, from own figures, and waiting for enough players', () => {
+  it('says hero averages need 2 players but can mostly reflect one player', () => {
     const text = section('public-numbers').textContent ?? '';
-    expect(text).toContain('are planned');
-    expect(text).toContain("own figures");
-    expect(text).toContain("never show one player's numbers");
-    expect(text).toContain('enough different players');
-    expect(text).toContain('never in the game');
+    expect(text).not.toContain('are planned');
+    expect(text).toContain('own figures');
+    expect(text).not.toContain("never show one player's numbers");
+    expect(text).toContain('once 2 different players have');
+    expect(text).toContain('one player can supply nearly all of it');
   });
 
   it('lists ability and ultimate use as planned, apart from the extended status', () => {

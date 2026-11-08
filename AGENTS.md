@@ -28,8 +28,10 @@ file can.
 These hold even if you read nothing else:
 
 - **Never commit to `master`**, never force-push, never rewrite
-  history, never delete a remote branch. A local branch may go only once
-  `git branch --merged master` lists it, and only with `git branch -d`.
+  history, never delete a remote branch. Once your pull request is merged
+  and its issue is closed, delete the local branches you created for that
+  work with `git branch -d`, never `-D`
+  ([rule 3](docs/rules.md)).
 - **Never merge without a posted review.** Merge only after the review in
   [qa-review.md](docs/agent-workflows/qa-review.md) is on the pull request and
   its blocking findings are fixed. Never bypass branch protection.
@@ -50,7 +52,7 @@ The complete list, which other documents cite by number, is
 
 Work runs from request to **merged pull request without stopping for
 approval**: file the issue, branch, open the PR, implement, verify, push, post
-a code review on the PR, fix what it finds, then merge with a merge commit.
+a code review on the PR, fix what it finds, then squash-merge it.
 Filing and updating issues, commenting, branching, committing, pushing, opening
 pull requests and merging a reviewed one are all pre-authorized.
 
