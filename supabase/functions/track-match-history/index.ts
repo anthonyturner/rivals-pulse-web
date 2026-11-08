@@ -141,7 +141,7 @@ Deno.serve(async request => {
       ? await recordAbilityUses(supabase, { fingerprint, playedAt, extended })
       : null;
     const timelinesStored = extended && extended.hero_timelines.length > 0
-      ? await recordHeroTimelines(supabase, { fingerprint, playedAt, extended })
+      ? await recordHeroTimelines(supabase, { fingerprint, playedAt, extended, recordedBy })
       : null;
 
     await purgeExpiredParticipants(supabase);
@@ -238,16 +238,20 @@ async function recordAbilityUses(
   }
 }
 
-/** Each player's anonymous hero timeline, with the same rule: a failure costs only these rows. */
+/**
+ * Each player's anonymous hero timeline, with the same rule: a failure costs only these rows. The
+ * recorder hash is stored beside them so the switch-in counts credit the uploader of the timelines.
+ */
 async function recordHeroTimelines(
   supabase: ReturnType<typeof createClient>,
-  match: { fingerprint: string; playedAt: string; extended: ExtendedUpload },
+  match: { fingerprint: string; playedAt: string; extended: ExtendedUpload; recordedBy: string },
 ): Promise<number | null> {
   try {
     const { data, error } = await supabase.rpc('record_match_hero_timelines', {
       p_fingerprint: match.fingerprint,
       p_played_at: match.playedAt,
       p_hero_timelines: match.extended.hero_timelines,
+      p_recorded_by: match.recordedBy,
     });
     if (error) throw error;
     return data as number;
