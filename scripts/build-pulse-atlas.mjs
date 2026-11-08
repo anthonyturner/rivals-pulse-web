@@ -16,6 +16,7 @@ import {
   parseManifest,
   resolveCommunityStats,
   resolveHeroScores,
+  resolveTeamLineups,
   tierListSeasonPath,
   verifyPulseAtlas,
 } from '../src/server/pulse-atlas/pulse-atlas.ts';
@@ -116,6 +117,19 @@ const heroScores = await resolveHeroScores({
 
 if (heroScores) {
   live.push(heroScores);
+}
+
+// The same promise again. The API answers in Competitive when it is asked for no mode, and the
+// file records that mode, so a reader never has to guess it.
+const teamLineups = await resolveTeamLineups({
+  read: () => fetchJson(`${apiBase}/team-lineups`),
+  published,
+  source: HERO_STATS_SOURCE_LABEL,
+  warn,
+});
+
+if (teamLineups) {
+  live.push(teamLineups);
 }
 
 const now = new Date().toISOString();
@@ -278,6 +292,8 @@ function toSample(input, sampleHeroIds) {
         return trimCommunityStats(data);
       case 'hero-scores':
         return { ...data, heroes: data.heroes.slice(0, 2) };
+      case 'team-lineups':
+        return trimTeamLineups(data);
       case 'tier-list': {
         // The current season and the one before it, so the sample shows the index
         // entry with ranks next to one without.
@@ -339,6 +355,17 @@ function trimCommunityStats(data) {
       counters: firstTwo(band.counters),
       synergies: firstTwo(band.synergies),
     })),
+  };
+}
+
+// One shape with enough data and one without, so the sample shows both.
+function trimTeamLineups(data) {
+  return {
+    ...data,
+    shapes: [
+      data.shapes.find((shape) => shape.status === 'ready'),
+      data.shapes.find((shape) => shape.status !== 'ready'),
+    ].filter((shape) => shape !== undefined),
   };
 }
 

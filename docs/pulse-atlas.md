@@ -21,6 +21,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | `hero-stats.json` | Each hero's community stats in every half-season that has started: win rate, pick rate, KDA, final hits and the matches behind them, with an "enough data" flag per hero. One file for all half-seasons. Shape below. |
 | `community-stats.json` | The community's counter and partner counts: how often each hero beat or lost to each enemy hero, and to each ally hero it played with, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `hero-scores.json` | Each hero's 1 to 10 Damage, Sustain, Ultimate and Utility scores with the figures behind them, or how far along a hero below the rule is, in the half-season shown. Shape below. Optional: absent until the first successful run that can build it. |
+| `team-lineups.json` | The community's team line-up shapes (how many Vanguards, Duelists and Strategists a team ran, such as 1-2-3) with the teams and wins behind each, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
 
 Every dataset file has this shape:
@@ -401,6 +402,80 @@ shown, listed in the manifest:
   source is `/api/community/hero-scores`, and the envelope's `source` is
   `rivals-pulse-web:hero-stats-api`.
 
+### The `team-lineups` data
+
+The team line-up shapes, for readers that want a "Team line-ups" row without the
+website. A shape is how many Vanguards, Duelists and Strategists one team ended a
+match with, shown in that order, such as `1-2-3`. Like the tier list it is the
+**community** data: built from the matches Rivals Pulse players upload, by the
+derivation behind `GET /api/team-lineups`
+([src/server/heroes/lineups/team-lineups.ts](../src/server/heroes/lineups/team-lineups.ts)), and from nothing else. It
+is **one file** for the half-season shown, listed in the manifest:
+
+```json
+{
+  "provenance": "rivals-pulse-community",
+  "status": "ready",
+  "minimumTeams": 50,
+  "mode": "competitive",
+  "currentSeasonId": 21,
+  "season": { "id": 21, "label": "Season 10.5" },
+  "classifiedTeams": 110,
+  "unclassifiedTeams": 2,
+  "shapes": [
+    { "shape": "2-2-2", "vanguards": 2, "duelists": 2, "strategists": 2, "status": "ready", "teams": 67, "wins": 37 },
+    { "shape": "1-2-3", "vanguards": 1, "duelists": 2, "strategists": 3, "status": "not-enough-data", "teams": null, "wins": null }
+  ]
+}
+```
+
+- **`provenance` is `"rivals-pulse-community"`, at the top level of `data`**, as
+  in the tier list. The generator refuses to build a file without it and the
+  read-back check fails if the written file lacks it.
+- **Counts only.** There is no pick rate and no win rate. A reader computes the
+  pick rate as `teams / classifiedTeams` and the win rate as `wins / teams`, the
+  figures `GET /api/team-lineups` also gives to four decimals.
+- **`teams`** is the teams that ran the shape in matches with a win or a loss, so
+  a mirror match counts both teams. **`wins`** is those that won.
+  **`classifiedTeams`** is every such team whose heroes all have a known role: the
+  denominator of the pick rate. **`unclassifiedTeams`** is the teams left out of
+  every shape because a hero's role is not known (no hero recorded, an unknown
+  id, Deadpool's role-less base form).
+- **A shape under `minimumTeams` is "not enough data" and carries no count.** Its
+  `status` is `not-enough-data` and its `teams` and `wins` are `null`. The shape
+  is still listed, so a reader knows it was seen, but the file states no count
+  for it, because a handful of teams could be one person's own games. The counts
+  of the other shapes and `classifiedTeams` are published, so when exactly one
+  shape is under the minimum a reader can work its count out by subtraction; that
+  gives away nothing `GET /api/team-lineups` does not. The generator refuses a
+  file in which such a shape has a count, whose `minimumTeams` is below 50 (the
+  site's own rule, held apart from what the API reports), or in which a `ready`
+  shape has fewer than `minimumTeams` teams or more wins than teams. The top-level
+  `status` is `ready` when at least one shape is, and `not-enough-data`
+  otherwise, which is a designed state, not an error.
+- **`mode`** is the mode the counts use. `GET /api/team-lineups` counts
+  **Competitive** when it is asked for no mode, because line-ups are a ranked-play
+  question, and the generator takes that default; this differs from
+  `community-stats.json` and `hero-stats.json`, which blend Quick Match and
+  Competitive. The file says its mode, so a reader never has to assume it. Rank
+  bands are not published, as in `community-stats`: the counts are the matches
+  with no rank, which is every match today.
+- **`shapes`** is ordered as the API orders it: shapes with enough data first,
+  most played first, then the shapes under the minimum, each group by shape. A
+  reader that wants another order sorts it. A shape is listed at most once.
+- **The season** works as in `community-stats`, including `inPlaceOfSeasonId`,
+  which is present only when the current half-season has no shape at the minimum
+  yet and `season` is the previous half-season's counts.
+- **Only these keys are published.** The generator allows exactly the keys above
+  (`readTeamLineups` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and
+  refuses a file, season or shape with any other, or a key naming something
+  private. It holds no player-level data (ADR-0011 in the overlay repo): no names,
+  uids, matches, heroes or per-match rows, only counts per shape.
+- **It never holds up the feed**, by the same rule as `community-stats` below: a
+  failure keeps the last published file, or leaves the file out if there is none.
+  The source is `/api/team-lineups`, and the envelope's `source` is
+  `rivals-pulse-web:hero-stats-api`.
+
 ### The hero `gameId`
 
 `heroes.json` carries the game's numeric hero id on each hero, so a consumer
@@ -550,7 +625,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, team line-ups with one shape that has enough data and one that has not, three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -583,9 +658,10 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    then once per half-season (`?halfSeason=<number>`), the current one
    included. That needs no secret. The tier list and the hero stats are
    assembled from those same answers and the hero ids in `hero-game-ids.json`
-   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. The one
-   other read is `/api/hero-pairs`, once, for `community-stats`; see below for
-   what happens when it fails.
+   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. Three
+   more reads are each made once: `/api/hero-pairs` for `community-stats`,
+   `/api/community/hero-scores` for `hero-scores` and `/api/team-lineups` for
+   `team-lineups`; see below for what happens when they fail.
 2. Reads the maps, hero-styles, strategist-tags and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
@@ -607,10 +683,10 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    [src/server/pulse-atlas/pulse-atlas-page.ts](../src/server/pulse-atlas/pulse-atlas-page.ts). It is not part of
    the feed: the manifest does not list it, and clients never need it.
 
-`community-stats` and `hero-scores` are the exceptions to the rule below:
+`community-stats`, `hero-scores` and `team-lineups` are the exceptions to the rule below:
 `resolveOptionalDataset` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts) turns any failure to fetch or
 assemble one into the last published file (kept byte for byte) or, if none was
-ever published, into leaving it out of the run, each with a warning. Neither ever
+ever published, into leaving it out of the run, each with a warning. None of them ever
 fails the generate job.
 
 Any other failed fetch (three attempts each), an empty or malformed dataset, or an
@@ -635,6 +711,10 @@ run after both are live publishes it.
 migration and the web app with `/api/community/hero-scores`. A merge starts a run that
 can reach the API before Vercel has deployed it; that run warns, and the next
 scheduled run, within six hours, publishes the file.
+
+`team-lineups` needs the `read_team_lineup_shapes` migration and the web app with
+`/api/team-lineups`, both already live; it follows the same rule if a run ever
+comes first.
 
 To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 24,
 which strips TypeScript types itself).
