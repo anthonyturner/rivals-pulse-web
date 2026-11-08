@@ -1,3 +1,5 @@
+import { findStrategistTagProblems } from './strategist-tags.ts';
+
 const PULSE_ATLAS_SCHEMA_VERSION = 1;
 export const PULSE_ATLAS_BASE_PATH = 'pulse-atlas/v1';
 export const PULSE_ATLAS_DATASETS = [
@@ -6,6 +8,7 @@ export const PULSE_ATLAS_DATASETS = [
   'glossary',
   'maps',
   'hero-styles',
+  'strategist-tags',
   'hero-stats',
   'community-stats',
   'hero-scores',
@@ -788,6 +791,8 @@ function describeShapeProblem(
       return describeTierListProblem(data);
     case 'hero-styles':
       return describeHeroStylesProblem(data, publishedHeroIds(inputs));
+    case 'strategist-tags':
+      return describeStrategistTagsProblem(data, inputs);
     case 'hero-stats':
       return describeHeroStatsProblem(data);
     case 'community-stats':
@@ -795,6 +800,18 @@ function describeShapeProblem(
     case 'hero-scores':
       return readHeroScores(data).problems.join('; ') || undefined;
   }
+}
+
+function describeStrategistTagsProblem(data: unknown, inputs: readonly PulseAtlasInput[]): string | undefined {
+  const heroes = inputs.find((input) => input.dataset === 'heroes')?.data;
+  const gameIds = inputs.find((input) => input.dataset === PULSE_ATLAS_HERO_GAME_IDS)?.data;
+  const errors = findStrategistTagProblems(
+    data,
+    publishedHeroIds(inputs) !== undefined && Array.isArray(heroes) ? heroes : undefined,
+    gameIds,
+  );
+
+  return errors.length > 0 ? errors.join('; ') : undefined;
 }
 
 function publishedHeroIds(inputs: readonly PulseAtlasInput[]): string[] | undefined {

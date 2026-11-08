@@ -31,6 +31,7 @@ const HERO_STATS_SOURCE_LABEL = 'rivals-pulse-web:hero-stats-api';
 const MAPS_SOURCE_LABEL = 'rivals-pulse-web:seed-maps';
 const HERO_STYLES_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-styles';
 const HERO_GAME_IDS_SOURCE_LABEL = 'rivals-pulse-web:seed-hero-game-ids';
+const STRATEGIST_TAGS_SOURCE_LABEL = 'rivals-pulse-web:seed-strategist-tags';
 const SAMPLE_SOURCE_LABEL = 'SAMPLE: trimmed, not live data';
 const FETCH_ATTEMPTS = 3;
 const FETCH_TIMEOUT_MS = 60_000;
@@ -70,6 +71,11 @@ const live = [
     dataset: 'hero-styles',
     source: HERO_STYLES_SOURCE_LABEL,
     data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'hero-styles.json'), 'utf8')),
+  },
+  {
+    dataset: 'strategist-tags',
+    source: STRATEGIST_TAGS_SOURCE_LABEL,
+    data: JSON.parse(await readFile(join(repoRoot, 'data', 'pulse-atlas', 'strategist-tags.json'), 'utf8')),
   },
   {
     dataset: 'hero-stats',
@@ -261,6 +267,7 @@ function toSample(input, sampleHeroIds) {
       case 'heroes':
         return data.slice(0, 2);
       case 'hero-styles':
+      case 'strategist-tags':
         return data.filter((entry) => sampleHeroIds.includes(entry.heroId));
       case 'glossary':
         return data.slice(0, 3);

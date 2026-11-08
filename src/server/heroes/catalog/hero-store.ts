@@ -69,6 +69,13 @@ export async function listHeroRoles(client: SupabaseClient): Promise<ReadonlyMap
   return new Map(rows.map((row) => [row.id, row.role]));
 }
 
+/** Each hero's display name by hero id, for naming a hero in a label. */
+export async function listHeroNames(client: SupabaseClient): Promise<ReadonlyMap<string, string>> {
+  const rows = await readAllRows<Pick<HeroRow, 'id' | 'name'>>(client, 'id, name', 'Reading hero names failed');
+
+  return new Map(rows.map((row) => [row.id, row.name]));
+}
+
 export async function getHero(client: SupabaseClient, id: string): Promise<Hero | undefined> {
   const { data, error } = await client
     .from(HERO_TABLE)
