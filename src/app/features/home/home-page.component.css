@@ -32,7 +32,7 @@
   content: '';
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--ink) 76%, transparent), color-mix(in srgb, var(--ink) 28%, transparent) 60%, color-mix(in srgb, var(--ink) 70%, transparent)),
-    linear-gradient(180deg, color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 48%, transparent) 72%, var(--ink-raised) 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 48%, transparent) 72%, var(--ink) 100%);
 }
 
 .home-page-background-video {

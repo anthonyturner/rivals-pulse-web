@@ -24,7 +24,6 @@ describe('HowItWorksComponent', () => {
 
     expect(text(element.querySelector('h2'))).toBe('How it works');
     expect(band.getAttribute('aria-labelledby')).toBe('home-how-title');
-    expect(band.classList).not.toContain('band--dark');
     expect(
       (element.querySelector('ol.steps') as HTMLElement).compareDocumentPosition(
         element.querySelector('app-trust-block') as HTMLElement,

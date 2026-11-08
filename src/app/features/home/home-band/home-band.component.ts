@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
 
-export type HomeBandTone = 'light' | 'white' | 'dark';
+export type HomeBandTone = 'light' | 'white';
 export type HomeBandAlign = 'start' | 'center';
 
 /**
