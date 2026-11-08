@@ -27,6 +27,7 @@ import { HomeContentService } from './home-content.service';
 import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
+import { PulseBannerComponent } from './pulse-banner/pulse-banner.component';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 import { WordOfDayComponent } from './word-of-day/word-of-day.component';
 
@@ -49,6 +50,7 @@ type VideoPlacement = 'hero' | 'floating' | 'minimized' | 'foreground';
     HomeFaqComponent,
     HowItWorksComponent,
     OverlaySectionComponent,
+    PulseBannerComponent,
     RouterLink,
     ToolsRowComponent,
     WordOfDayComponent,

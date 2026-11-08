@@ -184,6 +184,11 @@
   color: var(--on-ink);
 }
 
+.hero-banner {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+}
+
 .hero-copy {
   --eyebrow-color: var(--ink-accent);
   display: grid;
@@ -271,6 +276,10 @@ h1 {
   .season-hero {
     min-height: auto;
     padding: 110px 16px 64px;
+  }
+
+  .hero-banner {
+    margin-bottom: 20px;
   }
 
   .hero-copy {
