@@ -13,17 +13,23 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { tabTargetIndex } from '../../../shared/utilities/tab-keys';
+import { HubBentoComponent } from '../../hub/hub-bento/hub-bento.component';
 import { COMMUNITY_TABS, DEFAULT_COMMUNITY_TAB_ID } from '../community-tabs';
+import { COMMUNITY_LINKS, COMMUNITY_TILES } from '../community-tiles.data';
 
 @Component({
   selector: 'app-community-page',
-  imports: [NgComponentOutlet, RouterLink],
+  imports: [HubBentoComponent, NgComponentOutlet, PageHeaderComponent, RouterLink],
   templateUrl: './community-page.component.html',
   styleUrl: './community-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CommunityPageComponent {
+  protected readonly links = COMMUNITY_LINKS;
+  protected readonly tiles = COMMUNITY_TILES;
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 

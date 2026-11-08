@@ -8,41 +8,16 @@
   padding-block: 16px;
 }
 
-.community-page__header {
-  display: grid;
-  gap: 4px;
-  padding-block: 8px 12px;
+.community-page__tiles {
+  margin-bottom: 16px;
 }
 
-.community-page__title {
-  font-size: var(--type-page-title);
-  font-weight: 850;
-  line-height: 1.1;
-}
-
-.community-page__intro {
-  max-width: 70ch;
-  color: var(--text-soft);
-  font-size: var(--type-small);
-  line-height: 1.4;
-}
-
-.community-page__link {
-  color: var(--link);
-  font-weight: 700;
-  text-decoration: underline;
-}
-
-.community-page__link:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
-}
-
+/* The tabs are chips in a row that scrolls sideways on a phone. The padding is the 3px focus ring plus its 2px offset, so the scroll box does not clip it. */
 .community-page__tabs {
   display: flex;
-  gap: 4px;
+  gap: 8px;
+  padding: 6px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--border-strong);
   scrollbar-width: none;
 }
 
@@ -51,10 +26,10 @@
   flex: 0 0 auto;
   align-items: center;
   min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid transparent;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  padding: 0 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
   color: var(--text-soft);
   font-size: var(--type-small);
   font-weight: 800;
@@ -63,20 +38,29 @@
 }
 
 .community-page__tab:hover {
-  background: var(--surface);
+  border-color: var(--accent-line);
+  background: var(--bg-panel-soft);
+  color: var(--text);
 }
 
 .community-page__tab[aria-selected='true'] {
-  border-color: var(--border-strong);
-  background: var(--bg-elevated);
-  box-shadow: inset 0 3px 0 var(--accent-strong);
-  color: var(--text);
+  border-color: var(--accent-line);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .community-page__tab:focus-visible,
 .community-page__panel:focus-visible {
   outline: 3px solid var(--focus);
-  outline-offset: -3px;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .community-page__tab {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
 }
 
 .community-page__panel {

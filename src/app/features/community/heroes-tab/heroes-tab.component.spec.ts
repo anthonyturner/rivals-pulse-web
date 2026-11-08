@@ -89,6 +89,17 @@ describe('HeroesTabComponent', () => {
     expect(host().querySelector('app-state-panel')?.getAttribute('role')).toBe('status');
   });
 
+  it('draws the heroes as art-led tiles tinted by role, each with a role chip', async () => {
+    await answer(READY);
+
+    const tiles = Array.from(host().querySelectorAll('ol app-hero-tile')).slice(0, 2);
+
+    expect(tiles.map((tile) => tile.getAttribute('data-role'))).toEqual(['duelist', 'duelist']);
+    expect(tiles.every((tile) => tile.classList.contains('art-led'))).toBeTrue();
+    expect(tiles.map((tile) => tile.querySelector('.role-chip')?.textContent?.trim())).toEqual(['Duelist', 'Duelist']);
+    expect(tiles.every((tile) => tile.querySelector('img')?.getAttribute('alt') === '')).toBeTrue();
+  });
+
   describe('damage, healing and damage blocked per minute', () => {
     const figuresPanel = (): HTMLElement => host().querySelector('.figures') as HTMLElement;
     const groups = (): string[][] =>
@@ -101,8 +112,8 @@ describe('HeroesTabComponent', () => {
       await answer(READY);
 
       expect(groups()).toEqual([
-        ['Most damage per minute', 'HelaDamage per minute 1,050', 'StormDamage per minute 980'],
-        ['Most healing per minute', 'StormHealing per minute 400'],
+        ['Most damage per minute', 'HelaDamage per minute 1,050Duelist', 'StormDamage per minute 980Duelist'],
+        ['Most healing per minute', 'StormHealing per minute 400Duelist'],
         ['Most damage blocked per minute'],
       ]);
       expect(figuresPanel().textContent).toContain('No hero here yet.');

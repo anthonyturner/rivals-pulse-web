@@ -1,0 +1,10 @@
+@if (figures().length > 0) {
+  <dl class="figures">
+    @for (figure of figures(); track figure.label) {
+      <div class="figure">
+        <dt>{{ figure.label }}</dt>
+        <dd>{{ figure.value }}</dd>
+      </div>
+    }
+  </dl>
+}
