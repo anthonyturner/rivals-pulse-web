@@ -24,6 +24,7 @@ import { getCommunityMatches } from './server/community/matches';
 import { handlePulseRecordsRequest } from './server/records';
 import { getHeroMatchups } from './server/heroes/matchups';
 import { getHeroPairs, getHeroSynergies } from './server/heroes/pairs';
+import { getHeroSwitchIns } from './server/heroes/switch-ins';
 import { getTeamLineups } from './server/heroes/lineups';
 import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
@@ -84,6 +85,10 @@ app.get('/api/records', (req, res) => {
 
 app.get('/api/hero-matchups', (_req, res) => {
   handleApiResponse(res, () => getHeroMatchups());
+});
+
+app.get('/api/hero-switch-ins', (_req, res) => {
+  handleApiResponse(res, () => getHeroSwitchIns());
 });
 
 app.get('/api/hero-pairs', (req, res) => {

@@ -11,6 +11,7 @@ import type { Hero } from './hero.model';
 import { SidebarContent } from '../../core/layout/sidebar/sidebar-content';
 import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
+import { HeroSwitchInsService } from '../insights/hero-switch-ins.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroScoresService } from './hero-scores.service';
@@ -153,6 +154,7 @@ describe('HeroesPageComponent videos in hero tabs', () => {
         { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
         { provide: HeroScoresService, useValue: { getHeroScores: () => of(null) } },
         { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: HeroSwitchInsService, useValue: { getHeroSwitchIns: () => of(null) } },
         { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
       ],
     });
@@ -248,6 +250,7 @@ describe('HeroesPageComponent when the hero service fails', () => {
         { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
         { provide: HeroScoresService, useValue: { getHeroScores: () => of(null) } },
         { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: HeroSwitchInsService, useValue: { getHeroSwitchIns: () => of(null) } },
         { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
       ],
     });

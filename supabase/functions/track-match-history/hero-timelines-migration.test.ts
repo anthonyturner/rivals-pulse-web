@@ -123,9 +123,9 @@ describe('the purge after the hero timelines migration', () => {
     assert.match(body, timelinesDelete);
   });
 
-  it('is the latest purge, so a later restatement has to be checked against this one', () => {
+  it('is only restated later by the switch-in migration, which adds a freeze and nothing else', () => {
     const later = readdirSync(MIGRATIONS)
       .filter(name => name > TIMELINES && withoutComments(read(name)).includes('function public.purge_expired_participants('));
-    assert.deepEqual(later, []);
+    assert.deepEqual(later, ['20261108190000_hero_switch_in_aggregates.sql']);
   });
 });
