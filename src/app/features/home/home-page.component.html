@@ -4,91 +4,108 @@
   <app-word-of-day />
 
   <div class="hero-stage">
-    <div
-      class="home-page-background"
-      [class.is-foreground]="placement === 'foreground'"
-      [class.is-popout]="placement === 'floating'"
-      [class.is-minimized]="placement === 'minimized'"
-      [attr.role]="placement === 'foreground' ? 'dialog' : 'button'"
-      [attr.aria-modal]="placement === 'foreground' ? 'true' : null"
-      [attr.aria-label]="
-        placement === 'foreground'
-          ? heroMedia().title + ' video player'
-          : placement === 'floating'
-            ? 'Open the floating video player'
-            : 'Play the background video in the foreground'
-      "
-      [attr.tabindex]="placement === 'foreground' ? -1 : 0"
-      (click)="onBackgroundVideoSurfaceClick(backgroundVideo)"
-      (keydown)="onBackgroundVideoKeydown($event, backgroundVideo)"
-    >
-      <video
-        #backgroundVideo
-        class="home-page-background-video"
-        autoplay
-        [controls]="placement === 'foreground'"
-        [muted]="backgroundVideoMuted"
-        [src]="heroMedia().videoUrl"
-        loop
-        playsinline
-        preload="metadata"
-        [poster]="heroMedia().posterUrl"
-        tabindex="-1"
-        (canplay)="startBackgroundVideo(backgroundVideo)"
-        (click)="onForegroundVideoClick($event)"
-        (volumechange)="syncBackgroundVideoSound(backgroundVideo)"
+    @if (placement !== 'off') {
+      <div
+        class="home-page-background"
+        [class.is-foreground]="placement === 'foreground'"
+        [class.is-popout]="placement === 'floating'"
+        [class.is-minimized]="placement === 'minimized'"
+        [attr.role]="placement === 'foreground' ? 'dialog' : 'button'"
+        [attr.aria-modal]="placement === 'foreground' ? 'true' : null"
+        [attr.aria-label]="
+          placement === 'foreground'
+            ? heroMedia().title + ' video player'
+            : placement === 'floating'
+              ? 'Open the floating video player'
+              : 'Play the background video in the foreground'
+        "
+        [attr.tabindex]="placement === 'foreground' ? -1 : 0"
+        (click)="onBackgroundVideoSurfaceClick()"
+        (keydown)="onBackgroundVideoKeydown($event)"
       >
-        Your browser does not support embedded video playback.
-      </video>
-
-      @if (placement === 'foreground') {
-        <button
-          #videoClose
-          class="home-page-video-close"
-          type="button"
-          aria-label="Close foreground video"
-          (click)="$event.stopPropagation(); closeBackgroundVideo()"
+        <video
+          #backgroundVideo
+          class="home-page-background-video"
+          appReleaseMediaOnDestroy
+          autoplay
+          [controls]="placement === 'foreground'"
+          [muted]="backgroundVideoMuted"
+          [src]="heroMedia().videoUrl"
+          loop
+          playsinline
+          preload="metadata"
+          [poster]="heroMedia().posterUrl"
+          tabindex="-1"
+          (canplay)="startBackgroundVideo(backgroundVideo)"
+          (click)="onForegroundVideoClick($event)"
+          (volumechange)="syncBackgroundVideoSound(backgroundVideo)"
         >
-          Close
+          Your browser does not support embedded video playback.
+        </video>
+
+        @if (placement === 'foreground') {
+          <button
+            #videoClose
+            class="home-page-video-close"
+            type="button"
+            aria-label="Close foreground video"
+            (click)="$event.stopPropagation(); closeBackgroundVideo()"
+          >
+            Close
+          </button>
+        }
+      </div>
+
+      @if (placement === 'floating') {
+        <div class="home-page-video-controls">
+          <button #videoMinimize class="home-page-video-control" type="button" (click)="minimizeFloatingVideo(backgroundVideo)">
+            Minimize
+          </button>
+          <button class="home-page-video-control" type="button" (click)="sendVideoBackToBackground(backgroundVideo)">
+            Back to background
+          </button>
+        </div>
+      }
+
+      @if (placement === 'minimized') {
+        <button
+          #videoTab
+          class="home-page-video-tab"
+          type="button"
+          aria-label="Show the floating video player"
+          (click)="restoreFloatingVideo()"
+        >
+          Show video
         </button>
       }
+    }
+
+    <div class="hero-controls">
+      @if (heroVideoOn()) {
+        <button
+          class="home-page-sound-toggle"
+          type="button"
+          [attr.aria-label]="backgroundVideoMuted ? 'Unmute background video' : 'Mute background video'"
+          [attr.aria-pressed]="!backgroundVideoMuted"
+          (click)="toggleBackgroundVideoSound()"
+        >
+          {{ backgroundVideoMuted ? 'Sound off' : 'Sound on' }}
+        </button>
+      }
+
+      <button
+        class="home-page-video-toggle"
+        type="button"
+        aria-label="Background video"
+        [attr.aria-pressed]="heroVideoOn()"
+        (click)="toggleHeroVideo()"
+      >
+        Video <span aria-hidden="true">{{ heroVideoOn() ? 'on' : 'off' }}</span>
+      </button>
     </div>
 
-    @if (placement === 'floating') {
-      <div class="home-page-video-controls">
-        <button #videoMinimize class="home-page-video-control" type="button" (click)="minimizeFloatingVideo(backgroundVideo)">
-          Minimize
-        </button>
-        <button class="home-page-video-control" type="button" (click)="sendVideoBackToBackground(backgroundVideo)">
-          Back to background
-        </button>
-      </div>
-    }
-
-    @if (placement === 'minimized') {
-      <button
-        #videoTab
-        class="home-page-video-tab"
-        type="button"
-        aria-label="Show the floating video player"
-        (click)="restoreFloatingVideo()"
-      >
-        Show video
-      </button>
-    }
-
-    <button
-      class="home-page-sound-toggle"
-      type="button"
-      [attr.aria-label]="backgroundVideoMuted ? 'Unmute background video' : 'Mute background video'"
-      [attr.aria-pressed]="!backgroundVideoMuted"
-      (click)="toggleBackgroundVideoSound(backgroundVideo)"
-    >
-      {{ backgroundVideoMuted ? 'Sound off' : 'Sound on' }}
-    </button>
-
-    <header #heroBanner class="season-hero">
-      <app-pulse-banner class="hero-banner" />
+    <header #heroBanner class="season-hero" [class.has-pulse-backdrop]="!heroVideoOn()">
+      <app-pulse-banner class="hero-banner" [layout]="bannerLayout()" />
 
       <div class="hero-copy">
         <app-eyebrow>Live counters in game. Real stats on the web.</app-eyebrow>
@@ -109,7 +126,7 @@
     <app-overlay-section />
     <app-tools-row />
     <app-how-it-works />
-    <app-game-news-band [content]="homeContent()" (watchVideo)="onWatchUpdateVideo(backgroundVideo)" />
+    <app-game-news-band [content]="homeContent()" (watchVideo)="onWatchUpdateVideo()" />
     <app-home-faq />
     <app-closing-cta />
   </div>

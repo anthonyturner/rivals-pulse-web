@@ -91,6 +91,76 @@ describe('CircuitGrid', () => {
     });
   });
 
+  describe('on a bigger grid', () => {
+    /** Ordinary pulses the grid holds after `seconds` of play. */
+    function ambientAfter(width: number, height: number, seconds: number, random: () => number = () => 0.5): number {
+      grid.destroy();
+      grid = new CircuitGrid(canvas, palette, random);
+      grid.resize(width, height, 1);
+      grid.setPlayback('playing');
+      runFor(seconds * 1000);
+      return grid.ambientPulses;
+    }
+
+    function capacityAt(width: number, height: number): number {
+      grid.resize(width, height, 1);
+      return grid.ambientCapacity;
+    }
+
+    it("holds the strip's 14 ordinary pulses at the strip's size, and no fewer on a smaller strip", () => {
+      expect(capacityAt(1320, 128)).toBe(14);
+      expect(capacityAt(343, 104)).toBe(14);
+    });
+
+    it('holds more in proportion to the area, up to a cap that keeps a frame cheap', () => {
+      expect(capacityAt(1425, 826)).toBeGreaterThan(14);
+      expect(capacityAt(343, 974)).toBeGreaterThan(14);
+      expect(capacityAt(4000, 3000)).toBe(32);
+    });
+
+    it('fills a bigger grid as fast as the strip fills, by starting pulses more often', () => {
+      expect(ambientAfter(1425, 826, 5)).toBeGreaterThan(ambientAfter(1320, 128, 5));
+    });
+
+    it('starts pulses across the whole grid, not only at the centre', () => {
+      const seen: [number, number][] = [];
+      let n = 0;
+      const random = (): number => (n = (n + 0.137) % 1);
+      grid.destroy();
+      grid = new CircuitGrid(canvas, palette, random);
+      grid.resize(1425, 826, 1);
+      grid.setPlayback('playing');
+      for (let i = 0; i < 40; i++) {
+        runFor(400);
+        for (const pulse of (grid as unknown as { pulses: { x: number; y: number; strong: boolean }[] }).pulses) {
+          if (!pulse.strong && pulse.x < 300) seen.push([pulse.x, pulse.y]);
+        }
+      }
+
+      expect(seen.length).withContext('pulses seen in the left fifth').toBeGreaterThan(0);
+    });
+
+    it('starts every pulse of the strip at its centre, as it always has', () => {
+      grid.destroy();
+      grid = new CircuitGrid(canvas, palette, () => 0.5);
+      grid.resize(1320, 128, 1);
+      grid.setPlayback('playing');
+      runFor(16);
+
+      const [first] = (grid as unknown as { pulses: { x: number; y: number }[] }).pulses;
+      expect([first.x, first.y]).toEqual([Math.round(1320 / 2 / 24) * 24, Math.round(128 / 2 / 24) * 24]);
+    });
+
+    it('draws a still frame with more currents on a bigger grid', () => {
+      grid.destroy();
+      grid = new CircuitGrid(canvas, palette, () => 0.5);
+      grid.resize(1425, 826, 1);
+      grid.setPlayback('still');
+
+      expect(grid.ambientPulses).toBeGreaterThan(6);
+    });
+  });
+
   describe('paused', () => {
     it('does not count down to a surge, so it is not owed one when it plays again', () => {
       grid.setPlayback('playing');

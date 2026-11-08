@@ -6,6 +6,7 @@ import {
   afterNextRender,
   effect,
   inject,
+  input,
   signal,
   untracked,
   viewChild,
@@ -17,20 +18,30 @@ import { CircuitGrid, CircuitPalette, CircuitPlayback } from './circuit-grid';
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
+/** A framed strip of its own, or the whole backdrop of the box that holds it (the owner positions that box). */
+export type PulseBannerLayout = 'strip' | 'backdrop';
+
 /**
  * The Rivals Pulse name across the top of the home hero: a gold and a periwinkle heartbeat collide
  * under it and throw an orchid spark, over a circuit grid with currents racing along it. It is
  * decoration, so only the name is announced. The server renders the still frame; the browser starts
  * the motion, and holds it still when the tab is hidden, the banner is off screen, or the visitor asked
- * for reduced motion.
+ * for reduced motion. As a backdrop the grid fills the whole hero; the clash keeps a band of the
+ * height the owner gives it in `--pulse-stage-height`, so its drawing is not stretched tall.
+ *
+ * The owner sets the size with two custom properties: `--pulse-banner-height`, the strip's height
+ * (128px when unset), and `--pulse-stage-height`, the backdrop's clash band (200px when unset).
  */
 @Component({
   selector: 'app-pulse-banner',
   templateUrl: './pulse-banner.component.html',
   styleUrl: './pulse-banner.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[attr.data-layout]': 'layout()' },
 })
 export class PulseBannerComponent {
+  readonly layout = input<PulseBannerLayout>('strip');
+
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly theme = inject(ThemeService).theme;

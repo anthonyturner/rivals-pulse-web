@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { fullHomeContent } from './home-content.fixtures';
+import { HOME_HERO_VIDEO_STORAGE_KEY } from './home-hero-video-preference.service';
 import { HomePageComponent } from './home-page.component';
 
 describe('HomePageComponent', () => {
@@ -12,34 +13,47 @@ describe('HomePageComponent', () => {
   let http: HttpTestingController;
   let element: HTMLElement;
 
-  beforeEach(async () => {
-    TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
-    });
-    http = TestBed.inject(HttpTestingController);
-    spyOn(console, 'error');
+  async function render(): Promise<void> {
     fixture = TestBed.createComponent(HomePageComponent);
     element = fixture.nativeElement;
     fixture.detectChanges();
 
-    http.expectOne('/api/home/content').flush(fullHomeContent);
-    http.expectOne('/api/hero-stats').flush({
-      status: 'not-enough-data',
-      minimumMatches: 10,
-      halfSeasons: [],
-      halfSeason: null,
-      inPlaceOf: null,
-      matchesCounted: 0,
-      tiers: [],
-      belowMinimum: [],
-    });
-    http.expectOne('/api/glossary').flush([]);
+    // The services behind the page keep what they fetched, so a second render asks for less.
+    http.match('/api/home/content').forEach((request) => request.flush(fullHomeContent));
+    http.match('/api/hero-stats').forEach((request) =>
+      request.flush({
+        status: 'not-enough-data',
+        minimumMatches: 10,
+        halfSeasons: [],
+        halfSeason: null,
+        inPlaceOf: null,
+        matchesCounted: 0,
+        tiers: [],
+        belowMinimum: [],
+      }),
+    );
+    http.match('/api/glossary').forEach((request) => request.flush([]));
     await settle();
+  }
+
+  function configure(): void {
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    });
+    http = TestBed.inject(HttpTestingController);
+  }
+
+  beforeEach(async () => {
+    localStorage.removeItem(HOME_HERO_VIDEO_STORAGE_KEY);
+    configure();
+    spyOn(console, 'error');
+    await render();
   });
 
   afterEach(() => {
     fixture.destroy();
     http.verify();
+    localStorage.removeItem(HOME_HERO_VIDEO_STORAGE_KEY);
   });
 
   async function settle(): Promise<void> {
@@ -53,6 +67,9 @@ describe('HomePageComponent', () => {
   const soundToggle = (): HTMLButtonElement => element.querySelector('.home-page-sound-toggle') as HTMLButtonElement;
   const watchButton = (): HTMLButtonElement => element.querySelector('.actions__watch') as HTMLButtonElement;
   const closeButton = (): HTMLButtonElement | null => element.querySelector('.home-page-video-close');
+  const videoToggle = (): HTMLButtonElement => element.querySelector('.home-page-video-toggle') as HTMLButtonElement;
+  const banner = (): HTMLElement => element.querySelector('app-pulse-banner') as HTMLElement;
+  const hero = (): HTMLElement => element.querySelector('header.season-hero') as HTMLElement;
 
   describe('the page structure', () => {
     it('has one h1, then an h2 for each band in visual order', () => {
@@ -188,6 +205,26 @@ describe('HomePageComponent', () => {
       expect(document.activeElement).toBe(closeButton());
     });
 
+    it('plays the video straight from the click when it is already there, before any render', () => {
+      const play = spyOn(video(), 'play').and.resolveTo();
+
+      watchButton().click();
+
+      expect(play).toHaveBeenCalledTimes(1);
+    });
+
+    it('plays the video once it is rendered when the hero video was off', async () => {
+      videoToggle().click();
+      await settle();
+      const play = spyOn(HTMLMediaElement.prototype, 'play').and.resolveTo();
+
+      watchButton().click();
+      expect(play).not.toHaveBeenCalled();
+      await settle();
+
+      expect(play).toHaveBeenCalled();
+    });
+
     it('closes on Escape and returns focus to the button that opened it', async () => {
       watchButton().focus();
       watchButton().click();
@@ -230,6 +267,174 @@ describe('HomePageComponent', () => {
         closeButton()?.click();
         await settle();
       }
+    });
+  });
+
+  describe('the hero video switch', () => {
+    async function toggle(): Promise<void> {
+      videoToggle().click();
+      await settle();
+    }
+
+    /** A new visit: nothing is kept in memory, so the choice has to come back from storage. */
+    async function nextVisit(): Promise<void> {
+      fixture.destroy();
+      http.verify();
+      TestBed.resetTestingModule();
+      configure();
+      await render();
+    }
+
+    it('starts on, with the video playing in the background and the banner as a strip', () => {
+      expect(text(videoToggle())).toBe('Video on');
+      expect(videoToggle().getAttribute('aria-pressed')).toBe('true');
+      expect(videoToggle().type).toBe('button');
+      expect(videoToggle().getAttribute('aria-label')).toBe('Background video');
+      expect(video()).toBeTruthy();
+      expect(banner().getAttribute('data-layout')).toBe('strip');
+      expect(hero().classList).not.toContain('has-pulse-backdrop');
+    });
+
+    it('sits next to the sound toggle, last in the row so it stays at the edge when the sound toggle goes', async () => {
+      const row = element.querySelector('.hero-controls') as HTMLElement;
+
+      expect(Array.from(row.children)).toEqual([soundToggle(), videoToggle()]);
+
+      await toggle();
+
+      expect(Array.from(row.children)).toEqual([videoToggle()]);
+    });
+
+    it('keeps one name, "Background video", while the pressed state changes, so a screen reader does not contradict itself', async () => {
+      const label = videoToggle().getAttribute('aria-label');
+
+      await toggle();
+
+      expect(videoToggle().getAttribute('aria-label')).toBe(label);
+      expect(videoToggle().getAttribute('aria-pressed')).toBe('false');
+      expect(videoToggle().querySelector('[aria-hidden="true"]')?.textContent).toBe('off');
+    });
+
+    it('turns the video off: it is gone, the controls that belong to it are hidden and the banner fills the hero', async () => {
+      await toggle();
+
+      expect(text(videoToggle())).toBe('Video off');
+      expect(videoToggle().getAttribute('aria-pressed')).toBe('false');
+      expect(video()).toBeNull();
+      expect(player()).toBeNull();
+      expect(soundToggle()).toBeNull();
+      expect(element.querySelector('.home-page-video-controls, .home-page-video-tab')).toBeNull();
+      expect(banner().getAttribute('data-layout')).toBe('backdrop');
+      expect(hero().classList).toContain('has-pulse-backdrop');
+    });
+
+    it('pauses the video and lets go of its download as it turns it off', async () => {
+      const playing = video();
+      const pause = spyOn(playing, 'pause').and.callThrough();
+      spyOn(playing, 'load');
+
+      await toggle();
+
+      expect(pause).toHaveBeenCalled();
+      expect(playing.hasAttribute('src')).toBeFalse();
+    });
+
+    it('keeps the h1 as the only heading and the banner name as plain text, in both modes', async () => {
+      for (let pass = 0; pass < 2; pass++) {
+        expect(element.querySelectorAll('h1').length).toBe(1);
+        expect(banner().querySelector('.pulse-banner__name')?.tagName).toBe('P');
+        expect(banner().querySelector('h1, h2, h3, h4, h5, h6')).toBeNull();
+        await toggle();
+      }
+    });
+
+    it('stays a focusable native button after it is pressed, so the keyboard can switch it back', async () => {
+      videoToggle().focus();
+      await toggle();
+
+      expect(videoToggle().tabIndex).toBe(0);
+      expect(document.activeElement).toBe(videoToggle());
+    });
+
+    it("turns the video back on with today's hero: the video, the sound toggle and the banner strip", async () => {
+      await toggle();
+      await toggle();
+
+      expect(text(videoToggle())).toBe('Video on');
+      expect(videoToggle().getAttribute('aria-pressed')).toBe('true');
+      expect(video()).toBeTruthy();
+      expect(video().getAttribute('src')).toBeTruthy();
+      expect(text(soundToggle())).toBe('Sound off');
+      expect(banner().getAttribute('data-layout')).toBe('strip');
+      expect(hero().classList).not.toContain('has-pulse-backdrop');
+    });
+
+    it('brings the video back muted, even if the sound was on when it was turned off', async () => {
+      soundToggle().click();
+      await settle();
+      expect(video().muted).toBeFalse();
+
+      await toggle();
+      await toggle();
+
+      expect(video().muted).toBeTrue();
+      expect(text(soundToggle())).toBe('Sound off');
+    });
+
+    it('does not float or minimize a video that is off, however far the visitor scrolls', async () => {
+      await toggle();
+      spyOn(hero(), 'getBoundingClientRect').and.returnValue({ bottom: -900 } as DOMRect);
+
+      window.dispatchEvent(new Event('scroll'));
+      await settle();
+
+      expect(player()).toBeNull();
+      expect(element.querySelector('.home-page-video-tab')).toBeNull();
+      expect(document.documentElement.classList).not.toContain('has-minimized-video');
+    });
+
+    it('remembers the choice: the next visit opens with the video off', async () => {
+      await toggle();
+      expect(localStorage.getItem(HOME_HERO_VIDEO_STORAGE_KEY)).toBe('off');
+
+      await nextVisit();
+
+      expect(text(videoToggle())).toBe('Video off');
+      expect(video()).toBeNull();
+      expect(banner().getAttribute('data-layout')).toBe('backdrop');
+    });
+
+    it('remembers turning it back on', async () => {
+      await toggle();
+      await toggle();
+      expect(localStorage.getItem(HOME_HERO_VIDEO_STORAGE_KEY)).toBe('on');
+
+      await nextVisit();
+
+      expect(text(videoToggle())).toBe('Video on');
+      expect(video()).toBeTruthy();
+    });
+
+    it('opens the update video from the news band while the hero video is off, then lets it go again', async () => {
+      await toggle();
+      expect(video()).toBeNull();
+
+      watchButton().focus();
+      watchButton().click();
+      await settle();
+
+      expect(player().classList).toContain('is-foreground');
+      expect(video().getAttribute('src')).toBeTruthy();
+      expect(document.activeElement).toBe(closeButton());
+      expect(soundToggle()).toBeNull();
+
+      closeButton()?.click();
+      await settle();
+
+      expect(video()).toBeNull();
+      expect(player()).toBeNull();
+      expect(document.activeElement).toBe(watchButton());
+      expect(text(videoToggle())).toBe('Video off');
     });
   });
 

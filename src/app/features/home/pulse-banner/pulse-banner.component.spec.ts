@@ -56,6 +56,62 @@ describe('PulseBannerComponent', () => {
     });
   });
 
+  describe('the layout', () => {
+    it('is a strip unless the owner asks for a backdrop', () => {
+      create();
+
+      expect(fixture.nativeElement.getAttribute('data-layout')).toBe('strip');
+    });
+
+    it('fills the box that holds it as a backdrop, and sizes its grid to that box', async () => {
+      const resize = spyOn(CircuitGrid.prototype, 'resize');
+      create();
+      const box = fixture.nativeElement.parentElement as HTMLElement;
+      box.style.cssText = 'position: relative; width: 640px; height: 400px';
+      fixture.componentRef.setInput('layout', 'backdrop');
+      fixture.detectChanges();
+      await settle();
+
+      expect(fixture.nativeElement.getAttribute('data-layout')).toBe('backdrop');
+      expect(getComputedStyle(banner()).height).toBe('400px');
+      expect(getComputedStyle(banner()).borderTopWidth).toBe('0px');
+      expect(resize.calls.mostRecent().args.slice(0, 2)).toEqual([640, 400]);
+    });
+
+    it('keeps the clash in a band of the height the owner gives it, with the name and spark in that band', () => {
+      create();
+      fixture.componentRef.setInput('layout', 'backdrop');
+      fixture.detectChanges();
+      const box = fixture.nativeElement.parentElement as HTMLElement;
+      box.style.cssText = 'position: relative; width: 600px; height: 400px; --pulse-stage-height: 180px';
+      const stage = banner().querySelector('.pulse-banner__stage') as HTMLElement;
+
+      expect(stage.getBoundingClientRect().height).toBe(180);
+      for (const part of ['svg', '.pulse-banner__spark', '.pulse-banner__name']) {
+        expect(stage.querySelector(part)).withContext(part).toBeTruthy();
+      }
+    });
+
+    it('is a decoration that never takes a click from the copy over it', () => {
+      create();
+      fixture.componentRef.setInput('layout', 'backdrop');
+      fixture.detectChanges();
+
+      expect(getComputedStyle(fixture.nativeElement).pointerEvents).toBe('none');
+    });
+
+    it('goes back to the framed strip when the owner asks for one again', () => {
+      create();
+      fixture.componentRef.setInput('layout', 'backdrop');
+      fixture.detectChanges();
+      fixture.componentRef.setInput('layout', 'strip');
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.getAttribute('data-layout')).toBe('strip');
+      expect(getComputedStyle(banner()).height).toBe('128px');
+    });
+  });
+
   describe('motion', () => {
     it('plays once it is on screen, and holds when the tab is hidden', async () => {
       create();
