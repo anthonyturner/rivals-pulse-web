@@ -43,6 +43,22 @@ describe('deriveHeroSynergies', () => {
     ]);
   });
 
+  it('works the rates over team occurrences, which are twice the matches when both teams field the pair', () => {
+    const both: HeroPairsSynergy = { heroId: 1011, allyHeroId: 1033, matches: 12, appearances: 24, wins: 12 };
+    const [pair] = deriveHeroSynergies(pairsOf([both]), SLUGS).synergies;
+
+    expect(pair.matches).toBe(12);
+    expect(pair.appearances).toBe(24);
+    expect(pair.winRate).toBe(50);
+    expect(pair.shrunkWinRate).toBe(50);
+  });
+
+  it('shrinks toward 50% by the prior the pairs carry', () => {
+    const [pair] = deriveHeroSynergies(pairsOf([synergy(1011, 1033, 20, 20)], { priorMatches: 30 }), SLUGS).synergies;
+
+    expect(pair.shrunkWinRate).toBe(((20 + 15) / (20 + 30)) * 100);
+  });
+
   it('sorts by hero and then ally, which is not a ranking', () => {
     const result = deriveHeroSynergies(
       pairsOf([synergy(1022, 1033, 12, 6), synergy(1011, 1033, 12, 6), synergy(1011, 1022, 12, 6)]),

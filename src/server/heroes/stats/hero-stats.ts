@@ -135,8 +135,12 @@ interface HeroStatsDerivation {
 }
 
 /** A hero's record pulled toward 50% by the prior, as a fraction from 0 to 1. */
-export function shrunkWinRate(wins: number, appearances: number): number {
-  return (wins + WIN_RATE_PRIOR_MATCHES / 2) / (appearances + WIN_RATE_PRIOR_MATCHES);
+export function shrunkWinRate(
+  wins: number,
+  appearances: number,
+  priorMatches: number = WIN_RATE_PRIOR_MATCHES,
+): number {
+  return (wins + priorMatches / 2) / (appearances + priorMatches);
 }
 
 export function tierForShrunkWinRate(rate: number): TierName {

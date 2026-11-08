@@ -32,7 +32,7 @@ export function deriveHeroSynergies(
           appearances,
           wins,
           winRate: (wins / appearances) * 100,
-          shrunkWinRate: shrunkWinRate(wins, appearances) * 100,
+          shrunkWinRate: shrunkWinRate(wins, appearances, pairs.priorMatches) * 100,
         },
       ];
     },

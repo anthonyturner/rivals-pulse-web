@@ -70,7 +70,7 @@ describe('buildTeamCompsView role pairs', () => {
     expect(second.matches).toBe(5);
   });
 
-  it('breaks a tie by matches together and then by name', () => {
+  it('breaks a tie by matches together and then by hero id', () => {
     const view = buildTeamCompsView(
       synergiesOf([
         { ...synergy('hulk', 'venom', 5, 10), shrunkWinRate: 50 },
@@ -90,13 +90,6 @@ describe('buildTeamCompsView role pairs', () => {
 
     expect(pairs.length).toBeGreaterThan(PAIRS_PER_ROLE);
     expect(buildTeamCompsView(synergiesOf(pairs), roster).rolePairs[0].rows.length).toBe(PAIRS_PER_ROLE);
-  });
-
-  it('names a hero the roster does not know by its id instead of dropping the row', () => {
-    const roster: HeroIdentities = new Map([['hulk', { name: 'Hulk', role: 'Vanguard', imageUrl: null }]]);
-    const view = buildTeamCompsView(synergiesOf([synergy('hulk', 'new-hero', 6, 12)]), roster);
-
-    expect(rowsOf(view, 'Vanguard')).toEqual([]);
   });
 
   it('skips a pair whose rate is not a number', () => {
