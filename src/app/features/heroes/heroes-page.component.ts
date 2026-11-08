@@ -109,6 +109,7 @@ export class HeroesPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
   private readonly content = viewChild(HeroContentComponent);
+  private readonly grid = viewChild(HeroGridComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
   /** One player per video: Angular compares the address wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
@@ -138,6 +139,17 @@ export class HeroesPageComponent implements OnInit {
   readonly isRosterLoaded = signal(false);
   /** True when the roster could not be loaded or came back empty; both show the load-error state. */
   readonly isRosterFailed = signal(false);
+  private readonly hasRetriedRoster = signal(false);
+  /** What the load-error panel says: it changes with each outcome, so the panel's status region announces it. */
+  readonly rosterFailureMessage = computed(() => {
+    if (!this.isRosterLoaded()) {
+      return 'Asking for the heroes again.';
+    }
+
+    return this.hasRetriedRoster()
+      ? 'Still unavailable. Try again in a moment.'
+      : 'The roster is unavailable right now.';
+  });
   /** The hero in the address; empty on the roster-only landing. */
   readonly selectedHeroId = toSignal(this.routeHeroId.pipe(map((heroId) => heroId ?? '')), {
     initialValue: this.route.snapshot.paramMap.get('heroId') ?? '',
@@ -531,6 +543,21 @@ export class HeroesPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((kills) => this.heroKills.set(kills));
 
+    this.loadRoster();
+  }
+
+  /** Asks for the roster again after a failed load; ignored while a request is still running. */
+  retryRoster(): void {
+    if (!this.isRosterLoaded()) {
+      return;
+    }
+
+    this.hasRetriedRoster.set(true);
+    this.isRosterLoaded.set(false);
+    this.loadRoster();
+  }
+
+  private loadRoster(): void {
     forkJoin({
       heroes: this.heroDataService.getHeroRoster(),
       heroVideos: this.heroDataService.getHeroVideos(),
@@ -541,6 +568,11 @@ export class HeroesPageComponent implements OnInit {
         this.heroVideos.set(heroVideos);
         this.isRosterFailed.set(heroes === null);
         this.isRosterLoaded.set(true);
+
+        // The retry button that held focus is gone once the roster shows, so focus would drop to the page.
+        if (heroes !== null && this.hasRetriedRoster()) {
+          afterNextRender(() => this.grid()?.focusSearch(), { injector: this.injector });
+        }
       });
   }
 
@@ -573,16 +605,6 @@ export class HeroesPageComponent implements OnInit {
 
   roleClass(role: HeroRole): string {
     return role.toLowerCase();
-  }
-
-  gameplayArchetype(hero: Hero): string {
-    const selectedRole = this.heroRoleLabel(hero);
-
-    return (
-      hero.gameplayArchetypes?.find((archetype) => archetype.role === selectedRole)?.label ??
-      hero.gameplayArchetypes?.[0]?.label ??
-      ''
-    );
   }
 
   heroInitials(hero: Hero): string {
@@ -634,6 +656,11 @@ export class HeroesPageComponent implements OnInit {
     return kits.find((kit) => kit.role === this.selectedAbilityKitRole()) ?? kits[0];
   }
 
+  /** The role the detail page is showing: the selected kit's, else the hero's role for the filter. */
+  displayedRole(hero: Hero): HeroRole {
+    return this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+  }
+
   displayedAbilities(hero: Hero): HeroAbility[] {
     return this.selectedAbilityKit(hero)?.abilities ?? hero.abilities;
   }
@@ -683,7 +710,7 @@ export class HeroesPageComponent implements OnInit {
   }
 
   officialBaseStats(hero: Hero): HeroAbilityTechnicalDetail[] {
-    const selectedRole = this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+    const selectedRole = this.displayedRole(hero);
     const roleKit = hero.officialSource?.baseStatKits?.find((kit) => kit.role === selectedRole);
 
     return roleKit?.stats ?? hero.officialSource?.baseStats ?? [];
@@ -727,7 +754,7 @@ export class HeroesPageComponent implements OnInit {
   }
 
   displayedPlaystyleGuides(hero: Hero): HeroPlaystyleGuide[] {
-    const role = this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+    const role = this.displayedRole(hero);
 
     return (hero.playstyles ?? []).filter(
       (playstyle) => !playstyle.role || playstyle.role === role,
@@ -736,7 +763,7 @@ export class HeroesPageComponent implements OnInit {
 
   ultimateStrategies(hero: Hero): UltimateStrategy[] {
     const abilities = this.displayedAbilities(hero);
-    const role = this.selectedAbilityKit(hero)?.role ?? this.heroRoleLabel(hero);
+    const role = this.displayedRole(hero);
     const hasExplicitUltimate = abilities.some((ability) => this.hasUltimateSignal(ability));
     const ultimate = this.findPrimaryUltimate(abilities, hasExplicitUltimate);
 

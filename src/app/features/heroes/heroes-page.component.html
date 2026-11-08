@@ -3,7 +3,15 @@
 
   @if (isRosterFailed()) {
     <app-state-panel kind="error" heading="Heroes could not be loaded">
-      Try again in a few minutes.
+      <p>{{ rosterFailureMessage() }}</p>
+      <button
+        type="button"
+        class="retry"
+        [attr.aria-disabled]="isRosterLoaded() ? null : 'true'"
+        (click)="retryRoster()"
+      >
+        {{ isRosterLoaded() ? 'Try again' : 'Retrying…' }}
+      </button>
     </app-state-panel>
   } @else {
     <div class="workspace" [class.workspace--with-hero]="gridLayout() === 'roster'">

@@ -37,7 +37,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 ### Changed
 
 - Subpages now use compact, plain titles instead of decorative banners, leaving more room for guides, tools and stats ([#552](https://github.com/anthonyturner/rivals-pulse-web/pull/552)).
-
+- The hero page banner is redesigned as a type poster: a flat panel with the hero's surname as a faint watermark, a smaller sharp round portrait ringed in the hero's role colour, the role and archetype above a large name, and a bar along the bottom with the official base stats and the difficulty as a number (such as 3 / 5) with five pips. It works in both themes and wraps to two columns on a phone ([#553](https://github.com/anthonyturner/rivals-pulse-web/pull/553)).
 - The admin "Data jobs" page shows its times in US Eastern time (EST or EDT) instead of UTC ([#549](https://github.com/anthonyturner/rivals-pulse-web/pull/549)).
 - Hero profiles have clearer summaries, larger section tabs and supporting copy, and lighter labels for easier reading ([#547, fix(heroes): improve typography and readability](https://github.com/anthonyturner/rivals-pulse-web/pull/547)).
 - Build-signal score, Mobility and match-collection bars now use a yellow gradient in both themes, with estimated scores still patterned ([#545](https://github.com/anthonyturner/rivals-pulse-web/pull/545)).
@@ -113,6 +113,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- If the Heroes page cannot load the hero list, it says "Heroes could not be loaded" and now has a "Try again" button that asks for the list again, so you no longer have to reload the page ([#556](https://github.com/anthonyturner/rivals-pulse-web/pull/556)).
+- On a hero that can play several roles, such as Deadpool, the banner's role name and colour now follow the ability kit you pick, along with the stats, instead of showing "Multi-Role" over one role's stats ([#555](https://github.com/anthonyturner/rivals-pulse-web/pull/555)).
 - Hero detail section links now stay on the selected hero and scroll to the chosen section ([#526](https://github.com/anthonyturner/rivals-pulse-web/pull/526)).
 - The home page word of the day now sits below the sound control at the right of the hero, with a reserved column that keeps it clear of the headline and description on tablet widths; the existing mobile placement remains unchanged ([#519](https://github.com/anthonyturner/rivals-pulse-web/pull/519)).
 - The home page word of the day now selects from the full glossary, so Marvel Rivals terms listed under categories such as Positioning and Coach Term can appear ([#516](https://github.com/anthonyturner/rivals-pulse-web/pull/516)).

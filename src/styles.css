@@ -158,6 +158,9 @@
   --role-vanguard: var(--aurora-role-vanguard);
   --role-duelist: var(--aurora-role-duelist);
   --role-strategist: var(--aurora-role-strategist);
+  --role-vanguard-ink: var(--aurora-role-vanguard-ink);
+  --role-duelist-ink: var(--aurora-role-duelist-ink);
+  --role-strategist-ink: var(--aurora-role-strategist-ink);
   --link: var(--aurora-link-ink);
   --focus: var(--aurora-focus);
   --focus-ring: var(--aurora-secondary-soft);

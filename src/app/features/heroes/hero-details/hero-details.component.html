@@ -1,56 +1,40 @@
 ﻿<div class="detail-hero-container">
-  <div class="detail-hero">
-    <div class="detail-hero-profile">
-      <div class="detail-hero-media">
-        <div class="detail-hero-copy">
-          <app-eyebrow>{{ controller.heroRoleLabel(hero) }}</app-eyebrow>
-          <h2 tabindex="-1">{{ hero.name }}</h2>
-          <div class="detail-hero-facts">
-            <div class="difficulty" [attr.aria-label]="'Difficulty ' + hero.difficulty + ' out of 5'">
-              @for (pip of [1, 2, 3, 4, 5]; track pip) {
-              <span [class.filled]="pip <= hero.difficulty"></span>
-              }
-            </div>
-            @if (controller.officialBaseStats(hero).length) {
-            <dl class="technical-details hero-base-stats" aria-label="Official base stats">
-              @for (detail of controller.officialBaseStats(hero); track detail.label + detail.value) {
-              <div [class]="'stat-card stat-' + controller.technicalDetailType(detail.label)">
-                <span class="stat-icon" aria-hidden="true">
-                  <img
-                    class="inline-icon"
-                    [src]="controller.technicalDetailIcon(detail.label)"
-                    alt=""
-                  />
-                </span>
-                <div class="stat-copy">
-                  <dt>{{ detail.label }}</dt>
-                  <dd>{{ detail.value }}</dd>
-                </div>
-              </div>
-              }
-            </dl>
-            }
-          </div>
-          @if (hero.summary) {
-          <p class="detail-hero-lede">{{ hero.summary }}</p>
-          }
-          <ul class="detail-hero-tags" aria-label="Hero tags">
-            <li>{{ controller.heroRoleLabel(hero) }}</li>
-            @if (hero.gameplayArchetypes; as archetypes) {
-            @for (archetype of archetypes; track archetype.role + archetype.label) {
-            @if (archetype.role === controller.heroRoleLabel(hero)) {
-            <li>{{ archetype.label }}</li>
-            }
-            }
-            }
-            <li>Difficulty {{ hero.difficulty }}/5</li>
-          </ul>
-        </div>
-        <img class="hero-image large" [src]="hero.imageUrl" [alt]="hero.name" />
+  @if (banner(); as poster) {
+  <div class="hero-poster" [class]="poster.roleClass">
+    <span class="poster-watermark" aria-hidden="true">{{ poster.watermark }}</span>
+    <div class="poster-header">
+      <img class="poster-portrait" [src]="hero.imageUrl" [alt]="hero.name" width="72" height="72" />
+      <div class="poster-identity">
+        <p class="poster-kicker">{{ poster.kicker }}</p>
+        <h2 class="poster-name" tabindex="-1">{{ hero.name }}</h2>
       </div>
     </div>
-
+    @if (hero.summary) {
+    <p class="poster-summary">{{ hero.summary }}</p>
+    }
+    <dl class="poster-stats" aria-label="Official base stats and difficulty">
+      @for (stat of poster.stats; track stat.label + stat.value) {
+      <div class="poster-stat">
+        <dt>{{ stat.label }}</dt>
+        <dd>{{ stat.value }}</dd>
+      </div>
+      }
+      <div class="poster-stat poster-difficulty">
+        <dt>Difficulty</dt>
+        <dd>
+          <div class="poster-meter" role="img" [attr.aria-label]="poster.difficultyLabel">
+            <span>{{ poster.difficulty }} <small>/ 5</small></span>
+            <span class="poster-pips" aria-hidden="true">
+              @for (pip of poster.pips; track pip) {
+              <span [class.filled]="pip <= poster.difficulty"></span>
+              }
+            </span>
+          </div>
+        </dd>
+      </div>
+    </dl>
   </div>
+  }
 
   <div
     class="hero-section-tabs"
@@ -602,7 +586,7 @@
       <h3>Playstyle Variants</h3>
     </summary>
     <div class="collapsible-body">
-      <p class="section-note">{{ controller.heroRoleLabel(hero) }} plans from hero guides</p>
+      <p class="section-note">{{ controller.displayedRole(hero) }} plans from hero guides</p>
       @for (guide of controller.displayedPlaystyleGuides(hero); track guide.id) {
       <article>
         <strong>{{ guide.title }}</strong>

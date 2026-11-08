@@ -77,16 +77,9 @@ describe('HeroDetailsComponent', () => {
   it('shows the selected hero identity and overview before the matchup scan', () => {
     const element = render();
 
-    expect(element.querySelector('.detail-hero-profile img')?.getAttribute('src')).toBe(
-      mantis.imageUrl,
-    );
-    expect(element.querySelector('.detail-hero-profile img')?.getAttribute('alt')).toBe(
-      mantis.name,
-    );
-    expect(element.querySelector('.detail-hero-lede')?.textContent?.trim()).toBe(mantis.summary);
-    expect(element.querySelector('.difficulty')?.getAttribute('aria-label')).toBe(
-      'Difficulty 3 out of 5',
-    );
+    expect(element.querySelector('.poster-portrait')?.getAttribute('src')).toBe(mantis.imageUrl);
+    expect(element.querySelector('.poster-portrait')?.getAttribute('alt')).toBe(mantis.name);
+    expect(element.querySelector('.poster-summary')?.textContent?.trim()).toBe(mantis.summary);
     expect(
       [...element.querySelectorAll('.community-counters, .community-stats')].map(
         (section) => section.classList[0],
@@ -94,7 +87,7 @@ describe('HeroDetailsComponent', () => {
     ).toEqual(['community-counters', 'community-stats']);
   });
 
-  it('places official health and movement speed with role and difficulty in the hero profile', () => {
+  it('lists the official base stats and the difficulty in one stat bar', () => {
     const officialHero = {
       ...mantis,
       officialSource: {
@@ -106,16 +99,144 @@ describe('HeroDetailsComponent', () => {
       },
     } as Hero;
     const element = render(officialHero);
-    const profileCopy = element.querySelector('.detail-hero-copy');
+    const cells = [...element.querySelectorAll('.poster-stats .poster-stat')];
 
-    expect(profileCopy?.querySelector('app-eyebrow')?.textContent?.trim()).toBe('Strategist');
-    expect(profileCopy?.querySelector('.difficulty')).not.toBeNull();
-    expect(profileCopy?.querySelectorAll('.hero-base-stats .stat-card').length).toBe(2);
-    expect(profileCopy?.querySelector('.hero-base-stats')?.textContent).toContain('Health');
-    expect(profileCopy?.querySelector('.hero-base-stats')?.textContent).toContain('Movement Speed');
-    expect(element.querySelectorAll('.hero-base-stats').length).toBe(1);
-    expect(element.querySelector('.detail-hero-summary')).toBeNull();
-    expect(element.querySelector('.hero-section-stage .hero-base-stats')).toBeNull();
+    expect(cells.map((cell) => cell.querySelector('dt')?.textContent?.trim())).toEqual([
+      'Health',
+      'Movement Speed',
+      'Difficulty',
+    ]);
+    expect(cells[0].querySelector('dd')?.textContent?.trim()).toBe('250');
+    expect(element.querySelectorAll('.poster-stats').length).toBe(1);
+    expect(element.querySelector('.hero-section-stage .poster-stats')).toBeNull();
+  });
+
+  it('shows the difficulty as a number, five pips and an accessible label', () => {
+    const element = render();
+    const meter = element.querySelector('.poster-difficulty .poster-meter') as HTMLElement;
+
+    expect(element.querySelector('.poster-difficulty dt')?.textContent?.trim()).toBe('Difficulty');
+    expect(meter.getAttribute('aria-label')).toBe('Difficulty 3 out of 5');
+    expect(meter.textContent?.replace(/\s+/g, ' ').trim()).toBe('3 / 5');
+    expect(meter.querySelectorAll('.poster-pips span').length).toBe(5);
+    expect(meter.querySelectorAll('.poster-pips span.filled').length).toBe(3);
+    expect(meter.querySelector('.poster-pips')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('draws the last word of the name as a hidden watermark', () => {
+    const watermark = (name: string): HTMLElement | null => {
+      TestBed.resetTestingModule();
+
+      return render({ ...mantis, name }).querySelector('.poster-watermark');
+    };
+
+    const strange = watermark('Doctor Strange');
+    expect(strange?.textContent?.trim()).toBe('STRANGE');
+    expect(strange?.getAttribute('aria-hidden')).toBe('true');
+    expect(watermark('Mantis')?.textContent?.trim()).toBe('MANTIS');
+  });
+
+  it('sets the role colour hook from the hero role', () => {
+    const roleClass = (role: Hero['role']): string[] => {
+      TestBed.resetTestingModule();
+      const poster = render({ ...mantis, role }).querySelector('.hero-poster') as HTMLElement;
+
+      return [...poster.classList].filter((name) => name.startsWith('role-'));
+    };
+
+    expect(roleClass('Vanguard')).toEqual(['role-vanguard']);
+    expect(roleClass('Duelist')).toEqual(['role-duelist']);
+    expect(roleClass('Strategist')).toEqual(['role-strategist']);
+    expect(roleClass('Multi-Role')).toEqual(['role-multi-role']);
+  });
+
+  it('shows only the difficulty cell for a hero with no official stats', () => {
+    const element = render();
+    const cells = [...element.querySelectorAll('.poster-stats .poster-stat')];
+
+    expect(cells.length).toBe(1);
+    expect(cells[0].querySelector('dt')?.textContent?.trim()).toBe('Difficulty');
+  });
+
+  it('follows the selected ability kit when the banner stats depend on the role', async () => {
+    const kitHero = {
+      ...mantis,
+      roleAbilityKits: [
+        { role: 'Vanguard', label: 'Vanguard kit', abilities: [] },
+        { role: 'Duelist', label: 'Duelist kit', abilities: [] },
+      ],
+      officialSource: {
+        sourceUrl: 'https://marvelrivals.com/hero/mantis',
+        baseStatKits: [
+          { role: 'Vanguard', label: 'Vanguard', stats: [{ label: 'Health', value: '650' }] },
+          { role: 'Duelist', label: 'Duelist', stats: [{ label: 'Health', value: '250' }] },
+        ],
+      },
+    } as Hero;
+    const fixture = renderFixture(kitHero);
+    const element = fixture.nativeElement as HTMLElement;
+    const health = (): string | undefined =>
+      element.querySelector('.poster-stats .poster-stat dd')?.textContent?.trim();
+
+    expect(health()).toBe('650');
+
+    const controller = fixture.componentInstance.controller;
+    controller.selectAbilityKit('Duelist');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(health()).toBe('250');
+  });
+
+  it('moves the banner role label, colour and stats together when the kit changes on a multi-role hero', async () => {
+    const multiRoleHero = {
+      ...mantis,
+      name: 'Deadpool',
+      role: 'Multi-Role',
+      roleAbilityKits: [
+        { role: 'Vanguard', label: 'Vanguard kit', abilities: [] },
+        { role: 'Duelist', label: 'Duelist kit', abilities: [] },
+        { role: 'Strategist', label: 'Strategist kit', abilities: [] },
+      ],
+      officialSource: {
+        sourceUrl: 'https://marvelrivals.com/hero/deadpool',
+        baseStatKits: [
+          { role: 'Vanguard', label: 'Vanguard', stats: [{ label: 'Health', value: '650' }] },
+          { role: 'Duelist', label: 'Duelist', stats: [{ label: 'Health', value: '250' }] },
+          { role: 'Strategist', label: 'Strategist', stats: [{ label: 'Health', value: '300' }] },
+        ],
+      },
+    } as Hero;
+    const fixture = renderFixture(multiRoleHero);
+    const element = fixture.nativeElement as HTMLElement;
+    const controller = fixture.componentInstance.controller;
+    const banner = (): { kicker?: string; roleClasses: string[]; health?: string } => {
+      const poster = element.querySelector('.hero-poster') as HTMLElement;
+
+      return {
+        kicker: element.querySelector('.poster-kicker')?.textContent?.trim(),
+        roleClasses: [...poster.classList].filter((name) => name.startsWith('role-')),
+        health: element.querySelector('.poster-stats .poster-stat dd')?.textContent?.trim(),
+      };
+    };
+
+    expect(banner()).toEqual({ kicker: 'Vanguard', roleClasses: ['role-vanguard'], health: '650' });
+
+    for (const [role, health] of [
+      ['Duelist', '250'],
+      ['Strategist', '300'],
+      ['Vanguard', '650'],
+    ] as const) {
+      controller.selectAbilityKit(role);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(banner()).toEqual({
+        kicker: role,
+        roleClasses: [`role-${role.toLowerCase()}`],
+        health,
+      });
+    }
   });
 
   it('labels the overview and source link from official hero source data', () => {
@@ -136,7 +257,7 @@ describe('HeroDetailsComponent', () => {
     );
   });
 
-  it('shows role, matching archetype, and difficulty as data-backed profile tags', () => {
+  it('shows role, matching archetype, and difficulty in the poster kicker and stat bar', () => {
     const taggedHero = {
       ...mantis,
       gameplayArchetypes: [
@@ -159,12 +280,10 @@ describe('HeroDetailsComponent', () => {
       ],
     } as Hero;
     const element = render(taggedHero);
-    const tags = element.querySelector('.detail-hero-tags')?.textContent ?? '';
+    const kicker = element.querySelector('.poster-kicker')?.textContent?.trim();
 
-    expect(tags).toContain('Strategist');
-    expect(tags).toContain('Tempo setter');
-    expect(tags).toContain('Difficulty 3/5');
-    expect(tags).not.toContain('Flanker');
+    expect(kicker).toBe('Strategist · Tempo setter');
+    expect(kicker).not.toContain('Flanker');
   });
 
   it('shows a single shared panel beneath the available hero detail tabs', () => {
@@ -288,12 +407,58 @@ describe('HeroDetailsComponent', () => {
     const element = render();
 
     const heading = element.querySelector('h2') as HTMLElement;
-    const eyebrow = element.querySelector('app-eyebrow') as HTMLElement;
+    const kicker = element.querySelector('.poster-kicker') as HTMLElement;
 
-    expect(eyebrow.textContent?.trim()).toBe('Strategist');
-    expect(eyebrow.nextElementSibling).toBe(heading);
+    expect(kicker.textContent?.trim()).toBe('Strategist');
+    expect(kicker.nextElementSibling).toBe(heading);
     expect(heading.textContent?.trim()).toBe('Mantis');
-    expect(element.querySelectorAll('.detail-hero-media app-eyebrow').length).toBe(1);
+    expect(element.querySelectorAll('.poster-kicker').length).toBe(1);
     expect(element.querySelector('.hero-role')).toBeNull();
+  });
+});
+
+describe('HeroDetailsComponent collapsible sections', () => {
+  it('puts one h3 and nothing else in each collapsible summary, so the summary is named by its heading', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    const hero = {
+      ...mantis,
+      abilities: [{ name: 'Cosmic Ray', type: 'Ultimate', description: 'A beam.' }],
+      playstyles: [
+        {
+          id: 'guide',
+          title: 'Backline healer',
+          summary: 'Heal from range.',
+          whenToUse: 'Against dive.',
+          coreIdeas: [],
+          upgradeNotes: [],
+          ultimateNotes: [],
+        },
+      ],
+    } as Hero;
+    const controller = TestBed.runInInjectionContext(() => new HeroesPageComponent());
+    const fixture = TestBed.createComponent(HeroDetailsComponent);
+    fixture.componentRef.setInput('hero', hero);
+    fixture.componentRef.setInput('controller', controller);
+    fixture.detectChanges();
+
+    const summaries = [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll('details.collapsible > summary'),
+    ];
+
+    expect(summaries.map((summary) => summary.textContent?.trim())).toEqual([
+      'Playstyle Variants',
+      'Ultimate Strategy',
+    ]);
+    for (const summary of summaries) {
+      expect(summary.children.length).toBe(1);
+      expect(summary.firstElementChild?.tagName).toBe('H3');
+    }
   });
 });
