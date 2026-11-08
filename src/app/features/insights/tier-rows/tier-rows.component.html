@@ -1,4 +1,4 @@
-<ol class="tiers" [class.art-led]="artLed()">
+<ol class="tiers" [class.raised]="raised()">
   @for (tier of tiers(); track tier.name) {
     <li class="tier-row tier-{{ tier.name }}">
       <ng-template #label>

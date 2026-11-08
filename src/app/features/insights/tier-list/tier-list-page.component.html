@@ -59,7 +59,7 @@
     }
 
     @if (v.state === 'ready') {
-      <app-tier-rows [tiers]="v.tiers" [linkHeroes]="true" artLed showRoles />
+      <app-tier-rows [tiers]="v.tiers" [linkHeroes]="true" artLed raised showRoles />
     } @else {
       <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
         <p class="state-count">

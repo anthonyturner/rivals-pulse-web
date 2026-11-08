@@ -29,7 +29,7 @@ const TIERS: TierRowView[] = [
     <app-tier-rows id="plain" [tiers]="tiers" />
     <app-tier-rows id="linked" [tiers]="tiers" [linkHeroes]="true" [headingLevel]="3" />
     <app-tier-rows id="art" [tiers]="tiers" [linkHeroes]="true" artLed />
-    <app-tier-rows id="roles" [tiers]="tiers" artLed showRoles />
+    <app-tier-rows id="roles" [tiers]="tiers" artLed raised showRoles />
   `,
 })
 class HostComponent {
@@ -83,9 +83,9 @@ describe('TierRowsComponent', () => {
     expect(rows('linked').querySelector('h2')).toBeNull();
   });
 
-  it('marks the rows art-led only when asked', () => {
-    expect(rows('plain').querySelector('.tiers')?.classList).not.toContain('art-led');
-    expect(rows('art').querySelector('.tiers')?.classList).toContain('art-led');
+  it('raises the rows only when asked', () => {
+    expect(rows('art').querySelector('.tiers')?.classList).not.toContain('raised');
+    expect(rows('roles').querySelector('.tiers')?.classList).toContain('raised');
   });
 
   it('shows the hero role as a tinted kind chip only when asked', () => {
