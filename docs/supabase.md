@@ -1154,8 +1154,8 @@ relink racing it waits and then switches the setting off.
   owner-only rules (another account reads no row and writes none, `anon` and `service_role` cannot call the function, no
   client writes the table), the not-linked refusal, `updated_at`, and the reset on website unlink, app unlink, relink over a
   live link and losing a link to another account, and rolls back. Judge it by its exit status.
-- **Release order.** Push the three Pulse Records migrations in order by hand (`20261107100000`, `20261107100100`,
-  `20261107130000`) before their pull requests merge. **Do not merge the pull request for this switch before
+- **Release order.** Push `20261107130000` by hand (`npx supabase db push`) before the pull request merges; the two
+  Pulse Records migrations before it are already applied. **Do not merge the pull request for this switch before
   `anthonyturner/rivals_pulse#1386` (the desktop app privacy policy) ships**: the switch is what lets a name appear
   publicly, and the policy must extend the basis for that first (ADR-0006, decision 3).
 
