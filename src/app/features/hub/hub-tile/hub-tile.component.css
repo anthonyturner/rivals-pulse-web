@@ -12,7 +12,7 @@
   isolation: isolate;
 }
 
-:host(:hover) {
+:host(:not(.static):hover) {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-soft);
 }
@@ -25,7 +25,7 @@
       box-shadow 160ms ease;
   }
 
-  :host(:hover) {
+  :host(:not(.static):hover) {
     transform: translateY(-3px);
   }
 }
@@ -83,8 +83,13 @@
 /* The lead tile: key art behind a dark scrim. It stays dark in both themes, so it reads with the ink tokens. */
 :host(.featured) {
   min-height: 220px;
-  border-color: var(--ink-line);
   background: var(--ink);
+}
+
+/* The hover rule above is as specific as this one, so the dark edge is restated for it. */
+:host(.featured),
+:host(.featured:hover) {
+  border-color: var(--ink-line);
 }
 
 /* Chip and play marker stay at the top; the title and description settle at the bottom, on the scrim. */

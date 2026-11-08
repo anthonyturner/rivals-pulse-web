@@ -32,16 +32,26 @@ export interface GameRowView {
   cells: CellView[];
 }
 
+/** One of the game's headline figures: a table column's name over the subject game's cell in it. */
+export interface StatTileView extends CellView {
+  label: string;
+}
+
 export interface GameStatsView {
   /** True when the live numbers could not be fetched and the saved snapshot is shown instead. */
   saved: boolean;
   snapshotDate: string;
   /** One sentence-case line saying which snapshot this is and what it is compared with. */
   meta: string;
+  /** The table's column names after "Game", in order. */
+  columns: readonly string[];
   rows: GameRowView[];
+  /** The subject game's figures as tiles; empty when the subject is not among the rows. */
+  headline: StatTileView[];
 }
 
 const SUBJECT = 'Marvel Rivals';
+const COLUMNS: readonly string[] = ['Players now', '24h peak', 'All-time peak', 'Daily rank', 'Top sellers'];
 const MINUS = '−';
 const numbers = new Intl.NumberFormat('en-US');
 const timestamps = new Intl.DateTimeFormat('en-US', {
@@ -58,11 +68,16 @@ const timestamps = new Intl.DateTimeFormat('en-US', {
  * template never formats a number or decides whether a change is worth showing.
  */
 export function buildGameStatsView(stats: GameStatsResponse, saved: boolean): GameStatsView {
+  const rows = stats.games.map(gameRow);
+  const subject = rows.find((row) => row.subject);
+
   return {
     saved,
     snapshotDate: stats.snapshotDate,
     meta: saved ? `Saved snapshot ${stats.snapshotDate}` : liveMeta(stats),
-    rows: stats.games.map(gameRow),
+    columns: COLUMNS,
+    rows,
+    headline: subject ? subject.cells.map((cell, index) => ({ ...cell, label: COLUMNS[index] })) : [],
   };
 }
 
