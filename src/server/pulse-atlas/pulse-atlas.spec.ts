@@ -2890,3 +2890,153 @@ describe('the minimums a figure waits on', () => {
     expect(lineups['minimumPlayers']).toBe(COMMUNITY_BUCKET_MIN_PLAYERS);
   });
 });
+
+describe('the players behind a hero', () => {
+  const OLD = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
+  const NEW = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
+  const GAME_IDS = [thorEntry, { id: 'loki', gameId: LOKI_GAME_ID }, { id: 'hulk', gameId: 1011 }];
+  const placed = {
+    hero: 'thor',
+    tier: 'S',
+    appearances: 30,
+    wins: 20,
+    winRate: 66.7,
+    pickRate: 50,
+    shrunkWinRate: 60,
+    kda: 3,
+    finalHitsAverage: null,
+  };
+  const answer = (shown: typeof NEW | typeof OLD, extra: Record<string, unknown> = {}): Record<string, unknown> => ({
+    status: 'ready',
+    minimumMatches: 10,
+    minimumPlayers: 2,
+    halfSeasons: [OLD, NEW],
+    halfSeason: shown,
+    inPlaceOf: null,
+    matchesCounted: 40,
+    tiers: [{ name: 'S', heroes: [placed] }],
+    belowMinimum: [
+      { hero: 'loki', appearances: 4, players: 1 },
+      { hero: 'hulk', appearances: 2 },
+    ],
+    ...extra,
+  });
+  const exact = [
+    { halfSeason: 10, response: answer(OLD) },
+    { halfSeason: 10.5, response: answer(NEW) },
+  ];
+  const publish = (dataset: 'hero-stats' | 'tier-list', data: unknown, path: string) =>
+    JSON.parse(
+      buildPulseAtlas(withData(dataset, data), GENERATED_AT, fakeSha256).find((file) => file.path.endsWith(path))?.content ?? '{}',
+    ).data;
+
+  describe('in hero-stats.json', () => {
+    const assembled = assembleCommunityHeroStats(answer(NEW), exact, GAME_IDS) as {
+      minimumPlayers?: number;
+      seasons: { heroes: Record<string, unknown>[] }[];
+    };
+    const cell = (heroId: number) => assembled.seasons[1].heroes.find((hero) => hero['heroId'] === heroId);
+
+    it('states the minimum players and gives a hero below the minimum the players counted so far', () => {
+      expect(assembled.minimumPlayers).toBe(2);
+      expect(cell(LOKI_GAME_ID)).toEqual(jasmine.objectContaining({ enoughData: false, appearances: 4, players: 1 }));
+    });
+
+    it('leaves the count off a hero the database could not count, a hero with enough data, and an older answer', () => {
+      expect(cell(1011)?.['enoughData']).toBe(false);
+      expect('players' in (cell(1011) ?? {})).toBeFalse();
+      expect('players' in (cell(THOR_GAME_ID) ?? {})).toBeFalse();
+
+      const withoutCounts = (shown: typeof NEW | typeof OLD) =>
+        answer(shown, { minimumPlayers: undefined, belowMinimum: [{ hero: 'loki', appearances: 4 }] });
+      const older = assembleCommunityHeroStats(
+        withoutCounts(NEW),
+        [
+          { halfSeason: 10, response: withoutCounts(OLD) },
+          { halfSeason: 10.5, response: withoutCounts(NEW) },
+        ],
+        GAME_IDS,
+      );
+
+      expect(JSON.stringify(older)).not.toMatch(/players/i);
+    });
+
+    it('publishes both, counts only, through the gate', () => {
+      const data = publish('hero-stats', assembled, 'hero-stats.json');
+
+      expect(Object.keys(data)).toEqual(['provenance', 'minimumMatches', 'minimumPlayers', 'currentSeasonId', 'seasons']);
+      expect(data.minimumPlayers).toBe(2);
+      expect(data.seasons[1].heroes.find((hero: Record<string, unknown>) => hero['heroId'] === LOKI_GAME_ID).players).toBe(1);
+    });
+
+    it('refuses a count that is not a whole number, or that sits on a hero with enough data', () => {
+      const table = (cellChange: Record<string, unknown>, tableChange: Record<string, unknown> = {}, below = true) => {
+        const base = heroStatsTable();
+        const [season] = base['seasons'] as { heroes: Record<string, unknown>[] }[];
+        season.heroes = [below ? { ...BELOW_MINIMUM_CELL, ...cellChange } : { ...season.heroes[0], ...cellChange }];
+
+        return { ...base, ...tableChange };
+      };
+      const build = (data: unknown) => () => buildPulseAtlas(withData('hero-stats', data), GENERATED_AT, fakeSha256);
+
+      expect(build(table({ players: 1 }, { minimumPlayers: 2 }))).not.toThrow();
+      expect(build(table({ players: -1 }))).toThrowError(/players/);
+      expect(build(table({ players: 1.5 }))).toThrowError(/players/);
+      expect(build(table({ players: 'Anthony' }))).toThrowError(/players/);
+      expect(build(table({ players: { name: 'Anthony' } }))).toThrowError(/players/);
+      expect(build(table({ players: 1 }, {}, false))).toThrowError(/only on a cell with enoughData false/);
+      expect(build(table({}, { minimumPlayers: 0 }))).toThrowError(/minimumPlayers must be a whole number above 0/);
+    });
+  });
+
+  describe('in the tier list', () => {
+    const assembled = assembleCommunityTierList(answer(NEW), [exact[0]], GAME_IDS) as {
+      seasons: { ranks: Record<string, Record<string, unknown>> }[];
+    };
+
+    it('puts the minimum players on the snapshot and the players counted so far on each below-minimum row', () => {
+      const snapshot = assembled.seasons[1].ranks['99'];
+
+      expect(snapshot['minimumPlayers']).toBe(2);
+      expect(snapshot['belowMinimum']).toEqual([
+        { heroId: LOKI_GAME_ID, matches: 4, players: 1 },
+        { heroId: 1011, matches: 2 },
+      ]);
+    });
+
+    it('publishes both in the index and the season files, and still places a hero by matches alone', () => {
+      const files = buildPulseAtlas(withData('tier-list', assembled), GENERATED_AT, fakeSha256);
+      const season = JSON.parse(files.find((file) => file.path.endsWith('tier-list/seasons/21.json'))?.content ?? '{}').data;
+      const index = JSON.parse(files.find((file) => file.path.endsWith('/tier-list.json'))?.content ?? '{}').data;
+
+      expect(season.ranks['99'].minimumPlayers).toBe(2);
+      expect(season.ranks['99'].belowMinimum).toEqual([
+        { heroId: LOKI_GAME_ID, matches: 4, players: 1 },
+        { heroId: 1011, matches: 2 },
+      ]);
+      expect(index.seasons[1].ranks['99'].minimumPlayers).toBe(2);
+      expect(season.ranks['99'].tiers[0].heroes).toEqual([
+        { heroId: THOR_GAME_ID, winRate: 66.7, pickRate: 50, matches: 30, wins: 20 },
+      ]);
+    });
+
+    it('refuses a minimum that is not a whole number above 0 and a count that is not a whole number', () => {
+      const withSnapshot = (snapshot: Record<string, unknown>) =>
+        withData('tier-list', {
+          ...tierList(),
+          seasons: [1, 2].map((id) => ({ id, label: `Season ${id}`, ranks: { '99': { tiers: [], matchesCounted: 3, ...snapshot } } })),
+        });
+      const build = (snapshot: Record<string, unknown>) => () => buildPulseAtlas(withSnapshot(snapshot), GENERATED_AT, fakeSha256);
+
+      expect(build({ minimumPlayers: 2, belowMinimum: [{ heroId: LOKI_GAME_ID, matches: 4, players: 0 }] })).not.toThrow();
+      expect(build({ minimumPlayers: 0 })).toThrowError(/minimumPlayers/);
+      expect(build({ belowMinimum: [{ heroId: LOKI_GAME_ID, matches: 4, players: -1 }] })).toThrowError(/players/);
+      expect(build({ belowMinimum: [{ heroId: LOKI_GAME_ID, matches: 4, players: 'Anthony' }] })).toThrowError(/players/);
+    });
+  });
+
+  it('is refused in every other file: only hero stats and the tier list may carry a players key', () => {
+    expect(() => buildPulseAtlas(withData('community-stats', communityStatsData({ players: 2 })), GENERATED_AT, fakeSha256)).toThrowError(/players/);
+    expect(() => buildPulseAtlas(withData('hero-scores', { ...heroScoresData(), players: 2 }), GENERATED_AT, fakeSha256)).toThrowError(/players/);
+  });
+});
