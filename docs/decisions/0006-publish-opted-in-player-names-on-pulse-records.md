@@ -1,10 +1,16 @@
 # ADR-0006: Publish opted-in player names on Pulse Records
 
-- **Status:** Accepted on 2026-11-07. The maintainer decided the name, the route,
-  the opt-in rule and the data source on 2026-11-07 (decisions 1 to 3 and 5). The
-  defaults under decision 4 and the mechanism in decision 6 come from the
-  engineering refinement of issue 564 and were adopted under rule 14; the maintainer can override them,
-  and a change to them must amend this record and the website copy together.
+- **Status:** Accepted on 2026-11-07. The maintainer decided on 2026-11-07 that
+  the page is called Pulse Records at `/records`, that a name shows only for a
+  linked player who switched a new setting on (off by default), that other
+  records count and show as "Anonymous" or are left off as the children define,
+  that the data comes only from the site's own uploads, and that `participants`
+  stays closed (decisions 1, 2, 3 and 5 below, in outline). The detail comes from
+  the engineering refinement of issue 564 and was adopted under rule 14: the
+  two-key naming rule, "the name comes from the link, not the scoreboard line",
+  the list of what is never shown, the defaults in decision 4 and the mechanism
+  in decision 6. The maintainer can override any of it, and a change must amend
+  this record and the website copy together.
 - **Date:** 2026-11-07
 - **Deciders:** Anthony (maintainer).
 - **Related:** issue 564 (Pulse Records) and its children: this issue 565, 566
@@ -84,26 +90,31 @@ or deletes the account, and the page must not keep it longer than a couple of
 minutes after that (a short shared-cache lifetime, not the site default).
 
 **3. Anonymous lines are still published, and the policy says so.** The Kills,
-Assists and Final Hits boards include lines from players who have no linked
-account, or who have not opted in on an account that cannot be matched to the
-line, including people who never installed the app and never agreed to this.
+Assists and Final Hits boards include lines whose uid is not linked to any
+account, including people who never installed the app and never agreed to this.
 Such an entry shows the hero and the figure and the word "Anonymous", with no
 name, uid or match. It is still a published line from a match that person
 played, and someone who played in that match may recognise it. The privacy page
-says exactly that. The legal basis is the one the desktop app policy already
-gives for storing and showing scoreboard lines to other app users (legitimate
-interests, limited to what every player in the match can already see in the
-game, short retention, deletion on request); the in-game name, which is the
-extra step, rests on the player's consent.
+says exactly that. This change **extends** the legal basis the desktop app
+policy gives today. That policy (section 8) rests the storing and showing of
+scoreboard lines on legitimate interests, limited to giving app users match
+statistics and lookups, and its sections 1, 3 and 4 limit who sees the lines to
+other app users. Showing a line on a public website page goes beyond that, so
+the basis has to be extended to public display, with the same limits (only what
+every player in the match already sees in the game, short retention, deletion on
+request). The in-game name, which is the extra step, rests on the player's
+consent. This records what the project intends and is not legal advice.
 
 **4. Defaults for the questions the refinement left open (adopted, overridable).**
 
 - Damage, Healing and Damage Blocked come only from the uploading player's own
   line, because the app uploads those figures for no one else. Those boards
   show opted-in players only; they never show an anonymous row.
-- A linked player who has not opted in is left off the boards instead of being
-  shown as "Anonymous" beside the same person's name elsewhere. Their lines
-  that someone else uploaded are left off too, so no player appears twice.
+- Every linked player's lines are either named or left off, never shown as
+  "Anonymous". A linked player who has not opted in is left off. A linked
+  player's lines that someone else uploaded are left off whether or not they
+  opted in, because only the player's own app proves the line is theirs and
+  showing them as "Anonymous" would put the same person on the board twice.
 - Only Quick Match and Competitive count. Ties go to the earlier match. There is
   no half-season selector, no date, no filter and no match link.
 
@@ -169,6 +180,13 @@ states "Matches since" the earliest date it covers, taken from the data.
   maintainer.
 - Damage, healing and damage blocked boards publish one uploader's own numbers
   next to their name.
+- Figures can be attached to a line by the claimed uid without checking who
+  recorded it (`record_match_extras`; issue 352 tracks closing it). Until then
+  another uploader could put false damage, healing or blocked figures beside a
+  genuine opted-in name. Accepted for the first version.
+- The legal basis for showing lines publicly extends the one the desktop app
+  policy gives today (decision 3). The maintainer accepts that as a risk, and it
+  takes effect once overlay issue 1386 updates section 8 of that policy.
 - A short cache lifetime (60 seconds) on the records API is a cost in load
   against the site-wide five minutes plus an hour of stale answers, which would
   show a name for about 65 minutes after its owner switched it off.
@@ -200,12 +218,14 @@ A reviewer checks a change against this decision by looking for:
   this record. `/privacy` says Pulse Records is not open yet until issue 567
   opens it (the status constant in `privacy-notes.data.ts`).
 - The desktop app policy conflicts, which this change does not edit, and are
-  tracked as issue 1386 in `anthonyturner/rivals_pulse`: sections 1, 3 and 4 say scoreboard
-  lines are visible to app users only, section 4 says a player's damage,
-  healing and damage blocked are never shown as theirs and that published
-  averages "never show one player's numbers", section 2.1 says there are no
-  accounts (already tracked there as issue 1168), and sections 7, 8 and 9 do
-  not mention entries on the website or a name the player chose to show. The
-  policy change must ship before the first name can appear on the live site.
+  tracked as issue 1386 in `anthonyturner/rivals_pulse`: sections 1, 3 and 4 say
+  scoreboard lines are visible to app users only, section 4 says a player's
+  damage, healing and damage blocked are never shown as theirs and that
+  published averages "never show one player's numbers", section 2.1 says there
+  are no accounts (already tracked there as issue 1168), section 5 (the "Why"
+  column of the Supabase row) lists lookups, ban rates and hero averages but not
+  a public records page, and sections 7, 8 and 9 do not mention entries on the
+  website or a name the player chose to show. The policy change must ship before
+  the first name can appear on the live site; issue 568 lists it as a blocker.
 - Any later change to the defaults in decision 4 amends this record and the
   website copy in the same pull request.

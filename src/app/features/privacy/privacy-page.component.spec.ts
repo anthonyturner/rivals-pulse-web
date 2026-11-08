@@ -115,6 +115,8 @@ describe('PrivacyPageComponent', () => {
       expect(text).toContain('Anonymous entries are published lines from players who did not agree');
       expect(text).toContain('including players who never installed the app');
       expect(text).toContain('it is still a published line from a match that player took part in');
+      expect(text).toContain('A player whose account is linked is never shown as "Anonymous"');
+      expect(text).toContain("Lines of yours that another player's app uploaded are left off too, not shown as \"Anonymous\"");
     });
 
     it('says how to be taken off, and that the site shows no id, match, map or date', () => {

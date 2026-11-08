@@ -72,9 +72,8 @@ describe('HomeFaqComponent', () => {
 
       expect(answer).toContain('automatically');
       expect(answer).toMatch(/names and player ids/);
-      expect(answer).toContain('anonymous totals');
-      expect(answer).toContain("a player's name only if that player chose to show it");
-      expect(answer).toContain('The site never publishes player ids');
+      expect(answer).toContain('only anonymous totals and never player ids');
+      expect(answer).toContain("shows a player's name only if that player chose to show it");
       expect(answer).not.toMatch(/only match results|no personal|nothing personal/i);
     });
 
