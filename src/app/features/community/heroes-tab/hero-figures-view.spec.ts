@@ -61,7 +61,7 @@ describe('buildHeroFiguresView', () => {
 
     expect(view.kind).toBe('not-enough-data');
     expect(view.kind === 'not-enough-data' && view.summary).toContain('10 lines');
-    expect(view.kind === 'not-enough-data' && view.summary).toContain('at least 3 different players');
+    expect(view.kind === 'not-enough-data' && view.summary).toContain('at least 2 different players');
   });
 
   it('is the empty state when only roles have a figure', () => {

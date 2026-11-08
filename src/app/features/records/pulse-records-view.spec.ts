@@ -19,14 +19,14 @@ describe('buildRecordsView', () => {
       IDENTITIES,
     );
 
-    expect(PULSE_RECORDS_MIN_ROWS).toBe(5);
+    expect(PULSE_RECORDS_MIN_ROWS).toBe(2);
     expect(view.boards.map((board) => board.shown)).toEqual([true, false, false, false, false, false]);
     expect(view.boards[1].rows).toEqual([]);
     expect(view.anyShown).toBeTrue();
   });
 
   it('shows nothing, and no date, while every board is thin', () => {
-    const view = buildRecordsView(recordsOf({ kills: recordRows(4) }), IDENTITIES);
+    const view = buildRecordsView(recordsOf({ kills: recordRows(PULSE_RECORDS_MIN_ROWS - 1) }), IDENTITIES);
 
     expect(view.anyShown).toBeFalse();
     expect(view.since).toBeNull();

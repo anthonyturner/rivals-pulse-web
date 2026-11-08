@@ -35,7 +35,7 @@ export function figuresOf(
 
   return {
     status: 'ready',
-    minimums: { roleLines: 50, heroLines: 10, recorders: 3 },
+    minimums: { roleLines: 50, heroLines: 10, recorders: 2 },
     halfSeasons: [season(10.5)],
     halfSeason: season(10.5),
     inPlaceOf: null,
@@ -64,7 +64,7 @@ export function killPair(killer: string, victim: string, killsBand = 25): Commun
 export function killsOf(pairs: CommunityKillPair[], overrides: Partial<CommunityKills> = {}): CommunityKills {
   return {
     status: pairs.length > 0 ? 'ready' : 'not-enough-data',
-    minimums: { pairMatches: 10, recorders: 3 },
+    minimums: { pairMatches: 10, recorders: 2 },
     halfSeasons: [season(10.5)],
     halfSeason: season(10.5),
     inPlaceOf: null,

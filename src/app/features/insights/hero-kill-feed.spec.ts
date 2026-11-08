@@ -50,7 +50,7 @@ describe('hero kill feed reads', () => {
 
   it('names the minimum in matches and in players', () => {
     expect(killPairMinimum(KILLS)).toBe(
-      'A pair appears once it is in the kill feed of 10 recorded matches, recorded by at least 3 different players.',
+      'A pair appears once it is in the kill feed of 10 recorded matches, recorded by at least 2 different players.',
     );
   });
 });

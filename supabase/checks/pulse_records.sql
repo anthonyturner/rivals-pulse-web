@@ -187,7 +187,7 @@ begin
   if boards::text ~ '9060|9070|9071' then
     raise exception 'check failed: a hidden line or a do_not_store player is on a board (%)', boards;
   end if;
-  -- The Pulse Records pages show a board only from 5 rows and read that as 5 distinct uploaders, so
+  -- The Pulse Records pages show a board only from 2 rows and read that as 2 distinct uploaders, so
   -- this check (one row per uploader) is what that gate relies on.
   if boards::text ~ '9031:60|9032|9090|9082|9112' then
     raise exception 'check failed: a second row for one player or one uploader is on a board (%)', boards;

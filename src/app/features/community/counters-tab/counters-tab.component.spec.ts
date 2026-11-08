@@ -102,7 +102,7 @@ describe('CountersTabComponent', () => {
       expect(killFeedPanel().querySelector('app-state-panel')).toBeTruthy();
       expect(killFeedPanel().textContent).toContain('Not enough data yet');
       expect(killFeedPanel().textContent).toContain('10 recorded matches');
-      expect(killFeedPanel().textContent).toContain('at least 3 different players');
+      expect(killFeedPanel().textContent).toContain('at least 2 different players');
     });
 
     it('says only itself cannot be loaded when its request fails', async () => {

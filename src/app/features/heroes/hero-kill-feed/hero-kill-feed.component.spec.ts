@@ -83,7 +83,7 @@ describe('HeroKillFeedComponent', () => {
     expect(text).toContain('Not enough data yet');
     expect(text).toContain('Thor is not in enough kill feeds');
     expect(text).toContain('10 recorded matches');
-    expect(text).toContain('at least 3 different players');
+    expect(text).toContain('at least 2 different players');
   });
 
   it('shows the designed empty state when no pair is listed at all', async () => {
