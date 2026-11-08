@@ -7,8 +7,8 @@
   gap: 12px;
   margin-top: 20px;
   padding: 16px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   background: var(--bg-panel);
   scroll-margin-top: 16px;
   animation: fade-in 400ms ease-out;

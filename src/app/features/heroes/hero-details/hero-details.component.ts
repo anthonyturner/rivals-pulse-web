@@ -39,8 +39,6 @@ interface HeroBannerSource {
 }
 
 interface HeroBanner {
-  /** The hero's last name word in capitals, drawn behind the header as decoration. */
-  watermark: string;
   /** Sets the banner's role colour; see `.hero-poster.role-*` in the stylesheet. */
   roleClass: string;
   kicker: string;
@@ -85,7 +83,6 @@ export class HeroDetailsComponent implements OnChanges {
     const archetype = hero.gameplayArchetypes?.find((candidate) => candidate.role === role);
 
     return {
-      watermark: hero.name.trim().split(/\s+/).at(-1)?.toUpperCase() ?? '',
       roleClass: `role-${role.toLowerCase()}`,
       kicker: archetype ? `${role} · ${archetype.label}` : role,
       stats: controller.officialBaseStats(hero),

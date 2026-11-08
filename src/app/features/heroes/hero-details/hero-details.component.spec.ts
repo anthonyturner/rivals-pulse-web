@@ -123,17 +123,15 @@ describe('HeroDetailsComponent', () => {
     expect(meter.querySelector('.poster-pips')?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('draws the last word of the name as a hidden watermark', () => {
-    const watermark = (name: string): HTMLElement | null => {
-      TestBed.resetTestingModule();
+  it("draws the hero's art behind the header as decoration only", () => {
+    const element = render();
+    const art = element.querySelector('.poster-art') as HTMLElement;
+    const image = art.querySelector('img') as HTMLImageElement;
 
-      return render({ ...mantis, name }).querySelector('.poster-watermark');
-    };
-
-    const strange = watermark('Doctor Strange');
-    expect(strange?.textContent?.trim()).toBe('STRANGE');
-    expect(strange?.getAttribute('aria-hidden')).toBe('true');
-    expect(watermark('Mantis')?.textContent?.trim()).toBe('MANTIS');
+    expect(art.getAttribute('aria-hidden')).toBe('true');
+    expect(image.getAttribute('src')).toBe(mantis.imageUrl);
+    expect(image.getAttribute('alt')).toBe('');
+    expect(element.querySelectorAll('img[alt="Mantis"]').length).toBe(1);
   });
 
   it('sets the role colour hook from the hero role', () => {
