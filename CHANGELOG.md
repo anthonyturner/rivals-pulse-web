@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- The Hero stats page has a slim banner strip of heroes from every role under its heading, so it opens with a picture like the other pages while the table stays near the top; the table, mode picker and states are unchanged ([#657](https://github.com/anthonyturner/rivals-pulse-web/pull/657)).
 - The Your stats page opens with a picture tile: your most-played hero, with its name, match count and win rate, once you have matches, and generic hero art before that or when you are signed out ([#649](https://github.com/anthonyturner/rivals-pulse-web/pull/649)).
 - The home hero shows the animated Rivals Pulse banner from the desktop app: a gold pulse from the left and a periwinkle pulse from the right race along a heartbeat line, collide under the name and throw an orchid spark, over a faint circuit grid with currents racing along it. Every few seconds a stronger current crosses the grid. The banner holds still when the tab is hidden or the banner is off screen, and shows one still frame when your device asks for reduced motion ([#632](https://github.com/anthonyturner/rivals-pulse-web/issues/632)).
 - The Counters tile on the Tools page has its own banner art, a Vanguard facing a Duelist, behind the tile's text, so the page opens with a picture like the other hub pages ([#641](https://github.com/anthonyturner/rivals-pulse-web/pull/641)).
