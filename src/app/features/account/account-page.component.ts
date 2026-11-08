@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { DELETE_CONFIRMATION_PHRASE, isDeletionConfirmed } from '../../core/auth/account-deletion.types';
@@ -44,6 +44,7 @@ export class AccountPageComponent {
     return state.status === 'signedIn' ? state.player : null;
   });
   readonly linkHeading = viewChild<ElementRef<HTMLElement>>('linkHeading');
+  readonly recordsHeading = viewChild<ElementRef<HTMLElement>>('recordsHeading');
   /**
    * The one live region on the page. What an action did, whether it worked or not, is read out here
    * and shown where it happened, so nothing else on the page is live and nothing is read twice.
@@ -56,11 +57,33 @@ export class AccountPageComponent {
   readonly unlinking = signal(false);
   readonly unlinkError = signal<string | null>(null);
 
+  /** The saved setting. Unknown until it loads, and off for an account with no link. */
+  readonly recordsOptIn = signal(false);
+  readonly recordsOptInLoaded = signal(false);
+  readonly recordsOptInSaving = signal(false);
+  readonly recordsOptInError = signal<string | null>(null);
+  readonly recordsOptInLoadFailed = signal(false);
+  /** True once the box can say something true: there is no link (off), or the saved setting has been read. */
+  readonly recordsOptInKnown = computed(() => this.player() === null || this.recordsOptInLoaded());
+  /** Disabled only for want of a link. It stays enabled while saving, because a control that disables itself drops keyboard focus. */
+  readonly recordsOptInDisabled = computed(() => this.player() === null || !this.recordsOptInLoaded());
+  /** Which load is current, so an answer for a link that has since changed is dropped. */
+  private recordsOptInLoad = 0;
+
   readonly confirmationPhrase = DELETE_CONFIRMATION_PHRASE;
   readonly confirmation = signal('');
   readonly deleting = signal(false);
   readonly deleteError = signal<string | null>(null);
   readonly confirmed = computed(() => isDeletionConfirmed(this.confirmation()));
+
+  constructor() {
+    // The setting belongs to the link: it is off and fixed when there is none, and read again whenever the link changes.
+    effect(() => {
+      const linked = this.player() !== null;
+
+      untracked(() => void this.loadRecordsOptIn(linked));
+    });
+  }
 
   async signOut(): Promise<void> {
     await this.auth.signOut();
@@ -135,6 +158,97 @@ export class AccountPageComponent {
   private announceLinkChange(message: string): void {
     this.announcement.set(message);
     this.linkHeading()?.nativeElement.focus();
+  }
+
+  private async loadRecordsOptIn(linked: boolean, retry = false): Promise<void> {
+    const load = ++this.recordsOptInLoad;
+
+    this.recordsOptIn.set(false);
+    this.recordsOptInError.set(null);
+    this.recordsOptInLoadFailed.set(false);
+    this.recordsOptInLoaded.set(!linked);
+
+    if (!linked) {
+      return;
+    }
+
+    const result = await this.auth.loadRecordsOptIn();
+
+    if (load !== this.recordsOptInLoad) {
+      return;
+    }
+
+    switch (result.status) {
+      case 'ready':
+        this.recordsOptIn.set(result.showInRecords);
+        this.recordsOptInLoaded.set(true);
+        break;
+      case 'signedOut':
+        await this.router.navigate(['/sign-in'], { queryParams: { next: '/account' } });
+        break;
+      case 'failed':
+        this.recordsOptInLoadFailed.set(true);
+        this.recordsOptInError.set(result.message);
+        if (retry) {
+          this.announcement.set(result.message);
+        }
+        break;
+    }
+  }
+
+  /** The button goes away once clicked, so focus moves to the section heading rather than falling to the page body. */
+  retryRecordsOptIn(): void {
+    this.recordsHeading()?.nativeElement.focus();
+    void this.loadRecordsOptIn(this.player() !== null, true);
+  }
+
+  async onRecordsOptInChange(event: Event): Promise<void> {
+    const box = event.target as HTMLInputElement;
+    const show = box.checked;
+
+    // One save at a time. A change made while one is in flight is undone, so the box keeps showing the one being saved.
+    if (this.recordsOptInDisabled() || this.recordsOptInSaving()) {
+      box.checked = !show;
+
+      return;
+    }
+
+    this.recordsOptInSaving.set(true);
+    this.recordsOptInError.set(null);
+    this.announcement.set('');
+
+    const load = this.recordsOptInLoad;
+    const result = await this.auth.setRecordsOptIn(show);
+
+    this.recordsOptInSaving.set(false);
+
+    // An unlink or relink during the save reloaded the setting; this reply no longer describes it.
+    if (load !== this.recordsOptInLoad) {
+      box.checked = this.recordsOptIn();
+
+      return;
+    }
+
+    switch (result.status) {
+      case 'ready':
+        this.recordsOptIn.set(result.showInRecords);
+        box.checked = result.showInRecords;
+        this.announcement.set(
+          result.showInRecords
+            ? 'Show me in Pulse Records is on. Your name can appear on Pulse Records.'
+            : 'Show me in Pulse Records is off. Your name is not shown on Pulse Records.',
+        );
+        break;
+      case 'signedOut':
+        await this.router.navigate(['/sign-in'], { queryParams: { next: '/account' } });
+        break;
+      case 'failed':
+        // The box flipped under the player's finger; put it back to what is really saved.
+        box.checked = this.recordsOptIn();
+        this.recordsOptInError.set(result.message);
+        this.announcement.set(result.message);
+        break;
+    }
   }
 
   onConfirmationInput(event: Event): void {

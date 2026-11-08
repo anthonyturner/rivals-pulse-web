@@ -5,9 +5,13 @@
         [title]="tile.label"
         [route]="tile.path"
         [description]="tile.description"
+        [headingLevel]="headingLevel()"
         [chip]="tile.chip"
         [imageUrl]="tile.imageUrl"
         [playMarker]="tile.playMarker ?? false"
+        [imageFit]="tile.imageFit ?? 'banner'"
+        [lazyArt]="tile.lazyArt ?? false"
+        [thumbnailUrl]="tile.thumbnailUrl ?? null"
         [tint]="tile.tint ?? null"
         [split]="tile.split ?? false"
       >

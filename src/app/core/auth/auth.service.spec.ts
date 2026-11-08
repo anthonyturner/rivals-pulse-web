@@ -178,6 +178,58 @@ describe('AuthService', () => {
     });
   });
 
+  describe('the Pulse Records setting', () => {
+    it('reads the setting with a plain GET', async () => {
+      create(answer(200, { showInRecords: true }));
+
+      expect(await service.loadRecordsOptIn()).toEqual({ status: 'ready', showInRecords: true });
+      expect(fetchSpy).toHaveBeenCalledOnceWith('/api/account/records-opt-in');
+    });
+
+    for (const show of [true, false]) {
+      it(`posts only the choice (${show}) as JSON and returns what the server saved`, async () => {
+        create(answer(200, { showInRecords: show }));
+
+        expect(await service.setRecordsOptIn(show)).toEqual({ status: 'ready', showInRecords: show });
+        expect(fetchSpy).toHaveBeenCalledOnceWith('/api/account/records-opt-in', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ show }),
+        });
+      });
+    }
+
+    it('reports an ended session as signed out', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT }), answer(401, { error: 'Sign in to change this setting.' }));
+      await service.load();
+
+      expect(await service.setRecordsOptIn(true)).toEqual({ status: 'signedOut' });
+      expect(service.state()).toEqual({ status: 'signedOut' });
+    });
+
+    it('passes on the reason the server gives, such as needing a link first', async () => {
+      create(answer(409, { error: 'Link the desktop app first.' }));
+
+      expect(await service.setRecordsOptIn(true)).toEqual({ status: 'failed', message: 'Link the desktop app first.' });
+    });
+
+    it('gives a plain message, and never an "off", when the answer is unreadable or the network is down', async () => {
+      create(answer(500), answer(200, { showInRecords: 'yes' }));
+
+      const read = await service.loadRecordsOptIn();
+      const odd = await service.loadRecordsOptIn();
+
+      expect(read.status === 'failed' && read.message).toContain('could not be loaded');
+      expect(odd.status).toBe('failed');
+
+      fetchSpy.and.rejectWith(new TypeError('offline'));
+
+      const saved = await service.setRecordsOptIn(false);
+
+      expect(saved.status === 'failed' && saved.message).toContain('could not be saved');
+    });
+  });
+
   describe('deleteAccount', () => {
     const asked = { mode: 'account', confirmation: 'delete my account' } as const;
 
