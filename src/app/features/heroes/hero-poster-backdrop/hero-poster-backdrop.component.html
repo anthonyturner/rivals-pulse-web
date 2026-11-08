@@ -14,10 +14,6 @@
 </span>
 @if (videoUrl()) {
   <div class="backdrop-controls">
-    <button type="button" class="backdrop-control" role="switch" [attr.aria-checked]="playing()" (click)="toggle()">
-      <span class="backdrop-switch__track" aria-hidden="true"></span>
-      Gameplay video
-    </button>
     @if (videoLoaded()) {
       <button type="button" class="backdrop-control" [attr.aria-pressed]="soundOn()" (click)="toggleSound()">
         <svg class="backdrop-sound__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -31,5 +27,9 @@
         Sound
       </button>
     }
+    <button type="button" class="backdrop-control" role="switch" [attr.aria-checked]="playing()" (click)="toggle()">
+      <span class="backdrop-switch__track" aria-hidden="true"></span>
+      Gameplay video
+    </button>
   </div>
 }

@@ -1,4 +1,4 @@
-/* The art and the switch place themselves against the poster, so the host adds no box of its own. */
+/* The art and the controls place themselves against the poster, so the host adds no box of its own. */
 :host {
   display: contents;
 }
@@ -61,6 +61,7 @@
   z-index: 2;
   display: flex;
   flex-wrap: wrap;
+  /* Sound comes first in the markup, so the video switch stays put at the edge when Sound appears beside it. */
   justify-content: flex-end;
   gap: 8px;
 }

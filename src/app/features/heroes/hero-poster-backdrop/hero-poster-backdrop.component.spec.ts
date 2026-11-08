@@ -103,6 +103,22 @@ describe('HeroPosterBackdropComponent', () => {
     expect(soundButton()?.getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('starts muted again when the hero changes', async () => {
+    await press();
+    await loadVideo();
+    soundButton()?.click();
+    await fixture.whenStable();
+
+    fixture.componentRef.setInput(
+      'videoUrl',
+      TestBed.inject(DomSanitizer).bypassSecurityTrustResourceUrl('about:blank#next'),
+    );
+    await fixture.whenStable();
+    await loadVideo();
+
+    expect(soundButton()?.getAttribute('aria-pressed')).toBe('false');
+  });
+
   it('remembers the choice in this browser', async () => {
     await press();
 

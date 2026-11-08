@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
-const YOUTUBE_EMBED_ORIGIN = 'https://www.youtube-nocookie.com';
+/** The privacy-enhanced YouTube host: embeds must load from here for their player commands to reach them. */
+export const YOUTUBE_EMBED_ORIGIN = 'https://www.youtube-nocookie.com';
 
 export type YoutubeEmbedCommand = 'mute' | 'unMute';
 

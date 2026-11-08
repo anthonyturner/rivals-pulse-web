@@ -51,6 +51,7 @@ import {
 
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
+import { YOUTUBE_EMBED_ORIGIN } from './hero-poster-backdrop/youtube-embed-commands';
 
 interface UltimateStrategy {
   ability: HeroAbility;
@@ -513,7 +514,7 @@ export class HeroesPageComponent implements OnInit {
 
     // `playlist` set to the video itself is what makes YouTube loop a single video.
     return this.sanitizer.bypassSecurityTrustResourceUrl(
-      `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3`,
+      `${YOUTUBE_EMBED_ORIGIN}/embed/${id}?autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3`,
     );
   });
 
