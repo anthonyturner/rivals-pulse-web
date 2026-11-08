@@ -48,7 +48,7 @@ export class GameStatsPageComponent {
 
     return stats === null ? buildGameStatsView(SAVED_GAME_STATS, true) : buildGameStatsView(stats, false);
   });
-  readonly leadImage = '/images/site/heroes-banner.jpg';
+  readonly leadImage = '/images/site/banners/game-stats-banner.webp';
   readonly leadChip: TileChip = { kind: 'secondary', label: 'Steam' };
   readonly milestones = MILESTONES;
   readonly sources = SOURCES;

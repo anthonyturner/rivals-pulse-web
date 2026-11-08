@@ -17,7 +17,7 @@ const COMMUNITY: TileChip = { kind: 'tertiary', label: 'Community' };
  * A link missing here still gets a plain tile, after these.
  */
 export const RESOURCE_TILES: readonly HubTileConfig[] = [
-  { path: '/media-tutorials', size: 'feature', chip: LEARN, preview: null, imageUrl: '/images/site/heroes-banner.jpg', playMarker: true },
+  { path: '/media-tutorials', size: 'feature', chip: LEARN, preview: null, imageUrl: '/images/site/banners/resources-banner.webp', playMarker: true },
   { path: '/tier-list', size: 'tall', chip: COMMUNITY, preview: TierListPreviewComponent, imageUrl: null },
   { path: '/win-rates', size: 'half', chip: STATS, preview: HeroStatsPreviewComponent, imageUrl: null },
   { path: '/strategist-guides', size: 'half', chip: LEARN, preview: StrategistGuidesPreviewComponent, imageUrl: null },

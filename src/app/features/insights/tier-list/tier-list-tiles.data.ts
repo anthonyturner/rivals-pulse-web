@@ -22,7 +22,7 @@ export const TIER_LIST_TILES: readonly HubTileConfig[] = [
     size: 'half',
     chip: { kind: 'tertiary', label: 'Community' },
     preview: null,
-    imageUrl: '/images/site/heroes-banner.jpg',
+    imageUrl: '/images/site/banners/tier-list-banner.webp',
   },
   { path: '/win-rates', size: 'half', chip: { kind: 'secondary', label: 'Stats' }, preview: null, imageUrl: null },
 ];
