@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T00:00:00.000Z",
+  "generatedAt": "2026-11-08T00:00:00.000Z",
   "files": [
     {
       "dataset": "heroes",
@@ -55,6 +55,12 @@
       "path": "pulse-atlas/v1/hero-scores.json",
       "sha256": "42ef15d26ca5fa6cad78e53db0e6cafcf6aeefd7eae9f6ea8b5d8f316169cb28",
       "bytes": 1148
+    },
+    {
+      "dataset": "team-lineups",
+      "path": "pulse-atlas/v1/team-lineups.json",
+      "sha256": "5efde1a133b311b657044da38a6f491a3a473f2f2191aae3d9b5e556e61f249a",
+      "bytes": 535
     }
   ]
 }

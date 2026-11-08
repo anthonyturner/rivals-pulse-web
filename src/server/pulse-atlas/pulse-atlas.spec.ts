@@ -16,6 +16,8 @@ import {
   resolveCommunityStats,
   resolveHeroScores,
   assembleHeroScores,
+  assembleTeamLineups,
+  resolveTeamLineups,
   verifyPulseAtlas,
 } from './pulse-atlas';
 import { findStrategistTagProblems } from './strategist-tags';
@@ -173,6 +175,24 @@ function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<
   };
 }
 
+const READY_SHAPE = { shape: '2-2-2', vanguards: 2, duelists: 2, strategists: 2, status: 'ready', teams: 67, wins: 37 };
+const THIN_SHAPE = { shape: '1-2-3', vanguards: 1, duelists: 2, strategists: 3, status: 'not-enough-data', teams: null, wins: null };
+
+function teamLineupsData(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    provenance: PROVENANCE,
+    status: 'ready',
+    minimumTeams: 50,
+    mode: 'competitive',
+    currentSeasonId: 21,
+    season: { id: 21, label: 'Season 10.5' },
+    classifiedTeams: 110,
+    unclassifiedTeams: 2,
+    shapes: [READY_SHAPE, THIN_SHAPE],
+    ...overrides,
+  };
+}
+
 const notAboutCommunityStats = (warning: string): boolean => !warning.startsWith('community-stats:');
 
 function validInputs(): PulseAtlasInput[] {
@@ -190,6 +210,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'hero-stats', source: 'test', data: heroStatsTable() },
     { dataset: 'community-stats', source: 'test', data: communityStatsData() },
     { dataset: 'hero-scores', source: 'test', data: heroScoresData() },
+    { dataset: 'team-lineups', source: 'test', data: teamLineupsData() },
     { dataset: 'hero-game-ids', source: 'test', data: [thorEntry] },
   ];
 }
@@ -219,6 +240,7 @@ describe('buildPulseAtlas', () => {
       'pulse-atlas/v1/hero-stats.json',
       'pulse-atlas/v1/community-stats.json',
       'pulse-atlas/v1/hero-scores.json',
+      'pulse-atlas/v1/team-lineups.json',
       'pulse-atlas/v1/tier-list/seasons/1.json',
       'pulse-atlas/v1/tier-list/seasons/2.json',
       'pulse-atlas/v1/manifest.json',
@@ -2353,6 +2375,193 @@ describe('resolveHeroScores', () => {
 
     expect(input).toBeUndefined();
     expect(warnings[0]).toMatch(/left out of this publish/);
+  });
+});
+
+describe('the team-lineups dataset', () => {
+  const buildWith = (data: unknown): (() => PulseAtlasFile[]) => () => buildPulseAtlas(withData('team-lineups', data), GENERATED_AT, fakeSha256);
+  const shapesWith = (...shapes: Record<string, unknown>[]): Record<string, unknown> => teamLineupsData({ shapes });
+
+  it('is published and listed in the manifest', () => {
+    const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+    const manifest = parseManifest(files[files.length - 1].content);
+    const file = files.find((candidate) => candidate.path === 'pulse-atlas/v1/team-lineups.json');
+
+    expect(manifest.files.map((entry) => entry.dataset)).toContain('team-lineups');
+    expect(JSON.parse(file?.content ?? '{}').data).toEqual(teamLineupsData());
+  });
+
+  it('may be left out of a run, and the feed is still valid', () => {
+    const inputs = validInputs().filter((input) => input.dataset !== 'team-lineups');
+    const files = buildPulseAtlas(inputs, GENERATED_AT, fakeSha256);
+
+    expect(files.some((file) => file.path.endsWith('team-lineups.json'))).toBeFalse();
+    expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
+  });
+
+  it('is valid with no shape at all, which is the launch state', () => {
+    expect(buildWith(teamLineupsData({ status: 'not-enough-data', classifiedTeams: 0, unclassifiedTeams: 0, shapes: [] }))).not.toThrow();
+  });
+
+  it('refuses a shape under the minimum that carries counts', () => {
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, teams: 12 }))).toThrowError(/shape 1-2-3 is not enough data, so it may carry no counts/);
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, wins: 5 }))).toThrowError(/shape 1-2-3 is not enough data, so it may carry no counts/);
+  });
+
+  it('refuses a ready shape under the minimum, or with wins above its teams', () => {
+    expect(buildWith(shapesWith({ ...READY_SHAPE, teams: 49, wins: 20 }))).toThrowError(/shape 2-2-2 is ready with fewer than the minimum teams/);
+    expect(buildWith(shapesWith({ ...READY_SHAPE, wins: 68 }))).toThrowError(/shape 2-2-2 needs wins as a whole number from 0 to its teams/);
+    expect(buildWith(shapesWith({ ...READY_SHAPE, wins: null }))).toThrowError(/shape 2-2-2 needs wins as a whole number from 0 to its teams/);
+    expect(buildWith(shapesWith({ ...READY_SHAPE, teams: 111, wins: 60 }))).toThrowError(/shape 2-2-2 has more teams than classifiedTeams/);
+  });
+
+  it('refuses a status that disagrees with its shapes', () => {
+    expect(buildWith(teamLineupsData({ status: 'not-enough-data' }))).toThrowError(/status must be ready if and only if a shape is ready/);
+    expect(buildWith(shapesWith(THIN_SHAPE))).toThrowError(/status must be ready if and only if a shape is ready/);
+  });
+
+  it('refuses a shape whose name does not match its counts, or one listed twice', () => {
+    expect(buildWith(shapesWith({ ...READY_SHAPE, shape: '3-2-1' }))).toThrowError(/shape 3-2-1 does not match its vanguards, duelists and strategists/);
+    expect(buildWith(shapesWith(READY_SHAPE, READY_SHAPE))).toThrowError(/shape 2-2-2 is listed more than once/);
+  });
+
+  it('refuses a key outside the allow-list at every level', () => {
+    expect(buildWith(teamLineupsData({ note: 'x' }))).toThrowError(/the file has a key outside the allow-list: note/);
+    expect(buildWith(teamLineupsData({ season: { id: 21, label: 'Season 10.5', startsAt: 'x' } }))).toThrowError(/season has a key outside the allow-list: startsAt/);
+    expect(buildWith(shapesWith({ ...READY_SHAPE, pickRate: 0.6 }))).toThrowError(/shape 2-2-2 has a key outside the allow-list: pickRate/);
+  });
+
+  it('refuses a key naming something private', () => {
+    expect(buildWith(teamLineupsData({ playerCount: 3 }))).toThrowError(/playerCount/);
+  });
+
+  it('refuses an inPlaceOfSeasonId that is not the current season', () => {
+    expect(buildWith(teamLineupsData({ inPlaceOfSeasonId: 20 }))).toThrowError(/inPlaceOfSeasonId must be the currentSeasonId/);
+    expect(buildWith(teamLineupsData({ inPlaceOfSeasonId: 21 }))).not.toThrow();
+  });
+
+  it('refuses a file that is not the community data', () => {
+    expect(buildWith(teamLineupsData({ provenance: 'elsewhere' }))).toThrowError(/provenance must be/);
+  });
+
+  it('fails read-back when the written file loses its community marker', () => {
+    const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256).map((file) =>
+      file.path.endsWith('team-lineups.json') ? { ...file, content: file.content.replace(PROVENANCE, 'other') } : file,
+    );
+    const lineups = files.find((one) => one.path.endsWith('team-lineups.json'));
+    const rehashed = files.map((file) => {
+      if (!file.path.endsWith('manifest.json')) {
+        return file;
+      }
+
+      const manifest = parseManifest(file.content);
+
+      return {
+        ...file,
+        content: JSON.stringify({
+          ...manifest,
+          files: manifest.files.map((entry) =>
+            entry.dataset === 'team-lineups'
+              ? { ...entry, sha256: fakeSha256(lineups?.content ?? ''), bytes: new TextEncoder().encode(lineups?.content ?? '').length }
+              : entry,
+          ),
+        }),
+      };
+    });
+
+    expect(() => verifyPulseAtlas(rehashed, fakeSha256)).toThrowError(/team-lineups: the file does not carry provenance/);
+  });
+});
+
+describe('assembleTeamLineups', () => {
+  const answer = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    status: 'ready',
+    minimumTeams: 50,
+    halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00+00:00', endsAt: null },
+    inPlaceOf: null,
+    halfSeasons: [],
+    mode: 'competitive',
+    modes: [{ id: 'competitive', label: 'Competitive', decidedMatches: 56 }],
+    classifiedTeams: 110,
+    unclassifiedTeams: 2,
+    shapes: [
+      { ...READY_SHAPE, pickRate: 0.6091, winRate: 0.5522 },
+      { ...THIN_SHAPE, pickRate: null, winRate: null },
+    ],
+    ...overrides,
+  });
+
+  it('keeps the counts and drops everything else, turning the half-season into a season id', () => {
+    expect(assembleTeamLineups(answer())).toEqual(teamLineupsData());
+  });
+
+  it('names the current half-season when the previous one stands in for it', () => {
+    const data = assembleTeamLineups(
+      answer({ halfSeason: { id: 10, label: 'Season 10' }, inPlaceOf: { id: 10.5, label: 'Season 10.5' } }),
+    ) as Record<string, unknown>;
+
+    expect(data['currentSeasonId']).toBe(21);
+    expect(data['season']).toEqual({ id: 20, label: 'Season 10' });
+    expect(data['inPlaceOfSeasonId']).toBe(21);
+  });
+
+  it('throws on an answer of another shape, with no mode, or with no half-season', () => {
+    expect(() => assembleTeamLineups({ nope: true })).toThrowError(/not the team-lineups shape/);
+    expect(() => assembleTeamLineups(answer({ mode: undefined }))).toThrowError(/not the team-lineups shape/);
+    expect(() => assembleTeamLineups(answer({ shapes: [{ vanguards: 2 }] }))).toThrowError(/not the team-lineups shape/);
+    expect(() => assembleTeamLineups(answer({ halfSeason: null }))).toThrowError(/no half-season yet/);
+  });
+});
+
+describe('resolveTeamLineups', () => {
+  const PATH = 'pulse-atlas/v1/team-lineups.json';
+
+  async function resolve(read: () => Promise<unknown>, published: PulseAtlasFile[] = []) {
+    const warnings: string[] = [];
+    const input = await resolveTeamLineups({ read, published, source: 'live', warn: (warning) => warnings.push(warning) });
+
+    return { input, warnings };
+  }
+
+  const liveAnswer = (): Record<string, unknown> => ({
+    status: 'ready',
+    minimumTeams: 50,
+    halfSeason: { id: 10.5, label: 'Season 10.5' },
+    inPlaceOf: null,
+    mode: 'competitive',
+    classifiedTeams: 110,
+    unclassifiedTeams: 2,
+    shapes: [READY_SHAPE, THIN_SHAPE],
+  });
+
+  it('builds the dataset from the live answer, with no warning', async () => {
+    const { input, warnings } = await resolve(async () => liveAnswer());
+
+    expect(input).toEqual({ dataset: 'team-lineups', source: 'live', data: teamLineupsData() });
+    expect(warnings).toEqual([]);
+  });
+
+  it('leaves the dataset out, with a warning, when the endpoint fails and none was ever published', async () => {
+    const { input, warnings } = await resolve(() => Promise.reject(new Error('HTTP 404')));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/team-lineups could not be built.*HTTP 404.*left out of this publish/);
+  });
+
+  it('keeps the last published file when the endpoint fails', async () => {
+    const previous = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+    const { input, warnings } = await resolve(() => Promise.reject(new Error('HTTP 500')), previous);
+
+    expect(input).toEqual({ dataset: 'team-lineups', source: 'test', data: teamLineupsData() });
+    expect(warnings[0]).toMatch(/last published file is kept/);
+    expect(previous.some((file) => file.path === PATH)).toBeTrue();
+  });
+
+  it('takes the fallback when the answer would publish counts for a thin shape', async () => {
+    const { input, warnings } = await resolve(async () => ({ ...liveAnswer(), shapes: [READY_SHAPE, { ...THIN_SHAPE, teams: 12, wins: 5 }] }));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/may carry no counts/);
   });
 });
 
