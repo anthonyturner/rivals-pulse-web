@@ -116,6 +116,14 @@ describe('StatsTabComponent', () => {
     expect(text()).not.toMatch(/NaN|undefined|null/);
   });
 
+  it('tints each role card by its role', async () => {
+    await answer(READY);
+
+    const roles = Array.from(host().querySelectorAll('.role')).map((card) => card.getAttribute('data-role'));
+
+    expect(roles).toEqual(['vanguard', 'duelist', 'strategist']);
+  });
+
   it('switches mode and marks the chosen one pressed', async () => {
     await answer(READY);
 

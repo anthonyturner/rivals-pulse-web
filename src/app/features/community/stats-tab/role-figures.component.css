@@ -5,14 +5,20 @@
 
 .role-figures__scroll {
   overflow-x: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
 }
 
 .role-figures__table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid var(--border-strong);
   background: var(--bg-panel);
   color: var(--text);
+}
+
+.role-figures__table tbody tr:last-child th,
+.role-figures__table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .role-figures__table th,

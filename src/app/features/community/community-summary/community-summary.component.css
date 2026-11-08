@@ -3,10 +3,15 @@
   gap: 12px;
 }
 
+/* The loading, failure and empty panels share the tiles' 12px corners. */
+app-state-panel {
+  --state-panel-radius: 12px;
+}
+
 .tab-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 4px 16px;
 }
@@ -15,12 +20,6 @@
   font-size: var(--type-h3);
   font-weight: 800;
   line-height: 1.2;
-}
-
-.tab-scope {
-  color: var(--text-soft);
-  font-size: var(--type-small);
-  font-weight: 700;
 }
 
 .footnote {
@@ -32,15 +31,34 @@
 .links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 20px;
+  gap: 8px 12px;
 }
 
+/* A link to the full page is a pill with an arrow, so it reads as somewhere to go and not as a line of body text. */
 .link {
-  padding-block: 2px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
   color: var(--link);
   font-size: var(--type-small);
   font-weight: 700;
   text-decoration: underline;
+}
+
+.link::after {
+  content: '\2192';
+  content: '\2192' / '';
+  text-decoration: none;
+}
+
+.link:hover {
+  border-color: var(--accent-line);
+  background: var(--bg-panel-soft);
 }
 
 .link:focus-visible {
