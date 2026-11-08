@@ -1,4 +1,4 @@
-/* The art and the switch place themselves against the poster, so the host adds no box of its own. */
+/* The art and the controls place themselves against the poster, so the host adds no box of its own. */
 :host {
   display: contents;
 }
@@ -54,11 +54,19 @@
   content: '';
 }
 
-.backdrop-switch {
+.backdrop-controls {
   position: absolute;
   top: 16px;
   right: 16px;
   z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  /* Sound comes first in the markup, so the video switch stays put at the edge when Sound appears beside it. */
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.backdrop-control {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -73,13 +81,22 @@
   cursor: pointer;
 }
 
-.backdrop-switch:hover {
+.backdrop-control:hover {
   border-color: var(--poster-ring);
 }
 
-.backdrop-switch:focus-visible {
+.backdrop-control:focus-visible {
   outline: 2px solid var(--ink-focus);
   outline-offset: 2px;
+}
+
+.backdrop-control[aria-pressed='true'] {
+  border-color: var(--poster-ring);
+}
+
+.backdrop-sound__icon {
+  width: 18px;
+  height: 18px;
 }
 
 .backdrop-switch__track {
@@ -103,11 +120,11 @@
   transition: transform 0.2s ease;
 }
 
-.backdrop-switch[aria-checked='true'] .backdrop-switch__track {
+.backdrop-control[aria-checked='true'] .backdrop-switch__track {
   background: var(--poster-ring);
 }
 
-.backdrop-switch[aria-checked='true'] .backdrop-switch__track::after {
+.backdrop-control[aria-checked='true'] .backdrop-switch__track::after {
   transform: translateX(12px);
 }
 
@@ -126,13 +143,11 @@
   }
 
   /* In the flow above the name on a narrow poster, where a corner badge would sit on top of it. */
-  .backdrop-switch {
+  .backdrop-controls {
     position: relative;
     top: auto;
     right: auto;
     z-index: 1;
-    display: flex;
-    width: fit-content;
-    margin: -8px 0 12px auto;
+    margin: -8px 0 12px;
   }
 }
