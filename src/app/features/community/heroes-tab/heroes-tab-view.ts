@@ -1,5 +1,5 @@
 import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice, percentLabel, placementRequirementLabel } from '../../../shared/utilities/stat-labels';
 import { heroCell, type HeroIdentities } from '../../insights/hero-identity';
 import type { CommunityHeroRow } from '../community-hero-list/community-hero-list.component';
 
@@ -49,7 +49,7 @@ export function buildHeroesTabView(
 
     return {
       kind: 'not-enough-data',
-      summary: `${counted} A hero's numbers appear at ${countLabel(stats.minimumMatches, 'appearance', 'appearances')}.`,
+      summary: `${counted} A hero's numbers appear at ${placementRequirementLabel(stats)}.`,
     };
   }
 
@@ -60,7 +60,7 @@ export function buildHeroesTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero on both teams of one match counts twice. Only heroes with enough appearances are listed.`,
+    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero on both teams of one match counts twice. Only heroes with enough appearances and players are listed.`,
     mostPicked: leaders(placed, 'pickRate', identities),
     highestWinRate: leaders(placed, 'winRate', identities),
   };

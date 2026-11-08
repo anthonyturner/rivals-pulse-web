@@ -263,7 +263,7 @@ describe('WinRatesPageComponent', () => {
   it('shows heroes still short of the minimum as not enough data yet, beside the full table', async () => {
     const element = await open('/win-rates', full);
 
-    expect(text(element, '.building h2')).toEqual(['Progress toward 10 appearances']);
+    expect(text(element, '.building h2')).toEqual(['Progress toward a win rate']);
     expect(text(element, '.building-name')).toEqual(['Storm', 'Thor']);
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
   });
@@ -271,7 +271,6 @@ describe('WinRatesPageComponent', () => {
   it('says "1 appearance" when one is all a hero needs', async () => {
     const element = await open('/win-rates', { ...full, minimumMatches: 1 });
 
-    expect(text(element, '.building h2')).toEqual(['Progress toward 1 appearance']);
     expect(squash(text(element, '.meta')[0])).toContain('Heroes need 1 appearance to be listed');
   });
 
