@@ -1,6 +1,5 @@
 import { activityOf, dashboardStats, emptyDashboard, linkedDashboard, recentMatch } from '../../core/auth/own-dashboard.fixtures';
 import { heroIdentities } from '../insights/hero-identity';
-import { GENERIC_PROFILE_LEAD } from './profile-lead';
 import { buildProfileView, DEPTH_NOTE, NOT_COUNTED, type ProfileView } from './profile-view';
 
 const IDENTITIES = heroIdentities([
@@ -153,11 +152,6 @@ describe('buildProfileView ready', () => {
       jasmine.objectContaining({ hero: 'storm', name: 'Storm', figure: '66.7%', sample: '9 matches, KDA 4.0' }),
       jasmine.objectContaining({ hero: 'hela', name: 'Hela', figure: '40.0%', sample: '5 matches' }),
     ]);
-  });
-
-  it('leads with the most played hero, and with the generic art when no hero qualifies', () => {
-    expect(ready().lead).toEqual(jasmine.objectContaining({ title: 'Storm', imageUrl: '/images/heroes/storm.png' }));
-    expect(ready({ topHeroes: [] }).lead).toBe(GENERIC_PROFILE_LEAD);
   });
 
   it('draws a top hero with no recorded result as not counted', () => {

@@ -88,6 +88,12 @@ describe('ProfilePageComponent', () => {
   describe('for an account with no link', () => {
     beforeEach(() => open({ status: 'ready', dashboard: { linked: false } }));
 
+    it('shows the generic art, with no hero name or figures', () => {
+      expect(leadImage()).toBe('/images/site/banners/my-stats-banner.webp');
+      expect(lead().querySelector('app-kind-chip')).toBeNull();
+      expect(lead().textContent).not.toMatch(/Storm|Hela|\d/);
+    });
+
     it('explains linking and links to the account page', () => {
       expect(host().querySelector('app-state-panel h2')?.textContent).toContain('Link the desktop app');
       expect(text()).toContain('ask it for a link code');
@@ -138,6 +144,12 @@ describe('ProfilePageComponent', () => {
 
   describe('when the stats cannot be read', () => {
     beforeEach(() => open({ status: 'unavailable' }, { status: 'ready', dashboard: linkedDashboard() }));
+
+    it('shows the generic art, with no hero name or figures', () => {
+      expect(leadImage()).toBe('/images/site/banners/my-stats-banner.webp');
+      expect(lead().querySelector('app-kind-chip')).toBeNull();
+      expect(lead().textContent).not.toMatch(/Storm|Hela|\d/);
+    });
 
     it('says so and offers to try again', () => {
       expect(host().querySelector('[role="status"] h2')?.textContent).toContain('unavailable');

@@ -14,7 +14,6 @@ import { countLabel, percentLabel } from '../../shared/utilities/stat-labels';
 import type { CommunityHeroRow } from '../community/community-hero-list/community-hero-list.component';
 import { heroCell, type HeroIdentities } from '../insights/hero-identity';
 import { ownInsightTables, ownMatchTables, type OwnActivityTableView } from './own-activity/own-activity';
-import { profileLead, type ProfileLead } from './profile-lead';
 
 /** Shown in place of a figure the desktop app did not record. Never 0. */
 export const NOT_COUNTED = 'Not counted';
@@ -55,8 +54,6 @@ export type ProfileView =
   | {
       kind: 'ready';
       player: LinkedPlayer;
-      /** The most-played hero's art and name, or the generic art when the player has none to show. */
-      lead: ProfileLead;
       sample: string;
       /** Set when more matches existed than were read, so the figures cover only the newest. */
       notice: string | null;
@@ -107,7 +104,6 @@ export function buildProfileView(
   return {
     kind: 'ready',
     player,
-    lead: profileLead(stats.topHeroes[0], identities),
     sample: sampleOf(stats),
     notice: truncated ? TRUNCATED_NOTE : null,
     overview: overviewOf(stats),

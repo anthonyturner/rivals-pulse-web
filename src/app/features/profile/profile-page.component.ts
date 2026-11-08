@@ -23,7 +23,7 @@ import { HubTileComponent } from '../hub/hub-tile/hub-tile.component';
 import { heroIdentities } from '../insights/hero-identity';
 import { ProfileFigureListComponent } from './figure-list/profile-figure-list.component';
 import { OwnActivityTablesComponent } from './own-activity/own-activity-tables.component';
-import { GENERIC_PROFILE_LEAD } from './profile-lead';
+import { profileLead } from './profile-lead';
 import { buildProfileView, DEPTH_NOTE } from './profile-view';
 
 /** The signed-in player's own stats, read from the matches their linked desktop app uploaded. */
@@ -55,17 +55,14 @@ export class ProfilePageComponent {
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
 
   protected readonly depthNote = DEPTH_NOTE;
-  protected readonly view = computed(() => {
+  private readonly identities = computed(() => {
     const roster = this.roster();
 
-    return buildProfileView(this.result(), roster === undefined ? undefined : heroIdentities(roster));
+    return roster === undefined ? undefined : heroIdentities(roster);
   });
-  /** Any answer but a player with a most-played hero, a signed-out visitor included, gets the generic art. */
-  protected readonly lead = computed(() => {
-    const current = this.view();
 
-    return current.kind === 'ready' ? current.lead : GENERIC_PROFILE_LEAD;
-  });
+  protected readonly view = computed(() => buildProfileView(this.result(), this.identities()));
+  protected readonly lead = computed(() => profileLead(this.result(), this.identities()));
 
   constructor() {
     inject(DestroyRef).onDestroy(() => (this.destroyed = true));
