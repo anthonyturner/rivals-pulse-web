@@ -1,5 +1,5 @@
 import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice, percentLabel, placementRequirementLabel } from '../../../shared/utilities/stat-labels';
 
 export interface HeroCommunityFigure {
   label: string;
@@ -78,7 +78,7 @@ export function buildHeroCommunityStatsView(
   }
 
   const appearances = stats.belowMinimum.find((entry) => entry.hero === heroId)?.appearances ?? 0;
-  const needed = `The numbers appear at ${stats.minimumMatches} appearances.`;
+  const needed = `The numbers appear at ${placementRequirementLabel(stats)}.`;
   const where = fallbackFor === null || halfSeasonLabel === null ? '' : ` in ${halfSeasonLabel}`;
 
   return {
