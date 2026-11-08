@@ -112,6 +112,9 @@ jobs:
 
           - [ ] \`src/app/features/heroes/hero-gameplay-archetypes.ts\` - archetype label and notes
           - [ ] \`src/app/features/learning/guides/hero-guides/hero-guide-data.ts\` - hero guide entry
+          - [ ] \`data/pulse-atlas/hero-game-ids.json\` - the hero's game id
+          - [ ] \`data/pulse-atlas/strategist-tags.json\` - a \`healer\` or \`utility\` tag, if the hero is a Strategist
+          - [ ] \`hero_game_roles\` - a row in a new migration with the hero's game id and role (triple-support counts)
           BODY
 
           gh pr create --draft --base "$BASE_BRANCH" --head "$branch" --title "$PR_TITLE" --body-file pr-body.md

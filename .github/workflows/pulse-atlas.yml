@@ -17,6 +17,8 @@ on:
       - scripts/build-pulse-atlas.mjs
       - package.json
       - src/server/pulse-atlas/pulse-atlas.ts
+      - src/server/pulse-atlas/strategist-tags.ts
+      - src/contracts/strategist-tags.model.ts
       - src/server/pulse-atlas/pulse-atlas-page.ts
       - data/pulse-atlas/**
 

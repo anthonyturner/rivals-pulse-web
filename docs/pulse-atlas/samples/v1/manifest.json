@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T00:00:00.000Z",
+  "generatedAt": "2026-11-07T00:00:00.000Z",
   "files": [
     {
       "dataset": "heroes",
@@ -31,6 +31,12 @@
       "path": "pulse-atlas/v1/hero-styles.json",
       "sha256": "53ff6d4c746872d5f236bc95d17ca31331cb176e7a12301fb585c60a60171690",
       "bytes": 220
+    },
+    {
+      "dataset": "strategist-tags",
+      "path": "pulse-atlas/v1/strategist-tags.json",
+      "sha256": "217e26ba38c799a0589f93ddbf49bf573514ff454ea2656ec6c23e5959018f63",
+      "bytes": 154
     },
     {
       "dataset": "hero-stats",
