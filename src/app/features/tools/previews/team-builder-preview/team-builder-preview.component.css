@@ -1,0 +1,99 @@
+:host {
+  display: block;
+}
+
+.team {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slots {
+  gap: 8px;
+}
+
+/* The content box is the portrait's size; the gap and the role-coloured border sit outside it. */
+.slot {
+  display: grid;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  place-items: center;
+  padding: 2px;
+  border: 2px solid var(--control-border);
+  border-radius: 10px;
+}
+
+.slot[data-role='Vanguard'] {
+  border-color: var(--role-vanguard);
+}
+
+.slot[data-role='Duelist'] {
+  border-color: var(--role-duelist);
+}
+
+.slot[data-role='Strategist'] {
+  border-color: var(--role-strategist);
+}
+
+.slot--empty {
+  border-style: dashed;
+}
+
+.plus {
+  color: var(--text-muted);
+  font-size: var(--type-title);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.legend {
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  justify-content: flex-end;
+}
+
+.legend__item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.legend__item::before {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--control-border);
+  border-radius: 3px;
+  content: '';
+}
+
+.legend__item[data-role='Vanguard']::before {
+  border-color: var(--role-vanguard);
+}
+
+.legend__item[data-role='Duelist']::before {
+  border-color: var(--role-duelist);
+}
+
+.legend__item[data-role='Strategist']::before {
+  border-color: var(--role-strategist);
+}
+
+@media (max-width: 860px) {
+  .team {
+    justify-items: start;
+  }
+
+  .legend {
+    justify-content: flex-start;
+  }
+}

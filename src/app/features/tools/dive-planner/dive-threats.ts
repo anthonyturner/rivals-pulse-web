@@ -1,3 +1,6 @@
+/** The enemy heroes the planner opens with chosen. The hub's preview shows these too. */
+export const DEFAULT_DIVE_THREAT_IDS: readonly string[] = ['angela', 'black-cat', 'spider-man'];
+
 /** The enemy dive heroes the planner offers, in display order, with the advice for facing each. */
 export const DIVE_THREATS: readonly { id: string; instruction: string }[] = [
   {

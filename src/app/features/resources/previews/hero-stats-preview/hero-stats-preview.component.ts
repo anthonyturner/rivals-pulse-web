@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
-import { previewHeroStats, previewRoster } from '../preview-data';
-import { PreviewPortraitComponent } from '../preview-portrait/preview-portrait.component';
+import { previewHeroStats, previewRoster } from '../../../hub/preview-data';
+import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { winRatePreview } from '../preview-views';
 
 /** The three best win rates among heroes with enough matches, as bars. Draws nothing until one has. */

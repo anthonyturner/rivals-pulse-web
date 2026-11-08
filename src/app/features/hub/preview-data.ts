@@ -3,10 +3,12 @@ import { PLATFORM_ID, inject, signal, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, type Observable } from 'rxjs';
 
-import type { HeroStats } from '../../../../contracts/hero-stats.model';
-import type { Hero } from '../../heroes/hero.model';
-import { HeroDataService } from '../../heroes/hero-data.service';
-import { CurrentHeroStatsService } from '../../insights/current-hero-stats.service';
+import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
+import type { HeroStats } from '../../../contracts/hero-stats.model';
+import type { Hero } from '../heroes/hero.model';
+import { HeroDataService } from '../heroes/hero-data.service';
+import { CurrentHeroMatchupsService } from '../insights/current-hero-matchups.service';
+import { CurrentHeroStatsService } from '../insights/current-hero-stats.service';
 
 /**
  * The answer a tile's preview draws from, or null while it loads, if it fails or on the server.
@@ -33,4 +35,11 @@ export function previewRoster(): Signal<readonly Hero[] | null> {
   const heroes = inject(HeroDataService);
 
   return previewData(() => heroes.getHeroRoster());
+}
+
+/** The hero matchups, fetched once however many previews ask; null when they could not be read. */
+export function previewMatchups(): Signal<HeroMatchups | null> {
+  const matchups = inject(CurrentHeroMatchupsService);
+
+  return previewData(() => matchups.getHeroMatchups());
 }

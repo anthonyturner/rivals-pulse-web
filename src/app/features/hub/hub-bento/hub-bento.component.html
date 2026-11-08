@@ -1,0 +1,17 @@
+<ul class="bento">
+  @for (tile of tiles(); track tile.path) {
+    <li class="cell" [attr.data-size]="tile.size">
+      <app-hub-tile
+        [title]="tile.label"
+        [route]="tile.path"
+        [description]="tile.description"
+        [chip]="tile.chip"
+        [imageUrl]="tile.imageUrl"
+        [tint]="tile.tint ?? null"
+        [split]="tile.split ?? false"
+      >
+        <ng-container [ngComponentOutlet]="tile.preview" />
+      </app-hub-tile>
+    </li>
+  }
+</ul>

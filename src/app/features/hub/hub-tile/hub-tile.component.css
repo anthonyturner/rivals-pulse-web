@@ -40,17 +40,17 @@
   line-height: 1.5;
 }
 
-.chip[data-kind='learn'] {
+.chip[data-kind='accent'] {
   background: var(--accent-soft);
   color: var(--accent-strong);
 }
 
-.chip[data-kind='stats'] {
+.chip[data-kind='secondary'] {
   background: var(--secondary-soft);
   color: var(--secondary-ink);
 }
 
-.chip[data-kind='community'] {
+.chip[data-kind='tertiary'] {
   background: var(--tertiary-soft);
   color: var(--tertiary-ink);
 }
@@ -178,5 +178,44 @@
 @media (max-width: 560px) {
   .art__image {
     width: 260%;
+  }
+}
+
+/* A soft wash in the top-right corner, so a tile can lean toward a side without changing its fill. */
+:host([data-tint='danger']) {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--danger) 16%, transparent), transparent 55%),
+    var(--bg-panel);
+}
+
+/* A full-width strip: the text on the left and the preview centred beside it. */
+:host(.split) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 24px;
+  align-items: center;
+}
+
+:host(.split) .chip,
+:host(.split) .title,
+:host(.split) .description {
+  grid-column: 1;
+}
+
+:host(.split) .preview {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  :host(.split) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :host(.split) .preview {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 12px;
   }
 }
