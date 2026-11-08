@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { PreviewPortraitComponent } from '../preview-portrait/preview-portrait.component';
+import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { strategistPreview } from '../preview-views';
 
 /** The topics the strategist guides cover and the heroes they teach. It reads the guides themselves, so it shows on the server too. */

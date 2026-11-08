@@ -93,22 +93,18 @@ describe('buildTeamCompsView role pairs', () => {
       expect(row.second.name).toBe('Luna Snow');
     });
 
-    it('draws his portrait, falling back to the one the site keeps for him', () => {
+    it('draws his portrait from the roster, and the one the site keeps for him when the roster has none', () => {
+      const pair = synergiesOf([asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12))]);
       const withPortrait: HeroIdentities = new Map(identities).set('deadpool', {
         name: 'Deadpool',
         role: 'Multi-Role',
-        imageUrl: '/images/heroes/deadpool.png',
+        imageUrl: '/images/roster/deadpool-headshot.png',
       });
-      const [row] = buildTeamCompsView(
-        synergiesOf([asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12))]),
-        withPortrait,
-      ).rolePairs[0].rows;
 
-      expect(row.second.imageUrl).toBe('/images/heroes/deadpool.png');
-      expect(
-        buildTeamCompsView(synergiesOf([asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12))]), identities).rolePairs[0]
-          .rows[0].second.imageUrl,
-      ).toBe('/images/heroes/deadpool.png');
+      expect(buildTeamCompsView(pair, withPortrait).rolePairs[0].rows[0].second.imageUrl).toBe(
+        '/images/roster/deadpool-headshot.png',
+      );
+      expect(buildTeamCompsView(pair, identities).rolePairs[0].rows[0].second.imageUrl).toBe('/images/heroes/deadpool.png');
     });
 
     it('keeps a form out of a role it was not played in', () => {

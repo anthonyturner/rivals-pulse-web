@@ -1,15 +1,11 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
-import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
 import type { TierName } from '../../../../contracts/tier-list.model';
-import { heroIdentities, type HeroCellView } from '../../insights/hero-identity';
-import { rolePairsOf } from '../../insights/team-comps/team-comps-view';
+import { previewHero, type PreviewHero } from '../../hub/preview-hero';
+import { heroIdentities } from '../../insights/hero-identity';
 import { buildTierListView } from '../../insights/tier-list/tier-list-view';
 import { buildWinRatesView } from '../../insights/win-rates/win-rates-view';
 import type { Hero } from '../../heroes/hero.model';
 import { STRATEGIST_GUIDES } from '../../learning/guides/strategist-guides/strategist-guides.data';
-
-/** The hero a preview draws: enough for a portrait and a name. */
-export type PreviewHero = Pick<HeroCellView, 'hero' | 'name' | 'imageUrl'>;
 
 export const PREVIEW_TIERS: readonly TierName[] = ['S', 'A', 'B'];
 export const HEROES_PER_TIER = 4;
@@ -24,13 +20,6 @@ export interface WinRatePreviewRow extends PreviewHero {
   winRateLabel: string;
   /** Where the bar's fill ends, as a share of its width. */
   barPercent: number;
-}
-
-export interface PairPreviewRow {
-  role: string;
-  first: PreviewHero;
-  second: PreviewHero;
-  winRateLabel: string;
 }
 
 export interface StrategistPreview {
@@ -52,22 +41,6 @@ export function winRatePreview(stats: HeroStats, roster: readonly Hero[]): WinRa
     .map((row) => ({ ...previewHero(row), winRateLabel: row.winRateLabel, barPercent: row.barPercent }));
 }
 
-/** The best duo of each role that has one. */
-export function pairPreview(synergies: HeroSynergies, roster: readonly Hero[]): PairPreviewRow[] {
-  return rolePairsOf(synergies, heroIdentities(roster)).flatMap(({ role, rows }) =>
-    rows.length === 0
-      ? []
-      : [
-          {
-            role,
-            first: previewHero(rows[0].first),
-            second: previewHero(rows[0].second),
-            winRateLabel: rows[0].winRateLabel,
-          },
-        ],
-  );
-}
-
 /** What the guides cover and whose kits they teach, read from the guides themselves. */
 export function strategistPreview(): StrategistPreview {
   const heroes = new Map<string, PreviewHero>();
@@ -79,6 +52,3 @@ export function strategistPreview(): StrategistPreview {
   return { topics: [...new Set(STRATEGIST_GUIDES.map((guide) => guide.category))], heroes: [...heroes.values()] };
 }
 
-function previewHero({ hero, name, imageUrl }: PreviewHero): PreviewHero {
-  return { hero, name, imageUrl };
-}

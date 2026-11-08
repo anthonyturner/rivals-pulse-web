@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
+import { HeroImageFallbackDirective } from '../../../shared/directives/hero-image-fallback.directive';
 
 /** A hero's portrait at the site's list size. It is decoration: the tile's link carries the meaning. */
 @Component({
