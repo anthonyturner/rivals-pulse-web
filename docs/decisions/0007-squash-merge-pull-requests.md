@@ -1,6 +1,9 @@
 # ADR-0007: Squash-merge pull requests
 
-- **Status:** Accepted
+- **Status:** Accepted. **Amended on 2026-11-08 (issue 612):** agents now
+  delete their own local branches with `git branch -d` once the pull request
+  is merged and the issue is closed, so the local branches no longer
+  accumulate as described under Consequences. See rule 3.
 - **Date:** 2026-11-08
 - **Deciders:** Anthony (maintainer).
 - **Related:** issue 604. Amends the merge-method part of
