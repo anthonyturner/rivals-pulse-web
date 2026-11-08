@@ -211,12 +211,31 @@ describe('the Pulse Records pages', () => {
 
       expect(element.querySelector('table')).toBeNull();
       expect(text(element)).toContain('Not enough data yet');
+      expect(text(element)).not.toContain('Matches since');
+      expect(element.querySelector('app-state-panel a[href="/records"]')?.textContent).toBe('other records');
+      expect(element.querySelector('app-records-coverage')).toBeTruthy();
     });
 
     it('says so when the records cannot be loaded', async () => {
       const { element } = await open('/records/kills', 'failure');
 
-      expect(text(element)).toContain('Pulse Records could not be loaded');
+      expect(element.querySelector('[role="status"]')?.textContent).toContain('Pulse Records could not be loaded');
+      expect(element.querySelector('table')).toBeNull();
+    });
+
+    it('says it is loading under the list links, without announcing it', async () => {
+      const harness = await RouterTestingHarness.create();
+
+      await harness.navigateByUrl('/records/kills');
+      harness.detectChanges();
+
+      const element = harness.routeNativeElement as HTMLElement;
+
+      expect(element.querySelectorAll('nav a').length).toBe(7);
+      expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading Pulse Records');
+      expect(element.querySelector('[role="status"]')).toBeNull();
+      http.expectOne('/api/heroes');
+      http.expectOne('/api/records');
     });
 
     it('shows the 404 page for an unknown category and answers 404', async () => {
