@@ -51,3 +51,4 @@ ADR when the project decides differently.
 | [0003](0003-agent-autonomy.md) | Agent autonomy | Accepted |
 | [0004](0004-add-player-accounts-private-to-the-owner.md) | Add player accounts that are private to their owner | Proposed |
 | [0005](0005-gate-site-administration-behind-an-admin-table.md) | Gate site administration behind an admin table and a database check | Accepted |
+| [0006](0006-publish-opted-in-player-names-on-pulse-records.md) | Publish opted-in player names on Pulse Records | Accepted |

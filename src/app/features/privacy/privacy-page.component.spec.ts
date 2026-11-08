@@ -4,7 +4,12 @@ import { provideRouter } from '@angular/router';
 
 import { ADSENSE_CONFIG, AdSenseConfig } from '../../shared/components/ad-slot/adsense/adsense.config';
 import { PrivacyPageComponent } from './privacy-page.component';
-import { EXTENDED_UPLOAD_FIELDS, EXTENDED_UPLOAD_STATUS, TODAY_UPLOAD_FIELDS } from './privacy-notes.data';
+import {
+  EXTENDED_UPLOAD_FIELDS,
+  EXTENDED_UPLOAD_STATUS,
+  PULSE_RECORDS_STATUS,
+  TODAY_UPLOAD_FIELDS,
+} from './privacy-notes.data';
 
 describe('PrivacyPageComponent', () => {
   let page: HTMLElement;
@@ -85,6 +90,60 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('anonymous');
     expect(text).toContain('minimum');
     expect(text).toContain('never');
+  });
+
+  describe('Pulse Records', () => {
+    const records = (): string => (section('pulse-records').textContent ?? '').replace(/\s+/g, ' ');
+
+    it('says nothing is published until the page opens', () => {
+      expect(PULSE_RECORDS_STATUS).toBe('being-added');
+      expect(records()).toContain('Pulse Records is not open yet');
+      expect(records()).toContain('Nothing described in this section is published until it opens');
+    });
+
+    it('says a name needs a linked account and a switch that is off until it is turned on', () => {
+      const text = records();
+
+      expect(text).toContain('Only if you signed in, linked your account to the desktop app');
+      expect(text).toContain('It is off until you switch it on, and you can switch it off at any time');
+      expect(text).toContain('we cannot check that it is yours');
+    });
+
+    it('says anonymous entries are published lines from players who did not agree', () => {
+      const text = records();
+
+      expect(text).toContain('Anonymous entries are published lines from players who did not agree');
+      expect(text).toContain('including players who never installed the app');
+      expect(text).toContain('it is still a published line from a match that player took part in');
+    });
+
+    it('says how to be taken off, and that the site shows no id, match, map or date', () => {
+      const text = records();
+
+      expect(text).toContain('no player id, no match, map or date');
+      expect(text).toContain('Switching your name off removes your name and your entries within a few minutes');
+      expect(text).toContain('can then show as "Anonymous" until it is deleted');
+    });
+
+    it('is the stated exception in the summary and the publishing list, so neither promises no names', () => {
+      const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+      const published = (section('public-numbers').textContent ?? '').replace(/\s+/g, ' ');
+
+      expect(summary).toContain('Apart from Pulse Records');
+      expect(summary).toContain('some entries come from players who never agreed to anything');
+      expect(published).toContain('Apart from Pulse Records, only anonymous aggregates');
+      expect(published).toContain('In-game names appear only on Pulse Records');
+      expect(published).toContain('one match is enough for an entry there');
+      expect(section('uploaded-today').textContent).not.toContain('never published on this website');
+    });
+
+    it('says the account page shows the name publicly only if the player switches it on', () => {
+      const text = (section('accounts').textContent ?? '').replace(/\s+/g, ' ');
+
+      expect(text).toContain('only if you switch it on, which entries on Pulse Records carry your name');
+      expect(text).toContain('Your avatar is never shown there');
+      expect(text).toContain('The one thing you can choose to make public is your in-game name');
+    });
   });
 
   it('does not promise that every figure counts a match once: Insights counts it once per uploading player', () => {

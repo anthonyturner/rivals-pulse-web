@@ -36,7 +36,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     id: 'data',
     question: 'What does the app send?',
     answer:
-      'It uploads each match you play automatically, including the in-game names and player ids on the scoreboard. This website publishes only anonymous totals, never names or ids.',
+      "It uploads each match you play automatically, including the in-game names and player ids on the scoreboard. This website publishes anonymous totals. A planned page, Pulse Records, will also show a few top single-match figures, with a player's name only if that player chose to show it. The site never publishes player ids.",
     more: { label: 'Read the privacy notes', path: '/privacy' },
   },
   {

@@ -67,12 +67,14 @@ describe('HomeFaqComponent', () => {
       expect(answer).not.toMatch(/100%|guarantee|risk-free|ban-proof/i);
     });
 
-    it('say names and ids are uploaded and never published, as the FAQ page does', () => {
+    it('say names and ids are uploaded, and that only Pulse Records shows a name, by choice', () => {
       const answer = text(item('data').querySelector('.answer'));
 
       expect(answer).toContain('automatically');
       expect(answer).toMatch(/names and player ids/);
-      expect(answer).toContain('only anonymous totals, never names or ids');
+      expect(answer).toContain('anonymous totals');
+      expect(answer).toContain("a player's name only if that player chose to show it");
+      expect(answer).toContain('The site never publishes player ids');
       expect(answer).not.toMatch(/only match results|no personal|nothing personal/i);
     });
 

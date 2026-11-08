@@ -36,12 +36,19 @@
         below.
       </li>
       <li>
-        The community pages show <strong>anonymous totals</strong>: no names, no player ids and no
-        individual matches. A total for a map, a day or a time shows once 10 matches are behind it. While
-        few players upload, such a total can come from one player's matches, so it can show when that
-        player played and how they did on a map. A
+        Apart from Pulse Records (next point), the community pages show <strong>anonymous
+        totals</strong>: no names, no player ids and no individual matches. A total for a map, a day or
+        a time shows once 10 matches are behind it. While few players upload, such a total can come
+        from one player's matches, so it can show when that player played and how they did on a map. A
         signed-in player's own matches and insights are on the <a routerLink="/profile">My stats</a>
         page, which only that account can see.
+      </li>
+      <li>
+        <strong>Pulse Records</strong> is the exception: a public page of the highest single-match
+        figures@if (recordsBeingAdded) {, not open yet}. A player's name is shown on it only if that player linked an account and switched
+        it on, and some entries come from players who never agreed to anything and show as
+        &quot;Anonymous&quot;. See <a routerLink="." fragment="pulse-records">Pulse Records</a>
+        below.
       </li>
       <li>
         The totals come from matches uploaded by the RivalsPulse desktop app, a separate
@@ -85,7 +92,9 @@
     </p>
     <p>
       Names and player ids are stored so that players can be looked up inside the desktop app.
-      They are never published on this website.
+      This website never publishes a player id. It publishes an in-game name only on
+      <a routerLink="." fragment="pulse-records">Pulse Records</a>, and only for a player who
+      linked an account and switched their name on.
     </p>
   </section>
 
@@ -130,15 +139,20 @@
     <h2 id="public-numbers-title">What this website publishes</h2>
     <ul>
       <li>
-        Only <strong>anonymous aggregates</strong>: counts and sums over matches, such as how
-        often a hero is picked or wins, or the average match length of a game mode.
+        Apart from Pulse Records, only <strong>anonymous aggregates</strong>: counts and sums over
+        matches, such as how often a hero is picked or wins, or the average match length of a game
+        mode.
       </li>
       <li>
-        <strong>Never</strong> in-game names or player ids, or the stored rows behind the totals.
+        <strong>Never</strong> player ids, match times, links to a match or the stored rows behind
+        the totals. In-game names appear only on
+        <a routerLink="." fragment="pulse-records">Pulse Records</a>, and only for a player who
+        switched their name on.
       </li>
       <li>
         A figure is shown only once it rests on a <strong>minimum number of matches</strong>.
-        Below that the page says there is not enough data yet instead of showing a number.
+        Below that the page says there is not enough data yet instead of showing a number. Pulse
+        Records is the exception: one match is enough for an entry there.
       </li>
       <li>
         On the community Matches and Insights tabs that minimum is 10 matches, from any number of
@@ -173,13 +187,69 @@
     </ul>
   </section>
 
+  <section class="reading-section" id="pulse-records" aria-labelledby="pulse-records-title">
+    <h2 id="pulse-records-title">Pulse Records</h2>
+    @if (recordsBeingAdded) {
+      <p>
+        <strong>Pulse Records is not open yet.</strong> Nothing described in this section is
+        published until it opens. This page says now what it will publish, so you can decide
+        beforehand.
+      </p>
+    }
+    <p>
+      Pulse Records is a public page of the highest single-match figures from matches the desktop
+      app uploaded: kills, assists, final hits, damage, healing and damage blocked. Only Quick Match
+      and Competitive matches count. Each entry shows a hero, a figure and either a name or the word
+      &quot;Anonymous&quot;. It shows no player id, no match, map or date, and not who uploaded the
+      match. Each list says which date its matches start from.
+    </p>
+    <ul>
+      <li>
+        <strong>When your name is shown.</strong> Only if you signed in, linked your account to the
+        desktop app, and switched on &quot;Show me in Pulse Records&quot; on your
+        <a routerLink="/account">account page</a>. It is off until you switch it on, and you can
+        switch it off at any time. Your name is shown only on entries from matches your own app
+        uploaded. The name is the in-game name stored with your link, which the desktop app
+        reported when you linked; we cannot check that it is yours.
+      </li>
+      <li>
+        <strong>Anonymous entries are published lines from players who did not agree.</strong> The
+        kills, assists and final hits lists also include scoreboard lines of players who have no
+        linked account, including players who never installed the app. Such an entry shows the hero
+        and the figure as &quot;Anonymous&quot;, with no name or id, but it is still a published
+        line from a match that player took part in, and someone who played in it may recognise it.
+        A player whose account is linked and who has not switched their name on is left off the
+        lists.
+      </li>
+      <li>
+        <strong>Damage, healing and damage blocked.</strong> The app uploads these figures only for
+        the player who uploaded the match, so these lists show only players who switched their name
+        on, with their own figures.
+      </li>
+      <li>
+        <strong>Taking an entry off.</strong> Switching your name off removes your name and your
+        entries within a few minutes. Unlinking or deleting your account removes your name, but a
+        kills, assists or final hits line of yours can then show as &quot;Anonymous&quot; until it is
+        deleted on the schedule below. The &quot;forget me&quot; choice on the account page, or a
+        deletion request made through the desktop app's privacy policy, deletes the lines
+        themselves and takes the entries off.
+      </li>
+      <li>
+        <strong>Not proof.</strong> Entries come from what the desktop app reports, and a modified
+        app can report false figures or a name that is not its player's. A record on this page is
+        not a guarantee that the match happened as shown.
+      </li>
+    </ul>
+  </section>
+
   <section class="reading-section" id="retention" aria-labelledby="retention-title">
     <h2 id="retention-title">How long it is kept</h2>
     <ul>
       <li>
         Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
-        The extra figures above are kept for the same time.
+        The extra figures above are kept for the same time. A Pulse Records entry is read from
+        these lines, so it disappears when its line is deleted.
       </li>
       <li>
         The uploading player's own match history (their name, whole scoreboard line and the match
@@ -194,8 +264,8 @@
       <li>
         A player who does not use the app can ask for their scoreboard lines to be deleted and
         for their id not to be stored again. How to ask is in the desktop app's privacy policy.
-        That deletion covers the scoreboard lines, not the uploading players' own match history
-        above.
+        That deletion covers the scoreboard lines, and with them any Pulse Records entry made from
+        them, but not the uploading players' own match history above.
       </li>
     </ul>
   </section>
@@ -224,8 +294,9 @@
       <li>
         <strong>What it is used for.</strong> Signing you in and showing you your own account
         page (how you signed in, your email address and when you joined) and your own stats on
-        the My stats page, which includes your My matches and My insights. We send no email, and
-        there is no marketing.
+        the My stats page, which includes your My matches and My insights. If you switch it on, it
+        also shows your in-game name on Pulse Records. We send no email, and there is no
+        marketing.
       </li>
       <li>
         <strong>Linking the desktop app (optional).</strong> Until you do it, an account is not
@@ -237,8 +308,10 @@
         are linked, the app sends your name and avatar address again from time to time, and the
         new ones replace the ones we stored; the id never changes. The
         link holds those, the date you linked and your account id; the site shows you your name and
-        avatar in the page header and on your account page, to you only, and the link is not
-        used in the anonymous community totals. It only picks which matches you see as your own. The desktop app can also ask us whether you are linked, and
+        avatar in the page header and on your account page, to you only. The link is not used in the
+        anonymous community totals. It picks which matches you see as your own and, only if you
+        switch it on, which entries on Pulse Records carry your name. Your avatar is never shown
+        there. The desktop app can also ask us whether you are linked, and
         we answer with your in-game name and the date you linked, never your email or account id.
         A code is kept only as a scrambled value, works once, expires
         after ten minutes (a code nobody used is deleted within minutes of that), and a list of
@@ -259,8 +332,9 @@
       </li>
       <li>
         <strong>Who else sees it.</strong> Discord handles the sign-in and applies its own
-        privacy policy to it, and Supabase stores the account. Your account details are not shown to other visitors and are not
-        used in the community numbers.
+        privacy policy to it, and Supabase stores the account. Your account details are not shown to
+        other visitors and are not used in the community numbers. The one thing you can choose to
+        make public is your in-game name, on Pulse Records.
       </li>
     </ul>
     <p>
@@ -277,7 +351,9 @@
       and remove it there. A second choice, "Remove account and forget me", will also ask us to
       forget the matches the desktop app uploaded about you; it cannot be undone, and anonymous
       totals already published keep their counts. It is switched off until you link the desktop
-      app to your account.
+      app to your account. Removing the account also takes your name off Pulse Records within a few
+      minutes, but see Pulse Records above: a line of yours can stay there as &quot;Anonymous&quot;
+      until it is deleted.
     </p>
   </section>
 
