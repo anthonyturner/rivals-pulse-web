@@ -1678,10 +1678,29 @@ describe('the hero-stats dataset', () => {
     });
 
     it('refuses a cell whose enoughData disagrees with the minimum, in either direction', () => {
-      expect(() => published(withHeroStats(withCell({ appearances: 9 })))).toThrowError(/says enoughData true with 9 appearances and a minimum of 10/);
+      expect(() => published(withHeroStats(withCell({ appearances: 9 })))).toThrowError(/says enoughData true with 9 appearances and no player count, against a minimum of 10 appearances/);
       expect(() =>
         published(withHeroStats(withCell({ appearances: 10, enoughData: false }))),
       ).toThrowError(/says enoughData false with 10 appearances/);
+    });
+
+    describe('with a minimum of players', () => {
+      const withPlayers = (cell: Record<string, unknown>): Record<string, unknown> => ({ ...withCell(cell), minimumPlayers: 2 });
+      const held = { appearances: 12, enoughData: false, winRate: null, pickRate: null, kda: null, finalHitsAverage: null };
+
+      it('accepts a hero with enough matches that one player holds back, with the players that hold it', () => {
+        expect(() => published(withHeroStats(withPlayers({ ...held, players: 1 })))).not.toThrow();
+      });
+
+      it('refuses a hero with enough matches held back with no count, or with players that do not hold it', () => {
+        expect(() => published(withHeroStats(withPlayers(held)))).toThrowError(/says enoughData false with 12 appearances and no player count, against a minimum of 10 appearances and 2 players/);
+        expect(() => published(withHeroStats(withPlayers({ ...held, players: 2 })))).toThrowError(/says enoughData false with 12 appearances and 2 players/);
+      });
+
+      it('accepts a placed hero, which carries no count, and one below the matches whatever its players', () => {
+        expect(() => published(withHeroStats(withPlayers({})))).not.toThrow();
+        expect(() => published(withHeroStats(withPlayers({ ...held, appearances: 4, players: 5 })))).not.toThrow();
+      });
     });
 
     it('refuses a cell with enough data but no win rate or pick rate', () => {
@@ -2940,6 +2959,23 @@ describe('the players behind a hero', () => {
     it('states the minimum players and gives a hero below the minimum the players counted so far', () => {
       expect(assembled.minimumPlayers).toBe(2);
       expect(cell(LOKI_GAME_ID)).toEqual(jasmine.objectContaining({ enoughData: false, appearances: 4, players: 1 }));
+    });
+
+    it('flags a hero with enough matches but too few players as not enough data, with both counts, and passes the gate', () => {
+      const heldBack = (shown: typeof NEW | typeof OLD) =>
+        answer(shown, { belowMinimum: [{ hero: 'loki', appearances: 12, players: 1 }] });
+      const held = assembleCommunityHeroStats(
+        heldBack(NEW),
+        [
+          { halfSeason: 10, response: heldBack(OLD) },
+          { halfSeason: 10.5, response: heldBack(NEW) },
+        ],
+        GAME_IDS,
+      ) as { seasons: { heroes: Record<string, unknown>[] }[] };
+      const loki = held.seasons[1].heroes.find((hero) => hero['heroId'] === LOKI_GAME_ID);
+
+      expect(loki).toEqual(jasmine.objectContaining({ enoughData: false, appearances: 12, players: 1, winRate: null }));
+      expect(() => publish('hero-stats', held, 'hero-stats.json')).not.toThrow();
     });
 
     it('leaves the count off a hero the database could not count, a hero with enough data, and an older answer', () => {

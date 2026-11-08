@@ -2,6 +2,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../../../server/community/community-minimums';
 import { BLENDED_PLAY_MODE_IDS, HERO_STATS_MIN_MATCHES, PLAY_MODE_IDS, PLAY_MODES } from '../../../server/heroes/stats/hero-stats';
 import { SHOW_PRACTICE_MODE } from '../../shared/utilities/play-modes';
 import { HowWeCountPageComponent } from './how-we-count-page.component';
@@ -59,7 +60,8 @@ describe('HowWeCountPageComponent', () => {
 
   it('states the minimum the stats use', () => {
     expect(section('minimum')).toContain(`at least ${HERO_STATS_MIN_MATCHES} appearances`);
-    expect(section('seasons')).toContain(`reaches ${HERO_STATS_MIN_MATCHES} appearances`);
+    expect(section('minimum')).toContain(`at least ${COMMUNITY_BUCKET_MIN_PLAYERS} different players`);
+    expect(section('seasons')).toContain('has enough appearances and players');
   });
 
   it('says every rank is blended', () => {

@@ -50,7 +50,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     id: 'counting',
     question: 'Where do the numbers come from?',
     answer:
-      'Only from matches that RivalsPulse players record with the app, with no outside tier list or other stats site. A hero appears only once it has enough appearances, and the site says "not enough data yet" instead of guessing.',
+      'Only from matches that RivalsPulse players record with the app, with no outside tier list or other stats site. A hero appears only once it has enough appearances from enough different players, and the site says "not enough data yet" instead of guessing.',
     more: { label: 'How we count', path: '/how-we-count' },
   },
   {

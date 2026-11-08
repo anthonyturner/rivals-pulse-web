@@ -166,14 +166,74 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
       expect(belowOf([row(COMPETITIVE, 1, 1057), row(COMPETITIVE, 3, 10571)])[0].players).toBe(3);
     });
 
-    it('gates nothing: a hero with enough matches and one player is still placed, with no count on its line', () => {
-      const { stats } = derive(
-        sourceOf([{ heroes: [heroRow(HERO_A, MIN, MIN, { recorders: 1 })], matches: MIN }]),
-      );
+    describe('the player gate', () => {
+      const withRecorders = (recorders: number | null, extra: Partial<HeroAggregateRow> = {}) =>
+        derive(sourceOf([{ heroes: [heroRow(HERO_A, MIN, MIN, { recorders, ...extra })], matches: MIN }])).stats;
 
-      expect(stats.status).toBe('ready');
-      expect(stats.tiers.flatMap((tier) => tier.heroes)[0]).toEqual(jasmine.objectContaining({ hero: 'hulk' }));
-      expect(JSON.stringify(stats.tiers)).not.toContain('players');
+      it('holds a hero with enough matches and one player below the minimum, with both counts', () => {
+        const stats = withRecorders(COMMUNITY_BUCKET_MIN_PLAYERS - 1);
+
+        expect(stats.status).toBe('not-enough-data');
+        expect(stats.tiers).toEqual([]);
+        expect(stats.belowMinimum).toEqual([
+          { hero: 'hulk', appearances: MIN, players: COMMUNITY_BUCKET_MIN_PLAYERS - 1 },
+        ]);
+      });
+
+      it('places a hero with enough matches and the minimum players, with no count on its line', () => {
+        const stats = withRecorders(COMMUNITY_BUCKET_MIN_PLAYERS);
+
+        expect(stats.status).toBe('ready');
+        expect(stats.tiers.flatMap((tier) => tier.heroes)[0]).toEqual(jasmine.objectContaining({ hero: 'hulk' }));
+        expect(stats.belowMinimum).toEqual([]);
+        expect(JSON.stringify(stats.tiers)).not.toContain('players');
+      });
+
+      it('places on the matches alone where nobody counted the players (a frozen half-season)', () => {
+        const stats = withRecorders(null);
+
+        expect(stats.status).toBe('ready');
+        expect(stats.belowMinimum).toEqual([]);
+      });
+
+      it('still needs the matches when the players are enough', () => {
+        const stats = deriveHeroStats(
+          sourceOf([{ heroes: [heroRow(HERO_A, MIN - 1, MIN - 1, { recorders: 5 })], matches: MIN - 1 }]),
+          { now: NOW, heroSlugByGameId: SLUGS },
+        ).stats;
+
+        expect(stats.tiers).toEqual([]);
+        expect(stats.belowMinimum).toEqual([{ hero: 'hulk', appearances: MIN - 1, players: 5 }]);
+      });
+
+      it('reads the players of the modes asked for, so one mode can hold a hero the blend places', () => {
+        const heroes = [
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders: 2 }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1 }),
+        ];
+        const heroesIn = (mode: string) =>
+          deriveHeroStats(sourceOf([{ heroes, matches: 2 * MIN }]), { now: NOW, heroSlugByGameId: SLUGS, mode }).stats;
+
+        expect(heroesIn('all').tiers.flatMap((tier) => tier.heroes)).toHaveSize(1);
+        expect(heroesIn('quick-match').tiers.flatMap((tier) => tier.heroes)).toHaveSize(1);
+        expect(heroesIn('competitive').belowMinimum).toEqual([{ hero: 'hulk', appearances: MIN, players: 1 }]);
+      });
+
+      it('falls back to the previous half-season while the current one has no hero with enough players', () => {
+        const previous = heroRow(HERO_A, MIN, MIN, { halfSeason: 10, recorders: null });
+        const current = heroRow(HERO_A, MIN, MIN, { recorders: 1 });
+        const stats = derive(
+          sourceOf([{ heroes: [previous, current], matches: MIN }], {
+            totals: [
+              { halfSeason: 10, playModeId: PLAY_MODE_IDS.competitive, decidedMatches: MIN },
+              { halfSeason: 10.5, playModeId: PLAY_MODE_IDS.competitive, decidedMatches: MIN },
+            ],
+          }),
+        ).stats;
+
+        expect(stats.halfSeason?.id).toBe(10);
+        expect(stats.inPlaceOf?.id).toBe(10.5);
+      });
     });
   });
 
