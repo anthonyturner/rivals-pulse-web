@@ -155,6 +155,12 @@ Three more tokens size text that is not a heading. Body text is 1rem.
 
 ## Page containers
 
+Standard subpages use `app-page-header` for a title and optional short description
+directly on the page background, without a panel, stripe, pattern or shadow.
+Align it with the content and place tabs or filters below it. Custom headers may
+retain actions, navigation and meaningful imagery, using the page-title token.
+The home hero and subject imagery on hero or article pages remain separate.
+
 This section always applies, whatever the styling conventions above. It is a
 layout utility, not a global style override: the classes set a width and side
 margins and nothing visual, so they do not restyle anything inside them.
