@@ -62,7 +62,7 @@ describe('HeroCommunityCountersComponent', () => {
 
   it('describes a record in each card tooltip', async () => {
     const root = await show('thor', 'Thor', readyMatchups);
-    const titles = [...root.querySelectorAll('li[title]')].map((card) => card.getAttribute('title'));
+    const titles = [...root.querySelectorAll('button[title]')].map((card) => card.getAttribute('title'));
 
     expect(titles[1]).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
   });
@@ -194,5 +194,55 @@ describe('HeroCommunityCountersComponent', () => {
     expect(heading?.textContent).toContain('Community matchups');
     expect(root.querySelector('.community-counters__heading p')?.textContent).toContain('Thor');
     expect(root.querySelector('a')?.getAttribute('href')).toBe('/counters?hero=thor');
+  });
+  describe('head-to-head', () => {
+    const card = (root: HTMLElement, name: string): HTMLButtonElement =>
+      [...root.querySelectorAll<HTMLButtonElement>('.community-counters__card')].find((button) =>
+        button.textContent?.includes(name),
+      )!;
+    const dialog = (root: HTMLElement): HTMLDialogElement => root.querySelector('dialog')!;
+
+    afterEach(() => {
+      const open = fixture.nativeElement.querySelector('dialog[open]') as HTMLDialogElement | null;
+      open?.close();
+    });
+
+    it('makes each card a button named after both heroes', async () => {
+      const root = await show('thor', 'Thor', readyMatchups);
+
+      expect(card(root, 'Hulk').getAttribute('aria-label')).toContain('Head-to-head: Thor vs Hulk');
+      expect(dialog(root).open).toBeFalse();
+    });
+
+    it('opens the head-to-head for the selected hero, with both sides of the record', async () => {
+      const root = await show('thor', 'Thor', readyMatchups);
+
+      card(root, 'Hulk').click();
+      await fixture.whenStable();
+
+      const text = dialog(root).textContent ?? '';
+      expect(dialog(root).open).toBeTrue();
+      expect(text).toContain('Thor vs Hulk');
+      expect(text).toContain('25.0%');
+      expect(text).toContain('75.0%');
+      expect(text).toContain('12 matches');
+    });
+
+    it('closes from its button and gives focus back to the card that opened it', async () => {
+      const root = await show('thor', 'Thor', readyMatchups);
+      const opener = card(root, 'Hulk');
+
+      opener.focus();
+      opener.click();
+      await fixture.whenStable();
+      root.querySelector<HTMLButtonElement>('.head-to-head__close')!.click();
+      // The dialog's close event is queued as a task, not dispatched during close().
+      await new Promise((resolve) => setTimeout(resolve));
+      await fixture.whenStable();
+
+      expect(dialog(root).open).toBeFalse();
+      expect(dialog(root).textContent?.trim()).toBe('');
+      expect(document.activeElement).toBe(opener);
+    });
   });
 });

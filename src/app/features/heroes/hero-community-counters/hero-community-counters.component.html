@@ -33,11 +33,20 @@
         <h4 [id]="'community-counters-against-' + heroId()">Heroes with a winning record against {{ heroName() }}</h4>
         <ul class="community-counters__cards">
           @for (card of current.winningAgainst; track card.hero.id) {
-          <li [title]="card.description">
-            <img [src]="card.hero.imageUrl" alt="" />
-            <span class="community-counters__name">{{ card.hero.name }}</span>
-            <strong>{{ card.winRate }}</strong>
-            <small>{{ card.sample }}</small>
+          <li>
+            <button
+              type="button"
+              class="community-counters__card"
+              [title]="card.description"
+              [attr.aria-label]="'Head-to-head: ' + heroName() + ' vs ' + card.hero.name + '. ' + card.description"
+              aria-haspopup="dialog"
+              (click)="openHeadToHead(card.hero.id, $event)"
+            >
+              <img [src]="card.hero.imageUrl" alt="" />
+              <span class="community-counters__name">{{ card.hero.name }}</span>
+              <strong>{{ card.winRate }}</strong>
+              <small>{{ card.sample }}</small>
+            </button>
           </li>
           } @empty {
           <li class="community-counters__none">No hero has a winning record against {{ heroName() }} yet.</li>
@@ -49,11 +58,20 @@
         <h4 [id]="'community-counters-for-' + heroId()">Heroes {{ heroName() }} has a winning record against</h4>
         <ul class="community-counters__cards">
           @for (card of current.winningFor; track card.hero.id) {
-          <li [title]="card.description">
-            <img [src]="card.hero.imageUrl" alt="" />
-            <span class="community-counters__name">{{ card.hero.name }}</span>
-            <strong>{{ card.winRate }}</strong>
-            <small>{{ card.sample }}</small>
+          <li>
+            <button
+              type="button"
+              class="community-counters__card"
+              [title]="card.description"
+              [attr.aria-label]="'Head-to-head: ' + heroName() + ' vs ' + card.hero.name + '. ' + card.description"
+              aria-haspopup="dialog"
+              (click)="openHeadToHead(card.hero.id, $event)"
+            >
+              <img [src]="card.hero.imageUrl" alt="" />
+              <span class="community-counters__name">{{ card.hero.name }}</span>
+              <strong>{{ card.winRate }}</strong>
+              <small>{{ card.sample }}</small>
+            </button>
           </li>
           } @empty {
           <li class="community-counters__none">{{ heroName() }} has no winning record against another hero yet.</li>
@@ -63,7 +81,7 @@
     </div>
     <p class="community-counters__sample">
       Win rates come from matches recorded by RivalsPulse players, with a short run pulled toward even. They describe
-      how a hero fares against another hero.
+      how a hero fares against another hero. Select a hero for the head-to-head.
     </p>
     } @else {
     <div class="community-counters__empty">
@@ -74,3 +92,5 @@
     }
   </div>
 </section>
+
+<app-hero-matchup-detail [view]="headToHead()" (closed)="closeHeadToHead()" />

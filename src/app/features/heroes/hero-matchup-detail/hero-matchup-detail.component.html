@@ -1,0 +1,89 @@
+<dialog
+  #dialog
+  class="head-to-head"
+  aria-labelledby="head-to-head-title"
+  (close)="closed.emit()"
+  (click)="closeFromBackdrop($event)"
+>
+  @if (view(); as current) {
+  @let hero = current.sides[0].hero;
+  @let opponent = current.sides[1].hero;
+  <div class="head-to-head__panel">
+    <header class="head-to-head__header">
+      <div>
+        <h3 id="head-to-head-title">{{ hero.name }} vs {{ opponent.name }}</h3>
+        <p>
+          {{ current.sample }} recorded by RivalsPulse players@if (current.halfSeasonLabel) { · {{ current.halfSeasonLabel }} }
+        </p>
+      </div>
+      <button type="button" class="head-to-head__close" aria-label="Close the head-to-head" (click)="close()">
+        <span aria-hidden="true">×</span>
+      </button>
+    </header>
+
+    <div class="head-to-head__sides">
+      @for (side of current.sides; track side.hero.id; let first = $first) {
+      @let other = first ? opponent : hero;
+      <section class="head-to-head__side" [attr.aria-label]="side.hero.name">
+        <div class="head-to-head__identity">
+          <img [src]="side.hero.imageUrl" alt="" />
+          <h4>{{ side.hero.name }}</h4>
+        </div>
+
+        <dl>
+          <div class="head-to-head__record">
+            <dt>Win rate against {{ other.name }}</dt>
+            @if (side.record; as record) {
+            <dd>
+              <strong>{{ record.winRate }}</strong>
+              <span>{{ record.wins }} wins in {{ record.appearances }} appearances</span>
+            </dd>
+            } @else {
+            <dd>Not enough matches to show yet</dd>
+            }
+          </div>
+
+          <div>
+            <dt>Against {{ side.hero.name }}'s usual</dt>
+            @if (side.edge; as edge) {
+            <dd>
+              <strong>{{ edge.points }}</strong>
+              <span>usual win rate {{ edge.usual }}</span>
+            </dd>
+            } @else {
+            <dd>No overall win rate for this half-season</dd>
+            }
+          </div>
+
+          @if (current.showKillFeed) {
+          <div>
+            <dt>Seen killing {{ other.name }}</dt>
+            <dd>{{ side.killsBand ?? 'Not among its most seen kills' }}</dd>
+          </div>
+          }
+
+          @if (side.overall; as overall) {
+          <div>
+            <dt>KDA, all matches</dt>
+            <dd>{{ overall.kda }}</dd>
+          </div>
+          <div>
+            <dt>Final hits per match, all matches</dt>
+            <dd>{{ overall.finalHits }}</dd>
+          </div>
+          }
+        </dl>
+      </section>
+      }
+    </div>
+
+    <p class="head-to-head__caveat">
+      Win rates describe how each hero fared when the other was on the enemy team. They are not advice on whom to pick
+      or ban. KDA and final hits cover each hero's matches overall, not only this encounter.
+    </p>
+    @if (current.showKillFeed) {
+    <p class="head-to-head__caveat">{{ current.killFeedCaveat }}</p>
+    }
+  </div>
+  }
+</dialog>
