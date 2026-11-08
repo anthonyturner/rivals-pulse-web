@@ -235,6 +235,7 @@
         [heroName]="hero.name"
         [stats]="controller.heroStats()"
       />
+      <p><a routerLink="/win-rates">Compare all heroes in Hero stats</a></p>
   <app-hero-kill-feed
     [heroId]="hero.id"
     [heroName]="hero.name"
@@ -255,7 +256,7 @@
   <section class="gameplay-archetypes" aria-labelledby="gameplay-archetypes-title">
     <div class="section-heading">
       <h3 id="gameplay-archetypes-title">Gameplay Archetype</h3>
-      <a routerLink="/win-rates">Hero win rates</a>
+      <a routerLink="/win-rates">Hero stats</a>
     </div>
 
     <div class="archetype-grid">

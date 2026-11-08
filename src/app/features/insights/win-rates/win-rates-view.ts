@@ -9,6 +9,8 @@ export interface WinRateRowView extends HeroCellView {
   rank: number;
   winRate: number;
   winRateLabel: string;
+  pickRate: number | null;
+  pickRateLabel: string;
   /** Where the bar's fill ends, as a share of its width. */
   barPercent: number;
   tone: 'above' | 'even' | 'below';
@@ -26,6 +28,33 @@ export interface WinRateRowView extends HeroCellView {
  * - `unavailable-season`: the address names a half-season the site holds no numbers for.
  */
 export type WinRatesState = 'full' | 'partial' | 'empty' | 'unavailable-season';
+
+export type HeroStatsSort = 'win-desc' | 'win-asc' | 'pick-desc' | 'pick-asc';
+
+export function selectHeroStatsRows(
+  rows: readonly WinRateRowView[],
+  search: string,
+  role: string,
+  sort: HeroStatsSort,
+): WinRateRowView[] {
+  const query = search.trim().toLocaleLowerCase();
+  const byPick = sort.startsWith('pick');
+  const direction = sort.endsWith('asc') ? 1 : -1;
+
+  return rows
+    .filter((row) => (!role || row.role === role) && row.name.toLocaleLowerCase().includes(query))
+    .sort((a, b) => {
+      const left = byPick ? a.pickRate : a.winRate;
+      const right = byPick ? b.pickRate : b.winRate;
+
+      if (left === null || right === null) {
+        return left === right ? a.name.localeCompare(b.name) : left === null ? 1 : -1;
+      }
+
+      return direction * (left - right) || b.appearances - a.appearances || a.name.localeCompare(b.name);
+    })
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+}
 
 export interface WinRatesView {
   state: WinRatesState;
@@ -136,6 +165,8 @@ function rankedRow(
     ...heroCell(hero.hero, identities),
     winRate: hero.winRate,
     winRateLabel: percentLabel(hero.winRate),
+    pickRate: Number.isFinite(hero.pickRate) && hero.pickRate >= 0 ? hero.pickRate : null,
+    pickRateLabel: Number.isFinite(hero.pickRate) && hero.pickRate >= 0 ? percentLabel(hero.pickRate) : 'Not available',
     barPercent: Math.min(100, Math.max(0, hero.winRate)),
     tone: hero.winRate > 50 ? 'above' : hero.winRate < 50 ? 'below' : 'even',
     appearances: hero.appearances,

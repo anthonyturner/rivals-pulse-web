@@ -22,6 +22,7 @@
   @if (current.notice) {
   <p class="community-stats__notice"><strong>Previous half-season.</strong> {{ current.notice }}</p>
   }
+  }
   <dl class="community-stats__figures">
     @for (figure of current.figures; track figure.label) {
     <div>
@@ -30,6 +31,8 @@
     </div>
     }
   </dl>
+  <p class="community-stats__sample">Ban rates are not collected yet. Missing ban data does not mean a 0% ban rate.</p>
+  @if (current.kind === 'ready') {
   <p class="community-stats__sample">{{ current.sample }}</p>
   } @else {
   <div class="community-stats__empty">

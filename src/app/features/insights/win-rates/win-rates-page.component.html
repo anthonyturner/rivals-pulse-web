@@ -1,8 +1,8 @@
 <div class="insight-page win-rates-page page-container page-container--wide">
   <header class="intro">
-    <h1>Marvel Rivals hero win rates</h1>
+    <h1>Marvel Rivals hero stats</h1>
     <p class="lede">
-      How each hero is winning in matches RivalsPulse players recorded, all ranks together. For
+      Win rates, pick rates and ban availability in matches RivalsPulse players recorded, all ranks together. For
       tiers, see the <a routerLink="/tier-list">tier list</a>.
       <a routerLink="/how-we-count">How we count</a>
     </p>
@@ -27,11 +27,11 @@
   }
 
   @if (failed()) {
-    <app-state-panel kind="error" heading="Win rates could not be loaded" [announce]="false">
+    <app-state-panel kind="error" heading="Hero stats could not be loaded" [announce]="false">
       <p>The numbers are unavailable right now. Try again in a few minutes.</p>
     </app-state-panel>
   } @else if (loading()) {
-    <app-state-panel kind="loading" heading="Loading win rates" [announce]="false">
+    <app-state-panel kind="loading" heading="Loading hero stats" [announce]="false">
       <p>Fetching the latest counted matches.</p>
     </app-state-panel>
   } @else if (view(); as v) {
@@ -41,6 +41,39 @@
 
     @if (v.fallbackNotice; as notice) {
       <app-notice>{{ notice }}</app-notice>
+    }
+
+    @if (v.state === 'full' || v.state === 'partial') {
+      <div class="filters toolbar">
+        <label class="hero-search">
+          <span>Search heroes</span>
+          <input type="search" [value]="search()" (input)="searchHeroes($event)" placeholder="Hero name" />
+        </label>
+        <app-filter-select label="Role" [options]="roleChoices()" [value]="role()" (valueChange)="chooseRole($event)" />
+        <app-filter-select label="Sort" [options]="sortChoices" [value]="sort()" (valueChange)="chooseSort($event)" />
+      </div>
+      <p class="summary-scope">Summary for these filters, among heroes with {{ v.minimumLabel }} or more.</p>
+      <div class="summary" aria-label="Hero stats summary">
+        <button type="button" (click)="chooseSort('win-desc')" [attr.aria-pressed]="sort() === 'win-desc'">
+          <span>Highest win rate</span>
+          @if (leaders().win; as hero) {
+            <strong>{{ hero.name }}</strong><span>{{ hero.winRateLabel }}</span>
+          } @else { <strong>No qualified heroes</strong> }
+        </button>
+        <button type="button" (click)="chooseSort('pick-desc')" [attr.aria-pressed]="sort() === 'pick-desc'">
+          <span>Most picked</span>
+          @if (leaders().pick; as hero) {
+            <strong>{{ hero.name }}</strong><span>{{ hero.pickRateLabel }}</span>
+          } @else { <strong>No pick figures available</strong> }
+        </button>
+        <div class="ban-summary"><span>Ban data</span><strong>Not collected</strong><span>Ban rates are unavailable.</span></div>
+      </div>
+      @if (rows().length === 0 && buildingRows().length === 0 && (search() || role())) {
+        <app-state-panel heading="No heroes match these filters">
+          <p>Try another hero name or role.</p>
+          <button type="button" class="reset-filters" (click)="resetFilters()">Clear filters</button>
+        </app-state-panel>
+      }
     }
 
     @switch (v.state) {
@@ -73,23 +106,30 @@
         </app-state-panel>
       }
       @case ('full') {
+        @if (rows().length > 0) {
         <div class="card">
-          <h2 id="rates-title">Heroes, highest win rate first</h2>
-          <table aria-labelledby="rates-title">
-            <thead>
-              <tr>
-                <th scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
-                <th scope="col">Hero</th>
-                <th scope="col" class="col-role">Role</th>
-                <th scope="col" class="col-rate">Win rate</th>
-                <th scope="col" class="col-games">Wins / games</th>
+          <h2 id="rates-title">Heroes · {{ orderLabel() }}</h2>
+          <table role="table" aria-labelledby="rates-title" aria-describedby="ban-note">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader" scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
+                <th role="columnheader" scope="col">Hero</th>
+                <th role="columnheader" scope="col" class="col-role">Role</th>
+                <th role="columnheader" scope="col" class="col-rate" aria-label="Win rate" [attr.aria-sort]="winSort()">
+                  <button type="button" (click)="sortColumn('win')">Win rate<span aria-hidden="true"> {{ winSort() === 'descending' ? '↓' : winSort() === 'ascending' ? '↑' : '↕' }}</span></button>
+                </th>
+                <th role="columnheader" scope="col" class="col-pick" aria-label="Pick rate" [attr.aria-sort]="pickSort()">
+                  <button type="button" (click)="sortColumn('pick')">Pick rate<span aria-hidden="true"> {{ pickSort() === 'descending' ? '↓' : pickSort() === 'ascending' ? '↑' : '↕' }}</span></button>
+                </th>
+                <th role="columnheader" scope="col" class="col-ban">Ban rate</th>
+                <th role="columnheader" scope="col" class="col-games">Wins / games</th>
               </tr>
             </thead>
-            <tbody>
-              @for (row of v.ranked; track row.hero) {
-                <tr>
-                  <td class="col-rank">{{ row.rank }}</td>
-                  <th scope="row">
+            <tbody role="rowgroup">
+              @for (row of rows(); track row.hero) {
+                <tr role="row">
+                  <td role="cell" class="col-rank">{{ row.rank }}</td>
+                  <th role="rowheader" scope="row" class="col-hero">
                     <a class="hero-link" [routerLink]="['/heroes', row.hero]">
                       <img appHeroImageFallback [src]="row.imageUrl" alt="" width="28" height="28" loading="lazy" />
                       <span class="hero-name">{{ row.name }}</span>
@@ -98,8 +138,9 @@
                       <span class="role-under">{{ row.role }}</span>
                     }
                   </th>
-                  <td class="col-role">{{ row.role }}</td>
-                  <td class="col-rate">
+                  <td role="cell" class="col-role">{{ row.role }}</td>
+                  <td role="cell" class="col-rate">
+                    <span class="mobile-label" aria-hidden="true">Win rate</span>
                     <div class="rate" [attr.data-tone]="row.tone">
                       <strong>{{ row.winRateLabel }}</strong>
                       <span class="bar" aria-hidden="true">
@@ -107,7 +148,10 @@
                       </span>
                     </div>
                   </td>
-                  <td class="col-games">
+                  <td role="cell" class="col-pick"><span class="mobile-label" aria-hidden="true">Pick rate</span><strong>{{ row.pickRateLabel }}</strong></td>
+                  <td role="cell" class="col-ban"><span class="mobile-label" aria-hidden="true">Ban rate</span><span>Not collected</span></td>
+                  <td role="cell" class="col-games">
+                    <span class="mobile-label" aria-hidden="true">Wins / games</span>
                     <span class="visually-hidden">{{ row.winsGamesSpoken }}</span>
                     <span aria-hidden="true">{{ row.winsGamesLabel }}</span>
                   </td>
@@ -116,25 +160,28 @@
             </tbody>
           </table>
         </div>
+        }
       }
     }
 
-    @if ((v.state === 'full' || v.state === 'partial') && v.building.length > 0) {
+    @if ((v.state === 'full' || v.state === 'partial') && buildingRows().length > 0) {
       <section class="building" aria-labelledby="building-title">
         <div class="section-heading">
           <h2 id="building-title">Progress toward {{ v.minimumLabel }}</h2>
-          <p>Heroes need {{ v.minimumLabel }} before they get a win rate.</p>
+          <p>Building sample. Heroes need {{ v.minimumLabel }} before win and pick rates appear. Ban rates are not collected.</p>
         </div>
 
-        <app-hero-progress-list [rows]="v.building" />
+        <app-hero-progress-list [rows]="buildingRows()" />
       </section>
     }
 
     @if (v.state !== 'unavailable-season') {
+      <p class="method-note" id="ban-note">Ban rates are not collected yet. Missing ban data does not mean a 0% ban rate.</p>
       <p class="method-note">
         RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match
         and Competitive are counted together unless you pick a single mode. A game is one hero on
-        the scoreboard of one match, so a hero on both teams of one match is counted twice. Matches
+        the scoreboard of one match, so a hero on both teams of one match is counted twice. Pick rate is
+        hero appearances divided by matches counted and can exceed 100%. Matches
         without a win or a loss, and matches where the game did not say which mode they were, are
         left out.
       </p>

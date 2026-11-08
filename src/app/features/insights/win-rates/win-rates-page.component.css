@@ -33,7 +33,121 @@ thead th {
 }
 
 .col-role {
-  width: 110px;
+  width: 90px;
+}
+
+.col-rate {
+  width: 130px;
+}
+
+.col-pick,
+.col-ban {
+  width: 100px;
+}
+
+.mobile-label {
+  display: none;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+
+thead button {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-weight: 700;
+}
+
+thead [aria-sort='ascending'] button,
+thead [aria-sort='descending'] button {
+  color: var(--accent-strong);
+}
+
+.filters {
+  margin-top: 16px;
+}
+
+.filters app-filter-select {
+  flex: 1 1 190px;
+}
+
+.hero-search {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 200px;
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.hero-search input {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--type-small);
+}
+.hero-search input::placeholder {
+  color: var(--text-soft);
+}
+
+.summary-scope {
+  margin-top: 16px;
+  font-size: var(--type-caption);
+  color: var(--text-soft);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.summary > * {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.summary button {
+  border-color: var(--control-border);
+}
+
+.summary button:hover,
+.summary button[aria-pressed='true'] {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.summary span {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.summary strong {
+  font-size: var(--type-h3);
+}
+
+.reset-filters {
+  padding: 8px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
 }
 
 .col-games {
@@ -112,10 +226,57 @@ thead th {
   background: var(--danger);
 }
 
-@media (max-width: 560px) {
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .summary > * {
+    padding: 12px;
+  }
+
+  table,
+  tbody {
+    display: block;
+  }
+
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  thead button {
+    display: none;
+  }
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-block: 12px;
+    border-top: 1px solid var(--border);
+    gap: 12px 8px;
+  }
+
+  .col-hero,
+  .col-games {
+    grid-column: 1 / -1;
+  }
+
+  .mobile-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-soft);
+    font-size: var(--type-caption);
+  }
   th,
   td {
-    padding: 3px 4px;
+    padding: 0;
+    box-shadow: none;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .col-rank,
@@ -124,8 +285,19 @@ thead th {
   }
 
   .col-rate,
+  .col-pick,
+  .col-ban,
   .col-games {
-    width: 72px;
+    width: auto;
+  }
+
+  .col-games {
+    text-align: left;
+  }
+
+  .col-games .mobile-label {
+    display: inline;
+    margin-right: 8px;
   }
 
   /* The role sits under the name, outside the link, in the 14px the link leaves below the name. */

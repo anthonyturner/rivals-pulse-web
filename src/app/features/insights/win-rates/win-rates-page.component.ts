@@ -13,7 +13,7 @@ import { HeroDataService } from '../../heroes/hero-data.service';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
 import { heroIdentities } from '../hero-identity';
-import { buildWinRatesView } from './win-rates-view';
+import { buildWinRatesView, selectHeroStatsRows, type HeroStatsSort } from './win-rates-view';
 
 @Component({
   selector: 'app-win-rates-page',
@@ -74,6 +74,40 @@ export class WinRatesPageComponent {
       : null;
   });
 
+  readonly search = signal('');
+  readonly role = signal('');
+  readonly sort = signal<HeroStatsSort>('win-desc');
+  private readonly filtersChanged = signal(false);
+  readonly sortChoices = [
+    { value: 'win-desc', label: 'Win rate, highest first' },
+    { value: 'win-asc', label: 'Win rate, lowest first' },
+    { value: 'pick-desc', label: 'Pick rate, highest first' },
+    { value: 'pick-asc', label: 'Pick rate, lowest first' },
+  ] as const;
+  readonly roleChoices = computed(() => [
+    { value: '', label: 'All roles' },
+    ...Array.from(new Set([
+      ...(this.view()?.ranked ?? []).map((row) => row.role),
+      ...(this.view()?.building ?? []).map((row) => row.role),
+      this.role() || null,
+    ].filter((role): role is string => role !== null)))
+      .sort().map((role) => ({ value: role, label: role })),
+  ]);
+  readonly rows = computed(() => selectHeroStatsRows(this.view()?.ranked ?? [], this.search(), this.role(), this.sort()));
+  readonly buildingRows = computed(() => {
+    const query = this.search().trim().toLocaleLowerCase();
+
+    return (this.view()?.building ?? []).filter((row) =>
+      (!this.role() || row.role === this.role()) && row.name.toLocaleLowerCase().includes(query));
+  });
+  readonly leaders = computed(() => ({
+    win: selectHeroStatsRows(this.rows(), '', '', 'win-desc')[0] ?? null,
+    pick: selectHeroStatsRows(this.rows(), '', '', 'pick-desc').find((row) => row.pickRate !== null) ?? null,
+  }));
+  readonly orderLabel = computed(() => this.sortChoices.find((choice) => choice.value === this.sort())?.label ?? '');
+  readonly winSort = computed(() => this.sort() === 'win-desc' ? 'descending' : this.sort() === 'win-asc' ? 'ascending' : 'none');
+  readonly pickSort = computed(() => this.sort() === 'pick-desc' ? 'descending' : this.sort() === 'pick-asc' ? 'ascending' : 'none');
+
   readonly modeChoices = computed(() => this.modes().map(({ id, label }) => ({ value: id, label })));
   /**
    * Hidden until the first numbers are in, so it does not push the loading panel down when it
@@ -104,11 +138,15 @@ export class WinRatesPageComponent {
     const view = this.view();
 
     if (this.failed()) {
-      return 'Win rates could not be loaded';
+      return 'Hero stats could not be loaded';
+    }
+
+    if (view !== null && this.filtersChanged()) {
+      return `${this.rows().length} heroes with rates shown, ${this.orderLabel().toLocaleLowerCase()}; ${this.buildingRows().length} building sample. ${view.scopeLabel}.`;
     }
 
     return this.choiceMade() && view !== null
-      ? `Win rates updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`
+      ? `Hero stats updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`
       : '';
   });
 
@@ -118,6 +156,36 @@ export class WinRatesPageComponent {
     this.chosenMode.set(mode);
     this.pending.set(true);
     this.choiceMade.set(true);
+    this.filtersChanged.set(false);
     this.requested.next(mode);
+  }
+
+  searchHeroes(event: Event): void {
+    if (event.target instanceof HTMLInputElement) {
+      this.search.set(event.target.value);
+      this.filtersChanged.set(true);
+    }
+  }
+
+  chooseRole(value: string): void {
+    this.role.set(value);
+    this.filtersChanged.set(true);
+  }
+
+  chooseSort(value: string): void {
+    if (value === 'win-desc' || value === 'win-asc' || value === 'pick-desc' || value === 'pick-asc') {
+      this.sort.set(value);
+      this.filtersChanged.set(true);
+    }
+  }
+
+  sortColumn(column: 'win' | 'pick'): void {
+    this.chooseSort(this.sort() === `${column}-desc` ? `${column}-asc` : `${column}-desc`);
+  }
+
+  resetFilters(): void {
+    this.search.set('');
+    this.role.set('');
+    this.filtersChanged.set(true);
   }
 }

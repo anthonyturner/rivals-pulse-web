@@ -62,21 +62,22 @@ describe('HeroCommunityStatsComponent', () => {
     const values = [...root.querySelectorAll('dd')].map((value) => value.textContent?.trim());
 
     expect(text).toContain('RivalsPulse players');
-    expect(terms).toEqual(['Win rate', 'Pick rate', 'KDA', 'Final hits per match']);
-    expect(values).toEqual(['54.2%', '16.0%', '3.46', '9.0']);
+    expect(terms).toEqual(['Win rate', 'Pick rate', 'Ban rate', 'KDA', 'Final hits per match']);
+    expect(values).toEqual(['54.2%', '16.0%', 'Not collected', '3.46', '9.0']);
     expect(text).toContain('From 24 appearances in 150 matches recorded by RivalsPulse players');
     expect(text).toContain('Half-season: Season 10.5');
     expect(text).not.toContain('Not enough data yet');
   });
 
-  it('shows "Not enough data yet" with the matches so far, and no figures, below the minimum', async () => {
+  it('shows "Not enough data yet" with the matches so far, and labelled rate availability below the minimum', async () => {
     const root = await show('rocket-raccoon', 'Rocket Raccoon', readyStats);
     const text = root.textContent ?? '';
 
     expect(text).toContain('Not enough data yet');
     expect(text).toContain('Rocket Raccoon has 4 appearances so far');
     expect(text).toContain('The numbers appear at 10 appearances.');
-    expect(root.querySelector('dl')).toBeNull();
+    expect([...root.querySelectorAll('dt')].map((term) => term.textContent?.trim())).toEqual(['Win rate', 'Pick rate', 'Ban rate']);
+    expect([...root.querySelectorAll('dd')].map((value) => value.textContent?.trim())).toEqual(['Building sample', 'Building sample', 'Not collected']);
     expect(text).not.toMatch(/NaN|\b0\.0%|Infinity/);
   });
 
@@ -102,7 +103,7 @@ describe('HeroCommunityStatsComponent', () => {
 
     expect(text).toContain('Previous half-season.');
     expect(text).toContain("Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.");
-    expect(root.querySelectorAll('dd').length).toBe(4);
+    expect(root.querySelectorAll('dd').length).toBe(5);
   });
 
   it('shows the appearances so far, without a fallback notice, for a hero below the minimum in a stand-in half-season', async () => {
