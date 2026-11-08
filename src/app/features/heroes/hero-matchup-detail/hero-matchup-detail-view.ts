@@ -3,7 +3,7 @@ import type { HeroMatchup, HeroMatchups } from '../../../../contracts/hero-match
 import type { HeroStats, HeroStatsHalfSeason, HeroStatsHero } from '../../../../contracts/hero-stats.model';
 import { KILL_FEED_CAVEAT, killsBandLabel } from '../../insights/hero-kill-feed';
 import { matchupBetween, recordSampleLabel, recordWinRateLabel, type RosterHero } from '../../insights/hero-matchup-records';
-import { percentLabel } from '../../../shared/utilities/stat-labels';
+import { finalHitsLabel, kdaLabel, percentLabel } from '../../../shared/utilities/stat-labels';
 
 /** One hero's half of a head-to-head: how it fared against the other, and how that compares to its usual. */
 export interface HeadToHeadSide {
@@ -28,8 +28,6 @@ export interface HeadToHeadView {
   showKillFeed: boolean;
   killFeedCaveat: string;
 }
-
-const NOT_RECORDED = 'Not recorded';
 
 /**
  * The head-to-head between the page's hero and one opponent, built only from what the hero page has
@@ -56,7 +54,8 @@ export function buildHeadToHeadView(
 
   const season = matchups.halfSeason;
   const placed = sameHalfSeason(stats?.halfSeason, season) ? placedHeroes(stats) : new Map<string, HeroStatsHero>();
-  const killPairs = kills !== null && kills !== undefined && sameHalfSeason(kills.halfSeason, season) ? kills.pairs : null;
+  // A feed with no pair yet would make every pair read as "not among the most seen", so it is left out.
+  const killPairs = kills?.status === 'ready' && sameHalfSeason(kills.halfSeason, season) ? kills.pairs : null;
 
   const side = (self: RosterHero, other: RosterHero, record: HeroMatchup | undefined): HeadToHeadSide => {
     const usual = placed.get(self.id);
@@ -74,8 +73,8 @@ export function buildHeadToHeadView(
         usual === undefined
           ? null
           : {
-              kda: usual.kda === null ? NOT_RECORDED : usual.kda.toFixed(2),
-              finalHits: usual.finalHitsAverage === null ? NOT_RECORDED : usual.finalHitsAverage.toFixed(1),
+              kda: kdaLabel(usual.kda),
+              finalHits: finalHitsLabel(usual.finalHitsAverage),
             },
     };
   };
@@ -99,6 +98,10 @@ function placedHeroes(stats: HeroStats | null | undefined): Map<string, HeroStat
 
 /** Points above or below the usual rate, rounded as shown so "+0.0" never appears beside "even". */
 function edgeOf(matchupRate: number, usualRate: number): HeadToHeadSide['edge'] {
+  if (!Number.isFinite(matchupRate) || !Number.isFinite(usualRate)) {
+    return null;
+  }
+
   const points = Math.round((matchupRate - usualRate) * 10) / 10;
   const usual = percentLabel(usualRate);
 

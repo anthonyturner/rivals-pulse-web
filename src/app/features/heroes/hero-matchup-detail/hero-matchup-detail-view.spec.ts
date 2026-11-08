@@ -91,6 +91,18 @@ describe('buildHeadToHeadView', () => {
     expect(view?.showKillFeed).toBeFalse();
   });
 
+  it('leaves out a kill feed that has no pair yet, rather than calling every pair low', () => {
+    const view = buildHeadToHeadView(bothSides, stats, { ...killsOf([]), status: 'not-enough-data' }, 'hulk', 'thor', roster);
+
+    expect(view?.showKillFeed).toBeFalse();
+  });
+
+  it('leaves out the edge when a rate is not a number', () => {
+    const view = buildHeadToHeadView(bothSides, statsOf([placed('hulk', Number.NaN, 1, 1)]), null, 'hulk', 'thor', roster);
+
+    expect(view?.sides[0].edge).toBeNull();
+  });
+
   it('works without stats or a kill feed', () => {
     const view = buildHeadToHeadView(bothSides, undefined, null, 'hulk', 'thor', roster);
 

@@ -35,9 +35,14 @@ export class HeroMatchupDetailComponent {
     this.dialog().nativeElement.close();
   }
 
-  /** A click whose target is the dialog itself landed on the backdrop, outside the panel. */
+  /** Where the last press started, so a text selection dragged out of the panel does not close it. */
+  protected pressedOn: EventTarget | null = null;
+
+  /** A click pressed and released on the dialog itself landed on the backdrop, outside the panel. */
   protected closeFromBackdrop(event: MouseEvent): void {
-    if (event.target === this.dialog().nativeElement) {
+    const dialog = this.dialog().nativeElement;
+
+    if (event.target === dialog && this.pressedOn === dialog) {
       this.close();
     }
   }

@@ -3,6 +3,7 @@
   class="head-to-head"
   aria-labelledby="head-to-head-title"
   (close)="closed.emit()"
+  (mousedown)="pressedOn = $event.target"
   (click)="closeFromBackdrop($event)"
 >
   @if (view(); as current) {
@@ -43,17 +44,15 @@
             }
           </div>
 
+          @if (side.edge; as edge) {
           <div>
             <dt>Against {{ side.hero.name }}'s usual</dt>
-            @if (side.edge; as edge) {
             <dd>
               <strong>{{ edge.points }}</strong>
               <span>usual win rate {{ edge.usual }}</span>
             </dd>
-            } @else {
-            <dd>No overall win rate for this half-season</dd>
-            }
           </div>
+          }
 
           @if (current.showKillFeed) {
           <div>

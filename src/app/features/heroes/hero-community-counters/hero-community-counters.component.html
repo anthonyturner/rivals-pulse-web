@@ -38,7 +38,7 @@
               type="button"
               class="community-counters__card"
               [title]="card.description"
-              [attr.aria-label]="'Head-to-head: ' + heroName() + ' vs ' + card.hero.name + '. ' + card.description"
+              [attr.aria-label]="card.headToHeadLabel"
               aria-haspopup="dialog"
               (click)="openHeadToHead(card.hero.id, $event)"
             >
@@ -63,7 +63,7 @@
               type="button"
               class="community-counters__card"
               [title]="card.description"
-              [attr.aria-label]="'Head-to-head: ' + heroName() + ' vs ' + card.hero.name + '. ' + card.description"
+              [attr.aria-label]="card.headToHeadLabel"
               aria-haspopup="dialog"
               (click)="openHeadToHead(card.hero.id, $event)"
             >
