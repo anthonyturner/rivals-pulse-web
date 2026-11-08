@@ -99,7 +99,7 @@
 
 :host(.featured) .preview {
   /* A preview labels itself with the muted text token, which is dark in the light theme and would sit unreadable on the art. */
-  --text-muted: var(--on-ink);
+  --text-muted: var(--on-ink-muted);
 
   margin-top: 0;
 }
@@ -144,7 +144,7 @@
   height: auto;
 }
 
-/* Cover art fills the tile and is trimmed at the sides, leaning left, where the composition keeps its faces. */
+/* Cover art fills the tile, trimmed at the sides or bottom and anchored to the top, leaning left, where the composition keeps its faces. */
 :host(.cover) .art__image {
   width: 100%;
   height: 100%;
