@@ -1,67 +1,39 @@
 <div class="media page-container page-container--wide">
   <app-page-header
     title="Video tutorials"
-    description="Tutorials, masterclasses, VOD reviews and map guides for Marvel Rivals, played right here."
+    description="Tutorials, masterclasses, VOD reviews and map guides for Marvel Rivals. Each video loads when you play it."
   />
 
-  <div class="workspace">
-    <section class="player-pane" aria-labelledby="player-title">
-      @for (tutorial of playing(); track tutorial.id) {
-        <iframe
-          [src]="tutorial.embedUrl"
-          [title]="tutorial.title"
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
-      }
-      <h2 id="player-title" #playerTitle tabindex="-1">{{ current().title }}</h2>
-      <p class="guide-caption">{{ current().topics }}</p>
-      <p class="guide-text">{{ current().description }}</p>
-      <p class="guide-toolbar">
-        <a class="guide-link" [href]="current().sourceUrl" target="_blank" rel="noopener">
-          Watch on YouTube<span class="visually-hidden"> (opens in a new tab)</span>
-        </a>
-        @if (current().guideUrl; as guideUrl) {
-          <a class="guide-link" [routerLink]="guideUrl">Read guide notes</a>
-        }
-      </p>
-    </section>
+  <div class="guide-toolbar">
+    <label class="guide-search">
+      <span>Search tutorials</span>
+      <input type="search" [value]="searchTerm()" (input)="updateSearch($event)" />
+    </label>
+    <app-filter-select
+      label="Category"
+      [options]="categoryOptions"
+      [value]="category()"
+      (valueChange)="category.set($event)"
+    />
+  </div>
+  <p class="guide-count" role="status">{{ status() }}</p>
 
-    <section class="picker" aria-label="Choose a tutorial">
-      <div class="guide-toolbar">
-        <label class="guide-search">
-          <span>Search tutorials</span>
-          <input type="search" [value]="searchTerm()" (input)="updateSearch($event)" />
-        </label>
-        <app-filter-select
-          label="Category"
-          [options]="categoryOptions"
-          [value]="category()"
-          (valueChange)="category.set($event)"
-        />
-      </div>
-      <p class="guide-count" role="status">{{ status() }}</p>
+  @if (featured(); as lead) {
+    <app-tutorial-card [tutorial]="lead" [featured]="true" [headingLevel]="2" />
 
-      @if (rows().length > 0) {
-        <ul class="tutorial-list" aria-label="Tutorials">
-          @for (row of rows(); track row.id) {
-            <li>
-              <button
-                type="button"
-                class="pick"
-                [attr.aria-current]="row.id === current().id ? 'true' : null"
-                (click)="select(row.id)"
-              >
-                <app-hero-tile selectable [selected]="row.id === current().id" [name]="row.title" [imageUrl]="row.image">
-                  <span class="guide-caption">{{ row.category }}</span>
-                </app-hero-tile>
-              </button>
-            </li>
+    @for (group of groups(); track group.category) {
+      <section class="group" [attr.aria-labelledby]="'topic-' + $index">
+        <h2 class="group__title" [id]="'topic-' + $index">
+          <span class="chip" [attr.data-kind]="group.kind">{{ group.category }}</span>
+        </h2>
+        <ul class="cards" [attr.aria-label]="group.category + ' tutorials'">
+          @for (tutorial of group.tutorials; track tutorial.id) {
+            <li><app-tutorial-card [tutorial]="tutorial" /></li>
           }
         </ul>
-      } @else {
-        <app-state-panel [announce]="false">No tutorials match. Clear the search or set Category to All.</app-state-panel>
-      }
-    </section>
-  </div>
+      </section>
+    }
+  } @else {
+    <app-state-panel [announce]="false">No tutorials match. Clear the search or set Category to All.</app-state-panel>
+  }
 </div>

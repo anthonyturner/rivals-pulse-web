@@ -1,0 +1,233 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+
+:host(:hover) {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host {
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  :host(:hover) {
+    transform: translateY(-3px);
+  }
+}
+
+/* The still and the player fill the same 16:9 box, so swapping them never moves the page. */
+.media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--ink);
+}
+
+.player,
+.play {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.play {
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* The ring sits inside the box, which clips anything outside it. */
+.play:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+/* YouTube's still is 4:3 with black bars above and below a 16:9 video; cover crops them off. */
+.play__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A scrim under the play marker, so it reads over any still. */
+.play::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, color-mix(in srgb, var(--ink) 60%, transparent) 0%, transparent 60%);
+  content: '';
+}
+
+.play__marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 2px solid var(--ink-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: var(--ink-accent);
+  transform: translate(-50%, -50%);
+}
+
+.play:hover .play__marker,
+.play:focus-visible .play__marker {
+  background: var(--ink-accent);
+  color: var(--on-ink-accent);
+}
+
+.copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 12px 16px 16px;
+}
+
+.chip {
+  align-self: flex-start;
+  margin-bottom: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--type-caption);
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.chip[data-kind='accent'] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.chip[data-kind='secondary'] {
+  background: var(--secondary-soft);
+  color: var(--secondary-ink);
+}
+
+.chip[data-kind='tertiary'] {
+  background: var(--tertiary-soft);
+  color: var(--tertiary-ink);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.description {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.tags {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin: auto 0 0;
+  padding-top: 8px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* The lead card: a dark panel that stays dark in both themes, so it reads with the ink tokens. */
+:host(.featured) {
+  border-color: var(--ink-line);
+  background: var(--ink);
+}
+
+:host(.featured) .title {
+  font-size: var(--type-title);
+}
+
+:host(.featured) .title,
+:host(.featured) .description {
+  color: var(--on-ink);
+}
+
+:host(.featured) .description {
+  display: block;
+  font-size: 1rem;
+}
+
+:host(.featured) .tags {
+  color: var(--on-ink-muted);
+}
+
+:host(.featured) .link {
+  color: var(--ink-accent);
+}
+
+:host(.featured) .link:focus-visible {
+  outline-color: var(--ink-focus);
+}
+
+:host(.featured) .chip {
+  background: color-mix(in srgb, var(--ink-raised) 75%, transparent);
+  color: var(--ink-accent);
+}
+
+/* Only the accent kind is yellow on the dark card; the tinted colours are not made for a dark fill in both themes. */
+:host(.featured) .chip:not([data-kind='accent']) {
+  color: var(--on-ink);
+}
+
+/* On a wide screen the lead card lays the video beside its text. */
+@media (min-width: 860px) {
+  :host(.featured) {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: stretch;
+  }
+
+  :host(.featured) .copy {
+    justify-content: center;
+    padding: 24px;
+  }
+
+  :host(.featured) .links {
+    margin-top: 12px;
+  }
+}

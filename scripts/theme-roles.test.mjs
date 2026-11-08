@@ -10,7 +10,6 @@ const SRC = fileURLToPath(new URL('../src', import.meta.url));
 const KEPT_LITERALS = new Map([
   ['app/features/insights/tier-rows/tier-rows.component.css', 6],
   ['app/features/community/user-highlights/user-highlights-page.component.css', 1],
-  ['app/features/learning/media-tutorials/media-tutorials-page.component.css', 1],
 ]);
 
 /** Fill tokens read as text where the fill is not the text's own background: a large numeral, and the accent on the dark pill. */
