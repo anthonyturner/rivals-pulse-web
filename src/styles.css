@@ -179,6 +179,8 @@
   --ink-accent: #ffdf00;
   --on-ink-accent: #1a1600;
   --ink-focus: #7b7bff;
+  --ink-secondary: #7b7bff;
+  --ink-tertiary: #e070ff;
 }
 
 :root {
