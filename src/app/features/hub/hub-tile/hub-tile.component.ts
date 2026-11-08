@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import type { TileChip, TileImageFit, TileTint } from '../hub-tile.types';
+import { KindChipComponent } from '../kind-chip/kind-chip.component';
 
 /**
  * A link in a hub as a card: an optional category chip, the title, a one-line description and room
@@ -15,7 +16,7 @@ import type { TileChip, TileImageFit, TileTint } from '../hub-tile.types';
  */
 @Component({
   selector: 'app-hub-tile',
-  imports: [NgTemplateOutlet, RouterLink],
+  imports: [KindChipComponent, NgTemplateOutlet, RouterLink],
   templateUrl: './hub-tile.component.html',
   styleUrl: './hub-tile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

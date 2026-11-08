@@ -1,0 +1,19 @@
+<span class="poster-art" aria-hidden="true" inert>
+  <img class="poster-art__image" [src]="imageUrl()" alt="" width="320" height="320" decoding="async" />
+  @if (playing()) {
+    <iframe
+      class="poster-art__video"
+      [class.loaded]="videoLoaded()"
+      [src]="videoUrl()"
+      [title]="heroName() + ' gameplay video'"
+      allow="autoplay; encrypted-media"
+      (load)="videoLoaded.set(true)"
+    ></iframe>
+  }
+</span>
+@if (videoUrl()) {
+  <button type="button" class="backdrop-switch" role="switch" [attr.aria-checked]="playing()" (click)="toggle()">
+    <span class="backdrop-switch__track" aria-hidden="true"></span>
+    Gameplay video
+  </button>
+}

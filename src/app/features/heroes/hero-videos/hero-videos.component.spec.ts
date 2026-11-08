@@ -1,6 +1,5 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DomSanitizer } from '@angular/platform-browser';
 
 import { HeroVideoSearch } from '../hero.model';
 import { HeroVideosComponent } from './hero-videos.component';
@@ -13,12 +12,9 @@ describe('HeroVideosComponent', () => {
     label: 'Guide',
     query: 'A guide',
     url,
-    player: {
-      embedUrl: TestBed.inject(DomSanitizer).bypassSecurityTrustResourceUrl('about:blank'),
-      thumbnailUrl: `https://i.ytimg.com/vi/${url.slice(-1)}/hqdefault.jpg`,
-    },
+    youtubeId: url.slice(-1),
   });
-  const playButton = (): HTMLButtonElement | null => element.querySelector('button.video-play');
+  const playButton = (): HTMLButtonElement | null => element.querySelector('button');
   const press = async (button: HTMLButtonElement | null): Promise<void> => {
     button?.click();
     await fixture.whenStable();
@@ -48,7 +44,7 @@ describe('HeroVideosComponent', () => {
   });
 
   it('shows a play button, not a player, for a video that has one, and a link for every video', () => {
-    expect(element.querySelectorAll('button.video-play').length).toBe(1);
+    expect(element.querySelectorAll('button').length).toBe(1);
     expect(element.querySelectorAll('.video-copy a').length).toBe(2);
     expect(element.querySelector('.video-all')?.getAttribute('href')).toBe('https://example.test/all');
   });
@@ -86,10 +82,10 @@ describe('HeroVideosComponent', () => {
   it('starts only the video that was pressed', async () => {
     await setVideos([videoAt('https://example.test/a'), videoAt('https://example.test/b')]);
 
-    await press(element.querySelectorAll<HTMLButtonElement>('button.video-play')[1]);
+    await press(element.querySelectorAll<HTMLButtonElement>('button')[1]);
 
     expect(element.querySelectorAll('iframe').length).toBe(1);
-    expect(element.querySelectorAll('button.video-play').length).toBe(1);
+    expect(element.querySelectorAll('button').length).toBe(1);
   });
 
   it('keeps a started player when the same video is given again in a new list', async () => {

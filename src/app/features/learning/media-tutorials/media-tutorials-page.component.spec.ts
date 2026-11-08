@@ -3,15 +3,16 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { MediaTutorialsPageComponent } from './media-tutorials-page.component';
-import { MEDIA_TUTORIALS } from './media-tutorials.data';
+import { MEDIA_TUTORIALS, TUTORIAL_CATEGORIES } from './media-tutorials.data';
 
 describe('MediaTutorialsPageComponent', () => {
   let fixture: ComponentFixture<MediaTutorialsPageComponent>;
   let element: HTMLElement;
 
   const status = () => element.querySelector('[role="status"]')?.textContent?.trim();
-  const rows = () => Array.from(element.querySelectorAll<HTMLButtonElement>('.tutorial-list button'));
-  const playerTitle = () => element.querySelector<HTMLElement>('#player-title') as HTMLElement;
+  const cards = () => Array.from(element.querySelectorAll<HTMLElement>('app-tutorial-card'));
+  const plays = () => Array.from(element.querySelectorAll<HTMLButtonElement>('button.play'));
+  const images = () => Array.from(element.querySelectorAll<HTMLImageElement>('img.play__image'));
 
   async function settle(): Promise<void> {
     await fixture.whenStable();
@@ -39,83 +40,138 @@ describe('MediaTutorialsPageComponent', () => {
     element = fixture.nativeElement;
   });
 
-  it('has one player, no autoplay, and leaves the main landmark to the shell', () => {
-    const iframe = element.querySelector('iframe') as HTMLIFrameElement;
-
-    expect(element.querySelectorAll('iframe').length).toBe(1);
-    expect(iframe.src).toBe('https://www.youtube.com/embed/' + MEDIA_TUTORIALS[0].youtubeId);
-    expect(iframe.getAttribute('allow')).not.toContain('autoplay');
+  it('loads no embed before a click, and leaves the main landmark to the shell', () => {
+    expect(element.querySelectorAll('iframe').length).toBe(0);
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelectorAll('h1').length).toBe(1);
   });
 
-  it('renders a new player for each pick, so Back does not step through earlier picks, still without autoplay', async () => {
-    const first = element.querySelector('iframe') as HTMLIFrameElement;
+  it('shows every tutorial once, with its title, topic and link, and says how many', () => {
+    expect(cards().length).toBe(MEDIA_TUTORIALS.length);
+    expect(status()).toBe('18 tutorials');
 
-    rows()[3].click();
+    for (const tutorial of MEDIA_TUTORIALS) {
+      const card = cards().find((candidate) => candidate.textContent?.includes(tutorial.title));
+      const source = card?.querySelector<HTMLAnchorElement>('a[target="_blank"]');
+
+      expect(card).withContext(tutorial.title).toBeDefined();
+      expect(card?.textContent).toContain(tutorial.category);
+      expect(source?.getAttribute('href')).toBe(tutorial.sourceUrl);
+    }
+  });
+
+  it('leads with the first tutorial as the featured card, and groups the rest by topic in order', () => {
+    const featured = element.querySelector('app-tutorial-card.featured') as HTMLElement;
+    const topics = Array.from(element.querySelectorAll('h2 .chip')).map((chip) => chip.textContent?.trim());
+
+    expect(element.querySelectorAll('app-tutorial-card.featured').length).toBe(1);
+    expect(featured.querySelector('h2')?.textContent).toContain(MEDIA_TUTORIALS[0].title);
+    expect(featured.querySelector('.chip')?.getAttribute('data-kind')).toBe('accent');
+    expect(topics).toEqual([...TUTORIAL_CATEGORIES]);
+  });
+
+  it('tints each topic chip by its kind', () => {
+    const kinds = Object.fromEntries(
+      Array.from(element.querySelectorAll('h2 .chip')).map((chip) => [chip.textContent?.trim(), chip.getAttribute('data-kind')]),
+    );
+
+    expect(kinds).toEqual({
+      Fundamentals: 'accent',
+      Roles: 'secondary',
+      Heroes: 'secondary',
+      Mindset: 'accent',
+      'VOD Reviews': 'tertiary',
+      'Map Guides': 'tertiary',
+    });
+  });
+
+  it('loads only the featured still eagerly, keeps decorative stills empty-alt and sized', () => {
+    const [lead, ...rest] = images();
+
+    expect(images().length).toBe(MEDIA_TUTORIALS.length);
+    expect(lead.getAttribute('loading')).toBe('eager');
+    expect(rest.every((image) => image.getAttribute('loading') === 'lazy')).toBeTrue();
+    expect(images().every((image) => image.getAttribute('alt') === '' && image.getAttribute('width') === '480' && image.getAttribute('height') === '360')).toBeTrue();
+    expect(lead.src).toBe(`https://i.ytimg.com/vi/${MEDIA_TUTORIALS[0].youtubeId}/hqdefault.jpg`);
+  });
+
+  it('names each play button for its video and loads a player only for the one pressed', async () => {
+    const tutorial = MEDIA_TUTORIALS[2];
+    const play = () => plays().find((button) => button.getAttribute('aria-label') === `Play video: ${tutorial.title}`);
+
+    expect(play()).toBeDefined();
+
+    play()?.click();
     await settle();
-    const second = element.querySelector('iframe') as HTMLIFrameElement;
+    const iframe = element.querySelector('iframe') as HTMLIFrameElement;
 
     expect(element.querySelectorAll('iframe').length).toBe(1);
-    expect(second).not.toBe(first);
-    expect(second.src).toBe('https://www.youtube.com/embed/' + MEDIA_TUTORIALS[3].youtubeId);
-    expect(second.src).not.toContain('autoplay');
-    expect(second.getAttribute('allow')).not.toContain('autoplay');
+    expect(iframe.src).toBe(`https://www.youtube-nocookie.com/embed/${tutorial.youtubeId}?autoplay=1`);
+    expect(iframe.title).toBe(tutorial.title);
+    expect(plays().length).toBe(MEDIA_TUTORIALS.length - 1);
+    expect(play()).toBeUndefined();
+    expect(document.activeElement).toBe(iframe);
   });
 
-  it('lists every tutorial, selects the first and says how many', () => {
-    expect(rows().length).toBe(MEDIA_TUTORIALS.length);
-    expect(rows()[0].getAttribute('aria-current')).toBe('true');
-    expect(status()).toBe('18 tutorials');
-    expect(playerTitle().textContent).toContain(MEDIA_TUTORIALS[0].title);
-  });
-
-  it('swaps the player and moves focus to its title when a row is chosen', async () => {
-    rows()[2].click();
+  it('keeps a playing lead on screen, still playing, when a search no longer matches it', async () => {
+    plays()[0].click();
     await settle();
+    const player = element.querySelector('iframe');
 
-    expect(playerTitle().textContent).toContain(MEDIA_TUTORIALS[2].title);
-    expect(element.querySelector('iframe')?.title).toBe(MEDIA_TUTORIALS[2].title);
-    expect(rows()[2].getAttribute('aria-current')).toBe('true');
-    expect(rows()[0].getAttribute('aria-current')).toBeNull();
-    expect(document.activeElement).toBe(playerTitle());
+    await search('tilt');
+
+    expect(element.querySelector('app-tutorial-card.featured iframe')).toBe(player);
+    expect(element.querySelectorAll('iframe').length).toBe(1);
+    expect(cards().length).toBe(2);
+  });
+
+  it('keeps a video playing further down when a filter would make it the first match', async () => {
+    const heroes = MEDIA_TUTORIALS.filter((tutorial) => tutorial.category === 'Heroes');
+    const play = () =>
+      plays().find((button) => button.getAttribute('aria-label') === `Play video: ${heroes[0].title}`);
+
+    play()?.click();
+    await settle();
+    const player = element.querySelector('iframe');
+
+    await pickCategory('Heroes');
+
+    expect(element.querySelector('iframe')).toBe(player);
+    expect(element.querySelector('app-tutorial-card.featured iframe')).toBeNull();
+    expect(element.querySelector('app-tutorial-card.featured h2')?.textContent).toContain(heroes[1].title);
   });
 
   it('filters by category and by tag, counting "n of 18 tutorials"', async () => {
     await pickCategory('Roles');
     expect(status()).toBe('4 of 18 tutorials');
+    expect(cards().length).toBe(4);
 
     await pickCategory('All');
     await search('cooldowns');
     expect(status()).toBe('1 of 18 tutorials');
-    expect(rows().length).toBe(1);
-  });
-
-  it('keeps the playing tutorial when the filter hides its row', async () => {
-    await search('tilt');
-
-    expect(playerTitle().textContent).toContain(MEDIA_TUTORIALS[0].title);
-    expect(rows().every((row) => row.getAttribute('aria-current') === null)).toBeTrue();
+    expect(cards().length).toBe(1);
+    expect(element.querySelectorAll('app-tutorial-card.featured').length).toBe(1);
   });
 
   it('shows one silent empty panel and a single live status when nothing matches', async () => {
     await search('zzzz');
 
     expect(status()).toBe('0 of 18 tutorials');
+    expect(cards().length).toBe(0);
     expect(element.querySelector('app-state-panel')?.textContent).toContain('No tutorials match');
     expect(element.querySelectorAll('[role="status"], [aria-live]').length).toBe(1);
   });
 
-  it('marks the external link as opening a new tab and offers guide notes only where there are some', async () => {
+  it('marks the external link as opening a new tab and offers guide notes only where there are some', () => {
     const external = element.querySelector('a[target="_blank"]') as HTMLAnchorElement;
+    const withNotes = MEDIA_TUTORIALS.filter((tutorial) => tutorial.guideUrl);
+    const notes = Array.from(element.querySelectorAll<HTMLAnchorElement>('a')).filter((link) =>
+      link.textContent?.includes('Read guide notes'),
+    );
 
     expect(external.getAttribute('rel')).toBe('noopener');
     expect(external.querySelector('.visually-hidden')?.textContent).toContain('opens in a new tab');
-    expect(element.textContent).toContain('Read guide notes');
-
-    rows()[1].click();
-    await settle();
-
-    expect(element.textContent).not.toContain('Read guide notes');
+    expect(notes.length).toBe(withNotes.length);
+    expect(notes.length).toBeLessThan(MEDIA_TUTORIALS.length);
   });
 });

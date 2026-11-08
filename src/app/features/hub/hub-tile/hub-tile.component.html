@@ -11,7 +11,7 @@
   <img class="thumbnail" [src]="thumb" alt="" width="56" height="56" loading="lazy" decoding="async" />
 }
 @if (chip(); as tag) {
-  <span class="chip" [attr.data-kind]="tag.kind">{{ tag.label }}</span>
+  <app-kind-chip [kind]="tag.kind" [label]="tag.label" [dark]="!!imageUrl()" />
 }
 @if (headingLevel() === 3) {
   <h3 class="title"><ng-container *ngTemplateOutlet="link" /></h3>

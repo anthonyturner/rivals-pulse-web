@@ -1,3 +1,5 @@
+import type { TileChipKind } from '../../hub/hub-tile.types';
+
 export const TUTORIAL_CATEGORIES = [
   'Fundamentals',
   'Roles',
@@ -9,6 +11,16 @@ export const TUTORIAL_CATEGORIES = [
 
 export type TutorialCategory = (typeof TUTORIAL_CATEGORIES)[number];
 
+/** The chip tint of each topic: yellow for learning the game, indigo for the game's own pieces, violet for community reviews. */
+export const TUTORIAL_CATEGORY_KINDS: Record<TutorialCategory, TileChipKind> = {
+  Fundamentals: 'accent',
+  Mindset: 'accent',
+  Roles: 'secondary',
+  Heroes: 'secondary',
+  'VOD Reviews': 'tertiary',
+  'Map Guides': 'tertiary',
+};
+
 export interface MediaTutorial {
   id: string;
   category: TutorialCategory;
@@ -17,7 +29,6 @@ export interface MediaTutorial {
   youtubeId: string;
   sourceUrl: string;
   guideUrl?: string;
-  image: string;
   tags: string[];
 }
 
@@ -30,7 +41,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     youtubeId: 'rqxP_tKV2vc',
     sourceUrl: 'https://youtu.be/rqxP_tKV2vc?si=9K2auPgj1OXjaD2y',
     guideUrl: '/strategic-cover',
-    image: '/images/heroes/doctor-strange.png',
     tags: ['Cover', 'Sightlines', 'Survivability'],
   },
   {
@@ -40,7 +50,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'A Marvel Rivals positioning lesson about when high ground creates pressure and when dropping gives away your advantage.',
     youtubeId: '_PdmvN0s0ew',
     sourceUrl: 'https://youtu.be/_PdmvN0s0ew?si=E8lcu1rTkWXSU3mi',
-    image: '/images/heroes/iron-man.png',
     tags: ['High Ground', 'Angles', 'Map Control'],
   },
   {
@@ -50,7 +59,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Strategist masterclass material focused on space control, support uptime, and choosing which lane to stabilize.',
     youtubeId: 'veOh-WKr4Xw',
     sourceUrl: 'https://youtu.be/veOh-WKr4Xw?si=_s1DeN9iMPJtgUh7',
-    image: '/images/heroes/jeff-the-land-shark.png',
     tags: ['Jeff', 'Strategist', 'Space'],
   },
   {
@@ -60,7 +68,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Rotation and pathing concepts for creating new pressure without walking through the enemy main angle.',
     youtubeId: 'oAdjNFeiOrQ',
     sourceUrl: 'https://youtu.be/oAdjNFeiOrQ?si=ZQxCLxHa_fukSotJ',
-    image: '/images/heroes/spider-man.png',
     tags: ['Rotations', 'Pathing', 'Tempo'],
   },
   {
@@ -71,7 +78,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     youtubeId: 'FmfiDOyZmrQ',
     sourceUrl: 'https://youtu.be/FmfiDOyZmrQ?si=b8gXQdcpU1Y2vqfF',
     guideUrl: '/power-positions',
-    image: '/images/heroes/magneto.png',
     tags: ['Positioning', 'Pressure', 'Map Control'],
   },
   {
@@ -81,7 +87,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Strategist fundamentals for proactive support, resource timing, and maintaining useful pressure.',
     youtubeId: '-iBssvJkLXk',
     sourceUrl: 'https://youtu.be/-iBssvJkLXk?si=TdK-KchPCqEkt_Fb',
-    image: '/images/heroes/invisible-woman.png',
     tags: ['Strategist', 'Support', 'Resources'],
   },
   {
@@ -91,7 +96,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Duelist setup, scouting, and fight-timing material using Star-Lord examples.',
     youtubeId: 'YX2xq2RXV7o',
     sourceUrl: 'https://youtu.be/YX2xq2RXV7o?si=1SxRqhS7w1LB4B6E',
-    image: '/images/heroes/star-lord.png',
     tags: ['Star-Lord', 'Duelist', 'Setup'],
   },
   {
@@ -101,7 +105,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Fight-planning tutorial on overlapping angles, pressure traps, and when to collapse onto a target.',
     youtubeId: '9bp0D7R9zbg',
     sourceUrl: 'https://youtu.be/9bp0D7R9zbg?si=flVjnb_HF0puZU-3',
-    image: '/images/heroes/winter-soldier.png',
     tags: ['Killboxes', 'Angles', 'Focus Fire'],
   },
   {
@@ -111,7 +114,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Poke-team concepts for holding useful pressure, controlling lanes, and cutting dead time in fights.',
     youtubeId: 'F6EFqod3Kn0',
     sourceUrl: 'https://youtu.be/F6EFqod3Kn0?si=OufYyykEhYZXjgVO',
-    image: '/images/heroes/loki.png',
     tags: ['Lane Control', 'Uptime', 'Poke'],
   },
   {
@@ -121,7 +123,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Map-specific tutorial covering fight locations, route choices, and practical tips for Hell’s Heaven.',
     youtubeId: 'fUsbDOIjlpU',
     sourceUrl: 'https://youtu.be/fUsbDOIjlpU?si=dYm56G3TgKDtJheY',
-    image: '/images/heroes/captain-america.png',
     tags: ['Map Guide', "Hell's Heaven", 'Domination'],
   },
   {
@@ -131,7 +132,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Masterclass on creating synchronized pressure instead of entering fights early, late, or alone.',
     youtubeId: 'yftUQIsApMI',
     sourceUrl: 'https://youtu.be/yftUQIsApMI?si=BkzIi2ynIWqEiaOD',
-    image: '/images/heroes/psylocke.png',
     tags: ['Timing', 'Engage', 'Fight Planning'],
   },
   {
@@ -141,7 +141,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Decision-making tutorial on selecting vulnerable, isolated, or resource-light targets.',
     youtubeId: 'HoiwKJLR_tA',
     sourceUrl: 'https://youtu.be/HoiwKJLR_tA?si=_oS8swCV9MkR7aOt',
-    image: '/images/heroes/hela.png',
     tags: ['Target Priority', 'Decision Making', 'Pressure'],
   },
   {
@@ -151,7 +150,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Role masterclass on creating space, choosing fight locations, and spending cooldowns with intent.',
     youtubeId: 'TOZZRM5JnSM',
     sourceUrl: 'https://youtu.be/TOZZRM5JnSM?si=ODAVv83RtZxvguXr',
-    image: '/images/heroes/the-thing.png',
     tags: ['Vanguard', 'Space', 'Cooldowns'],
   },
   {
@@ -161,7 +159,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Role masterclass on scouting, setting up crossfires, and converting pressure into eliminations.',
     youtubeId: '6FGNkCvqhgA',
     sourceUrl: 'https://youtu.be/6FGNkCvqhgA?si=FSi0vTdUwu3O86xG',
-    image: '/images/heroes/black-panther.png',
     tags: ['Duelist', 'Setup', 'Threat'],
   },
   {
@@ -171,7 +168,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Role masterclass on proactive support, utility reservation, and turning resources into pressure.',
     youtubeId: 'K9Ce8VTHxuc',
     sourceUrl: 'https://youtu.be/K9Ce8VTHxuc?si=0HDhL7-D9wkvjCsJ',
-    image: '/images/heroes/mantis.png',
     tags: ['Strategist', 'Utility', 'Resources'],
   },
   {
@@ -181,7 +177,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'A practical VOD review framework for finding repeatable decision patterns instead of blaming single moments.',
     youtubeId: 'qbjD4v91UOk',
     sourceUrl: 'https://youtu.be/qbjD4v91UOk',
-    image: '/images/heroes/rocket-raccoon.png',
     tags: ['VOD Review', 'Practice', 'Improvement'],
   },
   {
@@ -191,7 +186,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Practice and mentality material for building repeatable performance across ranked blocks.',
     youtubeId: 'r-MDhF7li2s',
     sourceUrl: 'https://youtu.be/r-MDhF7li2s?si=R3DnPYsAr2gsA0iH',
-    image: '/images/heroes/luna-snow.png',
     tags: ['Consistency', 'Mindset', 'Practice'],
   },
   {
@@ -201,7 +195,6 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     description: 'Mental reset tutorial for staying useful after mistakes, pressure swings, and frustrating games.',
     youtubeId: '3leIrDmkHbs',
     sourceUrl: 'https://youtu.be/3leIrDmkHbs?si=oiLno2-O5oqqg9tT',
-    image: '/images/heroes/scarlet-witch.png',
     tags: ['Tilt', 'Mental', 'Reset'],
   },
 ];

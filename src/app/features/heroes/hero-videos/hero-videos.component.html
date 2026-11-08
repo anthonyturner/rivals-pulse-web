@@ -1,38 +1,14 @@
 <aside class="hero-videos" [attr.aria-label]="'YouTube videos for ' + heroName()">
   <h2 class="hero-videos__heading">YouTube videos</h2>
   <div class="hero-videos__list">
-    @for (video of cards(); track video.url) {
+    @for (video of videos(); track video.url) {
       <article class="video-card">
-        @if (video.player; as player) {
-          @if (video.started) {
-            <iframe
-              class="video-embed"
-              [src]="player.embedUrl"
-              [title]="heroName() + ' ' + video.label"
-              allow="
-                accelerometer;
-                autoplay;
-                clipboard-write;
-                encrypted-media;
-                gyroscope;
-                picture-in-picture;
-                web-share;
-              "
-              allowfullscreen
-            ></iframe>
-          } @else {
-            <button
-              type="button"
-              class="video-embed video-play"
-              [attr.aria-label]="'Play ' + heroName() + ' ' + video.label + ' video'"
-              (click)="play(video.url, $event)"
-            >
-              <img class="video-play__image" [src]="player.thumbnailUrl" alt="" width="480" height="360" loading="lazy" />
-              <svg class="video-play__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M8 5v14l11-7z" fill="currentColor" />
-              </svg>
-            </button>
-          }
+        @if (video.youtubeId; as youtubeId) {
+          <app-youtube-player
+            [videoId]="youtubeId"
+            [title]="heroName() + ' ' + video.label"
+            [label]="'Play ' + heroName() + ' ' + video.label + ' video'"
+          />
         }
         <span class="video-copy">
           <strong>{{ video.label }}</strong>
