@@ -15,6 +15,7 @@ import { HeroDataService } from '../../heroes/hero-data.service';
 import { seasonOptions, type SeasonOption } from '../half-season-view';
 import { heroIdentities } from '../hero-identity';
 import { HeroSynergiesService } from '../hero-synergies.service';
+import { TeamLineupsService } from '../team-lineups.service';
 import { TripleSupportTriosService } from '../triple-support-trios.service';
 import { buildTeamCompsView } from './team-comps-view';
 
@@ -43,6 +44,7 @@ interface TeamCompsRequest {
 export class TeamCompsPageComponent {
   private readonly synergiesService = inject(HeroSynergiesService);
   private readonly triosService = inject(TripleSupportTriosService);
+  private readonly lineupsService = inject(TeamLineupsService);
   private readonly chosenSeason = signal<number | undefined>(undefined);
   private readonly chosenMode = signal<HeroStatsModeId>(DEFAULT_TEAM_COMPS_MODE);
   /** True from choosing another half-season or mode until its numbers arrive, so the last one's are not shown under the new label. */
@@ -62,6 +64,7 @@ export class TeamCompsPageComponent {
         forkJoin({
           synergies: this.synergiesService.getHeroSynergies(halfSeason, mode),
           trios: this.triosService.getTripleSupportTrios(halfSeason, mode),
+          lineups: this.lineupsService.getTeamLineups(halfSeason, mode),
         }).pipe(
           tap(({ synergies }) => {
             this.rememberPickers(synergies);
@@ -75,7 +78,7 @@ export class TeamCompsPageComponent {
 
   /** Names, portraits and roles wait for the roster: without it no pair could be filed under a role. */
   readonly loading = computed(() => this.answers() === undefined || this.roster() === undefined || this.pending());
-  /** The duos carry the page; the triple supports failing alone is said in their own section. */
+  /** The duos carry the page; the triple supports or the line-ups failing alone is said in their own section. */
   readonly failed = computed(
     () => (this.answers() !== undefined && this.answers()?.synergies === null && !this.pending()) || this.roster() === null,
   );
@@ -84,7 +87,7 @@ export class TeamCompsPageComponent {
     const roster = this.roster();
 
     return answers?.synergies && roster && !this.pending()
-      ? buildTeamCompsView(answers.synergies, answers.trios, heroIdentities(roster))
+      ? buildTeamCompsView(answers.synergies, answers.trios, answers.lineups, heroIdentities(roster))
       : null;
   });
   readonly seasonChoices = computed(() => this.seasons().map(({ id, label }) => ({ value: String(id), label })));

@@ -79,6 +79,35 @@ thead th {
   list-style: none;
 }
 
+.lineup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+}
+
+.shape {
+  font-weight: 800;
+}
+
+.shape-caption {
+  color: var(--text-soft);
+}
+
+.support-badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--type-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.thin {
+  color: var(--text-soft);
+}
+
 .pair {
   display: flex;
   flex-wrap: wrap;

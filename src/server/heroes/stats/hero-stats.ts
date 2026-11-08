@@ -64,16 +64,15 @@ export const PLAY_MODES: readonly PlayMode[] = [
   { id: 'practice', label: 'Practice', playModeIds: [PLAY_MODE_IDS.practice] },
 ];
 
-const DEFAULT_PLAY_MODE = PLAY_MODES[0];
-
 /**
- * The mode a `mode` query value names: the blend when there is none, and undefined for a value that
- * names no mode, which then counts nothing rather than quietly counting the blend.
+ * The mode a `mode` query value names: `whenAbsent` (the blend unless an endpoint says otherwise)
+ * when there is none, and undefined for a value that names no mode, which then counts nothing
+ * rather than quietly counting the default.
  */
-export function playModeFromQuery(value: string | undefined): PlayMode | undefined {
+export function playModeFromQuery(value: string | undefined, whenAbsent: HeroStatsModeId = 'all'): PlayMode | undefined {
   const id = value?.trim().toLowerCase();
 
-  return id === undefined || id === '' ? DEFAULT_PLAY_MODE : PLAY_MODES.find((mode) => mode.id === id);
+  return PLAY_MODES.find((mode) => mode.id === (id === undefined || id === '' ? whenAbsent : id));
 }
 
 /** One hero in one half-season and mode, as `read_hero_stats()` returns it. */
