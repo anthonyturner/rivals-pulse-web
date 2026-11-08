@@ -1,9 +1,11 @@
 import type { HeroSynergies, HeroSynergy } from '../../../../contracts/hero-synergies.model';
+import type { TeamLineups } from '../../../../contracts/team-lineups.model';
 import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
+import { buildLineupsView, lineupsMethodNote, type LineupsView } from './lineups-view';
 import { buildTripleSupportView, type TripleSupportView } from './triple-support-view';
 
 /** RivalsPulse has no rank breakdown, so the page says that every figure counts every rank. */
@@ -34,11 +36,6 @@ export interface RolePairSectionView {
   rows: RolePairRowView[];
 }
 
-/** A section whose source is not built yet: it shows "Not enough data yet" until its rows can be filled. */
-export interface PendingSectionView {
-  state: 'not-enough-data';
-}
-
 export interface TeamCompsView {
   /** The half-season the numbers come from; null before any half-season exists. */
   season: SeasonView | null;
@@ -57,8 +54,9 @@ export interface TeamCompsView {
   /** Always the three roles, in order, so a role with no pair says so instead of vanishing. */
   rolePairs: RolePairSectionView[];
   tripleSupport: TripleSupportView;
-  /** Waits for the line-up counts; see issue 126. */
-  lineups: PendingSectionView;
+  lineups: LineupsView;
+  /** What the line-up pick rates are out of and who is left out, for the method note; null when there is nothing to say. */
+  lineupsNote: string | null;
 }
 
 /**
@@ -67,12 +65,13 @@ export interface TeamCompsView {
  * list. Within a role the pairs are ranked by win rate pulled toward 50%, so a short run cannot top
  * the list, and the rate shown is the plain one.
  *
- * The triple-support section is built from `trios` (null when they could not be loaded, which the
- * section says, without hiding the duos). The line-up section has no source yet, so it is pending.
+ * The triple-support section is built from `trios` and the line-up section from `lineups`; each is
+ * null when its request failed, which its section says, without hiding the duos.
  */
 export function buildTeamCompsView(
   synergies: HeroSynergies,
   trios: TripleSupportTrios | null,
+  lineups: TeamLineups | null,
   identities: HeroIdentities,
 ): TeamCompsView {
   const season = synergies.halfSeason === null ? null : seasonView(synergies.halfSeason);
@@ -103,7 +102,8 @@ export function buildTeamCompsView(
     ].filter((part): part is string => !!part),
     rolePairs,
     tripleSupport: buildTripleSupportView(trios, season?.id ?? null, identities),
-    lineups: { state: 'not-enough-data' },
+    lineups: buildLineupsView(lineups, season?.id ?? null),
+    lineupsNote: lineupsMethodNote(lineups),
   };
 }
 

@@ -26,8 +26,13 @@ function row(
   };
 }
 
-function derive(rows: TeamLineupRow[]) {
-  return deriveTeamLineups(rows, { halfSeasons: SEASONS }, NOW);
+const TOTALS = [
+  { halfSeason: 10.5, playModeId: 1, decidedMatches: 300 },
+  { halfSeason: 10.5, playModeId: 0, decidedMatches: 90 },
+];
+
+function derive(rows: TeamLineupRow[], options: { halfSeason?: number; mode?: string } = {}) {
+  return deriveTeamLineups(rows, { halfSeasons: SEASONS, totals: TOTALS }, { now: NOW, ...options });
 }
 
 describe('deriveTeamLineups', () => {
@@ -112,5 +117,51 @@ describe('deriveTeamLineups', () => {
 
     expect(lineups.shapes[0].pickRate).toBe(0);
     expect(lineups.shapes[0].winRate).toBe(0);
+  });
+
+  it('counts Competitive when no mode is asked for, and says which mode and half-seasons it offers', () => {
+    const lineups = derive([row([2, 2, 2], 400, 200)]);
+
+    expect(lineups.mode).toBe('competitive');
+    expect(lineups.halfSeasons?.map(({ id }) => id)).toEqual([10, 10.5]);
+    expect(lineups.modes?.map(({ id, decidedMatches }) => [id, decidedMatches])).toEqual([
+      ['all', 390],
+      ['quick-match', 90],
+      ['competitive', 300],
+      ['arcade', 0],
+      ['practice', 0],
+    ]);
+  });
+
+  it('names the mode asked for, and the blend when it asks for it', () => {
+    expect(derive([row([2, 2, 2], 400, 200)], { mode: 'quick-match' }).mode).toBe('quick-match');
+    expect(derive([row([2, 2, 2], 400, 200)], { mode: 'all' }).mode).toBe('all');
+  });
+
+  it('is the empty state, with no mode, for a mode that names none', () => {
+    const lineups = derive([], { mode: 'ranked' });
+
+    expect(lineups.status).toBe('not-enough-data');
+    expect(lineups.mode).toBeNull();
+    expect(lineups.shapes).toEqual([]);
+  });
+
+  it('shows exactly the half-season asked for, with no fall-back, and none for one that has not started', () => {
+    const rows = [
+      row([2, 2, 2], 500, 250, { halfSeason: 10, classifiedTeams: 1000 }),
+      row([2, 2, 2], null, null, { halfSeason: 10.5 }),
+    ];
+
+    const earlier = derive(rows, { halfSeason: 10 });
+    const current = derive(rows, { halfSeason: 10.5 });
+    const unknown = derive(rows, { halfSeason: 11 });
+
+    expect(earlier.halfSeason?.id).toBe(10);
+    expect(earlier.status).toBe('ready');
+    expect(current.halfSeason?.id).toBe(10.5);
+    expect(current.inPlaceOf).toBeNull();
+    expect(current.status).toBe('not-enough-data');
+    expect(unknown.halfSeason).toBeNull();
+    expect(unknown.shapes).toEqual([]);
   });
 });
