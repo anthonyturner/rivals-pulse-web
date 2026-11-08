@@ -110,7 +110,11 @@ export function deriveHeroMatchups(
   return finish(describe(current), null, now.matchups);
 }
 
-function snapshotOf(
+/**
+ * The matchups at the minimum in one half-season, with the game hero ids named by hero. Exported for
+ * the readers that compare another figure with a hero's overall record in the same half-season.
+ */
+export function snapshotOf(
   rows: readonly HeroMatchupRow[],
   halfSeason: number,
   heroSlugByGameId: ReadonlyMap<number, string>,

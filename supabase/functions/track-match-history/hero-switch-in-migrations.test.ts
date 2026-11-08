@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { columnsOf, createdFunctions, createdTables, escapeRegExp, MIGRATIONS, read, withoutComments } from './migration-sql.ts';
 
@@ -152,6 +152,21 @@ describe('the switch-in migration', () => {
     const definers = readdirSync(MIGRATIONS)
       .filter(name => name.endsWith('.sql') && name < SWITCH_INS && withoutComments(read(name)).includes('function public.hero_figure_qualifies('));
     assert.equal(definers.at(-1), '20261108120000_two_player_community_minimum.sql');
+  });
+
+  it('is printed by the website with the minimums of the latest hero_figure_qualifies', () => {
+    const latest = readdirSync(MIGRATIONS)
+      .filter(name => name.endsWith('.sql'))
+      .sort()
+      .map(name => withoutComments(read(name)))
+      .filter(text => text.includes('function public.hero_figure_qualifies('))
+      .at(-1);
+    const database = latest?.match(/function public\.hero_figure_qualifies[\s\S]*?p_matches >= (\d+)\s+and p_recorders >= (\d+)/);
+    const website = readFileSync(new URL('../../../src/server/heroes/switch-ins/hero-switch-ins.ts', import.meta.url), 'utf8');
+
+    assert.ok(database);
+    assert.equal(website.match(/SWITCH_IN_MIN_MATCHES = (\d+);/)?.[1], database[1]);
+    assert.equal(website.match(/SWITCH_IN_MIN_PLAYERS = (\d+);/)?.[1], database[2]);
   });
 
   it('checks the gate when it runs: a hidden fixture must not come back, and the fixtures are rolled back', () => {

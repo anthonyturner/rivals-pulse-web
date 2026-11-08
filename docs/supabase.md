@@ -108,6 +108,7 @@ repo's build. This is a move, not a redesign.
 | `20261108160000_hero_aggregate_recorders.sql` | `hero_aggregates.recorders`, the different recorders behind each hero per half-season and mode (null where never counted, such as a half-season frozen earlier); `fill_hero_aggregates` fills it and `read_hero_stats` returns it. The database only counts; the website gates on it (issues 628, 640). Same signatures and grants |
 | `20261108170000_hero_blended_recorders.sql` | `hero_aggregates.blended_recorders`, the different recorders behind each hero across Quick Match and Competitive together, each person once; the same value on the hero's Quick Match and Competitive rows, null on any other mode and where never counted (a frozen half-season). `fill_hero_aggregates` fills it and `read_hero_stats` returns it, and the blended view of hero stats and the tier list gates on it (issue 644). Same signatures and grants |
 | `20261108180000_match_hero_timelines.sql` | `match_hero_timelines` (each player's hero picks with the second they happened, by team, no uid or name, once per match), `record_match_hero_timelines`, the helper `json_whole_number`, and `purge_expired_participants` restated to delete timelines on the schedule of `match_hero_kills`, with every freeze still called |
+| `20261108190000_hero_switch_in_aggregates.sql` | `hero_switch_ins` and its half-season table (how often a team won after a player switched to a hero while an enemy hero was on the field, per half-season and mode, counts only), its fill, rebuild, recompute (hourly) and freeze, `read_hero_switch_ins` (gated by `hero_figure_qualifies`), and `purge_expired_participants` restated to call the new freeze before its first delete |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -625,6 +626,63 @@ id, RLS is on with no policy, and only the service role reaches it.
   read-only) compares the table with `hero_content` and `hero-game-ids.json` and lists every missing,
   wrong or stray row, Vanguard and Duelist included; `scripts/hero-game-roles-seed.test.ts` can only check
   the Strategists offline. Run it after the hero sync and after any migration that touches the table.
+
+## Hero switch-in aggregates
+
+Issue 655. `hero_switch_ins` keeps, per half-season, game mode, hero switched to and enemy hero, how
+often a team won after one of its players switched to the hero while the enemy hero was on the field,
+from `match_hero_timelines` (see "Hero timelines") and the scoreboard.
+`hero_switch_in_aggregate_half_seasons` holds the rebuild and freeze times. Neither holds a uid, name,
+fingerprint or per-player row, both have RLS on with no policy, and only the service role reaches them.
+It is a family of its own, built like the hero pair aggregates: `fill_`, `rebuild_`, `recompute_` and
+`freeze_hero_switch_in_aggregates`, the hourly job `recompute-hero-switch-in-aggregates` (minute 53),
+and `purge_expired_participants()` calling the freeze before its first delete. **Any later migration
+that restates the purge must keep calling every freeze**; a test reads the latest definition and fails
+if one is gone or comes after a delete.
+
+- **A switch** is a pick that follows a player's first pick and names a different hero than the pick
+  before it. The first pick is not a switch, and neither is a repeat of the same hero.
+- **Credit.** A switch is credited once to every distinct enemy hero on the field at its `at_second`:
+  for each timeline of a team other than the switching team, the latest pick at or before that second.
+  Two enemy players on one hero are one credit. A switch with no enemy pick yet is credited to nobody.
+  Rows hold `switches` (credits), `matches` (distinct matches they came from) and `wins` (credits whose
+  switching team won).
+- **Outcome** is the switching team's result in `participants`, read as the pair family reads a team's
+  result. A switch whose team has no result is not counted, and is counted on the next hourly rebuild
+  once a late upload fills the result in.
+- **Teams are independent.** The first uploader's timelines are all a match has, and a team that failed
+  the upload's scoreboard check was dropped, so a match can have timelines for one team only. A switch
+  needs its own team's timeline and an enemy team's timeline; one without either is skipped and the
+  rest of the match still counts.
+- **Recorders.** A row records how many distinct recorders its matches came from and how many matches
+  the busiest one did, as numbers only. The recorder is the one whose upload stored the match's
+  scoreboard, as in every other family (the timelines carry no recorder of their own).
+- **Mode.** The match's mode, read once per match. The reader's default is Quick Match and Competitive.
+- `read_hero_switch_ins(p_play_mode_ids)` (granted to `anon` and `service_role`) returns one jsonb value
+  `{ "switch_ins": [{ half_season, hero_id, enemy_hero_id, matches, switches, wins }] }`, summed over
+  the modes asked for, so PostgREST's 1000-row page limit never cuts it short. A (half-season, mode)
+  row is included only when `hero_figure_qualifies` passes for it (10 matches from 2 players, the
+  busiest player within `community_max_recorder_share_percent()`), checked before any modes are summed:
+  gating a combined figure would let a caller subtract one list of modes from another and recover a
+  hidden mode. The rows are stored whatever their size and the gate runs when they are read, as for the
+  kill feed. Recorder counts are never returned. The migration checks the gate when it runs, on
+  fixtures in a half-season that does not exist (a one-recorder row must not come back, a
+  three-recorder row must, alone and with the other mode asked for); the fixtures are rolled back.
+- The website reads it through `GET /api/hero-switch-ins`
+  ([`src/server/heroes/switch-ins/hero-switch-ins-read.ts`](../src/server/heroes/switch-ins/hero-switch-ins-read.ts)),
+  which sets each pairing beside the hero's overall record against that enemy from `read_hero_matchups`
+  in the same half-season, with Deadpool's role forms merged under one hero. It prints the 10 matches
+  and 2 players of `hero_figure_qualifies` (`SWITCH_IN_MIN_MATCHES`, `SWITCH_IN_MIN_PLAYERS`), which a
+  test compares with the latest definition. The hero page's Matchups tab shows it as "Switch-ins".
+- Players switch more when they are losing, so a switch-in win rate runs low. The page says so and
+  shows the hero's overall record against the same enemy beside it. A switch is credited to every enemy
+  hero on the field, so it is a co-occurrence, not proof that the switch was made to counter that hero.
+- **Run the check** after `supabase db push`:
+  `npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql` (fixtures in half-seasons 997
+  and 998, rolled back). It proves the counting rules, the reader, and that the purge freezes the counts
+  before it deletes the timelines.
+- Until the overlay sends `hero_timelines` (issue 654), the table stays empty and the hero page shows
+  its empty state. Half-seasons whose raw rows were purged before this migration cannot be filled.
 
 ## Backfilling participants from stored matches
 
