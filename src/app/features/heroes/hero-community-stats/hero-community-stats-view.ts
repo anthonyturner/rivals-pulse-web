@@ -77,7 +77,12 @@ export function buildHeroCommunityStatsView(
     };
   }
 
-  const appearances = stats.belowMinimum.find((entry) => entry.hero === heroId)?.appearances ?? 0;
+  const held = stats.belowMinimum.find((entry) => entry.hero === heroId);
+  const appearances = held?.appearances ?? 0;
+  const soFar =
+    held?.players === undefined
+      ? countLabel(appearances, 'appearance', 'appearances')
+      : `${countLabel(appearances, 'appearance', 'appearances')} and ${countLabel(held.players, 'player', 'players')}`;
   const needed = `The numbers appear at ${placementRequirementLabel(stats)}.`;
   const where = fallbackFor === null || halfSeasonLabel === null ? '' : ` in ${halfSeasonLabel}`;
 
@@ -92,7 +97,7 @@ export function buildHeroCommunityStatsView(
     ],
     summary:
       appearances > 0
-        ? `${heroName} has ${countLabel(appearances, 'appearance', 'appearances')} so far${where}, from matches recorded by RivalsPulse players. ${needed}`
+        ? `${heroName} has ${soFar} so far${where}, from matches recorded by RivalsPulse players. ${needed}`
         : `No match recorded by RivalsPulse players has ${heroName} yet${where}. ${needed}`,
   };
 }

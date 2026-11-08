@@ -110,6 +110,7 @@ describe('GameStatsPageComponent', () => {
     expect(lead.querySelector('h2')?.textContent?.trim()).toBe('Marvel Rivals on Steam');
     expect(lead.querySelector('a')).toBeNull();
     expect(lead.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(lead.querySelector('img')?.getAttribute('src')).toBe('/images/site/banners/game-stats-banner.webp');
     expect(text(element, '.stats:not(.stats--milestones) dt')).toEqual([
       'Players now',
       '24h peak',

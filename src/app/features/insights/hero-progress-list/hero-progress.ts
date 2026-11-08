@@ -54,7 +54,7 @@ function nextRequirement(
   return { count: appearances, needed: minimums.matches, unit: '' };
 }
 
-/** The heroes still short of the minimums, closest first. A hero never seen is left out. */
+/** The heroes still short of the minimums, the most appearances first. A hero never seen is left out. */
 export function heroProgressRows(
   belowMinimum: readonly HeroProgressEntry[],
   minimums: HeroProgressMinimums,

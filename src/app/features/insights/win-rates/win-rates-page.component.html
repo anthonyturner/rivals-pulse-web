@@ -52,7 +52,7 @@
         <app-filter-select label="Role" [options]="roleChoices()" [value]="role()" (valueChange)="chooseRole($event)" />
         <app-filter-select label="Sort" [options]="sortChoices" [value]="sort()" (valueChange)="chooseSort($event)" />
       </div>
-      <p class="summary-scope">Summary for these filters, among heroes with {{ v.minimumLabel }} or more.</p>
+      <p class="summary-scope">Summary for these filters, among heroes with {{ v.placementLabel }}.</p>
       <div class="summary" aria-label="Hero stats summary">
         <button type="button" (click)="chooseSort('win-desc')" [attr.aria-pressed]="sort() === 'win-desc'">
           <span>Highest win rate</span>

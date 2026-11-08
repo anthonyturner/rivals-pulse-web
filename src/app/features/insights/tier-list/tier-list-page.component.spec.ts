@@ -154,6 +154,7 @@ describe('TierListPageComponent', () => {
 
     expect(lead?.textContent).toContain('RivalsPulse has no rank breakdown');
     expect(lead?.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(lead?.querySelector('img')?.getAttribute('src')).toBe('/images/site/banners/tier-list-banner.webp');
   });
 
   it('draws art-led hero tiles that link to their hero', async () => {
