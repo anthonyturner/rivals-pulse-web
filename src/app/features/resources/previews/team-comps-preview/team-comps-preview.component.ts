@@ -15,7 +15,7 @@ import { pairPreview } from '../preview-views';
 })
 export class TeamCompsPreviewComponent {
   private readonly synergiesService = inject(HeroSynergiesService);
-  private readonly synergies = previewData(() => this.synergiesService.getHeroSynergies());
+  private readonly synergies = previewData(() => this.synergiesService.getHeroSynergies(undefined, 'competitive'));
   private readonly roster = previewRoster();
 
   protected readonly pairs = computed(() => {
