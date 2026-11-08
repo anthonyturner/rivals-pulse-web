@@ -43,9 +43,9 @@ repo's build. This is a move, not a redesign.
   `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
   once it carries the extended upload, so renaming it or changing its arguments silently drops
   every newer overlay's extras; a signature change follows "Changing a database function's
-  signature" below), `record_match_ability_uses` (the same).
+  signature" below), `record_match_ability_uses` and `record_match_hero_timelines` (the same).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`), `participant_hero_ability_uses` (written by `record_match_ability_uses`), `tracked_match_recorders` (written by `track-match-history` itself) and
+  `record_match_extras`), `participant_hero_ability_uses` (written by `record_match_ability_uses`), `match_hero_timelines` (written by `record_match_hero_timelines`), `tracked_match_recorders` (written by `track-match-history` itself) and
   `voice_ai_token_requests` (written by `elevenlabs-agent-token`; the publishable key cannot reach it). The
   aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
@@ -107,6 +107,7 @@ repo's build. This is a move, not a redesign.
 | `20261108150000_hero_score_busiest_share.sql` | `read_community_hero_scores` flags the busiest player as `top * 100 > n * community_max_recorder_share_percent()` instead of a fixed half, so the flags are false at a 100% limit (issue 616). Same signature, security and grants |
 | `20261108160000_hero_aggregate_recorders.sql` | `hero_aggregates.recorders`, the different recorders behind each hero per half-season and mode (null where never counted, such as a half-season frozen earlier); `fill_hero_aggregates` fills it and `read_hero_stats` returns it. The database only counts; the website gates on it (issues 628, 640). Same signatures and grants |
 | `20261108170000_hero_blended_recorders.sql` | `hero_aggregates.blended_recorders`, the different recorders behind each hero across Quick Match and Competitive together, each person once; the same value on the hero's Quick Match and Competitive rows, null on any other mode and where never counted (a frozen half-season). `fill_hero_aggregates` fills it and `read_hero_stats` returns it, and the blended view of hero stats and the tier list gates on it (issue 644). Same signatures and grants |
+| `20261108180000_match_hero_timelines.sql` | `match_hero_timelines` (each player's hero picks with the second they happened, by team, no uid or name, once per match), `record_match_hero_timelines`, the helper `json_whole_number`, and `purge_expired_participants` restated to delete timelines on the schedule of `match_hero_kills`, with every freeze still called |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -431,6 +432,20 @@ stored exactly as before.
 - At most 160 entries (20 heroes in 8 slots); a longer list is dropped whole. The first entry of a hero and slot wins, and a repeat of the match writes nothing.
 
 The reply's `extended` gains `ability_uses` (rows written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. `hero_ability_aggregates` keeps the counts, rebuilt and frozen with the other extended aggregates, and no read function publishes them yet.
+
+### Hero timelines
+
+Issue 654. A newer overlay may add a fourth optional field. A body without it is stored exactly as
+before, and its reply is unchanged.
+
+`match.hero_timelines` is `[{ team, picks: [{ hero_id, at_second }] }]`, one entry per human player, with no uid and no name:
+
+- `team` is the scoreboard's `camp`, 0 to 9. `hero_id` is the game hero id. `at_second` counts from the start of the match, 0 to 7200 (fractions are rounded), and never goes back within a player's picks.
+- At most 12 players and 20 picks per player; a longer list is not a real one and the whole field is dropped. An entry with a bad team, no picks, a bad pick or seconds that go back is dropped alone.
+- A team is kept only when the last hero of each of its timelines matches that team's scoreboard heroes (`match.match_players`) as a multiset. A team with a missing or dropped timeline, or a different final hero, is dropped whole; the other team is kept.
+- The database stores a timeline whole or not at all, once per match: the roster fingerprint plus the start time, the first uploader's wins, within the 4 minute window `record_match_participants` uses. `match_hero_timelines` is deleted by `purge_expired_participants` on the schedule of `match_hero_kills`.
+
+The reply's `extended` gains `hero_timelines` (player timelines written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. Check the migration with `npx supabase db query --linked -f supabase/checks/match_hero_timelines.sql`.
 
 ### Who contributed, and when a figure is published
 

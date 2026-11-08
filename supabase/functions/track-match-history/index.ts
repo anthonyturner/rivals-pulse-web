@@ -84,7 +84,7 @@ Deno.serve(async request => {
     const halfSeason = readHalfSeason(match);
     const participants = parseParticipants(match);
     const { play_mode_id, map_name } = readMatchContext(match);
-    const extended = readExtendedUpload(match);
+    const extended = readExtendedUpload(match, participants);
     const fingerprint = await rosterFingerprint(participants);
     const { rawPayload, performance } = storableMatch(match);
 
@@ -140,6 +140,9 @@ Deno.serve(async request => {
     const abilityUsesStored = extended && extended.hero_ability_uses.length > 0
       ? await recordAbilityUses(supabase, { fingerprint, playedAt, extended })
       : null;
+    const timelinesStored = extended && extended.hero_timelines.length > 0
+      ? await recordHeroTimelines(supabase, { fingerprint, playedAt, extended })
+      : null;
 
     await purgeExpiredParticipants(supabase);
 
@@ -148,8 +151,14 @@ Deno.serve(async request => {
       status: 'ok',
       recorded: 1,
       participants: stored,
-      ...(extendedStored || abilityUsesStored !== null
-        ? { extended: { ...extendedStored, ...(abilityUsesStored === null ? {} : { ability_uses: abilityUsesStored }) } }
+      ...(extendedStored || abilityUsesStored !== null || timelinesStored !== null
+        ? {
+          extended: {
+            ...extendedStored,
+            ...(abilityUsesStored === null ? {} : { ability_uses: abilityUsesStored }),
+            ...(timelinesStored === null ? {} : { hero_timelines: timelinesStored }),
+          },
+        }
         : {}),
     });
   } catch (error) {
@@ -225,6 +234,25 @@ async function recordAbilityUses(
     return data as number;
   } catch (error) {
     console.error(`Ability uses not stored: ${getErrorMessage(error)}`);
+    return null;
+  }
+}
+
+/** Each player's anonymous hero timeline, with the same rule: a failure costs only these rows. */
+async function recordHeroTimelines(
+  supabase: ReturnType<typeof createClient>,
+  match: { fingerprint: string; playedAt: string; extended: ExtendedUpload },
+): Promise<number | null> {
+  try {
+    const { data, error } = await supabase.rpc('record_match_hero_timelines', {
+      p_fingerprint: match.fingerprint,
+      p_played_at: match.playedAt,
+      p_hero_timelines: match.extended.hero_timelines,
+    });
+    if (error) throw error;
+    return data as number;
+  } catch (error) {
+    console.error(`Hero timelines not stored: ${getErrorMessage(error)}`);
     return null;
   }
 }
