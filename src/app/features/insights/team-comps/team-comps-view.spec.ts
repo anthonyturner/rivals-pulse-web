@@ -1,7 +1,16 @@
 import type { HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
+import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
+import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import type { HeroIdentities } from '../hero-identity';
 import { synergiesOf, synergy } from '../hero-synergies.fixtures';
-import { PAIRS_PER_ROLE, buildTeamCompsView } from './team-comps-view';
+import { triosOf } from '../triple-support-trios.fixtures';
+import { PAIRS_PER_ROLE, buildTeamCompsView as buildView } from './team-comps-view';
+
+const buildTeamCompsView = (
+  synergies: HeroSynergies,
+  identities: HeroIdentities,
+  trios: TripleSupportTrios | null = triosOf([]),
+) => buildView(synergies, trios, identities);
 
 const identities: HeroIdentities = new Map([
   ['hulk', { name: 'Hulk', role: 'Vanguard', imageUrl: '/images/heroes/hulk.png' }],
@@ -110,10 +119,9 @@ describe('buildTeamCompsView sections and labels', () => {
     endsAt,
   });
 
-  it('keeps the triple-support and line-up sections pending until they have a source', () => {
+  it('keeps the line-up section pending until line-ups are counted', () => {
     const view = buildTeamCompsView(synergiesOf([synergy('hulk', 'thor', 8, 12)]), identities);
 
-    expect(view.tripleSupport).toEqual({ state: 'not-enough-data' });
     expect(view.lineups).toEqual({ state: 'not-enough-data' });
   });
 
@@ -123,11 +131,29 @@ describe('buildTeamCompsView sections and labels', () => {
       identities,
     );
 
-    expect(view.metaParts).toEqual(['Season 10.5', 'Started Oct 9, 2026', 'Pairs need 10 matches together to be listed']);
+    expect(view.metaParts).toEqual([
+      'All ranks counted',
+      'Season 10.5',
+      'Started Oct 9, 2026',
+      'Pairs need 10 matches together to be listed',
+    ]);
   });
 
-  it('has no toolbar facts when no duo is listed', () => {
-    expect(buildTeamCompsView(synergiesOf([]), identities).metaParts).toEqual([]);
+  it('still says all ranks are counted when no duo is listed, and nothing else', () => {
+    expect(buildTeamCompsView(synergiesOf([]), identities).metaParts).toEqual(['All ranks counted']);
+  });
+
+  it('names the mode counted, with a caveat for one whose numbers do not compare', () => {
+    const competitive = buildTeamCompsView(synergiesOf([]), identities);
+    const arcade = buildTeamCompsView(synergiesOf([], { mode: 'arcade' }), identities);
+
+    expect([competitive.modeLabel, competitive.modeCaveat]).toEqual(['Competitive', null]);
+    expect(arcade.modeLabel).toBe('Arcade');
+    expect(arcade.modeCaveat).toContain('Arcade has custom lobbies');
+  });
+
+  it('names the mode and half-season an empty state is about', () => {
+    expect(buildTeamCompsView(synergiesOf([]), identities).scopeLabel).toBe('in Competitive for Season 10.5');
   });
 
   it('explains when the previous half-season stands in for the current one', () => {
@@ -136,7 +162,9 @@ describe('buildTeamCompsView sections and labels', () => {
       identities,
     );
 
-    expect(view.fallbackNotice).toBe("Season 10.5 does not have enough data yet, so these are Season 10's numbers until it does.");
+    expect(view.fallbackNotice).toBe(
+      "Season 10.5 does not have enough Competitive data yet, so these are Season 10's Competitive numbers until it does.",
+    );
   });
 
   it('has no notice and no season before any half-season exists', () => {

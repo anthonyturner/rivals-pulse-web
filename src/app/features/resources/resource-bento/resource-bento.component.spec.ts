@@ -62,6 +62,11 @@ describe('ResourceBentoComponent', () => {
     const reply = (url: string, body: object | string): void => {
       const request = http.expectOne((candidate) => candidate.url === url);
 
+      // The Team comps preview shows what the page it links to opens on.
+      if (url === '/api/hero-synergies') {
+        expect(request.request.params.get('mode')).toBe('competitive');
+      }
+
       if (body === 'error') {
         request.flush('down', { status: 500, statusText: 'Server Error' });
       } else {

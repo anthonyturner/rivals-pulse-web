@@ -34,6 +34,16 @@ const NAMES = new Map<number, string>([
   [ULTRON, 'Ultron'],
 ]);
 
+const SLUGS = new Map<number, string>([
+  [MANTIS, 'mantis'],
+  [ADAM, 'adam-warlock'],
+  [ULTRON, 'ultron'],
+  [LUNA, 'luna-snow'],
+  [LOKI, 'loki'],
+  [ROCKET, 'rocket-raccoon'],
+  [CLOAK, 'cloak-and-dagger'],
+]);
+
 function row(heroes: [number, number, number], matches: number, extra: Partial<TripleSupportRow> = {}): TripleSupportRow {
   const [heroA, heroB, heroC] = [...heroes].sort((a, b) => a - b);
 
@@ -53,8 +63,21 @@ function row(heroes: [number, number, number], matches: number, extra: Partial<T
   };
 }
 
-function derive(rows: TripleSupportRow[], names: ReadonlyMap<number, string> = NAMES) {
-  return deriveTripleSupportTrios(rows, { halfSeasons: SEASONS }, { now: NOW, tagByGameId: TAGS, nameByGameId: names });
+const TOTALS = [
+  { halfSeason: 10.5, playModeId: 0, decidedMatches: 40 },
+  { halfSeason: 10.5, playModeId: 1, decidedMatches: 60 },
+];
+
+function derive(
+  rows: TripleSupportRow[],
+  names: ReadonlyMap<number, string> = NAMES,
+  options: { halfSeason?: number; mode?: string; slugs?: ReadonlyMap<number, string> } = {},
+) {
+  return deriveTripleSupportTrios(
+    rows,
+    { halfSeasons: SEASONS, totals: TOTALS },
+    { now: NOW, tagByGameId: TAGS, nameByGameId: names, slugByGameId: options.slugs ?? SLUGS, ...options },
+  );
 }
 
 describe('variantOf', () => {
@@ -127,6 +150,7 @@ describe('deriveTripleSupportTrios', () => {
     expect(trios.trios).toEqual([
       {
         heroIds: [MANTIS, LUNA, ROCKET].sort((a, b) => a - b) as [number, number, number],
+        heroes: ['mantis', 'rocket-raccoon', 'luna-snow'],
         variant: { label: 'Mantis triple', anchorHeroIds: [MANTIS] },
         matches: 20,
         teams: 24,
@@ -165,6 +189,54 @@ describe('deriveTripleSupportTrios', () => {
 
     expect(trios.trios.map((trio) => trio.variant.label)).toEqual(['Three healers']);
     expect(unnamedGameIds).toEqual([MANTIS]);
+  });
+
+  it('leaves out, and reports, a trio with a Strategist that has no hero id in heroes.json', () => {
+    const slugs = new Map(SLUGS);
+
+    slugs.delete(LOKI);
+
+    const { trios, unnamedGameIds } = derive([row([MANTIS, LUNA, LOKI], 40), row([ADAM, LUNA, CLOAK], 12)], NAMES, { slugs });
+
+    expect(trios.trios.map((trio) => trio.variant.label)).toEqual(['Adam Warlock triple']);
+    expect(unnamedGameIds).toEqual([LOKI]);
+  });
+
+  it('names the heroes of a trio by their ids in heroes.json, in the order of the game ids', () => {
+    const { trios } = derive([row([ADAM, LUNA, LOKI], 12)]);
+
+    expect(trios.trios[0].heroIds).toEqual([LOKI, LUNA, ADAM].sort((a, b) => a - b) as [number, number, number]);
+    expect(trios.trios[0].heroes).toEqual(['loki', 'luna-snow', 'adam-warlock']);
+  });
+
+  it('lists the half-seasons and the modes, counted in the half-season shown', () => {
+    const { trios } = derive([row([MANTIS, LUNA, LOKI], 20)]);
+
+    expect(trios.halfSeasons?.map(({ id }) => id)).toEqual([10, 10.5]);
+    expect(trios.mode).toBe('all');
+    expect(trios.modes?.map(({ id, decidedMatches }) => [id, decidedMatches])).toEqual([
+      ['all', 100],
+      ['quick-match', 40],
+      ['competitive', 60],
+      ['arcade', 0],
+      ['practice', 0],
+    ]);
+  });
+
+  it('names the mode asked for, and a mode that names none is null', () => {
+    expect(derive([], NAMES, { mode: 'competitive' }).trios.mode).toBe('competitive');
+    expect(derive([], NAMES, { mode: 'ranked' }).trios.mode).toBeNull();
+  });
+
+  it('shows exactly the half-season asked for, even an empty one, instead of falling back', () => {
+    const rows = [row([MANTIS, LUNA, LOKI], 20, { halfSeason: 10 }), row([ADAM, LUNA, LOKI], 4)];
+
+    expect(derive(rows, NAMES, { halfSeason: 10 }).trios.trios.length).toBe(1);
+
+    const current = derive(rows, NAMES, { halfSeason: 10.5 }).trios;
+
+    expect([current.halfSeason?.id, current.inPlaceOf, current.status]).toEqual([10.5, null, 'not-enough-data']);
+    expect(derive(rows, NAMES, { halfSeason: 11 }).trios.halfSeason).toBeNull();
   });
 
   it('reports 0 team counts while every trio is left out, as the contract says', () => {
@@ -207,7 +279,12 @@ describe('deriveTripleSupportTrios', () => {
   });
 
   it('answers the empty state before any half-season exists', () => {
-    const { trios } = deriveTripleSupportTrios([], { halfSeasons: [] }, { now: NOW, tagByGameId: TAGS, nameByGameId: NAMES });
+    const { trios } = deriveTripleSupportTrios([], { halfSeasons: [], totals: [] }, {
+      now: NOW,
+      tagByGameId: TAGS,
+      nameByGameId: NAMES,
+      slugByGameId: SLUGS,
+    });
 
     expect(trios.halfSeason).toBeNull();
     expect(trios.status).toBe('not-enough-data');

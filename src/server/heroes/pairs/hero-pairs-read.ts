@@ -10,12 +10,17 @@ import {
 } from './hero-pairs.ts';
 import { deriveHeroSynergies } from './hero-synergies.ts';
 import { readHeroStatsSource } from '../stats/index.ts';
+import { playModeFromQuery } from '../stats/hero-stats.ts';
 import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.ts';
 
 interface HeroPairsReadOptions {
   env?: SupabaseReadEnv;
   fetch?: typeof fetch;
   now?: () => Date;
+  /** One exact half-season instead of the current one; see `DeriveHeroPairsOptions`. */
+  halfSeason?: number;
+  /** The `mode` query value, as `DeriveHeroPairsOptions` takes it. */
+  mode?: string;
 }
 
 const READ_FUNCTION = 'read_hero_pairs';
@@ -107,16 +112,22 @@ function kindOf(value: string): HeroPairKind {
  * The site's hero pair counts. A game hero id with no mapping is left out and logged (hero id 0 is
  * "no hero recorded" and always lands here); it never fails the request. The half-seasons and the
  * per-hero counts come from the same `read_hero_stats()` answer the hero stats use, so both read the
- * same current half-season. A read function that is not in the database yet is the empty state.
+ * same current half-season. A read function that is not in the database yet is the empty state, and
+ * so is a `mode` that names no mode: nothing is read for it.
  */
 export async function getHeroPairs(options: HeroPairsReadOptions = {}): Promise<HeroPairs> {
   const env = options.env ?? process.env;
+  const mode = playModeFromQuery(options.mode);
   const [rows, source] = await Promise.all([
-    orWhenNotDeployed(fetchHeroPairRows(env, options.fetch), READ_FUNCTION, []),
+    mode === undefined
+      ? []
+      : orWhenNotDeployed(fetchHeroPairRows(env, options.fetch, mode.playModeIds), READ_FUNCTION, []),
     readHeroStatsSource(env, options.fetch),
   ]);
   const { pairs, excludedGameIds } = deriveHeroPairs(rows, source, {
     now: (options.now ?? (() => new Date()))(),
+    halfSeason: options.halfSeason,
+    mode: options.mode,
     baseGameIdByGameId,
   });
 

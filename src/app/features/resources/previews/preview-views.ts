@@ -54,7 +54,7 @@ export function winRatePreview(stats: HeroStats, roster: readonly Hero[]): WinRa
 
 /** The best duo of each role that has one. */
 export function pairPreview(synergies: HeroSynergies, roster: readonly Hero[]): PairPreviewRow[] {
-  return buildTeamCompsView(synergies, heroIdentities(roster)).rolePairs.flatMap(({ role, rows }) =>
+  return buildTeamCompsView(synergies, null, heroIdentities(roster)).rolePairs.flatMap(({ role, rows }) =>
     rows.length === 0
       ? []
       : [

@@ -25,3 +25,13 @@ function dateLabel(value: string | null): string | null {
     ? null
     : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(time);
 }
+
+export interface SeasonOption {
+  id: number;
+  label: string;
+}
+
+/** Every half-season the API can answer for, newest first. */
+export function seasonOptions(halfSeasons: readonly HeroStatsHalfSeason[]): SeasonOption[] {
+  return [...halfSeasons].reverse().map(({ id, label }) => ({ id, label }));
+}
