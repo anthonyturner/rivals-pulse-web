@@ -1,6 +1,5 @@
 :host {
   display: block;
-  --heroes-box-shadow: inset 1px 0 var(--accent-strong);
 }
 
 .heroes-page {
@@ -12,7 +11,7 @@
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 999px;
   background: var(--surface);
   color: var(--text-soft);
   font: inherit;

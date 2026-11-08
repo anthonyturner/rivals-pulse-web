@@ -24,7 +24,7 @@ interface HeroCard {
   summary: string;
   imageUrl: string;
   roleLabel: HeroRole;
-  roleClass: string;
+  roleKey: string;
   archetype: string;
   label: string;
   selected: boolean;
@@ -67,6 +67,11 @@ export class HeroGridComponent {
 
   readonly placeholders = Array.from({ length: EAGER_CARD_COUNT }, (_, index) => index);
 
+  /** Each role filter with the key its tint is styled by; `All` has no role, so no tint. */
+  readonly roleChips = computed(() =>
+    this.roles().map((role) => ({ role, key: role === 'All' ? null : role.toLowerCase() })),
+  );
+
   readonly cards = computed<HeroCard[]>(() => {
     const filter = this.selectedRole();
     const selectedId = this.selectedHeroId();
@@ -84,7 +89,7 @@ export class HeroGridComponent {
         summary: hero.summary,
         imageUrl: hero.imageUrl,
         roleLabel,
-        roleClass: roleLabel.toLowerCase(),
+        roleKey: roleLabel.toLowerCase(),
         archetype,
         label: `${hero.name}, ${roleLabel}`,
         selected: hero.id === selectedId,

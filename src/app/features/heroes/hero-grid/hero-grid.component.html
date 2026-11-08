@@ -11,14 +11,15 @@
     </label>
 
     <div class="chip-group" role="group" aria-label="Filter by role">
-      @for (role of roles(); track role) {
+      @for (chip of roleChips(); track chip.role) {
         <button
           type="button"
           class="chip"
-          [attr.aria-pressed]="selectedRole() === role"
-          (click)="roleSelected.emit(role)"
+          [attr.aria-pressed]="selectedRole() === chip.role"
+          [attr.data-role]="chip.key"
+          (click)="roleSelected.emit(chip.role)"
         >
-          {{ role }}
+          {{ chip.role }}
         </button>
       }
     </div>
@@ -76,6 +77,7 @@
             queryParamsHandling="preserve"
             [class.selected]="card.selected"
             [attr.data-hero-id]="card.id"
+            [attr.data-role]="card.roleKey"
             [attr.aria-current]="card.selected ? 'page' : null"
             [attr.aria-label]="card.label"
           >
@@ -83,13 +85,13 @@
               class="hero-image"
               [src]="card.imageUrl"
               alt=""
-              width="40"
-              height="40"
+              width="320"
+              height="320"
               [attr.loading]="card.lazy ? 'lazy' : null"
             />
             <span class="hero-card-copy">
               <span class="hero-card-name">{{ card.name }}</span>
-              <span class="role-pill" [class]="card.roleClass">{{ card.roleLabel }}</span>
+              <span class="role-pill">{{ card.roleLabel }}</span>
               @if (showsRows()) {
                 <span class="hero-card-summary">{{ card.summary }}</span>
                 @if (card.archetype) {

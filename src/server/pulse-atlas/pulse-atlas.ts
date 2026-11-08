@@ -1,3 +1,4 @@
+import { TEAM_LINEUP_MIN_TEAMS } from '../heroes/lineups/team-lineups.ts';
 import { findStrategistTagProblems } from './strategist-tags.ts';
 
 const PULSE_ATLAS_SCHEMA_VERSION = 1;
@@ -12,6 +13,7 @@ export const PULSE_ATLAS_DATASETS = [
   'hero-stats',
   'community-stats',
   'hero-scores',
+  'team-lineups',
 ] as const;
 
 /**
@@ -19,7 +21,7 @@ export const PULSE_ATLAS_DATASETS = [
  * These depend on an endpoint and a database function that are deployed separately, so the publish
  * must not be held up by them (see `resolveOptionalDataset`).
  */
-export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats', 'hero-scores'];
+export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats', 'hero-scores', 'team-lineups'];
 
 /**
  * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
@@ -239,9 +241,7 @@ export function verifyPulseAtlas(files: readonly PulseAtlasFile[], sha256: Sha25
   }
 
   problems.push(...findSeasonFileProblems(files, sha256));
-  problems.push(...findHeroStatsFileProblems(files));
-  problems.push(...findCommunityStatsFileProblems(files));
-  problems.push(...findHeroScoresFileProblems(files));
+  COMMUNITY_DATASETS.forEach((dataset) => problems.push(...findProvenanceFileProblems(files, dataset)));
 
   if (problems.length > 0) {
     throw new Error(`Pulse Atlas failed verification:\n- ${problems.join('\n- ')}`);
@@ -799,6 +799,8 @@ function describeShapeProblem(
       return describeCommunityStatsProblem(data);
     case 'hero-scores':
       return readHeroScores(data).problems.join('; ') || undefined;
+    case 'team-lineups':
+      return readTeamLineups(data).join('; ') || undefined;
   }
 }
 
@@ -1466,13 +1468,7 @@ function readHeroStatsTable(data: unknown): ReadHeroStats {
   }
 
   const problems: string[] = [];
-  const checkKeys = (record: Record<string, unknown>, allowed: readonly string[], where: string): void => {
-    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
-
-    if (stray.length > 0) {
-      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
-    }
-  };
+  const checkKeys = keyChecker(problems);
 
   checkKeys(data, HERO_STATS_KEYS, 'the file');
 
@@ -1641,8 +1637,13 @@ function withPublishableHeroStats(inputs: readonly PulseAtlasInput[]): { inputs:
 }
 
 // Read-back check of the written file: it keeps the marker the overlay needs.
-function findHeroStatsFileProblems(files: readonly PulseAtlasFile[]): string[] {
-  const file = files.find((candidate) => candidate.path === datasetPath('hero-stats'));
+/** The datasets built from the community's own matches, whose written file must carry the provenance marker. */
+const COMMUNITY_DATASETS: readonly PulseAtlasDataset[] = ['hero-stats', 'community-stats', 'hero-scores', 'team-lineups'];
+
+// Read-back check of a written community file: it keeps the marker the overlay needs. A dataset the
+// run left out has no file and nothing to check.
+function findProvenanceFileProblems(files: readonly PulseAtlasFile[], dataset: PulseAtlasDataset): string[] {
+  const file = files.find((candidate) => candidate.path === datasetPath(dataset));
 
   if (!file) {
     return [];
@@ -1652,7 +1653,34 @@ function findHeroStatsFileProblems(files: readonly PulseAtlasFile[]): string[] {
 
   return isRecord(data) && data['provenance'] === COMMUNITY_PROVENANCE
     ? []
-    : [`hero-stats: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
+    : [`${dataset}: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
+}
+
+/** A checker that records, in `problems`, each key of a record that is not in its allow-list. */
+function keyChecker(problems: string[]): CheckKeys {
+  return (record, allowed, where) => {
+    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
+
+    if (stray.length > 0) {
+      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
+    }
+  };
+}
+
+/**
+ * A half-season of a community API answer, as its id and label; null passes through (no previous
+ * half-season). Anything else that is not an id and a label is the caller's `problem`.
+ */
+function communityHalfSeasonOf(value: unknown, problem: (detail: string) => Error): { id: number; label: string } | null {
+  if (value === null) {
+    return null;
+  }
+
+  if (!isRecord(value) || !isFiniteNumber(value['id']) || !isNonEmptyString(value['label'])) {
+    throw problem('a half-season needs an id and a label');
+  }
+
+  return { id: value['id'], label: value['label'] };
 }
 
 /** The keys a community-stats file, season, band and row may carry: the allow-list. Anything else refuses the build. */
@@ -1696,17 +1724,7 @@ interface ReadCommunityStats {
 export function assembleCommunityStats(answer: unknown): unknown {
   const problem = (detail: string): Error =>
     new Error(`/api/hero-pairs is not the hero-pairs shape (${detail}). Has the web app been deployed with it?`);
-  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => {
-    if (value === null) {
-      return null;
-    }
-
-    if (!isRecord(value) || !isFiniteNumber(value['id']) || !isNonEmptyString(value['label'])) {
-      throw problem('a half-season needs an id and a label');
-    }
-
-    return { id: value['id'], label: value['label'] };
-  };
+  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => communityHalfSeasonOf(value, problem);
 
   if (
     !isRecord(answer) ||
@@ -1753,13 +1771,7 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
   }
 
   const problems: string[] = [];
-  const checkKeys: CheckKeys = (record, allowed, where) => {
-    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
-
-    if (stray.length > 0) {
-      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
-    }
-  };
+  const checkKeys = keyChecker(problems);
 
   checkKeys(data, COMMUNITY_STATS_KEYS, 'the file');
 
@@ -1996,21 +2008,6 @@ function withPublishableCommunityStats(inputs: readonly PulseAtlasInput[]): { in
   };
 }
 
-// Read-back check of the written file: it keeps the marker the overlay needs.
-function findCommunityStatsFileProblems(files: readonly PulseAtlasFile[]): string[] {
-  const file = files.find((candidate) => candidate.path === datasetPath('community-stats'));
-
-  if (!file) {
-    return [];
-  }
-
-  const data = parseEnvelope(file.content)?.data;
-
-  return isRecord(data) && data['provenance'] === COMMUNITY_PROVENANCE
-    ? []
-    : [`community-stats: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
-}
-
 interface ResolveCommunityStatsOptions {
   /** Reads the API answer. A failure to do so, or an unusable answer, takes the fallback. */
   read: () => Promise<unknown>;
@@ -2113,17 +2110,7 @@ const HERO_SCORE_MEASURES: Readonly<Record<(typeof HERO_SCORE_STATS)[number], re
 export function assembleHeroScores(answer: unknown, heroGameIds: unknown, warn: (warning: string) => void = () => undefined): unknown {
   const problem = (detail: string): Error =>
     new Error(`/api/community/hero-scores is not the hero-scores shape (${detail}). Has the web app been deployed with it?`);
-  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => {
-    if (value === null) {
-      return null;
-    }
-
-    if (!isRecord(value) || !isFiniteNumber(value['id']) || !isNonEmptyString(value['label'])) {
-      throw problem('a half-season needs an id and a label');
-    }
-
-    return { id: value['id'], label: value['label'] };
-  };
+  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => communityHalfSeasonOf(value, problem);
 
   if (!isRecord(answer) || !isRecord(answer['minimums']) || !Array.isArray(answer['heroes'])) {
     throw problem('no minimums and heroes');
@@ -2278,13 +2265,7 @@ function readHeroScores(data: unknown): ReadHeroScores {
   }
 
   const problems: string[] = [];
-  const checkKeys: CheckKeys = (record, allowed, where) => {
-    const stray = Object.keys(record).filter((key) => !allowed.includes(key));
-
-    if (stray.length > 0) {
-      problems.push(`${where} has a key outside the allow-list: ${stray.join(', ')}`);
-    }
-  };
+  const checkKeys = keyChecker(problems);
   const minimums = data['minimums'];
   const season = data['season'];
 
@@ -2375,19 +2356,201 @@ function withPublishableHeroScores(inputs: readonly PulseAtlasInput[]): { inputs
   };
 }
 
-// Read-back check of the written file: it keeps the community marker.
-function findHeroScoresFileProblems(files: readonly PulseAtlasFile[]): string[] {
-  const file = files.find((candidate) => candidate.path === datasetPath('hero-scores'));
+const TEAM_LINEUPS_KEYS: readonly string[] = [
+  'provenance',
+  'status',
+  'minimumTeams',
+  'mode',
+  'currentSeasonId',
+  'season',
+  'inPlaceOfSeasonId',
+  'classifiedTeams',
+  'unclassifiedTeams',
+  'shapes',
+];
+const TEAM_LINEUPS_SHAPE_KEYS: readonly string[] = ['shape', 'vanguards', 'duelists', 'strategists', 'status', 'teams', 'wins'];
+const TEAM_LINEUPS_STATUSES: readonly unknown[] = ['ready', 'not-enough-data'];
 
-  if (!file) {
-    return [];
+/** The team-lineups input for a run; see `resolveOptionalDataset`. The gate is the shape check plus the private-key and credential-value checks. */
+export function resolveTeamLineups(options: ResolveCommunityStatsOptions): Promise<PulseAtlasInput | undefined> {
+  return resolveOptionalDataset('team-lineups', assembleTeamLineups, describeTeamLineupsInputProblem, options);
+}
+
+/**
+ * Folds the `/api/team-lineups` answer into the `team-lineups` dataset the gate checks. Only the
+ * counts are taken (teams and wins per shape, never the rates, which a reader derives), and the
+ * half-season becomes a season id, as in the tier list. Throws when the answer is not that shape, or
+ * names no half-season yet, so the caller can fall back to the last published file.
+ */
+export function assembleTeamLineups(answer: unknown): unknown {
+  const problem = (detail: string): Error =>
+    new Error(`/api/team-lineups is not the team-lineups shape (${detail}). Has the web app been deployed with it?`);
+  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => communityHalfSeasonOf(value, problem);
+
+  if (
+    !isRecord(answer) ||
+    !isNonEmptyString(answer['status']) ||
+    !isFiniteNumber(answer['minimumTeams']) ||
+    !isNonEmptyString(answer['mode']) ||
+    !isFiniteNumber(answer['classifiedTeams']) ||
+    !isFiniteNumber(answer['unclassifiedTeams']) ||
+    !Array.isArray(answer['shapes'])
+  ) {
+    throw problem('no status, minimumTeams, mode, team counts and shapes');
   }
 
-  const data = parseEnvelope(file.content)?.data;
+  const shown = halfSeasonOf(answer['halfSeason']);
+  const inPlaceOf = halfSeasonOf(answer['inPlaceOf']);
+  const current = inPlaceOf ?? shown;
 
-  return isRecord(data) && data['provenance'] === COMMUNITY_PROVENANCE
-    ? []
-    : [`hero-scores: the file does not carry provenance "${COMMUNITY_PROVENANCE}"`];
+  if (!current || !shown) {
+    throw new Error('The team-lineups API has no half-season yet, so there is nothing to publish.');
+  }
+
+  const shapes = answer['shapes'].map((row: unknown) => {
+    if (!isRecord(row) || !isNonEmptyString(row['shape'])) {
+      throw problem('a shape needs a name');
+    }
+
+    const { shape, vanguards, duelists, strategists, status, teams, wins } = row;
+
+    return { shape, vanguards, duelists, strategists, status, teams, wins };
+  });
+
+  return {
+    provenance: COMMUNITY_PROVENANCE,
+    status: answer['status'],
+    minimumTeams: answer['minimumTeams'],
+    mode: answer['mode'],
+    currentSeasonId: seasonIdOf(current.id),
+    season: { id: seasonIdOf(shown.id), label: shown.label },
+    ...(inPlaceOf === null ? {} : { inPlaceOfSeasonId: seasonIdOf(inPlaceOf.id) }),
+    classifiedTeams: answer['classifiedTeams'],
+    unclassifiedTeams: answer['unclassifiedTeams'],
+    shapes,
+  };
+}
+
+// One shape's faults. A shape under the minimum carries no count at all, and a listed one has at
+// least the minimum teams, so no figure can describe a handful of teams.
+function findTeamLineupShapeProblems(row: unknown, index: number, minimumTeams: unknown, classifiedTeams: unknown): string[] {
+  if (!isRecord(row)) {
+    return [`shape ${index} is not an object`];
+  }
+
+  const { shape, vanguards, duelists, strategists, status, teams, wins } = row;
+  const where = `shape ${String(shape)}`;
+  const found: string[] = [];
+
+  if (![vanguards, duelists, strategists].every((count) => isInteger(count) && count >= 0)) {
+    return [`${where} needs vanguards, duelists and strategists as non-negative whole numbers`];
+  }
+
+  if (shape !== `${String(vanguards)}-${String(duelists)}-${String(strategists)}`) {
+    found.push(`${where} does not match its vanguards, duelists and strategists`);
+  }
+
+  if (status === 'ready') {
+    // The floor is the site's own rule, so an answer that reports a lowered minimum cannot publish a thin shape.
+    if (!isInteger(teams) || !isFiniteNumber(minimumTeams) || teams < Math.max(minimumTeams, TEAM_LINEUP_MIN_TEAMS)) {
+      found.push(`${where} is ready with fewer than the minimum teams`);
+    } else if (!isInteger(wins) || wins < 0 || wins > teams) {
+      found.push(`${where} needs wins as a whole number from 0 to its teams`);
+    } else if (isFiniteNumber(classifiedTeams) && teams > classifiedTeams) {
+      found.push(`${where} has more teams than classifiedTeams`);
+    }
+  } else if (status === 'not-enough-data') {
+    if (teams !== null || wins !== null) {
+      found.push(`${where} is not enough data, so it may carry no counts`);
+    }
+  } else {
+    found.push(`${where} has an unknown status`);
+  }
+
+  return found;
+}
+
+/**
+ * Checks the team-lineups dataset and returns every fault, so one run names them all. It refuses a
+ * file that is not the community's, a key outside the allow-list (so nothing can reach a row by
+ * accident), counts on a shape under the minimum, and a status that disagrees with the shapes. No
+ * shape at all is valid: that is the launch state.
+ */
+function readTeamLineups(data: unknown): string[] {
+  if (isRecord(data) && data['provenance'] !== COMMUNITY_PROVENANCE) {
+    return [`provenance must be "${COMMUNITY_PROVENANCE}"`];
+  }
+
+  if (!isRecord(data) || !Array.isArray(data['shapes'])) {
+    return ['expected an object with a shapes list'];
+  }
+
+  const problems: string[] = [];
+  const checkKeys = keyChecker(problems);
+  const season = data['season'];
+  const shapes: unknown[] = data['shapes'];
+
+  checkKeys(data, TEAM_LINEUPS_KEYS, 'the file');
+
+  if (!TEAM_LINEUPS_STATUSES.includes(data['status'])) {
+    problems.push('status must be ready or not-enough-data');
+  }
+
+  if (!isInteger(data['minimumTeams']) || data['minimumTeams'] < TEAM_LINEUP_MIN_TEAMS) {
+    problems.push(`minimumTeams must be a whole number of at least ${TEAM_LINEUP_MIN_TEAMS}`);
+  }
+
+  if (!isNonEmptyString(data['mode'])) {
+    problems.push('mode must name the mode the counts use');
+  }
+
+  if (!isInteger(data['classifiedTeams']) || data['classifiedTeams'] < 0 || !isInteger(data['unclassifiedTeams']) || data['unclassifiedTeams'] < 0) {
+    problems.push('classifiedTeams and unclassifiedTeams must be non-negative whole numbers');
+  }
+
+  if (!isInteger(data['currentSeasonId'])) {
+    problems.push('currentSeasonId must be a whole number');
+  }
+
+  if (data['inPlaceOfSeasonId'] !== undefined && data['inPlaceOfSeasonId'] !== data['currentSeasonId']) {
+    problems.push('inPlaceOfSeasonId must be the currentSeasonId when present');
+  }
+
+  if (!isRecord(season) || !isInteger(season['id']) || !isNonEmptyString(season['label'])) {
+    problems.push('season needs an id and a label');
+  } else {
+    checkKeys(season, COMMUNITY_STATS_SEASON_KEYS, 'season');
+  }
+
+  const names = new Set<unknown>();
+
+  shapes.forEach((row, index) => {
+    if (isRecord(row)) {
+      checkKeys(row, TEAM_LINEUPS_SHAPE_KEYS, `shape ${String(row['shape'])}`);
+
+      if (names.has(row['shape'])) {
+        problems.push(`shape ${String(row['shape'])} is listed more than once`);
+      }
+      names.add(row['shape']);
+    }
+
+    problems.push(...findTeamLineupShapeProblems(row, index, data['minimumTeams'], data['classifiedTeams']));
+  });
+
+  const anyReady = shapes.some((row) => isRecord(row) && row['status'] === 'ready');
+
+  if (TEAM_LINEUPS_STATUSES.includes(data['status']) && (data['status'] === 'ready') !== anyReady) {
+    problems.push('status must be ready if and only if a shape is ready');
+  }
+
+  return problems;
+}
+
+/** The gate a team-lineups input must pass, checked before the build so a fallback can be chosen. */
+function describeTeamLineupsInputProblem(data: unknown): string | undefined {
+  const problems = [...readTeamLineups(data), ...findUnsafeContent(data, 'team-lineups')];
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
 }
 
 function findSeasonFileProblems(files: readonly PulseAtlasFile[], sha256: Sha256Hex): string[] {

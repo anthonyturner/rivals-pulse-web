@@ -15,10 +15,6 @@
   font-size: var(--type-small);
 }
 
-app-state-panel {
-  margin-top: 12px;
-}
-
 .boards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
