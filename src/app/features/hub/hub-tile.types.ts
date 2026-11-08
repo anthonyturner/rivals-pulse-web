@@ -22,6 +22,13 @@ export type TileSize = 'feature' | 'tall' | 'half' | 'third' | 'note' | 'wide';
 /** A soft wash of colour in a tile's top-right corner. `danger` is a red wash, drawn with the `--danger` token. */
 export type TileTint = 'danger';
 
+/**
+ * How key art sits in a lead tile:
+ * - `banner`: a wide picture, zoomed in and pinned to the lower left so its centre falls out of frame.
+ * - `portrait`: a square picture at the tile's height, against the right edge, with the text to its left.
+ */
+export type TileImageFit = 'banner' | 'portrait';
+
 /** A hub link as the navigation data spells it. */
 export interface HubLink {
   label: string;
@@ -44,6 +51,10 @@ export interface HubTileConfig {
   imageUrl: string | null;
   /** A play button over the key art, for a tile that opens video. Only drawn with `imageUrl`. */
   playMarker?: boolean;
+  /** How the key art sits in the tile. Only used with `imageUrl`; a banner when left out. */
+  imageFit?: TileImageFit;
+  /** A small square picture beside the text, for a tile with no key art. A tile with `imageUrl` ignores it. */
+  thumbnailUrl?: string | null;
   tint?: TileTint;
   /** Text on the left and the preview on the right, for a full-width strip. A tablet stacks them. */
   split?: boolean;

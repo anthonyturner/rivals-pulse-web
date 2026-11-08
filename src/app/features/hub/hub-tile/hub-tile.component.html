@@ -1,16 +1,26 @@
 @if (imageUrl(); as src) {
   <span class="art" aria-hidden="true">
-    <img class="art__image" [src]="src" alt="" decoding="async" />
+    <img class="art__image" [src]="src" alt="" loading="lazy" decoding="async" />
   </span>
   @if (playMarker()) {
     <span class="marker" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="16" height="16" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg>
     </span>
   }
+} @else if (thumbnailUrl(); as thumb) {
+  <img class="thumbnail" [src]="thumb" alt="" width="56" height="56" loading="lazy" decoding="async" />
 }
 @if (chip(); as tag) {
   <span class="chip" [attr.data-kind]="tag.kind">{{ tag.label }}</span>
 }
-<h2 class="title"><a class="link" [routerLink]="route()">{{ title() }}</a></h2>
+@if (headingLevel() === 3) {
+  <h3 class="title"><ng-container *ngTemplateOutlet="link" /></h3>
+} @else {
+  <h2 class="title"><ng-container *ngTemplateOutlet="link" /></h2>
+}
 <p class="description">{{ description() }}</p>
 <div class="preview" aria-hidden="true"><ng-content /></div>
+
+<ng-template #link>
+  <a class="link" [routerLink]="route()">{{ title() }}</a>
+</ng-template>

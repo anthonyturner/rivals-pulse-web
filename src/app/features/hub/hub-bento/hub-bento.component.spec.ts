@@ -93,4 +93,54 @@ describe('HubBentoComponent', () => {
     expect(beta.getAttribute('data-tint')).toBeNull();
     expect(gamma.getAttribute('data-tint')).toBeNull();
   });
+
+  it('draws key art as a banner unless the tile asks for a portrait', () => {
+    const element = render(LINKS, [
+      { path: '/alpha', size: 'feature', chip: null, preview: null, imageUrl: '/a.png', imageFit: 'portrait' },
+      { path: '/beta', size: 'feature', chip: null, preview: null, imageUrl: '/b.jpg' },
+    ]);
+    const [alpha, beta] = Array.from(element.querySelectorAll('app-hub-tile'));
+
+    expect(alpha.classList).toContain('portrait');
+    expect(beta.classList).not.toContain('portrait');
+  });
+
+  it('draws a lazy, decorative thumbnail beside a tile with no key art, and ignores it on a tile with some', () => {
+    const element = render(LINKS, [
+      { path: '/alpha', size: 'third', chip: null, preview: null, imageUrl: null, thumbnailUrl: '/a.png' },
+      { path: '/beta', size: 'feature', chip: null, preview: null, imageUrl: '/b.png', thumbnailUrl: '/c.png' },
+      { path: '/gamma', size: 'third', chip: null, preview: null, imageUrl: null },
+    ]);
+    const [alpha, beta, gamma] = Array.from(element.querySelectorAll('app-hub-tile'));
+    const thumbnail = alpha.querySelector('img.thumbnail');
+
+    expect(alpha.classList).toContain('thumbed');
+    expect(thumbnail?.getAttribute('src')).toBe('/a.png');
+    expect(thumbnail?.getAttribute('alt')).toBe('');
+    expect(thumbnail?.getAttribute('loading')).toBe('lazy');
+    expect(beta.querySelector('img.thumbnail')).toBeNull();
+    expect(beta.classList).not.toContain('thumbed');
+    expect(gamma.querySelector('img')).toBeNull();
+  });
+
+  it('titles its tiles with h2 headings by default and h3 headings under a section heading', () => {
+    const config: HubTileConfig[] = [{ path: '/alpha', size: 'third', chip: null, preview: null, imageUrl: null }];
+    const page = render(LINKS, config);
+
+    expect(page.querySelectorAll('h2').length).toBe(3);
+    expect(page.querySelectorAll('h3').length).toBe(0);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
+    const fixture = TestBed.createComponent(HubBentoComponent);
+    fixture.componentRef.setInput('links', LINKS);
+    fixture.componentRef.setInput('config', config);
+    fixture.componentRef.setInput('headingLevel', 3);
+    fixture.detectChanges();
+    const section: HTMLElement = fixture.nativeElement;
+
+    expect(section.querySelectorAll('h2').length).toBe(0);
+    expect(Array.from(section.querySelectorAll('h3'), (heading) => heading.textContent?.trim())).toEqual(['Alpha', 'Beta', 'Gamma']);
+    expect(section.querySelectorAll('h3 a').length).toBe(3);
+  });
 });
