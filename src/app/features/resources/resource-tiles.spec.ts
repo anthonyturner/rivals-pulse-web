@@ -113,6 +113,7 @@ describe('The Resources hub', () => {
         'Game Stats',
         'Glossary',
         'Team Comps',
+        'Pulse Records',
       ]);
     });
 
@@ -130,7 +131,7 @@ describe('The Resources hub', () => {
     it('sizes the tiles by kind, with Media Tutorials as the feature', () => {
       const sizes = Array.from(element.querySelectorAll('.cell')).map((cell) => cell.getAttribute('data-size'));
 
-      expect(sizes).toEqual(['feature', 'tall', 'half', 'half', 'third', 'third', 'note', 'wide']);
+      expect(sizes).toEqual(['feature', 'tall', 'half', 'half', 'third', 'third', 'note', 'wide', 'wide']);
       expect(element.querySelectorAll('app-hub-tile.featured').length).toBe(1);
       expect(tile('Media Tutorials').classList).toContain('featured');
     });
