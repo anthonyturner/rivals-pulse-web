@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  align-items: flex-end;
+  padding-top: 12px;
+}
+
+.group {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+/* The enemy is drawn larger than the heroes that answer it, and outlined in the site's enemy red. */
+.enemy {
+  --hero-thumb: 64px;
+
+  box-sizing: border-box;
+  padding: 2px;
+  border: 2px solid var(--danger);
+  border-radius: 10px;
+}
+
+.answers {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.answer {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.pill {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--win-soft);
+  color: var(--win-ink);
+  font-size: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  line-height: 1.5;
+}

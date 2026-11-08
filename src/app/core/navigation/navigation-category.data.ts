@@ -2,8 +2,6 @@ export interface NavigationCategory {
   label: string;
   path: string;
   description: string;
-  /** `bento` draws the links as mixed-size tiles with live previews; without it they are a plain list of cards. */
-  layout?: 'bento';
   items: Array<{
     label: string;
     path: string;
@@ -17,7 +15,6 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
     label: 'Resources',
     path: '/resources',
     description: 'Videos, guides, stats and a glossary for quick reference.',
-    layout: 'bento',
     items: [
       { label: 'Media Tutorials', path: '/media-tutorials', description: 'Browse coaching videos by topic.', enabled: true },
       { label: 'Strategist Guides', path: '/strategist-guides', description: 'Study transcript-built support lessons and practice drills.', enabled: true },

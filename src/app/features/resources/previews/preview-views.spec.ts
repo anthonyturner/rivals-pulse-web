@@ -1,8 +1,7 @@
 import { heroOf } from '../../insights/hero-matchup.fixtures';
 import { statsHero, statsOf } from '../../insights/hero-stats.fixtures';
-import { synergiesOf, synergy } from '../../insights/hero-synergies.fixtures';
 import { STRATEGIST_GUIDES } from '../../learning/guides/strategist-guides/strategist-guides.data';
-import { HEROES_PER_TIER, WIN_RATE_ROWS, pairPreview, strategistPreview, tierPreview, winRatePreview } from './preview-views';
+import { HEROES_PER_TIER, WIN_RATE_ROWS, strategistPreview, tierPreview, winRatePreview } from './preview-views';
 
 const roster = [
   heroOf('hulk', 'Hulk', 'Vanguard'),
@@ -65,24 +64,6 @@ describe('winRatePreview', () => {
 
   it('is empty when no hero has a readable record', () => {
     expect(winRatePreview(statsOf([]), roster)).toEqual([]);
-  });
-});
-
-describe('pairPreview', () => {
-  it('gives the best duo of each role that has one, and leaves the other roles out', () => {
-    const pairs = pairPreview(
-      synergiesOf([synergy('hulk', 'thor', 9, 12), synergy('storm', 'hela', 7, 12), synergy('hulk', 'mantis', 12, 12)]),
-      roster,
-    );
-
-    expect(pairs.map((pair) => [pair.role, pair.first.name, pair.second.name, pair.winRateLabel])).toEqual([
-      ['Vanguard', 'Hulk', 'Thor', '75.0%'],
-      ['Duelist', 'Storm', 'Hela', '58.3%'],
-    ]);
-  });
-
-  it('is empty before any pair has enough matches', () => {
-    expect(pairPreview(synergiesOf([]), roster)).toEqual([]);
   });
 });
 

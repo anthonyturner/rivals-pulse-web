@@ -14,7 +14,7 @@ import { HeroMatchupsService } from '../../insights/hero-matchups.service';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 import { matchupNotice } from '../../insights/matchup-notice';
 import { answersTo, MultiThreatAnswer } from './dive-answers';
-import { DIVE_THREATS } from './dive-threats';
+import { DEFAULT_DIVE_THREAT_IDS, DIVE_THREATS } from './dive-threats';
 import { JubileeCaseStudyComponent } from './jubilee-case-study/jubilee-case-study.component';
 
 /** The most enemy heroes the planner takes at once; choosing another drops the oldest. */
@@ -47,7 +47,7 @@ export class DivePlannerPageComponent implements OnInit {
   private readonly matchups = signal<HeroMatchups | null | undefined>(undefined);
 
   protected readonly maxDiveThreats = MAX_DIVE_THREATS;
-  protected readonly selectedDiveThreatIds = signal<string[]>(['angela', 'black-cat', 'spider-man']);
+  protected readonly selectedDiveThreatIds = signal<string[]>([...DEFAULT_DIVE_THREAT_IDS]);
 
   protected readonly heroesLoaded = computed(() => this.heroes() !== undefined);
   protected readonly notice = computed(() => matchupNotice(this.matchups(), 'The threat chips still work.'));

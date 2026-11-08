@@ -4,13 +4,14 @@ import { PLATFORM_ID, provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { NAVIGATION_CATEGORIES } from '../../../core/navigation/navigation-category.data';
-import { heroOf } from '../../insights/hero-matchup.fixtures';
-import { statsHero, statsOf } from '../../insights/hero-stats.fixtures';
-import { synergiesOf, synergy } from '../../insights/hero-synergies.fixtures';
-import type { GlossaryTerm } from '../../reference/glossary/glossary.model';
-import { LOCAL_DATE } from '../../../shared/utilities/local-date';
-import { ResourceBentoComponent } from './resource-bento.component';
+import { NAVIGATION_CATEGORIES } from '../../core/navigation/navigation-category.data';
+import { heroOf } from '../insights/hero-matchup.fixtures';
+import { statsHero, statsOf } from '../insights/hero-stats.fixtures';
+import { synergiesOf, synergy } from '../insights/hero-synergies.fixtures';
+import type { GlossaryTerm } from '../reference/glossary/glossary.model';
+import { LOCAL_DATE } from '../../shared/utilities/local-date';
+import { HubBentoComponent } from '../hub/hub-bento/hub-bento.component';
+import { RESOURCE_TILES } from './resource-tiles.data';
 
 const links = (NAVIGATION_CATEGORIES.find((category) => category.label === 'Resources')?.items ?? []).filter(
   (item) => item.enabled,
@@ -35,9 +36,9 @@ const TERM: GlossaryTerm = {
   sourceUrl: '/glossary',
 };
 
-describe('ResourceBentoComponent', () => {
+describe('The Resources hub', () => {
   let http: HttpTestingController;
-  let fixture: ComponentFixture<ResourceBentoComponent>;
+  let fixture: ComponentFixture<HubBentoComponent>;
   let element: HTMLElement;
 
   function render(platform: 'browser' | 'server' = 'browser'): void {
@@ -52,8 +53,9 @@ describe('ResourceBentoComponent', () => {
       ],
     });
     http = TestBed.inject(HttpTestingController);
-    fixture = TestBed.createComponent(ResourceBentoComponent);
+    fixture = TestBed.createComponent(HubBentoComponent);
     fixture.componentRef.setInput('links', links);
+    fixture.componentRef.setInput('config', RESOURCE_TILES);
     fixture.detectChanges();
     element = fixture.nativeElement;
   }
@@ -83,7 +85,7 @@ describe('ResourceBentoComponent', () => {
   }
 
   const tile = (label: string): HTMLElement =>
-    Array.from(element.querySelectorAll<HTMLElement>('app-resource-tile')).find(
+    Array.from(element.querySelectorAll<HTMLElement>('app-hub-tile')).find(
       (candidate) => candidate.querySelector('a')?.textContent?.trim() === label,
     ) as HTMLElement;
   const flat = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -100,7 +102,7 @@ describe('ResourceBentoComponent', () => {
     });
 
     it('lays the released links out in the grid order, one tile each', () => {
-      const names = Array.from(element.querySelectorAll('app-resource-tile h2')).map((heading) => flat(heading));
+      const names = Array.from(element.querySelectorAll('app-hub-tile h2')).map((heading) => flat(heading));
 
       expect(names).toEqual([
         'Media Tutorials',
@@ -129,7 +131,7 @@ describe('ResourceBentoComponent', () => {
       const sizes = Array.from(element.querySelectorAll('.cell')).map((cell) => cell.getAttribute('data-size'));
 
       expect(sizes).toEqual(['feature', 'tall', 'half', 'half', 'third', 'third', 'note', 'wide']);
-      expect(element.querySelectorAll('app-resource-tile.featured').length).toBe(1);
+      expect(element.querySelectorAll('app-hub-tile.featured').length).toBe(1);
       expect(tile('Media Tutorials').classList).toContain('featured');
     });
 
@@ -149,13 +151,13 @@ describe('ResourceBentoComponent', () => {
         return chip ? [flat(chip), chip.getAttribute('data-kind') as string] : undefined;
       };
 
-      expect(chips('Media Tutorials')).toEqual(['Learn', 'learn']);
-      expect(chips('Strategist Guides')).toEqual(['Learn', 'learn']);
-      expect(chips('Hero stats')).toEqual(['Stats', 'stats']);
-      expect(chips('Game Stats')).toEqual(['Stats', 'stats']);
-      expect(chips('Glossary')).toEqual(['Reference', 'stats']);
-      expect(chips('Tier List')).toEqual(['Community', 'community']);
-      expect(chips('User Highlights')).toEqual(['Community', 'community']);
+      expect(chips('Media Tutorials')).toEqual(['Learn', 'accent']);
+      expect(chips('Strategist Guides')).toEqual(['Learn', 'accent']);
+      expect(chips('Hero stats')).toEqual(['Stats', 'secondary']);
+      expect(chips('Game Stats')).toEqual(['Stats', 'secondary']);
+      expect(chips('Glossary')).toEqual(['Reference', 'secondary']);
+      expect(chips('Tier List')).toEqual(['Community', 'tertiary']);
+      expect(chips('User Highlights')).toEqual(['Community', 'tertiary']);
     });
 
     it('shows the strategist guides preview, which needs no request', () => {
@@ -227,7 +229,7 @@ describe('ResourceBentoComponent', () => {
     render();
     await answerWith({});
 
-    expect(element.querySelectorAll('app-resource-tile').length).toBe(links.length);
+    expect(element.querySelectorAll('app-hub-tile').length).toBe(links.length);
 
     for (const label of ['Tier List', 'Hero stats', 'Game Stats', 'Glossary', 'Team Comps']) {
       expect(flat(tile(label).querySelector('.preview'))).toBe('');
@@ -251,7 +253,7 @@ describe('ResourceBentoComponent', () => {
     render('server');
 
     http.expectNone(() => true);
-    expect(element.querySelectorAll('app-resource-tile').length).toBe(links.length);
+    expect(element.querySelectorAll('app-hub-tile').length).toBe(links.length);
   });
 
   it('gives a link the tile data does not name a plain tile after the others', () => {
@@ -259,8 +261,9 @@ describe('ResourceBentoComponent', () => {
       providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
-    const plain = TestBed.createComponent(ResourceBentoComponent);
+    const plain = TestBed.createComponent(HubBentoComponent);
     plain.componentRef.setInput('links', [{ label: 'New thing', path: '/new-thing', description: 'Something new.' }, ...links]);
+    plain.componentRef.setInput('config', RESOURCE_TILES);
     plain.detectChanges();
     http.match(() => true);
 

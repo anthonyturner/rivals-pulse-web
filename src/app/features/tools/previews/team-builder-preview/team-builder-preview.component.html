@@ -1,0 +1,20 @@
+@if (slots().length > 0) {
+  <div class="team">
+    <ul class="slots">
+      @for (slot of slots(); track $index) {
+        <li class="slot" [attr.data-role]="slot.role" [class.slot--empty]="!slot.hero">
+          @if (slot.hero; as hero) {
+            <app-preview-portrait [src]="hero.imageUrl" />
+          } @else {
+            <span class="plus">+</span>
+          }
+        </li>
+      }
+    </ul>
+    <ul class="legend">
+      @for (role of roles; track role) {
+        <li class="legend__item" [attr.data-role]="role">{{ role }}</li>
+      }
+    </ul>
+  </div>
+}
