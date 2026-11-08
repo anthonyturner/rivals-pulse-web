@@ -44,7 +44,7 @@ describe('HeroPosterBackdropComponent', () => {
     await press();
 
     expect(toggle()?.getAttribute('aria-checked')).toBe('true');
-    expect(video()?.getAttribute('tabindex')).toBe('-1');
+    expect(video()?.closest('.poster-art')?.hasAttribute('inert')).toBeTrue();
 
     await press();
 
@@ -56,6 +56,14 @@ describe('HeroPosterBackdropComponent', () => {
     await press();
 
     expect(localStorage.getItem(STORAGE_KEY)).toBe('video');
+  });
+
+  it('still switches, for this visit only, when the browser refuses storage', async () => {
+    spyOn(Storage.prototype, 'setItem').and.throwError('blocked');
+
+    await press();
+
+    expect(toggle()?.getAttribute('aria-checked')).toBe('true');
   });
 
   it('hides the switch and the player when the hero has no video', async () => {
@@ -83,5 +91,17 @@ describe('HeroPosterBackdropPreferenceService', () => {
 
     expect(preference.backdrop()).toBe('video');
     localStorage.removeItem('rp.hero-poster-backdrop');
+  });
+
+  it('falls back to the portrait when the browser refuses to read storage', async () => {
+    spyOn(Storage.prototype, 'getItem').and.throwError('blocked');
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    const preference = TestBed.inject(HeroPosterBackdropPreferenceService);
+    const fixture = TestBed.createComponent(HeroPosterBackdropComponent);
+    fixture.componentRef.setInput('heroName', 'Luna');
+    fixture.componentRef.setInput('imageUrl', '/luna.png');
+    await fixture.whenStable();
+
+    expect(preference.backdrop()).toBe('portrait');
   });
 });

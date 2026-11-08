@@ -21,7 +21,10 @@ export class HeroPosterBackdropComponent {
   protected readonly playing = computed(() => this.videoUrl() !== null && this.preference.backdrop() === 'video');
 
   /** The portrait stays visible until the player has loaded, so switching never flashes an empty frame. */
-  protected readonly videoLoaded = linkedSignal({ source: this.videoUrl, computation: () => false });
+  protected readonly videoLoaded = linkedSignal({
+    source: computed(() => (this.playing() ? this.videoUrl() : null)),
+    computation: () => false,
+  });
 
   protected toggle(): void {
     this.preference.set(this.playing() ? 'portrait' : 'video');
