@@ -33,31 +33,6 @@ app-filter-select {
   margin: 0;
 }
 
-/* The topic as a pill, tinted by its kind, like the chips on the hub tiles. */
-.chip {
-  display: inline-block;
-  padding: 2px 12px;
-  border-radius: 999px;
-  font-size: var(--type-h3);
-  font-weight: 850;
-  line-height: 1.5;
-}
-
-.chip[data-kind='accent'] {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
-
-.chip[data-kind='secondary'] {
-  background: var(--secondary-soft);
-  color: var(--secondary-ink);
-}
-
-.chip[data-kind='tertiary'] {
-  background: var(--tertiary-soft);
-  color: var(--tertiary-ink);
-}
-
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));

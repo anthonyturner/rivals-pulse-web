@@ -113,6 +113,34 @@ describe('MediaTutorialsPageComponent', () => {
     expect(document.activeElement).toBe(iframe);
   });
 
+  it('keeps a playing lead on screen, still playing, when a search no longer matches it', async () => {
+    plays()[0].click();
+    await settle();
+    const player = element.querySelector('iframe');
+
+    await search('tilt');
+
+    expect(element.querySelector('app-tutorial-card.featured iframe')).toBe(player);
+    expect(element.querySelectorAll('iframe').length).toBe(1);
+    expect(cards().length).toBe(2);
+  });
+
+  it('keeps a video playing further down when a filter would make it the first match', async () => {
+    const heroes = MEDIA_TUTORIALS.filter((tutorial) => tutorial.category === 'Heroes');
+    const play = () =>
+      plays().find((button) => button.getAttribute('aria-label') === `Play video: ${heroes[0].title}`);
+
+    play()?.click();
+    await settle();
+    const player = element.querySelector('iframe');
+
+    await pickCategory('Heroes');
+
+    expect(element.querySelector('iframe')).toBe(player);
+    expect(element.querySelector('app-tutorial-card.featured iframe')).toBeNull();
+    expect(element.querySelector('app-tutorial-card.featured h2')?.textContent).toContain(heroes[1].title);
+  });
+
   it('filters by category and by tag, counting "n of 18 tutorials"', async () => {
     await pickCategory('Roles');
     expect(status()).toBe('4 of 18 tutorials');

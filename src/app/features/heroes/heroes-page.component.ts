@@ -45,7 +45,6 @@ import {
   HeroRoleAbilityKit,
   HeroStrategyGuide,
   HeroVideo,
-  HeroVideoPlayer,
   HeroVideoSearch,
   HeroVideoType,
 } from './hero.model';
@@ -113,7 +112,6 @@ export class HeroesPageComponent implements OnInit {
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
   /** One player per video: Angular compares the address wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
-  private readonly players = new Map<string, HeroVideoPlayer>();
   private readonly routeHeroId = this.route.paramMap.pipe(
     map((params) => params.get('heroId')),
     distinctUntilChanged(),
@@ -1374,7 +1372,7 @@ export class HeroesPageComponent implements OnInit {
       label: role === 'Duelist' ? 'Gefest DPS guide' : `Gefest ${role} guide`,
       query: video.title,
       url: `https://www.youtube.com/watch?v=${video.id}`,
-      player: this.youtubePlayer(video.id),
+      youtubeId: video.id,
     };
   }
 
@@ -1413,7 +1411,7 @@ export class HeroesPageComponent implements OnInit {
       label,
       query: video.title,
       url: `https://www.youtube.com/watch?v=${video.youtubeId}`,
-      player: this.youtubePlayer(video.youtubeId),
+      youtubeId: video.youtubeId,
     };
   }
 
@@ -1424,25 +1422,5 @@ export class HeroesPageComponent implements OnInit {
       videos.find((video) => video.heroId === hero.id) ??
       videos.find((video) => !video.heroId && video.role === hero.role)
     );
-  }
-
-  private youtubePlayer(videoId: string): HeroVideoPlayer {
-    const known = this.players.get(videoId);
-
-    if (known) {
-      return known;
-    }
-
-    const player: HeroVideoPlayer = {
-      // The privacy-enhanced YouTube host. Autoplay, because the player only exists once the visitor pressed play.
-      embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(
-        `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`,
-      ),
-      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-    };
-
-    this.players.set(videoId, player);
-
-    return player;
   }
 }

@@ -1,36 +1,16 @@
 @let video = tutorial();
 
-<div class="media">
-  @if (started()) {
-    <iframe
-      class="player"
-      [src]="video.embedUrl"
-      [title]="video.title"
-      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-      allowfullscreen
-    ></iframe>
-  } @else {
-    <button type="button" class="play" [attr.aria-label]="'Play video: ' + video.title" (click)="play()">
-      <img
-        class="play__image"
-        [src]="video.thumbnailUrl"
-        alt=""
-        width="480"
-        height="360"
-        [attr.loading]="featured() ? 'eager' : 'lazy'"
-        [attr.fetchpriority]="featured() ? 'high' : null"
-        decoding="async"
-      />
-      <span class="play__marker" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg>
-      </span>
-    </button>
-  }
-</div>
+<app-youtube-player
+  [videoId]="video.youtubeId"
+  [title]="video.title"
+  [label]="'Play video: ' + video.title"
+  [eager]="featured()"
+  [(started)]="started"
+/>
 
 <div class="copy">
   @if (featured()) {
-    <span class="chip" [attr.data-kind]="video.kind">{{ video.category }}</span>
+    <app-kind-chip [kind]="video.kind" [label]="video.category" [dark]="true" />
   }
   @if (headingLevel() === 2) {
     <h2 class="title">{{ video.title }}</h2>
@@ -38,7 +18,7 @@
     <h3 class="title">{{ video.title }}</h3>
   }
   <p class="description">{{ video.description }}</p>
-  <p class="tags">{{ video.tags }}</p>
+  <p class="topics">{{ video.topics }}</p>
   <p class="links">
     <a class="link" [href]="video.sourceUrl" target="_blank" rel="noopener">
       Watch on YouTube<span class="visually-hidden"> (opens in a new tab)</span>

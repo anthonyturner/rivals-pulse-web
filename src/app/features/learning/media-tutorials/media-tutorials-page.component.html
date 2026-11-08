@@ -18,22 +18,36 @@
   </div>
   <p class="guide-count" role="status">{{ status() }}</p>
 
-  @if (featured(); as lead) {
-    <app-tutorial-card [tutorial]="lead" [featured]="true" [headingLevel]="2" />
+  @if (lead(); as tutorial) {
+    <app-tutorial-card
+      [tutorial]="tutorial"
+      [featured]="true"
+      [headingLevel]="2"
+      [started]="started().has(tutorial.id)"
+      (startedChange)="markStarted(tutorial.id)"
+    />
+  }
 
-    @for (group of groups(); track group.category) {
-      <section class="group" [attr.aria-labelledby]="'topic-' + $index">
-        <h2 class="group__title" [id]="'topic-' + $index">
-          <span class="chip" [attr.data-kind]="group.kind">{{ group.category }}</span>
-        </h2>
-        <ul class="cards" [attr.aria-label]="group.category + ' tutorials'">
-          @for (tutorial of group.tutorials; track tutorial.id) {
-            <li><app-tutorial-card [tutorial]="tutorial" /></li>
-          }
-        </ul>
-      </section>
-    }
-  } @else {
+  @for (group of groups(); track group.category) {
+    <section class="group" [attr.aria-labelledby]="'topic-' + $index">
+      <h2 class="group__title" [id]="'topic-' + $index">
+        <app-kind-chip size="large" [kind]="group.kind" [label]="group.category" />
+      </h2>
+      <ul class="cards" [attr.aria-label]="group.category + ' tutorials'">
+        @for (tutorial of group.tutorials; track tutorial.id) {
+          <li>
+            <app-tutorial-card
+              [tutorial]="tutorial"
+              [started]="started().has(tutorial.id)"
+              (startedChange)="markStarted(tutorial.id)"
+            />
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (noMatches()) {
     <app-state-panel [announce]="false">No tutorials match. Clear the search or set Category to All.</app-state-panel>
   }
 </div>
