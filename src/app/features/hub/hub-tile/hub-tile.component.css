@@ -1,0 +1,246 @@
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  isolation: isolate;
+}
+
+:host(:hover) {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host {
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  :host(:hover) {
+    transform: translateY(-3px);
+  }
+}
+
+.chip {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--type-caption);
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.chip[data-kind='accent'] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.chip[data-kind='secondary'] {
+  background: var(--secondary-soft);
+  color: var(--secondary-ink);
+}
+
+.chip[data-kind='tertiary'] {
+  background: var(--tertiary-soft);
+  color: var(--tertiary-ink);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.link {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+/* The link covers the whole tile, so the focus ring does too. */
+.link::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  content: '';
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.link:focus-visible::after {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.description {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.4;
+}
+
+.preview {
+  margin-top: auto;
+}
+
+/* The lead tile: key art behind a dark scrim. It stays dark in both themes, so it reads with the ink tokens. */
+:host(.featured) {
+  min-height: 220px;
+  border-color: var(--ink-line);
+  background: var(--ink);
+}
+
+/* Chip and play marker stay at the top; the title and description settle at the bottom, on the scrim. */
+:host(.featured) .title {
+  margin-top: auto;
+}
+
+:host(.featured) .preview {
+  margin-top: 0;
+}
+
+:host(.featured) .title,
+:host(.featured) .link,
+:host(.featured) .description {
+  color: var(--on-ink);
+}
+
+:host(.featured) .link:hover {
+  color: var(--ink-accent);
+}
+
+:host(.featured) .chip {
+  background: color-mix(in srgb, var(--ink) 75%, transparent);
+  color: var(--ink-accent);
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.art::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ink) 92%, transparent) 0%,
+    color-mix(in srgb, var(--ink) 55%, transparent) 50%,
+    transparent 100%
+  );
+  content: '';
+}
+
+/* Zoomed in and pinned to the lower left, which suits the Media Tutorials banner: the street shows and its centred game logo is mostly out of frame. */
+.art__image {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 170%;
+  max-width: none;
+  height: auto;
+}
+
+.marker {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 2px solid var(--ink-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: var(--ink-accent);
+}
+
+@media (max-width: 560px) {
+  .art__image {
+    width: 260%;
+  }
+}
+
+/* A soft wash in the top-right corner, so a tile can lean toward a side without changing its fill. */
+:host([data-tint='danger']) {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--danger) 16%, transparent), transparent 55%),
+    var(--bg-panel);
+}
+
+/*
+ * A full-width strip: the text on the left, centred in the strip's height, and the preview beside
+ * it. The text sits in the three middle rows; the flexible rows above and below take up whatever
+ * height the preview adds, so the text stays together.
+ */
+:host(.split) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 1fr auto auto auto 1fr;
+  column-gap: 24px;
+}
+
+:host(.split) .chip {
+  grid-row: 2;
+  justify-self: start;
+}
+
+:host(.split) .title {
+  grid-row: 3;
+}
+
+:host(.split) .description {
+  grid-row: 4;
+}
+
+:host(.split) .chip,
+:host(.split) .title,
+:host(.split) .description {
+  grid-column: 1;
+}
+
+:host(.split) .preview {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  :host(.split) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  :host(.split) .chip,
+  :host(.split) .title,
+  :host(.split) .description,
+  :host(.split) .preview {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  :host(.split) .preview {
+    margin-top: 12px;
+  }
+}

@@ -91,6 +91,7 @@ repo's build. This is a move, not a redesign.
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 | `20261107120000_triple_support_trios.sql` | Anonymous triple-support trio counts: `hero_game_roles` (the role of each game hero id), `triple_support_trios`, `triple_support_totals`, `triple_support_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_triple_support_trios(smallint[])` (granted to `anon`), an hourly `recompute-triple-support-aggregates` job, and a `purge_expired_participants` that also freezes them |
+| `20261107140000_team_lineup_shapes.sql` | Anonymous team line-up counts, written by the triple-support rebuild: `team_lineup_shapes`, `team_lineup_min_teams()` (50), `read_team_lineup_shapes(smallint[])` (granted to `anon`), and restated `fill_triple_support_aggregates` and `rebuild_triple_support_aggregates` that also write and empty the shapes. No new job, freeze or purge: the existing ones cover it |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
 | `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
 | `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
@@ -533,6 +534,63 @@ rebuild, recompute and freeze, and no other family is touched.
   upload, four Strategists, hero id 0, Deadpool's base id), rebuilds, asserts the counts and
   permissions, and rolls back. `supabase/functions/track-match-history/triple-support-migrations.test.ts`
   reads the SQL for the posture and shape rules.
+
+## Team line-up aggregates
+
+`team_lineup_shapes` keeps, per half-season, game mode, rank bucket and shape, how many classified teams
+ran it in a match with a result and how many won. A shape is the Vanguard-Duelist-Strategist count of one
+team at the end of the match (`hero_id` is the hero a player ended on), such as 1-2-3; triple support is
+every shape with three or more Strategists. The table holds no uid, name, fingerprint, recorder or hero
+id, RLS is on with no policy, and only the service role reaches it.
+
+- **Part of the triple-support family, not a family of its own.** A shape needs exactly what the trio
+  rebuild already computes: the role of every hero on a team (`hero_game_roles`), the same duplicate
+  handling, the same unresolved-team rule and the same totals. So `fill_triple_support_aggregates` writes
+  the shapes in the same statement as the trios and totals (the migration restates it with the shapes
+  added; a test compares the trio and totals writes with the earlier definition and fails if they
+  change), and `rebuild_triple_support_aggregates` empties the shapes with them. Nothing else is
+  restated: the existing hourly job (`recompute-triple-support-aggregates`, minute 47) rebuilds shapes,
+  `freeze_triple_support_aggregates()` freezes them, and `purge_expired_participants()` is untouched, so
+  it cannot lose a freeze call. A half-season frozen before this migration has no shapes.
+- **Which teams count.** The rules of the triple-support section hold: a team with a hero that has no row
+  in `hero_game_roles` (id 0, Deadpool's base id 1057, an unknown id) is unclassified, counted in
+  `triple_support_totals.unclassified_teams`, and never in a shape. A classified team with a result adds
+  one occurrence to its shape, so a mirror match adds two; a match uploaded twice is one match (the
+  second upload is dropped on arrival). The number of players on a team is not checked, so a team with
+  fewer than six lines (a player who set `do_not_store` is skipped at upload, and `forget_player` removes
+  a line later) is classified from the lines that remain and shows a shape one short. A follow-up should
+  treat such a team as unresolved in both families.
+- **Pick rate and win rate.** The pick rate is a shape's `teams` over `classified_teams` of the same
+  half-season, mode and bucket (always the sum of that bucket's shapes); the win rate is `wins` over
+  `teams`. Both are computed by the website from counts.
+- **The minimum.** Every shape seen is stored (three small numbers each). `team_lineup_min_teams()` (50,
+  matched by `TEAM_LINEUP_MIN_TEAMS` on the website; a test compares the two) is applied by the reader to
+  the teams summed over the modes asked for: a shape under it comes back with `enough_data` false and
+  null `teams` and `wins`, which the site shows as "not enough data yet".
+- `read_team_lineup_shapes(p_play_mode_ids)` (granted to `anon` and `service_role`; default Competitive,
+  mode 1) returns `half_season, rank_bucket, vanguards, duelists, strategists, teams, wins, enough_data,
+  classified_teams, unclassified_teams`. The two team counts are the half-season's, repeated on each
+  row, and use the same recorder gate as the trio reader (rank bucket -1 ungated; a bucket of 0 or more
+  only from the (half-season, mode, bucket) totals that pass `community_bucket_shown`, checked before
+  the modes are summed). A half-season and bucket with only unclassified teams comes back as one row
+  with null shape columns. Recorder counts are never returned. The website reads it through
+  `GET /api/team-lineups`
+  ([`src/server/heroes/lineups/team-lineups-read.ts`](../src/server/heroes/lineups/team-lineups-read.ts)),
+  which builds the figures from rank bucket -1 alone and refuses a full 1,000-row page instead of
+  paging, because a half-season has a few dozen shapes at most.
+- The migration checks the gate and the minimum when it runs, on fixtures in a half-season that does not
+  exist, and rolls them back. Nothing in the repository runs the SQL counting itself (no test
+  database), so after applying the migration run
+  `npx supabase db query --linked -f supabase/checks/team_lineup_shapes.sql`: it records 100 fixture
+  Competitive matches in a half-season that does not exist (shapes at and under the minimum, a mirror
+  match, a duplicate upload, hero id 0, Deadpool's base id and role form), rebuilds, asserts the counts,
+  the reader, the freeze and the permissions, and rolls back.
+  `supabase/functions/track-match-history/team-lineup-migrations.test.ts` reads the SQL for the posture
+  and shape rules.
+- **`hero_game_roles` against the live hero list.** `npm run check:hero-game-roles` (service role,
+  read-only) compares the table with `hero_content` and `hero-game-ids.json` and lists every missing,
+  wrong or stray row, Vanguard and Duelist included; `scripts/hero-game-roles-seed.test.ts` can only check
+  the Strategists offline. Run it after the hero sync and after any migration that touches the table.
 
 ## Backfilling participants from stored matches
 

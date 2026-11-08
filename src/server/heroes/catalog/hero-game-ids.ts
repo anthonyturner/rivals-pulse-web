@@ -33,11 +33,36 @@ export function buildBaseGameIdByGameId(entries: readonly HeroGameIdEntry[]): Re
   );
 }
 
+/** A game hero id as a hero of `heroes.json`, with the role the id was played in when the game splits the hero by role. */
+export interface HeroPlacement {
+  hero: string;
+  role?: HeroRole;
+}
+
+/**
+ * Game hero id to the hero it is and, for a role form of a hero the game splits by role (Deadpool),
+ * the role that form is played in. The base id and a variant with no role of its own carry no role,
+ * so a pair holding them cannot be filed under one.
+ */
+export function buildHeroPlacementByGameId(entries: readonly HeroGameIdEntry[]): ReadonlyMap<number, HeroPlacement> {
+  return new Map(
+    entries.flatMap((entry): [number, HeroPlacement][] => [
+      [entry.gameId, { hero: entry.id }],
+      ...(entry.gameIdVariants ?? []).map((variant): [number, HeroPlacement] => [
+        variant.gameId,
+        { hero: entry.id, role: HERO_ROLES.find((role) => role === variant.role) },
+      ]),
+    ]),
+  );
+}
+
 export const heroGameIdEntries: readonly HeroGameIdEntry[] = curatedHeroGameIds;
 
 export const heroSlugByGameId: ReadonlyMap<number, string> = buildHeroSlugByGameId(heroGameIdEntries);
 
 export const baseGameIdByGameId: ReadonlyMap<number, number> = buildBaseGameIdByGameId(heroGameIdEntries);
+
+export const heroPlacementByGameId: ReadonlyMap<number, HeroPlacement> = buildHeroPlacementByGameId(heroGameIdEntries);
 
 /**
  * Game hero id to the hero's role. A hero the game splits by role (Deadpool) has a role on each

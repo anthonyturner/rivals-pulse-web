@@ -1,10 +1,20 @@
 import type { HeroPairs, HeroPairsSynergy } from '../../../contracts/hero-pairs.model.ts';
+import type { HeroPlacement } from '../catalog/index.ts';
 import { deriveHeroSynergies } from './hero-synergies';
 
-const SLUGS = new Map<number, string>([
-  [1011, 'hulk'],
-  [1022, 'captain-america'],
-  [1033, 'black-widow'],
+const DEADPOOL = 1057;
+const DEADPOOL_VANGUARD = 10571;
+const DEADPOOL_DUELIST = 10572;
+const DEADPOOL_STRATEGIST = 10573;
+
+const SLUGS = new Map<number, HeroPlacement>([
+  [1011, { hero: 'hulk' }],
+  [1022, { hero: 'captain-america' }],
+  [1033, { hero: 'black-widow' }],
+  [DEADPOOL, { hero: 'deadpool' }],
+  [DEADPOOL_VANGUARD, { hero: 'deadpool', role: 'Vanguard' }],
+  [DEADPOOL_DUELIST, { hero: 'deadpool', role: 'Duelist' }],
+  [DEADPOOL_STRATEGIST, { hero: 'deadpool', role: 'Strategist' }],
 ]);
 
 function synergy(heroId: number, allyHeroId: number, matches: number, wins: number): HeroPairsSynergy {
@@ -41,6 +51,14 @@ describe('deriveHeroSynergies', () => {
         shrunkWinRate: ((15 + 5) / (20 + 10)) * 100,
       },
     ]);
+  });
+
+  it('carries the half-seasons and modes the pairs offer, so a page can fill its pickers', () => {
+    const halfSeasons = [{ id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null }];
+    const modes = [{ id: 'competitive' as const, label: 'Competitive', decidedMatches: 80 }];
+    const result = deriveHeroSynergies(pairsOf([synergy(1011, 1033, 20, 15)], { halfSeasons, mode: 'competitive', modes }), SLUGS);
+
+    expect([result.halfSeasons, result.mode, result.modes]).toEqual([halfSeasons, 'competitive', modes]);
   });
 
   it('works the rates over team occurrences, which are twice the matches when both teams field the pair', () => {
@@ -96,5 +114,58 @@ describe('deriveHeroSynergies', () => {
     const inPlaceOf = { id: 11, label: 'Season 11', startsAt: null, endsAt: null };
 
     expect(deriveHeroSynergies(pairsOf([synergy(1011, 1033, 12, 6)], { inPlaceOf }), SLUGS).inPlaceOf).toEqual(inPlaceOf);
+  });
+
+  describe('for a hero the game splits by role', () => {
+    for (const [gameId, role] of [
+      [DEADPOOL_VANGUARD, 'Vanguard'],
+      [DEADPOOL_DUELIST, 'Duelist'],
+      [DEADPOOL_STRATEGIST, 'Strategist'],
+    ] as const) {
+      it(`names the ${role} form's pair with the role it was played in`, () => {
+        const [pair] = deriveHeroSynergies(pairsOf([synergy(1011, gameId, 20, 15)]), SLUGS).synergies;
+
+        expect(pair.hero).toBe('hulk');
+        expect('heroRole' in pair).toBeFalse();
+        expect(pair.ally).toBe('deadpool');
+        expect(pair.allyRole).toBe(role);
+      });
+    }
+
+    it('names the role on the hero side too', () => {
+      const [pair] = deriveHeroSynergies(pairsOf([synergy(DEADPOOL_STRATEGIST, 1033, 20, 15)]), SLUGS).synergies;
+
+      expect(pair).toEqual(jasmine.objectContaining({ hero: 'deadpool', heroRole: 'Strategist', ally: 'black-widow' }));
+    });
+
+    it('lists the base id with no role, so a page cannot place it', () => {
+      const [pair] = deriveHeroSynergies(pairsOf([synergy(DEADPOOL, 1033, 20, 15)]), SLUGS).synergies;
+
+      expect(pair.hero).toBe('deadpool');
+      expect('heroRole' in pair).toBeFalse();
+    });
+
+    it('keeps each form as its own pair with the same hero, ordered by role', () => {
+      const result = deriveHeroSynergies(
+        pairsOf([
+          synergy(1011, DEADPOOL_STRATEGIST, 12, 6),
+          synergy(1011, DEADPOOL_VANGUARD, 14, 7),
+          synergy(1011, DEADPOOL, 13, 6),
+        ]),
+        SLUGS,
+      );
+
+      expect(result.synergies.map(({ ally, allyRole, matches }) => `${ally}/${allyRole ?? '-'}/${matches}`)).toEqual([
+        'deadpool/-/13',
+        'deadpool/Strategist/12',
+        'deadpool/Vanguard/14',
+      ]);
+    });
+
+    it('leaves out a hero paired with another form of itself', () => {
+      const result = deriveHeroSynergies(pairsOf([synergy(DEADPOOL_VANGUARD, DEADPOOL_STRATEGIST, 12, 6)]), SLUGS);
+
+      expect(result.synergies).toEqual([]);
+    });
   });
 });

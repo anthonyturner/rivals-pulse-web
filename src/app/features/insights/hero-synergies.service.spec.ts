@@ -32,6 +32,16 @@ describe('HeroSynergiesService', () => {
     expect(result).toEqual(answer);
   });
 
+  it('asks for one half-season and one mode, leaving out the default blend', () => {
+    service.getHeroSynergies(10, 'competitive').subscribe();
+    http.expectOne('/api/hero-synergies?halfSeason=10&mode=competitive').flush(synergiesOf([]));
+
+    service.getHeroSynergies(undefined, 'all').subscribe();
+    const plain = http.expectOne('/api/hero-synergies');
+    expect(plain.request.params.keys()).toEqual([]);
+    plain.flush(synergiesOf([]));
+  });
+
   it('answers null when the request fails', () => {
     let result: HeroSynergies | null | undefined;
 
@@ -57,6 +67,26 @@ describe('isHeroSynergies', () => {
   it('accepts a ready answer and the empty state', () => {
     expect(isHeroSynergies(good)).toBeTrue();
     expect(isHeroSynergies(synergiesOf([]))).toBeTrue();
+  });
+
+  it('accepts an answer cached before it listed half-seasons and modes, and a well-formed list', () => {
+    const { halfSeasons, mode, modes, ...old } = good;
+
+    expect([halfSeasons, mode, modes].every((part) => part !== undefined)).toBeTrue();
+    expect(isHeroSynergies(old)).toBeTrue();
+  });
+
+  it('accepts the role of a form that was played, and rejects one that is not text', () => {
+    const pair = good.synergies[0];
+
+    expect(isHeroSynergies({ ...good, synergies: [{ ...pair, heroRole: 'Strategist', allyRole: 'Vanguard' }] })).toBeTrue();
+    expect(isHeroSynergies({ ...good, synergies: [{ ...pair, allyRole: 3 }] })).toBeFalse();
+  });
+
+  it('rejects half-season and mode lists the page could not read', () => {
+    expect(isHeroSynergies({ ...good, halfSeasons: 'all' })).toBeFalse();
+    expect(isHeroSynergies({ ...good, halfSeasons: [{ label: 'Season 10' }] })).toBeFalse();
+    expect(isHeroSynergies({ ...good, modes: [{ id: 'all', label: 'All' }] })).toBeFalse();
   });
 
   it('rejects an answer missing a part the page reads', () => {

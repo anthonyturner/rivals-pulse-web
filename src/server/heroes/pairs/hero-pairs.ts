@@ -9,6 +9,8 @@ import {
   BLENDED_PLAY_MODE_IDS,
   chooseHalfSeason,
   halfSeasonTimeline,
+  modesOf,
+  playModeFromQuery,
   WIN_RATE_PRIOR_MATCHES,
   type HeroStatsSource,
 } from '../stats/hero-stats.ts';
@@ -28,7 +30,7 @@ import {
  */
 export const HERO_PAIR_MIN_MATCHES = 10;
 
-/** The modes the counts blend: the same Competitive and Quick Match blend as the hero stats. */
+/** The modes the counts blend when no mode is asked for: the same Competitive and Quick Match blend as the hero stats. */
 export const HERO_PAIR_PLAY_MODE_IDS: readonly number[] = BLENDED_PLAY_MODE_IDS;
 
 /**
@@ -60,6 +62,17 @@ export interface HeroPairRow {
 
 interface DeriveHeroPairsOptions {
   now: Date;
+  /**
+   * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has
+   * not started, or that nothing knows, gives the empty state.
+   */
+  halfSeason?: number;
+  /**
+   * The `mode` query value that the rows were read for; see `playModeFromQuery`. None is the Quick
+   * Match and Competitive blend, and a value naming no mode counts nothing. It also picks which of
+   * the per-hero counts in `source` the band's heroes and match total are taken from.
+   */
+  mode?: string;
   /** Game hero id to the hero's base game id (Deadpool's role forms to 1057). A game id missing here is left out. */
   baseGameIdByGameId: ReadonlyMap<number, number>;
 }
@@ -97,20 +110,21 @@ export function deriveHeroPairs(
     [...rows.map((row) => row.halfSeason), ...source.heroes.map((row) => row.halfSeason)],
     options.now,
   );
+  const mode = playModeFromQuery(options.mode);
   const excludedGameIds = new Set<number>();
   const snapshots = new Map<number, HalfSeasonSnapshot>();
   const snapshot = (id: number): HalfSeasonSnapshot => {
     let result = snapshots.get(id);
 
     if (result === undefined) {
-      result = snapshotOf(rows, source, id, options.baseGameIdByGameId);
+      result = snapshotOf(rows, source, id, mode?.playModeIds ?? [], options.baseGameIdByGameId);
       result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
       snapshots.set(id, result);
     }
 
     return result;
   };
-  const { shown, inPlaceOf } = chooseHalfSeason(timeline, undefined, (id) => hasPairs(snapshot(id).band));
+  const { shown, inPlaceOf } = chooseHalfSeason(timeline, options.halfSeason, (id) => hasPairs(snapshot(id).band));
   const band = shown === undefined ? undefined : snapshot(shown).band;
 
   return {
@@ -120,6 +134,9 @@ export function deriveHeroPairs(
       priorMatches: WIN_RATE_PRIOR_MATCHES,
       halfSeason: shown === undefined ? null : timeline.describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
+      halfSeasons: timeline.started.map(timeline.describe),
+      mode: mode?.id ?? null,
+      modes: modesOf(source, shown),
       bands: band === undefined ? [] : [band],
     },
     excludedGameIds: [...excludedGameIds].sort((a, b) => a - b),
@@ -134,6 +151,7 @@ function snapshotOf(
   rows: readonly HeroPairRow[],
   source: HeroStatsSource,
   halfSeason: number,
+  playModeIds: readonly number[],
   baseGameIdByGameId: ReadonlyMap<number, number>,
 ): HalfSeasonSnapshot {
   const excludedGameIds = new Set<number>();
@@ -151,9 +169,9 @@ function snapshotOf(
     band: {
       ...ALL_RANKS_BAND,
       decidedMatches: source.totals
-        .filter((row) => row.halfSeason === halfSeason && HERO_PAIR_PLAY_MODE_IDS.includes(row.playModeId))
+        .filter((row) => row.halfSeason === halfSeason && playModeIds.includes(row.playModeId))
         .reduce((sum, row) => sum + row.decidedMatches, 0),
-      heroes: heroesOf(source, halfSeason, baseIdOf),
+      heroes: heroesOf(source, halfSeason, playModeIds, baseIdOf),
       counters: pairsOf(rows, halfSeason, 'vs', baseIdOf).map(
         ({ first, second, tally }): HeroPairsCounter => ({ heroId: first, enemyHeroId: second, ...tally }),
       ),
@@ -168,12 +186,13 @@ function snapshotOf(
 function heroesOf(
   source: HeroStatsSource,
   halfSeason: number,
+  playModeIds: readonly number[],
   baseIdOf: (gameId: number) => number | undefined,
 ): HeroPairsHero[] {
   const heroes = new Map<number, HeroPairsHero>();
 
   for (const row of source.heroes) {
-    if (row.halfSeason !== halfSeason || !HERO_PAIR_PLAY_MODE_IDS.includes(row.playModeId)) {
+    if (row.halfSeason !== halfSeason || !playModeIds.includes(row.playModeId)) {
       continue;
     }
 

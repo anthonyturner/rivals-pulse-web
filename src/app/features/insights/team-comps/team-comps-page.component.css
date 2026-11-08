@@ -3,7 +3,7 @@
   min-height: 100vh;
 }
 
-.meta {
+.toolbar {
   margin-bottom: 4px;
 }
 
@@ -57,6 +57,55 @@ thead th {
 .col-rate {
   width: 84px;
   text-align: right;
+}
+
+.col-share {
+  width: 96px;
+  text-align: right;
+}
+
+.variant-summary {
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.trio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lineup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+}
+
+.shape {
+  font-weight: 800;
+}
+
+.shape-caption {
+  color: var(--text-soft);
+}
+
+.support-badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--type-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.thin {
+  color: var(--text-soft);
 }
 
 .pair {
@@ -113,5 +162,9 @@ thead th {
 
   .col-rate {
     width: 60px;
+  }
+
+  .col-share {
+    width: 64px;
   }
 }

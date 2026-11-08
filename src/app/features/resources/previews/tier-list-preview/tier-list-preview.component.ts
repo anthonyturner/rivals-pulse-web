@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
-import { previewHeroStats, previewRoster } from '../preview-data';
-import { PreviewPortraitComponent } from '../preview-portrait/preview-portrait.component';
+import { previewRoster } from '../../../hub/preview-data';
+import { previewHeroStats } from '../current-hero-stats-data';
+import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { tierPreview } from '../preview-views';
 
 /** The top heroes of the S, A and B tiers. Draws nothing until the tier list has placed a hero. */

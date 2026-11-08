@@ -1,5 +1,5 @@
 import type { HeroPairs } from '../../../contracts/hero-pairs.model.ts';
-import { fetchHeroPairRows, getHeroPairs, parseHeroPairRows } from './hero-pairs-read';
+import { fetchHeroPairRows, getHeroPairs, getHeroSynergies, parseHeroPairRows } from './hero-pairs-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };
 const NOW = () => new Date('2026-10-30T12:00:00Z');
@@ -97,6 +97,9 @@ const ALLOWED_KEYS = new Set([
   'priorMatches',
   'halfSeason',
   'inPlaceOf',
+  'halfSeasons',
+  'mode',
+  'modes',
   'bands',
   'id',
   'label',
@@ -139,6 +142,80 @@ describe('getHeroPairs', () => {
     expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/ids with no hero mapping: 0$/));
   });
 
+  it('lists the half-seasons and modes a client can ask for, counted in the half-season shown', async () => {
+    const pairs = await getHeroPairs({ ...options, fetch: answering(bothFunctions) });
+
+    expect(pairs.mode).toBe('all');
+    expect(pairs.halfSeasons?.map(({ id }) => id)).toEqual([10.5]);
+    expect(pairs.modes?.map(({ id, decidedMatches }) => [id, decidedMatches])).toEqual([
+      ['all', 80],
+      ['quick-match', 0],
+      ['competitive', 80],
+      ['arcade', 0],
+      ['practice', 0],
+    ]);
+  });
+
+  it('reads one mode on its own: asks the function for that mode and counts only its matches', async () => {
+    const seen: Seen[] = [];
+
+    const pairs = await getHeroPairs({ ...options, mode: 'competitive', fetch: answering(bothFunctions, seen) });
+    const call = seen.find(({ url }) => url.includes('read_hero_pairs'));
+
+    expect(JSON.parse(String(call?.init?.body))).toEqual({ p_play_mode_ids: [1] });
+    expect(pairs.mode).toBe('competitive');
+    expect(pairs.bands[0].decidedMatches).toBe(80);
+    expect(pairs.bands[0].heroes).toEqual([{ heroId: 1011, appearances: 40, wins: 22 }]);
+  });
+
+  it('counts nothing for a mode with no matches, without borrowing the blend', async () => {
+    const pairs = await getHeroPairs({ ...options, mode: 'quick-match', fetch: answering(bothFunctions) });
+
+    expect(pairs.mode).toBe('quick-match');
+    expect(pairs.bands[0].decidedMatches).toBe(0);
+    expect(pairs.bands[0].heroes).toEqual([]);
+  });
+
+  it('answers the empty state for a mode that names no mode, without reading the pairs', async () => {
+    const seen: Seen[] = [];
+
+    const pairs = await getHeroPairs({ ...options, mode: 'ranked', fetch: answering(bothFunctions, seen) });
+
+    expect(pairs.status).toBe('not-enough-data');
+    expect(pairs.mode).toBeNull();
+    expect(pairs.bands[0].synergies).toEqual([]);
+    expect(seen.some(({ url }) => url.includes('read_hero_pairs'))).toBeFalse();
+  });
+
+  it('shows exactly the half-season asked for, with no fall-back, and none for one that has not started', async () => {
+    const twoSeasons = {
+      ...statsAnswer,
+      half_seasons: [
+        { half_season: 10, starts_at: '2026-09-01T00:00:00Z' },
+        { half_season: 10.5, starts_at: '2026-10-09T09:00:00Z' },
+        { half_season: 11, starts_at: '2026-12-01T00:00:00Z' },
+      ],
+    };
+    const fetch = answering({
+      read_hero_pairs: { body: [pairRow('with', 1011, 1033, 14, { half_season: 10 })] },
+      read_hero_stats: { body: twoSeasons },
+    });
+
+    const earlier = await getHeroPairs({ ...options, halfSeason: 10, fetch });
+    const current = await getHeroPairs({ ...options, halfSeason: 10.5, fetch });
+    const future = await getHeroPairs({ ...options, halfSeason: 11, fetch });
+    const unknown = await getHeroPairs({ ...options, halfSeason: Number.NaN, fetch });
+
+    expect(earlier.halfSeason?.id).toBe(10);
+    expect(earlier.bands[0].synergies.length).toBe(1);
+    expect(current.halfSeason?.id).toBe(10.5);
+    expect(current.inPlaceOf).toBeNull();
+    expect(current.status).toBe('not-enough-data');
+    expect(future.halfSeason).toBeNull();
+    expect(unknown.halfSeason).toBeNull();
+    expect(earlier.halfSeasons?.map(({ id }) => id)).toEqual([10, 10.5]);
+  });
+
   it('answers the empty state when the database has no pair', async () => {
     const pairs = await getHeroPairs({
       ...options,
@@ -176,6 +253,42 @@ describe('getHeroPairs while a read function is not in the database', () => {
     await expectAsync(
       getHeroPairs({ ...options, fetch: answering({ ...bothFunctions, read_hero_stats: { body: { code: '42501' }, status: 401 } }) }),
     ).toBeRejectedWithError('read_hero_stats answered 401');
+  });
+});
+
+describe('Deadpool in the pair reads', () => {
+  const options = { env: ENV, now: NOW };
+  const INVISIBLE_WOMAN = 1050;
+  const fetchOf = () =>
+    answering({
+      read_hero_pairs: {
+        body: [
+          pairRow('with', INVISIBLE_WOMAN, 1057, 12),
+          pairRow('with', INVISIBLE_WOMAN, 10571, 13),
+          pairRow('with', INVISIBLE_WOMAN, 10572, 14),
+          pairRow('with', INVISIBLE_WOMAN, 10573, 15),
+        ],
+      },
+      read_hero_stats: { body: statsAnswer },
+    });
+
+  it('keeps each role form of his apart in the synergies, each placed by the role played', async () => {
+    const { synergies } = await getHeroSynergies({ ...options, fetch: fetchOf() });
+
+    expect(synergies.map(({ hero, ally, allyRole, matches }) => `${hero}+${ally}/${allyRole ?? '-'}/${matches}`)).toEqual([
+      'invisible-woman+deadpool/-/12',
+      'invisible-woman+deadpool/Duelist/14',
+      'invisible-woman+deadpool/Strategist/15',
+      'invisible-woman+deadpool/Vanguard/13',
+    ]);
+  });
+
+  it('still merges his forms under the base id in the hero pairs the Pulse Atlas publishes', async () => {
+    const pairs = await getHeroPairs({ ...options, fetch: fetchOf() });
+
+    expect(pairs.bands[0].synergies).toEqual([
+      { heroId: INVISIBLE_WOMAN, allyHeroId: 1057, matches: 54, appearances: 54, wins: 26 },
+    ]);
   });
 });
 

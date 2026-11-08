@@ -294,6 +294,12 @@ file** for the half-season shown, listed in the manifest:
   Deadpool).
 - **Hero ids** are the game's numeric ids, as in the tier list; join them to
   `heroes.json`. Deadpool's three role forms are merged under his base id, 1057.
+  This merged shape is the contract the overlay reads and it does not change:
+  placing Deadpool's duos under the role of the form played (the Team comps page)
+  is done only in `GET /api/hero-synergies`, which counts the forms apart and
+  names the role on each entry (`heroRole`, `allyRole`). `community-stats.json`
+  stays on `GET /api/hero-pairs`, so it needs no version bump and the overlay
+  needs no change.
   The database drops every pair of game ids below the minimum before the API
   sees it, so each form needs the minimum on its own, and the merged count can
   understate Deadpool's real total. The minimum is applied again after the merge,

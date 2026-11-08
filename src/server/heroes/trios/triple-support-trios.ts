@@ -8,6 +8,8 @@ import {
   BLENDED_PLAY_MODE_IDS,
   chooseHalfSeason,
   halfSeasonTimeline,
+  modesOf,
+  playModeFromQuery,
   type HeroStatsSource,
 } from '../stats/hero-stats.ts';
 
@@ -24,7 +26,7 @@ import {
  */
 export const TRIPLE_SUPPORT_MIN_MATCHES = 10;
 
-/** The modes the counts blend: the same Competitive and Quick Match blend as the hero stats. */
+/** The modes the counts blend when no mode is asked for: the same Competitive and Quick Match blend as the hero stats. */
 export const TRIPLE_SUPPORT_PLAY_MODE_IDS: readonly number[] = BLENDED_PLAY_MODE_IDS;
 
 /**
@@ -58,15 +60,27 @@ export interface TripleSupportRow {
 
 interface DeriveTripleSupportTriosOptions {
   now: Date;
+  /**
+   * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has
+   * not started, or that nothing knows, gives the empty state.
+   */
+  halfSeason?: number;
+  /**
+   * The `mode` query value that the rows were read for; see `playModeFromQuery`. None is the Quick
+   * Match and Competitive blend, and a value naming no mode counts nothing.
+   */
+  mode?: string;
   /** Base game id to the hero's tag. A Strategist missing here cannot be named, so its trio is left out. */
   tagByGameId: ReadonlyMap<number, StrategistTag>;
   /** Base game id to the hero's display name. A utility hero missing here cannot be named, so its trio is left out. */
   nameByGameId: ReadonlyMap<number, string>;
+  /** Base game id to the hero's id in `heroes.json`. A Strategist missing here cannot be shown, so its trio is left out. */
+  slugByGameId: ReadonlyMap<number, string>;
 }
 
 interface TripleSupportDerivation {
   trios: TripleSupportTrios;
-  /** Game hero ids in the counted rows that have no tag, or no name for a utility hero, so their trios were left out. */
+  /** Game hero ids in the counted rows that have no tag or no slug, or no name for a utility hero, so their trios were left out. */
   unnamedGameIds: number[];
 }
 
@@ -80,10 +94,11 @@ interface HalfSeasonSnapshot {
 
 export function deriveTripleSupportTrios(
   rows: readonly TripleSupportRow[],
-  source: Pick<HeroStatsSource, 'halfSeasons'>,
+  source: Pick<HeroStatsSource, 'halfSeasons' | 'totals'>,
   options: DeriveTripleSupportTriosOptions,
 ): TripleSupportDerivation {
   const timeline = halfSeasonTimeline(source.halfSeasons, rows.map((row) => row.halfSeason), options.now);
+  const mode = playModeFromQuery(options.mode);
   const unnamedGameIds = new Set<number>();
   const snapshots = new Map<number, HalfSeasonSnapshot>();
   const snapshot = (id: number): HalfSeasonSnapshot => {
@@ -97,7 +112,7 @@ export function deriveTripleSupportTrios(
 
     return result;
   };
-  const { shown, inPlaceOf } = chooseHalfSeason(timeline, undefined, (id) => snapshot(id).trios.length > 0);
+  const { shown, inPlaceOf } = chooseHalfSeason(timeline, options.halfSeason, (id) => snapshot(id).trios.length > 0);
   const counted = shown === undefined ? undefined : snapshot(shown);
 
   return {
@@ -106,6 +121,9 @@ export function deriveTripleSupportTrios(
       minimumMatches: TRIPLE_SUPPORT_MIN_MATCHES,
       halfSeason: shown === undefined ? null : timeline.describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
+      halfSeasons: timeline.started.map(timeline.describe),
+      mode: mode?.id ?? null,
+      modes: modesOf(source, shown),
       classifiedTeams: counted?.classifiedTeams ?? 0,
       unclassifiedTeams: counted?.unclassifiedTeams ?? 0,
       fourPlusTeams: counted?.fourPlusTeams ?? 0,
@@ -128,10 +146,15 @@ function snapshotOf(
     const heroIds: [number, number, number] = [row.heroA, row.heroB, row.heroC];
     const variant = variantOf(heroIds, options.tagByGameId, options.nameByGameId);
 
+    const slugs = heroIds.map((gameId) => options.slugByGameId.get(gameId));
+
     // The database counts a trio only for known Strategists, so a hero that cannot be named means the
-    // tag list or the hero names are behind the role list; a trio nobody can name is left out and reported.
-    if ('unnamed' in variant) {
-      variant.unnamed.forEach((gameId) => unnamedGameIds.add(gameId));
+    // tag list, the hero ids or the hero names are behind the role list; a trio nobody can name is
+    // left out and reported.
+    if ('unnamed' in variant || !isThree(slugs)) {
+      const unslugged = heroIds.filter((gameId) => !options.slugByGameId.has(gameId));
+
+      [...('unnamed' in variant ? variant.unnamed : []), ...unslugged].forEach((gameId) => unnamedGameIds.add(gameId));
       continue;
     }
 
@@ -141,6 +164,7 @@ function snapshotOf(
 
     trios.push({
       heroIds,
+      heroes: slugs,
       variant,
       matches: row.matches,
       teams: row.teams,
@@ -188,6 +212,10 @@ export function variantOf(
     label: anchors.length === 0 ? THREE_HEALERS : `${anchors.map((anchor) => anchor.name).join(' + ')} triple`,
     anchorHeroIds: anchors.map((anchor) => anchor.gameId),
   };
+}
+
+function isThree(slugs: readonly (string | undefined)[]): slugs is [string, string, string] {
+  return slugs.length === 3 && slugs.every((slug) => slug !== undefined);
 }
 
 function compareIds(a: readonly number[], b: readonly number[]): number {

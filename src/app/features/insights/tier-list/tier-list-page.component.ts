@@ -9,11 +9,12 @@ import { NoticeComponent } from '../../../shared/components/notice/notice.compon
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { DEFAULT_MODE_ID, heroStatsModeOptions, type ModeOption } from '../../../shared/utilities/play-modes';
 import { HeroDataService } from '../../heroes/hero-data.service';
+import { seasonOptions, type SeasonOption } from '../half-season-view';
 import { heroIdentities } from '../hero-identity';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
 import { TierRowsComponent } from '../tier-rows/tier-rows.component';
-import { buildTierListView, seasonOptions, type SeasonOption } from './tier-list-view';
+import { buildTierListView } from './tier-list-view';
 
 interface TierListRequest {
   halfSeason: number | undefined;
