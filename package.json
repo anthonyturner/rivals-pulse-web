@@ -26,6 +26,7 @@
     "sync:official-heroes": "node scripts/sync-official-heroes.mjs",
     "sync:official-hero-images": "node scripts/sync-official-hero-images.mjs",
     "check:official-heroes": "node scripts/sync-official-heroes.mjs --check",
+    "check:hero-game-roles": "node scripts/check-hero-game-roles.mjs",
     "watch:official-heroes": "node scripts/sync-official-heroes.mjs --watch --interval-days 3",
     "sync:game-stats": "node --experimental-strip-types scripts/sync-game-stats.mjs",
     "build:pulse-atlas": "node --experimental-strip-types scripts/build-pulse-atlas.mjs",
