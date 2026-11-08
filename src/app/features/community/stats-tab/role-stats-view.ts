@@ -10,6 +10,8 @@ export interface RoleFigure {
 
 export interface RoleCard {
   role: string;
+  /** The role as a style key, such as `vanguard`, for its tint. */
+  roleKey: string;
   appearancesLabel: string;
   ready: boolean;
   /** Empty until the role reaches the minimum. */
@@ -117,6 +119,7 @@ function cardOf(entry: RoleStatsRole, minimumLines: number, modeLabel?: string):
 
   return {
     role: entry.role,
+    roleKey: entry.role.toLowerCase(),
     appearancesLabel: countLabel(entry.appearances, 'line', 'lines'),
     ready,
     figures: ready

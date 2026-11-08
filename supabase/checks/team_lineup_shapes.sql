@@ -148,7 +148,7 @@ begin
 
   select * into read_back from public.read_team_lineup_shapes(array[1]::smallint[])
     where half_season = 995 and vanguards = 3 and duelists = 2 and strategists = 1;
-  if not found or read_back.enough_data or read_back.teams <> m - 1 or read_back.wins is not null then
+  if not found or read_back.enough_data or read_back.teams is distinct from m - 1 or read_back.wins is not null then
     raise exception 'a shape under the minimum must carry its team count and no wins: %', read_back;
   end if;
 

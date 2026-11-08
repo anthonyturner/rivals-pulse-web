@@ -23,10 +23,10 @@
     'loser result';
   gap: 2px 12px;
   align-items: center;
-  padding: 7px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
+  border-radius: 12px;
+  background: linear-gradient(to right, color-mix(in srgb, var(--tertiary) 12%, var(--bg-panel)), var(--bg-panel) 60%);
 }
 
 .winner {
@@ -52,7 +52,9 @@ img {
   flex: none;
   width: var(--hero-thumb);
   height: var(--hero-thumb);
-  border-radius: 6px;
+  border: 2px solid var(--border-strong);
+  border-radius: 10px;
+  box-sizing: border-box;
   background: var(--surface-2);
   object-fit: cover;
 }

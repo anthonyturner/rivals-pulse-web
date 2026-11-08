@@ -428,7 +428,10 @@ shown, listed in the manifest:
   player holds more than `minimums.busiestContributorShare` of the lines, so it is
   false whenever that share is 1 (no limit), and a reader must not say "more than
   half" unless the share is 0.5. The database decides it
-  (`community_max_recorder_share_percent()` in `read_community_hero_scores`).
+  (`community_max_recorder_share_percent()` in `read_community_hero_scores`). The
+  published `busiestContributorShare` is a separate website constant
+  (`HERO_SCORE_MINIMUMS` in `src/server/community/extended/hero-scores.ts`): change
+  both together, or the flag and the published share disagree.
 - **`qualifiedHeroes`** is, for each stat, how many heroes pass the rule: those whose
   stat is `scored` or `ranking-too-small`. Compared with `minimums.rankedHeroes` it is
   the progress toward a ranking ("2 of 5 heroes"). It counts every hero the API

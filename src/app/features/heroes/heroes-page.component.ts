@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, filter, forkJoin, map, pairwise } from 'rxjs';
 
@@ -45,13 +45,13 @@ import {
   HeroRoleAbilityKit,
   HeroStrategyGuide,
   HeroVideo,
-  HeroVideoPlayer,
   HeroVideoSearch,
   HeroVideoType,
 } from './hero.model';
 
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { slugify, escapeRegExp } from '../../shared/utilities/string-utils';
+import { YOUTUBE_EMBED_ORIGIN } from './hero-poster-backdrop/youtube-embed-commands';
 
 interface UltimateStrategy {
   ability: HeroAbility;
@@ -112,8 +112,6 @@ export class HeroesPageComponent implements OnInit {
   private readonly grid = viewChild(HeroGridComponent);
   private readonly heroes = signal<Hero[]>([]);
   private readonly heroVideos = signal<HeroVideo[]>([]);
-  /** One player per video: Angular compares the address wrapper, not the address in it, so a new wrapper would reload a player that heroes of one role share. */
-  private readonly players = new Map<string, HeroVideoPlayer>();
   private readonly routeHeroId = this.route.paramMap.pipe(
     map((params) => params.get('heroId')),
     distinctUntilChanged(),
@@ -501,6 +499,23 @@ export class HeroesPageComponent implements OnInit {
     const countersAndCombos = this.pazCountersCombosVideo(hero);
 
     return [guide, gameplay, countersAndCombos];
+  });
+
+  /** The selected hero's own PAZ gameplay video as a muted, looping backdrop. A role fallback video shows another hero, so it is not used. */
+  readonly selectedHeroPosterVideoUrl = computed<SafeResourceUrl | null>(() => {
+    const hero = this.selectedHero();
+    const video = hero && this.findHeroVideo(hero, 'paz-gameplay');
+
+    if (!video || video.heroId !== hero.id) {
+      return null;
+    }
+
+    const id = video.youtubeId;
+
+    // `playlist` set to the video itself is what makes YouTube loop a single video.
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `${YOUTUBE_EMBED_ORIGIN}/embed/${id}?autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=${id}&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3`,
+    );
   });
 
   readonly selectedHeroYoutubeUrl = computed(() =>
@@ -1374,7 +1389,7 @@ export class HeroesPageComponent implements OnInit {
       label: role === 'Duelist' ? 'Gefest DPS guide' : `Gefest ${role} guide`,
       query: video.title,
       url: `https://www.youtube.com/watch?v=${video.id}`,
-      player: this.youtubePlayer(video.id),
+      youtubeId: video.id,
     };
   }
 
@@ -1413,7 +1428,7 @@ export class HeroesPageComponent implements OnInit {
       label,
       query: video.title,
       url: `https://www.youtube.com/watch?v=${video.youtubeId}`,
-      player: this.youtubePlayer(video.youtubeId),
+      youtubeId: video.youtubeId,
     };
   }
 
@@ -1424,25 +1439,5 @@ export class HeroesPageComponent implements OnInit {
       videos.find((video) => video.heroId === hero.id) ??
       videos.find((video) => !video.heroId && video.role === hero.role)
     );
-  }
-
-  private youtubePlayer(videoId: string): HeroVideoPlayer {
-    const known = this.players.get(videoId);
-
-    if (known) {
-      return known;
-    }
-
-    const player: HeroVideoPlayer = {
-      // The privacy-enhanced YouTube host. Autoplay, because the player only exists once the visitor pressed play.
-      embedUrl: this.sanitizer.bypassSecurityTrustResourceUrl(
-        `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`,
-      ),
-      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-    };
-
-    this.players.set(videoId, player);
-
-    return player;
   }
 }

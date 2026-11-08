@@ -1,0 +1,35 @@
+<span class="poster-art" aria-hidden="true" inert>
+  <img class="poster-art__image" [src]="imageUrl()" alt="" width="320" height="320" decoding="async" />
+  @if (playing()) {
+    <iframe
+      #player
+      class="poster-art__video"
+      [class.loaded]="videoLoaded()"
+      [src]="videoUrl()"
+      [title]="heroName() + ' gameplay video'"
+      allow="autoplay; encrypted-media"
+      (load)="videoLoaded.set(true)"
+    ></iframe>
+  }
+</span>
+@if (videoUrl()) {
+  <div class="backdrop-controls">
+    @if (videoLoaded()) {
+      <button type="button" class="backdrop-control" [attr.aria-pressed]="soundOn()" (click)="toggleSound()">
+        <svg class="backdrop-sound__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
+          @if (soundOn()) {
+            <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          } @else {
+            <path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          }
+        </svg>
+        Sound
+      </button>
+    }
+    <button type="button" class="backdrop-control" role="switch" [attr.aria-checked]="playing()" (click)="toggle()">
+      <span class="backdrop-switch__track" aria-hidden="true"></span>
+      Gameplay video
+    </button>
+  </div>
+}

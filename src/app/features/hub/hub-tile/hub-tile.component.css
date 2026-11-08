@@ -33,26 +33,6 @@
 .chip {
   align-self: flex-start;
   margin-bottom: 10px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: var(--type-caption);
-  font-weight: 750;
-  line-height: 1.5;
-}
-
-.chip[data-kind='accent'] {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
-
-.chip[data-kind='secondary'] {
-  background: var(--secondary-soft);
-  color: var(--secondary-ink);
-}
-
-.chip[data-kind='tertiary'] {
-  background: var(--tertiary-soft);
-  color: var(--tertiary-ink);
 }
 
 .title {
@@ -124,16 +104,6 @@
 
 :host(.featured) .link:hover {
   color: var(--ink-accent);
-}
-
-:host(.featured) .chip {
-  background: color-mix(in srgb, var(--ink) 75%, transparent);
-  color: var(--ink-accent);
-}
-
-/* Only the accent kind is yellow on the dark tile; the other kinds read as plain light text, since the tinted colours are not made for a dark fill in both themes. */
-:host(.featured) .chip:not([data-kind='accent']) {
-  color: var(--on-ink);
 }
 
 .art {

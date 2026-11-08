@@ -27,6 +27,7 @@ const TIERS: TierRowView[] = [
   template: `
     <app-tier-rows id="plain" [tiers]="tiers" />
     <app-tier-rows id="linked" [tiers]="tiers" [linkHeroes]="true" [headingLevel]="3" />
+    <app-tier-rows id="art" [tiers]="tiers" [linkHeroes]="true" artLed />
   `,
 })
 class HostComponent {
@@ -63,6 +64,14 @@ describe('TierRowsComponent', () => {
   it('leaves the hero tiles unlinked unless asked to link them', () => {
     expect(rows('plain').querySelector('a')).toBeNull();
     expect(rows('linked').querySelector('a')?.getAttribute('href')).toBe('/heroes/storm');
+  });
+
+  it('draws plain hero tiles unless asked for the art-led look, tinted by the hero role', () => {
+    expect(rows('plain').querySelector('app-hero-tile')?.classList).not.toContain('art-led');
+    const tile = rows('art').querySelector('app-hero-tile');
+
+    expect(tile?.classList).toContain('art-led');
+    expect(tile?.getAttribute('data-role')).toBe('duelist');
   });
 
   it('draws each row heading at the level the page asks for', () => {

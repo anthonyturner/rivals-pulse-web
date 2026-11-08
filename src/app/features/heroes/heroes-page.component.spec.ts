@@ -146,7 +146,8 @@ describe('HeroesPageComponent videos in hero tabs', () => {
           useValue: {
             getHeroRoster: () =>
               of([hero('mantis', 'Mantis', 'Strategist'), hero('luna', 'Luna', 'Strategist')]),
-            getHeroVideos: () => of([]),
+            getHeroVideos: () =>
+              of([{ heroId: 'luna', videoType: 'paz-gameplay', youtubeId: 'lunaPaz', title: 'Luna PAZ' }]),
           },
         },
         { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
@@ -185,34 +186,36 @@ describe('HeroesPageComponent videos in hero tabs', () => {
     expect(content.template()).toBeNull();
   });
 
-  it('keeps the same player address object for a video heroes of one role share, so the player does not reload', async () => {
-    const before = page.selectedHeroVideos()[0];
+  it('gives a single video its YouTube id, for the player to load on a click', () => {
+    const [video] = page.selectedHeroVideos();
 
-    await harness.navigateByUrl('/heroes/luna');
-
-    expect(page.selectedHero()?.name).toBe('Luna');
-    expect(page.selectedHeroVideos()[0].player).toBe(before.player);
+    expect(video.url).toBe(`https://www.youtube.com/watch?v=${video.youtubeId}`);
+    expect(video.youtubeId).toMatch(/^[\w-]+$/);
   });
 
-  it('gives a single video a thumbnail from YouTube and a player on the privacy-enhanced host that autoplays', () => {
-    const player = page.selectedHeroVideos()[0].player;
-    const embed = TestBed.inject(DomSanitizer).sanitize(
-      SecurityContext.RESOURCE_URL,
-      player?.embedUrl ?? null,
-    );
-    const id = player?.thumbnailUrl.match(
-      /^https:\/\/i\.ytimg\.com\/vi\/([\w-]+)\/hqdefault\.jpg$/,
-    )?.[1];
+  it('gives the poster a muted, looping backdrop of the hero\'s own PAZ gameplay video', async () => {
+    await harness.navigateByUrl('/heroes/luna');
 
-    expect(id).toBeTruthy();
-    expect(embed).toBe(`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`);
+    const backdrop = TestBed.inject(DomSanitizer).sanitize(
+      SecurityContext.RESOURCE_URL,
+      page.selectedHeroPosterVideoUrl(),
+    );
+
+    expect(backdrop).toBe(
+      'https://www.youtube-nocookie.com/embed/lunaPaz?autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=lunaPaz&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3',
+    );
+  });
+
+  it('gives the poster no backdrop video when the hero has no PAZ gameplay video of their own', () => {
+    expect(page.selectedHeroPosterVideoUrl()).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.backdrop-controls')).toBeNull();
   });
 
   it('gives a video that is only a YouTube search link no player', () => {
     const [, gameplay] = page.selectedHeroVideos();
 
     expect(gameplay.url).toContain('youtube.com/results');
-    expect(gameplay.player).toBeUndefined();
+    expect(gameplay.youtubeId).toBeUndefined();
   });
 });
 

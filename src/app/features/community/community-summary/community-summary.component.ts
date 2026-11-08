@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
+import { KindChipComponent } from '../../hub/kind-chip/kind-chip.component';
 
 export interface CommunitySummaryLink {
   label: string;
@@ -24,7 +25,7 @@ export const MY_STATS_LINK: CommunitySummaryLink = { label: 'See your own matche
  */
 @Component({
   selector: 'app-community-summary',
-  imports: [NoticeComponent, RouterLink, StatePanelComponent],
+  imports: [KindChipComponent, NoticeComponent, RouterLink, StatePanelComponent],
   templateUrl: './community-summary.component.html',
   styleUrl: './community-summary.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

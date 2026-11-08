@@ -13,6 +13,7 @@ import { HeroBuildSignalsComponent } from '../hero-build-signals/hero-build-sign
 import { HeroCommunityCountersComponent } from '../hero-community-counters/hero-community-counters.component';
 import { HeroCommunityStatsComponent } from '../hero-community-stats/hero-community-stats.component';
 import { HeroKillFeedComponent } from '../hero-kill-feed/hero-kill-feed.component';
+import { HeroPosterBackdropComponent } from '../hero-poster-backdrop/hero-poster-backdrop.component';
 import { HeroVideosComponent } from '../hero-videos/hero-videos.component';
 import { Hero, HeroAbilityTechnicalDetail, HeroRole } from '../hero.model';
 import type { HeroesPageComponent } from '../heroes-page.component';
@@ -55,6 +56,7 @@ interface HeroBanner {
     HeroCommunityCountersComponent,
     HeroCommunityStatsComponent,
     HeroKillFeedComponent,
+    HeroPosterBackdropComponent,
     HeroVideosComponent,
     RouterLink,
   ],
