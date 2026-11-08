@@ -4,6 +4,17 @@
     description="Your own matches, worked out from what your RivalsPulse desktop app uploaded. Only you can see this page."
   />
 
+  @let tile = lead();
+
+  <app-hub-tile
+    class="lead"
+    [title]="tile.title"
+    [description]="tile.description"
+    [chip]="tile.chip"
+    [imageUrl]="tile.imageUrl"
+    [imageFit]="tile.imageFit"
+  />
+
   @let current = view();
 
   @switch (current.kind) {

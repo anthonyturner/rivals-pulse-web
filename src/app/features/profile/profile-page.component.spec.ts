@@ -17,6 +17,8 @@ describe('ProfilePageComponent', () => {
 
   const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const text = (): string => host().textContent ?? '';
+  const lead = (): HTMLElement => host().querySelector<HTMLElement>('app-hub-tile.lead') as HTMLElement;
+  const leadImage = (): string | null | undefined => lead().querySelector('img')?.getAttribute('src');
 
   async function open(...answers: DashboardResult[]): Promise<void> {
     loadDashboard = jasmine.createSpy('loadDashboard').and.returnValues(...answers.map((a) => Promise.resolve(a)));
@@ -58,11 +60,42 @@ describe('ProfilePageComponent', () => {
     http.expectOne('/api/heroes').flush([]);
   });
 
+  it('shows the generic art, with no hero name or figures, to a signed-out visitor on the way to sign in', async () => {
+    loadDashboard = jasmine.createSpy('loadDashboard').and.returnValue(Promise.resolve({ status: 'signedOut' }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: { loadDashboard } },
+      ],
+    });
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    http = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/heroes').flush([heroOf('storm', 'Storm', 'Duelist')]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(leadImage()).toBe('/images/site/banners/my-stats-banner.webp');
+    expect(lead().classList).toContain('cover');
+    expect(lead().querySelector('app-kind-chip')).toBeNull();
+    expect(lead().textContent).not.toMatch(/Storm|\d/);
+  });
+
   describe('for an account with no link', () => {
     beforeEach(() => open({ status: 'ready', dashboard: { linked: false } }));
 
+    it('shows the generic art, with no hero name or figures', () => {
+      expect(leadImage()).toBe('/images/site/banners/my-stats-banner.webp');
+      expect(lead().querySelector('app-kind-chip')).toBeNull();
+      expect(lead().textContent).not.toMatch(/Storm|Hela|\d/);
+    });
+
     it('explains linking and links to the account page', () => {
-      expect(host().querySelector('h2')?.textContent).toContain('Link the desktop app');
+      expect(host().querySelector('app-state-panel h2')?.textContent).toContain('Link the desktop app');
       expect(text()).toContain('ask it for a link code');
       expect(host().querySelector('a[href="/account"]')).toBeTruthy();
     });
@@ -80,6 +113,13 @@ describe('ProfilePageComponent', () => {
 
   describe('for a linked player with no matches', () => {
     beforeEach(() => open({ status: 'ready', dashboard: emptyDashboard() }));
+
+    it('shows the generic art, with no hero name or figures', () => {
+      expect(leadImage()).toBe('/images/site/banners/my-stats-banner.webp');
+      expect(lead().querySelector('img')?.getAttribute('alt')).toBe('');
+      expect(lead().querySelector('app-kind-chip')).toBeNull();
+      expect(lead().textContent).not.toMatch(/Storm|Hela|\d/);
+    });
 
     it('shows who is linked and says matches appear after the app uploads one', () => {
       expect(host().querySelector('.player-name')?.textContent).toBe('Aurora');
@@ -104,6 +144,12 @@ describe('ProfilePageComponent', () => {
 
   describe('when the stats cannot be read', () => {
     beforeEach(() => open({ status: 'unavailable' }, { status: 'ready', dashboard: linkedDashboard() }));
+
+    it('shows the generic art, with no hero name or figures', () => {
+      expect(leadImage()).toBe('/images/site/banners/my-stats-banner.webp');
+      expect(lead().querySelector('app-kind-chip')).toBeNull();
+      expect(lead().textContent).not.toMatch(/Storm|Hela|\d/);
+    });
 
     it('says so and offers to try again', () => {
       expect(host().querySelector('[role="status"] h2')?.textContent).toContain('unavailable');
@@ -137,6 +183,14 @@ describe('ProfilePageComponent', () => {
 
   describe('for a linked player with matches', () => {
     beforeEach(() => open({ status: 'ready', dashboard: linkedDashboard({ activity: activityOf('Tokyo 2099') }) }));
+
+    it('leads with the most played hero: its portrait, its name and its record', () => {
+      expect(leadImage()).toBe('/images/heroes/storm.png');
+      expect(lead().classList).toContain('portrait');
+      expect(lead().querySelector('h2')?.textContent?.trim()).toBe('Storm');
+      expect(lead().querySelector('app-kind-chip')?.textContent).toContain('Most played');
+      expect(lead().querySelector('.description')?.textContent).toBe('9 matches, 66.7% win rate');
+    });
 
     it('shows the avatar and the in-game name', () => {
       expect(host().querySelector('.player-name')?.textContent).toBe('Aurora');
