@@ -10,7 +10,9 @@
 > ([supabase.md](supabase.md#website-game-stats)).
 >
 > The anonymous hero counts that outlive the purge (hero pairs against and with each other, among them) are
-> Supabase tables too: see [supabase.md](supabase.md#hero-pair-aggregates).
+> Supabase tables too: see [supabase.md](supabase.md#hero-pair-aggregates). So are the triple-support
+> trio counts and the role of each game hero id they depend on: see
+> [Triple-support aggregates](#triple-support-aggregates-supabase) below.
 
 The app uses one shared Turso/libSQL database for curated content and cached external API payloads.
 The mock JSON files under `data/seeds` are seed inputs only; runtime pages read from the Express API backed by Turso.
@@ -96,6 +98,22 @@ Stores one game-stat capture header per UTC hour. The unique `capture_bucket` pr
 
 Stores the per-game values for each snapshot, including current players, 24-hour peak, all-time peak, daily rank, seller rank, review text, and source URL. The Game Stats API joins the latest incoming values with the preceding snapshot to calculate historical deltas.
 
+## Triple-support aggregates (Supabase)
+
+Counts of the teams that ran exactly three Strategists, written by a database job from `participants`
+and kept after the raw rows are purged. Full rules: [supabase.md](supabase.md#triple-support-aggregates).
+RLS is on with no policy; only the service role reads the tables, and the site reads `read_triple_support_trios`.
+
+| Table | Holds |
+| --- | --- |
+| `hero_game_roles` | One row per game hero id: `game_id` (key), `base_game_id` (the hero's own id; Deadpool's three role forms 10571 to 10573 share 1057) and `role` (Vanguard, Duelist or Strategist). Deadpool's role-less base id 1057 and hero id 0 have no row. Seeded by the migration; a new hero needs a row. |
+| `triple_support_trios` | Key: `half_season`, `play_mode_id`, `rank_bucket` (-1 = unknown), and the trio `hero_a <= hero_b <= hero_c` (base game ids). Counts: `matches` (distinct matches), `teams` (team occurrences, so a match where both teams ran it adds two) and `wins`. Only trios with 10 or more matches over the half-season are stored. |
+| `triple_support_totals` | Key: `half_season`, `play_mode_id`, `rank_bucket`. `matches`, `decided_matches`, `recorders` and `top_recorder_matches` (numbers only, for the recorder gate) and the team counts of matches with a result: `classified_teams` (every hero's role known: a trio's denominator), `unclassified_teams` (a hero with no role: id 0, 1057, an unknown id) and `four_plus_teams` (classified, four or more Strategists, counted as a shape only). |
+| `triple_support_aggregate_half_seasons` | Which half-seasons were built, when, and when frozen by the purge. |
+
+No table holds a uid, name, fingerprint or recorder. `hero_id` in `participants` is the hero each
+player ended the match on, so a trio is the heroes the team finished on.
+
 ## API Routes
 
 The Express SSR server exposes read-only routes:
@@ -108,6 +126,7 @@ The Express SSR server exposes read-only routes:
 - `GET /api/glossary`
 - `GET /api/external-sources/:sourceKey`
 - `GET /api/game-stats`
+- `GET /api/triple-support-trios`
 - `GET /api/sync/game-stats` (cron or authorized manual sync)
 
 ## Update Flow
