@@ -1,4 +1,4 @@
--- Proves the team line-up rules (migration 20261107140000) on fixture matches in a half-season that
+-- Proves the team line-up rules (migrations 20261107140000 and 20261108140000) on fixture matches in a half-season that
 -- does not exist, then rolls everything back. Run after applying the migration:
 --   npx supabase db query --linked -f supabase/checks/team_lineup_shapes.sql
 -- It fails with an exception naming the rule that broke; it ends with a rollback, never a commit.
@@ -133,7 +133,7 @@ begin
   end if;
 
   -- The reader: 2-2-2 sits exactly on the minimum and 1-2-3 is over it, so both carry their counts;
-  -- 3-2-1, one under it, is "not enough data".
+  -- 3-2-1, one under it, is "not enough data": its team count comes back, its wins do not.
   select count(*) into listed from public.read_team_lineup_shapes(array[1]::smallint[]) where half_season = 995;
   if listed <> 3 then
     raise exception 'the reader must list every stored shape, thin ones included, got %', listed;
@@ -148,8 +148,8 @@ begin
 
   select * into read_back from public.read_team_lineup_shapes(array[1]::smallint[])
     where half_season = 995 and vanguards = 3 and duelists = 2 and strategists = 1;
-  if not found or read_back.enough_data or read_back.teams is not null or read_back.wins is not null then
-    raise exception 'a shape under the minimum must be withheld: %', read_back;
+  if not found or read_back.enough_data or read_back.teams <> m - 1 or read_back.wins is not null then
+    raise exception 'a shape under the minimum must carry its team count and no wins: %', read_back;
   end if;
 
   if exists (select 1 from public.read_team_lineup_shapes(array[0, 2, 3]::smallint[]) where half_season = 995) then

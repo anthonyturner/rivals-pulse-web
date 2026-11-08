@@ -7,6 +7,32 @@ work: issue 100 (the move to Supabase); this feed is its public read contract.
 
 Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 
+## What a figure waits on
+
+A figure that is not shown yet waits on a minimum, and a reader can draw "N of M"
+progress when the file states both. Every number here is a count, never who made it,
+and a field a file does not carry means "no progress to show": fall back to plain copy.
+
+| File | Minimum it states | Count so far for a figure below it |
+| --- | --- | --- |
+| `hero-stats.json` | `minimumMatches` | `appearances` on a cell with `enoughData: false` |
+| `tier-list.json` and `tier-list/seasons/<id>.json` | `minimumMatches` on each rank snapshot | `matches` on each `belowMinimum` row, always present |
+| `community-stats.json` | `minimumMatches`, `minimumPlayers` | none: a pair below the minimum is left out, not listed |
+| `hero-scores.json` | `minimums`, and `qualifiedHeroes` for how many heroes pass | `matches` (in steps of 5) and `contributors` on a stat that is `collecting` |
+| `team-lineups.json` | `minimumTeams`, `minimumPlayers` | `teams` on a shape with status `not-enough-data` |
+
+**What is not published, and why.** Hero stats, the tier list and the hero pairs are
+held back by a match minimum alone: the database counts no players behind a hero's
+cell, so there is no `minimumPlayers` or per-hero `players` in `hero-stats.json` or
+the tier list, and no per-shape `players` in `team-lineups.json`. The site records no
+bans at all, so there is no `minimumBanMatches` or `banMatches`. A reader must not
+infer a rule from a field that is missing.
+
+**Own games.** `hero-scores.json` rounds a below-minimum `matches` down to a multiple of
+5 because that count is one player's own lines on a hero. The other counts are scoreboard
+lines or teams across everyone in the matches, so they are exact. A new count that
+measures one player's own games must follow the same rounding.
+
 ## Files
 
 | File | Holds |
@@ -72,6 +98,7 @@ season and downloads an older one only when a player picks it.
         "99": {
           "tiers": [{ "name": "S", "heroes": [{ "heroId": 1042, "winRate": 60.85, "pickRate": 7.14, "matches": 140, "wins": 85 }] }],
           "matchesCounted": 1500,
+          "minimumMatches": 10,
           "belowMinimum": [{ "heroId": 1016, "matches": 4 }]
         }
       }
@@ -115,11 +142,16 @@ season has a file too, so a client can treat every season the same way.
   `heroes.json` (next section). A hero in the tier list that no `gameId` in
   `heroes.json` matches is published all the same, with a warning on the
   workflow run.
-- **A rank snapshot is** `{ tiers, matchesCounted?, belowMinimum?, fallbackFromSeasonId? }`.
+- **A rank snapshot is** `{ tiers, matchesCounted?, minimumMatches?, belowMinimum?, fallbackFromSeasonId? }`.
   `tiers` may be empty. `matchesCounted` is the number of matches the numbers
-  are pooled from. `belowMinimum` lists the heroes that have data but too few
-  matches to be placed, as `{ heroId, matches }`; such a hero has no tier, which
-  is not the same as the lowest one. `fallbackFromSeasonId` is set only when the
+  are pooled from. `minimumMatches` is the appearances a hero needs before it is
+  placed (10), so `matches` over `minimumMatches` is a hero's progress; it is a
+  whole number above 0 and absent from a file published before it existed.
+  `belowMinimum` lists the heroes that have data but too few
+  matches to be placed, as `{ heroId, matches }`, with `matches` always present and
+  exact; such a hero has no tier, which
+  is not the same as the lowest one. No name or id is published below the minimum
+  that is not in this list, and the tier list has no player minimum: only matches. `fallbackFromSeasonId` is set only when the
   current season has no placed hero yet and the snapshot holds the previous
   season's numbers instead; it names that previous season.
 - **A season can have no hero at all.** A new half-season starts with too few
@@ -137,8 +169,8 @@ season has a file too, so a client can treat every season the same way.
 - The generator fails, and nothing is published, if a hero-stats answer is
   missing or is for another half-season than asked for, if `currentSeasonId` is
   not a listed season, if a hero row has no integer `heroId` or a non-numeric
-  rate or count, or if a snapshot's `matchesCounted`, `belowMinimum` or
-  `fallbackFromSeasonId` is malformed.
+  rate or count, or if a snapshot's `matchesCounted`, `minimumMatches`,
+  `belowMinimum` or `fallbackFromSeasonId` is malformed.
 
 ### The `hero-stats` data
 
@@ -235,6 +267,7 @@ file** for the half-season shown, listed in the manifest:
 {
   "provenance": "rivals-pulse-community",
   "minimumMatches": 10,
+  "minimumPlayers": 2,
   "priorMatches": 10,
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
@@ -258,7 +291,17 @@ file** for the half-season shown, listed in the manifest:
   (`(wins + priorMatches / 2) / (appearances + priorMatches)`), the rule the
   tier list uses ([src/server/heroes/stats/hero-stats.ts](../src/server/heroes/stats/hero-stats.ts)). `minimumMatches`
   is the decided matches a pair needs before it is listed; a pair with fewer is
-  "not enough data", which is not the same as a pair that lost.
+  "not enough data", which is not the same as a pair that lost. A pair below it is
+  left out, so the file carries no progress count for one.
+- **`minimumPlayers`** is the different players that must have recorded a rank band
+  before it is published (2), the `community_bucket_shown` rule in the database
+  ([src/server/community/community-minimums.ts](../src/server/community/community-minimums.ts) prints it, and a test compares the two).
+  It is a whole number above 0, optional for a file published before it existed.
+  The database applies it to rank bands of 0 or more; the `all` band below is built
+  from matches with no rank, which that rule does not gate, so today it is the number a
+  future rank band will wait on and not a reason the `all` band is short.
+  It is the only key with the word "player" that the generator lets through (here
+  and in `team-lineups.json`), and only as this count.
 - **The season** is as in the tier list: the id is the half-season number times
   two (10 is 20, 10.5 is 21). `currentSeasonId` is the latest half-season whose
   start has passed. `season` is the half-season the counts come from.
@@ -351,6 +394,7 @@ shown, listed in the manifest:
 {
   "provenance": "rivals-pulse-community",
   "minimums": { "matches": 10, "contributors": 2, "busiestContributorShare": 1, "rankedHeroes": 5 },
+  "qualifiedHeroes": { "damage": 1, "sustain": 1, "ultimate": 0, "utility": 0 },
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
   "heroes": [
@@ -379,6 +423,17 @@ shown, listed in the manifest:
   `measures` is present only for `scored` and `ranking-too-small`: a hero below the
   rule carries no figure. `contributors` and `oneContributorAboveHalf` are present
   only while `collecting`. `label` is fixed per stat.
+- **`oneContributorAboveHalf` means "above the published `busiestContributorShare`".**
+  The key keeps its name from when the limit was half. It is true only while one
+  player holds more than `minimums.busiestContributorShare` of the lines, so it is
+  false whenever that share is 1 (no limit), and a reader must not say "more than
+  half" unless the share is 0.5. The database decides it
+  (`community_max_recorder_share_percent()` in `read_community_hero_scores`).
+- **`qualifiedHeroes`** is, for each stat, how many heroes pass the rule: those whose
+  stat is `scored` or `ranking-too-small`. Compared with `minimums.rankedHeroes` it is
+  the progress toward a ranking ("2 of 5 heroes"). It counts every hero the API
+  answered, including one with no `gameId` that the file leaves out. It is optional for a
+  file published before it existed, and each count is a whole number of 0 or more.
 - **`matches`** is lines (one player on one hero in one match), so two uploaders in
   one lobby count twice. While `collecting` it is rounded down to a multiple of 5, and
   the generator refuses anything else, because an exact count could be one person's own
@@ -392,7 +447,8 @@ shown, listed in the manifest:
   refuses a file, hero, stat, measure or ability with any other, a key naming
   something private, a score off the scale or below the minimum matches, a stat below
   the rule carrying a figure, and a stat with the wrong label. The word `player` in a
-  key refuses the build, which is why this file says `contributors`. It holds no
+  key refuses the build, which is why this file says `contributors` (the one
+  exception is the count `minimumPlayers`, in `community-stats.json` and `team-lineups.json`). It holds no
   player-level data: no names, uids, teams, matches or per-match rows, and no sum.
 - **No shipped overlay reads it.** The overlay reads the manifest entries it asks for
   by name and skips the rest, as it already does for `hero-stats.json`. Nothing here
@@ -417,6 +473,7 @@ is **one file** for the half-season shown, listed in the manifest:
   "provenance": "rivals-pulse-community",
   "status": "ready",
   "minimumTeams": 50,
+  "minimumPlayers": 2,
   "mode": "competitive",
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
@@ -424,7 +481,7 @@ is **one file** for the half-season shown, listed in the manifest:
   "unclassifiedTeams": 2,
   "shapes": [
     { "shape": "2-2-2", "vanguards": 2, "duelists": 2, "strategists": 2, "status": "ready", "teams": 67, "wins": 37 },
-    { "shape": "1-2-3", "vanguards": 1, "duelists": 2, "strategists": 3, "status": "not-enough-data", "teams": null, "wins": null }
+    { "shape": "1-2-3", "vanguards": 1, "duelists": 2, "strategists": 3, "status": "not-enough-data", "teams": 12, "wins": null }
   ]
 }
 ```
@@ -441,18 +498,24 @@ is **one file** for the half-season shown, listed in the manifest:
   denominator of the pick rate. **`unclassifiedTeams`** is the teams left out of
   every shape because a hero's role is not known (no hero recorded, an unknown
   id, Deadpool's role-less base form).
-- **A shape under `minimumTeams` is "not enough data" and carries no count.** Its
-  `status` is `not-enough-data` and its `teams` and `wins` are `null`. The shape
-  is still listed, so a reader knows it was seen, but the file states no count
-  for it, because a handful of teams could be one person's own games. The counts
-  of the other shapes and `classifiedTeams` are published, so when exactly one
-  shape is under the minimum a reader can work its count out by subtraction; that
-  gives away nothing `GET /api/team-lineups` does not. The generator refuses a
-  file in which such a shape has a count, whose `minimumTeams` is below 50 (the
+- **A shape under `minimumTeams` is "not enough data" and carries only its team count.**
+  Its `status` is `not-enough-data`, its `teams` is the teams counted so far (a whole
+  number above 0 and under `minimumTeams`, so `teams` over `minimumTeams` is its
+  progress) and its `wins` is `null`, so no win rate can be worked out for a handful
+  of teams. `teams` is `null` when the database did not report a count, which is
+  what the file carried before the database released it. The shape is listed, and no
+  name, id or hero is published for it, only the count. The generator refuses a
+  file in which such a shape has wins, a `teams` that is not under the minimum
+  or is above `classifiedTeams`, whose `minimumTeams` is below 50 (the
   site's own rule, held apart from what the API reports), or in which a `ready`
   shape has fewer than `minimumTeams` teams or more wins than teams. The top-level
   `status` is `ready` when at least one shape is, and `not-enough-data`
   otherwise, which is a designed state, not an error.
+- **`minimumPlayers`** is the different players that must have recorded a rank band
+  before it is published (2), as in `community-stats`: the same database rule, the same
+  caveat that the matches with no rank, which is every match today, are not gated by
+  it, and the same optional, whole-number-above-0 value. There is no per-shape player
+  count: the database counts players behind a rank band, not behind a shape.
 - **`mode`** is the mode the counts use. `GET /api/team-lineups` counts
   **Competitive** when it is asked for no mode, because line-ups are a ranked-play
   question, and the generator takes that default; this differs from
@@ -625,7 +688,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, team line-ups with one shape that has enough data and one that has not, three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, team line-ups with one shape that has enough data and one that has not (and its team count so far), three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated

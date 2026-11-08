@@ -340,8 +340,8 @@ function withoutNumber(
 /**
  * Match counts arrive in steps of 5 while a hero is below the rule, so an exact count never shows.
  * One busy player can hold a hero back past both minimums, so the counts stop at each minimum. The
- * busiest player is only named as the reason while the minimums cap a player's share, and once there are
- * enough players for it to be one.
+ * busiest player is only named as the reason while the minimums cap a player's share, once there are
+ * enough players for it to be one, and by the share the minimums publish (the flag means "above that share").
  */
 function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores): string {
   const { matches, contributors, busiestContributorShare } = answer.minimums;
@@ -355,7 +355,7 @@ function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores):
   const progress = `${matchesSoFar} of ${matches} matches, ${playersSoFar} of ${contributors} players`;
 
   return busiestContributorShare < 1 && stat?.oneContributorAboveHalf && (stat.contributors ?? 0) >= contributors
-    ? `${progress}. One player has more than half of these matches, so it needs more players.`
+    ? `${progress}. One player has more than ${shareLabel(busiestContributorShare)} of these matches, so it needs more players.`
     : progress;
 }
 
