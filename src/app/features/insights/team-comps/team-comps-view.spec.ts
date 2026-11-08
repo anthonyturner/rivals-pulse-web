@@ -1,8 +1,10 @@
 import type { HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
 import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
+import type { TeamLineups } from '../../../../contracts/team-lineups.model';
 import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import type { HeroIdentities } from '../hero-identity';
 import { synergiesOf, synergy } from '../hero-synergies.fixtures';
+import { lineupShape, lineupsOf } from '../team-lineups.fixtures';
 import { triosOf } from '../triple-support-trios.fixtures';
 import { PAIRS_PER_ROLE, buildTeamCompsView as buildView } from './team-comps-view';
 
@@ -10,7 +12,8 @@ const buildTeamCompsView = (
   synergies: HeroSynergies,
   identities: HeroIdentities,
   trios: TripleSupportTrios | null = triosOf([]),
-) => buildView(synergies, trios, identities);
+  lineups: TeamLineups | null = lineupsOf([]),
+) => buildView(synergies, trios, lineups, identities);
 
 const identities: HeroIdentities = new Map([
   ['hulk', { name: 'Hulk', role: 'Vanguard', imageUrl: '/images/heroes/hulk.png' }],
@@ -119,10 +122,18 @@ describe('buildTeamCompsView sections and labels', () => {
     endsAt,
   });
 
-  it('keeps the line-up section pending until line-ups are counted', () => {
-    const view = buildTeamCompsView(synergiesOf([synergy('hulk', 'thor', 8, 12)]), identities);
+  it('builds the line-up section from the line-ups, and says so when they could not be loaded', () => {
+    const pairs = synergiesOf([synergy('hulk', 'thor', 8, 12)]);
+    const ready = buildTeamCompsView(pairs, identities, triosOf([]), lineupsOf([lineupShape(2, 2, 2, 600, 330)]));
 
-    expect(view.lineups).toEqual({ state: 'not-enough-data' });
+    expect(ready.lineups.state).toBe('ready');
+    expect(buildTeamCompsView(pairs, identities).lineups).toEqual({
+      state: 'not-enough-data',
+      notice: null,
+      minimumLabel: '50 teams',
+    });
+    expect(buildTeamCompsView(pairs, identities, triosOf([]), null).lineups).toEqual({ state: 'unavailable' });
+    expect(buildTeamCompsView(pairs, identities, triosOf([]), null).lineupsNote).toBeNull();
   });
 
   it('says what is counted in the toolbar, with the minimum', () => {

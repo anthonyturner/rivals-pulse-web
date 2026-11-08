@@ -3,12 +3,18 @@ import { DEFAULT_MODE_ID } from '../../shared/utilities/play-modes';
 
 /**
  * The query values that pick a half-season and a mode on the hero-stats family of endpoints. The
- * default blend is asked for with no `mode`, so it shares the default request's cached answer.
+ * mode an endpoint counts when asked for none (`defaultMode`: the blend, except for the line-ups,
+ * which open on Competitive) is asked for with no `mode`, so it shares the default request's cached
+ * answer. Any other mode is always named, so the blend is never mistaken for a default it is not.
  */
-export function statsQueryParams(halfSeason?: number, mode?: HeroStatsModeId): Record<string, number | string> {
+export function statsQueryParams(
+  halfSeason?: number,
+  mode?: HeroStatsModeId,
+  defaultMode: HeroStatsModeId = DEFAULT_MODE_ID,
+): Record<string, number | string> {
   return {
     ...(halfSeason === undefined ? {} : { halfSeason }),
-    ...(mode === undefined || mode === DEFAULT_MODE_ID ? {} : { mode }),
+    ...(mode === undefined || mode === defaultMode ? {} : { mode }),
   };
 }
 

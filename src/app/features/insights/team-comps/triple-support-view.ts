@@ -1,7 +1,7 @@
 import type { TripleSupportTrio, TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
-import { nonDefaultModeLabel } from '../../../shared/utilities/play-modes';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { countLabel, percentLabel } from '../../../shared/utilities/stat-labels';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
+import { sectionSeasonNotice } from './section-season-notice';
 
 /** Trios listed per variant, so each card stays a short read. */
 export const TRIOS_PER_VARIANT = 5;
@@ -67,7 +67,7 @@ export function buildTripleSupportView(
     return { state: 'unavailable' };
   }
 
-  const notice = noticeOf(trios, shownSeasonId);
+  const notice = sectionSeasonNotice('Triple supports', trios, shownSeasonId);
   const minimumLabel = countLabel(trios.minimumMatches, 'match', 'matches');
   const variants = variantsOf(trios.trios, identities);
 
@@ -135,16 +135,4 @@ function quadSupportOf(trios: TripleSupportTrios): QuadSupportView | null {
         label: `${trios.fourPlusTeams} of ${countLabel(trios.classifiedTeams, 'team', 'teams')} (${percentLabel((trios.fourPlusTeams / trios.classifiedTeams) * 100)})`,
       }
     : null;
-}
-
-function noticeOf(trios: TripleSupportTrios, shownSeasonId: number | null): string | null {
-  const season = trios.halfSeason;
-
-  if (season === null || shownSeasonId === null || season.id === shownSeasonId) {
-    return null;
-  }
-
-  return trios.inPlaceOf === null
-    ? `Triple supports are ${season.label}'s numbers.`
-    : halfSeasonFallbackNotice(trios.inPlaceOf.label, season.label, nonDefaultModeLabel(trios));
 }

@@ -6,10 +6,12 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
+import type { TeamLineups } from '../../../../contracts/team-lineups.model';
 import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import type { Hero } from '../../heroes/hero.model';
 import { heroOf, season } from '../hero-matchup.fixtures';
 import { synergiesOf, synergy } from '../hero-synergies.fixtures';
+import { lineupShape, lineupsOf, thinShape } from '../team-lineups.fixtures';
 import { trio, triosOf } from '../triple-support-trios.fixtures';
 import { TeamCompsPageComponent } from './team-comps-page.component';
 
@@ -43,15 +45,33 @@ describe('TeamCompsPageComponent', () => {
 
   let harness: RouterTestingHarness;
 
-  /** Answers the pair and trio requests for `query` (the page opens on Competitive), and returns what it drew. */
+  /**
+   * The pair and trio endpoints open on the blend and the line-ups endpoint on Competitive, so each
+   * request leaves out its own default: a query with no mode is the blend, which the line-ups name.
+   */
+  function lineupsUrl(query: string): string {
+    const params = new URLSearchParams(query);
+
+    if (params.get('mode') === 'competitive') {
+      params.delete('mode');
+    } else if (!params.has('mode')) {
+      params.set('mode', 'all');
+    }
+
+    return params.size === 0 ? '/api/team-lineups' : `/api/team-lineups?${params}`;
+  }
+
+  /** Answers the pair, trio and line-up requests for `query` (the page opens on Competitive), and returns what it drew. */
   function answer(
     synergies: HeroSynergies | 'failure',
     trios: TripleSupportTrios | 'failure',
     query = '?mode=competitive',
+    lineups: TeamLineups | 'failure' = lineupsOf([]),
   ): HTMLElement {
     for (const [url, body] of [
       [`/api/hero-synergies${query}`, synergies],
       [`/api/triple-support-trios${query}`, trios],
+      [lineupsUrl(query), lineups],
     ] as const) {
       const request = http.expectOne(url);
 
@@ -77,13 +97,14 @@ describe('TeamCompsPageComponent', () => {
     synergies: HeroSynergies | 'failure',
     roster: Hero[] = ROSTER,
     trios: TripleSupportTrios | 'failure' = triosOf([]),
+    lineups: TeamLineups | 'failure' = lineupsOf([]),
   ): Promise<HTMLElement> {
     harness = await RouterTestingHarness.create();
 
     await harness.navigateByUrl('/team-comps');
     http.expectOne('/api/heroes').flush(roster);
 
-    return answer(synergies, trios);
+    return answer(synergies, trios, '?mode=competitive', lineups);
   }
 
   const text = (element: HTMLElement, selector: string): string[] =>
@@ -102,6 +123,7 @@ describe('TeamCompsPageComponent', () => {
     http.expectOne('/api/heroes');
     http.expectOne('/api/hero-synergies?mode=competitive');
     http.expectOne('/api/triple-support-trios?mode=competitive');
+    http.expectOne('/api/team-lineups');
   });
 
   it('draws one table per role with its pairs, matches together and win rate', async () => {
@@ -188,6 +210,7 @@ describe('TeamCompsPageComponent', () => {
     http.expectOne('/api/heroes').flush('down', { status: 500, statusText: 'Server Error' });
     http.expectOne('/api/hero-synergies?mode=competitive').flush(synergiesOf([synergy('hulk', 'thor', 9, 12)]));
     http.expectOne('/api/triple-support-trios?mode=competitive').flush(triosOf([]));
+    http.expectOne('/api/team-lineups').flush(lineupsOf([]));
     harness.detectChanges();
 
     const element = harness.routeNativeElement as HTMLElement;
@@ -248,6 +271,132 @@ describe('TeamCompsPageComponent', () => {
       expect(element.querySelectorAll('section')[0].querySelector('table')).not.toBeNull();
       expect(text(element, 'app-state-panel h3')[0]).toBe('Triple supports could not be loaded');
       expect(element.textContent).not.toContain('Team comps could not be loaded');
+    });
+  });
+
+  describe('the line-ups', () => {
+    const PAIRS = synergiesOf([synergy('hulk', 'thor', 9, 12)]);
+    const LINEUPS = lineupsOf(
+      [
+        lineupShape(1, 2, 3, 250, 100),
+        lineupShape(2, 2, 2, 600, 330),
+        thinShape(3, 2, 1),
+        thinShape(1, 1, 4),
+      ],
+      { classifiedTeams: 1000, unclassifiedTeams: 12 },
+    );
+
+    async function lineupsSection(lineups: TeamLineups | 'failure' = LINEUPS): Promise<HTMLElement> {
+      const element = await open(PAIRS, ROSTER, triosOf([]), lineups);
+
+      return element.querySelectorAll('section')[2] as HTMLElement;
+    }
+
+    it('draws one table of line-ups with their pick rate, win rate and teams, most played first', async () => {
+      const section = await lineupsSection();
+      const table = section.querySelector('table') as HTMLTableElement;
+
+      expect(text(table, 'thead th')).toEqual(['Line-up', 'Pick rate', 'Win rate', 'Teams']);
+      expect(text(table, 'tbody th .shape')).toEqual(['2-2-2', '1-2-3', '3-2-1', '1-1-4']);
+      expect(text(table, 'tbody th .shape-caption')).toEqual([
+        '2 tanks · 2 DPS · 2 supports',
+        '1 tank · 2 DPS · 3 supports',
+        '3 tanks · 2 DPS · 1 support',
+        '1 tank · 1 DPS · 4 supports',
+      ]);
+      expect(text(table, 'tbody tr:nth-child(1) td')).toEqual(['60.0%', '55.0%', '600']);
+      expect(text(table, 'tbody tr:nth-child(2) td')).toEqual(['25.0%', '40.0%', '250']);
+      expect(table.getAttribute('aria-labelledby')).toBe('lineups-title');
+      expect(section.querySelector('#lineups-title')?.textContent).toBe('Line-ups');
+    });
+
+    it('lists a thin line-up as "Not enough data yet" with no figures', async () => {
+      const section = await lineupsSection();
+      const thin = Array.from(section.querySelectorAll('tbody tr')).slice(2);
+
+      expect(thin.length).toBe(2);
+
+      for (const row of thin) {
+        expect(text(row as HTMLElement, 'td')).toEqual(['Not enough data yet']);
+        expect(row.querySelector('td')?.getAttribute('colspan')).toBe('3');
+        expect(row.textContent).not.toContain('%');
+      }
+    });
+
+    it('names the triple and quad supports in words, not by colour alone', async () => {
+      const section = await lineupsSection();
+
+      expect(text(section, '.support-badge')).toEqual(['Triple support', 'Quad support']);
+    });
+
+    it('reads each line-up aloud as its tanks, DPS and supports, hiding the dashes', async () => {
+      const section = await lineupsSection();
+      const first = section.querySelector('tbody th') as HTMLElement;
+
+      expect(text(first, '.visually-hidden')).toEqual(['2 tanks, 2 DPS and 2 supports']);
+      expect(first.querySelector('.shape')?.getAttribute('aria-hidden')).toBe('true');
+      expect(first.querySelector('.shape-caption')?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('links to the Triple supports section from the introduction', async () => {
+      const section = await lineupsSection();
+      const link = section.querySelector('.section-heading a');
+
+      expect(link?.textContent).toBe('Triple supports');
+      expect(link?.getAttribute('href')).toBe('/team-comps#triple-title');
+      expect(section.ownerDocument.getElementById('triple-title')?.textContent).toBe('Triple supports');
+    });
+
+    it('says how many teams are left out in the method note', async () => {
+      const element = await open(PAIRS, ROSTER, triosOf([]), LINEUPS);
+      const note = element.querySelector('.method-note')?.textContent?.replace(/\s+/g, ' ') ?? '';
+
+      expect(note).toContain('Line-up pick rates are out of the 1000 teams whose heroes all have a known role.');
+      expect(note).toContain('12 teams had a hero no role is known for');
+    });
+
+    it('says "Not enough data yet" with the minimum when no line-up has reached it', async () => {
+      const section = await lineupsSection(lineupsOf([thinShape(2, 2, 2)]));
+
+      expect(section.querySelector('table')).toBeNull();
+      expect(text(section, 'app-state-panel h3')).toEqual(['Not enough data yet']);
+      expect(section.querySelector('app-state-panel')?.textContent).toContain('No line-up has reached 50 teams in Competitive for Season 10.5');
+    });
+
+    it('names its own half-season when it is not the one the rest of the page shows', async () => {
+      const section = await lineupsSection(
+        lineupsOf([lineupShape(2, 2, 2, 600, 330)], { halfSeason: season(10), inPlaceOf: season(10.5) }),
+      );
+
+      expect(section.querySelector('app-notice')?.textContent).toContain('Season 10.5 does not have enough Competitive data yet');
+    });
+
+    it('says the line-ups could not be loaded without hiding the duos or the triple supports', async () => {
+      const element = await open(PAIRS, ROSTER, triosOf([]), 'failure');
+      const sections = element.querySelectorAll('section');
+
+      expect(sections[0].querySelector('table')).not.toBeNull();
+      expect(text(sections[2] as HTMLElement, 'app-state-panel h3')).toEqual(['Line-ups could not be loaded']);
+      expect(element.textContent).not.toContain('Team comps could not be loaded');
+      expect(element.querySelector('.method-note')?.textContent).not.toContain('Line-up pick rates');
+    });
+
+    it('asks for the mode picked, naming the Quick Match and Competitive blend rather than leaving it out', async () => {
+      const element = await open(PAIRS);
+      const mode = element.querySelectorAll('.toolbar select')[0] as HTMLSelectElement;
+
+      mode.value = 'all';
+      mode.dispatchEvent(new Event('change'));
+      harness.detectChanges();
+
+      const picked = answer(
+        synergiesOf([synergy('hulk', 'thor', 3, 12)], { mode: 'all' }),
+        triosOf([], { mode: 'all' }),
+        '',
+        lineupsOf([lineupShape(2, 2, 2, 600, 330)], { mode: 'all' }),
+      );
+
+      expect(text(picked, 'section:nth-of-type(3) tbody th .shape')).toEqual(['2-2-2']);
     });
   });
 

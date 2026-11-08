@@ -1,6 +1,12 @@
 import type { TeamLineupShape, TeamLineups } from '../../../contracts/team-lineups.model.ts';
-import { PLAY_MODE_IDS } from '../../../contracts/play-modes.ts';
-import { chooseHalfSeason, halfSeasonTimeline, type HeroStatsSource } from '../stats/hero-stats.ts';
+import type { HeroStatsModeId } from '../../../contracts/hero-stats.model.ts';
+import {
+  chooseHalfSeason,
+  halfSeasonTimeline,
+  modesOf,
+  playModeFromQuery,
+  type HeroStatsSource,
+} from '../stats/hero-stats.ts';
 
 /**
  * Every team line-up figure on the site is derived here, from the counts in `team_lineup_shapes` and
@@ -14,8 +20,11 @@ import { chooseHalfSeason, halfSeasonTimeline, type HeroStatsSource } from '../s
  */
 export const TEAM_LINEUP_MIN_TEAMS = 50;
 
-/** Competitive only (issue 126); a blend with Quick Match would answer a different question. */
-export const TEAM_LINEUP_PLAY_MODE_IDS: readonly number[] = [PLAY_MODE_IDS.competitive];
+/**
+ * The mode counted when none is asked for. Line-ups are a ranked-play question (issue 126), so the
+ * default is Competitive, not the Quick Match blend the other hero endpoints open on.
+ */
+export const TEAM_LINEUP_DEFAULT_MODE_ID: HeroStatsModeId = 'competitive';
 
 /**
  * `rank_bucket` of rows with no rank: every row today. Once buckets of 0 or more exist, -1 means
@@ -54,12 +63,27 @@ interface HalfSeasonSnapshot {
   ready: boolean;
 }
 
+interface DeriveTeamLineupsOptions {
+  now: Date;
+  /**
+   * Derive exactly this half-season, with no fall-back to the previous one. A half-season that has
+   * not started, or that nothing knows, gives the empty state.
+   */
+  halfSeason?: number;
+  /**
+   * The `mode` query value that the rows were read for; see `playModeFromQuery`. None is
+   * Competitive, and a value naming no mode counts nothing.
+   */
+  mode?: string;
+}
+
 export function deriveTeamLineups(
   rows: readonly TeamLineupRow[],
-  source: Pick<HeroStatsSource, 'halfSeasons'>,
-  now: Date,
+  source: Pick<HeroStatsSource, 'halfSeasons' | 'totals'>,
+  options: DeriveTeamLineupsOptions,
 ): TeamLineups {
-  const timeline = halfSeasonTimeline(source.halfSeasons, rows.map((row) => row.halfSeason), now);
+  const timeline = halfSeasonTimeline(source.halfSeasons, rows.map((row) => row.halfSeason), options.now);
+  const mode = playModeFromQuery(options.mode, TEAM_LINEUP_DEFAULT_MODE_ID);
   const snapshots = new Map<number, HalfSeasonSnapshot>();
   const snapshot = (id: number): HalfSeasonSnapshot => {
     let result = snapshots.get(id);
@@ -71,7 +95,7 @@ export function deriveTeamLineups(
 
     return result;
   };
-  const { shown, inPlaceOf } = chooseHalfSeason(timeline, undefined, (id) => snapshot(id).ready);
+  const { shown, inPlaceOf } = chooseHalfSeason(timeline, options.halfSeason, (id) => snapshot(id).ready);
   const counted = shown === undefined ? undefined : snapshot(shown);
 
   return {
@@ -79,6 +103,9 @@ export function deriveTeamLineups(
     minimumTeams: TEAM_LINEUP_MIN_TEAMS,
     halfSeason: shown === undefined ? null : timeline.describe(shown),
     inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
+    halfSeasons: timeline.started.map(timeline.describe),
+    mode: mode?.id ?? null,
+    modes: modesOf(source, shown),
     classifiedTeams: counted?.classifiedTeams ?? 0,
     unclassifiedTeams: counted?.unclassifiedTeams ?? 0,
     shapes: counted?.shapes ?? [],

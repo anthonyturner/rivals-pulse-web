@@ -98,8 +98,8 @@ app.get('/api/triple-support-trios', (req, res) => {
   handleApiResponse(res, () => getTripleSupportTrios(heroStatsQueryFrom(queryReader(req.query))));
 });
 
-app.get('/api/team-lineups', (_req, res) => {
-  handleApiResponse(res, () => getTeamLineups());
+app.get('/api/team-lineups', (req, res) => {
+  handleApiResponse(res, () => getTeamLineups(heroStatsQueryFrom(queryReader(req.query))));
 });
 
 app.get('/api/community/stats', (req, res) => {

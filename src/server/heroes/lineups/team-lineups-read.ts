@@ -1,8 +1,9 @@
 import type { TeamLineups } from '../../../contracts/team-lineups.model.ts';
+import { playModeFromQuery } from '../stats/hero-stats.ts';
 import { readHeroStatsSource } from '../stats/index.ts';
 import {
   deriveTeamLineups,
-  TEAM_LINEUP_PLAY_MODE_IDS,
+  TEAM_LINEUP_DEFAULT_MODE_ID,
   UNKNOWN_RANK_BUCKET,
   type TeamLineupRow,
 } from './team-lineups.ts';
@@ -17,6 +18,10 @@ interface TeamLineupsReadOptions {
   env?: SupabaseReadEnv;
   fetch?: typeof fetch;
   now?: () => Date;
+  /** One exact half-season instead of the current one; see `DeriveTeamLineupsOptions`. */
+  halfSeason?: number;
+  /** The `mode` query value, as `DeriveTeamLineupsOptions` takes it. */
+  mode?: string;
 }
 
 const READ_FUNCTION = 'read_team_lineup_shapes';
@@ -32,11 +37,11 @@ const PAGE_SIZE = 1000;
 /** Only the rows the figures are built from, so the database never has to send the others. */
 const PAGE_FILTERS = { rank_bucket: `eq.${UNKNOWN_RANK_BUCKET}` } as const;
 
-/** Reads the shape counts through `public.read_team_lineup_shapes(smallint[])`. */
+/** Reads the shape counts through `public.read_team_lineup_shapes(smallint[])`, summed over `playModeIds`. */
 export async function fetchTeamLineupRows(
   env: SupabaseReadEnv,
   fetcher: typeof fetch = fetch,
-  playModeIds: readonly number[] = TEAM_LINEUP_PLAY_MODE_IDS,
+  playModeIds: readonly number[],
 ): Promise<TeamLineupRow[]> {
   const body = await callSupabaseFunction(
     'Team line-ups',
@@ -77,16 +82,24 @@ export function parseTeamLineupRows(body: unknown): TeamLineupRow[] {
 }
 
 /**
- * The site's team line-ups. The half-seasons come from the same `read_hero_stats()` answer the hero
- * stats use, so both read the same current half-season. A read function that is not in the database
- * yet is the empty state.
+ * The site's team line-ups, in Competitive unless a `mode` is asked for. The half-seasons come from
+ * the same `read_hero_stats()` answer the hero stats use, so both read the same current half-season.
+ * A read function that is not in the database yet is the empty state, and so is a `mode` that names
+ * no mode: nothing is read for it.
  */
 export async function getTeamLineups(options: TeamLineupsReadOptions = {}): Promise<TeamLineups> {
   const env = options.env ?? process.env;
+  const mode = playModeFromQuery(options.mode, TEAM_LINEUP_DEFAULT_MODE_ID);
   const [rows, source] = await Promise.all([
-    orWhenNotDeployed(fetchTeamLineupRows(env, options.fetch), READ_FUNCTION, []),
+    mode === undefined
+      ? []
+      : orWhenNotDeployed(fetchTeamLineupRows(env, options.fetch, mode.playModeIds), READ_FUNCTION, []),
     readHeroStatsSource(env, options.fetch),
   ]);
 
-  return deriveTeamLineups(rows, source, (options.now ?? (() => new Date()))());
+  return deriveTeamLineups(rows, source, {
+    now: (options.now ?? (() => new Date()))(),
+    halfSeason: options.halfSeason,
+    mode: options.mode,
+  });
 }

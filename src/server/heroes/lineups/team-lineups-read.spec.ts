@@ -26,7 +26,7 @@ function shapeRow(shape: [number, number, number] | null, teams: number | null, 
 
 const statsAnswer = {
   half_seasons: [{ half_season: 10.5, starts_at: '2026-10-09T09:00:00Z' }],
-  totals: [],
+  totals: [{ half_season: 10.5, play_mode_id: 1, decided_matches: 300 }],
   heroes: [],
 };
 
@@ -66,6 +66,10 @@ const ALLOWED_KEYS = new Set([
   'minimumTeams',
   'halfSeason',
   'inPlaceOf',
+  'halfSeasons',
+  'mode',
+  'modes',
+  'decidedMatches',
   'id',
   'label',
   'startsAt',
@@ -105,6 +109,40 @@ describe('getTeamLineups', () => {
     expect([lineups.classifiedTeams, lineups.unclassifiedTeams]).toEqual([1000, 40]);
   });
 
+  it('counts Competitive when no mode is asked for, and reads another mode on its own when it is', async () => {
+    const seen: Seen[] = [];
+    const fetch = answering(bothFunctions, seen);
+    const bodyOfCall = () => JSON.parse(String(seen.filter(({ url }) => url.includes('read_team_lineup_shapes')).at(-1)?.init?.body));
+
+    const byDefault = await getTeamLineups({ ...options, fetch });
+
+    expect(bodyOfCall()).toEqual({ p_play_mode_ids: [1] });
+    expect(byDefault.mode).toBe('competitive');
+
+    const blend = await getTeamLineups({ ...options, mode: 'all', fetch });
+
+    expect(bodyOfCall()).toEqual({ p_play_mode_ids: [0, 1] });
+    expect(blend.mode).toBe('all');
+  });
+
+  it('answers the empty state for a mode that names no mode, without reading the shapes', async () => {
+    const seen: Seen[] = [];
+
+    const lineups = await getTeamLineups({ ...options, mode: 'ranked', fetch: answering(bothFunctions, seen) });
+
+    expect(lineups.status).toBe('not-enough-data');
+    expect(lineups.mode).toBeNull();
+    expect(lineups.shapes).toEqual([]);
+    expect(seen.some(({ url }) => url.includes('read_team_lineup_shapes'))).toBeFalse();
+  });
+
+  it('shows exactly the half-season asked for, with none for one that has not started', async () => {
+    const fetch = answering(bothFunctions);
+
+    expect((await getTeamLineups({ ...options, halfSeason: 10.5, fetch })).halfSeason?.id).toBe(10.5);
+    expect((await getTeamLineups({ ...options, halfSeason: 11, fetch })).halfSeason).toBeNull();
+  });
+
   it('answers the empty state when the database has no shape', async () => {
     const lineups = await getTeamLineups({
       ...options,
@@ -138,7 +176,7 @@ describe('fetchTeamLineupRows', () => {
   it('posts Competitive to the read function with the publishable key, asking only for rows with no rank', async () => {
     const seen: Seen[] = [];
 
-    await fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: [] } }, seen));
+    await fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: [] } }, seen), [1]);
 
     expect(seen[0].url).toBe('https://example.supabase.co/rest/v1/rpc/read_team_lineup_shapes?limit=1000&offset=0&rank_bucket=eq.-1');
     expect(seen[0].init?.method).toBe('POST');
@@ -149,24 +187,24 @@ describe('fetchTeamLineupRows', () => {
   it('refuses a full page rather than reading it as the whole answer', async () => {
     const full = Array.from({ length: 1000 }, (_, index) => shapeRow([index, 0, 0], 300));
 
-    await expectAsync(fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: full } }))).toBeRejectedWithError(
+    await expectAsync(fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: full } }), [1])).toBeRejectedWithError(
       /more than a page/,
     );
   });
 
   it('names every missing variable and never a key value', async () => {
-    await expectAsync(fetchTeamLineupRows({}, answering({}))).toBeRejectedWithError(
+    await expectAsync(fetchTeamLineupRows({}, answering({}), [1])).toBeRejectedWithError(
       'Team line-ups are not configured. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.',
     );
   });
 
   it('rejects an answer that is not the expected shape', async () => {
-    await expectAsync(fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: {} } }))).toBeRejected();
+    await expectAsync(fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: {} } }), [1])).toBeRejected();
     await expectAsync(
-      fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: [{ vanguards: 'x' }] } })),
+      fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: [{ vanguards: 'x' }] } }), [1]),
     ).toBeRejected();
     await expectAsync(
-      fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: [shapeRow([1, 2, 3], 250, { enough_data: 'yes' })] } })),
+      fetchTeamLineupRows(ENV, answering({ read_team_lineup_shapes: { body: [shapeRow([1, 2, 3], 250, { enough_data: 'yes' })] } }), [1]),
     ).toBeRejected();
   });
 });

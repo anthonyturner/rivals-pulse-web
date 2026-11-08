@@ -193,12 +193,75 @@
     <section class="comps-section" aria-labelledby="lineups-title">
       <div class="section-heading">
         <h2 id="lineups-title">Line-ups</h2>
-        <p>How teams split between Vanguards, Duelists and Strategists, such as 2-2-2 or 1-2-3.</p>
+        <p>
+          How teams split between tanks (Vanguards), DPS (Duelists) and supports (Strategists), written
+          in that order: 2-2-2 is 2 tanks, 2 DPS and 2 supports. A line-up with three or more supports
+          is triple or quad support; the trios behind it are in
+          <a [routerLink]="[]" fragment="triple-title">Triple supports</a>.
+        </p>
       </div>
-      @if (v.lineups.state === 'not-enough-data') {
-        <app-state-panel heading="Not enough data yet" [headingLevel]="3">
-          <p>Line-up shapes appear here once RivalsPulse players have recorded enough matches of each.</p>
-        </app-state-panel>
+      @let lineups = v.lineups;
+      @switch (lineups.state) {
+        @case ('unavailable') {
+          <app-state-panel kind="error" heading="Line-ups could not be loaded" [headingLevel]="3" [announce]="false">
+            <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+          </app-state-panel>
+        }
+        @case ('not-enough-data') {
+          @if (lineups.notice; as notice) {
+            <app-notice>{{ notice }}</app-notice>
+          }
+          <app-state-panel heading="Not enough data yet" [headingLevel]="3">
+            <p>
+              No line-up has reached {{ lineups.minimumLabel }} {{ v.scopeLabel }}. Line-ups appear here
+              once RivalsPulse players have recorded enough teams of each.
+            </p>
+          </app-state-panel>
+        }
+        @case ('ready') {
+          @if (lineups.notice; as notice) {
+            <app-notice>{{ notice }}</app-notice>
+          }
+          <div class="card">
+            <table aria-labelledby="lineups-title">
+              <thead>
+                <tr>
+                  <th scope="col">Line-up</th>
+                  <th scope="col" class="col-share">Pick rate</th>
+                  <th scope="col" class="col-rate">Win rate</th>
+                  <th scope="col" class="col-matches">Teams</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of lineups.rows; track row.shape) {
+                  <tr>
+                    <th scope="row">
+                      <span class="lineup">
+                        <span class="shape" aria-hidden="true">{{ row.shape }}</span>
+                        <span class="shape-caption" aria-hidden="true">{{ row.caption }}</span>
+                        <span class="visually-hidden">{{ row.spoken }}</span>
+                        @if (row.supportLabel; as label) {
+                          <span class="support-badge">{{ label }}</span>
+                        }
+                      </span>
+                    </th>
+                    @if (row.figures; as figures) {
+                      <td class="col-share">{{ figures.pickRateLabel }}</td>
+                      <td class="col-rate">{{ figures.winRateLabel }}</td>
+                      <td class="col-matches">{{ figures.teams }}</td>
+                    } @else {
+                      <td class="thin" colspan="3">Not enough data yet</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="empty">
+            Pick rate is the share of teams that ran this line-up. A line-up shows its figures once
+            {{ lineups.minimumLabel }} have run it.
+          </p>
+        }
       }
     </section>
 
@@ -208,7 +271,11 @@
       ranked by win rate pulled toward 50%, so a short run cannot top a list; the rate shown is the
       plain one. A pair is counted once for each team that fields it, so a pair on both teams of one
       match counts twice. Matches without a win or a loss, and matches where the game did not say
-      which mode they were, are left out. <a routerLink="/how-we-count">How we count</a>
+      which mode they were, are left out.
+      @if (v.lineupsNote; as note) {
+        {{ note }}
+      }
+      <a routerLink="/how-we-count">How we count</a>
     </p>
   }
 </div>

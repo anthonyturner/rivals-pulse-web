@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
+import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero-stats.model.ts';
 
 /**
  * One team line-up shape: how many Vanguards, Duelists and Strategists one team ran at the end of a
@@ -25,8 +25,8 @@ export interface TeamLineupShape {
 }
 
 /**
- * The team line-ups in Competitive matches from RivalsPulse app matches only. No player and no hero
- * is named.
+ * The team line-ups in Competitive matches (or the one `mode` asked for) from RivalsPulse app
+ * matches only. No player and no hero is named.
  *
  * `ready` means at least one shape reached `minimumTeams`; `not-enough-data` is a designed state, not
  * an error. A team with a hero no role is known for (no hero recorded, an unknown id) is counted in
@@ -39,6 +39,12 @@ export interface TeamLineups {
   halfSeason: HeroStatsHalfSeason | null;
   /** Set only when `halfSeason` is the previous one, shown while the current one has no shape at the minimum. */
   inPlaceOf: HeroStatsHalfSeason | null;
+  /** Every half-season that has started, oldest first: the seasons a client can ask for. Absent only in an answer the CDN cached before this field existed. */
+  halfSeasons?: HeroStatsHalfSeason[];
+  /** The mode the counts use (Competitive when none was asked for), or null when the request named a mode that does not exist (then nothing is counted). Absent only in an answer the CDN cached before this field existed. */
+  mode?: HeroStatsModeId | null;
+  /** Every mode a client can ask for, counted in the half-season shown. Absent when `mode` is. */
+  modes?: HeroStatsMode[];
   /** Teams in matches with a win or a loss whose heroes all have a known role: the denominator of `pickRate`. */
   classifiedTeams: number;
   /** Teams in those matches with a hero no role is known for. */
