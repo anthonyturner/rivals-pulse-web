@@ -22,6 +22,16 @@ import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../../community/community-minimums
 /** Appearances a hero needs before it is placed in a tier. */
 export const HERO_STATS_MIN_MATCHES = 10;
 
+/**
+ * A hero is placed once it has `HERO_STATS_MIN_MATCHES` appearances and `COMMUNITY_BUCKET_MIN_PLAYERS`
+ * recorders. A hero with no recorder count (a frozen half-season) is placed on the matches alone.
+ * `minimumPlayers` on the response publishes this same constant, so the gate and its published
+ * figure cannot differ.
+ */
+function isPlaced(appearances: number, players: number | undefined): boolean {
+  return appearances >= HERO_STATS_MIN_MATCHES && (players === undefined || players >= COMMUNITY_BUCKET_MIN_PLAYERS);
+}
+
 /** Pseudo-matches at 50% added to a hero's record, so a short run of wins cannot top the list. */
 export const WIN_RATE_PRIOR_MATCHES = 10;
 
@@ -384,11 +394,16 @@ function snapshotOf(
 
   const lines = [...tallies]
     .filter(([, tally]) => tally.appearances > 0)
-    .map(([hero, tally]) => ({ hero, tally, shrunk: shrunkWinRate(tally.wins, tally.appearances) }));
+    .map(([hero, tally]) => ({
+      hero,
+      tally,
+      shrunk: shrunkWinRate(tally.wins, tally.appearances),
+      players: playersBehind(rowsBySlug.get(hero) ?? []),
+    }));
 
   const byTier = new Map<TierName, HeroStatsHero[]>();
   lines
-    .filter(({ tally }) => tally.appearances >= HERO_STATS_MIN_MATCHES)
+    .filter(({ tally, players }) => isPlaced(tally.appearances, players))
     .sort((a, b) => b.shrunk - a.shrunk || b.tally.appearances - a.tally.appearances || a.hero.localeCompare(b.hero))
     .forEach(({ hero, tally, shrunk }) => {
       const tier = tierForShrunkWinRate(shrunk);
@@ -399,12 +414,14 @@ function snapshotOf(
     matchesCounted,
     tiers: TIER_ORDER.filter((name) => byTier.has(name)).map((name) => ({ name, heroes: byTier.get(name) ?? [] })),
     belowMinimum: lines
-      .filter(({ tally }) => tally.appearances < HERO_STATS_MIN_MATCHES)
-      .map(({ hero, tally }): HeroStatsBelowMinimum => {
-        const players = playersBehind(rowsBySlug.get(hero) ?? []);
-
-        return { hero, appearances: tally.appearances, ...(players === undefined ? {} : { players }) };
-      })
+      .filter(({ tally, players }) => !isPlaced(tally.appearances, players))
+      .map(
+        ({ hero, tally, players }): HeroStatsBelowMinimum => ({
+          hero,
+          appearances: tally.appearances,
+          ...(players === undefined ? {} : { players }),
+        }),
+      )
       .sort((a, b) => b.appearances - a.appearances || a.hero.localeCompare(b.hero)),
     excludedGameIds,
   };
