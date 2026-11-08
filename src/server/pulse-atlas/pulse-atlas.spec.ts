@@ -2433,6 +2433,50 @@ describe('the team-lineups dataset', () => {
 
   it('refuses a key naming something private', () => {
     expect(buildWith(teamLineupsData({ playerCount: 3 }))).toThrowError(/playerCount/);
+    expect(buildWith(shapesWith({ ...READY_SHAPE, steamId: 'x' }))).toThrowError(/steamId/);
+  });
+
+  it('refuses a credential-shaped value even when the shape is otherwise sound, by the unsafe-content check on its own', () => {
+    expect(buildWith(teamLineupsData({ season: { id: 21, label: 'sb_secret_abc' } }))).toThrowError(
+      /team-lineups\.season\.label: value looks like a credential/,
+    );
+  });
+
+  it('is gated by the unsafe-content check before a build, so a fallback can be chosen', async () => {
+    const warnings: string[] = [];
+    const input = await resolveTeamLineups({
+      read: async () => ({
+        status: 'ready',
+        minimumTeams: 50,
+        halfSeason: { id: 10.5, label: 'sb_secret_abc' },
+        inPlaceOf: null,
+        mode: 'competitive',
+        classifiedTeams: 110,
+        unclassifiedTeams: 2,
+        shapes: [READY_SHAPE],
+      }),
+      published: [],
+      source: 'live',
+      warn: (warning) => warnings.push(warning),
+    });
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/value looks like a credential/);
+  });
+
+  it('refuses an unknown shape status', () => {
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, status: 'collecting' }))).toThrowError(/shape 1-2-3 has an unknown status/);
+  });
+
+  it('refuses a mode that is not named', () => {
+    expect(buildWith(teamLineupsData({ mode: null }))).toThrowError(/mode must name the mode the counts use/);
+  });
+
+  it('holds its own floor of 50 teams, whatever minimum the API reports', () => {
+    expect(buildWith(teamLineupsData({ minimumTeams: 10 }))).toThrowError(/minimumTeams must be a whole number of at least 50/);
+    expect(buildWith(teamLineupsData({ minimumTeams: 10, shapes: [{ ...READY_SHAPE, teams: 30, wins: 20 }] }))).toThrowError(
+      /shape 2-2-2 is ready with fewer than the minimum teams/,
+    );
   });
 
   it('refuses an inPlaceOfSeasonId that is not the current season', () => {
@@ -2508,6 +2552,8 @@ describe('assembleTeamLineups', () => {
   it('throws on an answer of another shape, with no mode, or with no half-season', () => {
     expect(() => assembleTeamLineups({ nope: true })).toThrowError(/not the team-lineups shape/);
     expect(() => assembleTeamLineups(answer({ mode: undefined }))).toThrowError(/not the team-lineups shape/);
+    expect(() => assembleTeamLineups(answer({ mode: null }))).toThrowError(/not the team-lineups shape/);
+    expect(() => assembleTeamLineups(answer({ halfSeason: { id: 10.5 } }))).toThrowError(/a half-season needs an id and a label/);
     expect(() => assembleTeamLineups(answer({ shapes: [{ vanguards: 2 }] }))).toThrowError(/not the team-lineups shape/);
     expect(() => assembleTeamLineups(answer({ halfSeason: null }))).toThrowError(/no half-season yet/);
   });
@@ -2555,6 +2601,13 @@ describe('resolveTeamLineups', () => {
     expect(input).toEqual({ dataset: 'team-lineups', source: 'test', data: teamLineupsData() });
     expect(warnings[0]).toMatch(/last published file is kept/);
     expect(previous.some((file) => file.path === PATH)).toBeTrue();
+  });
+
+  it('takes the fallback when the answer names a malformed half-season', async () => {
+    const { input, warnings } = await resolve(async () => ({ ...liveAnswer(), halfSeason: { id: 'ten', label: 'Season 10.5' } }));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/a half-season needs an id and a label.*left out of this publish/);
   });
 
   it('takes the fallback when the answer would publish counts for a thin shape', async () => {

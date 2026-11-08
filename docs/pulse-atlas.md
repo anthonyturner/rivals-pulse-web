@@ -443,10 +443,14 @@ is **one file** for the half-season shown, listed in the manifest:
   id, Deadpool's role-less base form).
 - **A shape under `minimumTeams` is "not enough data" and carries no count.** Its
   `status` is `not-enough-data` and its `teams` and `wins` are `null`. The shape
-  is still listed, so a reader knows it was seen, but nothing says how many teams
-  ran it, because a handful of teams could be one person's own games. The
-  generator refuses a file in which such a shape has a count, or a `ready` shape
-  has fewer than `minimumTeams` teams or more wins than teams. The top-level
+  is still listed, so a reader knows it was seen, but the file states no count
+  for it, because a handful of teams could be one person's own games. The counts
+  of the other shapes and `classifiedTeams` are published, so when exactly one
+  shape is under the minimum a reader can work its count out by subtraction; that
+  gives away nothing `GET /api/team-lineups` does not. The generator refuses a
+  file in which such a shape has a count, whose `minimumTeams` is below 50 (the
+  site's own rule, held apart from what the API reports), or in which a `ready`
+  shape has fewer than `minimumTeams` teams or more wins than teams. The top-level
   `status` is `ready` when at least one shape is, and `not-enough-data`
   otherwise, which is a designed state, not an error.
 - **`mode`** is the mode the counts use. `GET /api/team-lineups` counts
@@ -654,10 +658,10 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    then once per half-season (`?halfSeason=<number>`), the current one
    included. That needs no secret. The tier list and the hero stats are
    assembled from those same answers and the hero ids in `hero-game-ids.json`
-   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. The one
-   other reads are `/api/hero-pairs`, once, for `community-stats`, and
-   `/api/team-lineups`, once, for `team-lineups`; see below for what happens
-   when they fail.
+   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. Three
+   more reads are each made once: `/api/hero-pairs` for `community-stats`,
+   `/api/community/hero-scores` for `hero-scores` and `/api/team-lineups` for
+   `team-lineups`; see below for what happens when they fail.
 2. Reads the maps, hero-styles, strategist-tags and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
@@ -682,7 +686,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
 `community-stats`, `hero-scores` and `team-lineups` are the exceptions to the rule below:
 `resolveOptionalDataset` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts) turns any failure to fetch or
 assemble one into the last published file (kept byte for byte) or, if none was
-ever published, into leaving it out of the run, each with a warning. Neither ever
+ever published, into leaving it out of the run, each with a warning. None of them ever
 fails the generate job.
 
 Any other failed fetch (three attempts each), an empty or malformed dataset, or an
