@@ -22,18 +22,6 @@ app-state-panel {
   line-height: 1.2;
 }
 
-/* The season is real information, so it is a chip in the community's violet. */
-.tab-scope {
-  padding: 2px 10px;
-  border: 1px solid color-mix(in srgb, var(--tertiary) 45%, transparent);
-  border-radius: 999px;
-  background: var(--tertiary-soft);
-  color: var(--tertiary-ink);
-  font-size: var(--type-caption);
-  font-weight: 750;
-  line-height: 1.5;
-}
-
 .footnote {
   max-width: 70ch;
   color: var(--text-soft);

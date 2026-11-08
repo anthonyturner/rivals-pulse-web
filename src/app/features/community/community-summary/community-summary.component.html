@@ -1,7 +1,7 @@
 <header class="tab-header">
   <h2 class="tab-title">{{ heading() }}</h2>
   @if (halfSeasonLabel(); as label) {
-    <p class="tab-scope">{{ label }}</p>
+    <app-kind-chip class="tab-scope" kind="tertiary" [label]="label" />
   }
 </header>
 
