@@ -22,6 +22,14 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'records',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'records/**',
+    renderMode: RenderMode.Client
+  },
+  {
     path: '**',
     renderMode: RenderMode.Server
   }

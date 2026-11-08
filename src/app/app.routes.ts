@@ -9,6 +9,7 @@ import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility'
 import { ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
 import { HOME_TITLE } from './core/seo/site-meta';
 import { heroesRoutes } from './features/heroes/heroes.routes';
+import { pulseRecordsCategoryRouteTitle } from './features/records/pulse-records-titles';
 import { heroGuideRouteTitle, strategistGuideRouteTitle } from './features/learning/guides/guide-titles';
 
 export const routes: Routes = [
@@ -211,6 +212,29 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/insights/team-comps/team-comps-page.component').then(
         (module) => module.TeamCompsPageComponent,
+      ),
+  },
+  {
+    path: 'records',
+    title: 'Pulse Records | RivalsPulse',
+    loadComponent: () =>
+      import('./features/records/records-page/records-page.component').then(
+        (module) => module.RecordsPageComponent,
+      ),
+  },
+  {
+    path: 'records/:category',
+    title: pulseRecordsCategoryRouteTitle,
+    canMatch: [
+      knownIdGuard(() =>
+        import('./features/records/pulse-records.data').then((module) =>
+          module.PULSE_RECORDS_PAGES.map((page) => page.slug),
+        ),
+      ),
+    ],
+    loadComponent: () =>
+      import('./features/records/records-category-page/records-category-page.component').then(
+        (module) => module.RecordsCategoryPageComponent,
       ),
   },
   {

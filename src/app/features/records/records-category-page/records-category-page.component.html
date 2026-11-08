@@ -1,0 +1,45 @@
+<div class="records-page page-container page-container--wide">
+  @if (page(); as current) {
+    <app-page-header
+      [title]="current.heading"
+      description="The best lines Rivals Pulse players have recorded, best first, up to 50."
+    />
+
+    <nav class="lists" aria-label="Pulse Records lists">
+      <a routerLink="/records" class="chip">All records</a>
+      @for (entry of pages; track entry.key) {
+        <a [routerLink]="entry.link" routerLinkActive="active" ariaCurrentWhenActive="page" class="chip">{{ entry.title }}</a>
+      }
+    </nav>
+
+    @if (state.failed()) {
+      <app-state-panel kind="error" heading="Pulse Records could not be loaded">
+        <p>The records are unavailable right now. Try again in a few minutes.</p>
+      </app-state-panel>
+    } @else if (state.loading()) {
+      <app-state-panel kind="loading" heading="Loading Pulse Records" [announce]="false">
+        <p>Fetching the best matches.</p>
+      </app-state-panel>
+    } @else if (board(); as shownBoard) {
+      @if (shownBoard.shown) {
+        @if (state.view()?.since; as since) {
+          <p class="meta">Matches since {{ since }}</p>
+        }
+        <section class="board" [attr.aria-labelledby]="shownBoard.headingId">
+          <h2 [id]="shownBoard.headingId" class="visually-hidden">{{ current.title }}</h2>
+          <app-record-table [rows]="shownBoard.rows" [labelledBy]="shownBoard.headingId" [valueLabel]="current.title" />
+        </section>
+      } @else {
+        <app-state-panel heading="Not enough data yet">
+          <p>
+            This list appears once {{ minimumRows }} different uploading players have a record for it, so that one
+            account cannot fill it. Meanwhile, the <a routerLink="/records">other records</a> may already
+            have enough.
+          </p>
+        </app-state-panel>
+      }
+
+      <app-records-coverage />
+    }
+  }
+</div>

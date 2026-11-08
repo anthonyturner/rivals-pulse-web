@@ -1,0 +1,51 @@
+<div class="records-page page-container page-container--wide">
+  <app-page-header
+    title="Pulse Records"
+    description="The best single matches Rivals Pulse players have recorded: most kills, assists, final hits, damage, healing and damage blocked."
+  />
+
+  @if (state.failed()) {
+    <app-state-panel kind="error" heading="Pulse Records could not be loaded">
+      <p>The records are unavailable right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (state.loading()) {
+    <app-state-panel kind="loading" heading="Loading Pulse Records" [announce]="false">
+      <p>Fetching the best matches.</p>
+    </app-state-panel>
+  } @else if (state.view(); as view) {
+    @if (view.since; as since) {
+      <p class="meta">Matches since {{ since }}</p>
+    }
+
+    @if (view.anyShown) {
+      <div class="boards">
+        @for (board of view.boards; track board.page.key) {
+          <section class="board" [attr.aria-labelledby]="board.headingId">
+            <h2 [id]="board.headingId">{{ board.page.title }}</h2>
+            @if (board.shown) {
+              <app-record-table
+                [rows]="board.rows"
+                [labelledBy]="board.headingId"
+                [valueLabel]="board.page.title"
+              />
+              <a class="more" [routerLink]="board.page.link">
+                See the full list<span class="visually-hidden"> for {{ board.page.title }}</span>
+              </a>
+            } @else {
+              <p class="thin">Not enough data yet.</p>
+            }
+          </section>
+        }
+      </div>
+    } @else {
+      <app-state-panel heading="Not enough data yet">
+        <p>
+          Records appear once enough players have uploaded matches. A list is shown from
+          {{ minimumRows }} different uploading players, so that one account cannot set every record.
+        </p>
+      </app-state-panel>
+    }
+
+    <app-records-coverage />
+  }
+</div>

@@ -60,7 +60,7 @@ describe('NavigationCategoryPageComponent', () => {
     const element = renderCategory('Resources');
 
     expect(element.querySelector('h2')).toBeNull();
-    expect(element.querySelectorAll('app-guide-card').length).toBe(8);
+    expect(element.querySelectorAll('app-guide-card').length).toBe(9);
   });
 
   it('is not a landmark of its own and has no live region', () => {

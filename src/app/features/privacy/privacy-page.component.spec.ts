@@ -95,10 +95,12 @@ describe('PrivacyPageComponent', () => {
   describe('Pulse Records', () => {
     const records = (): string => (section('pulse-records').textContent ?? '').replace(/\s+/g, ' ');
 
-    it('says nothing is published until the page opens', () => {
-      expect(PULSE_RECORDS_STATUS).toBe('being-added');
-      expect(records()).toContain('Pulse Records is not open yet');
-      expect(records()).toContain('Nothing described in this section is published until it opens');
+    it('no longer says the page is closed once it is open, and links to it', () => {
+      expect(PULSE_RECORDS_STATUS).toBe('open');
+      expect(records()).not.toContain('not open yet');
+      expect(records()).not.toContain('published until it opens');
+      expect(section('summary').textContent).not.toContain('not open yet');
+      expect(section('pulse-records').querySelector('a[href="/records"]')).toBeTruthy();
     });
 
     it('says a name needs a linked account and a switch that is off until it is turned on', () => {
