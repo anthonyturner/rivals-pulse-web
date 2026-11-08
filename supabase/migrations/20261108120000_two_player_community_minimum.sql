@@ -14,7 +14,9 @@
 -- separate step from merging the pull request: run `supabase db push` after the merge.
 
 -- The most that the busiest recorder may supply of a figure, as a percentage of its matches. 100 is
--- no limit; the starting rule was 50. Raise or lower it here by restating this one function.
+-- no limit; the starting rule was 50. Raise or lower it here by restating this one function. It is
+-- kept apart from `insights_max_recorder_share_percent()` so the hero figures and the Matches and
+-- Insights tabs can be tightened separately.
 create or replace function public.community_max_recorder_share_percent() returns integer
 language sql
 immutable
@@ -54,7 +56,7 @@ begin
   assert public.community_max_recorder_share_percent() = 100, 'the busiest player is not limited';
 
   assert public.hero_figure_qualifies(10, 2, 6), 'two players qualify however the matches are split';
-  assert public.hero_figure_qualifies(10, 2, 10), 'a figure of exactly the match minimum qualifies';
+  assert public.hero_figure_qualifies(10, 2, 10), 'a figure one of two players supplies whole qualifies under the 100% share';
   assert public.hero_figure_qualifies(20, 4, 4), 'a spread figure must qualify';
   assert not public.hero_figure_qualifies(9, 2, 4), 'too few matches must be hidden';
   assert not public.hero_figure_qualifies(10, 1, 5), 'one player must be hidden';

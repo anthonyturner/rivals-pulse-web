@@ -474,7 +474,7 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   published while it stays ungated: a bucket could be recovered by subtracting the rest from its
   all-ranks total.
 - The migration checks the gate when it runs, on fixtures in a half-season that does not exist (a
-  one-recorder bucket must not come back, a two-recorder bucket must, alone and with the other
+  one-recorder bucket must not come back, a three-recorder bucket must, alone and with the other
   mode asked for); the fixtures are rolled back.
 
 ## Triple-support aggregates
