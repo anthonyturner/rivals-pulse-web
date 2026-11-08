@@ -391,14 +391,17 @@ stand, so it is not optional and not shortened for small changes.
    commit on the branch. A non-blocking suggestion is fixed when you agree with
    it; when you do not, reply on the pull request saying why. Push without
    force, then re-review the new diff and post that review too.
-5. **Merge when it is clean**, with a merge commit:
+5. **Squash-merge when it is clean**:
 
    ```sh
-   gh pr merge <n> --merge
+   gh pr merge <n> --squash
    ```
 
-   A merge commit keeps the branch's commits intact, so the merge can be
-   reverted as one unit and the history shows exactly what was reviewed.
+   A squash merge lands the pull request as one commit on `master`, titled
+   after the pull request, so the history reads one line per change and the
+   merge can be reverted as one unit. The branch's individual commits stay on
+   the pull request
+   ([ADR-0007](../decisions/0007-squash-merge-pull-requests.md)).
 
 Do **not** merge, and say why in the report and on the pull request, when:
 
@@ -414,7 +417,7 @@ Leave that pull request open and ready for review. Never close the issue by
 hand ([rule 12](../rules.md)) — the merge closes it through `Closes #n`.
 
 After merging, remove the worktree if the work used one, per **Remove the
-worktree once the pull request is merged** above, and report the merge commit.
+worktree once the pull request is merged** above, and report the squash commit.
 
 Merged or left open, finish by returning the checkout, per **Return the
 checkout to `master`** below.
@@ -476,5 +479,6 @@ far more often than anything else.
 
 Never force-push, rewrite history, delete remote branches, bypass branch
 protection, or commit directly to `master`. A local branch may be deleted only
-once `git branch --merged master` lists it, and only with `git branch -d`. Never close an issue by hand —
-the merge closes it through `Closes #n`.
+once `git branch --merged master` lists it, and only with `git branch -d`. A
+squash-merged branch never appears in that list, so leave it in place. Never
+close an issue by hand — the merge closes it through `Closes #n`.

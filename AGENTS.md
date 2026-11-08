@@ -50,7 +50,7 @@ The complete list, which other documents cite by number, is
 
 Work runs from request to **merged pull request without stopping for
 approval**: file the issue, branch, open the PR, implement, verify, push, post
-a code review on the PR, fix what it finds, then merge with a merge commit.
+a code review on the PR, fix what it finds, then squash-merge it.
 Filing and updating issues, commenting, branching, committing, pushing, opening
 pull requests and merging a reviewed one are all pre-authorized.
 
