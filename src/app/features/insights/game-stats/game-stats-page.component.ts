@@ -1,11 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+import type { TileChip } from '../../hub/hub-tile.types';
+import { HubTileComponent } from '../../hub/hub-tile/hub-tile.component';
+import { KindChipComponent } from '../../hub/kind-chip/kind-chip.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { buildGameStatsView } from './game-stats-view';
 import { GameStatsService } from './game-stats.service';
 import { SAVED_GAME_STATS } from './saved-game-stats';
+import { StatDeltaComponent } from './stat-delta/stat-delta.component';
 
 const MILESTONES = [
   { value: '10M', label: 'Players in 72 hours' },
@@ -25,7 +29,7 @@ const SOURCES = [
 
 @Component({
   selector: 'app-game-stats-page',
-  imports: [NoticeComponent, StatePanelComponent],
+  imports: [HubTileComponent, KindChipComponent, NoticeComponent, StatDeltaComponent, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-stats-page.component.html',
   styleUrls: ['../insight-page.css', './game-stats-page.component.css'],
@@ -44,6 +48,8 @@ export class GameStatsPageComponent {
 
     return stats === null ? buildGameStatsView(SAVED_GAME_STATS, true) : buildGameStatsView(stats, false);
   });
+  readonly leadImage = '/images/site/heroes-banner.jpg';
+  readonly leadChip: TileChip = { kind: 'secondary', label: 'Steam' };
   readonly milestones = MILESTONES;
   readonly sources = SOURCES;
 }

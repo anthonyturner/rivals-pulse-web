@@ -103,6 +103,35 @@ describe('GameStatsPageComponent', () => {
     expect(element.querySelectorAll('.card h2').length).toBe(1);
   });
 
+  it('leads with key art and the Marvel Rivals figures as tiles, each named by its column', async () => {
+    const element = await open(live);
+    const lead = element.querySelector('app-hub-tile') as HTMLElement;
+
+    expect(lead.querySelector('h2')?.textContent?.trim()).toBe('Marvel Rivals on Steam');
+    expect(lead.querySelector('a')).toBeNull();
+    expect(lead.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(text(element, '.stats:not(.stats--milestones) dt')).toEqual([
+      'Players now',
+      '24h peak',
+      'All-time peak',
+      'Daily rank',
+      'Top sellers',
+    ]);
+    expect(
+      text(element, '.stats:not(.stats--milestones) .stat__value'),
+    ).toEqual(['43,194', '118,674', '644,269', '#15', '#4']);
+    expect(text(element, '.stats:not(.stats--milestones) .stat:first-child .delta [aria-hidden="true"]')).toEqual([
+      '+3,392 (+8.52%)',
+    ]);
+    expect(element.querySelectorAll('.stats app-kind-chip[data-kind="secondary"]').length).toBe(8);
+  });
+
+  it('draws no lead and no figure tiles while loading', async () => {
+    const element = await open('pending');
+
+    expect(element.querySelector('app-hub-tile, .stats:not(.stats--milestones)')).toBeNull();
+  });
+
   it('draws one table with a caption, a note on what changes compare with, and a scope on every header', async () => {
     const element = await open(live);
     const table = element.querySelector('table') as HTMLTableElement;
@@ -170,8 +199,8 @@ describe('GameStatsPageComponent', () => {
   it('lists the three launch milestones and the Steam-only caveat', async () => {
     const element = await open(live);
 
-    expect(text(element, 'dd')).toEqual(['10M', '20M', '40M+']);
-    expect(text(element, 'dt')).toEqual([
+    expect(text(element, '.stats--milestones dd')).toEqual(['10M', '20M', '40M+']);
+    expect(text(element, '.stats--milestones dt')).toEqual([
       'Players in 72 hours',
       'Players by December 17, 2024',
       'Players by February 2025 (NetEase, all platforms)',
@@ -251,7 +280,7 @@ describe('GameStatsPageComponent', () => {
     const element = await open({ ...live, games: [] });
 
     expect(text(element, 'app-state-panel h2')).toEqual(['No games to compare yet']);
-    expect(element.querySelector('table')).toBeNull();
+    expect(element.querySelector('table, app-hub-tile, .stats:not(.stats--milestones)')).toBeNull();
     expect(element.querySelector('[role="status"]')).toBeNull();
   });
 });

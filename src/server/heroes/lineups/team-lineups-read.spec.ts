@@ -225,11 +225,14 @@ describe('parseTeamLineupRows', () => {
     ]);
   });
 
-  it('reads the row of a half-season with no shape, and the figures a thin shape withholds, as null', () => {
-    const [noShape, thin] = parseTeamLineupRows([shapeRow(null, null), shapeRow([3, 2, 1], null)]);
+  it('reads the row of a half-season with no shape as null, and a thin shape with its team count and no wins', () => {
+    const [noShape, thin] = parseTeamLineupRows([
+      shapeRow(null, null),
+      shapeRow([3, 2, 1], null, { teams: 12, wins: null, enough_data: false }),
+    ]);
 
     expect(noShape.shape).toBeNull();
     expect(thin.shape).toEqual({ vanguards: 3, duelists: 2, strategists: 1 });
-    expect([thin.teams, thin.wins, thin.enoughData]).toEqual([null, null, false]);
+    expect([thin.teams, thin.wins, thin.enoughData]).toEqual([12, null, false]);
   });
 });

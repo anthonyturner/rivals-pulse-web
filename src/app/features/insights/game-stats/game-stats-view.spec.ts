@@ -54,6 +54,19 @@ function statsOf(games: GameComparison[], overrides: Partial<GameStatsResponse> 
 }
 
 describe('buildGameStatsView', () => {
+  it('turns the subject game into headline tiles named after the table columns', () => {
+    const view = buildGameStatsView(statsOf([game('Overwatch'), game('Marvel Rivals', { currentPlayers: 43194 })]), false);
+
+    expect(view.columns).toEqual(['Players now', '24h peak', 'All-time peak', 'Daily rank', 'Top sellers']);
+    expect(view.headline.map((tile) => tile.label)).toEqual(view.columns);
+    expect(view.headline.map((tile) => tile.value)).toEqual(['43,194', '118,674', '644,269', '#15', '#4']);
+    expect(view.headline.map((tile) => tile.kind)).toEqual(['metric', 'metric', 'metric', 'rank', 'rank']);
+  });
+
+  it('has no headline tiles when the subject game is not among the rows', () => {
+    expect(buildGameStatsView(statsOf([game('Overwatch')]), false).headline).toEqual([]);
+  });
+
   it('writes one row per game with its five figures in column order', () => {
     const view = buildGameStatsView(statsOf([game('Marvel Rivals'), game('Overwatch')]), false);
 

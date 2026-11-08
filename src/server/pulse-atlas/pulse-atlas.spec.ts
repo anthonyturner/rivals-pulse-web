@@ -1,3 +1,4 @@
+import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../community/community-minimums';
 import curatedHeroGameIds from '../../../data/pulse-atlas/hero-game-ids.json';
 import curatedHeroStyles from '../../../data/pulse-atlas/hero-styles.json';
 import curatedStrategistTags from '../../../data/pulse-atlas/strategist-tags.json';
@@ -120,6 +121,7 @@ function communityStatsData(overrides: Record<string, unknown> = {}, band: Recor
   return {
     provenance: PROVENANCE,
     minimumMatches: 10,
+    minimumPlayers: 2,
     priorMatches: 10,
     currentSeasonId: 2,
     season: { id: 2, label: 'Season 2' },
@@ -150,6 +152,7 @@ function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<
   return {
     provenance: PROVENANCE,
     minimums: { matches: 10, contributors: 3, busiestContributorShare: 0.5, rankedHeroes: 5 },
+    qualifiedHeroes: { damage: 1, sustain: 0, ultimate: 0, utility: 0 },
     currentSeasonId: 2,
     season: { id: 2, label: 'Season 1' },
     heroes: [
@@ -177,12 +180,14 @@ function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<
 
 const READY_SHAPE = { shape: '2-2-2', vanguards: 2, duelists: 2, strategists: 2, status: 'ready', teams: 67, wins: 37 };
 const THIN_SHAPE = { shape: '1-2-3', vanguards: 1, duelists: 2, strategists: 3, status: 'not-enough-data', teams: null, wins: null };
+const COUNTED_THIN_SHAPE = { ...THIN_SHAPE, teams: 12 };
 
 function teamLineupsData(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     provenance: PROVENANCE,
     status: 'ready',
     minimumTeams: 50,
+    minimumPlayers: 2,
     mode: 'competitive',
     currentSeasonId: 21,
     season: { id: 21, label: 'Season 10.5' },
@@ -956,7 +961,7 @@ describe('communityHalfSeasonRequests and assembleCommunityTierList', () => {
     const empty = answer(NEW, { status: 'not-enough-data', tiers: [], matchesCounted: 3, belowMinimum: [] });
     const data = assemble(empty);
 
-    expect(data.seasons[1].ranks['99']).toEqual({ tiers: [], matchesCounted: 3, belowMinimum: [] });
+    expect(data.seasons[1].ranks['99']).toEqual({ tiers: [], matchesCounted: 3, minimumMatches: 10, belowMinimum: [] });
     expect(() =>
       buildPulseAtlas(withData('tier-list', data), GENERATED_AT, fakeSha256),
     ).not.toThrow();
@@ -1904,6 +1909,7 @@ describe('the community-stats dataset', () => {
     expect(Object.keys(envelope.data)).toEqual([
       'provenance',
       'minimumMatches',
+      'minimumPlayers',
       'priorMatches',
       'currentSeasonId',
       'season',
@@ -2030,10 +2036,11 @@ describe('the community-stats dataset', () => {
       expect([...keys].sort()).toEqual(
         [
           'allyHeroId', 'appearances', 'bands', 'counters', 'currentSeasonId', 'decidedMatches', 'enemyHeroId', 'heroId',
-          'heroes', 'id', 'key', 'label', 'matches', 'minimumMatches', 'priorMatches', 'provenance', 'season', 'synergies', 'wins',
+          'heroes', 'id', 'key', 'label', 'matches', 'minimumMatches', 'minimumPlayers', 'priorMatches', 'provenance', 'season', 'synergies', 'wins',
         ].sort(),
       );
-      expect(JSON.stringify(data)).not.toMatch(/player|account|session|steam|email|token|secret|uid|rivalsmeta/i);
+      // `minimumPlayers` is the one key that names players: a count of how many, never which.
+      expect(JSON.stringify(data).replace('"minimumPlayers":2', '')).not.toMatch(/player|account|session|steam|email|token|secret|uid|rivalsmeta/i);
     });
   });
 
@@ -2141,6 +2148,7 @@ describe('assembleCommunityStats', () => {
     expect(assembleCommunityStats(answer())).toEqual({
       provenance: PROVENANCE,
       minimumMatches: 10,
+      minimumPlayers: 2,
       priorMatches: 10,
       currentSeasonId: 21,
       season: { id: 21, label: 'Season 10.5' },
@@ -2176,6 +2184,19 @@ describe('assembleCommunityStats', () => {
 describe('the hero-scores dataset', () => {
   const buildWith = (data: unknown): (() => PulseAtlasFile[]) => () => buildPulseAtlas(withData('hero-scores', data), GENERATED_AT, fakeSha256);
   const withStray = (extra: Record<string, unknown>): Record<string, unknown> => heroScoresData({}, extra);
+
+  it('may omit qualifiedHeroes, as a file published before it existed does', () => {
+    const { qualifiedHeroes: _omitted, ...without } = heroScoresData();
+
+    expect(buildWith(without)).not.toThrow();
+  });
+
+  it('refuses qualifiedHeroes that is not four counts of heroes', () => {
+    expect(buildWith(heroScoresData({ qualifiedHeroes: { damage: 1, sustain: 0, ultimate: 0 } }))).toThrowError(/qualifiedHeroes needs a non-negative whole number for each stat/);
+    expect(buildWith(heroScoresData({ qualifiedHeroes: { damage: -1, sustain: 0, ultimate: 0, utility: 0 } }))).toThrowError(/qualifiedHeroes needs a non-negative whole number/);
+    expect(buildWith(heroScoresData({ qualifiedHeroes: { damage: 1, sustain: 0, ultimate: 0, utility: 0, mobility: 2 } }))).toThrowError(/qualifiedHeroes has a key outside the allow-list: mobility/);
+    expect(buildWith(heroScoresData({ qualifiedHeroes: 4 }))).toThrowError(/qualifiedHeroes must be an object/);
+  });
 
   it('is published and listed in the manifest', () => {
     const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
@@ -2306,12 +2327,37 @@ describe('assembleHeroScores', () => {
     expect(data).toEqual({
       provenance: PROVENANCE,
       minimums: answer()['minimums'],
+      qualifiedHeroes: { damage: 0, sustain: 0, ultimate: 0, utility: 0 },
       currentSeasonId: 21,
       season: { id: 21, label: 'Season 10.5' },
       heroes: [{ heroId: THOR_GAME_ID, damage: { status: 'collecting' } }],
     });
     expect(warnings.length).toBe(1);
     expect(warnings[0]).toContain('nobody');
+  });
+
+  it('counts the heroes that pass the rule for each stat, whether or not enough do to rank them, and not the ones still collecting', () => {
+    const data = assembleHeroScores(
+      answer({
+        heroes: [
+          { hero: 'thor', damage: { status: 'scored' }, sustain: { status: 'ranking-too-small' }, ultimate: { status: 'collecting' }, utility: { status: 'no-measurable-ability' } },
+          { hero: 'nobody', damage: { status: 'scored' }, sustain: { status: 'collecting' } },
+        ],
+      }),
+      [thorEntry],
+    ) as Record<string, unknown>;
+
+    expect(data['qualifiedHeroes']).toEqual({ damage: 2, sustain: 1, ultimate: 0, utility: 0 });
+  });
+
+  it('leaves the busiest-player flag as the API sent it, whatever the published share', () => {
+    const flagged = { hero: 'thor', damage: { status: 'collecting', oneContributorAboveHalf: true } };
+    const data = assembleHeroScores(
+      answer({ minimums: { matches: 10, contributors: 1, busiestContributorShare: 1, rankedHeroes: 5 }, heroes: [flagged] }),
+      [thorEntry],
+    ) as { heroes: { damage: { oneContributorAboveHalf: boolean } }[] };
+
+    expect(data.heroes[0].damage.oneContributorAboveHalf).toBeTrue();
   });
 
   it('names the current half-season when the previous one stands in for it', () => {
@@ -2403,9 +2449,31 @@ describe('the team-lineups dataset', () => {
     expect(buildWith(teamLineupsData({ status: 'not-enough-data', classifiedTeams: 0, unclassifiedTeams: 0, shapes: [] }))).not.toThrow();
   });
 
-  it('refuses a shape under the minimum that carries counts', () => {
-    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, teams: 12 }))).toThrowError(/shape 1-2-3 is not enough data, so it may carry no counts/);
-    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, wins: 5 }))).toThrowError(/shape 1-2-3 is not enough data, so it may carry no counts/);
+  it('publishes the teams counted so far for a shape under the minimum, and nothing else about it', () => {
+    const file = buildWith(shapesWith(READY_SHAPE, COUNTED_THIN_SHAPE))().find((candidate) => candidate.path.endsWith('team-lineups.json'));
+    const shapes = (JSON.parse(file?.content ?? '{}').data as { shapes: Record<string, unknown>[] }).shapes;
+
+    expect(shapes[1]).toEqual(COUNTED_THIN_SHAPE);
+  });
+
+  it('refuses a shape under the minimum that carries wins, or a count that is not under the minimum', () => {
+    expect(buildWith(shapesWith(READY_SHAPE, { ...COUNTED_THIN_SHAPE, wins: 5 }))).toThrowError(/shape 1-2-3 is not enough data, so it may carry no wins/);
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, teams: 50 }))).toThrowError(/shape 1-2-3 is not enough data, so its teams must be null or a whole number under the minimum/);
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, teams: 0 }))).toThrowError(/so its teams must be null or a whole number under the minimum/);
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, teams: 12.5 }))).toThrowError(/so its teams must be null or a whole number under the minimum/);
+    expect(buildWith(shapesWith(READY_SHAPE, { ...THIN_SHAPE, teams: 12 }))).not.toThrow();
+  });
+
+  it('refuses a thin shape with more teams than the classified teams', () => {
+    expect(buildWith(teamLineupsData({ classifiedTeams: 10, shapes: [COUNTED_THIN_SHAPE] }))).toThrowError(/shape 1-2-3 has more teams than classifiedTeams/);
+  });
+
+  it('may state the minimum number of players, and refuses one that is not a count', () => {
+    const { minimumPlayers: _omitted, ...without } = teamLineupsData();
+
+    expect(buildWith(without)).not.toThrow();
+    expect(buildWith(teamLineupsData({ minimumPlayers: 0 }))).toThrowError(/minimumPlayers must be a whole number above 0/);
+    expect(buildWith(teamLineupsData({ minimumPlayers: '2' }))).toThrowError(/minimumPlayers must be a whole number above 0/);
   });
 
   it('refuses a ready shape under the minimum, or with wins above its teams', () => {
@@ -2433,6 +2501,7 @@ describe('the team-lineups dataset', () => {
 
   it('refuses a key naming something private', () => {
     expect(buildWith(teamLineupsData({ playerCount: 3 }))).toThrowError(/playerCount/);
+    expect(buildWith(teamLineupsData({ players: 3 }))).toThrowError(/players/);
     expect(buildWith(shapesWith({ ...READY_SHAPE, steamId: 'x' }))).toThrowError(/steamId/);
   });
 
@@ -2539,6 +2608,12 @@ describe('assembleTeamLineups', () => {
     expect(assembleTeamLineups(answer())).toEqual(teamLineupsData());
   });
 
+  it('keeps the teams counted so far for a thin shape and drops its rates', () => {
+    const data = assembleTeamLineups(answer({ shapes: [READY_SHAPE, { ...COUNTED_THIN_SHAPE, pickRate: null, winRate: null }] }));
+
+    expect(data).toEqual(teamLineupsData({ shapes: [READY_SHAPE, COUNTED_THIN_SHAPE] }));
+  });
+
   it('names the current half-season when the previous one stands in for it', () => {
     const data = assembleTeamLineups(
       answer({ halfSeason: { id: 10, label: 'Season 10' }, inPlaceOf: { id: 10.5, label: 'Season 10.5' } }),
@@ -2577,13 +2652,13 @@ describe('resolveTeamLineups', () => {
     mode: 'competitive',
     classifiedTeams: 110,
     unclassifiedTeams: 2,
-    shapes: [READY_SHAPE, THIN_SHAPE],
+    shapes: [READY_SHAPE, COUNTED_THIN_SHAPE],
   });
 
   it('builds the dataset from the live answer, with no warning', async () => {
     const { input, warnings } = await resolve(async () => liveAnswer());
 
-    expect(input).toEqual({ dataset: 'team-lineups', source: 'live', data: teamLineupsData() });
+    expect(input).toEqual({ dataset: 'team-lineups', source: 'live', data: teamLineupsData({ shapes: [READY_SHAPE, COUNTED_THIN_SHAPE] }) });
     expect(warnings).toEqual([]);
   });
 
@@ -2610,11 +2685,11 @@ describe('resolveTeamLineups', () => {
     expect(warnings[0]).toMatch(/a half-season needs an id and a label.*left out of this publish/);
   });
 
-  it('takes the fallback when the answer would publish counts for a thin shape', async () => {
-    const { input, warnings } = await resolve(async () => ({ ...liveAnswer(), shapes: [READY_SHAPE, { ...THIN_SHAPE, teams: 12, wins: 5 }] }));
+  it('takes the fallback when the answer would publish wins for a thin shape', async () => {
+    const { input, warnings } = await resolve(async () => ({ ...liveAnswer(), shapes: [READY_SHAPE, { ...COUNTED_THIN_SHAPE, wins: 5 }] }));
 
     expect(input).toBeUndefined();
-    expect(warnings[0]).toMatch(/may carry no counts/);
+    expect(warnings[0]).toMatch(/may carry no wins/);
   });
 });
 
@@ -2753,5 +2828,65 @@ describe('resolveCommunityStats', () => {
   it('never throws, whatever the read does', async () => {
     await expectAsync(resolve(() => Promise.reject('a string'))).toBeResolved();
     await expectAsync(resolve(async () => null)).toBeResolved();
+  });
+});
+
+describe('the minimums a figure waits on', () => {
+  const tierListWith = (snapshot: Record<string, unknown>): PulseAtlasInput[] =>
+    withData('tier-list', {
+      ...tierList(),
+      seasons: [1, 2].map((id) => ({ id, label: `Season ${id}`, ranks: { '99': { tiers: [], matchesCounted: 3, ...snapshot } } })),
+    });
+  const seasonFile = (inputs: PulseAtlasInput[]): Record<string, unknown> => {
+    const file = buildPulseAtlas(inputs, GENERATED_AT, fakeSha256).find((candidate) => candidate.path.endsWith('tier-list/seasons/1.json'));
+
+    return JSON.parse(file?.content ?? '{}').data as Record<string, unknown>;
+  };
+
+  it('publishes the minimum matches of a tier-list snapshot beside its below-minimum rows, in the season files and the index', () => {
+    const inputs = tierListWith({ minimumMatches: 10, belowMinimum: [{ heroId: LOKI_GAME_ID, matches: 4 }] });
+    const files = buildPulseAtlas(inputs, GENERATED_AT, fakeSha256);
+    const index = JSON.parse(files.find((file) => file.path.endsWith('/tier-list.json'))?.content ?? '{}').data;
+    const season = seasonFile(inputs) as { ranks: Record<string, Record<string, unknown>> };
+
+    expect(season.ranks['99']['minimumMatches']).toBe(10);
+    expect(season.ranks['99']['belowMinimum']).toEqual([{ heroId: LOKI_GAME_ID, matches: 4 }]);
+    expect(index.seasons[1].ranks['99'].minimumMatches).toBe(10);
+  });
+
+  it('refuses a tier-list minimum that is not a whole number above 0', () => {
+    expect(() => buildPulseAtlas(tierListWith({ minimumMatches: 0 }), GENERATED_AT, fakeSha256)).toThrowError(/minimumMatches to be a whole number above 0/);
+    expect(() => buildPulseAtlas(tierListWith({ minimumMatches: '10' }), GENERATED_AT, fakeSha256)).toThrowError(/minimumMatches to be a whole number above 0/);
+  });
+
+  it('publishes the minimum players of community-stats, which the private-key check lets through only under that name', () => {
+    const published = (data: unknown) =>
+      JSON.parse(
+        buildPulseAtlas(withData('community-stats', data), GENERATED_AT, fakeSha256).find((file) => file.path.endsWith('community-stats.json'))?.content ?? '{}',
+      ).data;
+
+    expect(published(communityStatsData()).minimumPlayers).toBe(2);
+    expect(() => buildPulseAtlas(withData('community-stats', communityStatsData({ minimumPlayers: 0 })), GENERATED_AT, fakeSha256)).toThrowError(
+      /minimumPlayers must be a whole number above 0/,
+    );
+    expect(() => buildPulseAtlas(withData('community-stats', communityStatsData({ players: 2 })), GENERATED_AT, fakeSha256)).toThrowError(/players/);
+  });
+
+  it('assembles the minimum players of community-stats and team-lineups from the one constant', () => {
+    const bands = (communityStatsData() as { bands: unknown[] }).bands;
+    const stats = assembleCommunityStats({ minimumMatches: 10, priorMatches: 10, halfSeason: { id: 1, label: 'Season 1' }, inPlaceOf: null, bands }) as Record<string, unknown>;
+    const lineups = assembleTeamLineups({
+      status: 'not-enough-data',
+      minimumTeams: 50,
+      halfSeason: { id: 1, label: 'Season 1' },
+      inPlaceOf: null,
+      mode: 'competitive',
+      classifiedTeams: 0,
+      unclassifiedTeams: 0,
+      shapes: [],
+    }) as Record<string, unknown>;
+
+    expect(stats['minimumPlayers']).toBe(COMMUNITY_BUCKET_MIN_PLAYERS);
+    expect(lineups['minimumPlayers']).toBe(COMMUNITY_BUCKET_MIN_PLAYERS);
   });
 });

@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+:host([data-trend='up']) {
+  color: var(--win-ink);
+}
+
+:host([data-trend='down']) {
+  color: var(--loss-ink);
+}

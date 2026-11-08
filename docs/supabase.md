@@ -103,6 +103,8 @@ repo's build. This is a move, not a redesign.
 | `20261107100100_pulse_records_read.sql` | `records_hidden` (closed to every API role), the ceiling helpers `pulse_records_value_cap` and `pulse_records_rate_cap`, and `read_pulse_records()` (service role only) |
 | `20261107130000_records_opt_in.sql` | The "Show me in Pulse Records" switch: `set_records_opt_in(boolean)` (granted to `authenticated` only) and a trigger on `player_links` that switches the setting off whenever a link row is deleted |
 | `20261108120000_two_player_community_minimum.sql` | Restates `hero_figure_qualifies` and `community_bucket_shown` with a player minimum of 2 instead of 3, and a limit on the busiest player read from the new `community_max_recorder_share_percent()` (100, so no cap; it was 50) (issue 603). The 10-match minimum is unchanged |
+| `20261108140000_team_lineup_thin_shape_counts.sql` | `read_team_lineup_shapes` returns a shape's `teams` while it is under `team_lineup_min_teams()`; its `wins` and `enough_data` are still withheld (issue 616). Same signature, gate and grants |
+| `20261108150000_hero_score_busiest_share.sql` | `read_community_hero_scores` flags the busiest player as `top * 100 > n * community_max_recorder_share_percent()` instead of a fixed half, so the flags are false at a 100% limit (issue 616). Same signature, security and grants |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -424,7 +426,7 @@ The reply's `extended` gains `ability_uses` (rows written) only when the upload 
 
 The website reads through `read_community_hero_figures()` and `read_community_kill_feed()` (service role only). A figure that fails is sent as zero lines, sum and seconds, a hero whose three figures all fail is absent, and a kill pair that fails is absent. The rule is applied per half-season and mode before anything is summed.
 
-`read_community_hero_scores()` (service role only) is the third reader, behind the 1 to 10 scores in [hero-build-scores.md](hero-build-scores.md). It returns every row of `hero_figure_aggregates` and `hero_ability_aggregates`, because a hero below the rule must be able to say how far along it is. A row or figure that fails the rule keeps its line and player counts, and whether one player is above half, with every sum at 0. The busiest player's own count never leaves the database.
+`read_community_hero_scores()` (service role only) is the third reader, behind the 1 to 10 scores in [hero-build-scores.md](hero-build-scores.md). It returns every row of `hero_figure_aggregates` and `hero_ability_aggregates`, because a hero below the rule must be able to say how far along it is. A row or figure that fails the rule keeps its line and player counts, and whether one player is above the published share (`community_max_recorder_share_percent()`, so never at 100; `20261108150000` restated the flags, which were a fixed half), with every sum at 0. The busiest player's own count never leaves the database.
 
 A uid is the client's claim, as it is for figures (see "Reading a linked player's own dashboard"), so contributor counts trust it.
 
@@ -567,8 +569,9 @@ id, RLS is on with no policy, and only the service role reaches it.
   `teams`. Both are computed by the website from counts.
 - **The minimum.** Every shape seen is stored (three small numbers each). `team_lineup_min_teams()` (50,
   matched by `TEAM_LINEUP_MIN_TEAMS` on the website; a test compares the two) is applied by the reader to
-  the teams summed over the modes asked for: a shape under it comes back with `enough_data` false and
-  null `teams` and `wins`, which the site shows as "not enough data yet".
+  the teams summed over the modes asked for: a shape under it comes back with `enough_data` false, its
+  `teams` so far (from `20261108140000`; it was null before) and null `wins`, which the site shows as
+  "not enough data yet" and the Pulse Atlas publishes as progress toward the minimum.
 - `read_team_lineup_shapes(p_play_mode_ids)` (granted to `anon` and `service_role`; default Competitive,
   mode 1) returns `half_season, rank_bucket, vanguards, duelists, strategists, teams, wins, enough_data,
   classified_teams, unclassified_teams`. The two team counts are the half-season's, repeated on each

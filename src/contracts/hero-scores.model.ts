@@ -25,7 +25,11 @@ export interface HeroScoreStat {
   matches: number;
   /** Different players so far, only while `collecting`. */
   contributors: number | null;
-  /** While `collecting`, whether one player holds more than half of the lines, which holds the hero back. */
+  /**
+   * While `collecting`, whether one player holds more than `minimums.busiestContributorShare` of the
+   * lines, which holds the hero back. Always false when that share is 1 (no limit). The name is kept from
+   * when the limit was half.
+   */
   oneContributorAboveHalf: boolean | null;
   /** The figures behind the score, by name. Null until the hero passes the rule. */
   measures: Record<string, number> | null;
