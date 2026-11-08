@@ -19,9 +19,11 @@ import { PlayerAvatarComponent } from '../../shared/components/player-avatar/pla
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { CommunityHeroListComponent } from '../community/community-hero-list/community-hero-list.component';
 import { HeroDataService } from '../heroes/hero-data.service';
+import { HubTileComponent } from '../hub/hub-tile/hub-tile.component';
 import { heroIdentities } from '../insights/hero-identity';
 import { ProfileFigureListComponent } from './figure-list/profile-figure-list.component';
 import { OwnActivityTablesComponent } from './own-activity/own-activity-tables.component';
+import { GENERIC_PROFILE_LEAD } from './profile-lead';
 import { buildProfileView, DEPTH_NOTE } from './profile-view';
 
 /** The signed-in player's own stats, read from the matches their linked desktop app uploaded. */
@@ -29,6 +31,7 @@ import { buildProfileView, DEPTH_NOTE } from './profile-view';
   selector: 'app-profile-page',
   imports: [
     CommunityHeroListComponent,
+    HubTileComponent,
     NoticeComponent,
     OwnActivityTablesComponent,
     PageHeaderComponent,
@@ -56,6 +59,12 @@ export class ProfilePageComponent {
     const roster = this.roster();
 
     return buildProfileView(this.result(), roster === undefined ? undefined : heroIdentities(roster));
+  });
+  /** Any answer but a player with a most-played hero, a signed-out visitor included, gets the generic art. */
+  protected readonly lead = computed(() => {
+    const current = this.view();
+
+    return current.kind === 'ready' ? current.lead : GENERIC_PROFILE_LEAD;
   });
 
   constructor() {
