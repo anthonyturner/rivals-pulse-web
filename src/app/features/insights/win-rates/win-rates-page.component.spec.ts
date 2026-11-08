@@ -156,7 +156,7 @@ describe('WinRatesPageComponent', () => {
           const strip = frameDocument.querySelector<HTMLElement>('.strip');
           expect(strip?.getBoundingClientRect().height)
             .withContext(`strip ${theme} at ${width}px`)
-            .toBeLessThanOrEqual(width <= 560 ? 56 : 96);
+            .toBe(width <= 560 ? 56 : 96);
         }
       }
     } finally {

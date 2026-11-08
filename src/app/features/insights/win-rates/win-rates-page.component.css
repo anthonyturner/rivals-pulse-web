@@ -3,13 +3,13 @@
   min-height: 100vh;
 }
 
-/* Art is composed 12:1, so the strip crops only a sliver at the sides on a desktop and more on a phone, where the row of heroes is still centred. */
+/* The art is 12:1: wide desktops crop a few pixels of height, and 30% keeps the heads in; narrower screens crop the sides, so phones show the centre of the row. */
 .strip {
   position: relative;
   height: 96px;
   margin-bottom: 12px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ink-line);
   border-radius: 12px;
   background: var(--ink);
 }
