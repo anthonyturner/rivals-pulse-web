@@ -275,7 +275,7 @@ it, as a plain input, to the Game News band:
   for the glance come from the hero stats, in the browser only (the end is the next half-season's
   start, otherwise "ongoing"). The spotlight's "Watch update video" button emits `watchVideo`; the
   page, which owns the video, opens its player.
-- `HomeHeroStatsService` fetches `/api/hero-stats` once, in the browser only, for the matches-counted
+- `CurrentHeroStatsService` (`features/insights`) fetches `/api/hero-stats` once and shares it; the home page reads it in the browser only, for the matches-counted
   figure under the hero buttons and the news band's dates. The hero's downloads and rating come from
   `OVERWOLF_LISTING_STATS` and read "Coming soon" until the Overwolf listing has them.
 

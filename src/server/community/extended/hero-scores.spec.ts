@@ -420,6 +420,7 @@ describe('the derived scores in Pulse Atlas', () => {
         },
         { dataset: 'hero-scores', source: 't', data },
         { dataset: 'hero-game-ids', source: 't', data: gameIds },
+        { dataset: 'strategist-tags', source: 't', data: [{ heroId: 'unlisted-healer', tag: 'healer' }] },
       ],
       '2026-11-05T00:00:00.000Z',
       fakeSha256,

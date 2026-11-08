@@ -5,6 +5,7 @@ import {
   countHeroes,
   deleteHero,
   getHero,
+  listHeroNames,
   listHeroRoles,
   listHeroes,
   saveHero,
@@ -172,6 +173,24 @@ describe('deleteHero', () => {
     await expectAsync(deleteHero(client, 'jubilee')).toBeRejectedWithError(
       'Deleting hero jubilee failed: boom',
     );
+  });
+});
+
+describe('listHeroNames', () => {
+  it('maps each hero id to its display name, reading only the id and name columns', async () => {
+    const { client, calls } = fakeSupabaseClient(() => ({
+      data: [
+        { id: 'adam-warlock', name: 'Adam Warlock' },
+        { id: 'mantis', name: 'Mantis' },
+      ],
+    }));
+
+    const names = await listHeroNames(client);
+
+    expect(names.get('adam-warlock')).toBe('Adam Warlock');
+    expect(names.get('mantis')).toBe('Mantis');
+    expect(calls[0].table).toBe('hero_content');
+    expect(calls[0].steps[0]).toEqual(['select', ['id, name']]);
   });
 });
 

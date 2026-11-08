@@ -6,6 +6,10 @@ export interface UploadField {
 export type ExtendedUploadStatus = 'being-added' | 'uploaded';
 export const EXTENDED_UPLOAD_STATUS: ExtendedUploadStatus = 'uploaded';
 
+export type PulseRecordsStatus = 'being-added' | 'open';
+/** Flip to 'open' in the change that opens the Pulse Records pages, so the privacy page stops saying nothing is published yet. */
+export const PULSE_RECORDS_STATUS: PulseRecordsStatus = 'being-added';
+
 /** What the desktop app uploads for a match it records: each human player's line plus the match facts. */
 export const TODAY_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'In-game name', detail: 'As the game shows it on the scoreboard.' },

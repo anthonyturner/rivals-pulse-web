@@ -1,0 +1,14 @@
+@if (rows().length > 0) {
+  <ul class="rows">
+    @for (row of rows(); track row.name) {
+      <li class="row">
+        <span class="letter">{{ row.name }}</span>
+        <span class="heroes">
+          @for (hero of row.heroes; track hero.hero) {
+            <app-preview-portrait [src]="hero.imageUrl" />
+          }
+        </span>
+      </li>
+    }
+  </ul>
+}

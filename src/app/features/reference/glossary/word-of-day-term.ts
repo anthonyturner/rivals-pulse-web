@@ -1,4 +1,4 @@
-import type { GlossaryTerm } from '../../reference/glossary/glossary.model';
+import type { GlossaryTerm } from './glossary.model';
 
 const DAY_IN_MILLISECONDS = 86_400_000;
 
