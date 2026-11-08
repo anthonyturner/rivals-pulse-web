@@ -21,6 +21,8 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     linkedPlayer: async () => null,
     redeemLinkCode: async () => ({ status: 'invalid' }),
     unlinkPlayer: async () => undefined,
+    readRecordsOptIn: async () => false,
+    setRecordsOptIn: async (_tokens, show) => ({ status: 'saved', showInRecords: show }),
     readOwnDashboard: async () => ({ linked: false }),
     isAdmin: async () => false,
     beginDataJob: async () => ({ status: 'started', runId: 1 }),
@@ -702,6 +704,124 @@ describe('POST account/link', () => {
   });
 });
 
+describe('account/records-opt-in', () => {
+  const get = (overrides: Partial<AccountRequest> = {}) =>
+    request('account/records-opt-in', { cookieHeader: SESSION_COOKIE, ...overrides });
+  const post = (body: unknown, overrides: Partial<AccountRequest> = {}) =>
+    request('account/records-opt-in', {
+      method: 'POST',
+      originHeader: 'https://rivalspulse.com',
+      cookieHeader: SESSION_COOKIE,
+      body,
+      ...overrides,
+    });
+
+  it('reads the setting with the verified tokens, and answers only the choice', async () => {
+    const read = jasmine.createSpy('readRecordsOptIn').and.resolveTo(true);
+    const response = await run(get(), gateway({ readRecordsOptIn: read }));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ showInRecords: true });
+    expect(read).toHaveBeenCalledOnceWith(TOKENS);
+  });
+
+  it('needs a session to read, and reads nothing without one', async () => {
+    const read = jasmine.createSpy('readRecordsOptIn').and.resolveTo(true);
+    const response = await run(get({ cookieHeader: undefined }), gateway({ readRecordsOptIn: read }));
+
+    expect(response.status).toBe(401);
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it('says 503, never "off", when the setting cannot be read', async () => {
+    spyOn(console, 'warn');
+    const response = await run(
+      get(),
+      gateway({
+        readRecordsOptIn: async () => {
+          throw new AuthUnavailableError('down');
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(JSON.stringify(response.body)).not.toContain('showInRecords');
+  });
+
+  for (const show of [true, false]) {
+    it(`saves ${show ? 'on' : 'off'} for the session's account and answers the saved choice`, async () => {
+      const set = jasmine.createSpy('setRecordsOptIn').and.callFake(async (_tokens: unknown, value: boolean) => ({
+        status: 'saved',
+        showInRecords: value,
+      }));
+      const response = await run(post({ show }), gateway({ setRecordsOptIn: set }));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ showInRecords: show });
+      expect(set).toHaveBeenCalledOnceWith(TOKENS, show);
+    });
+  }
+
+  it('ignores any account named in the body, because only the session decides whose setting changes', async () => {
+    const set = jasmine.createSpy('setRecordsOptIn').and.resolveTo({ status: 'saved', showInRecords: true });
+
+    await run(post({ show: true, userId: 'someone-else', user_id: 'someone-else' }), gateway({ setRecordsOptIn: set }));
+
+    expect(set).toHaveBeenCalledOnceWith(TOKENS, true);
+  });
+
+  it('answers 409 with a plain reason when there is no link to turn it on for', async () => {
+    const response = await run(post({ show: true }), gateway({ setRecordsOptIn: async () => ({ status: 'not-linked' }) }));
+
+    expect(response.status).toBe(409);
+    expect((response.body as { error: string }).error).toContain('Link the desktop app first');
+  });
+
+  it('refuses anything that is not a true or false, and changes nothing', async () => {
+    const set = jasmine.createSpy('setRecordsOptIn').and.resolveTo({ status: 'saved', showInRecords: false });
+
+    for (const body of [undefined, null, {}, { show: 'true' }, { show: 1 }, { show: null }, 'true', []]) {
+      expect((await run(post(body), gateway({ setRecordsOptIn: set }))).status).toBe(400);
+    }
+
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('needs a session cookie to change, and changes nothing without one', async () => {
+    const set = jasmine.createSpy('setRecordsOptIn').and.resolveTo({ status: 'saved', showInRecords: true });
+    const response = await run(post({ show: true }, { cookieHeader: undefined }), gateway({ setRecordsOptIn: set }));
+
+    expect(response.status).toBe(401);
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('refuses a POST from another origin, or with none, before doing anything', async () => {
+    const set = jasmine.createSpy('setRecordsOptIn').and.resolveTo({ status: 'saved', showInRecords: true });
+
+    expect((await run(post({ show: true }, { originHeader: 'https://evil.example' }), gateway({ setRecordsOptIn: set }))).status).toBe(403);
+    expect((await run(post({ show: true }, { originHeader: undefined }), gateway({ setRecordsOptIn: set }))).status).toBe(403);
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('says 503 when Supabase cannot be asked to save', async () => {
+    spyOn(console, 'warn');
+    const response = await run(
+      post({ show: true }),
+      gateway({
+        setRecordsOptIn: async () => {
+          throw new AuthUnavailableError('down');
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+  });
+
+  it('allows GET and POST only', async () => {
+    expect((await run(request('account/records-opt-in', { method: 'DELETE', originHeader: 'https://rivalspulse.com', cookieHeader: SESSION_COOKIE }))).status).toBe(405);
+  });
+});
+
 describe('POST account/unlink', () => {
   const post = (overrides: Partial<AccountRequest> = {}) =>
     request('account/unlink', {
@@ -965,6 +1085,8 @@ describe('a session that was refreshed during the request', () => {
     { name: 'link', req: post('account/link'), unavailable: 'Linking is unavailable', failing: (fail) => ({ redeemLinkCode: fail }) },
     { name: 'unlink', req: post('account/unlink'), unavailable: 'Linking is unavailable', failing: (fail) => ({ unlinkPlayer: fail }) },
     { name: 'dashboard', req: get(), unavailable: 'Your dashboard is unavailable', failing: (fail) => ({ readOwnDashboard: fail }) },
+    { name: 'records setting read', req: request('account/records-opt-in', { cookieHeader: SESSION_COOKIE }), unavailable: 'Pulse Records setting is unavailable', failing: (fail) => ({ readRecordsOptIn: fail }) },
+    { name: 'records setting save', req: { ...post('account/records-opt-in'), body: { show: true } }, unavailable: 'Pulse Records setting is unavailable', failing: (fail) => ({ setRecordsOptIn: fail }) },
   ];
 
   /** The refreshed tokens belong only in the Set-Cookie value, never in a body or a log line. */

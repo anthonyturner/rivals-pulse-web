@@ -37,6 +37,8 @@ const RECENT_SIGN_IN_SECONDS = 10 * 60;
 /** One message for a wrong, used or expired code, so the answer never says which one it was. */
 const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from the desktop app.';
 const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
+const RECORDS_OPT_IN_UNAVAILABLE = 'Your Pulse Records setting is unavailable right now. Try again in a moment.';
+const RECORDS_OPT_IN_NEEDS_LINK = 'Link the desktop app first. Pulse Records can only show the name of a linked player.';
 const DASHBOARD_UNAVAILABLE = 'Your dashboard is unavailable right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
@@ -73,6 +75,12 @@ async function route(request: AccountRequest, gateway: () => AuthGateway): Promi
       return method === 'POST' ? linkPlayer(request, gateway) : methodNotAllowed();
     case 'account/unlink':
       return method === 'POST' ? unlinkPlayer(request, gateway) : methodNotAllowed();
+    case 'account/records-opt-in':
+      return method === 'GET'
+        ? readRecordsOptIn(request, gateway)
+        : method === 'POST'
+          ? setRecordsOptIn(request, gateway)
+          : methodNotAllowed();
     case 'account/dashboard':
       return method === 'GET' ? readDashboard(request, gateway) : methodNotAllowed();
     default:
@@ -155,6 +163,38 @@ async function unlinkPlayer(request: AccountRequest, gateway: () => AuthGateway)
     await gateway().unlinkPlayer(tokens);
 
     return json(200, { player: null });
+  });
+}
+
+/** Whether the signed-in account named itself on Pulse Records. A read that fails is a 503, never "off". */
+async function readRecordsOptIn(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  const refusal = { signedOutMessage: 'Sign in to see this setting.', unavailableMessage: RECORDS_OPT_IN_UNAVAILABLE };
+
+  return withSession(request, gateway, refusal, async (tokens) =>
+    json(200, { showInRecords: await gateway().readRecordsOptIn(tokens) }),
+  );
+}
+
+/**
+ * Switches the signed-in account's own "Show me in Pulse Records". The body is `{ show: boolean }` and
+ * nothing in it names an account: the database acts on the session's account alone.
+ */
+async function setRecordsOptIn(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  const refusal = { signedOutMessage: 'Sign in to change this setting.', unavailableMessage: RECORDS_OPT_IN_UNAVAILABLE };
+
+  return withSession(request, gateway, refusal, async (tokens) => {
+    const show = (request.body as { show?: unknown } | undefined)?.show;
+
+    // Anything but a real boolean is no choice at all, so it must not become "off" by accident.
+    if (typeof show !== 'boolean') {
+      return json(400, { error: 'Choose on or off.' });
+    }
+
+    const result = await gateway().setRecordsOptIn(tokens, show);
+
+    return result.status === 'saved'
+      ? json(200, { showInRecords: result.showInRecords })
+      : json(409, { error: RECORDS_OPT_IN_NEEDS_LINK });
   });
 }
 

@@ -5,7 +5,7 @@
 
 .library {
   display: grid;
-  gap: 16px;
+  gap: 24px;
   padding-block: 16px 32px;
 }
 
@@ -13,17 +13,4 @@ h2 {
   margin-bottom: 8px;
   font-size: var(--type-h3);
   font-weight: 850;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.grid li {
-  display: grid;
 }

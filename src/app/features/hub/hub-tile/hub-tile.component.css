@@ -131,6 +131,11 @@
   color: var(--ink-accent);
 }
 
+/* Only the accent kind is yellow on the dark tile; the other kinds read as plain light text, since the tinted colours are not made for a dark fill in both themes. */
+:host(.featured) .chip:not([data-kind='accent']) {
+  color: var(--on-ink);
+}
+
 .art {
   position: absolute;
   inset: 0;
@@ -151,7 +156,7 @@
   content: '';
 }
 
-/* Zoomed in and pinned to the lower left, which suits the Media Tutorials banner: the street shows and its centred game logo is mostly out of frame. */
+/* A banner is zoomed in and pinned to the lower left, so a logo at its centre is mostly out of frame. */
 .art__image {
   position: absolute;
   bottom: 0;
@@ -159,6 +164,20 @@
   width: 170%;
   max-width: none;
   height: auto;
+}
+
+/* A portrait keeps its aspect ratio at the tile's height, against the right edge, and fades into the tile on the left so the text stays readable. */
+:host(.portrait) .art__image {
+  right: 0;
+  left: auto;
+  width: auto;
+  height: 100%;
+}
+
+:host(.portrait) .art::after {
+  background:
+    linear-gradient(to right, var(--ink) 0%, color-mix(in srgb, var(--ink) 80%, transparent) 40%, transparent 75%),
+    linear-gradient(to top, color-mix(in srgb, var(--ink) 92%, transparent) 0%, transparent 60%);
 }
 
 .marker {
@@ -179,6 +198,61 @@
   .art__image {
     width: 260%;
   }
+
+  :host(.portrait) .art__image {
+    width: auto;
+  }
+
+  /* The text spans the tile's width on a phone, so the portrait sits under a heavier scrim. */
+  :host(.portrait) .art::after {
+    background: linear-gradient(
+      to top,
+      var(--ink) 0%,
+      color-mix(in srgb, var(--ink) 85%, transparent) 55%,
+      color-mix(in srgb, var(--ink) 20%, transparent) 100%
+    );
+  }
+}
+
+/* A small square picture on the left and the text beside it. A tablet and a phone keep it, since it only takes 56px. */
+:host(.thumbed) {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-auto-rows: min-content;
+  align-content: start;
+  column-gap: 12px;
+}
+
+.thumbnail {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+:host(.thumbed) .chip,
+:host(.thumbed) .title,
+:host(.thumbed) .description {
+  grid-column: 2;
+}
+
+:host(.thumbed) .chip {
+  justify-self: start;
+  margin-bottom: 6px;
+}
+
+:host(.thumbed) .description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+:host(.thumbed) .preview {
+  grid-column: 1 / -1;
 }
 
 /* A soft wash in the top-right corner, so a tile can lean toward a side without changing its fill. */

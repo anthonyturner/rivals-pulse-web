@@ -4,22 +4,10 @@
     description="Hero playbooks, fundamentals and strategist lessons for Marvel Rivals."
   />
 
-  @for (group of groups; track group.title) {
+  @for (section of sections; track section.title) {
     <section>
-      <h2>{{ group.title }}</h2>
-      <ul class="grid">
-        @for (card of group.cards; track card.title) {
-          <li>
-            <app-guide-card
-              [title]="card.title"
-              [route]="card.route"
-              [imageUrl]="card.imageUrl"
-              [caption]="card.caption"
-              [blurb]="card.blurb"
-            />
-          </li>
-        }
-      </ul>
+      <h2>{{ section.title }}</h2>
+      <app-hub-bento [links]="section.links" [config]="section.tiles" [headingLevel]="3" />
     </section>
   }
 </div>
