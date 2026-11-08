@@ -110,12 +110,12 @@ describe('HomePageComponent', () => {
       expect(element.querySelector('aside')).toBeNull();
     });
 
-    it('alternates dark, white, light, white, light and dark bands', () => {
+    it('alternates light and white bands, closing on light', () => {
       const tones = Array.from(element.querySelectorAll('section.band')).map((band) =>
-        band.classList.contains('band--dark') ? 'dark' : band.classList.contains('band--white') ? 'white' : 'light',
+        band.classList.contains('band--white') ? 'white' : 'light',
       );
 
-      expect(tones).toEqual(['dark', 'white', 'light', 'white', 'light', 'dark']);
+      expect(tones).toEqual(['light', 'white', 'light', 'white', 'light', 'light']);
     });
 
     it('uses the one shared get-app button in the hero and the closing band', () => {

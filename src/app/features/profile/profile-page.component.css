@@ -8,6 +8,11 @@
   padding-block: 32px;
 }
 
+/* Tall enough that a banner's faces and a hero's portrait sit above the text; both kinds of art share it, so the page does not jump when the hero arrives. */
+app-hub-tile.lead {
+  min-height: 260px;
+}
+
 .caption {
   max-width: 70ch;
   color: var(--text-soft);

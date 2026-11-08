@@ -32,7 +32,7 @@
   content: '';
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--ink) 76%, transparent), color-mix(in srgb, var(--ink) 28%, transparent) 60%, color-mix(in srgb, var(--ink) 70%, transparent)),
-    linear-gradient(180deg, color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 48%, transparent) 72%, var(--ink-raised) 100%);
+    linear-gradient(180deg, color-mix(in srgb, var(--ink) 8%, transparent), color-mix(in srgb, var(--ink) 48%, transparent) 72%, var(--ink) 100%);
 }
 
 .home-page-background-video {
@@ -184,6 +184,11 @@
   color: var(--on-ink);
 }
 
+.hero-banner {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+}
+
 .hero-copy {
   --eyebrow-color: var(--ink-accent);
   display: grid;
@@ -271,6 +276,10 @@ h1 {
   .season-hero {
     min-height: auto;
     padding: 110px 16px 64px;
+  }
+
+  .hero-banner {
+    margin-bottom: 20px;
   }
 
   .hero-copy {
