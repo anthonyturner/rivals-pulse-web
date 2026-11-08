@@ -6,7 +6,7 @@ import type {
   HeroStatsModeId,
 } from '../../../../contracts/hero-stats.model';
 import type { HeroIdentities } from '../hero-identity';
-import { buildWinRatesView } from './win-rates-view';
+import { buildWinRatesView, selectHeroStatsRows } from './win-rates-view';
 
 const season = (id: number, startsAt: string | null, endsAt: string | null): HeroStatsHalfSeason => ({
   id,
@@ -72,6 +72,30 @@ const MODES: HeroStatsMode[] = [
 ];
 
 describe('buildWinRatesView', () => {
+  it('shows uncapped pick rates, leaving a missing pick rate unavailable', () => {
+    const view = buildWinRatesView(statsOf({ tiers: [{ name: 'B', heroes: [
+      { ...hero('storm', 12, 8), pickRate: 120 },
+      { ...hero('hela', 20, 10), pickRate: Number.NaN },
+    ] }] }), null, identities);
+
+    expect(view.ranked.map((row) => row.pickRateLabel)).toEqual(['120.0%', 'Not available']);
+    expect(view.ranked[1].pickRate).toBeNull();
+  });
+
+  it('filters names and roles together and sorts picks with missing figures last', () => {
+    const view = buildWinRatesView(statsOf({ tiers: [{ name: 'B', heroes: [
+      { ...hero('storm', 12, 8), pickRate: 120 },
+      { ...hero('luna-snow', 20, 10), pickRate: 30 },
+      { ...hero('hela', 20, 10), pickRate: Number.NaN },
+    ] }] }), null, identities);
+
+    expect(selectHeroStatsRows(view.ranked, '  SNOW ', 'Strategist', 'pick-desc').map((row) => row.hero)).toEqual(['luna-snow']);
+    expect(selectHeroStatsRows(view.ranked, '', '', 'pick-asc').map((row) => row.hero)).toEqual(['luna-snow', 'storm', 'hela']);
+    expect(selectHeroStatsRows(view.ranked, 'missing', '', 'win-desc')).toEqual([]);
+    expect(selectHeroStatsRows(view.ranked, '', '', 'win-asc')[0].hero).toBe('hela');
+    expect(view.ranked[0].hero).toBe('storm');
+  });
+
   describe('with heroes past the minimum', () => {
     it('ranks heroes by win rate, then appearances', () => {
       const view = buildWinRatesView(statsOf(), null, identities);

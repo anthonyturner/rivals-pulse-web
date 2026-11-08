@@ -60,6 +60,7 @@ const full: HeroStats = {
 
 describe('WinRatesPageComponent', () => {
   let http: HttpTestingController;
+  let activeHarness: RouterTestingHarness;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -80,11 +81,12 @@ describe('WinRatesPageComponent', () => {
   afterEach(() => http.verify());
 
   /** Opens the page, answers its two requests, and returns what it drew. */
-  async function open(url: string, stats: HeroStats | 'failure'): Promise<HTMLElement> {
+  async function open(url: string, stats: HeroStats | 'failure', roster: unknown[] = []): Promise<HTMLElement> {
     const harness = await RouterTestingHarness.create();
+    activeHarness = harness;
 
     await harness.navigateByUrl(url);
-    http.expectOne('/api/heroes').flush([]);
+    http.expectOne('/api/heroes').flush(roster);
 
     const request = http.expectOne('/api/hero-stats');
 
@@ -109,6 +111,88 @@ describe('WinRatesPageComponent', () => {
 
   const squash = (value: string): string => value.replace(/\s+/g, ' ');
 
+  it('keeps summary leaders within the selected role and search', async () => {
+    const element = await open('/win-rates', full, [
+      { id: 'storm', name: 'Storm', role: 'Duelist', imageUrl: null },
+      { id: 'hela', name: 'Hela', role: 'Vanguard', imageUrl: null },
+    ]);
+    const role = element.querySelector<HTMLSelectElement>('.filters app-filter-select select');
+    if (role === null) {
+      throw new Error('Role filter is missing');
+    }
+    role.value = 'Vanguard';
+    role.dispatchEvent(new Event('change'));
+    activeHarness.detectChanges();
+    expect(text(element, 'tbody .hero-name')).toEqual(['Hela']);
+    expect(text(element, '.summary button').every((label) => label.includes('Hela'))).toBeTrue();
+    expect(element.querySelectorAll('.col-ban button').length).toBe(0);
+  });
+
+  it('fits the table into desktop and narrow layouts in both themes', async () => {
+    const element = await open('/win-rates', full);
+    const frame = document.createElement('iframe');
+    document.body.appendChild(frame);
+    try {
+      const frameDocument = frame.contentDocument;
+      if (frameDocument === null) {
+        throw new Error('Layout frame is unavailable');
+      }
+      const styles = frameDocument.createElement('style');
+      styles.textContent = Array.from(document.styleSheets).flatMap((sheet) =>
+        Array.from(sheet.cssRules).map((rule) => rule.cssText)).join('\n');
+      frameDocument.head.appendChild(styles);
+      frameDocument.body.appendChild(element.cloneNode(true));
+      for (const theme of ['dark', 'light']) {
+        frameDocument.documentElement.dataset['theme'] = theme;
+        for (const width of [320, 360, 760, 800, 1366]) {
+          frame.style.width = `${width}px`;
+          const page = frameDocument.querySelector<HTMLElement>('.win-rates-page');
+          const table = frameDocument.querySelector('table');
+          if (page === null || table === null) {
+            throw new Error('Stats layout is missing');
+          }
+          expect(table.getBoundingClientRect().right).withContext(`${theme} at ${width}px`).toBeLessThanOrEqual(width);
+          expect(page.scrollWidth).withContext(`${theme} at ${width}px`).toBeLessThanOrEqual(page.clientWidth);
+        }
+      }
+    } finally {
+      frame.remove();
+    }
+  });
+
+  it('sorts picks from the summary and table, announces order, and filters without another request', async () => {
+    const element = await open('/win-rates', { ...full, tiers: [{ name: 'A', heroes: [
+      { ...hero('storm', 12, 8), pickRate: 120 },
+      { ...hero('hela', 20, 9), pickRate: 150 },
+    ] }] });
+
+    expect(text(element, '.summary button')[1]).toContain('Hela');
+    element.querySelectorAll<HTMLButtonElement>('.summary button')[1].click();
+    activeHarness.detectChanges();
+    expect(text(element, 'tbody .hero-name')).toEqual(['Hela', 'Storm']);
+    expect(element.querySelector('[aria-sort="descending"]')?.textContent).toContain('Pick rate');
+    expect(element.querySelector('[aria-live]')?.textContent).toContain('pick rate, highest first');
+    element.querySelector<HTMLButtonElement>('.col-pick button')?.click();
+    activeHarness.detectChanges();
+    expect(text(element, 'tbody .hero-name')).toEqual(['Storm', 'Hela']);
+
+    const search = element.querySelector<HTMLInputElement>('input[type="search"]');
+    if (search === null) {
+      throw new Error('Search input is missing');
+    }
+    search.value = ' no such hero ';
+    search.dispatchEvent(new Event('input'));
+    activeHarness.detectChanges();
+    expect(element.textContent).toContain('No heroes match these filters');
+    expect(element.querySelector('table')).toBeNull();
+    expect(element.querySelector('.summary')?.textContent).not.toContain('Hela');
+    element.querySelector<HTMLButtonElement>('.reset-filters')?.click();
+    activeHarness.detectChanges();
+    expect(text(element, 'tbody .hero-name').length).toBe(2);
+    expect(element.textContent).toContain('Not collected');
+    expect(element.textContent).toContain('exceed 100%');
+  });
+
   it('says it is loading until the numbers arrive, without announcing it', async () => {
     const harness = await RouterTestingHarness.create();
 
@@ -117,7 +201,7 @@ describe('WinRatesPageComponent', () => {
 
     const element = harness.routeNativeElement as HTMLElement;
 
-    expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading win rates');
+    expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading hero stats');
     expect(element.querySelector('[role="status"]')).toBeNull();
 
     http.expectOne('/api/heroes').flush([]);
@@ -133,12 +217,12 @@ describe('WinRatesPageComponent', () => {
     expect(meta).toContain('the line marks 50%');
     expect(text(element, 'tbody .hero-name')).toEqual(['Storm', 'Hela']);
     expect(text(element, 'tbody .rate strong')).toEqual(['66.7%', '45.0%']);
-    expect(text(element, 'tbody .col-games [aria-hidden="true"]')).toEqual(['8 / 12', '9 / 20']);
+    expect(text(element, 'tbody .col-games [aria-hidden="true"]:not(.mobile-label)')).toEqual(['8 / 12', '9 / 20']);
     expect(text(element, 'tbody .col-games .visually-hidden')).toEqual([
       '8 wins in 12 games',
       '9 wins in 20 games',
     ]);
-    expect(text(element, 'h2')[0]).toBe('Heroes, highest win rate first');
+    expect(text(element, 'h2')[0]).toBe('Heroes · Win rate, highest first');
   });
 
   it('draws a real table: every header names its scope and the heading names the table', async () => {
@@ -149,7 +233,7 @@ describe('WinRatesPageComponent', () => {
     expect(table.getAttribute('aria-labelledby')).toBe('rates-title');
     expect(element.querySelector('#rates-title')?.tagName).toBe('H2');
     expect(headers.every((header) => header.getAttribute('scope') !== null)).toBeTrue();
-    expect(text(table, 'thead th')).toEqual(['#Rank', 'Hero', 'Role', 'Win rate', 'Wins / games']);
+    expect(text(table, 'thead th')).toEqual(['#Rank', 'Hero', 'Role', 'Win rate ↓', 'Pick rate ↕', 'Ban rate', 'Wins / games']);
   });
 
   it('links each hero to the heroes page and keeps the decorative portrait out of the reading order', async () => {
@@ -229,10 +313,10 @@ describe('WinRatesPageComponent', () => {
   it('says the numbers could not be loaded when the request fails, announced once by the live region', async () => {
     const element = await open('/win-rates', 'failure');
 
-    expect(text(element, 'app-state-panel h2')).toEqual(['Win rates could not be loaded']);
+    expect(text(element, 'app-state-panel h2')).toEqual(['Hero stats could not be loaded']);
     expect(element.querySelector('table')).toBeNull();
     expect(element.querySelector('[role="status"]')).toBeNull();
-    expect(element.querySelector('[aria-live]')?.textContent?.trim()).toBe('Win rates could not be loaded');
+    expect(element.querySelector('[aria-live]')?.textContent?.trim()).toBe('Hero stats could not be loaded');
   });
 
   it('answers an old season address with the empty state and a way to the current numbers', async () => {
@@ -242,7 +326,7 @@ describe('WinRatesPageComponent', () => {
     expect(text(element, 'app-state-panel h2')).toEqual(['Season 9 is not shown here']);
     expect(squash(text(element, 'app-state-panel p')[0])).toContain('latest half-season only');
     expect(element.querySelector('.toolbar')).toBeNull();
-    expect(element.querySelector('app-filter-select')).toBeNull();
+    expect(element.querySelector('.toolbar:not(.filters) app-filter-select')).toBeNull();
     expect(element.querySelector('.method-note')).toBeNull();
     expect(element.querySelector('table')).toBeNull();
     expect(link?.textContent).toContain('See Season 10.5 win rates');
@@ -290,7 +374,7 @@ describe('WinRatesPageComponent', () => {
     it('lists only the modes that hold a decided match, the default first, and never Practice', async () => {
       const { element } = await openWithPicker();
 
-      expect(text(element, '.filter-select__label')).toEqual(['Mode']);
+      expect(text(element, '.filter-select__label')).toEqual(['Mode', 'Role', 'Sort']);
       expect(Array.from(modeSelect(element).options).map((option) => option.textContent?.trim())).toEqual([
         'Quick Match and Competitive',
         'Quick Match',
@@ -303,7 +387,7 @@ describe('WinRatesPageComponent', () => {
     it('draws no picker when only the default blend holds matches, and names the mode in the meta line instead', async () => {
       const element = await open('/win-rates', { ...withModes, modes: [MODES[0]] });
 
-      expect(element.querySelector('app-filter-select')).toBeNull();
+      expect(element.querySelector('.toolbar:not(.filters) app-filter-select')).toBeNull();
       expect(squash(text(element, '.meta')[0])).toMatch(/^Quick Match and Competitive · Season 10.5/);
     });
 
@@ -314,7 +398,7 @@ describe('WinRatesPageComponent', () => {
       harness.detectChanges();
 
       expect(element.querySelector('table')).toBeNull();
-      expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading win rates');
+      expect(element.querySelector('[aria-busy="true"]')?.textContent).toContain('Loading hero stats');
       expect(element.querySelector('[role="status"]')).toBeNull();
       expect(liveRegion(element)).toBe('');
 
@@ -322,7 +406,7 @@ describe('WinRatesPageComponent', () => {
       harness.detectChanges();
 
       expect(liveRegion(element)).toBe(
-        'Win rates updated in Competitive for Season 10.5: 28 matches counted',
+        'Hero stats updated in Competitive for Season 10.5: 28 matches counted',
       );
       expect(element.querySelectorAll('[aria-live]').length).toBe(1);
       expect(squash(text(element, '.meta')[0])).toContain('28 matches counted');
@@ -373,9 +457,9 @@ describe('WinRatesPageComponent', () => {
       http.expectOne('/api/hero-stats?mode=competitive').flush('down', { status: 500, statusText: 'Server Error' });
       harness.detectChanges();
 
-      expect(text(element, 'app-state-panel h2')).toEqual(['Win rates could not be loaded']);
+      expect(text(element, 'app-state-panel h2')).toEqual(['Hero stats could not be loaded']);
       expect(modeSelect(element).options.length).toBe(3);
-      expect(liveRegion(element)).toBe('Win rates could not be loaded');
+      expect(liveRegion(element)).toBe('Hero stats could not be loaded');
     });
   });
 });
