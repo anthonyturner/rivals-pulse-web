@@ -1216,9 +1216,9 @@ relink racing it waits and then switches the setting off.
   not fire and the setting stays on: it is the same recorder and the same player, only the name the app reports changed
   (ADR-0006 ties naming to the link, not to the name). The new name is what the boards show.
 - **Release order.** Push `20261107130000` by hand (`npx supabase db push`) before the pull request merges; the two
-  Pulse Records migrations before it are already applied. **Do not merge the pull request for this switch before
-  `anthonyturner/rivals_pulse#1386` (the desktop app privacy policy) ships**: the switch is what lets a name appear
-  publicly, and the policy must extend the basis for that first (ADR-0006, decision 3).
+  Pulse Records migrations before it are already applied. It was applied to production on 2026-11-08. The maintainer
+  decided on 2026-11-08 that the switch ships before `anthonyturner/rivals_pulse#1386` (the desktop app privacy
+  policy), which follows; the website's `/privacy` section is the notice until then (ADR-0006, amended).
 
 ## Tests
 

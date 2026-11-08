@@ -578,12 +578,22 @@ describe('AccountPageComponent Pulse Records switch', () => {
     expect(page(harness).textContent).toContain('could not be loaded right now');
     expect(auth.loadRecordsOptIn).toHaveBeenCalledTimes(1);
 
-    auth.loadRecordsOptIn.and.callFake(async () => ({ status: 'ready', showInRecords: true }));
+    auth.loadRecordsOptIn.and.callFake(async () => ({ status: 'failed', message: 'Still could not be loaded.' }));
     retry?.click();
     await harness.fixture.whenStable();
     harness.detectChanges();
 
-    expect(auth.loadRecordsOptIn).toHaveBeenCalledTimes(2);
+    expect(document.activeElement?.id).toBe('account-records-title');
+    expect(announcement(harness)).toContain('Still could not be loaded.');
+
+    auth.loadRecordsOptIn.and.callFake(async () => ({ status: 'ready', showInRecords: true }));
+    Array.from(page(harness).querySelectorAll('button'))
+      .find((button) => button.textContent?.trim() === 'Try again')
+      ?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(auth.loadRecordsOptIn).toHaveBeenCalledTimes(3);
     expect(checkbox(harness).checked).toBeTrue();
     expect(page(harness).textContent).not.toContain('could not be loaded right now');
   });
@@ -616,6 +626,29 @@ describe('AccountPageComponent Pulse Records switch', () => {
     expect(checkbox(harness).checked).toBeTrue();
     expect(checkbox(harness).getAttribute('aria-busy')).toBeNull();
     expect(document.activeElement).toBe(checkbox(harness));
+  });
+
+  it('ignores a save that finishes after the desktop app was unlinked', async () => {
+    const { auth } = setup(LINKED);
+    let finish: (result: RecordsOptInResult) => void = () => undefined;
+
+    auth.setRecordsOptIn.and.callFake(() => new Promise<RecordsOptInResult>((resolve) => (finish = resolve)));
+    const harness = await open();
+
+    checkbox(harness).click();
+    harness.detectChanges();
+    Array.from(page(harness).querySelectorAll('button'))
+      .find((button) => button.textContent?.trim() === 'Unlink')
+      ?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    finish({ status: 'ready', showInRecords: true });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(announcement(harness)).not.toContain('is on');
   });
 
   it('links to what Pulse Records publishes, in the privacy notes', async () => {

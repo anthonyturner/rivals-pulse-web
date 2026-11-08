@@ -44,6 +44,7 @@ export class AccountPageComponent {
     return state.status === 'signedIn' ? state.player : null;
   });
   readonly linkHeading = viewChild<ElementRef<HTMLElement>>('linkHeading');
+  readonly recordsHeading = viewChild<ElementRef<HTMLElement>>('recordsHeading');
   /**
    * The one live region on the page. What an action did, whether it worked or not, is read out here
    * and shown where it happened, so nothing else on the page is live and nothing is read twice.
@@ -159,7 +160,7 @@ export class AccountPageComponent {
     this.linkHeading()?.nativeElement.focus();
   }
 
-  private async loadRecordsOptIn(linked: boolean): Promise<void> {
+  private async loadRecordsOptIn(linked: boolean, retry = false): Promise<void> {
     const load = ++this.recordsOptInLoad;
 
     this.recordsOptIn.set(false);
@@ -188,12 +189,17 @@ export class AccountPageComponent {
       case 'failed':
         this.recordsOptInLoadFailed.set(true);
         this.recordsOptInError.set(result.message);
+        if (retry) {
+          this.announcement.set(result.message);
+        }
         break;
     }
   }
 
+  /** The button goes away once clicked, so focus moves to the section heading rather than falling to the page body. */
   retryRecordsOptIn(): void {
-    void this.loadRecordsOptIn(this.player() !== null);
+    this.recordsHeading()?.nativeElement.focus();
+    void this.loadRecordsOptIn(this.player() !== null, true);
   }
 
   async onRecordsOptInChange(event: Event): Promise<void> {
@@ -211,9 +217,17 @@ export class AccountPageComponent {
     this.recordsOptInError.set(null);
     this.announcement.set('');
 
+    const load = this.recordsOptInLoad;
     const result = await this.auth.setRecordsOptIn(show);
 
     this.recordsOptInSaving.set(false);
+
+    // An unlink or relink during the save reloaded the setting; this reply no longer describes it.
+    if (load !== this.recordsOptInLoad) {
+      box.checked = this.recordsOptIn();
+
+      return;
+    }
 
     switch (result.status) {
       case 'ready':
