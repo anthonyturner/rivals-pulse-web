@@ -31,9 +31,9 @@
 
     <div class="roles">
       @for (card of current.cards; track card.role) {
-        <article class="role">
+        <article class="role" [attr.data-role]="card.roleKey">
           <header class="role-header">
-            <h3 class="role-name">{{ card.role }}</h3>
+            <h3 class="role-name"><span class="role-dot" aria-hidden="true"></span>{{ card.role }}</h3>
             <p class="role-sample">{{ card.appearancesLabel }}</p>
           </header>
           @if (card.ready) {

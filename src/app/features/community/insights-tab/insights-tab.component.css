@@ -16,14 +16,15 @@
 .groups {
   display: grid;
   gap: 12px;
+  align-items: start;
 }
 
 .group {
   min-width: 0;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
+  border-radius: 12px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--tertiary) 12%, var(--bg-panel)), var(--bg-panel) 60%);
 }
 
 .group-title {

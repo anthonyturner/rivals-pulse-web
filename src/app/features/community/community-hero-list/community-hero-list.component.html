@@ -2,11 +2,16 @@
   <ol class="hero-list">
     @for (hero of heroes(); track hero.hero) {
       <li>
-        <app-hero-tile [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="hero.hero">
+        <app-hero-tile artLed [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="hero.hero" [role]="hero.role">
           <span tileFigure class="figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>
-          @if (hero.sample) {
-            <span class="sample">{{ hero.sample }}</span>
-          }
+          <span class="meta">
+            @if (hero.role; as role) {
+              <span class="role-chip" [attr.data-role]="role.toLowerCase()">{{ role }}</span>
+            }
+            @if (hero.sample) {
+              <span class="sample">{{ hero.sample }}</span>
+            }
+          </span>
         </app-hero-tile>
       </li>
     }

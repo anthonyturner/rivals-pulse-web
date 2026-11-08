@@ -268,6 +268,15 @@ describe('CommunityPageComponent', () => {
     expect(host().querySelector('.community-page__intro')?.textContent).toContain('Anonymous totals');
   });
 
+  it('leads with key art that is decoration, with a community chip', async () => {
+    await open('/heroes');
+
+    const art = host().querySelector<HTMLElement>('.community-page__art');
+    expect(art?.getAttribute('aria-hidden')).toBe('true');
+    expect(art?.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(host().querySelector('.community-page__chip')?.textContent?.trim()).toBe('Community');
+  });
+
   describe('on a narrow screen', () => {
     beforeEach(() => {
       (harness.fixture.nativeElement as HTMLElement).style.width = '384px';
