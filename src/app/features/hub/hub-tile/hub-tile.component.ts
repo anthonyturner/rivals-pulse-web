@@ -24,6 +24,7 @@ import { KindChipComponent } from '../kind-chip/kind-chip.component';
   host: {
     '[class.featured]': '!!imageUrl()',
     '[class.portrait]': '!!imageUrl() && imageFit() === "portrait"',
+    '[class.cover]': '!!imageUrl() && imageFit() === "cover"',
     '[class.thumbed]': '!imageUrl() && !!thumbnailUrl()',
     '[class.split]': 'split()',
     '[class.static]': '!route()',
