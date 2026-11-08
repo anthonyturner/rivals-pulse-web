@@ -95,6 +95,7 @@
 .home-page-video-close,
 .home-page-video-control,
 .home-page-video-tab,
+.home-page-video-toggle,
 .home-page-sound-toggle {
   border: 1px solid var(--ink-control-border);
   border-radius: 999px;
@@ -149,11 +150,17 @@
   padding: 0 16px;
 }
 
-.home-page-sound-toggle {
+.hero-controls {
   position: absolute;
   z-index: 3;
   top: 24px;
   right: 32px;
+  display: flex;
+  gap: 8px;
+}
+
+.home-page-video-toggle,
+.home-page-sound-toggle {
   min-height: 40px;
   padding: 0 14px;
 }
@@ -161,6 +168,7 @@
 .home-page-video-close:hover,
 .home-page-video-control:hover,
 .home-page-video-tab:hover,
+.home-page-video-toggle:hover,
 .home-page-sound-toggle:hover {
   border-color: var(--ink-accent);
   background: color-mix(in srgb, var(--ink) 94%, transparent);
@@ -169,24 +177,39 @@
 .home-page-video-close:focus-visible,
 .home-page-video-control:focus-visible,
 .home-page-video-tab:focus-visible,
+.home-page-video-toggle:focus-visible,
 .home-page-sound-toggle:focus-visible {
   outline: 3px solid var(--ink-focus);
   outline-offset: 3px;
 }
 
 .season-hero {
+  --hero-pad-top: clamp(70px, 4vw, 144px);
+  --hero-band-gap: 8px;
+  /* The banner strip's height; with the video off the same room is kept free for the clash, so the copy does not move. */
+  --pulse-banner-height: 128px;
   position: relative;
   z-index: 1;
   display: grid;
   min-height: min(520px, calc(100dvh - 80px));
   /* The side padding lines the copy up with the 1320px column of the bands below. */
-  padding: clamp(70px, 4vw, 144px) max(32px, calc((100% - 1320px) / 2)) 56px;
+  padding: var(--hero-pad-top) max(32px, calc((100% - 1320px) / 2)) 56px;
   color: var(--on-ink);
+}
+
+.season-hero.has-pulse-backdrop {
+  --pulse-stage-height: calc(var(--hero-pad-top) + var(--pulse-banner-height));
 }
 
 .hero-banner {
   grid-column: 1 / -1;
-  margin-bottom: 8px;
+  margin-bottom: var(--hero-band-gap);
+}
+
+/* A banner placed in a grid area would fill only that area; unplaced, it fills the whole hero. */
+.season-hero.has-pulse-backdrop .hero-banner {
+  grid-column: auto;
+  margin-bottom: 0;
 }
 
 .hero-copy {
@@ -195,6 +218,10 @@
   align-content: start;
   max-width: 810px;
   padding-top: clamp(18px, 3vw, 40px);
+}
+
+.season-hero.has-pulse-backdrop .hero-copy {
+  padding-top: calc(var(--pulse-banner-height) + var(--hero-band-gap) + clamp(18px, 3vw, 40px));
 }
 
 @media (min-width: 721px) and (max-width: 1200px) {
@@ -268,22 +295,30 @@ h1 {
     --popout-gap: var(--mobile-page-gutter);
   }
 
-  .home-page-sound-toggle {
+  .hero-controls {
     top: 16px;
     right: 16px;
   }
 
   .season-hero {
+    --hero-pad-top: 110px;
+    --hero-band-gap: 20px;
     min-height: auto;
-    padding: 110px 16px 64px;
-  }
-
-  .hero-banner {
-    margin-bottom: 20px;
+    padding: var(--hero-pad-top) 16px 64px;
   }
 
   .hero-copy {
     padding-top: 0;
+  }
+
+  .season-hero.has-pulse-backdrop .hero-copy {
+    padding-top: calc(var(--pulse-banner-height) + var(--hero-band-gap));
+  }
+}
+
+@media (max-width: 640px) {
+  .season-hero {
+    --pulse-banner-height: 104px;
   }
 }
 

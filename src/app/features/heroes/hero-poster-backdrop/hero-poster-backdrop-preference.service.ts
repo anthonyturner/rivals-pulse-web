@@ -1,40 +1,23 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { afterNextRender, Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+
+import { rememberedSetting } from '../../../shared/utilities/remembered-setting';
 
 export type HeroPosterBackdrop = 'portrait' | 'video';
 
 const STORAGE_KEY = 'rp.hero-poster-backdrop';
 
-/** The visitor's chosen poster backdrop, remembered in this browser. */
+/** The visitor's chosen poster backdrop, remembered in this browser; the server renders the portrait. */
 @Injectable({ providedIn: 'root' })
 export class HeroPosterBackdropPreferenceService {
-  private readonly document = inject(DOCUMENT);
-  private readonly current = signal<HeroPosterBackdrop>('portrait');
+  private readonly choice = rememberedSetting<HeroPosterBackdrop>({
+    key: STORAGE_KEY,
+    fallback: 'portrait',
+    isValid: (saved): saved is HeroPosterBackdrop => saved === 'portrait' || saved === 'video',
+  });
 
-  readonly backdrop = this.current.asReadonly();
-
-  constructor() {
-    // Read after the first render: the server always renders the portrait, and hydration must see the same markup.
-    if (isPlatformBrowser(inject(PLATFORM_ID))) {
-      afterNextRender(() => this.current.set(this.readSaved()));
-    }
-  }
+  readonly backdrop = this.choice.value;
 
   set(backdrop: HeroPosterBackdrop): void {
-    this.current.set(backdrop);
-
-    try {
-      this.document.defaultView?.localStorage.setItem(STORAGE_KEY, backdrop);
-    } catch {
-      // Private windows and blocked storage throw; the choice then lasts for this visit only.
-    }
-  }
-
-  private readSaved(): HeroPosterBackdrop {
-    try {
-      return this.document.defaultView?.localStorage.getItem(STORAGE_KEY) === 'video' ? 'video' : 'portrait';
-    } catch {
-      return 'portrait';
-    }
+    this.choice.set(backdrop);
   }
 }
