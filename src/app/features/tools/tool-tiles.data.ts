@@ -12,7 +12,7 @@ const BUILDER: TileChip = { kind: 'accent', label: 'Builder' };
  * and the Dive Planner share two rows, and the Team Builder is a strip under them.
  */
 export const TOOL_TILES: readonly HubTileConfig[] = [
-  { path: '/counters', size: 'feature', chip: MATCHUPS, preview: CountersPreviewComponent, imageUrl: null, tint: 'danger' },
+  { path: '/counters', size: 'feature', chip: MATCHUPS, preview: CountersPreviewComponent, imageUrl: '/images/site/banners/counters-banner.webp', imageFit: 'cover', tint: 'danger' },
   { path: '/dive-planner', size: 'tall', chip: PLANNER, preview: DivePlannerPreviewComponent, imageUrl: null },
   { path: '/team-builder', size: 'wide', chip: BUILDER, preview: TeamBuilderPreviewComponent, imageUrl: null, split: true },
 ];
