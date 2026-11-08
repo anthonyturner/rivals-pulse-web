@@ -166,8 +166,7 @@ can revert any merge.
 This is a standing authorization for the outward-facing actions along the way:
 filing and updating GitHub issues, posting issue and pull-request comments,
 creating branches, committing, pushing, opening pull requests, marking a
-verified pull request ready for review, and merging a reviewed one with a merge
-commit. No stage asks permission to record its own output in GitHub.
+verified pull request ready for review, and squash-merging a reviewed one. No stage asks permission to record its own output in GitHub.
 
 The branch and a draft pull request are created **as soon as the issue exists
 and before implementation begins** — see
@@ -179,9 +178,10 @@ arrive rather than waiting for it.
 a pull request that has no posted review, that still has a blocking finding, or
 whose checks fail, and never bypasses branch protection to get one in. The
 prohibitions in [rule 3](../rules.md) are unchanged: never force-push, never
-rewrite history, never commit directly to `master`. A merge
-commit keeps every commit of the branch intact, so any merge can be reverted
-cleanly.
+rewrite history, never commit directly to `master`. A squash
+merge lands each pull request as one commit on `master`, so any merge can be
+reverted cleanly and the history stays one line per change
+([ADR-0007](../decisions/0007-squash-merge-pull-requests.md)).
 
 What this trades: a wrong approach now surfaces at the pull request rather than
 before the code is written. That is deliberate. The protection against it sits

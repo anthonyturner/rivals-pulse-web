@@ -18,7 +18,7 @@ optional.
    approval, per **How far an agent goes** in
    [agent-workflows/pipeline.md](agent-workflows/pipeline.md): file the issue,
    branch, commit, push, open the PR, post a code review on it, fix the real
-   findings, then merge with a merge commit. Never merge a pull request that
+   findings, then squash-merge it. Never merge a pull request that
    has no posted review, that still has a blocking finding, or whose checks
    fail.
 3. Never force-push, rewrite history, delete remote branches, bypass branch
