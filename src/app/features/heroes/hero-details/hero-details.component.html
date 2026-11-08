@@ -1,9 +1,11 @@
 ﻿<div class="detail-hero-container">
   @if (banner(); as poster) {
   <div class="hero-poster" [class]="poster.roleClass">
-    <span class="poster-art" aria-hidden="true">
-      <img class="poster-art__image" [src]="hero.imageUrl" alt="" width="320" height="320" decoding="async" />
-    </span>
+    <app-hero-poster-backdrop
+      [heroName]="hero.name"
+      [imageUrl]="hero.imageUrl"
+      [videoUrl]="controller.selectedHeroPosterVideoUrl()"
+    />
     <div class="poster-header">
       <img class="poster-portrait" [src]="hero.imageUrl" [alt]="hero.name" width="320" height="320" />
       <div class="poster-identity">
