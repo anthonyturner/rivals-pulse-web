@@ -63,7 +63,7 @@ describe('NavigationCategoryPageComponent', () => {
     const element = renderCategory('Resources');
 
     expect(element.querySelector('#coming-soon-title')).toBeNull();
-    expect(element.querySelectorAll('app-hub-tile').length).toBe(8);
+    expect(element.querySelectorAll('app-hub-tile').length).toBe(9);
   });
 
   it('draws Resources and Tools as bento grids, each with its own tiles', () => {

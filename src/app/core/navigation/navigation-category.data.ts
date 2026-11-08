@@ -23,6 +23,7 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
       { label: 'Tier List', path: '/tier-list', description: 'Community hero tiers from RivalsPulse players, by half-season.', enabled: true },
       { label: 'Hero stats', path: '/win-rates', description: 'Compare hero win and pick rates from RivalsPulse matches.', enabled: true },
       { label: 'Team Comps', path: '/team-comps', description: 'Compare the best duos in each role, triple supports and line-ups.', enabled: true },
+      { label: 'Pulse Records', path: '/records', description: 'See the best single matches players have recorded.', enabled: true },
       { label: 'Glossary', path: '/glossary', description: 'Translate common hero-shooter terms quickly.', enabled: true },
     ],
   },
