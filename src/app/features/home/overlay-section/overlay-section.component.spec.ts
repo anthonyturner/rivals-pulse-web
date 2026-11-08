@@ -17,14 +17,14 @@ describe('OverlaySectionComponent', () => {
 
   const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
-  it('is a dark band labelled by its h2', () => {
+  it('is a themed light band labelled by its h2', () => {
     const section = element.querySelector('section.band');
     const heading = element.querySelector('h2');
 
     expect(heading?.id).toBeTruthy();
     expect(section?.getAttribute('aria-labelledby')).toBe(heading?.id);
     expect(text(heading)).toBe('The overlay does the work while you play');
-    expect(section?.classList).toContain('band--dark');
+    expect(section?.classList).not.toContain('band--white');
     expect(element.querySelectorAll('h2').length).toBe(1);
   });
 

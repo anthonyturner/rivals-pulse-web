@@ -84,16 +84,13 @@ describe('HomeBandComponent', () => {
   });
 
   it('marks its tone, with light as the plain band', async () => {
-    expect(section().classList).not.toContain('band--dark');
     expect(section().classList).not.toContain('band--white');
 
-    for (const tone of ['white', 'dark'] as const) {
-      fixture.componentInstance.tone = tone;
-      fixture.changeDetectorRef.markForCheck();
-      fixture.detectChanges();
+    fixture.componentInstance.tone = 'white';
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
 
-      expect(section().classList).toContain(`band--${tone}`);
-    }
+    expect(section().classList).toContain('band--white');
   });
 
   it('centres its head on request and starts it at the left otherwise', () => {

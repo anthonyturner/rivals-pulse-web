@@ -169,7 +169,7 @@
   --shadow-soft: var(--aurora-card-shadow);
   --eyebrow: var(--aurora-accent-ink);
 
-  /* Bands that stay dark in both themes (the home hero over its photo, the news, overlay and trust bands): the Aurora dark values, fixed. `npm run test:theme` holds them equal to the dark palette. */
+  /* Bands that stay dark in both themes (the home hero over its photo, the news band and the trust block): the Aurora dark values, fixed. `npm run test:theme` holds them equal to the dark palette. */
   --ink: #090b14;
   --ink-raised: #141828;
   --ink-line: #2c3350;
