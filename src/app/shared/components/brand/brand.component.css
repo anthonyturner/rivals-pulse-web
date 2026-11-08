@@ -10,7 +10,7 @@
   text-decoration: none;
 }
 
-/* The logo carries its own dark panel, so it reads on both themes; the radius and ring only soften its square corners. */
+/* The logo carries its own dark panel; the 1px ring gives that panel an edge where it meets the dark theme background. */
 .brand-mark {
   flex: none;
   width: 32px;
