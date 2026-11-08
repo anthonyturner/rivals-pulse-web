@@ -28,6 +28,9 @@ export type PulseBannerLayout = 'strip' | 'backdrop';
  * the motion, and holds it still when the tab is hidden, the banner is off screen, or the visitor asked
  * for reduced motion. As a backdrop the grid fills the whole hero; the clash keeps a band of the
  * height the owner gives it in `--pulse-stage-height`, so its drawing is not stretched tall.
+ *
+ * The owner sets the size with two custom properties: `--pulse-banner-height`, the strip's height
+ * (128px when unset), and `--pulse-stage-height`, the backdrop's clash band (200px when unset).
  */
 @Component({
   selector: 'app-pulse-banner',

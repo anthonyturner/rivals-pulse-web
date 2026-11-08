@@ -23,8 +23,12 @@ interface Pulse {
 }
 
 const CELL = 24;
-const MAX_AMBIENT_PULSES = 14;
-const AMBIENT_SPAWN_GAP_S = 0.35;
+/** The strip's size: 14 ambient pulses and one new one every 0.35 s are what it looks right with. */
+const STRIP_AREA = 1320 * 128;
+const STRIP_AMBIENT_PULSES = 14;
+const STRIP_SPAWN_GAP_S = 0.35;
+/** A bigger grid has proportionally more pulses, up to this many: each is several glowing strokes a frame. */
+const MAX_AMBIENT_PULSES = 32;
 const TURN_CHANCE = 0.35;
 /** The wait before each surge is drawn from this range; it counts down only while the grid plays. */
 const AMBIENT_SURGE_MIN_S = 6;
@@ -33,6 +37,7 @@ const MAX_FRAME_S = 0.05;
 const GRID_LINE_ALPHA = 0.55;
 /** The trail fades in this many steps: fewer strokes per pulse than one per segment. */
 const TRAIL_BANDS = 4;
+/** The still frame's pulses, for a grid the size of the strip. */
 const STILL_PULSES = 6;
 const STILL_STEPS = 40;
 const STILL_STEP_S = 0.016;
@@ -62,6 +67,11 @@ export class CircuitGrid {
     private readonly random: () => number = Math.random,
   ) {
     this.ambientSurgeTimer = this.nextAmbientSurgeGap();
+  }
+
+  /** The ordinary pulses still on the grid. */
+  get ambientPulses(): number {
+    return this.pulses.filter(pulse => !pulse.strong).length;
   }
 
   /** The stronger pulses still on the grid. */
@@ -118,9 +128,9 @@ export class CircuitGrid {
       this.spawnSurge();
       this.ambientSurgeTimer = this.nextAmbientSurgeGap();
     }
-    if (this.spawnTimer <= 0 && this.pulses.filter(pulse => !pulse.strong).length < MAX_AMBIENT_PULSES) {
+    if (this.spawnTimer <= 0 && this.ambientPulses < this.ambientCapacity) {
       this.spawnAmbient();
-      this.spawnTimer = AMBIENT_SPAWN_GAP_S;
+      this.spawnTimer = STRIP_SPAWN_GAP_S * (STRIP_AMBIENT_PULSES / this.ambientCapacity);
     }
     this.pulses = this.pulses.filter(pulse => pulse.life > 0);
     for (const pulse of this.pulses) this.step(pulse, seconds);
@@ -130,10 +140,30 @@ export class CircuitGrid {
     return AMBIENT_SURGE_MIN_S + this.random() * (AMBIENT_SURGE_MAX_S - AMBIENT_SURGE_MIN_S);
   }
 
+  /** How many ordinary pulses the grid holds: the strip's number at the strip's size, more in proportion to a bigger area, never fewer. */
+  get ambientCapacity(): number {
+    const scaled = Math.round((STRIP_AMBIENT_PULSES * this.width * this.height) / STRIP_AREA);
+    return Math.min(MAX_AMBIENT_PULSES, Math.max(STRIP_AMBIENT_PULSES, scaled));
+  }
+
+  /**
+   * Pulses start at the centre, where the heartbeat in the banner collides. On a grid bigger than the
+   * strip that would leave the rest empty, so the share of the area beyond the strip's decides how
+   * often one starts at a random crossing instead. The strip itself never does.
+   */
+  private spawnPoint(): [number, number] {
+    const beyondStrip = Math.max(0, 1 - STRIP_AREA / Math.max(1, this.width * this.height));
+    if (beyondStrip > 0 && this.random() < beyondStrip) {
+      return [Math.round((this.random() * this.width) / CELL) * CELL, Math.round((this.random() * this.height) / CELL) * CELL];
+    }
+    return [Math.round(this.width / 2 / CELL) * CELL, Math.round(this.height / 2 / CELL) * CELL];
+  }
+
   private spawnAmbient(): void {
+    const [x, y] = this.spawnPoint();
     this.pulses.push({
-      x: Math.round(this.width / 2 / CELL) * CELL,
-      y: Math.round(this.height / 2 / CELL) * CELL,
+      x,
+      y,
       dx: this.random() < 0.5 ? -1 : 1,
       dy: 0,
       trail: [],
@@ -194,7 +224,8 @@ export class CircuitGrid {
 
   private renderStill(): void {
     this.pulses = [];
-    for (let i = 0; i < STILL_PULSES; i++) this.spawnAmbient();
+    const count = Math.round((STILL_PULSES * this.ambientCapacity) / STRIP_AMBIENT_PULSES);
+    for (let i = 0; i < count; i++) this.spawnAmbient();
     for (const pulse of this.pulses) {
       for (let step = 0; step < STILL_STEPS; step++) this.step(pulse, STILL_STEP_S);
     }

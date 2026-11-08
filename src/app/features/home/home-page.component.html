@@ -81,15 +81,6 @@
     }
 
     <div class="hero-controls">
-      <button
-        class="home-page-video-toggle"
-        type="button"
-        [attr.aria-pressed]="heroVideoOn()"
-        (click)="toggleHeroVideo()"
-      >
-        {{ heroVideoOn() ? 'Video on' : 'Video off' }}
-      </button>
-
       @if (heroVideoOn()) {
         <button
           class="home-page-sound-toggle"
@@ -101,6 +92,16 @@
           {{ backgroundVideoMuted ? 'Sound off' : 'Sound on' }}
         </button>
       }
+
+      <button
+        class="home-page-video-toggle"
+        type="button"
+        aria-label="Background video"
+        [attr.aria-pressed]="heroVideoOn()"
+        (click)="toggleHeroVideo()"
+      >
+        Video <span aria-hidden="true">{{ heroVideoOn() ? 'on' : 'off' }}</span>
+      </button>
     </div>
 
     <header #heroBanner class="season-hero" [class.has-pulse-backdrop]="!heroVideoOn()">

@@ -140,7 +140,6 @@
 @media (max-width: 640px) {
   .pulse-banner {
     --spark-size: 12px;
-    height: var(--pulse-banner-height, 104px);
   }
 }
 
@@ -148,7 +147,8 @@
  * As a backdrop the banner is the hero's whole background, so it has no frame, and the box that holds
  * it is positioned by the owner. The grid fills that box; the clash keeps a band across the top of
  * it, `--pulse-stage-height` tall, so the heartbeat stays the shape it is in the strip at any hero size
- * and the copy below it has the grid alone behind it. The scrim keeps that copy readable.
+ * and the copy below it has the grid alone behind it. The scrim keeps that copy readable: at least
+ * 64% ink wherever the copy can be, and light only to the right of the copy column on a wide hero.
  */
 :host([data-layout='backdrop']) {
   position: absolute;
@@ -170,9 +170,13 @@
   position: absolute;
   inset: 0;
   content: '';
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--ink) 78%, transparent), color-mix(in srgb, var(--ink) 30%, transparent) 62%, transparent),
-    linear-gradient(180deg, transparent 38%, color-mix(in srgb, var(--ink) 55%, transparent));
+  background: color-mix(in srgb, var(--ink) 64%, transparent);
+}
+
+@media (min-width: 1201px) {
+  :host([data-layout='backdrop']) .pulse-banner::after {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 76%, transparent), color-mix(in srgb, var(--ink) 64%, transparent) 62%, color-mix(in srgb, var(--ink) 10%, transparent));
+  }
 }
 
 :host([data-layout='backdrop']) .pulse-banner__stage {

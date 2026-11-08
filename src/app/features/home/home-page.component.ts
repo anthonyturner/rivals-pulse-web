@@ -263,21 +263,34 @@ export class HomePageComponent implements AfterViewInit {
     );
   }
 
-  /** The video is not in the page while the hero video is off, so it is rendered first when the update video opens. */
+  /** With the hero video off the video is not in the page, so it is rendered first, then played. */
   private openBackgroundVideo(): void {
+    const existing = this.backgroundVideo()?.nativeElement;
+
     this.videoOpener = this.isBrowser ? (this.document.activeElement as HTMLElement | null) : null;
     this.foregroundOpen.set(true);
+
+    if (existing) {
+      this.playForeground(existing);
+    }
+
     afterNextRender(
       () => {
         this.videoClose?.nativeElement.focus();
-        void this.backgroundVideo()
-          ?.nativeElement.play()
-          .catch(() => {
-            // Native foreground controls remain available if playback does not resume automatically.
-          });
+
+        if (!existing) {
+          this.playForeground(this.backgroundVideo()?.nativeElement);
+        }
       },
       { injector: this.injector },
     );
+  }
+
+  /** Called straight from the click when it can be: a browser may refuse to play once the gesture is over. */
+  private playForeground(video: HTMLVideoElement | undefined): void {
+    void video?.play().catch(() => {
+      // Native foreground controls remain available if playback does not resume automatically.
+    });
   }
 
   @HostListener('document:keydown.escape')
