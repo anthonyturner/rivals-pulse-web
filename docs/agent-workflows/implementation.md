@@ -481,5 +481,4 @@ Never force-push, rewrite history, delete remote branches, bypass branch
 protection, or commit directly to `master`. A local branch may be deleted only
 once `git branch --merged master` lists it, and only with `git branch -d`. A
 squash-merged branch never appears in that list, so leave it in place. Never
-close an issue by hand —
-the merge closes it through `Closes #n`.
+close an issue by hand — the merge closes it through `Closes #n`.

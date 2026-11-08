@@ -166,7 +166,8 @@ can revert any merge.
 This is a standing authorization for the outward-facing actions along the way:
 filing and updating GitHub issues, posting issue and pull-request comments,
 creating branches, committing, pushing, opening pull requests, marking a
-verified pull request ready for review, and squash-merging a reviewed one. No stage asks permission to record its own output in GitHub.
+verified pull request ready for review, and squash-merging a reviewed one. No
+stage asks permission to record its own output in GitHub.
 
 The branch and a draft pull request are created **as soon as the issue exists
 and before implementation begins** — see
