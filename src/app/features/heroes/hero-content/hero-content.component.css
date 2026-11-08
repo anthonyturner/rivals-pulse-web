@@ -17,7 +17,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: flex-start;
 }
 .detail-action {
   display: inline-flex;

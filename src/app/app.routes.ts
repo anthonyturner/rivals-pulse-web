@@ -137,6 +137,7 @@ export const routes: Routes = [
   },
   {
     path: 'media-tutorials',
+    title: 'Video tutorials | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/media-tutorials/media-tutorials-page.component').then(
         (module) => module.MediaTutorialsPageComponent,
@@ -168,6 +169,7 @@ export const routes: Routes = [
   },
   {
     path: 'user-highlights',
+    title: 'User highlights | RivalsPulse',
     loadComponent: () =>
       import('./features/community/user-highlights/user-highlights-page.component').then(
         (module) => module.UserHighlightsPageComponent,
@@ -182,6 +184,7 @@ export const routes: Routes = [
   },
   {
     path: 'tier-list',
+    title: 'Tier list | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/tier-list/tier-list-page.component').then(
         (module) => module.TierListPageComponent,
@@ -194,6 +197,7 @@ export const routes: Routes = [
   },
   {
     path: 'win-rates',
+    title: 'Hero stats | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/win-rates/win-rates-page.component').then(
         (module) => module.WinRatesPageComponent,
@@ -201,6 +205,7 @@ export const routes: Routes = [
   },
   {
     path: 'win-rates/:season',
+    title: 'Hero stats | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/win-rates/win-rates-page.component').then(
         (module) => module.WinRatesPageComponent,
@@ -243,6 +248,7 @@ export const routes: Routes = [
   },
   {
     path: 'counters',
+    title: 'Hero counters | RivalsPulse',
     loadComponent: () =>
       import('./features/tools/counters/counters-page.component').then(
         (module) => module.CountersPageComponent,
@@ -258,6 +264,7 @@ export const routes: Routes = [
   },
   {
     path: 'team-builder',
+    title: 'Team builder | RivalsPulse',
     loadComponent: () =>
       import('./features/tools/team-builder/team-builder-page.component').then(
         (module) => module.TeamBuilderPageComponent,

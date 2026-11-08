@@ -45,13 +45,17 @@ export class ReturnTrail {
   }
 
   private record(url: string): void {
-    const label = pageLabel(this.titleStrategy.buildTitle(this.router.routerState.snapshot));
-    const point: ReturnPoint = { url: this.router.parseUrl(url), label };
+    const tree = this.router.parseUrl(url);
+    const point: ReturnPoint = {
+      url: tree,
+      label: pageLabel(this.titleStrategy.buildTitle(this.router.routerState.snapshot), tree),
+    };
     const last = this.last();
 
-    // Inside one area the earlier page stays the one from before the area was entered.
-    if (last && areaOf(last.url) !== areaOf(point.url)) {
-      this.previous.set(last);
+    // Entering an area sets its origin; moving around inside it keeps that origin. Entering at the
+    // area's own index (such as `/heroes`) means the reader started there, so there is none.
+    if (!last || areaOf(last.url) !== areaOf(point.url)) {
+      this.previous.set(last && isDetail(point.url) ? last : null);
     }
 
     this.last.set(point);
@@ -70,10 +74,22 @@ function areaOf(url: UrlTree): string {
   return url.root.children['primary']?.segments[0]?.path ?? '';
 }
 
-/** "Your stats | RivalsPulse" reads as "Your stats"; the home page's title leads with the site name. */
-export function pageLabel(title: string | undefined): string {
-  if (!title || title === SITE_NAME || title.startsWith(`${SITE_NAME} |`)) {
+/** A page below an area's index, such as `/heroes/mantis`. */
+function isDetail(url: UrlTree): boolean {
+  return (url.root.children['primary']?.segments.length ?? 0) > 1;
+}
+
+/**
+ * "Your stats | RivalsPulse" reads as "Your stats". The home page is "Home", and a page whose route
+ * has no title of its own gets a plain "Back" rather than a name it does not have.
+ */
+export function pageLabel(title: string | undefined, url: UrlTree): string {
+  if (areaOf(url) === '') {
     return 'Home';
+  }
+
+  if (!title) {
+    return 'Back';
   }
 
   const suffix = ` | ${SITE_NAME}`;

@@ -19,6 +19,7 @@ describe('ReturnTrail', () => {
           { path: '', title: 'RivalsPulse | Feel the pulse of every match', component: BlankPage },
           { path: 'profile', title: 'Your stats | RivalsPulse', component: BlankPage },
           { path: 'community/:tab', title: 'Community | RivalsPulse', component: BlankPage },
+          { path: 'counters', component: BlankPage },
           { path: 'heroes', title: 'Heroes | RivalsPulse', component: BlankPage },
           { path: 'heroes/:heroId', title: 'Mantis | RivalsPulse', component: BlankPage },
         ]),
@@ -68,6 +69,27 @@ describe('ReturnTrail', () => {
     expect(trail.originOutside('/heroes')?.label).toBe('Community');
   });
 
+  it('has no origin when the reader opened the hero from the Heroes page', async () => {
+    await visit('/', '/heroes', '/heroes/mantis');
+
+    expect(trail.originOutside('/heroes')).toBeNull();
+  });
+
+  it('calls the home page Home', async () => {
+    await visit('/', '/heroes/mantis');
+
+    expect(trail.originOutside('/heroes')?.label).toBe('Home');
+  });
+
+  it('offers a plain Back for a page with no title of its own', async () => {
+    await visit('/counters', '/heroes/mantis');
+
+    const origin = trail.originOutside('/heroes');
+
+    expect(origin?.label).toBe('Back');
+    expect(router.serializeUrl(origin!.url)).toBe('/counters');
+  });
+
   it('has no origin for an area the reader is not in', async () => {
     await visit('/heroes/mantis', '/profile');
 
@@ -76,12 +98,15 @@ describe('ReturnTrail', () => {
 });
 
 describe('pageLabel', () => {
+  const url = (path: string) => TestBed.inject(Router).parseUrl(path);
+
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] }));
+
   it('drops the site name from a page title', () => {
-    expect(pageLabel('Tier list | RivalsPulse')).toBe('Tier list');
+    expect(pageLabel('Tier list | RivalsPulse', url('/tier-list'))).toBe('Tier list');
   });
 
-  it('calls the home page Home', () => {
-    expect(pageLabel('RivalsPulse | Feel the pulse of every match')).toBe('Home');
-    expect(pageLabel(undefined)).toBe('Home');
+  it('keeps a title without the site name as it is', () => {
+    expect(pageLabel('Tier list', url('/tier-list'))).toBe('Tier list');
   });
 });
