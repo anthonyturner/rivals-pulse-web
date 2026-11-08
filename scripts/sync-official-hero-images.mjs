@@ -88,17 +88,20 @@ async function findRenderUrl(urls) {
   return null;
 }
 
-/** Reads a PNG's dimensions from its header, without downloading the image. */
+/** Reads a transparent PNG's dimensions from its header, without downloading the image. */
 async function pngSize(url) {
-  const response = await fetch(url, { headers: { ...requestHeaders, range: 'bytes=0-23' } });
+  const response = await fetch(url, { headers: { ...requestHeaders, range: 'bytes=0-25' } });
 
   if (!response.ok) {
     return null;
   }
 
   const header = Buffer.from(await response.arrayBuffer());
+  const truecolourWithAlpha = 6;
 
-  return header.length >= 24 && header.toString('latin1', 1, 4) === 'PNG'
+  return header.length >= 26 &&
+    header.toString('latin1', 1, 4) === 'PNG' &&
+    header[25] === truecolourWithAlpha
     ? { width: header.readUInt32BE(16), height: header.readUInt32BE(20) }
     : null;
 }
@@ -107,12 +110,16 @@ async function pngSize(url) {
 async function headshot(render) {
   const { data, info } = await sharp(render)
     .ensureAlpha()
-    .extractChannel(3)
+    .extractChannel('alpha')
     .raw()
     .toBuffer({ resolveWithObject: true });
   const figure = opaqueBounds(data, info.width, 0, info.height);
   const figureHeight = figure.bottom - figure.top;
   const side = Math.min(Math.round(figureHeight * HEADSHOT_SHARE), info.width, info.height);
+
+  if (side < PORTRAIT_SIZE / 2) {
+    throw new Error(`Render figure is too small to crop a portrait (${side}px).`);
+  }
   // The head is centred on whatever is opaque near the top of the figure.
   const head = opaqueBounds(data, info.width, figure.top, figure.top + Math.round(figureHeight * 0.14));
   const centreX = Math.round((head.left + head.right) / 2);
