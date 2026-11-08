@@ -10,6 +10,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- Hero stats now combines win rates and pick rates with search, role filters and sorting. Hero profiles show ban rates as not collected and label win and pick rates as building sample until enough matches exist ([#559](https://github.com/anthonyturner/rivals-pulse-web/pull/559)).
 - Each job on the admin "Data jobs" page, including the two run from GitHub, now shows a live countdown to its next scheduled run and the time of that run. The page also says that GitHub can start its two late or skip them, and "Last scheduled run" catches up without a reload ([#541](https://github.com/anthonyturner/rivals-pulse-web/pull/541)).
 - The guide library has a new fundamentals guide on tempo, fight timing and ultimate economy: when a fight is worth starting, the stages of a fight, and when to spend an ultimate. It credits and links the two outside articles it draws on, says plainly that the tempo article is about Overwatch, and lists one more article as further reading ([#538](https://github.com/anthonyturner/rivals-pulse-web/pull/538)).
 - The home page now shows a dismissible word of the day from the Marvel Rivals glossary in a floating card that stays visible as you scroll ([#514](https://github.com/anthonyturner/rivals-pulse-web/pull/514)).

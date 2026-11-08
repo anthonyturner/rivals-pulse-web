@@ -88,7 +88,7 @@ const GROUPS: LibraryGroup[] = [
   {
     title: 'Habits and team play',
     cards: [
-      pageCard('Hero win rates', '/win-rates', 'peni-parker', 'See how each hero is winning in matches RivalsPulse players recorded.', 'RivalsPulse matches'),
+      pageCard('Hero stats', '/win-rates', 'peni-parker', 'Compare hero win and pick rates in matches RivalsPulse players recorded.', 'RivalsPulse matches'),
       pageCard('Techniques', '/techniques', 'iron-man', 'Train practical mechanics and fight habits from the workbook.'),
       pageCard('Power positions', '/power-positions', 'hawkeye', 'Recognize the locations that make your next fight easier.'),
       pageCard('Strategic cover', '/strategic-cover', 'magneto', 'Turn terrain into safer, repeatable decisions.'),
