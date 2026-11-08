@@ -90,6 +90,7 @@ repo's build. This is a move, not a redesign.
 | `20261101050000_app_link_status.sql` | The app reading and removing its own link: `link_status_for_recorder` and `unlink_player_for_recorder` (service role only), and the `status` and `unlink` kinds in `link_attempt_log` |
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
+| `20261107120000_triple_support_trios.sql` | Anonymous triple-support trio counts: `hero_game_roles` (the role of each game hero id), `triple_support_trios`, `triple_support_totals`, `triple_support_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_triple_support_trios(smallint[])` (granted to `anon`), an hourly `recompute-triple-support-aggregates` job, and a `purge_expired_participants` that also freezes them |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
 | `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
 | `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
@@ -474,6 +475,66 @@ them. It is a family of its own, like the extended aggregates: `fill_hero_aggreg
   one-recorder bucket must not come back, a three-recorder bucket must, alone and with the other
   mode asked for); the fixtures are rolled back.
 
+## Triple-support aggregates
+
+`triple_support_trios` keeps, per half-season, game mode, rank bucket and trio of Strategists, how often a
+team ran exactly those three in a match with a result and how often it won. `triple_support_totals`
+keeps, per half-season, mode and rank bucket, the matches counted, as numbers only how many distinct
+recorders made them and how many matches the busiest one did, and the teams behind a trio's share.
+Neither table holds a uid, name, fingerprint or per-player row, both have RLS on with no policy, and
+only the service role reaches them. It is a family of its own, built like hero pairs: its own fill,
+rebuild, recompute and freeze, and no other family is touched.
+
+- **Who is a Strategist.** The rebuild runs in the database (hourly, and in the purge), so it cannot ask
+  the website. `hero_game_roles` is one row per game hero id with `base_game_id` and `role`, seeded in
+  the migration from `data/pulse-atlas/hero-game-ids.json` and the live hero list. Deadpool has rows
+  for his three role forms only (10571 Vanguard, 10572 Duelist, 10573 Strategist, all with base id
+  1057): his base id 1057 and hero id 0 ("no hero recorded") have no row. **A new hero needs a row in
+  the same pull request that adds it to `hero-game-ids.json`**, as a new migration that upserts it;
+  `scripts/hero-game-roles-seed.test.ts` fails when the two disagree, and when the Strategists differ
+  from `data/pulse-atlas/strategist-tags.json`. The healer or utility tag is not in the database: it only
+  names a trio, and the website does that when it reads.
+- **Which teams count.** A team is one side of a match that has a result. `hero_id` is the hero a player
+  ended the match on. The team is **unresolved** if any of its lines has no row in `hero_game_roles` (no
+  hero, id 0, 1057, a hero not yet added); it is counted in `unclassified_teams`, never as a trio and
+  never silently dropped. A resolved team is **classified** (`classified_teams`, the denominator of a
+  trio's share; a team with fewer than six stored lines, for example because a player asked to be
+  forgotten, is still classified from the lines that remain, so its Strategist count can be low). A classified team with exactly three Strategists adds one occurrence (`teams`, and
+  `wins` if it won) to its trio, keyed by the three base game ids ascending (Deadpool's Strategist form
+  under 1057). A classified team with four or more Strategists is counted in `four_plus_teams` as that
+  shape only: its heroes are not stored. A match counts once however many people recorded it (a match
+  is its roster fingerprint plus start time, and a second upload is dropped on arrival); a match where
+  both teams run the same trio adds two `teams` and one `matches`.
+- A trio is stored, in every mode and bucket it was seen in, only when its matches summed over the
+  half-season reach `triple_support_min_matches()` (10). `rank_bucket` is -1 (unknown) on every row
+  today, as for hero pairs; `fill_triple_support_aggregates` is the one place that will derive it.
+- `recompute_triple_support_aggregates()` rebuilds every half-season that still has raw rows and is not
+  frozen (hourly job `recompute-triple-support-aggregates`, minute 47).
+  `purge_expired_participants()` calls `freeze_triple_support_aggregates()` before its first delete.
+  **Any later migration that restates the purge must keep calling every freeze**; the test described
+  under hero pairs reads the latest definition and fails if one is gone. Half-seasons whose raw rows
+  were purged before this migration ran have no trio counts.
+- `read_triple_support_trios(p_play_mode_ids)` (granted to `anon` and `service_role`) returns
+  `half_season, rank_bucket, hero_a, hero_b, hero_c, matches, teams, wins, classified_teams,
+  unclassified_teams, four_plus_teams`, summed over the modes asked for (default Quick Match and
+  Competitive), with the minimum applied again to the sum. The four team counts are the half-season's,
+  repeated on each trio row. The recorder gate is the one hero pairs use: rank bucket -1 is returned
+  ungated, a bucket of 0 or more only from the (half-season, mode, bucket) rows whose own totals pass
+  `community_bucket_shown`, checked before the modes are summed and applied to the team counts as
+  well. Recorder counts are never returned. The website reads it through
+  `GET /api/triple-support-trios`
+  ([`src/server/heroes/trios/triple-support-trios-read.ts`](../src/server/heroes/trios/triple-support-trios-read.ts)),
+  which pages with `limit`, `offset` and `order=half_season,rank_bucket,hero_a,hero_b,hero_c` until a
+  page comes back empty, builds the figures from rank bucket -1 alone, and names each trio from
+  `strategist-tags.json` and the hero names ([pulse-atlas.md](pulse-atlas.md#the-strategist-tags-data)).
+- The migration checks the gate when it runs, on fixtures in a half-season that does not exist, and
+  rolls them back. Nothing in the repository runs the SQL counting itself (no test database), so after
+  applying the migration run `npx supabase db query --linked -f supabase/checks/triple_support_trios.sql`:
+  it records fixture matches in a half-season that does not exist (a trio at the minimum, a duplicate
+  upload, four Strategists, hero id 0, Deadpool's base id), rebuilds, asserts the counts and
+  permissions, and rolls back. `supabase/functions/track-match-history/triple-support-migrations.test.ts`
+  reads the SQL for the posture and shape rules.
+
 ## Backfilling participants from stored matches
 
 `npm run backfill:participants` replays the rows of `tracked_matches` through
@@ -700,8 +761,9 @@ policy's hard limit), but later than promised.
 - **Required:** `select jobname from cron.job where jobname in
   ('purge-expired-participants', 'purge-cron-run-history', 'recompute-hero-aggregates',
   'recompute-extended-aggregates', 'recompute-play-time-aggregates',
-  'recompute-community-match-aggregates', 'recompute-hero-pair-aggregates', 'purge-link-data');` must
-  show all eight jobs (two daily jobs, the participant purge and the run history cleanup, the five
+  'recompute-community-match-aggregates', 'recompute-hero-pair-aggregates',
+  'recompute-triple-support-aggregates', 'purge-link-data');` must
+  show all nine jobs (two daily jobs, the participant purge and the run history cleanup, the six
   hourly aggregate rebuilds and the five-minute link purge). If one is missing (the migrations warn
   when `pg_cron` is unavailable), enable `pg_cron` and schedule by hand
   `select public.purge_expired_participants();` daily,
@@ -709,7 +771,8 @@ policy's hard limit), but later than promised.
   `select public.recompute_hero_aggregates();`, `select public.recompute_extended_aggregates();`,
   `select public.recompute_play_time_aggregates();`,
   `select public.recompute_community_match_aggregates();` and
-  `select public.recompute_hero_pair_aggregates();` hourly, and `select public.purge_link_data();`
+  `select public.recompute_hero_pair_aggregates();`,
+  `select public.recompute_triple_support_aggregates();` hourly, and `select public.purge_link_data();`
   every five minutes. `supabase/checks/cron-run-history.sql`
   proves the cleanup against the linked project and rolls back:
   `npx supabase db query --linked -f supabase/checks/cron-run-history.sql`.

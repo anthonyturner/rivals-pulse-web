@@ -1,0 +1,16 @@
+@if (pairs().length > 0) {
+  <ul class="pairs">
+    @for (pair of pairs(); track pair.role) {
+      <li class="pair">
+        <span class="duo">
+          <app-preview-portrait [src]="pair.first.imageUrl" />
+          <app-preview-portrait [src]="pair.second.imageUrl" />
+        </span>
+        <span class="text">
+          <span class="role">{{ pair.role }} duo</span>
+          <span class="rate">{{ pair.winRateLabel }}</span>
+        </span>
+      </li>
+    }
+  </ul>
+}

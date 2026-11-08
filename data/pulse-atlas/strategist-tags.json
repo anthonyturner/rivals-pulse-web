@@ -1,0 +1,15 @@
+[
+  { "heroId": "adam-warlock", "tag": "utility" },
+  { "heroId": "cloak-and-dagger", "tag": "healer" },
+  { "heroId": "deadpool", "tag": "healer" },
+  { "heroId": "gambit", "tag": "healer" },
+  { "heroId": "invisible-woman", "tag": "healer" },
+  { "heroId": "jeff-the-land-shark", "tag": "healer" },
+  { "heroId": "jubilee", "tag": "healer" },
+  { "heroId": "loki", "tag": "healer" },
+  { "heroId": "luna-snow", "tag": "healer" },
+  { "heroId": "mantis", "tag": "utility" },
+  { "heroId": "rocket-raccoon", "tag": "healer" },
+  { "heroId": "ultron", "tag": "utility" },
+  { "heroId": "white-fox", "tag": "healer" }
+]

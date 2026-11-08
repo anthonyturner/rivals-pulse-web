@@ -1,11 +1,15 @@
 <div class="category page-container page-container--wide">
   <app-page-header [title]="category.label" [description]="category.description" />
 
-  <ul class="grid">
-    @for (item of released; track item.path) {
-      <li><app-guide-card [title]="item.label" [route]="item.path" [blurb]="item.description" /></li>
-    }
-  </ul>
+  @if (category.layout === 'bento') {
+    <app-resource-bento [links]="released" />
+  } @else {
+    <ul class="grid">
+      @for (item of released; track item.path) {
+        <li><app-guide-card [title]="item.label" [route]="item.path" [blurb]="item.description" /></li>
+      }
+    </ul>
+  }
 
   @if (comingSoon.length > 0) {
     <section aria-labelledby="coming-soon-title">

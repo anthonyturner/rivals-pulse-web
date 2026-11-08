@@ -15,7 +15,7 @@ RivalsPulse is an Angular coaching companion for learning Marvel Rivals heroes, 
 | Area | Routes |
 | --- | --- |
 | Heroes and matchups | `/heroes`, `/hero-guides`, `/counters` |
-| Draft and meta | `/team-builder`, `/tier-list`, `/win-rates`, `/game-stats` |
+| Draft and meta | `/team-builder`, `/team-comps`, `/tier-list`, `/win-rates`, `/game-stats` |
 | Coaching fundamentals | `/beginner-interactive-guide`, `/techniques`, `/build-theory` |
 | Positioning and strategy | `/power-positions`, `/strategic-cover`, `/triple-support-counter` |
 | Guided learning | `/learning-paths`, `/media-tutorials`, `/watch-next`, `/glossary` |

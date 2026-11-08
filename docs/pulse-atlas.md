@@ -17,6 +17,7 @@ Base URL: `https://anthonyturner.github.io/rivals-pulse-web/pulse-atlas/v1/`
 | `glossary.json` | The glossary terms, exactly as `GET /api/glossary` returns them. |
 | `maps.json` | Map ids to names: a list of `{ "id": number, "name": string }`. Source: [data/pulse-atlas/seed-maps.json](../data/pulse-atlas/seed-maps.json), copied unchanged from the overlay repo's `src/app/data/seed-maps.json`. |
 | `hero-styles.json` | Each hero's playstyle mix: whole-number percentages of Poke, Dive and Brawl. Shape below. Source: [data/pulse-atlas/hero-styles.json](../data/pulse-atlas/hero-styles.json), hand-maintained in this repository. |
+| `strategist-tags.json` | Each Strategist's tag, `utility` or `healer`, which names a triple-support team. Shape and the naming rules below. Source: [data/pulse-atlas/strategist-tags.json](../data/pulse-atlas/strategist-tags.json), hand-maintained in this repository. |
 | `hero-stats.json` | Each hero's community stats in every half-season that has started: win rate, pick rate, KDA, final hits and the matches behind them, with an "enough data" flag per hero. One file for all half-seasons. Shape below. |
 | `community-stats.json` | The community's counter and partner counts: how often each hero beat or lost to each enemy hero, and to each ally hero it played with, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `hero-scores.json` | Each hero's 1 to 10 Damage, Sustain, Ultimate and Utility scores with the figures behind them, or how far along a hero below the rule is, in the half-season shown. Shape below. Optional: absent until the first successful run that can build it. |
@@ -479,6 +480,48 @@ One entry per hero in `heroes.json`, keyed by the hero's `id` slug:
   unit test runs the same check on the committed file, so a malformed weight
   fails in a pull request before it can fail a publish.
 
+### The `strategist-tags` data
+
+One entry per Strategist, keyed by the hero's `id` slug in `heroes.json`, in the same envelope as
+`hero-styles.json`. It is what the site and the overlay use to name a triple-support team:
+
+```json
+[{ "heroId": "mantis", "tag": "utility" }, { "heroId": "luna-snow", "tag": "healer" }]
+```
+
+- **`tag` is `utility` or `healer`.** The utility Strategists are exactly `adam-warlock`, `mantis` and
+  `ultron`; every other Strategist is a `healer`, `loki`, `white-fox` and `deadpool` included. Readers
+  join a `heroId` to a game id through `heroes.json` (`gameId`, and `gameIdVariants`).
+- **Deadpool's entry applies only to his Strategist form, id 10573.** His other forms (10571 Vanguard,
+  10572 Duelist) are never Strategists, and his base id 1057 has no role. A team with a player on 1057,
+  or on hero id 0 (the game's "no hero recorded"), is **unresolved**: it gets no label and no trio. A
+  game hero id with no entry in `heroes.json` is unresolved the same way. `hero_id` is the hero each
+  player ended the match on.
+- **Naming a team.** Count the team's resolved Strategists (a Strategist is a hero whose role is
+  Strategist, or Deadpool on 10573):
+  - exactly 3: a **triple**. With no utility Strategist it is **"Three healers"**. Otherwise take the
+    utility heroes' display names (`heroes.json` `name`), sort them alphabetically, join them with
+    `" + "` and add `" triple"`: "Mantis triple", "Adam Warlock + Mantis triple", "Adam Warlock +
+    Mantis + Ultron triple";
+  - 4 or more: **"Quad support"**, with no trio;
+  - fewer than 3: no label.
+
+  The triple is also a **trio** of its three heroes, which the site stores and counts; the label only
+  names it, so a pairing such as Ultron and Luna Snow inside a triple stays visible.
+  [`GET /api/triple-support-trios`](api-specification.md) returns these labels from the same file.
+- Exactly one entry per Strategist is required. The generator refuses to build, and so nothing is
+  published, if a hero in `heroes.json` whose role is Strategist (or who has a Strategist form in
+  `hero-game-ids.json`) has no entry, a hero is listed twice, an entry names a hero that is not a
+  Strategist, a `tag` is neither value, an entry has a key other than `heroId` and `tag`, or the list is
+  empty (`findStrategistTagProblems` in
+  [src/server/pulse-atlas/strategist-tags.ts](../src/server/pulse-atlas/strategist-tags.ts)). **Add the
+  entry in the same pull request that adds a Strategist** (and a `hero_game_roles` row, see
+  [supabase.md](supabase.md#triple-support-aggregates)). An entry for a hero that is not in
+  `heroes.json` is published as it is and ignored by readers, so a removed hero cannot freeze the feed.
+  A unit test runs the same check on the committed file.
+- The tags are editorial: Anthony owns the list. Edit the file in a pull request; a merge that
+  changes it publishes through the workflow below.
+
 `manifest.json`:
 
 ```json
@@ -501,7 +544,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, three glossary terms, the full maps list, the hero-styles entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -537,7 +580,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    by `assembleCommunityTierList` and `assembleCommunityHeroStats`. The one
    other read is `/api/hero-pairs`, once, for `community-stats`; see below for
    what happens when it fails.
-2. Reads the maps, hero-styles and hero-game-ids source files from the repository.
+2. Reads the maps, hero-styles, strategist-tags and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
    If this fails, for example with a 404 on the first run, everything is built

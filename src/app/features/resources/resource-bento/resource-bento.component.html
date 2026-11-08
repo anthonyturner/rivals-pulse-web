@@ -1,0 +1,34 @@
+<ul class="bento">
+  @for (tile of tiles(); track tile.path) {
+    <li class="cell" [attr.data-size]="tile.size">
+      <app-resource-tile
+        [title]="tile.label"
+        [route]="tile.path"
+        [description]="tile.description"
+        [chip]="tile.chip"
+        [imageUrl]="tile.imageUrl"
+      >
+        @switch (tile.preview) {
+          @case ('tier-list') {
+            <app-tier-list-preview />
+          }
+          @case ('hero-stats') {
+            <app-hero-stats-preview />
+          }
+          @case ('strategist-guides') {
+            <app-strategist-guides-preview />
+          }
+          @case ('roster') {
+            <app-roster-preview />
+          }
+          @case ('glossary') {
+            <app-glossary-preview />
+          }
+          @case ('team-comps') {
+            <app-team-comps-preview />
+          }
+        }
+      </app-resource-tile>
+    </li>
+  }
+</ul>
