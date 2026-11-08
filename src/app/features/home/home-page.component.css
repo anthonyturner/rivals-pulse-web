@@ -206,6 +206,12 @@
   margin-bottom: var(--hero-band-gap);
 }
 
+/* A banner placed in a grid area would fill only that area; unplaced, it fills the whole hero. */
+.season-hero.has-pulse-backdrop .hero-banner {
+  grid-column: auto;
+  margin-bottom: 0;
+}
+
 .hero-copy {
   --eyebrow-color: var(--ink-accent);
   display: grid;

@@ -1,4 +1,4 @@
-import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
+import { Component, PLATFORM_ID, provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { ReleaseMediaOnDestroyDirective } from './release-media-on-destroy.directive';
@@ -31,5 +31,17 @@ describe('ReleaseMediaOnDestroyDirective', () => {
     expect(pause).toHaveBeenCalledTimes(1);
     expect(video.hasAttribute('src')).toBeFalse();
     expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the element alone on the server', async () => {
+    TestBed.configureTestingModule({ providers: [{ provide: PLATFORM_ID, useValue: 'server' }] });
+    const pause = spyOn(HTMLMediaElement.prototype, 'pause');
+    const fixture = TestBed.createComponent(HostComponent);
+    await fixture.whenStable();
+
+    fixture.componentInstance.shown.set(false);
+    await fixture.whenStable();
+
+    expect(pause).not.toHaveBeenCalled();
   });
 });
