@@ -3,7 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
-import { AuthService, DeleteAccountResult, LinkChangeResult, SessionState } from '../../core/auth/auth.service';
+import {
+  AuthService,
+  DeleteAccountResult,
+  LinkChangeResult,
+  RecordsOptInResult,
+  SessionState,
+} from '../../core/auth/auth.service';
 import type { LinkedPlayer } from '../../core/auth/linked-player.types';
 import { AccountPageComponent } from './account-page.component';
 import { SignInPageComponent } from './sign-in-page.component';
@@ -16,6 +22,7 @@ function setup(
   deletion: DeleteAccountResult = { status: 'deleted' },
   linkChange: LinkChangeResult = { status: 'done' },
   linkedAfter: LinkedPlayer | null = null,
+  optIn: { loaded?: RecordsOptInResult; saved?: (show: boolean) => RecordsOptInResult } = {},
 ) {
   const state = signal<SessionState>(session);
   const auth = {
@@ -31,6 +38,18 @@ function setup(
     }),
     linkPlayer: jasmine.createSpy('linkPlayer').and.callFake(async () => changeLink(linkedAfter)),
     unlinkPlayer: jasmine.createSpy('unlinkPlayer').and.callFake(async () => changeLink(null)),
+    loadRecordsOptIn: jasmine
+      .createSpy('loadRecordsOptIn')
+      .and.callFake(async () => optIn.loaded ?? { status: 'ready', showInRecords: false }),
+    setRecordsOptIn: jasmine.createSpy('setRecordsOptIn').and.callFake(async (show: boolean) => {
+      const result: RecordsOptInResult = optIn.saved?.(show) ?? { status: 'ready', showInRecords: show };
+
+      if (result.status === 'signedOut') {
+        state.set({ status: 'signedOut' });
+      }
+
+      return result;
+    }),
   };
 
   /** What the real service does to its state once the server has answered a link change. */
@@ -118,7 +137,7 @@ describe('AccountPageComponent deletion', () => {
       (heading) => heading.textContent?.trim(),
     );
 
-    expect(headings).toEqual(['Sign-in details', 'Link the desktop app', 'Delete your account']);
+    expect(headings).toEqual(['Sign-in details', 'Link the desktop app', 'Pulse Records', 'Delete your account']);
   });
 
   it('keeps the delete button off until the phrase is typed', async () => {
@@ -181,7 +200,7 @@ describe('AccountPageComponent deletion', () => {
 
     expect(deleteForm.getAttribute('aria-busy')).toBe('true');
     expect(phraseInput(harness).readOnly).toBeTrue();
-    expect(page(harness).querySelectorAll(':disabled:not(.guide-button)').length).toBe(0);
+    expect(page(harness).querySelectorAll(':disabled:not(.guide-button):not(#records-opt-in)').length).toBe(0);
     expect(deleteButton(harness).disabled).toBeFalse();
     expect(deleteButton(harness).textContent).toContain('Deleting…');
     expect(document.activeElement).toBe(phraseInput(harness));
@@ -414,6 +433,166 @@ describe('AccountPageComponent linking', () => {
     expect(page(harness).querySelector('[role="status"]')?.textContent).toContain('unavailable');
     expect(page(harness).querySelectorAll('[role="status"], [role="alert"], [aria-live]').length).toBe(1);
     expect(page(harness).querySelector('.player strong')?.textContent).toBe('Aurora');
+  });
+});
+
+describe('AccountPageComponent Pulse Records switch', () => {
+  const AURORA = { name: 'Aurora', avatarUrl: null };
+  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA, isAdmin: false };
+  const checkbox = (harness: RouterTestingHarness): HTMLInputElement =>
+    page(harness).querySelector('#records-opt-in') as HTMLInputElement;
+  const announcement = (harness: RouterTestingHarness): string =>
+    page(harness).querySelector('[role="status"]')?.textContent?.trim() ?? '';
+
+  /** Opens the page and waits for the setting to load, which starts once the page has drawn. */
+  async function open(): Promise<RouterTestingHarness> {
+    const harness = await RouterTestingHarness.create('/account');
+
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    return harness;
+  }
+
+  async function toggle(harness: RouterTestingHarness): Promise<void> {
+    checkbox(harness).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
+  it('is a labelled native checkbox, described by its help text', async () => {
+    setup(LINKED);
+    const harness = await open();
+    const box = checkbox(harness);
+    const label = page(harness).querySelector('label[for="records-opt-in"]');
+
+    expect(box.type).toBe('checkbox');
+    expect(label?.textContent?.trim()).toBe('Show me in Pulse Records');
+    expect(page(harness).querySelector(`#${box.getAttribute('aria-describedby')}`)?.textContent).toContain(
+      'appears beside the entries from matches your own desktop app uploaded',
+    );
+  });
+
+  it('is off by default for a linked player, and never pre-ticked', async () => {
+    const { auth } = setup(LINKED);
+    const harness = await open();
+
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(checkbox(harness).disabled).toBeFalse();
+    expect(auth.setRecordsOptIn).not.toHaveBeenCalled();
+  });
+
+  it('shows the setting the server holds', async () => {
+    setup(LINKED, undefined, undefined, undefined, { loaded: { status: 'ready', showInRecords: true } });
+    const harness = await open();
+
+    expect(checkbox(harness).checked).toBeTrue();
+  });
+
+  it('is disabled and explained, and asks the server nothing, until a player is linked', async () => {
+    const { auth } = setup(SIGNED_IN);
+    const harness = await open();
+    const help = page(harness).querySelector(`#${checkbox(harness).getAttribute('aria-describedby')}`);
+
+    expect(checkbox(harness).disabled).toBeTrue();
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(help?.textContent).toContain('Link the desktop app above to turn this on');
+    expect(auth.loadRecordsOptIn).not.toHaveBeenCalled();
+  });
+
+  it('saves on and announces it, and saves off and announces that', async () => {
+    const { auth } = setup(LINKED);
+    const harness = await open();
+
+    await toggle(harness);
+
+    expect(auth.setRecordsOptIn).toHaveBeenCalledOnceWith(true);
+    expect(checkbox(harness).checked).toBeTrue();
+    expect(announcement(harness)).toBe('Show me in Pulse Records is on. Your name can appear on Pulse Records.');
+
+    await toggle(harness);
+
+    expect(auth.setRecordsOptIn).toHaveBeenCalledWith(false);
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(announcement(harness)).toBe('Show me in Pulse Records is off. Your name is not shown on Pulse Records.');
+  });
+
+  it('can be operated from the keyboard', async () => {
+    const { auth } = setup(LINKED);
+    const harness = await open();
+
+    checkbox(harness).focus();
+    checkbox(harness).click();
+    await harness.fixture.whenStable();
+
+    expect(document.activeElement).toBe(checkbox(harness));
+    expect(auth.setRecordsOptIn).toHaveBeenCalledOnceWith(true);
+  });
+
+  it('puts the box back and says why when the save fails', async () => {
+    setup(LINKED, undefined, undefined, undefined, {
+      saved: () => ({ status: 'failed', message: 'Your Pulse Records setting could not be saved right now.' }),
+    });
+    const harness = await open();
+
+    await toggle(harness);
+
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(page(harness).textContent).toContain('could not be saved right now');
+    expect(announcement(harness)).toContain('could not be saved right now');
+  });
+
+  it('stays off and says so when the saved setting cannot be loaded, rather than guessing', async () => {
+    setup(LINKED, undefined, undefined, undefined, {
+      loaded: { status: 'failed', message: 'Your Pulse Records setting could not be loaded right now.' },
+    });
+    const harness = await open();
+
+    expect(checkbox(harness).disabled).toBeTrue();
+    expect(page(harness).textContent).toContain('could not be loaded right now');
+  });
+
+  it('is switched off and fixed once the desktop app is unlinked', async () => {
+    const { auth } = setup(LINKED, undefined, undefined, undefined, { loaded: { status: 'ready', showInRecords: true } });
+    const harness = await open();
+
+    expect(checkbox(harness).checked).toBeTrue();
+
+    Array.from(page(harness).querySelectorAll('button'))
+      .find((button) => button.textContent?.trim() === 'Unlink')
+      ?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(auth.unlinkPlayer).toHaveBeenCalled();
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(checkbox(harness).disabled).toBeTrue();
+  });
+
+  it('reads the setting again after a new link, which starts off', async () => {
+    const { auth } = setup(SIGNED_IN, undefined, { status: 'done' }, AURORA);
+    const harness = await open();
+    const input = page(harness).querySelector('#link-code') as HTMLInputElement;
+
+    input.value = 'abcd-efgh';
+    input.dispatchEvent(new Event('input'));
+    harness.detectChanges();
+    (page(harness).querySelector('form button[type="submit"]') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(auth.loadRecordsOptIn).toHaveBeenCalledTimes(1);
+    expect(checkbox(harness).checked).toBeFalse();
+    expect(checkbox(harness).disabled).toBeFalse();
+  });
+
+  it('sends a signed-out player to sign in', async () => {
+    setup(LINKED, undefined, undefined, undefined, { saved: () => ({ status: 'signedOut' }) });
+    const harness = await open();
+
+    await toggle(harness);
+
+    expect(TestBed.inject(Router).url).toContain('/sign-in');
   });
 });
 

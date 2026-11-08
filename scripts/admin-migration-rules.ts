@@ -18,7 +18,10 @@ export const GUARDED_FROM = '20261104140000';
  * Functions granted to `authenticated` from `GUARDED_FROM` on that are deliberately not admin-only,
  * as `public.name`. Adding one is a decision for review: it is callable by anyone who signs up.
  */
-export const NOT_ADMIN_FUNCTIONS: readonly string[] = [];
+export const NOT_ADMIN_FUNCTIONS: readonly string[] = [
+  // The "Show me in Pulse Records" switch (issue 568): any linked player changes their own setting. It names no account and touches only the caller's row.
+  'public.set_records_opt_in',
+];
 
 const IS_ADMIN = 'public.is_admin';
 

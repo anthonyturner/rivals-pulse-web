@@ -282,6 +282,78 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('readRecordsOptIn', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const ask = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).readRecordsOptIn(tokens) };
+    };
+
+    it('reads the settings row with the user token, so row-level security picks the account', async () => {
+      const { calls, result } = ask({ status: 200, body: [{ show_in_records: true }] });
+
+      expect(await result).toBeTrue();
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/account_settings?select=show_in_records&limit=1');
+      expect(calls[0].method).toBe('GET');
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reads no row, an off row and an answer of an unknown shape as off', async () => {
+      expect(await ask({ status: 200, body: [] }).result).toBeFalse();
+      expect(await ask({ status: 200, body: [{ show_in_records: false }] }).result).toBeFalse();
+      expect(await ask({ status: 200, body: [{ show_in_records: 'yes' }] }).result).toBeFalse();
+      expect(await ask({ status: 200, body: { show_in_records: true } }).result).toBeFalse();
+    });
+
+    it('reports a refusal or a server error as unavailable, never as off', async () => {
+      for (const status of [401, 404, 500]) {
+        await expectAsync(ask({ status }).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
+  describe('setRecordsOptIn', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const save = (show: boolean, answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).setRecordsOptIn(tokens, show) };
+    };
+
+    it('calls the function with the choice and the user token, and names no account', async () => {
+      const { calls, result } = save(true, { status: 200, body: { status: 'saved', showInRecords: true } });
+
+      expect(await result).toEqual({ status: 'saved', showInRecords: true });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/set_records_opt_in');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({ p_show: true });
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reads a switch-off, and a refusal for want of a link', async () => {
+      expect(await save(false, { status: 200, body: { status: 'saved', showInRecords: false } }).result).toEqual({
+        status: 'saved',
+        showInRecords: false,
+      });
+      expect(await save(true, { status: 200, body: { status: 'not_linked' } }).result).toEqual({ status: 'not-linked' });
+    });
+
+    it('reports a missing function, a refusal or an answer that is not what was asked as unavailable', async () => {
+      for (const [show, answer] of [
+        [true, { status: 404, body: { code: 'PGRST202' } }],
+        [true, { status: 401 }],
+        [true, { status: 500 }],
+        [true, { status: 200, body: { status: 'surprise' } }],
+        [true, { status: 200, body: { status: 'saved', showInRecords: false } }],
+        [false, { status: 200, body: { status: 'not_linked' } }],
+        [true, { status: 200 }],
+      ] as const) {
+        await expectAsync(save(show, answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
   describe('isAdmin', () => {
     const tokens = { accessToken: 'access', refreshToken: 'refresh' };
     const ask = (answer: { status: number; body?: unknown }) => {

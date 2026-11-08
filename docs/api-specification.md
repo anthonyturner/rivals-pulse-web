@@ -19,6 +19,8 @@ POST /api/auth/sign-out
 POST /api/account/delete
 POST /api/account/link
 POST /api/account/unlink
+GET /api/account/records-opt-in
+POST /api/account/records-opt-in
 GET /api/account/dashboard
 GET /api/admin/me
 GET /api/admin/data-jobs
@@ -68,6 +70,15 @@ never told apart); 429 `{ error, retryAfterSeconds }` after five wrong codes in 
 valid session; 503 when Supabase is unavailable. `POST /api/account/unlink` takes no body and answers 200
 `{ "player": null }`, with the same 401 and 503. Both obey the Origin check and `no-store` of the other
 account routes.
+
+`GET /api/account/records-opt-in` answers the signed-in account's "Show me in Pulse Records" setting as `{ "showInRecords": boolean }`
+(false until the account switches it on), read with the account's own token so only its own row can come back.
+`POST /api/account/records-opt-in` takes `{ "show": true | false }` and the `rp_session` cookie and answers 200
+`{ "showInRecords": boolean }` with the value the database saved. Anything but a real boolean is 400 `{ error: "Choose on or off." }`;
+turning it on without a linked player is 409 with a plain reason; 401 with no valid session; 503 when Supabase is unavailable (a
+failed read is never reported as off). Nothing in the body names an account: the database acts on the session's account alone.
+The setting goes back to off whenever the account's link is removed or replaced. The POST obeys the Origin check, and both
+answers are `no-store`, like the other account routes. See "The Show me in Pulse Records switch" in [supabase.md](supabase.md).
 
 `/api/admin/*` is the site administration API (ADR-0005), and every route in it goes through one wrapper
 (`handleAdminRequest`, `src/server/admin/admin-api.ts`). It answers 401 with no valid session, 403 for a signed-in

@@ -99,6 +99,7 @@ repo's build. This is a move, not a redesign.
 | `20261105120000_community_tabs_ten_matches.sql` | The Community Matches and Insights tabs show a figure at 10 matches from any number of players: `insights_min_matches` 10, `insights_min_recorders` 1, `insights_max_recorder_share_percent` 100, and `community_tab_bucket_shown`, which `read_community_matches` now uses. `community_bucket_shown` is unchanged |
 | `20261107100000_account_settings.sql` | `account_settings` (`show_in_records`, off by default; the owner selects, no client writes) |
 | `20261107100100_pulse_records_read.sql` | `records_hidden` (closed to every API role), the ceiling helpers `pulse_records_value_cap` and `pulse_records_rate_cap`, and `read_pulse_records()` (service role only) |
+| `20261107110000_records_opt_in.sql` | The "Show me in Pulse Records" switch: `set_records_opt_in(boolean)` (granted to `authenticated` only) and a trigger on `player_links` that switches the setting off whenever a link row is deleted |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -1066,6 +1067,34 @@ value just under a ceiling can still top a board, and a modified client can clai
   by its exit status. Until applied, `/api/records` answers 200 with `status: "not-enough-data"`.
 - Known gap: `record_match_extras` attaches figures by the claimed uid without checking the uploader, so another
   uploader can put figures beside an opted-in name. Accepted for v1 (ADR-0006); issue 352 tracks it.
+
+### The "Show me in Pulse Records" switch (issue 568)
+
+`set_records_opt_in(p_show boolean)` (`20261107110000_records_opt_in.sql`) is the only way the setting changes: security
+definer, empty `search_path`, executable by `authenticated` only (not `anon`, not `service_role`). It acts on `auth.uid()`
+and takes no account id. It returns `{ "status": "saved", "showInRecords": bool }`, or `{ "status": "not_linked" }` when
+asked to turn it on with no link (nothing is written); turning it off always works. The table has no trigger of its own, so
+the function sets `updated_at`. It holds the account's `player_links` row (`for share`) while it writes, so an unlink or
+relink racing it waits and then switches the setting off.
+
+- **The setting goes off when the link goes.** An `after delete` trigger on `player_links`
+  (`reset_records_opt_in()`, closed to every API role) sets `show_in_records = false` and `updated_at` for the account
+  whose row was deleted. Every way a link ends deletes that row (`unlink_player`, `unlink_player_for_recorder`, the
+  "latest proof wins" delete in `redeem_link_code` when the account moves to another player or another account takes the
+  recorder, and the cascade from deleting the account), so the three functions are not restated and a later one is covered.
+  Linking the same player again also switches it off. A first link starts off.
+- **Reading it.** The website reads the owner's own row with `GET /rest/v1/account_settings?select=show_in_records` and the
+  account's own token (the existing select policy). A read that fails is a 503, never "off", so the page cannot claim a name is
+  hidden when it may not be. The routes are `GET` and `POST /api/account/records-opt-in` (see
+  [api-specification.md](api-specification.md)).
+- **Checks.** `npx supabase db query --linked -f supabase/checks/records_opt_in.sql` plants accounts and links, asserts the
+  owner-only rules (another account reads no row and writes none, `anon` and `service_role` cannot call the function, no
+  client writes the table), the not-linked refusal, `updated_at`, and the reset on website unlink, app unlink, relink over a
+  live link and losing a link to another account, and rolls back. Judge it by its exit status.
+- **Release order.** Push the three Pulse Records migrations in order by hand (`20261107100000`, `20261107100100`,
+  `20261107110000`) before their pull requests merge. **Do not merge the pull request for this switch before
+  `anthonyturner/rivals_pulse#1386` (the desktop app privacy policy) ships**: the switch is what lets a name appear
+  publicly, and the policy must extend the basis for that first (ADR-0006, decision 3).
 
 ## Tests
 

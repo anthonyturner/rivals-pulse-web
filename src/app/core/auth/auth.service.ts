@@ -36,6 +36,14 @@ export type LinkChangeResult =
   /** The server's own words for why it refused (a wrong code, too many tries), or a generic line. */
   | { status: 'failed'; message: string };
 
+export type RecordsOptInResult =
+  /** The setting as the server holds it, read or just saved. */
+  | { status: 'ready'; showInRecords: boolean }
+  /** There was no valid session, so nothing was read or changed. */
+  | { status: 'signedOut' }
+  /** The server's own words for why it refused (no link to turn it on for), or a generic line. */
+  | { status: 'failed'; message: string };
+
 export type DashboardResult =
   | { status: 'ready'; dashboard: OwnDashboardResponse }
   /** There was no valid session, so there is nothing to show. */
@@ -45,6 +53,8 @@ export type DashboardResult =
 
 const LINK_FAILED = 'The desktop app could not be linked right now. Try again in a moment.';
 const UNLINK_FAILED = 'The desktop app could not be unlinked right now. Try again in a moment.';
+const RECORDS_OPT_IN_LOAD_FAILED = 'Your Pulse Records setting could not be loaded right now. Try again in a moment.';
+const RECORDS_OPT_IN_SAVE_FAILED = 'Your Pulse Records setting could not be saved right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 /**
@@ -129,6 +139,16 @@ export class AuthService {
     return this.changeLink('/api/account/unlink', {}, UNLINK_FAILED);
   }
 
+  /** Reads whether the signed-in account has switched on "Show me in Pulse Records". */
+  async loadRecordsOptIn(): Promise<RecordsOptInResult> {
+    return this.requestRecordsOptIn(undefined, RECORDS_OPT_IN_LOAD_FAILED);
+  }
+
+  /** Switches "Show me in Pulse Records" for the signed-in account. The server and database decide whose; nothing here names an account. */
+  async setRecordsOptIn(show: boolean): Promise<RecordsOptInResult> {
+    return this.requestRecordsOptIn({ show }, RECORDS_OPT_IN_SAVE_FAILED);
+  }
+
   /** Reads the signed-in player's own stats, worked out on the server from the matches their link proves are theirs. */
   async loadDashboard(): Promise<DashboardResult> {
     try {
@@ -171,6 +191,36 @@ export class AuthService {
       }
 
       return { status: 'failed', message: await this.errorMessage(response, fallback) };
+    } catch {
+      return { status: 'failed', message: fallback };
+    }
+  }
+
+  private async requestRecordsOptIn(body: { show: boolean } | undefined, fallback: string): Promise<RecordsOptInResult> {
+    try {
+      const response = body
+        ? await fetch('/api/account/records-opt-in', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+        : await fetch('/api/account/records-opt-in');
+
+      if (response.status === 401) {
+        this.markSignedOut();
+
+        return { status: 'signedOut' };
+      }
+
+      if (!response.ok) {
+        return { status: 'failed', message: await this.errorMessage(response, fallback) };
+      }
+
+      const answer = (await response.json()) as { showInRecords?: unknown } | null;
+
+      return typeof answer?.showInRecords === 'boolean'
+        ? { status: 'ready', showInRecords: answer.showInRecords }
+        : { status: 'failed', message: fallback };
     } catch {
       return { status: 'failed', message: fallback };
     }
