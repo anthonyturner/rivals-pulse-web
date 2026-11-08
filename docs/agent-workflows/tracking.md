@@ -38,7 +38,7 @@ no separate status field to keep in step, and nothing to transition.
 | Draft pull request opened | Draft PR linked to the issue |
 | Implementation verified | PR marked ready for review |
 | QA review | Review posted as a PR comment; findings fixed |
-| Merge (merge commit) | Issue closed by `Closes #n` |
+| Squash merge | Issue closed by `Closes #n` |
 
 **No agent closes an issue by hand.** Completion follows a merge. An agent that
 closes an issue is asserting a result no merge has recorded.

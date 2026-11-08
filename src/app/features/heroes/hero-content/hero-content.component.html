@@ -1,10 +1,18 @@
 @if (hero()) {
   <section class="hero-detail" aria-label="Selected hero details">
-    <div class="detail-actions">
+    <nav class="detail-actions" aria-label="Breadcrumb">
+      @if (origin(); as origin) {
+        <a class="detail-action" [routerLink]="origin.url">
+          <span aria-hidden="true">&larr;</span> {{ origin.label }}
+        </a>
+      }
       <a class="detail-action" routerLink="/heroes" queryParamsHandling="preserve">
-        <span aria-hidden="true">&larr;</span> All heroes
+        @if (!origin()) {
+          <span aria-hidden="true">&larr;</span>
+        }
+        All heroes
       </a>
-    </div>
+    </nav>
 
     @for (shown of detailHeroes(); track shown.id) {
       <div class="detail-main">

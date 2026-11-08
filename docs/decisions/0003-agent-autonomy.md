@@ -1,6 +1,8 @@
 # ADR-0003: Agent autonomy
 
-- **Status:** Accepted
+- **Status:** Accepted. **Amended on 2026-11-08 by [ADR-0007](0007-squash-merge-pull-requests.md):**
+  pull requests are squash-merged, not merged with a merge commit. The
+  merge-commit wording below is kept as the original record.
 - **Date:** Accepted when this playbook was installed
 - **Deciders:** Project maintainers, by choosing an autonomy mode when installing the agent playbook
 - **Related:** [pipeline.md](../agent-workflows/pipeline.md), [implementation.md](../agent-workflows/implementation.md), [refinement.md](../agent-workflows/refinement.md), [ADR-0001](0001-record-refinement-on-the-issue.md), [ADR-0002](0002-track-work-in-github-only.md)
