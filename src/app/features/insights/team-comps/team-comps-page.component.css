@@ -3,7 +3,7 @@
   min-height: 100vh;
 }
 
-.meta {
+.toolbar {
   margin-bottom: 4px;
 }
 
@@ -57,6 +57,26 @@ thead th {
 .col-rate {
   width: 84px;
   text-align: right;
+}
+
+.col-share {
+  width: 96px;
+  text-align: right;
+}
+
+.variant-summary {
+  margin-top: 2px;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.trio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .pair {
@@ -113,5 +133,9 @@ thead th {
 
   .col-rate {
     width: 60px;
+  }
+
+  .col-share {
+    width: 64px;
   }
 }

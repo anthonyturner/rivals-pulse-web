@@ -3,6 +3,7 @@ import type {
   HeroStatsBelowMinimum,
   HeroStatsHalfSeason,
   HeroStatsHero,
+  HeroStatsMode,
   HeroStatsModeId,
   HeroStatsTier,
 } from '../../../contracts/hero-stats.model.ts';
@@ -44,7 +45,7 @@ export { PLAY_MODE_IDS };
  */
 export const BLENDED_PLAY_MODE_IDS: readonly number[] = [PLAY_MODE_IDS.quickMatch, PLAY_MODE_IDS.competitive];
 
-interface PlayMode {
+export interface PlayMode {
   id: HeroStatsModeId;
   label: string;
   /** The `participants.play_mode_id` values this mode counts. Unknown (-1) is in none of them. */
@@ -69,7 +70,7 @@ const DEFAULT_PLAY_MODE = PLAY_MODES[0];
  * The mode a `mode` query value names: the blend when there is none, and undefined for a value that
  * names no mode, which then counts nothing rather than quietly counting the blend.
  */
-function playModeFromQuery(value: string | undefined): PlayMode | undefined {
+export function playModeFromQuery(value: string | undefined): PlayMode | undefined {
   const id = value?.trim().toLowerCase();
 
   return id === undefined || id === '' ? DEFAULT_PLAY_MODE : PLAY_MODES.find((mode) => mode.id === id);
@@ -284,11 +285,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
       halfSeason: shown === undefined ? null : timeline.describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : timeline.describe(inPlaceOf),
       mode: mode?.id ?? null,
-      modes: PLAY_MODES.map(({ id, label, playModeIds }) => ({
-        id,
-        label,
-        decidedMatches: shown === undefined ? 0 : decidedMatchesOf(source, shown, playModeIds),
-      })),
+      modes: modesOf(source, shown),
       matchesCounted: result?.matchesCounted ?? 0,
       tiers: result?.tiers ?? [],
       belowMinimum: result?.belowMinimum ?? [],
@@ -322,7 +319,20 @@ export function addRow(tally: Tally, row: HeroAggregateRow): void {
   tally.finalHitsN += row.finalHitsN;
 }
 
-function decidedMatchesOf(source: HeroStatsSource, halfSeason: number, playModeIds: readonly number[]): number {
+/** Every mode a client can ask for, with the matches each holds in `halfSeason` (0 for no half-season). */
+export function modesOf(source: Pick<HeroStatsSource, 'totals'>, halfSeason: number | undefined): HeroStatsMode[] {
+  return PLAY_MODES.map(({ id, label, playModeIds }) => ({
+    id,
+    label,
+    decidedMatches: halfSeason === undefined ? 0 : decidedMatchesOf(source, halfSeason, playModeIds),
+  }));
+}
+
+function decidedMatchesOf(
+  source: Pick<HeroStatsSource, 'totals'>,
+  halfSeason: number,
+  playModeIds: readonly number[],
+): number {
   return source.totals
     .filter((row) => row.halfSeason === halfSeason && playModeIds.includes(row.playModeId))
     .reduce((sum, row) => sum + row.decidedMatches, 0);
