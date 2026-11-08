@@ -79,6 +79,12 @@ describe('HeroGuidesPageComponent', () => {
     }
   });
 
+  it('loads the first group lead art at once and defers every later group lead', () => {
+    const loading = sections().map((section) => section.querySelector('.art__image')?.getAttribute('loading') ?? null);
+
+    expect(loading).toEqual([null, 'lazy', 'lazy', 'lazy', 'lazy']);
+  });
+
   it('tints a hero playbook chip by its role and a fundamentals chip with the accent', () => {
     const chipKinds = (section: Element) => Array.from(section.querySelectorAll('.chip'), (chip) => chip.getAttribute('data-kind'));
     const roles = new Map(HERO_GUIDES.map((guide) => [guide.heroName, guide.role]));

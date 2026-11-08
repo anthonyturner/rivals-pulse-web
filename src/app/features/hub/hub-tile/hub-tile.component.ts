@@ -9,7 +9,8 @@ import type { TileChip, TileImageFit, TileTint } from '../hub-tile.types';
  * for a small preview, which goes in as content. The whole card is one link named by the title, so
  * the preview is decoration and is hidden from assistive technology. Give `imageUrl` for key art
  * behind a scrim, which makes the card the hub's lead tile, and `playMarker` to add a play button
- * over it for a card that opens video; `imageFit` says how the art sits. A card with no key art can
+ * over it for a card that opens video; `imageFit` says how the art sits, and `lazyArt` defers loading
+ * it for a card that starts below the fold. A card with no key art can
  * give `thumbnailUrl` for a small square picture beside its text.
  */
 @Component({
@@ -20,7 +21,7 @@ import type { TileChip, TileImageFit, TileTint } from '../hub-tile.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.featured]': '!!imageUrl()',
-    '[class.portrait]': 'imageFit() === "portrait"',
+    '[class.portrait]': '!!imageUrl() && imageFit() === "portrait"',
     '[class.thumbed]': '!imageUrl() && !!thumbnailUrl()',
     '[class.split]': 'split()',
     '[attr.data-tint]': 'tint()',
@@ -36,6 +37,7 @@ export class HubTileComponent {
   readonly headingLevel = input<2 | 3>(2);
   readonly playMarker = input(false);
   readonly imageFit = input<TileImageFit>('banner');
+  readonly lazyArt = input(false);
   readonly thumbnailUrl = input<string | null>(null);
   readonly tint = input<TileTint | null>(null);
   readonly split = input(false);

@@ -256,6 +256,16 @@ describe('The Resources hub', () => {
     expect(element.querySelectorAll('app-hub-tile').length).toBe(links.length);
   });
 
+  it('loads the lead tile key art at once, since it is in view when the page opens', () => {
+    render();
+    http.match(() => true);
+
+    const art = element.querySelector('.art__image');
+
+    expect(art).not.toBeNull();
+    expect(art?.hasAttribute('loading')).toBeFalse();
+  });
+
   it('gives a link the tile data does not name a plain tile after the others', () => {
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],

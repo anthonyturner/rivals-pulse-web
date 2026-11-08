@@ -176,24 +176,20 @@ export function guideTileSizes(count: number): TileSize[] {
   return sizes;
 }
 
-function toSection(group: LibraryGroup): GuideSection {
+/** `lazyArt` says whether the group's lead art starts below the fold: true for every group but the first, which opens the page. */
+function toSection(group: LibraryGroup, groupIndex: number): GuideSection {
+  const lazyArt = groupIndex > 0;
   const sizes = guideTileSizes(group.cards.length);
 
   return {
     title: group.title,
     links: group.cards.map((card) => ({ label: card.title, path: card.path, description: card.blurb })),
-    tiles: group.cards.map((card, index) => {
-      const lead = index === 0;
+    tiles: group.cards.map((card, index): HubTileConfig => {
+      const chip = card.caption ? { kind: card.captionKind, label: card.caption } : null;
 
-      return {
-        path: card.path,
-        size: sizes[index],
-        chip: card.caption ? { kind: card.captionKind, label: card.caption } : null,
-        preview: null,
-        imageUrl: lead ? card.imageUrl : null,
-        imageFit: 'portrait',
-        thumbnailUrl: lead ? null : card.imageUrl,
-      };
+      return index === 0
+        ? { path: card.path, size: sizes[index], chip, preview: null, imageUrl: card.imageUrl, imageFit: 'portrait', lazyArt }
+        : { path: card.path, size: sizes[index], chip, preview: null, imageUrl: null, thumbnailUrl: card.imageUrl };
     }),
   };
 }

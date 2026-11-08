@@ -131,6 +131,11 @@
   color: var(--ink-accent);
 }
 
+/* Only the accent kind is yellow on the dark tile; the other kinds read as plain light text, since the tinted colours are not made for a dark fill in both themes. */
+:host(.featured) .chip:not([data-kind='accent']) {
+  color: var(--on-ink);
+}
+
 .art {
   position: absolute;
   inset: 0;

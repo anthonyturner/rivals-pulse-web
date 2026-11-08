@@ -105,6 +105,25 @@ describe('HubBentoComponent', () => {
     expect(beta.classList).not.toContain('portrait');
   });
 
+  it('loads key art at once unless the tile asks for it to be lazy', () => {
+    const element = render(LINKS, [
+      { path: '/alpha', size: 'feature', chip: null, preview: null, imageUrl: '/a.jpg' },
+      { path: '/beta', size: 'feature', chip: null, preview: null, imageUrl: '/b.jpg', lazyArt: true },
+    ]);
+    const [alpha, beta] = Array.from(element.querySelectorAll('app-hub-tile'));
+
+    expect(alpha.querySelector('.art__image')?.hasAttribute('loading')).toBeFalse();
+    expect(beta.querySelector('.art__image')?.getAttribute('loading')).toBe('lazy');
+  });
+
+  it('gives the portrait look only to a tile with key art', () => {
+    const element = render(LINKS, [
+      { path: '/alpha', size: 'third', chip: null, preview: null, imageUrl: null, imageFit: 'portrait', thumbnailUrl: '/a.png' },
+    ]);
+
+    expect(element.querySelector('app-hub-tile')?.classList).not.toContain('portrait');
+  });
+
   it('draws a lazy, decorative thumbnail beside a tile with no key art, and ignores it on a tile with some', () => {
     const element = render(LINKS, [
       { path: '/alpha', size: 'third', chip: null, preview: null, imageUrl: null, thumbnailUrl: '/a.png' },

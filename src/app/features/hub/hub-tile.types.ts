@@ -53,6 +53,8 @@ export interface HubTileConfig {
   playMarker?: boolean;
   /** How the key art sits in the tile. Only used with `imageUrl`; a banner when left out. */
   imageFit?: TileImageFit;
+  /** Wait to load the key art until it nears the screen, for a lead tile below the fold. Eager when left out, so art in view loads at once. */
+  lazyArt?: boolean;
   /** A small square picture beside the text, for a tile with no key art. A tile with `imageUrl` ignores it. */
   thumbnailUrl?: string | null;
   tint?: TileTint;
