@@ -1,0 +1,37 @@
+:host {
+  display: block;
+}
+
+.rows {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.letter {
+  display: grid;
+  flex: none;
+  width: 24px;
+  height: var(--hero-thumb);
+  place-items: center;
+  border-radius: 6px;
+  background: var(--tertiary-soft);
+  color: var(--tertiary-ink);
+  font-size: var(--type-small);
+  font-weight: 850;
+}
+
+.heroes {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}

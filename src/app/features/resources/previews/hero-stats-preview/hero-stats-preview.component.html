@@ -1,0 +1,14 @@
+@if (rows().length > 0) {
+  <ul class="rows">
+    @for (row of rows(); track row.hero) {
+      <li class="row">
+        <app-preview-portrait [src]="row.imageUrl" />
+        <span class="bar-block">
+          <span class="name">{{ row.name }}</span>
+          <span class="track"><span class="fill" [style.width.%]="row.barPercent"></span></span>
+        </span>
+        <span class="rate">{{ row.winRateLabel }}</span>
+      </li>
+    }
+  </ul>
+}

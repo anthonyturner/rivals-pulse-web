@@ -15,7 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EyebrowComponent } from '../../../shared/components/eyebrow/eyebrow.component';
 import { HomeBandComponent } from '../home-band/home-band.component';
 import type { HomeContent } from '../home-content.model';
-import { HomeHeroStatsService } from '../home-hero-stats.service';
+import { CurrentHeroStatsService } from '../../insights/current-hero-stats.service';
 import { buildGameNewsView } from './game-news-view';
 import { seasonDateRange } from './season-date-range';
 
@@ -42,7 +42,7 @@ export class GameNewsBandComponent {
 
   constructor() {
     if (isPlatformBrowser(inject(PLATFORM_ID))) {
-      inject(HomeHeroStatsService)
+      inject(CurrentHeroStatsService)
         .getHeroStats()
         .pipe(takeUntilDestroyed(inject(DestroyRef)))
         .subscribe((stats) => {

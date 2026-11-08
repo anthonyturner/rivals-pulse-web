@@ -4,7 +4,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import type { HeroStats } from '../../../contracts/hero-stats.model';
-import { HomeHeroStatsService } from './home-hero-stats.service';
+import { CurrentHeroStatsService } from './current-hero-stats.service';
 
 const ended = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
 const ongoing = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
@@ -19,16 +19,16 @@ const stats: HeroStats = {
   belowMinimum: [],
 };
 
-describe('HomeHeroStatsService', () => {
+describe('CurrentHeroStatsService', () => {
   let http: HttpTestingController;
-  let service: HomeHeroStatsService;
+  let service: CurrentHeroStatsService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
-    service = TestBed.inject(HomeHeroStatsService);
+    service = TestBed.inject(CurrentHeroStatsService);
     spyOn(console, 'error');
   });
 
