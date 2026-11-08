@@ -129,16 +129,16 @@ async function saveOfficialHero(db, officialHero) {
 }
 
 function getImageUrl(heroId, existingImageUrl, officialImageUrl) {
-  if (existingImageUrl && !existingImageUrl.includes('default-hero')) {
-    return existingImageUrl;
-  }
-
+  // A committed portrait always wins, so a hero first stored with the official
+  // thumbnail moves to its headshot once `sync:official-hero-images` adds it.
   if (existsSync(join(heroImagesPath, `${heroId}.png`))) {
     return `/images/heroes/${heroId}.png`;
   }
 
-  // A hero added mid-season has no committed portrait yet, so the official
-  // image keeps the card correct until `sync:official-hero-images` runs.
+  if (existingImageUrl && !existingImageUrl.includes('default-hero')) {
+    return existingImageUrl;
+  }
+
   return officialImageUrl || '/images/heroes/default-hero.png';
 }
 
