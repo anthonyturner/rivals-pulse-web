@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  width: fit-content;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--type-caption);
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+:host([data-kind='accent']) {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+:host([data-kind='secondary']) {
+  background: var(--secondary-soft);
+  color: var(--secondary-ink);
+}
+
+:host([data-kind='tertiary']) {
+  background: var(--tertiary-soft);
+  color: var(--tertiary-ink);
+}
+
+:host([data-dark]) {
+  background: color-mix(in srgb, var(--ink) 75%, transparent);
+  color: var(--ink-accent);
+}
+
+:host([data-dark]:not([data-kind='accent'])) {
+  color: var(--on-ink);
+}
+
+:host([data-size='large']) {
+  padding-inline: 12px;
+  font-size: var(--type-h3);
+  font-weight: 850;
+}

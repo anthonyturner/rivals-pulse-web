@@ -1,40 +1,13 @@
-.media,
-.workspace,
-.player-pane,
-.picker {
-  display: grid;
-  gap: 12px;
+:host {
+  display: block;
   min-width: 0;
 }
 
 .media {
-  padding-block: 16px 32px;
-}
-
-.workspace {
+  display: grid;
   gap: 16px;
-  align-items: start;
-}
-
-iframe {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
-  border-radius: 8px;
-  background: #000;
-}
-
-h2 {
-  font-size: var(--type-title);
-  font-weight: 850;
-  line-height: 1.15;
-}
-
-.guide-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
+  min-width: 0;
+  padding-block: 16px 32px;
 }
 
 .guide-search,
@@ -50,44 +23,25 @@ app-filter-select {
   font-weight: 850;
 }
 
-.tutorial-list {
+.group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.group__title {
+  margin: 0;
+}
+
+.cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-  gap: 6px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.pick {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.pick:focus-visible {
-  outline: none;
-}
-
-.pick:focus-visible > app-hero-tile {
-  outline: 3px solid var(--link);
-  outline-offset: -3px;
-}
-
-@media (min-width: 860px) {
-  .workspace {
-    grid-template-columns: minmax(0, 1fr) 320px;
-  }
-
-  .tutorial-list {
-    grid-template-columns: minmax(0, 1fr);
-    max-height: 460px;
-    overflow-y: auto;
-  }
+.cards > li {
+  min-width: 0;
 }
