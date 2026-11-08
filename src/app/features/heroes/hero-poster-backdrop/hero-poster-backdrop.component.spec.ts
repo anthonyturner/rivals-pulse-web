@@ -4,13 +4,20 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 import { HeroPosterBackdropComponent } from './hero-poster-backdrop.component';
 import { HeroPosterBackdropPreferenceService } from './hero-poster-backdrop-preference.service';
+import { YoutubeEmbedCommands } from './youtube-embed-commands';
 
 describe('HeroPosterBackdropComponent', () => {
   const STORAGE_KEY = 'rp.hero-poster-backdrop';
   let fixture: ComponentFixture<HeroPosterBackdropComponent>;
   let element: HTMLElement;
+  let youtube: jasmine.SpyObj<YoutubeEmbedCommands>;
 
-  const toggle = (): HTMLButtonElement | null => element.querySelector('button.backdrop-switch');
+  const toggle = (): HTMLButtonElement | null => element.querySelector('button[role="switch"]');
+  const soundButton = (): HTMLButtonElement | null => element.querySelector('button[aria-pressed]');
+  const loadVideo = async (): Promise<void> => {
+    video()?.dispatchEvent(new Event('load'));
+    await fixture.whenStable();
+  };
   const video = (): HTMLIFrameElement | null => element.querySelector('iframe');
   const press = async (): Promise<void> => {
     toggle()?.click();
@@ -19,7 +26,10 @@ describe('HeroPosterBackdropComponent', () => {
 
   beforeEach(async () => {
     localStorage.removeItem(STORAGE_KEY);
-    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    youtube = jasmine.createSpyObj<YoutubeEmbedCommands>('YoutubeEmbedCommands', ['send']);
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), { provide: YoutubeEmbedCommands, useValue: youtube }],
+    });
     fixture = TestBed.createComponent(HeroPosterBackdropComponent);
     element = fixture.nativeElement;
     fixture.componentRef.setInput('heroName', 'Luna');
@@ -50,6 +60,47 @@ describe('HeroPosterBackdropComponent', () => {
 
     expect(toggle()?.getAttribute('aria-checked')).toBe('false');
     expect(video()).toBeNull();
+  });
+
+  it('offers sound once the playing video has loaded, starting muted', async () => {
+    expect(soundButton()).toBeNull();
+
+    await press();
+    await loadVideo();
+
+    expect(soundButton()?.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('unmutes and mutes the playing video without reloading it', async () => {
+    await press();
+    await loadVideo();
+    const frame = video();
+
+    soundButton()?.click();
+    await fixture.whenStable();
+
+    expect(soundButton()?.getAttribute('aria-pressed')).toBe('true');
+    expect(youtube.send).toHaveBeenCalledWith(frame!, 'unMute');
+
+    soundButton()?.click();
+    await fixture.whenStable();
+
+    expect(soundButton()?.getAttribute('aria-pressed')).toBe('false');
+    expect(youtube.send).toHaveBeenCalledWith(frame!, 'mute');
+    expect(video()).toBe(frame);
+  });
+
+  it('starts muted again when the video is switched off and back on', async () => {
+    await press();
+    await loadVideo();
+    soundButton()?.click();
+    await fixture.whenStable();
+
+    await press();
+    await press();
+    await loadVideo();
+
+    expect(soundButton()?.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('remembers the choice in this browser', async () => {
@@ -103,5 +154,19 @@ describe('HeroPosterBackdropPreferenceService', () => {
     await fixture.whenStable();
 
     expect(preference.backdrop()).toBe('portrait');
+  });
+});
+
+describe('YoutubeEmbedCommands', () => {
+  it('posts the command to the YouTube player as a JSON message for its origin only', () => {
+    const postMessage = jasmine.createSpy('postMessage');
+    const frame = { contentWindow: { postMessage } } as unknown as HTMLIFrameElement;
+
+    new YoutubeEmbedCommands().send(frame, 'unMute');
+
+    expect(postMessage).toHaveBeenCalledWith(
+      JSON.stringify({ event: 'command', func: 'unMute', args: [] }),
+      'https://www.youtube-nocookie.com',
+    );
   });
 });

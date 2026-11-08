@@ -1,7 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection, SecurityContext } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DomSanitizer } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of, Subject } from 'rxjs';
@@ -201,13 +202,13 @@ describe('HeroesPageComponent videos in hero tabs', () => {
     );
 
     expect(backdrop).toBe(
-      'https://www.youtube-nocookie.com/embed/lunaPaz?autoplay=1&mute=1&loop=1&playlist=lunaPaz&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3',
+      'https://www.youtube-nocookie.com/embed/lunaPaz?autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=lunaPaz&controls=0&disablekb=1&playsinline=1&rel=0&iv_load_policy=3',
     );
   });
 
   it('gives the poster no backdrop video when the hero has no PAZ gameplay video of their own', () => {
     expect(page.selectedHeroPosterVideoUrl()).toBeNull();
-    expect(harness.routeNativeElement?.querySelector('.backdrop-switch')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.backdrop-controls')).toBeNull();
   });
 
   it('gives a video that is only a YouTube search link no player', () => {
