@@ -1,5 +1,6 @@
 import type { HeroStatsHalfSeason } from '../../../../contracts/hero-stats.model';
-import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
+import type { HeroSynergies, HeroSynergy } from '../../../../contracts/hero-synergies.model';
+import type { HeroRole } from '../../../../contracts/role-stats.model';
 import type { TeamLineups } from '../../../../contracts/team-lineups.model';
 import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import type { HeroIdentities } from '../hero-identity';
@@ -56,6 +57,86 @@ describe('buildTeamCompsView role pairs', () => {
     expect(rowsOf(view, 'Vanguard')).toEqual(['hulk+thor']);
     expect(rowsOf(view, 'Duelist')).toEqual([]);
     expect(rowsOf(view, 'Strategist')).toEqual([]);
+  });
+
+  describe('for Deadpool, whom the game splits by role', () => {
+    const asForm = (hero: 'hero' | 'ally', role: HeroRole, pair: HeroSynergy): HeroSynergy => ({
+      ...pair,
+      [hero === 'hero' ? 'heroRole' : 'allyRole']: role,
+    });
+
+    it('files a pair under the role of the form played, once per form', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([
+          asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12)),
+          asForm('ally', 'Duelist', synergy('hela', 'deadpool', 8, 12)),
+          asForm('ally', 'Strategist', synergy('mantis', 'deadpool', 7, 12)),
+        ]),
+        identities,
+      );
+
+      expect(rowsOf(view, 'Vanguard')).toEqual(['hulk+deadpool']);
+      expect(rowsOf(view, 'Duelist')).toEqual(['hela+deadpool']);
+      expect(rowsOf(view, 'Strategist')).toEqual(['mantis+deadpool']);
+    });
+
+    it('names him with the form and gives the form as his role', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([asForm('hero', 'Strategist', synergy('deadpool', 'luna-snow', 9, 12))]),
+        identities,
+      );
+      const [row] = view.rolePairs[2].rows;
+
+      expect(row.first).toEqual(
+        jasmine.objectContaining({ hero: 'deadpool', name: 'Deadpool (Strategist)', role: 'Strategist' }),
+      );
+      expect(row.second.name).toBe('Luna Snow');
+    });
+
+    it('draws his portrait from the roster, and the one the site keeps for him when the roster has none', () => {
+      const pair = synergiesOf([asForm('ally', 'Vanguard', synergy('hulk', 'deadpool', 9, 12))]);
+      const withPortrait: HeroIdentities = new Map(identities).set('deadpool', {
+        name: 'Deadpool',
+        role: 'Multi-Role',
+        imageUrl: '/images/roster/deadpool-headshot.png',
+      });
+
+      expect(buildTeamCompsView(pair, withPortrait).rolePairs[0].rows[0].second.imageUrl).toBe(
+        '/images/roster/deadpool-headshot.png',
+      );
+      expect(buildTeamCompsView(pair, identities).rolePairs[0].rows[0].second.imageUrl).toBe('/images/heroes/deadpool.png');
+    });
+
+    it('keeps a form out of a role it was not played in', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([asForm('ally', 'Strategist', synergy('hulk', 'deadpool', 9, 12))]),
+        identities,
+      );
+
+      expect(rowsOf(view, 'Vanguard')).toEqual([]);
+      expect(rowsOf(view, 'Strategist')).toEqual([]);
+    });
+
+    it('lists two forms with the same partner as separate rows', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([
+          asForm('ally', 'Strategist', synergy('mantis', 'deadpool', 9, 12)),
+          asForm('ally', 'Strategist', synergy('luna-snow', 'deadpool', 7, 12)),
+        ]),
+        identities,
+      );
+
+      expect(rowsOf(view, 'Strategist')).toEqual(['mantis+deadpool', 'luna-snow+deadpool']);
+    });
+
+    it('leaves the base id, which has no form, out of every list', () => {
+      const view = buildTeamCompsView(
+        synergiesOf([synergy('hulk', 'deadpool', 9, 12), synergy('mantis', 'deadpool', 9, 12), synergy('hela', 'deadpool', 9, 12)]),
+        identities,
+      );
+
+      expect(view.rolePairs.map(({ rows }) => rows.length)).toEqual([0, 0, 0]);
+    });
   });
 
   it('always lists the three roles in order, each with its heading', () => {

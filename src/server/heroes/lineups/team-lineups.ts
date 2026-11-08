@@ -1,5 +1,4 @@
-import type { TeamLineupShape, TeamLineups } from '../../../contracts/team-lineups.model.ts';
-import type { HeroStatsModeId } from '../../../contracts/hero-stats.model.ts';
+import { TEAM_LINEUP_DEFAULT_MODE_ID, type TeamLineupShape, type TeamLineups } from '../../../contracts/team-lineups.model.ts';
 import {
   chooseHalfSeason,
   halfSeasonTimeline,
@@ -19,12 +18,6 @@ import {
  * thinner shape); applying it again here keeps a thinner shape's figures out if that function changes.
  */
 export const TEAM_LINEUP_MIN_TEAMS = 50;
-
-/**
- * The mode counted when none is asked for. Line-ups are a ranked-play question (issue 126), so the
- * default is Competitive, not the Quick Match blend the other hero endpoints open on.
- */
-export const TEAM_LINEUP_DEFAULT_MODE_ID: HeroStatsModeId = 'competitive';
 
 /**
  * `rank_bucket` of rows with no rank: every row today. Once buckets of 0 or more exist, -1 means

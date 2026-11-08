@@ -1,5 +1,5 @@
 import type { HeroPairs } from '../../../contracts/hero-pairs.model.ts';
-import { fetchHeroPairRows, getHeroPairs, parseHeroPairRows } from './hero-pairs-read';
+import { fetchHeroPairRows, getHeroPairs, getHeroSynergies, parseHeroPairRows } from './hero-pairs-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };
 const NOW = () => new Date('2026-10-30T12:00:00Z');
@@ -253,6 +253,42 @@ describe('getHeroPairs while a read function is not in the database', () => {
     await expectAsync(
       getHeroPairs({ ...options, fetch: answering({ ...bothFunctions, read_hero_stats: { body: { code: '42501' }, status: 401 } }) }),
     ).toBeRejectedWithError('read_hero_stats answered 401');
+  });
+});
+
+describe('Deadpool in the pair reads', () => {
+  const options = { env: ENV, now: NOW };
+  const INVISIBLE_WOMAN = 1050;
+  const fetchOf = () =>
+    answering({
+      read_hero_pairs: {
+        body: [
+          pairRow('with', INVISIBLE_WOMAN, 1057, 12),
+          pairRow('with', INVISIBLE_WOMAN, 10571, 13),
+          pairRow('with', INVISIBLE_WOMAN, 10572, 14),
+          pairRow('with', INVISIBLE_WOMAN, 10573, 15),
+        ],
+      },
+      read_hero_stats: { body: statsAnswer },
+    });
+
+  it('keeps each role form of his apart in the synergies, each placed by the role played', async () => {
+    const { synergies } = await getHeroSynergies({ ...options, fetch: fetchOf() });
+
+    expect(synergies.map(({ hero, ally, allyRole, matches }) => `${hero}+${ally}/${allyRole ?? '-'}/${matches}`)).toEqual([
+      'invisible-woman+deadpool/-/12',
+      'invisible-woman+deadpool/Duelist/14',
+      'invisible-woman+deadpool/Strategist/15',
+      'invisible-woman+deadpool/Vanguard/13',
+    ]);
+  });
+
+  it('still merges his forms under the base id in the hero pairs the Pulse Atlas publishes', async () => {
+    const pairs = await getHeroPairs({ ...options, fetch: fetchOf() });
+
+    expect(pairs.bands[0].synergies).toEqual([
+      { heroId: INVISIBLE_WOMAN, allyHeroId: 1057, matches: 54, appearances: 54, wins: 26 },
+    ]);
   });
 });
 

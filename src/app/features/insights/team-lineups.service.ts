@@ -3,11 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 
 import type { HeroStatsModeId } from '../../../contracts/hero-stats.model';
-import type { TeamLineups } from '../../../contracts/team-lineups.model';
+import { TEAM_LINEUP_DEFAULT_MODE_ID, type TeamLineups } from '../../../contracts/team-lineups.model';
 import { hasReadableScope, statsQueryParams } from './stats-scope';
-
-/** What `/api/team-lineups` counts when asked for no mode. Unlike the other hero endpoints, not the Quick Match blend. */
-const LINEUPS_DEFAULT_MODE: HeroStatsModeId = 'competitive';
 
 /** The site's own `/api/team-lineups`: RivalsPulse match records, with no outside request. */
 @Injectable({ providedIn: 'root' })
@@ -21,7 +18,7 @@ export class TeamLineupsService {
    */
   getTeamLineups(halfSeason?: number, mode?: HeroStatsModeId): Observable<TeamLineups | null> {
     return this.http
-      .get<unknown>('/api/team-lineups', { params: statsQueryParams(halfSeason, mode, LINEUPS_DEFAULT_MODE) })
+      .get<unknown>('/api/team-lineups', { params: statsQueryParams(halfSeason, mode, TEAM_LINEUP_DEFAULT_MODE_ID) })
       .pipe(
         map((body) => (isTeamLineups(body) ? body : null)),
         catchError((error: unknown) => {

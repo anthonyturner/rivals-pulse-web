@@ -1,7 +1,7 @@
 import type { HeroSynergies } from '../../../contracts/hero-synergies.model';
 import type { Hero } from '../heroes/hero.model';
 import { heroIdentities } from '../insights/hero-identity';
-import { buildTeamCompsView } from '../insights/team-comps/team-comps-view';
+import { rolePairsOf } from '../insights/team-comps/team-comps-view';
 import { previewHero, type PreviewHero } from './preview-hero';
 
 export interface PairPreviewRow {
@@ -13,7 +13,7 @@ export interface PairPreviewRow {
 
 /** The best duo of each role that has one, ranked as the Team comps page ranks them. */
 export function pairPreview(synergies: HeroSynergies, roster: readonly Hero[]): PairPreviewRow[] {
-  return buildTeamCompsView(synergies, null, null, heroIdentities(roster)).rolePairs.flatMap(({ role, rows }) =>
+  return rolePairsOf(synergies, heroIdentities(roster)).flatMap(({ role, rows }) =>
     rows.length === 0
       ? []
       : [

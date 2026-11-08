@@ -76,6 +76,13 @@ describe('isHeroSynergies', () => {
     expect(isHeroSynergies(old)).toBeTrue();
   });
 
+  it('accepts the role of a form that was played, and rejects one that is not text', () => {
+    const pair = good.synergies[0];
+
+    expect(isHeroSynergies({ ...good, synergies: [{ ...pair, heroRole: 'Strategist', allyRole: 'Vanguard' }] })).toBeTrue();
+    expect(isHeroSynergies({ ...good, synergies: [{ ...pair, allyRole: 3 }] })).toBeFalse();
+  });
+
   it('rejects half-season and mode lists the page could not read', () => {
     expect(isHeroSynergies({ ...good, halfSeasons: 'all' })).toBeFalse();
     expect(isHeroSynergies({ ...good, halfSeasons: [{ label: 'Season 10' }] })).toBeFalse();

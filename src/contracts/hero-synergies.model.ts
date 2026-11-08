@@ -1,4 +1,5 @@
 import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero-stats.model.ts';
+import type { HeroRole } from './role-stats.model.ts';
 
 /**
  * How a pair of heroes fares when one team holds both, from the matches RivalsPulse players
@@ -8,8 +9,15 @@ import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero
 export interface HeroSynergy {
   /** The first hero of the pair, as its id in `heroes.json`. */
   hero: string;
+  /**
+   * The role `hero` was played in, set only for a hero the game splits by role (Deadpool), whose
+   * forms are counted apart. Absent for every other hero, and for a count with no form recorded.
+   */
+  heroRole?: HeroRole;
   /** The other hero of the pair. A pair is listed once, in either order. */
   ally: string;
+  /** The role `ally` was played in; see `heroRole`. */
+  allyRole?: HeroRole;
   /** Matches with a win or a loss in which a team held both. */
   matches: number;
   /** Team occurrences of the pair in those matches: a match where both teams held it counts twice. */
@@ -27,6 +35,10 @@ export interface HeroSynergy {
  * `ready` means at least one pair has reached `minimumMatches`; `not-enough-data` is a designed
  * state, not an error, and then `synergies` is empty. Pairs below the minimum are never listed.
  * The list is sorted by hero, then ally, which is not a ranking.
+ *
+ * A hero the game splits by role is listed once per form played, each with its `heroRole` or
+ * `allyRole`, so a page can file the pair under the role that was played. `/api/hero-pairs` and the
+ * Pulse Atlas merge those forms instead.
  */
 export interface HeroSynergies {
   status: 'ready' | 'not-enough-data';

@@ -1,9 +1,8 @@
-import type { TeamLineups } from '../../../contracts/team-lineups.model.ts';
+import { TEAM_LINEUP_DEFAULT_MODE_ID, type TeamLineups } from '../../../contracts/team-lineups.model.ts';
 import { playModeFromQuery } from '../stats/hero-stats.ts';
 import { readHeroStatsSource } from '../stats/index.ts';
 import {
   deriveTeamLineups,
-  TEAM_LINEUP_DEFAULT_MODE_ID,
   UNKNOWN_RANK_BUCKET,
   type TeamLineupRow,
 } from './team-lineups.ts';

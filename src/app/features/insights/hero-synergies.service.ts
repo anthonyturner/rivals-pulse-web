@@ -57,6 +57,7 @@ function isReadableSynergy(entry: unknown): boolean {
   return (
     typeof synergy['hero'] === 'string' &&
     typeof synergy['ally'] === 'string' &&
+    [synergy['heroRole'], synergy['allyRole']].every((role) => role === undefined || typeof role === 'string') &&
     ['matches', 'appearances', 'wins', 'winRate', 'shrunkWinRate'].every(
       (key) => typeof synergy[key] === 'number' && Number.isFinite(synergy[key]),
     )
