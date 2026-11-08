@@ -6,7 +6,7 @@ import type {
   HeroStatsModeId,
 } from '../../../../contracts/hero-stats.model';
 import type { HeroIdentities } from '../hero-identity';
-import { buildTierListView, seasonOptions } from './tier-list-view';
+import { buildTierListView } from './tier-list-view';
 
 const season = (id: number, startsAt: string | null, endsAt: string | null): HeroStatsHalfSeason => ({
   id,
@@ -189,14 +189,5 @@ describe('buildTierListView', () => {
       'Sep 11, 2026 to Oct 9, 2026',
     );
     expect(buildTierListView(statsOf(), identities).season?.dateRange).toBe('Started Oct 9, 2026');
-  });
-});
-
-describe('seasonOptions', () => {
-  it('lists the newest half-season first', () => {
-    expect(seasonOptions([previous, current])).toEqual([
-      { id: 10.5, label: 'Season 10.5' },
-      { id: 10, label: 'Season 10' },
-    ]);
   });
 });

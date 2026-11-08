@@ -24,6 +24,7 @@ import { getCommunityMatches } from './server/community/matches';
 import { handlePulseRecordsRequest } from './server/records';
 import { getHeroMatchups } from './server/heroes/matchups';
 import { getHeroPairs, getHeroSynergies } from './server/heroes/pairs';
+import { getTeamLineups } from './server/heroes/lineups';
 import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
 import { syncHomeNews } from './server/content/home';
@@ -39,10 +40,14 @@ app.get('/api/content/status', (_req, res) => {
   handleApiResponse(res, () => getContentStatusFromDatabase());
 });
 
-app.get('/api/hero-stats', (req, res) => {
-  const read = (name: string): string | undefined => (typeof req.query[name] === 'string' ? req.query[name] : undefined);
+/** Reads one query value by name: its string, or undefined when it is missing or repeated. */
+const queryReader =
+  (query: Record<string, unknown>) =>
+  (name: string): string | undefined =>
+    typeof query[name] === 'string' ? query[name] : undefined;
 
-  handleApiResponse(res, () => getHeroStats(heroStatsQueryFrom(read)));
+app.get('/api/hero-stats', (req, res) => {
+  handleApiResponse(res, () => getHeroStats(heroStatsQueryFrom(queryReader(req.query))));
 });
 
 app.get('/api/community/matches', (req, res) => {
@@ -81,16 +86,20 @@ app.get('/api/hero-matchups', (_req, res) => {
   handleApiResponse(res, () => getHeroMatchups());
 });
 
-app.get('/api/hero-pairs', (_req, res) => {
-  handleApiResponse(res, () => getHeroPairs());
+app.get('/api/hero-pairs', (req, res) => {
+  handleApiResponse(res, () => getHeroPairs(heroStatsQueryFrom(queryReader(req.query))));
 });
 
-app.get('/api/hero-synergies', (_req, res) => {
-  handleApiResponse(res, () => getHeroSynergies());
+app.get('/api/hero-synergies', (req, res) => {
+  handleApiResponse(res, () => getHeroSynergies(heroStatsQueryFrom(queryReader(req.query))));
 });
 
-app.get('/api/triple-support-trios', (_req, res) => {
-  handleApiResponse(res, () => getTripleSupportTrios());
+app.get('/api/triple-support-trios', (req, res) => {
+  handleApiResponse(res, () => getTripleSupportTrios(heroStatsQueryFrom(queryReader(req.query))));
+});
+
+app.get('/api/team-lineups', (_req, res) => {
+  handleApiResponse(res, () => getTeamLineups());
 });
 
 app.get('/api/community/stats', (req, res) => {

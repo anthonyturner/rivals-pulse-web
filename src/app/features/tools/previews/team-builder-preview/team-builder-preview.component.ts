@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
-import { HeroSynergiesService } from '../../../insights/hero-synergies.service';
 import { PAIR_ROLES } from '../../../insights/team-comps/team-comps-view';
-import { previewData, previewRoster } from '../../../hub/preview-data';
+import { previewRoster, previewSynergies } from '../../../hub/preview-data';
 import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { teamPreview } from '../preview-views';
 
@@ -18,8 +17,7 @@ import { teamPreview } from '../preview-views';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeamBuilderPreviewComponent {
-  private readonly synergiesService = inject(HeroSynergiesService);
-  private readonly synergies = previewData(() => this.synergiesService.getHeroSynergies());
+  private readonly synergies = previewSynergies();
   private readonly roster = previewRoster();
 
   protected readonly roles = PAIR_ROLES;

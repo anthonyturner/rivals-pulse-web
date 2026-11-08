@@ -66,6 +66,20 @@ describe('HubBentoComponent', () => {
     ]);
   });
 
+  it('draws the play marker only on a tile that asks for it, whether or not it has key art', () => {
+    const element = render(LINKS, [
+      { path: '/alpha', size: 'feature', chip: null, preview: null, imageUrl: '/a.jpg', playMarker: true },
+      { path: '/beta', size: 'feature', chip: null, preview: null, imageUrl: '/b.jpg' },
+      { path: '/gamma', size: 'wide', chip: null, preview: null, imageUrl: null, playMarker: true },
+    ]);
+    const [alpha, beta, gamma] = Array.from(element.querySelectorAll('app-hub-tile'));
+
+    expect(alpha.querySelector('.marker')).not.toBeNull();
+    expect(beta.querySelector('.art__image')).not.toBeNull();
+    expect(beta.querySelector('.marker')).toBeNull();
+    expect(gamma.querySelector('.marker')).toBeNull();
+  });
+
   it('passes a tile its tint and its strip layout', () => {
     const element = render(LINKS, [
       { path: '/alpha', size: 'feature', chip: null, preview: null, imageUrl: null, tint: 'danger' },

@@ -11,9 +11,9 @@ export interface PairPreviewRow {
   winRateLabel: string;
 }
 
-/** The best duo of each role that has one, as the Team comps page ranks them. */
+/** The best duo of each role that has one, ranked as the Team comps page ranks them. */
 export function pairPreview(synergies: HeroSynergies, roster: readonly Hero[]): PairPreviewRow[] {
-  return buildTeamCompsView(synergies, heroIdentities(roster)).rolePairs.flatMap(({ role, rows }) =>
+  return buildTeamCompsView(synergies, null, heroIdentities(roster)).rolePairs.flatMap(({ role, rows }) =>
     rows.length === 0
       ? []
       : [

@@ -38,7 +38,7 @@ function trioRow(heroes: [number, number, number], matches: number, extra: Recor
 
 const statsAnswer = {
   half_seasons: [{ half_season: 10.5, starts_at: '2026-10-09T09:00:00Z' }],
-  totals: [],
+  totals: [{ half_season: 10.5, play_mode_id: 1, decided_matches: 60 }],
   heroes: [],
 };
 
@@ -92,6 +92,10 @@ const ALLOWED_KEYS = new Set([
   'minimumMatches',
   'halfSeason',
   'inPlaceOf',
+  'halfSeasons',
+  'mode',
+  'modes',
+  'decidedMatches',
   'id',
   'label',
   'startsAt',
@@ -101,6 +105,7 @@ const ALLOWED_KEYS = new Set([
   'fourPlusTeams',
   'trios',
   'heroIds',
+  'heroes',
   'variant',
   'anchorHeroIds',
   'matches',
@@ -134,7 +139,73 @@ describe('getTripleSupportTrios', () => {
     ]);
     expect(trios.trios[0].share).toBe(0.14);
     expect([trios.classifiedTeams, trios.unclassifiedTeams, trios.fourPlusTeams]).toEqual([100, 7, 2]);
-    expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/no tag in strategist-tags\.json, or a utility hero with no name: 1999$/));
+    expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/no tag in strategist-tags\.json.*a utility hero with no name\): 1999$/));
+  });
+
+  it('lists the half-seasons and modes a client can ask for, counted in the half-season shown', async () => {
+    spyOn(console, 'warn');
+
+    const trios = await getTripleSupportTrios({ ...options, fetch: answering(bothFunctions) });
+
+    expect(trios.mode).toBe('all');
+    expect(trios.halfSeasons?.map(({ id }) => id)).toEqual([10.5]);
+    expect(trios.modes?.map(({ id, decidedMatches }) => [id, decidedMatches])).toEqual([
+      ['all', 60],
+      ['quick-match', 0],
+      ['competitive', 60],
+      ['arcade', 0],
+      ['practice', 0],
+    ]);
+  });
+
+  it('reads one mode on its own by asking the function for that mode', async () => {
+    spyOn(console, 'warn');
+
+    const seen: Seen[] = [];
+    const trios = await getTripleSupportTrios({ ...options, mode: 'competitive', fetch: answering(bothFunctions, seen) });
+    const call = seen.find(({ url }) => url.includes('read_triple_support_trios'));
+
+    expect(JSON.parse(String(call?.init?.body))).toEqual({ p_play_mode_ids: [1] });
+    expect(trios.mode).toBe('competitive');
+  });
+
+  it('answers the empty state for a mode that names no mode, without reading the trios', async () => {
+    const seen: Seen[] = [];
+
+    const trios = await getTripleSupportTrios({ ...options, mode: 'ranked', fetch: answering(bothFunctions, seen) });
+
+    expect(trios.status).toBe('not-enough-data');
+    expect(trios.mode).toBeNull();
+    expect(trios.trios).toEqual([]);
+    expect(seen.some(({ url }) => url.includes('read_triple_support_trios'))).toBeFalse();
+  });
+
+  it('shows exactly the half-season asked for, with no fall-back to another', async () => {
+    spyOn(console, 'warn');
+
+    const fetch = answering({
+      read_triple_support_trios: { body: [trioRow([MANTIS, LUNA, LOKI], 14, { half_season: 10 })] },
+      read_hero_stats: {
+        body: {
+          ...statsAnswer,
+          half_seasons: [
+            { half_season: 10, starts_at: '2026-09-01T00:00:00Z' },
+            { half_season: 10.5, starts_at: '2026-10-09T09:00:00Z' },
+          ],
+        },
+      },
+    });
+
+    const earlier = await getTripleSupportTrios({ ...options, halfSeason: 10, fetch });
+    const current = await getTripleSupportTrios({ ...options, halfSeason: 10.5, fetch });
+    const unknown = await getTripleSupportTrios({ ...options, halfSeason: Number.NaN, fetch });
+
+    expect(earlier.halfSeason?.id).toBe(10);
+    expect(earlier.trios.length).toBe(1);
+    expect(current.halfSeason?.id).toBe(10.5);
+    expect(current.inPlaceOf).toBeNull();
+    expect(current.trios).toEqual([]);
+    expect(unknown.halfSeason).toBeNull();
   });
 
   it('does not read the hero names when there is no trio to name', async () => {

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
-import { previewMatchups, previewRoster } from '../../../hub/preview-data';
+import { previewRoster } from '../../../hub/preview-data';
+import { previewMatchups } from '../current-hero-matchups-data';
 import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { divePreview } from '../preview-views';
 

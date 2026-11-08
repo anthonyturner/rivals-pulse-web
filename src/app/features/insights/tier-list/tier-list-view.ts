@@ -1,4 +1,4 @@
-import type { HeroStats, HeroStatsHalfSeason, HeroStatsHero } from '../../../../contracts/hero-stats.model';
+import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
 import type { TierName } from '../../../../contracts/tier-list.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
@@ -18,11 +18,6 @@ export interface TierHeroView extends HeroCellView {
 export interface TierRowView {
   name: TierName;
   heroes: TierHeroView[];
-}
-
-export interface SeasonOption {
-  id: number;
-  label: string;
 }
 
 /**
@@ -50,11 +45,6 @@ export interface TierListView {
   tiers: TierRowView[];
   /** Heroes short of the minimum, drawn in the same place whether or not other heroes are placed. */
   building: HeroProgressRow[];
-}
-
-/** Every half-season the API can answer for, newest first. */
-export function seasonOptions(halfSeasons: readonly HeroStatsHalfSeason[]): SeasonOption[] {
-  return [...halfSeasons].reverse().map(({ id, label }) => ({ id, label }));
 }
 
 /**

@@ -62,6 +62,11 @@ describe('The Tools hub', () => {
     const reply = (url: string, body: object | undefined): void => {
       const request = http.expectOne((candidate) => candidate.url === url);
 
+      // The Team Builder strip shows the duos the Team comps page opens on.
+      if (url === '/api/hero-synergies') {
+        expect(request.request.params.get('mode')).toBe('competitive');
+      }
+
       if (body === undefined) {
         request.flush('down', { status: 500, statusText: 'Server Error' });
       } else {

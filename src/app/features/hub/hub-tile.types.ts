@@ -19,7 +19,7 @@ export interface TileChip {
  */
 export type TileSize = 'feature' | 'tall' | 'half' | 'third' | 'note' | 'wide';
 
-/** A soft wash of colour in a tile's top-right corner. `danger` is the red the site uses for the enemy side. */
+/** A soft wash of colour in a tile's top-right corner. `danger` is a red wash, drawn with the `--danger` token. */
 export type TileTint = 'danger';
 
 /** A hub link as the navigation data spells it. */
@@ -40,8 +40,10 @@ export interface HubTileConfig {
    * technology and must draw nothing, rather than a placeholder, while it has no data.
    */
   preview: Type<unknown> | null;
-  /** Key art behind the tile, under a scrim. */
+  /** Key art behind the tile, under a scrim, which also makes it the dark lead tile. */
   imageUrl: string | null;
+  /** A play button over the key art, for a tile that opens video. Only drawn with `imageUrl`. */
+  playMarker?: boolean;
   tint?: TileTint;
   /** Text on the left and the preview on the right, for a full-width strip. A tablet stacks them. */
   split?: boolean;

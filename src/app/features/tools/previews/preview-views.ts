@@ -69,7 +69,8 @@ export function divePreview(matchups: HeroMatchups, roster: readonly Hero[]): Di
 /**
  * Six slots, two per role in Vanguard, Duelist, Strategist order, filled with the best duo of each
  * role as the Team comps page ranks them. A role with no duo leaves its two slots empty. Empty
- * altogether, rather than six plus signs, when no role has a duo at all.
+ * altogether, rather than six plus signs, when no role has a duo at all. The pairs are the ones
+ * `previewSynergies` reads, in Competitive, the mode that page opens on.
  */
 export function teamPreview(synergies: HeroSynergies, roster: readonly Hero[]): TeamSlotPreview[] {
   const pairs = pairPreview(synergies, roster);

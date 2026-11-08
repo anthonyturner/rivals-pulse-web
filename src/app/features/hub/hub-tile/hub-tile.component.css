@@ -151,7 +151,7 @@
   content: '';
 }
 
-/* Zoomed in and pinned to the lower left, so the street shows and the centred game logo is mostly out of frame. */
+/* Zoomed in and pinned to the lower left, which suits the Media Tutorials banner: the street shows and its centred game logo is mostly out of frame. */
 .art__image {
   position: absolute;
   bottom: 0;

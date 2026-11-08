@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 
-import { HeroSynergiesService } from '../../../insights/hero-synergies.service';
-import { previewData, previewRoster } from '../../../hub/preview-data';
+import { previewRoster, previewSynergies } from '../../../hub/preview-data';
 import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { pairPreview } from '../../../hub/pair-preview';
 
@@ -14,8 +13,7 @@ import { pairPreview } from '../../../hub/pair-preview';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeamCompsPreviewComponent {
-  private readonly synergiesService = inject(HeroSynergiesService);
-  private readonly synergies = previewData(() => this.synergiesService.getHeroSynergies());
+  private readonly synergies = previewSynergies();
   private readonly roster = previewRoster();
 
   protected readonly pairs = computed(() => {

@@ -16,6 +16,7 @@ ul {
 }
 
 .slots {
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -86,6 +87,15 @@ ul {
 
 .legend__item[data-role='Strategist']::before {
   border-color: var(--role-strategist);
+}
+
+/* At 320px the tile leaves about 256px, which six full-size slots need 304px for, so the slots shrink to fit one row. */
+@media (max-width: 400px) {
+  .slots {
+    --hero-thumb: 28px;
+
+    gap: 6px;
+  }
 }
 
 @media (max-width: 860px) {
