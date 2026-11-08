@@ -153,10 +153,10 @@ function snapshotOf(
 
   return {
     trios,
-    // Every row of a half-season carries the same team counts.
-    classifiedTeams: own[0]?.classifiedTeams ?? 0,
-    unclassifiedTeams: own[0]?.unclassifiedTeams ?? 0,
-    fourPlusTeams: own[0]?.fourPlusTeams ?? 0,
+    // Every row of a half-season carries the same team counts; they are 0 while no trio is listed.
+    classifiedTeams: trios.length > 0 ? own[0].classifiedTeams : 0,
+    unclassifiedTeams: trios.length > 0 ? own[0].unclassifiedTeams : 0,
+    fourPlusTeams: trios.length > 0 ? own[0].fourPlusTeams : 0,
     unnamedGameIds,
   };
 }

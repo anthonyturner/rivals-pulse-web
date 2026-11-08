@@ -495,7 +495,8 @@ rebuild, recompute and freeze, and no other family is touched.
   ended the match on. The team is **unresolved** if any of its lines has no row in `hero_game_roles` (no
   hero, id 0, 1057, a hero not yet added); it is counted in `unclassified_teams`, never as a trio and
   never silently dropped. A resolved team is **classified** (`classified_teams`, the denominator of a
-  trio's share). A classified team with exactly three Strategists adds one occurrence (`teams`, and
+  trio's share; a team with fewer than six stored lines, for example because a player asked to be
+  forgotten, is still classified from the lines that remain, so its Strategist count can be low). A classified team with exactly three Strategists adds one occurrence (`teams`, and
   `wins` if it won) to its trio, keyed by the three base game ids ascending (Deadpool's Strategist form
   under 1057). A classified team with four or more Strategists is counted in `four_plus_teams` as that
   shape only: its heroes are not stored. A match counts once however many people recorded it (a match

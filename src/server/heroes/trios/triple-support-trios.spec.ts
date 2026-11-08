@@ -167,6 +167,13 @@ describe('deriveTripleSupportTrios', () => {
     expect(unnamedGameIds).toEqual([MANTIS]);
   });
 
+  it('reports 0 team counts while every trio is left out, as the contract says', () => {
+    const { trios } = derive([row([MANTIS, LUNA, 1999], 40)]);
+
+    expect(trios.status).toBe('not-enough-data');
+    expect([trios.classifiedTeams, trios.unclassifiedTeams, trios.fourPlusTeams]).toEqual([0, 0, 0]);
+  });
+
   it('builds the figures from the rows with no rank alone', () => {
     const { trios } = derive([
       row([MANTIS, LUNA, LOKI], 20),
