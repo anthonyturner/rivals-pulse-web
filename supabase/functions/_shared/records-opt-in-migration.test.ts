@@ -10,7 +10,7 @@ import { MIGRATIONS, read, withoutComments } from '../track-match-history/migrat
  * for the posture that is easy to break and expensive to find in production: who may call what, what the
  * function writes, and which events switch the setting back off.
  */
-const MIGRATION = '20261107110000_records_opt_in.sql';
+const MIGRATION = '20261107130000_records_opt_in.sql';
 const sql = withoutComments(read(MIGRATION));
 
 const setter = sql.match(/create or replace function public\.set_records_opt_in\(p_show boolean\)[\s\S]*?\n\$\$;/)?.[0] ?? '';

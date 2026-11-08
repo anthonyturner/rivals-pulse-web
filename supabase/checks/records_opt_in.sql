@@ -3,7 +3,7 @@
 -- goes back to off whenever the link ends or is replaced. Everything is planted inside one transaction
 -- that ends in a rollback, with throwaway accounts and recorders.
 --
--- Run it by hand after the migrations are applied (20261107100000, 20261107100100 and 20261107110000);
+-- Run it by hand after the migrations are applied (20261107100000, 20261107100100 and 20261107130000);
 -- it changes nothing:
 --   npx supabase db query --linked -f supabase/checks/records_opt_in.sql
 -- Judge it by its exit status. Every failure is an exception ("check failed: ...") that stops the

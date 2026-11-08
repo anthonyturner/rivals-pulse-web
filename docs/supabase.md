@@ -99,7 +99,7 @@ repo's build. This is a move, not a redesign.
 | `20261105120000_community_tabs_ten_matches.sql` | The Community Matches and Insights tabs show a figure at 10 matches from any number of players: `insights_min_matches` 10, `insights_min_recorders` 1, `insights_max_recorder_share_percent` 100, and `community_tab_bucket_shown`, which `read_community_matches` now uses. `community_bucket_shown` is unchanged |
 | `20261107100000_account_settings.sql` | `account_settings` (`show_in_records`, off by default; the owner selects, no client writes) |
 | `20261107100100_pulse_records_read.sql` | `records_hidden` (closed to every API role), the ceiling helpers `pulse_records_value_cap` and `pulse_records_rate_cap`, and `read_pulse_records()` (service role only) |
-| `20261107110000_records_opt_in.sql` | The "Show me in Pulse Records" switch: `set_records_opt_in(boolean)` (granted to `authenticated` only) and a trigger on `player_links` that switches the setting off whenever a link row is deleted |
+| `20261107130000_records_opt_in.sql` | The "Show me in Pulse Records" switch: `set_records_opt_in(boolean)` (granted to `authenticated` only) and a trigger on `player_links` that switches the setting off whenever a link row is deleted |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -1070,7 +1070,7 @@ value just under a ceiling can still top a board, and a modified client can clai
 
 ### The "Show me in Pulse Records" switch (issue 568)
 
-`set_records_opt_in(p_show boolean)` (`20261107110000_records_opt_in.sql`) is the only way the setting changes: security
+`set_records_opt_in(p_show boolean)` (`20261107130000_records_opt_in.sql`) is the only way the setting changes: security
 definer, empty `search_path`, executable by `authenticated` only (not `anon`, not `service_role`). It acts on `auth.uid()`
 and takes no account id. It returns `{ "status": "saved", "showInRecords": bool }`, or `{ "status": "not_linked" }` when
 asked to turn it on with no link (nothing is written); turning it off always works. The table has no trigger of its own, so
@@ -1092,7 +1092,7 @@ relink racing it waits and then switches the setting off.
   client writes the table), the not-linked refusal, `updated_at`, and the reset on website unlink, app unlink, relink over a
   live link and losing a link to another account, and rolls back. Judge it by its exit status.
 - **Release order.** Push the three Pulse Records migrations in order by hand (`20261107100000`, `20261107100100`,
-  `20261107110000`) before their pull requests merge. **Do not merge the pull request for this switch before
+  `20261107130000`) before their pull requests merge. **Do not merge the pull request for this switch before
   `anthonyturner/rivals_pulse#1386` (the desktop app privacy policy) ships**: the switch is what lets a name appear
   publicly, and the policy must extend the basis for that first (ADR-0006, decision 3).
 
