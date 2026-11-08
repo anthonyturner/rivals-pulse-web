@@ -58,8 +58,13 @@
   list-style: none;
 }
 
-.community-counters__cards li:not(.community-counters__none) {
+.community-counters__card {
   display: grid;
+  width: 100%;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  border: 0;
   grid-template-columns: 32px minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
   gap: 2px 8px;
@@ -69,6 +74,11 @@
   border-bottom: 1px solid var(--border);
   border-radius: 0;
   background: transparent;
+  color: inherit;
+}
+
+.community-counters__card:hover {
+  background: var(--bg-panel-soft);
 }
 
 .community-counters__cards img {

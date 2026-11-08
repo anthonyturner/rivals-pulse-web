@@ -8,6 +8,9 @@ import {
   winningRecordsOf,
 } from '../../insights/hero-matchup-records';
 
+/** A record card that opens the head-to-head, with the accessible name its button carries. */
+export type HeadToHeadCard = RecordCard<RosterHero> & { headToHeadLabel: string };
+
 export type HeroCommunityCountersView =
   | { kind: 'loading' }
   | { kind: 'unavailable' }
@@ -24,9 +27,9 @@ export type HeroCommunityCountersView =
       /** The shared fallback sentence, set when this is the previous half-season. */
       notice: string | null;
       /** Heroes that win more than they lose against this hero. */
-      winningAgainst: RecordCard<RosterHero>[];
+      winningAgainst: HeadToHeadCard[];
       /** Heroes this hero wins more than it loses against. */
-      winningFor: RecordCard<RosterHero>[];
+      winningFor: HeadToHeadCard[];
     };
 
 /**
@@ -70,7 +73,14 @@ export function buildHeroCommunityCountersView(
     halfSeasonLabel,
     fallbackFor,
     notice: matchups.inPlaceOf === null ? null : halfSeasonFallbackNotice(matchups.inPlaceOf.label, halfSeasonLabel),
-    winningAgainst: recordCards(winningRecordsAgainst(matchups, heroId), 'hero', roster),
-    winningFor: recordCards(winningRecordsOf(matchups, heroId), 'enemy', roster),
+    winningAgainst: headToHeadCards(recordCards(winningRecordsAgainst(matchups, heroId), 'hero', roster), heroName),
+    winningFor: headToHeadCards(recordCards(winningRecordsOf(matchups, heroId), 'enemy', roster), heroName),
   };
+}
+
+function headToHeadCards(cards: RecordCard<RosterHero>[], heroName: string): HeadToHeadCard[] {
+  return cards.map((card) => ({
+    ...card,
+    headToHeadLabel: `Head-to-head: ${heroName} vs ${card.hero.name}. ${card.description}`,
+  }));
 }

@@ -5,6 +5,19 @@ export function percentLabel(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+/** What a figure no recorded line carried reads as. */
+export const NOT_RECORDED = 'Not recorded';
+
+/** A KDA to two decimal places, such as `2.35`, or "Not recorded". */
+export function kdaLabel(kda: number | null): string {
+  return kda === null ? NOT_RECORDED : kda.toFixed(2);
+}
+
+/** Final hits per match to one decimal place, such as `4.3`, or "Not recorded". */
+export function finalHitsLabel(finalHitsAverage: number | null): string {
+  return finalHitsAverage === null ? NOT_RECORDED : finalHitsAverage.toFixed(1);
+}
+
 /** A count with its noun, such as `1 match` or `4 matches`. */
 export function countLabel(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
