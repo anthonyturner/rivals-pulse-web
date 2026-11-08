@@ -31,6 +31,7 @@ declare
   account_d uuid := gen_random_uuid();
   account_e uuid := gen_random_uuid();
   account_f uuid := gen_random_uuid();
+  account_g uuid := gen_random_uuid();
   claims_a text;
   claims_b text;
   answer jsonb;
@@ -45,23 +46,26 @@ begin
     (account_b, 'records-check-b@example.invalid'),
     (account_d, 'records-check-d@example.invalid'),
     (account_e, 'records-check-e@example.invalid'),
-    (account_f, 'records-check-f@example.invalid');
+    (account_f, 'records-check-f@example.invalid'),
+    (account_g, 'records-check-g@example.invalid');
 
   claims_a := json_build_object('sub', account_a, 'role', 'authenticated')::text;
   claims_b := json_build_object('sub', account_b, 'role', 'authenticated')::text;
 
   -- A, E and F switched naming on; B switched it off; D never touched it (no row, so off). F's
-  -- link name is nothing but invisible characters, which must come back as no name.
+  -- link name is nothing but invisible characters, so F is left off every board (a linked line is named or
+  -- absent, never anonymous). G opted in too, but G's link name is on do_not_store.
   insert into public.player_links (user_id, recorder_id, player_uid, player_name)
   values
     (account_a, 'chk-rec-a', 'chk-uid-a', 'Aurora' || chr(8238) || chr(8203) || 'Prime'),
     (account_b, 'chk-rec-b', 'chk-uid-b', 'Blaze'),
     (account_d, 'chk-rec-d', 'chk-uid-dflt', 'Default'),
     (account_e, 'chk-rec-e', 'chk-uid-e', 'Eclipse'),
-    (account_f, 'chk-rec-f', 'chk-uid-f', chr(8238) || chr(8203));
+    (account_f, 'chk-rec-f', 'chk-uid-f', chr(8238) || chr(8203)),
+    (account_g, 'chk-rec-g', 'chk-uid-g', 'Gone Name');
 
   insert into public.account_settings (user_id, show_in_records)
-  values (account_a, true), (account_b, false), (account_e, true), (account_f, true);
+  values (account_a, true), (account_b, false), (account_e, true), (account_f, true), (account_g, true);
 
   insert into public.participants
     (fingerprint, half_season, played_at, uid, name, team, hero_id, kills, assists, final_hits, play_mode_id, recorded_by)
@@ -92,7 +96,8 @@ begin
     ('chk-line-21', 9.0, now() - interval '35 minutes', 'chk-uid-f1', 'ChkPlain', 1, 9100, 10, null, null, 1, 'chk-rec-f1'),
     ('chk-line-22', 9.0, now() - interval '34 minutes', 'chk-uid-e', 'Eclipse', 1, 9110, 5, null, null, 1, 'chk-rec-e'),
     ('chk-line-23', 9.0, now() - interval '33 minutes', 'chk-uid-e2', 'ChkMate', 1, 9112, 2, null, null, 1, 'chk-rec-e'),
-    ('chk-line-24', 9.0, now() - interval '32 minutes', 'chk-uid-f', 'ChkFade', 1, 9120, 15, null, null, 1, 'chk-rec-f');
+    ('chk-line-24', 9.0, now() - interval '32 minutes', 'chk-uid-f', 'ChkFade', 1, 9120, 15, null, null, 1, 'chk-rec-f'),
+    ('chk-line-25', 9.0, now() - interval '31 minutes', 'chk-uid-g', 'ChkGone', 1, 9130, 12, null, null, 1, 'chk-rec-g');
 
   insert into public.participant_hero_figures (participant_id, hero_id, seconds, damage_dealt, healing, damage_blocked)
   select p.id, v.hero_id, v.seconds, v.damage, v.healing, v.blocked
@@ -115,7 +120,8 @@ begin
 
   insert into public.do_not_store (kind, key) values
     ('uid', 'chk-uid-dns'),
-    ('name', 'forgotten chk');
+    ('name', 'forgotten chk'),
+    ('name', 'gone name');
 
   -- 55 anonymous uploaders with one kill each, to prove the board stops at 50.
   insert into public.participants
@@ -140,15 +146,15 @@ begin
   -- Naming: the two-key match plus the setting. Lines 2 (Aurora's uid from another uploader), 3 (naming
   -- off) and 3d (never set) must be on no board, and the name is the link's with invisible characters gone.
   if boards -> 'kills' is distinct from
-     '["9052:100:-", "9030:70:-", "9033:45:-", "9001:40:AuroraPrime", "9080:30:-", "9081:30:-", "9091:25:-", "9120:15:-", "9100:10:-", "9110:5:Eclipse"]'::jsonb then
+     '["9052:100:-", "9030:70:-", "9033:45:-", "9001:40:AuroraPrime", "9080:30:-", "9081:30:-", "9091:25:-", "9100:10:-", "9110:5:Eclipse"]'::jsonb then
     raise exception 'check failed: the kills board is not the planted expectation (%)', boards -> 'kills';
   end if;
   raise notice 'ok: only the two-key match with naming on is named; the link''s name is used, not the line''s';
 
-  if boards::text ~ '9010|9020|9021' then
-    raise exception 'check failed: a squatter, a naming-off player or a never-set player is on a board (%)', boards;
+  if boards::text ~ '9010|9020|9021|9120|9121|9130' then
+    raise exception 'check failed: a squatter, a naming-off player, a never-set player, a player whose name cleans to nothing or a player whose link name is on do_not_store is on a board (%)', boards;
   end if;
-  raise notice 'ok: the same uid from another uploader, a player with naming off and one who never set it are left off';
+  raise notice 'ok: the same uid from another uploader, naming off, never set, a name that cleans to nothing and a link name on do_not_store are all left off';
 
   if boards -> 'assists' is distinct from '["9031:80:-", "9001:12:AuroraPrime"]'::jsonb
      or boards -> 'final_hits' is distinct from '["9030:60:-", "9001:9:AuroraPrime"]'::jsonb then
@@ -158,7 +164,7 @@ begin
 
   -- Figures: named players only, and only a plausible segment with time played.
   if boards -> 'damage' is distinct from '["9111:30000:Eclipse", "9001:20000:AuroraPrime"]'::jsonb
-     or boards -> 'healing' is distinct from '["9121:6000:-", "9005:100:AuroraPrime"]'::jsonb
+     or boards -> 'healing' is distinct from '["9005:100:AuroraPrime"]'::jsonb
      or boards -> 'blocked' is distinct from '["9111:60000:Eclipse", "9001:5000:AuroraPrime"]'::jsonb then
     raise exception 'check failed: a figure board is not the planted expectation (%)', boards;
   end if;
@@ -214,7 +220,8 @@ begin
   answer := public.read_pulse_records();
   reset role;
   boards := pg_temp.planted_boards(answer);
-  if boards::text ~ '9001|9005|AuroraPrime' or boards -> 'damage' is distinct from '["9111:30000:Eclipse"]'::jsonb then
+  if boards::text ~ '9001|9005|AuroraPrime' or boards -> 'damage' is distinct from '["9111:30000:Eclipse"]'::jsonb
+     or boards -> 'healing' is distinct from '[]'::jsonb then
     raise exception 'check failed: a player who switched naming off is still on a board (%)', boards;
   end if;
   update public.account_settings set show_in_records = true where user_id = account_a;

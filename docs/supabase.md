@@ -1037,7 +1037,9 @@ A line counts only if it passes every guard, all in the `lines` step:
 - Quick Match or Competitive (`play_mode_id` 0 or 1) and a real hero. Not on `records_hidden`, not in `do_not_store`.
 - **Named** only when `recorded_by = player_links.recorder_id` AND `uid = player_links.player_uid` AND that account's
   `account_settings.show_in_records` is true. The name is the link's `player_name` with control and bidirectional
-  characters removed, never `participants.name`. A linked player with naming off is left off.
+  characters removed, never `participants.name`. A linked player with naming off is left off, and so is one whose link
+  name is empty once cleaned: a linked line is named or absent, never anonymous. A `do_not_store` name also matches the
+  link's name. `coveredFrom` is the oldest line the boards can draw on.
 - **Left off entirely:** any line whose uid is linked to an account but was uploaded by someone else, opted in or not.
   So the anonymous rows are only lines whose uid no account has linked.
 - Damage, healing and blocked come from `participant_hero_figures` of a named line only (seconds above 0, a value

@@ -91,8 +91,18 @@ function parseRecord(row: Record<string, unknown>): PulseRecord {
   };
 }
 
-function cleanName(name: string): string | null {
-  return name.replace(UNSAFE_NAME_CHARACTERS, '').trim() || null;
+/**
+ * A name that is empty once cleaned is an error, not an anonymous row: the database leaves such a
+ * linked player off the board, so one arriving here means the two cleaners disagree.
+ */
+function cleanName(name: string): string {
+  const cleaned = name.replace(UNSAFE_NAME_CHARACTERS, '').trim();
+
+  if (cleaned === '') {
+    throw new Error(`${READ_FUNCTION}: a name is empty once cleaned`);
+  }
+
+  return cleaned;
 }
 
 function parseCoveredFrom(value: unknown): string | null {

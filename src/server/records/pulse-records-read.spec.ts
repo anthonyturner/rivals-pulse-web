@@ -57,21 +57,22 @@ describe('parsePulseRecords', () => {
     expect(records.coveredFrom).toBeNull();
   });
 
-  it('strips control and bidirectional characters from a name, and treats an empty one as anonymous', () => {
+  it('strips control and bidirectional characters from a name', () => {
     const records = parsePulseRecords({
       coveredFrom: null,
-      categories: [
-        {
-          key: 'kills',
-          rows: [
-            { heroId: 1, value: 1, name: 'Au\u202eror\u200ba\u2066' },
-            { heroId: 2, value: 1, name: '\u202e\u200b' },
-          ],
-        },
-      ],
+      categories: [{ key: 'kills', rows: [{ heroId: 1, value: 1, name: 'Au\u202eror\u200ba\u2066' }] }],
     });
 
-    expect(records.categories[0].rows.map((row) => row.name)).toEqual(['Aurora', null]);
+    expect(records.categories[0].rows.map((row) => row.name)).toEqual(['Aurora']);
+  });
+
+  it('fails on a name that is empty once cleaned, instead of showing the row as anonymous', () => {
+    const answer = {
+      coveredFrom: null,
+      categories: [{ key: 'kills', rows: [{ heroId: 2, value: 1, name: '\u202e\u200b' }] }],
+    };
+
+    expect(() => parsePulseRecords(answer)).toThrowError(/a name is empty once cleaned/);
   });
 
   it('rejects an answer it cannot trust', () => {

@@ -17,8 +17,36 @@ const settingsSql = withoutComments(read(SETTINGS_MIGRATION));
 
 const body = sql.match(/create or replace function public\.read_pulse_records\(\)[\s\S]*?\n\$\$;/)?.[0] ?? '';
 
-/** Every key the function puts in its answer: the first argument of each jsonb_build_object pair. */
-const answerKeys = [...body.matchAll(/'(\w+)',\s*(?:k\.|r\.|coalesce|\()/g)].map((match) => match[1]);
+/** The argument text of every `jsonb_build_object(...)` call in the function, outermost first. */
+const buildObjectCalls = [...body.matchAll(/jsonb_build_object\(/g)].map((call) => {
+  const from = (call.index ?? 0) + call[0].length;
+  let depth = 1;
+  let end = from;
+  while (depth > 0 && end < body.length) {
+    depth += body[end] === '(' ? 1 : body[end] === ')' ? -1 : 0;
+    end++;
+  }
+  return body.slice(from, end - 1);
+});
+
+/** The keys of one call: every other top-level argument, which must be a quoted word. */
+function keysOf(args: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < args.length; i++) {
+    depth += args[i] === '(' ? 1 : args[i] === ')' ? -1 : 0;
+    if (args[i] === ',' && depth === 0) {
+      parts.push(args.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(args.slice(start).trim());
+
+  return parts.filter((_, index) => index % 2 === 0).map((key) => key.match(/^'(\w+)'$/)?.[1] ?? `NOT A KEY: ${key}`);
+}
+
+const answerKeys = buildObjectCalls.flatMap(keysOf);
 
 describe(READ_MIGRATION, () => {
   it('declares the read once, with no parameters', () => {
@@ -57,7 +85,7 @@ describe(READ_MIGRATION, () => {
   });
 
   it('returns only the allowed keys, and none that could name a line, a recorder, a player or a time', () => {
-    assert.deepEqual([...new Set(answerKeys)].sort(), ['categories', 'coveredFrom', 'heroId', 'key', 'name', 'rows', 'value']);
+    assert.deepEqual(buildObjectCalls.map(keysOf), [['coveredFrom', 'categories'], ['key', 'rows'], ['heroId', 'value', 'name']]);
     assert.deepEqual(
       answerKeys.filter((key) => /uid|recorder|recorded|^id$|line|participant|match|time|played/i.test(key)),
       [],
@@ -82,7 +110,7 @@ describe(READ_MIGRATION, () => {
   it('names a line only on the two-key match plus the setting, and leaves a claimed uid off otherwise', () => {
     assert.match(body, /left join public\.player_links own\s+on own\.recorder_id = p\.recorded_by and own\.player_uid = p\.uid/);
     assert.match(body, /left join public\.account_settings s on s\.user_id = own\.user_id/);
-    assert.match(body, /own\.user_id is null or coalesce\(s\.show_in_records, false\)/);
+    assert.match(body, /own\.user_id is null or \(coalesce\(s\.show_in_records, false\) and cleaned\.shown_name is not null\)/);
     assert.match(body, /own\.user_id is not null\s+or not exists \(select 1 from public\.player_links claimed where claimed\.player_uid = p\.uid\)/);
   });
 
@@ -94,7 +122,13 @@ describe(READ_MIGRATION, () => {
   it('leaves out hidden lines and do_not_store players', () => {
     assert.match(body, /not exists \(select 1 from public\.records_hidden h where h\.participant_id = p\.id\)/);
     assert.match(body, /d\.kind = 'uid' and d\.key = p\.uid/);
-    assert.match(body, /d\.kind = 'name' and d\.key = lower\(btrim\(p\.name\)\)/);
+    assert.match(body, /d\.kind = 'name' and d\.key in \(\s*lower\(btrim\(p\.name\)\), lower\(btrim\(own\.player_name\)\), lower\(cleaned\.shown_name\)\)/);
+  });
+
+  it('leaves a linked player off when the link name is empty once cleaned, so no linked row is anonymous', () => {
+    assert.match(body, /left join lateral \(\s*select nullif\(btrim\(regexp_replace\(\s*own\.player_name,[^)]*\)\), ''\) as shown_name\s*\) cleaned on true/);
+    assert.match(body, /\band cleaned\.shown_name is not null\)/);
+    assert.equal(body.match(/regexp_replace/g)?.length, 1, 'the name is cleaned in one place');
   });
 
   it('holds a value to a ceiling, and a figure to time played and a per-minute ceiling', () => {

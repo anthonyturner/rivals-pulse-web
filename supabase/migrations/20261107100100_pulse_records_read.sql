@@ -56,16 +56,20 @@ revoke execute on function public.pulse_records_rate_cap(text) from public, anon
 
 -- Returns {"coveredFrom":"YYYY-MM-DD"|null,"categories":[{"key":...,"rows":[{"heroId","value","name"}]}]}
 -- with up to 50 rows per category, best first, in the order kills, assists, final_hits, damage,
--- healing, blocked. `name` is null for an anonymous line.
+-- healing, blocked. `name` is null for an anonymous line. `coveredFrom` is the oldest line the boards
+-- can draw on, so it counts nothing a guard below leaves out.
 --
 -- Which lines count (each guard is in the `lines` step):
 --   * Quick Match and Competitive only (`play_mode_id` 0 or 1), and a real hero.
---   * Not hidden, and not a player in `do_not_store`.
+--   * Not hidden, and not a player in `do_not_store` (by uid, by the line's name, or by the name of the
+--     link that would be published).
 --   * A line is named only when BOTH its recorder and its uid match a link (`recorded_by =
 --     recorder_id` AND `uid = player_uid`) and that account switched naming on; the name is the
 --     link's, never `participants.name`. A uid is a claim, so a line carrying a linked player's uid
 --     from any other uploader is left off the board rather than shown anonymously beside their name.
---     A linked player who has not switched naming on is left off too.
+--     A linked player who has not switched naming on is left off too, and so is one whose link name is
+--     empty once control and bidirectional characters are removed: a linked line is named or absent,
+--     never anonymous.
 --   * Damage, healing and blocked come from the uploader's own line, which only a named player can
 --     prove, so those boards hold named players only.
 --   * A value must be above 0 and within its ceiling, and a figure also needs time played and a
@@ -87,25 +91,29 @@ as $$
         else 'name:' || lower(btrim(p.name))
       end as player_key,
       own.user_id is not null as is_named,
-      nullif(btrim(regexp_replace(
-        own.player_name,
-        '[\u0001-\u001f\u007f-\u009f\u061c\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]', '', 'g'
-      )), '') as shown_name
+      cleaned.shown_name
     from public.participants p
     left join public.player_links own
       on own.recorder_id = p.recorded_by and own.player_uid = p.uid
     left join public.account_settings s on s.user_id = own.user_id
+    left join lateral (
+      select nullif(btrim(regexp_replace(
+        own.player_name,
+        '[\u0001-\u001f\u007f-\u009f\u061c\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]', '', 'g'
+      )), '') as shown_name
+    ) cleaned on true
     where p.play_mode_id in (0, 1)
       and p.hero_id > 0
       and not exists (select 1 from public.records_hidden h where h.participant_id = p.id)
       and not exists (
         select 1 from public.do_not_store d
         where (d.kind = 'uid' and d.key = p.uid)
-           or (d.kind = 'name' and d.key = lower(btrim(p.name)))
+           or (d.kind = 'name' and d.key in (
+                 lower(btrim(p.name)), lower(btrim(own.player_name)), lower(cleaned.shown_name)))
       )
       and (own.user_id is not null
            or not exists (select 1 from public.player_links claimed where claimed.player_uid = p.uid))
-      and (own.user_id is null or coalesce(s.show_in_records, false))
+      and (own.user_id is null or (coalesce(s.show_in_records, false) and cleaned.shown_name is not null))
   ),
   candidates as (
     select c.category, l.id, l.played_at, l.recorded_by, l.player_key, l.shown_name, l.hero_id, c.value
@@ -120,7 +128,6 @@ as $$
       values ('damage', f.damage_dealt), ('healing', f.healing), ('blocked', f.damage_blocked)
     ) as c(category, value)
     where l.is_named
-      and f.hero_id > 0
       and f.seconds > 0
       and c.value between 1 and public.pulse_records_value_cap(c.category)
       and c.value * 60.0 / f.seconds <= public.pulse_records_rate_cap(c.category)
@@ -141,9 +148,7 @@ as $$
   )
   select jsonb_build_object(
     'coveredFrom', (
-      select to_char(min(p.played_at) at time zone 'utc', 'YYYY-MM-DD')
-      from public.participants p
-      where p.play_mode_id in (0, 1)
+      select to_char(min(l.played_at) at time zone 'utc', 'YYYY-MM-DD') from lines l
     ),
     'categories', (
       select jsonb_agg(
