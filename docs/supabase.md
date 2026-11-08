@@ -97,6 +97,8 @@ repo's build. This is a move, not a redesign.
 | `20261104140000_admins.sql` | `admins` (the site administrators, no grant to the API roles) and `is_admin()` (granted to `authenticated` only): the database half of the admin area |
 | `20261104150000_admin_data_jobs.sql` | Running the data jobs on demand: `admin_audit_log` (closed to every API role), `sync_runs.by_admin`, the helpers `data_job_cooldown`, `data_job_unfinished_after` and `data_job_wait` (callable by no API role, so neither security definer nor guarded), and `admin_begin_run`, `admin_run_rebuild`, `admin_finish_run` and `admin_data_jobs_status` (granted to `authenticated` only, each asking `is_admin()` first) |
 | `20261105120000_community_tabs_ten_matches.sql` | The Community Matches and Insights tabs show a figure at 10 matches from any number of players: `insights_min_matches` 10, `insights_min_recorders` 1, `insights_max_recorder_share_percent` 100, and `community_tab_bucket_shown`, which `read_community_matches` now uses. `community_bucket_shown` is unchanged |
+| `20261107100000_account_settings.sql` | `account_settings` (`show_in_records`, off by default; the owner selects, no client writes) |
+| `20261107100100_pulse_records_read.sql` | `records_hidden` (closed to every API role), the ceiling helpers `pulse_records_value_cap` and `pulse_records_rate_cap`, and `read_pulse_records()` (service role only) |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -1018,6 +1020,50 @@ and a `pg_cron` queue for one that passes about 60 seconds. Either is a follow-u
   (harmless), a game stats run stores nothing if the scheduled one captured first, and a home news run is last-writer-wins.
 - The route that runs jobs has `maxDuration: 60` in `vercel.json` (`functions`), above the 30-second news deadline and within the
   limit every plan allows, so it does not depend on the project default. `scripts/admin-routes.test.ts` holds it.
+
+### Pulse Records read (issue 566)
+
+[ADR-0006](decisions/0006-publish-opted-in-player-names-on-pulse-records.md) is the design. `read_pulse_records()`
+(`20261107100100_pulse_records_read.sql`) is the only door to the boards: security definer, empty `search_path`,
+no parameters, executable by `service_role` only. It returns `{ coveredFrom, categories: [{ key, rows: [{ heroId,
+value, name }] }] }` for `kills`, `assists`, `final_hits`, `damage`, `healing` and `blocked`, up to 50 rows each, and
+never a uid, recorder, line id or match time. The website reads it through `GET /api/records`
+(`src/server/records/`, `api/records.ts`, one Express route), which sends `public, max-age=0, s-maxage=60` and no
+stale window, so a name is gone within two minutes of its owner switching naming off
+(`scripts/pulse-records-route.test.ts`). Nothing in the app reads it yet; the pages are issue 567.
+
+A line counts only if it passes every guard, all in the `lines` step:
+
+- Quick Match or Competitive (`play_mode_id` 0 or 1) and a real hero. Not on `records_hidden`, not in `do_not_store`.
+- **Named** only when `recorded_by = player_links.recorder_id` AND `uid = player_links.player_uid` AND that account's
+  `account_settings.show_in_records` is true. The name is the link's `player_name` with control and bidirectional
+  characters removed, never `participants.name`. A linked player with naming off is left off.
+- **Left off entirely:** any line whose uid is linked to an account but was uploaded by someone else, opted in or not.
+  So the anonymous rows are only lines whose uid no account has linked.
+- Damage, healing and blocked come from `participant_hero_figures` of a named line only (seconds above 0, a value
+  within its ceiling, a per-minute rate within its ceiling), so those boards never hold an anonymous row. Per hero,
+  not per match.
+- One row per player (linked account, else uid, else lower-cased name), then one row per uploader; the earlier match
+  wins a tie. With few uploaders a board is short by design: two uploaders can fill at most two rows.
+
+Ceilings (restate `pulse_records_value_cap` and `pulse_records_rate_cap` in a new migration to change them; nothing
+needs rebuilding). Chosen on 2026-11-07 from production (8,202 lines, 191 figure rows, 2 uploaders), Quick Match and
+Competitive: the largest kills, assists and final hits seen were 66, 59 and 35, so 100, 100 and 60. The largest
+damage and blocked segments were 25,308 and 41,539 (3,254 and 6,875 per minute), so 40,000 and 65,000 with 5,000 and
+10,000 per minute. Healing has no support rows to learn from (largest 1,243), so 80,000 and 6,000 per minute come from
+what the game allows; revisit once supports upload. Ceilings only limit a forger, they do not stop one: a forged
+value just under a ceiling can still top a board, and a modified client can claim a real player's name when linking.
+
+- **Hide a line by hand** (the only moderation): `npx supabase db query --linked "insert into public.records_hidden
+  (participant_id, note) values (<participants.id>, '<why>')"`. The entry goes when the line is purged.
+- **Cost:** about 155 to 190 ms on 8,202 lines, mostly the sort. If it passes a few seconds, fall back to a candidates
+  table that holds only `participants.id` with cascade delete and no names.
+- **Release order:** the migrations are not applied by merging. Push by hand before the merge
+  (`npx supabase migration list --linked`, then `npx supabase db push`), then
+  `npx supabase db query --linked -f supabase/checks/pulse_records.sql`, which plants lines and rolls back and is judged
+  by its exit status. Until applied, `/api/records` answers 200 with `status: "not-enough-data"`.
+- Known gap: `record_match_extras` attaches figures by the claimed uid without checking the uploader, so another
+  uploader can put figures beside an opted-in name. Accepted for v1 (ADR-0006); issue 352 tracks it.
 
 ## Tests
 
