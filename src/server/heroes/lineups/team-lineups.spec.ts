@@ -56,20 +56,32 @@ describe('deriveTeamLineups', () => {
     expect(lineups.shapes[0].pickRate).toBe(0.5);
   });
 
-  it('lists a shape under the minimum as not enough data, with no figures, after the shapes that have them', () => {
-    const lineups = derive([row([3, 2, 1], null, null), row([2, 2, 2], 400, 200), row([1, 2, 3], TEAM_LINEUP_MIN_TEAMS - 1, 20)]);
+  it('lists a shape under the minimum as not enough data, with its team count so far and no other figure, after the shapes that have them', () => {
+    const lineups = derive([
+      row([3, 2, 1], null, null),
+      row([2, 2, 2], 400, 200),
+      row([1, 2, 3], TEAM_LINEUP_MIN_TEAMS - 1, null, { enoughData: false }),
+    ]);
 
     expect(lineups.shapes.map((shape) => [shape.shape, shape.status, shape.teams, shape.winRate])).toEqual([
       ['2-2-2', 'ready', 400, 0.5],
-      ['1-2-3', 'not-enough-data', null, null],
+      ['1-2-3', 'not-enough-data', TEAM_LINEUP_MIN_TEAMS - 1, null],
       ['3-2-1', 'not-enough-data', null, null],
     ]);
   });
 
-  it('withholds figures the database sent for a shape under the minimum', () => {
+  it('withholds the wins and rates the database sent for a shape under the minimum, and keeps its team count', () => {
     const lineups = derive([row([2, 2, 2], 400, 200), row([1, 2, 3], TEAM_LINEUP_MIN_TEAMS - 1, 20, { enoughData: true })]);
 
-    expect(lineups.shapes[1]).toEqual(jasmine.objectContaining({ status: 'not-enough-data', teams: null, wins: null, pickRate: null }));
+    expect(lineups.shapes[1]).toEqual(
+      jasmine.objectContaining({ status: 'not-enough-data', teams: TEAM_LINEUP_MIN_TEAMS - 1, wins: null, pickRate: null, winRate: null }),
+    );
+  });
+
+  it('never reports a count at or over the minimum for a shape it does not show', () => {
+    const lineups = derive([row([2, 2, 2], 400, 200), row([1, 2, 3], TEAM_LINEUP_MIN_TEAMS, null, { enoughData: false })]);
+
+    expect(lineups.shapes[1]).toEqual(jasmine.objectContaining({ status: 'not-enough-data', teams: null }));
   });
 
   it('is the empty state, with the unclassified teams still counted, when no shape reaches the minimum', () => {

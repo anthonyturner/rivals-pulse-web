@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T00:00:00.000Z",
+  "generatedAt": "2026-11-08T12:00:00.000Z",
   "files": [
     {
       "dataset": "heroes",
@@ -11,8 +11,8 @@
     {
       "dataset": "tier-list",
       "path": "pulse-atlas/v1/tier-list.json",
-      "sha256": "a00d7765bcde10e6e8975a950ad49a3ad7c76fb7c06e7a97fa0d14820ce3d3d2",
-      "bytes": 1780
+      "sha256": "0a5b109ed79bb77b5cfb8a962d92099cb33f36b546ebe58ab8adf33f02c99d4c",
+      "bytes": 1800
     },
     {
       "dataset": "glossary",
@@ -47,20 +47,20 @@
     {
       "dataset": "community-stats",
       "path": "pulse-atlas/v1/community-stats.json",
-      "sha256": "6682549ed317bc2fe4763be63644bd1149420b465bb2787afc82f8173f865132",
-      "bytes": 733
+      "sha256": "b15527d7c4ffa51fda240e5f223f8b183dba5e61bfae94e6b38d8b2c07a51ce5",
+      "bytes": 752
     },
     {
       "dataset": "hero-scores",
       "path": "pulse-atlas/v1/hero-scores.json",
-      "sha256": "42ef15d26ca5fa6cad78e53db0e6cafcf6aeefd7eae9f6ea8b5d8f316169cb28",
-      "bytes": 1148
+      "sha256": "21c5f9c76f31a1db11f79f41074382a652f8f93919d2ebdf35c2ad7e89227517",
+      "bytes": 1214
     },
     {
       "dataset": "team-lineups",
       "path": "pulse-atlas/v1/team-lineups.json",
-      "sha256": "5efde1a133b311b657044da38a6f491a3a473f2f2191aae3d9b5e556e61f249a",
-      "bytes": 535
+      "sha256": "2a9c31d1f868a052587be460d8432641c809bd3099d9021cbac4b4b589996507",
+      "bytes": 552
     }
   ]
 }

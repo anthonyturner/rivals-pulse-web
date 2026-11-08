@@ -12,7 +12,7 @@ export const TEAM_LINEUP_DEFAULT_MODE_ID: HeroStatsModeId = 'competitive';
  * match, such as 1-2-3 (shown in that order), and how teams with that shape fared.
  *
  * `not-enough-data` means fewer teams than `minimumTeams` ran the shape this half-season; the shape
- * is listed and its figures are null.
+ * is listed with the teams counted so far, and its other figures are null.
  */
 export interface TeamLineupShape {
   /** The shape as "Vanguards-Duelists-Strategists", such as "1-2-3". */
@@ -21,7 +21,10 @@ export interface TeamLineupShape {
   duelists: number;
   strategists: number;
   status: 'ready' | 'not-enough-data';
-  /** Teams that ran this shape in matches with a win or a loss; a mirror match counts both teams. Null while not enough data. */
+  /**
+   * Teams that ran this shape in matches with a win or a loss; a mirror match counts both teams. While
+   * not enough data it is the count so far, always under `minimumTeams`, or null when the database did not say.
+   */
   teams: number | null;
   /** The teams that won. Null while not enough data. */
   wins: number | null;

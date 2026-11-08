@@ -1,3 +1,4 @@
+import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../community/community-minimums.ts';
 import { TEAM_LINEUP_MIN_TEAMS } from '../heroes/lineups/team-lineups.ts';
 import { findStrategistTagProblems } from './strategist-tags.ts';
 
@@ -86,6 +87,10 @@ export function tierListSeasonPath(seasonId: number): string {
 // leak of something private rather than as a false alarm.
 const PRIVATE_KEY =
   /secret|password|passwd|token|api[-_]?key|authorization|credential|email|puuid|player|steam|account|session/i;
+
+// A number of players, never who they are: the one key the player pattern lets through, so a file can
+// say how many players a figure waits for. Its value is checked where the key is allow-listed.
+const PLAYER_COUNT_KEYS: readonly string[] = ['minimumPlayers'];
 
 // `counters` are matchup picks derived from a third-party site and are never published, so the key
 // is unsafe everywhere except in community-stats, whose counters are the site's own counts.
@@ -411,6 +416,7 @@ function snapshotOf(view: HeroStatsView, gameIdOf: (hero: string) => number | un
       }),
     })),
     matchesCounted: view.matchesCounted,
+    minimumMatches: view.minimumMatches,
     belowMinimum: view.belowMinimum.flatMap((hero) => {
       const heroId = gameIdOf(hero.hero);
 
@@ -1115,6 +1121,8 @@ interface BelowMinimumRow {
 interface SlimSnapshot {
   tiers: (Record<string, unknown> & { heroes: SlimHeroRow[] })[];
   matchesCounted?: number;
+  /** Appearances a hero needs before it is placed; what each `belowMinimum` row counts toward. */
+  minimumMatches?: number;
   belowMinimum?: BelowMinimumRow[];
   /** Set when the numbers are the previous season's, standing in for a season with no placed hero yet. */
   fallbackFromSeasonId?: number;
@@ -1261,10 +1269,14 @@ function slimSnapshot(snapshot: unknown, heroes: Set<number>): SlimSnapshot | st
     tiers.push({ ...tier, heroes: rows });
   }
 
-  const { matchesCounted, belowMinimum, fallbackFromSeasonId } = snapshot;
+  const { matchesCounted, minimumMatches, belowMinimum, fallbackFromSeasonId } = snapshot;
 
   if (matchesCounted !== undefined && !(isFiniteNumber(matchesCounted) && matchesCounted >= 0)) {
     return 'needs matchesCounted to be a non-negative number';
+  }
+
+  if (minimumMatches !== undefined && !isPositiveInteger(minimumMatches)) {
+    return 'needs minimumMatches to be a whole number above 0';
   }
 
   if (fallbackFromSeasonId !== undefined && !isInteger(fallbackFromSeasonId)) {
@@ -1280,6 +1292,7 @@ function slimSnapshot(snapshot: unknown, heroes: Set<number>): SlimSnapshot | st
   return {
     tiers,
     ...(matchesCounted === undefined ? {} : { matchesCounted }),
+    ...(minimumMatches === undefined ? {} : { minimumMatches }),
     ...(below === undefined ? {} : { belowMinimum: below }),
     ...(fallbackFromSeasonId === undefined ? {} : { fallbackFromSeasonId }),
   };
@@ -1687,6 +1700,7 @@ function communityHalfSeasonOf(value: unknown, problem: (detail: string) => Erro
 const COMMUNITY_STATS_KEYS: readonly string[] = [
   'provenance',
   'minimumMatches',
+  'minimumPlayers',
   'priorMatches',
   'currentSeasonId',
   'season',
@@ -1746,6 +1760,7 @@ export function assembleCommunityStats(answer: unknown): unknown {
   return {
     provenance: COMMUNITY_PROVENANCE,
     minimumMatches: answer['minimumMatches'],
+    minimumPlayers: COMMUNITY_BUCKET_MIN_PLAYERS,
     priorMatches: answer['priorMatches'],
     currentSeasonId: seasonIdOf(current.id),
     season: shown === null ? null : { id: seasonIdOf(shown.id), label: shown.label },
@@ -1775,10 +1790,14 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
 
   checkKeys(data, COMMUNITY_STATS_KEYS, 'the file');
 
-  const { minimumMatches, priorMatches, currentSeasonId, season, inPlaceOfSeasonId } = data;
+  const { minimumMatches, minimumPlayers, priorMatches, currentSeasonId, season, inPlaceOfSeasonId } = data;
 
   if (!isPositiveInteger(minimumMatches)) {
     problems.push('minimumMatches must be a whole number above 0');
+  }
+
+  if (minimumPlayers !== undefined && !isPositiveInteger(minimumPlayers)) {
+    problems.push('minimumPlayers must be a whole number above 0');
   }
 
   if (!isPositiveInteger(priorMatches)) {
@@ -1854,6 +1873,7 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
     table: {
       provenance: COMMUNITY_PROVENANCE,
       minimumMatches,
+      ...(minimumPlayers === undefined ? {} : { minimumPlayers }),
       priorMatches,
       currentSeasonId,
       season: shownSeason,
@@ -2078,12 +2098,22 @@ export function resolveHeroScores(
 const HERO_SCORE_STATS = ['damage', 'sustain', 'ultimate', 'utility'] as const;
 
 /** The keys a hero-scores file, hero, stat and ability may carry: the allow-list. Anything else refuses the build. */
-const HERO_SCORES_KEYS: readonly string[] = ['provenance', 'minimums', 'currentSeasonId', 'season', 'inPlaceOfSeasonId', 'heroes'];
+const HERO_SCORES_KEYS: readonly string[] = [
+  'provenance',
+  'minimums',
+  'qualifiedHeroes',
+  'currentSeasonId',
+  'season',
+  'inPlaceOfSeasonId',
+  'heroes',
+];
 const HERO_SCORES_MINIMUM_KEYS: readonly string[] = ['matches', 'contributors', 'busiestContributorShare', 'rankedHeroes'];
 const HERO_SCORES_HERO_KEYS: readonly string[] = ['heroId', ...HERO_SCORE_STATS, 'abilities'];
 const HERO_SCORES_STAT_KEYS: readonly string[] = ['status', 'score', 'label', 'matches', 'contributors', 'oneContributorAboveHalf', 'measures'];
 const HERO_SCORES_ABILITY_KEYS: readonly string[] = ['slot', 'ability', 'tag', 'usesPerTenMinutes', 'takedownsPerUse', 'matches'];
 const HERO_SCORES_STATUSES: readonly unknown[] = ['scored', 'collecting', 'ranking-too-small', 'no-measurable-ability'];
+/** The statuses of a hero that passes the rule, whether or not enough heroes do for a ranking. */
+const HERO_SCORE_QUALIFIED_STATUSES: readonly unknown[] = ['scored', 'ranking-too-small'];
 /** An exact count below the rule could be one person's own games on a hero, so the file refuses one. */
 const HERO_SCORE_PROGRESS_STEP = 5;
 const HERO_SCORE_TAGS: readonly unknown[] = ['Utility', 'Damage', 'Mobility', 'Sustain', null];
@@ -2125,6 +2155,7 @@ export function assembleHeroScores(answer: unknown, heroGameIds: unknown, warn: 
   }
 
   const { gameIdOf, unmapped } = heroGameIdLookup(heroGameIds);
+  const qualifiedHeroes = { damage: 0, sustain: 0, ultimate: 0, utility: 0 };
   const heroes = answer['heroes'].flatMap((row: unknown) => {
     if (!isRecord(row) || !isNonEmptyString(row['hero'])) {
       throw problem('a hero needs an id');
@@ -2132,6 +2163,14 @@ export function assembleHeroScores(answer: unknown, heroGameIds: unknown, warn: 
 
     const { hero, ...rest } = row;
     const heroId = gameIdOf(String(hero));
+
+    for (const name of HERO_SCORE_STATS) {
+      const stat = rest[name];
+
+      if (isRecord(stat) && HERO_SCORE_QUALIFIED_STATUSES.includes(stat['status'])) {
+        qualifiedHeroes[name] += 1;
+      }
+    }
 
     return heroId === undefined ? [] : [{ heroId, ...rest }];
   });
@@ -2141,6 +2180,7 @@ export function assembleHeroScores(answer: unknown, heroGameIds: unknown, warn: 
   return {
     provenance: COMMUNITY_PROVENANCE,
     minimums: answer['minimums'],
+    qualifiedHeroes,
     currentSeasonId: seasonIdOf(current.id),
     season: { id: seasonIdOf(shown.id), label: shown.label },
     ...(inPlaceOf === null ? {} : { inPlaceOfSeasonId: seasonIdOf(inPlaceOf.id) }),
@@ -2276,6 +2316,22 @@ function readHeroScores(data: unknown): ReadHeroScores {
     problems.push('minimums needs its four numbers');
   }
 
+  const qualifiedHeroes = data['qualifiedHeroes'];
+
+  if (qualifiedHeroes !== undefined) {
+    if (!isRecord(qualifiedHeroes)) {
+      problems.push('qualifiedHeroes must be an object');
+    } else {
+      checkKeys(qualifiedHeroes, HERO_SCORE_STATS, 'qualifiedHeroes');
+
+      const counts = HERO_SCORE_STATS.map((name) => qualifiedHeroes[name]);
+
+      if (!counts.every((count) => isInteger(count) && count >= 0)) {
+        problems.push('qualifiedHeroes needs a non-negative whole number for each stat');
+      }
+    }
+  }
+
   if (!isInteger(data['currentSeasonId'])) {
     problems.push('currentSeasonId must be a whole number');
   }
@@ -2360,6 +2416,7 @@ const TEAM_LINEUPS_KEYS: readonly string[] = [
   'provenance',
   'status',
   'minimumTeams',
+  'minimumPlayers',
   'mode',
   'currentSeasonId',
   'season',
@@ -2421,6 +2478,7 @@ export function assembleTeamLineups(answer: unknown): unknown {
     provenance: COMMUNITY_PROVENANCE,
     status: answer['status'],
     minimumTeams: answer['minimumTeams'],
+    minimumPlayers: COMMUNITY_BUCKET_MIN_PLAYERS,
     mode: answer['mode'],
     currentSeasonId: seasonIdOf(current.id),
     season: { id: seasonIdOf(shown.id), label: shown.label },
@@ -2431,8 +2489,8 @@ export function assembleTeamLineups(answer: unknown): unknown {
   };
 }
 
-// One shape's faults. A shape under the minimum carries no count at all, and a listed one has at
-// least the minimum teams, so no figure can describe a handful of teams.
+// One shape's faults. A shape under the minimum carries only the teams counted so far, never wins, and
+// a listed one has at least the minimum teams, so no figure can describe a handful of teams.
 function findTeamLineupShapeProblems(row: unknown, index: number, minimumTeams: unknown, classifiedTeams: unknown): string[] {
   if (!isRecord(row)) {
     return [`shape ${index} is not an object`];
@@ -2460,8 +2518,17 @@ function findTeamLineupShapeProblems(row: unknown, index: number, minimumTeams: 
       found.push(`${where} has more teams than classifiedTeams`);
     }
   } else if (status === 'not-enough-data') {
-    if (teams !== null || wins !== null) {
-      found.push(`${where} is not enough data, so it may carry no counts`);
+    if (wins !== null) {
+      found.push(`${where} is not enough data, so it may carry no wins`);
+    }
+
+    // Null is a count the database did not give; otherwise it is the progress toward the minimum.
+    if (teams !== null) {
+      if (!isPositiveInteger(teams) || !isFiniteNumber(minimumTeams) || teams >= Math.max(minimumTeams, TEAM_LINEUP_MIN_TEAMS)) {
+        found.push(`${where} is not enough data, so its teams must be null or a whole number under the minimum`);
+      } else if (isFiniteNumber(classifiedTeams) && teams > classifiedTeams) {
+        found.push(`${where} has more teams than classifiedTeams`);
+      }
     }
   } else {
     found.push(`${where} has an unknown status`);
@@ -2498,6 +2565,10 @@ function readTeamLineups(data: unknown): string[] {
 
   if (!isInteger(data['minimumTeams']) || data['minimumTeams'] < TEAM_LINEUP_MIN_TEAMS) {
     problems.push(`minimumTeams must be a whole number of at least ${TEAM_LINEUP_MIN_TEAMS}`);
+  }
+
+  if (data['minimumPlayers'] !== undefined && !isPositiveInteger(data['minimumPlayers'])) {
+    problems.push('minimumPlayers must be a whole number above 0');
   }
 
   if (!isNonEmptyString(data['mode'])) {
@@ -2622,7 +2693,7 @@ function findUnsafeContent(value: unknown, path: string, unsafeKey: RegExp = UNS
     value.forEach((item, index) => found.push(...findUnsafeContent(item, `${path}[${index}]`, unsafeKey)));
   } else if (isRecord(value)) {
     for (const [key, child] of Object.entries(value)) {
-      if (unsafeKey.test(key)) {
+      if (unsafeKey.test(key) && !PLAYER_COUNT_KEYS.includes(key)) {
         found.push(`${path}.${key}: key is private or counter data`);
       }
 

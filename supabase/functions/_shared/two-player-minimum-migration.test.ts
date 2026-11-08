@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const migration = readFileSync(
@@ -38,4 +38,21 @@ test('its asserts hide one player and show two, however the matches are split', 
   assert.match(migration, /assert public\.hero_figure_qualifies\(10, 2, 6\)/);
   assert.match(migration, /assert not public\.community_bucket_shown\(10, 1, 10\)/);
   assert.match(migration, /assert public\.community_bucket_shown\(10, 2, 6\)/);
+});
+
+test('the website prints the player minimum of the latest community_bucket_shown', () => {
+  const migrations = new URL('../../migrations/', import.meta.url);
+  const latest = readdirSync(migrations)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .map((name) => readFileSync(new URL(name, migrations), 'utf8').replace(/--.*$/gm, ''))
+    .filter((sql) => sql.includes('function public.community_bucket_shown('))
+    .at(-1);
+  const database = latest?.match(/function public\.community_bucket_shown[\s\S]*?p_recorders >= (\d+)/)?.[1];
+  const website = readFileSync(new URL('../../../src/server/community/community-minimums.ts', import.meta.url), 'utf8').match(
+    /COMMUNITY_BUCKET_MIN_PLAYERS = (\d+);/,
+  )?.[1];
+
+  assert.ok(database);
+  assert.equal(website, database);
 });
