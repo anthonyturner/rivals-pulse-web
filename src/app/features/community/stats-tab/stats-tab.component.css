@@ -10,14 +10,20 @@
 
 .mode {
   min-height: 40px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-elevated);
+  border-radius: 999px;
+  background: var(--surface);
   color: var(--text-soft);
   font-size: var(--type-small);
   font-weight: 700;
   cursor: pointer;
+}
+
+.mode:hover {
+  border-color: var(--accent-line);
+  background: var(--bg-panel-soft);
+  color: var(--text);
 }
 
 .mode[aria-pressed='true'] {
@@ -36,15 +42,38 @@
   gap: 12px;
 }
 
+/* A role sets one colour for its card's wash, its edge and its dot; `--hero-role-ink` is the same role used as text. */
 .role {
+  --hero-role-color: var(--text-muted);
+  --hero-role-ink: var(--text-muted);
+
   display: grid;
   align-content: start;
   gap: 8px;
   min-width: 0;
   padding: 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--bg-elevated);
+  border: 1px solid color-mix(in srgb, var(--hero-role-color) 40%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-role-color) 16%, var(--bg-panel)),
+    var(--bg-panel) 70%
+  );
+}
+
+.role[data-role='vanguard'] {
+  --hero-role-color: var(--role-vanguard);
+  --hero-role-ink: var(--role-vanguard-ink);
+}
+
+.role[data-role='duelist'] {
+  --hero-role-color: var(--role-duelist);
+  --hero-role-ink: var(--role-duelist-ink);
+}
+
+.role[data-role='strategist'] {
+  --hero-role-color: var(--role-strategist);
+  --hero-role-ink: var(--role-strategist-ink);
 }
 
 .role-header {
@@ -56,9 +85,20 @@
 }
 
 .role-name {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--hero-role-ink);
   font-size: var(--type-h3);
   font-weight: 800;
   line-height: 1.2;
+}
+
+.role-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hero-role-color);
 }
 
 .role-sample,

@@ -73,7 +73,6 @@ app-state-panel,
   margin-top: 12px;
 }
 
-/* Headline figures as tiles: a chip naming the figure over the number, on a panel washed with the secondary (indigo). */
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));

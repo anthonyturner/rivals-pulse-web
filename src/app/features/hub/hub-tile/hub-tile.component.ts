@@ -7,13 +7,13 @@ import { KindChipComponent } from '../kind-chip/kind-chip.component';
 
 /**
  * A link in a hub as a card: an optional category chip, the title, a one-line description and room
- * for a small preview, which goes in as content. The whole card is one link named by the title, so
- * the preview is decoration and is hidden from assistive technology. Give `imageUrl` for key art
+ * for a small preview, which goes in as content. With a `route` the whole card is one link named by
+ * the title; without one it is not a link at all, so the title is plain text and the card does not
+ * lift on hover. Either way the preview is decoration and is hidden from assistive technology. Give `imageUrl` for key art
  * behind a scrim, which makes the card the hub's lead tile, and `playMarker` to add a play button
  * over it for a card that opens video; `imageFit` says how the art sits, and `lazyArt` defers loading
  * it for a card that starts below the fold. A card with no key art can
- * give `thumbnailUrl` for a small square picture beside its text. With no `route` the card is not a
- * link: the title is plain text and the card does not lift on hover.
+ * give `thumbnailUrl` for a small square picture beside its text.
  */
 @Component({
   selector: 'app-hub-tile',

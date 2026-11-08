@@ -44,14 +44,14 @@ export interface GameStatsView {
   /** One sentence-case line saying which snapshot this is and what it is compared with. */
   meta: string;
   /** The table's column names after "Game", in order. */
-  columns: string[];
+  columns: readonly string[];
   rows: GameRowView[];
   /** The subject game's figures as tiles; empty when the subject is not among the rows. */
   headline: StatTileView[];
 }
 
 const SUBJECT = 'Marvel Rivals';
-const COLUMNS = ['Players now', '24h peak', 'All-time peak', 'Daily rank', 'Top sellers'];
+const COLUMNS: readonly string[] = ['Players now', '24h peak', 'All-time peak', 'Daily rank', 'Top sellers'];
 const MINUS = '−';
 const numbers = new Intl.NumberFormat('en-US');
 const timestamps = new Intl.DateTimeFormat('en-US', {
