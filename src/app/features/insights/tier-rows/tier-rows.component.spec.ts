@@ -14,6 +14,7 @@ function hero(id: string, name: string): TierHeroView {
     winRateLabel: '66.7%',
     pickRateLabel: '10.0%',
     appearancesLabel: '12',
+    roleChip: { kind: 'tertiary', label: 'Duelist' },
   };
 }
 
@@ -27,6 +28,8 @@ const TIERS: TierRowView[] = [
   template: `
     <app-tier-rows id="plain" [tiers]="tiers" />
     <app-tier-rows id="linked" [tiers]="tiers" [linkHeroes]="true" [headingLevel]="3" />
+    <app-tier-rows id="art" [tiers]="tiers" [linkHeroes]="true" artLed />
+    <app-tier-rows id="roles" [tiers]="tiers" artLed showRoles />
   `,
 })
 class HostComponent {
@@ -65,10 +68,32 @@ describe('TierRowsComponent', () => {
     expect(rows('linked').querySelector('a')?.getAttribute('href')).toBe('/heroes/storm');
   });
 
+  it('draws plain hero tiles unless asked for the art-led look, tinted by the hero role', () => {
+    expect(rows('plain').querySelector('app-hero-tile')?.classList).not.toContain('art-led');
+    const tile = rows('art').querySelector('app-hero-tile');
+
+    expect(tile?.classList).toContain('art-led');
+    expect(tile?.getAttribute('data-role')).toBe('duelist');
+  });
+
   it('draws each row heading at the level the page asks for', () => {
     expect(rows('plain').querySelector('h2.tier-label')).toBeTruthy();
     expect(rows('plain').querySelector('h3')).toBeNull();
     expect(rows('linked').querySelector('h3.tier-label')).toBeTruthy();
     expect(rows('linked').querySelector('h2')).toBeNull();
+  });
+
+  it('marks the rows art-led only when asked', () => {
+    expect(rows('plain').querySelector('.tiers')?.classList).not.toContain('art-led');
+    expect(rows('art').querySelector('.tiers')?.classList).toContain('art-led');
+  });
+
+  it('shows the hero role as a tinted kind chip only when asked', () => {
+    expect(rows('art').querySelector('app-kind-chip')).toBeNull();
+
+    const chip = rows('roles').querySelector('app-kind-chip');
+
+    expect(chip?.textContent?.trim()).toBe('Duelist');
+    expect(chip?.getAttribute('data-kind')).toBe('tertiary');
   });
 });

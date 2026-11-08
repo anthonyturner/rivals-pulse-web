@@ -10,38 +10,13 @@
   padding-block: 16px;
 }
 
-h1,
 h2,
 p {
   margin: 0;
 }
 
-.tier-hero {
-  display: grid;
-  gap: 4px;
-  padding-block: 8px 12px;
-}
-
-h1 {
-  font-size: var(--type-page-title);
-  font-weight: 850;
-  line-height: 1.1;
-}
-
-.lede {
-  max-width: 70ch;
-  color: var(--text-soft);
-  font-size: var(--type-small);
-}
-
-.lede-link {
-  color: var(--link);
-  font-weight: 700;
-}
-
-.lede-link:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
+.tier-page__tiles {
+  margin-bottom: 16px;
 }
 
 /* The pickers' labels are --text-muted, 4.2:1 on the page background; --text-soft is 8.3:1. */
@@ -51,6 +26,10 @@ h1 {
   flex-wrap: wrap;
   gap: 12px 16px;
   align-items: end;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
 }
 
 .toolbar app-filter-select {
@@ -73,6 +52,11 @@ app-tier-rows {
   margin-top: 12px;
 }
 
+/* The loading, failure and empty panels share the tiles' 12px corners. */
+app-state-panel {
+  --state-panel-radius: 12px;
+}
+
 .state-count {
   color: var(--text);
   font-weight: 800;
@@ -83,8 +67,8 @@ app-tier-rows {
   margin-top: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-elevated);
+  border-radius: 12px;
+  background: var(--bg-panel);
 }
 
 .section-heading {
@@ -100,13 +84,6 @@ app-tier-rows {
 .section-heading p {
   color: var(--text-muted);
   font-size: var(--type-small);
-}
-
-.method-note {
-  max-width: 90ch;
-  margin-top: 16px;
-  color: var(--text-soft);
-  font-size: var(--type-caption);
 }
 
 @media (max-width: 1023px) {

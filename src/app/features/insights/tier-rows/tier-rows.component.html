@@ -1,4 +1,4 @@
-<ol class="tiers">
+<ol class="tiers" [class.art-led]="artLed()">
   @for (tier of tiers(); track tier.name) {
     <li class="tier-row tier-{{ tier.name }}">
       <ng-template #label>
@@ -19,7 +19,7 @@
         <ul class="hero-grid">
           @for (hero of tier.heroes; track hero.hero) {
             <li>
-              <app-hero-tile [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="linkHeroes() ? hero.hero : null">
+              <app-hero-tile [artLed]="artLed()" [role]="hero.role" [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="linkHeroes() ? hero.hero : null">
                 <span class="hero-figures">
                   <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
                   <span class="hero-caption">
@@ -28,6 +28,9 @@
                     ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
                   </span>
                 </span>
+                @if (showRoles() && hero.roleChip; as chip) {
+                  <app-kind-chip class="hero-role" [kind]="chip.kind" [label]="chip.label" />
+                }
               </app-hero-tile>
             </li>
           }

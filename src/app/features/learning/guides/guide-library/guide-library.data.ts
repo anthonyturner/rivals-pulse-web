@@ -1,3 +1,4 @@
+import { HERO_ROLE_CHIP_KINDS } from '../../../hub/hero-role-chip';
 import type { HubLink, HubTileConfig, TileChipKind, TileSize } from '../../../hub/hub-tile.types';
 import { HERO_GUIDES, HeroGuide } from '../hero-guides/hero-guide-data';
 import { STRATEGIST_GUIDES } from '../strategist-guides/strategist-guides.data';
@@ -23,16 +24,7 @@ export interface GuideSection {
   tiles: HubTileConfig[];
 }
 
-/**
- * A role's chip is the role's own tint. The palette's role tokens are the secondary (Vanguard), the
- * tertiary (Duelist) and the accent (Strategist) colours, which are what the chip kinds draw with.
- */
-const ROLE_CHIP_KINDS: Record<HeroGuide['role'], TileChipKind> = {
-  Vanguard: 'secondary',
-  Duelist: 'tertiary',
-  Strategist: 'accent',
-  Fundamentals: 'accent',
-};
+const ROLE_CHIP_KINDS: Record<HeroGuide['role'], TileChipKind> = { ...HERO_ROLE_CHIP_KINDS, Fundamentals: 'accent' };
 
 const guidesById = new Map(HERO_GUIDES.map((guide) => [guide.heroId, guide]));
 

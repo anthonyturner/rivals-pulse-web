@@ -1,19 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { BehaviorSubject, switchMap, tap } from 'rxjs';
 
 import type { HeroStats, HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { DEFAULT_MODE_ID, heroStatsModeOptions, type ModeOption } from '../../../shared/utilities/play-modes';
 import { HeroDataService } from '../../heroes/hero-data.service';
+import { HubBentoComponent } from '../../hub/hub-bento/hub-bento.component';
 import { seasonOptions, type SeasonOption } from '../half-season-view';
 import { heroIdentities } from '../hero-identity';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
 import { HeroStatsService } from '../hero-stats.service';
 import { TierRowsComponent } from '../tier-rows/tier-rows.component';
+import { TIER_LIST_LINKS, TIER_LIST_TILES } from './tier-list-tiles.data';
 import { buildTierListView } from './tier-list-view';
 
 interface TierListRequest {
@@ -27,8 +29,9 @@ interface TierListRequest {
   imports: [
     FilterSelectComponent,
     HeroProgressListComponent,
+    HubBentoComponent,
     NoticeComponent,
-    RouterLink,
+    PageHeaderComponent,
     StatePanelComponent,
     TierRowsComponent,
   ],
@@ -37,6 +40,9 @@ interface TierListRequest {
   styleUrl: './tier-list-page.component.css',
 })
 export class TierListPageComponent {
+  protected readonly links = TIER_LIST_LINKS;
+  protected readonly tiles = TIER_LIST_TILES;
+
   private readonly heroStats = inject(HeroStatsService);
   private readonly chosenSeason = signal<number | undefined>(undefined);
   private readonly chosenMode = signal<HeroStatsModeId>(DEFAULT_MODE_ID);

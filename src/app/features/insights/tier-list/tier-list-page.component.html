@@ -1,13 +1,10 @@
 <section class="tier-page page-container page-container--wide">
-  <header class="tier-hero">
-    <h1>Marvel Rivals tier list</h1>
-    <p class="lede">
-      Heroes ranked by win rate in matches RivalsPulse players recorded, all ranks together.
-      <a class="lede-link" routerLink="/how-we-count">How we count</a>
-      &middot;
-      <a class="lede-link" routerLink="/win-rates">Exact figures: hero stats</a>
-    </p>
-  </header>
+  <app-page-header
+    title="Marvel Rivals tier list"
+    description="Heroes ranked by win rate in matches RivalsPulse players recorded, all ranks together."
+  />
+
+  <app-hub-bento class="tier-page__tiles" [links]="links" [config]="tiles" />
 
   <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
 
@@ -62,7 +59,7 @@
     }
 
     @if (v.state === 'ready') {
-      <app-tier-rows [tiers]="v.tiers" />
+      <app-tier-rows [tiers]="v.tiers" [linkHeroes]="true" artLed showRoles />
     } @else {
       <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
         <p class="state-count">
@@ -90,12 +87,5 @@
         <app-hero-progress-list [rows]="v.building" />
       </section>
     }
-
-    <p class="method-note">
-      RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match and
-      Competitive are counted together unless you pick a single mode. A hero on both teams of one
-      match is counted twice. Matches without a win or a loss, and matches where the game did not
-      say which mode they were, are left out.
-    </p>
   }
 </section>

@@ -134,24 +134,34 @@ describe('TierListPageComponent', () => {
   it('labels the page as based on RivalsPulse players and offers no rank picker or ban column', async () => {
     const { page } = await open(partial);
 
-    expect(page.querySelector('.tier-hero')?.firstElementChild?.tagName).toBe('H1');
-    expect(text(page, '.lede')[0]).toContain('RivalsPulse players');
+    expect(page.querySelector('app-page-header')?.firstElementChild?.firstElementChild?.tagName).toBe('H1');
+    expect(text(page, 'app-page-header .description')[0]).toContain('RivalsPulse players');
     expect(page.querySelector('select')).toBeNull();
     expect(page.textContent).not.toContain('Ban');
     expect(page.querySelector('a[target="_blank"]')).toBeNull();
   });
 
-  it('links the lede to the How we count explainer', async () => {
+  it('links the lead tiles to the How we count explainer and the exact win rates', async () => {
     const { page } = await open(partial);
+    const hrefs = Array.from(page.querySelectorAll('app-hub-bento a')).map((link) => link.getAttribute('href'));
 
-    expect(page.querySelector('.lede a')?.getAttribute('href')).toBe('/how-we-count');
+    expect(hrefs).toEqual(['/how-we-count', '/win-rates']);
   });
 
-  it('links the lede to the exact win rates', async () => {
+  it('puts the method note in the lead tile, with decorative key art', async () => {
     const { page } = await open(partial);
-    const hrefs = Array.from(page.querySelectorAll('.lede a')).map((link) => link.getAttribute('href'));
+    const lead = page.querySelector('app-hub-tile.featured');
 
-    expect(hrefs).toContain('/win-rates');
+    expect(lead?.textContent).toContain('RivalsPulse has no rank breakdown');
+    expect(lead?.querySelector('img')?.getAttribute('alt')).toBe('');
+  });
+
+  it('draws art-led hero tiles that link to their hero', async () => {
+    const { page } = await open(partial);
+    const tile = page.querySelector('app-tier-rows app-hero-tile');
+
+    expect(tile?.classList).toContain('art-led');
+    expect(tile?.querySelector('a')?.getAttribute('href')).toMatch(/^\/heroes\//);
   });
 
   it('draws the six tier rows with the placed heroes, their sample and the matches counted', async () => {

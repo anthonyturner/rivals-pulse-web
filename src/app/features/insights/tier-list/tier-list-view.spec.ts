@@ -82,6 +82,7 @@ describe('buildTierListView', () => {
         winRateLabel: '66.7%',
         pickRateLabel: '12.5%',
         appearancesLabel: '12',
+        roleChip: { kind: 'tertiary', label: 'Duelist' },
       }),
     );
   });
@@ -91,6 +92,7 @@ describe('buildTierListView', () => {
 
     expect(thor.name).toBe('Thor');
     expect(thor.role).toBeNull();
+    expect(thor.roleChip).toBeNull();
     expect(thor.imageUrl).toBe('/images/heroes/thor.png');
   });
 

@@ -9,6 +9,9 @@ import { HeroTileComponent } from './hero-tile.component';
   template: `
     <app-hero-tile id="plain" name="Storm" imageUrl="/images/heroes/storm.png"><span class="under">3 games</span></app-hero-tile>
     <app-hero-tile id="picked" name="Thor" imageUrl="/images/heroes/thor.png" selectable selected />
+    <app-hero-tile id="art" name="Mantis" imageUrl="/images/heroes/mantis.png" heroId="mantis" artLed role="Strategist" />
+    <app-hero-tile id="art-norole" name="Gorr" imageUrl="/images/heroes/gorr.png" artLed />
+    <app-hero-tile id="role-only" name="Hulk" imageUrl="/images/heroes/hulk.png" role="Vanguard" />
     <app-hero-tile id="linked" name="Hela" imageUrl="/images/heroes/hela.png" heroId="hela">
       <span tileFigure class="aside">70.0%</span>
       <span class="under">20 games</span>
@@ -51,6 +54,24 @@ describe('HeroTileComponent', () => {
     expect(tile('plain').classList).not.toContain('selectable');
     expect(tile('picked').classList).toContain('selectable');
     expect(tile('picked').classList).toContain('selected');
+  });
+
+  it('keeps the plain tile unless asked for the art-led look', () => {
+    expect(tile('plain').classList).not.toContain('art-led');
+    expect(tile('plain').classList).not.toContain('linked');
+    expect(tile('role-only').hasAttribute('data-role')).toBeFalse();
+  });
+
+  it('tints an art-led tile by the hero role and marks a linked one', () => {
+    expect(tile('art').classList).toContain('art-led');
+    expect(tile('art').classList).toContain('linked');
+    expect(tile('art').getAttribute('data-role')).toBe('strategist');
+    expect(tile('art').querySelector('img')?.getAttribute('alt')).toBe('');
+  });
+
+  it('leaves an art-led tile with no role untinted', () => {
+    expect(tile('art-norole').classList).toContain('art-led');
+    expect(tile('art-norole').hasAttribute('data-role')).toBeFalse();
   });
 
   it('swaps a portrait that fails to load for the default hero portrait', () => {
