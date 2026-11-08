@@ -1,5 +1,6 @@
 import type { HeroStatsModeId } from '../../../contracts/hero-stats.model.ts';
 import type { TierName } from '../../../contracts/tier-list.model.ts';
+import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../../community/community-minimums';
 import {
   BLENDED_PLAY_MODE_IDS,
   HERO_STATS_MIN_MATCHES,
@@ -59,6 +60,7 @@ function heroRow(
     assistsN: 0,
     finalHitsSum: 0,
     finalHitsN: 0,
+    recorders: null,
     ...extra,
   };
 }
@@ -120,6 +122,59 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
     expect(stats.belowMinimum.map((hero) => hero.hero).sort()).toEqual(['captain-america', 'hulk']);
     expect(stats.belowMinimum[0].appearances).toBe(MIN - 1);
     expect(stats.status).toBe('not-enough-data');
+  });
+
+  describe('players behind a hero', () => {
+    const QUICK = PLAY_MODE_IDS.quickMatch;
+    const COMPETITIVE = PLAY_MODE_IDS.competitive;
+    const LINES = 3;
+    const row = (playModeId: number, recorders: number | null, gameHeroId = HERO_A) =>
+      heroRow(gameHeroId, LINES, 1, { playModeId, recorders });
+    const belowOf = (heroes: HeroAggregateRow[], mode?: string) =>
+      deriveHeroStats(sourceOf([{ heroes, matches: MIN }]), {
+        now: NOW,
+        heroSlugByGameId: SLUGS,
+        mode,
+      }).stats.belowMinimum;
+
+    it('states the players the community rule asks for, beside the match minimum', () => {
+      expect(derive(sourceOf([])).stats.minimumPlayers).toBe(COMMUNITY_BUCKET_MIN_PLAYERS);
+    });
+
+    it('gives a hero below the minimum the players counted so far', () => {
+      expect(belowOf([row(COMPETITIVE, 1)])).toEqual([{ hero: 'hulk', appearances: LINES, players: 1 }]);
+    });
+
+    it('never adds two modes: the same player records in both, so the most any one mode has is the count', () => {
+      expect(belowOf([row(QUICK, 2), row(COMPETITIVE, 1)])).toEqual([
+        { hero: 'hulk', appearances: 2 * LINES, players: 2 },
+      ]);
+    });
+
+    it('counts only the mode asked for', () => {
+      expect(belowOf([row(QUICK, 2), row(COMPETITIVE, 1)], 'competitive')[0].players).toBe(1);
+    });
+
+    it('carries no count for a hero any of whose rows was never counted, and never reads null as 0', () => {
+      const [hero] = belowOf([row(QUICK, 2), row(COMPETITIVE, null)]);
+
+      expect(hero).toEqual({ hero: 'hulk', appearances: 2 * LINES });
+      expect('players' in hero).toBeFalse();
+    });
+
+    it('gives the rows of one hero split across game ids the most any one row has', () => {
+      expect(belowOf([row(COMPETITIVE, 1, 1057), row(COMPETITIVE, 3, 10571)])[0].players).toBe(3);
+    });
+
+    it('gates nothing: a hero with enough matches and one player is still placed, with no count on its line', () => {
+      const { stats } = derive(
+        sourceOf([{ heroes: [heroRow(HERO_A, MIN, MIN, { recorders: 1 })], matches: MIN }]),
+      );
+
+      expect(stats.status).toBe('ready');
+      expect(stats.tiers.flatMap((tier) => tier.heroes)[0]).toEqual(jasmine.objectContaining({ hero: 'hulk' }));
+      expect(JSON.stringify(stats.tiers)).not.toContain('players');
+    });
   });
 
   it('places a hero once it reaches the minimum sample', () => {
@@ -380,6 +435,7 @@ describe('deriveHeroStats half-seasons', () => {
     expect(stats).toEqual({
       status: 'not-enough-data',
       minimumMatches: MIN,
+      minimumPlayers: COMMUNITY_BUCKET_MIN_PLAYERS,
       halfSeasons: [],
       halfSeason: null,
       inPlaceOf: null,

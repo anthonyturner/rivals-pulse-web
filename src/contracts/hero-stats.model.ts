@@ -53,6 +53,12 @@ export interface HeroStatsTier {
 export interface HeroStatsBelowMinimum {
   hero: string;
   appearances: number;
+  /**
+   * Different players who recorded the matches this hero appeared in: a count so far, never who.
+   * Absent where nobody counted it (a half-season that ended before the count existed). Informational:
+   * nothing is held back for want of players.
+   */
+  players?: number;
 }
 
 /**
@@ -64,6 +70,12 @@ export interface HeroStatsBelowMinimum {
 export interface HeroStats {
   status: 'ready' | 'not-enough-data';
   minimumMatches: number;
+  /**
+   * Different players the community rule asks for before a figure is trusted. Informational for hero
+   * stats: a hero is placed on `minimumMatches` alone. Absent only in an answer the CDN cached before
+   * this field existed.
+   */
+  minimumPlayers?: number;
   /** Every half-season that has started, oldest first: the seasons a client can ask for. */
   halfSeasons: HeroStatsHalfSeason[];
   /** The half-season the numbers come from, or null before any half-season exists. */
