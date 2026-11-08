@@ -40,19 +40,16 @@
   white-space: nowrap;
 }
 
-/* The role chip: a dot and an edge in the role's colour, the text in its readable shade. A hero with another role keeps a quiet chip. */
+/* The role chip reads the colours the art-led tile above it sets for its hero's role, so the role-to-colour mapping lives in one place. */
 .role-chip {
-  --hero-role-color: var(--text-muted);
-  --hero-role-ink: var(--text-muted);
-
   display: inline-flex;
   gap: 5px;
   align-items: center;
   padding: 0 8px;
-  border: 1px solid color-mix(in srgb, var(--hero-role-color) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tile-role-color) 50%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--hero-role-color) 12%, transparent);
-  color: var(--hero-role-ink);
+  background: color-mix(in srgb, var(--tile-role-color) 12%, transparent);
+  color: var(--tile-role-ink);
   font-size: var(--type-caption);
   font-weight: 750;
   line-height: 1.6;
@@ -62,23 +59,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--hero-role-color);
+  background: var(--tile-role-color);
   content: '';
-}
-
-.role-chip[data-role='vanguard'] {
-  --hero-role-color: var(--role-vanguard);
-  --hero-role-ink: var(--role-vanguard-ink);
-}
-
-.role-chip[data-role='duelist'] {
-  --hero-role-color: var(--role-duelist);
-  --hero-role-ink: var(--role-duelist-ink);
-}
-
-.role-chip[data-role='strategist'] {
-  --hero-role-color: var(--role-strategist);
-  --hero-role-ink: var(--role-strategist-ink);
 }
 
 .empty {

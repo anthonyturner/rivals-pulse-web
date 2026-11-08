@@ -55,7 +55,10 @@ describe('CommunityPageComponent', () => {
   }
 
   async function answerMatchesTab(): Promise<void> {
-    TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
+    // The lead tile's totals ask for the same answer, so every request for it is answered.
+    TestBed.inject(HttpTestingController)
+      .match('/api/community/matches')
+      .forEach((request) => request.flush(MATCHES_NOT_ENOUGH_DATA));
     await harness.fixture.whenStable();
     harness.detectChanges();
   }
@@ -238,43 +241,60 @@ describe('CommunityPageComponent', () => {
     });
   }
 
-  it('points to My stats from the intro, and no longer places My matches on Community', async () => {
+  const tileLinks = (): HTMLAnchorElement[] =>
+    Array.from(host().querySelectorAll<HTMLAnchorElement>('app-hub-bento a'));
+
+  it('points to My stats, the privacy notes and How we count from tiles, not from the intro', async () => {
     await open('/heroes');
 
-    const link = host().querySelector<HTMLAnchorElement>('.community-page__intro a[href="/profile"]');
-
-    expect(link?.textContent?.trim()).toBe('My stats');
-    expect(host().querySelector('.community-page__intro')?.textContent).not.toMatch(/My matches|My insights|exceptions/);
-  });
-
-  it('links the anonymity note to the privacy notes', async () => {
-    await open('/heroes');
-
-    const link = host().querySelector<HTMLAnchorElement>('.community-page__intro a');
-    expect(link?.getAttribute('href')).toBe('/privacy');
-  });
-
-  it('links the anonymity note to the How we count explainer', async () => {
-    await open('/heroes');
-
-    const links = host().querySelectorAll<HTMLAnchorElement>('.community-page__intro a');
-    expect(links[1]?.getAttribute('href')).toBe('/how-we-count');
+    expect(tileLinks().map((link) => [link.textContent?.trim(), link.getAttribute('href')])).toEqual([
+      ['How we count', '/how-we-count'],
+      ['Privacy notes', '/privacy'],
+      ['My stats', '/profile'],
+    ]);
+    expect(host().querySelector('app-page-header')?.querySelector('a')).toBeNull();
+    expect(host().textContent).not.toMatch(/My matches|My insights|exceptions/);
   });
 
   it('says the numbers are anonymous totals, under a one-line title', async () => {
     await open('/heroes');
 
     expect(host().querySelector('h1')?.textContent?.trim()).toBe('Community totals');
-    expect(host().querySelector('.community-page__intro')?.textContent).toContain('Anonymous totals');
+    expect(host().querySelector('app-page-header .description')?.textContent).toContain('Anonymous totals');
   });
 
-  it('leads with key art that is decoration, with a community chip', async () => {
+  it('keeps the page header plain and leads with a key-art tile that is decoration', async () => {
     await open('/heroes');
 
-    const art = host().querySelector<HTMLElement>('.community-page__art');
+    const lead = host().querySelector<HTMLElement>('app-hub-tile.featured');
+    const art = lead?.querySelector<HTMLElement>('.art');
+
+    expect(host().querySelector('app-page-header')?.querySelector('img')).toBeNull();
     expect(art?.getAttribute('aria-hidden')).toBe('true');
     expect(art?.querySelector('img')?.getAttribute('alt')).toBe('');
-    expect(host().querySelector('.community-page__chip')?.textContent?.trim()).toBe('Community');
+    expect(lead?.querySelector('h2')?.textContent?.trim()).toBe('How we count');
+  });
+
+  it('shows the real totals in the lead tile, and nothing while there are none', async () => {
+    await open('/heroes');
+
+    const http = TestBed.inject(HttpTestingController);
+    const requests = http.match('/api/community/matches');
+    expect(host().querySelector('app-community-totals-preview .figure')).toBeNull();
+
+    requests.forEach((request) => request.flush({ ...MATCHES_NOT_ENOUGH_DATA, status: 'ready', matchesBand: 250, halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null }, averageLengthMinutes: 12 }));
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const figures = Array.from(host().querySelectorAll('app-community-totals-preview .figure')).map((figure) => [
+      figure.querySelector('dt')?.textContent,
+      figure.querySelector('dd')?.textContent,
+    ]);
+    expect(figures).toEqual([
+      ['Matches counted', '250+'],
+      ['Average match', '12 min'],
+      ['Season', 'Season 10'],
+    ]);
   });
 
   describe('on a narrow screen', () => {

@@ -6,7 +6,7 @@
           <span tileFigure class="figure"><span class="visually-hidden">{{ figureLabel() }} </span>{{ hero.figure }}</span>
           <span class="meta">
             @if (hero.role; as role) {
-              <span class="role-chip" [attr.data-role]="role.toLowerCase()">{{ role }}</span>
+              <span class="role-chip">{{ role }}</span>
             }
             @if (hero.sample) {
               <span class="sample">{{ hero.sample }}</span>

@@ -14,8 +14,8 @@ import { HeroImageFallbackDirective } from '../../../shared/directives/hero-imag
  *
  * `artLed` gives the tile the look of the redesigned pages: a rounder card washed in the hero's
  * role colour, a ringed portrait and, for a linked tile, a lift and a focus ring. It reads `role`
- * for the tint; with none the wash is the accent. Every other page leaves it off and keeps the
- * plain tile.
+ * for the tint; with none the wash is the accent. The plain tile is the default. The tile sets
+ * `--tile-role-color` and `--tile-role-ink`, which the content placed inside it can read.
  */
 @Component({
   selector: 'app-hero-tile',
