@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
+import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero-stats.model.ts';
 
 /**
  * How a pair of heroes fares when one team holds both, from the matches RivalsPulse players
@@ -22,7 +22,7 @@ export interface HeroSynergy {
 
 /**
  * Every hero-with-hero record the site shows, from RivalsPulse app matches only, in the Quick Match
- * and Competitive blend and all ranks together.
+ * and Competitive blend (or the one `mode` asked for) and all ranks together.
  *
  * `ready` means at least one pair has reached `minimumMatches`; `not-enough-data` is a designed
  * state, not an error, and then `synergies` is empty. Pairs below the minimum are never listed.
@@ -35,5 +35,11 @@ export interface HeroSynergies {
   halfSeason: HeroStatsHalfSeason | null;
   /** Set only when `halfSeason` is the previous half-season, shown while the current one has no pair at the minimum. */
   inPlaceOf: HeroStatsHalfSeason | null;
+  /** Every half-season that has started, oldest first: the seasons a client can ask for. Absent only in an answer the CDN cached before this field existed. */
+  halfSeasons?: HeroStatsHalfSeason[];
+  /** The mode the counts use, or null when the request named a mode that does not exist (then nothing is counted). Absent only in an answer the CDN cached before this field existed. */
+  mode?: HeroStatsModeId | null;
+  /** Every mode a client can ask for, counted in the half-season shown. Absent when `mode` is. */
+  modes?: HeroStatsMode[];
   synergies: HeroSynergy[];
 }

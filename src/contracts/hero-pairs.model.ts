@@ -1,4 +1,4 @@
-import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
+import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero-stats.model.ts';
 
 /** One hero's record in a band. Heroes are the game's hero ids, with Deadpool's role forms under 1057. */
 export interface HeroPairsHero {
@@ -34,7 +34,7 @@ export interface HeroPairsSynergy {
 export interface HeroPairsBand {
   key: string;
   label: string;
-  /** Matches with a win or a loss in the half-season in the Quick Match and Competitive blend. */
+  /** Matches with a win or a loss in the half-season, in the mode counted (the Quick Match and Competitive blend by default). */
   decidedMatches: number;
   heroes: HeroPairsHero[];
   counters: HeroPairsCounter[];
@@ -57,6 +57,12 @@ export interface HeroPairs {
   halfSeason: HeroStatsHalfSeason | null;
   /** Set only when `halfSeason` is the previous one, shown while the current one has no pair at the minimum. */
   inPlaceOf: HeroStatsHalfSeason | null;
+  /** Every half-season that has started, oldest first: the seasons a client can ask for. Absent only in an answer the CDN cached before this field existed. */
+  halfSeasons?: HeroStatsHalfSeason[];
+  /** The mode the counts use, or null when the request named a mode that does not exist (then nothing is counted). Absent only in an answer the CDN cached before this field existed. */
+  mode?: HeroStatsModeId | null;
+  /** Every mode a client can ask for, counted in the half-season shown. Absent when `mode` is. */
+  modes?: HeroStatsMode[];
   /** Today only the `all` band; lists are sorted by hero id, which is not a ranking. */
   bands: HeroPairsBand[];
 }

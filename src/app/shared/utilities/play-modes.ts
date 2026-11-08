@@ -35,7 +35,7 @@ export function selectableModes(candidates: readonly ModeCandidate[], selected: 
 }
 
 /** The modes a hero stats answer offers, in the answer's order. Empty for an answer without a mode list. */
-export function heroStatsModeOptions(stats: HeroStats, selected: HeroStatsModeId): ModeOption[] {
+export function heroStatsModeOptions(stats: Pick<HeroStats, 'modes'>, selected: HeroStatsModeId): ModeOption[] {
   return selectableModes(
     (stats.modes ?? []).map(({ id, label, decidedMatches }) => ({ id, label, hasMatches: decidedMatches > 0 })),
     selected,

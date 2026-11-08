@@ -43,6 +43,9 @@ export function deriveHeroSynergies(
     minimumMatches: pairs.minimumMatches,
     halfSeason: pairs.halfSeason,
     inPlaceOf: pairs.inPlaceOf,
+    halfSeasons: pairs.halfSeasons,
+    mode: pairs.mode,
+    modes: pairs.modes,
     synergies: synergies.sort((a, b) => a.hero.localeCompare(b.hero) || a.ally.localeCompare(b.ally)),
   };
 }

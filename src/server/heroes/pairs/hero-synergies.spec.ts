@@ -43,6 +43,14 @@ describe('deriveHeroSynergies', () => {
     ]);
   });
 
+  it('carries the half-seasons and modes the pairs offer, so a page can fill its pickers', () => {
+    const halfSeasons = [{ id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null }];
+    const modes = [{ id: 'competitive' as const, label: 'Competitive', decidedMatches: 80 }];
+    const result = deriveHeroSynergies(pairsOf([synergy(1011, 1033, 20, 15)], { halfSeasons, mode: 'competitive', modes }), SLUGS);
+
+    expect([result.halfSeasons, result.mode, result.modes]).toEqual([halfSeasons, 'competitive', modes]);
+  });
+
   it('works the rates over team occurrences, which are twice the matches when both teams field the pair', () => {
     const both: HeroPairsSynergy = { heroId: 1011, allyHeroId: 1033, matches: 12, appearances: 24, wins: 12 };
     const [pair] = deriveHeroSynergies(pairsOf([both]), SLUGS).synergies;

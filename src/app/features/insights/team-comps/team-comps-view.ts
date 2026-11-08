@@ -1,7 +1,13 @@
 import type { HeroSynergies, HeroSynergy } from '../../../../contracts/hero-synergies.model';
+import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
+import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
+import { buildTripleSupportView, type TripleSupportView } from './triple-support-view';
+
+/** RivalsPulse has no rank breakdown, so the page says that every figure counts every rank. */
+const ALL_RANKS_FACT = 'All ranks counted';
 
 export const PAIR_ROLES = ['Vanguard', 'Duelist', 'Strategist'] as const;
 
@@ -36,15 +42,22 @@ export interface PendingSectionView {
 export interface TeamCompsView {
   /** The half-season the numbers come from; null before any half-season exists. */
   season: SeasonView | null;
+  /** The mode the numbers count, such as "Competitive" or "Quick Match and Competitive". */
+  modeLabel: string;
+  /** Set for a mode whose numbers do not mean what Quick Match and Competitive do. */
+  modeCaveat: string | null;
   /** Set when the numbers are the previous half-season's, shown until the current one has enough data. */
   fallbackNotice: string | null;
+  /** "in Competitive for Season 10.5": names the mode and half-season that an empty state is about. */
+  scopeLabel: string;
   /** "10 matches", or "1 match". */
   minimumLabel: string;
   /** The toolbar's facts in reading order. */
   metaParts: string[];
   /** Always the three roles, in order, so a role with no pair says so instead of vanishing. */
   rolePairs: RolePairSectionView[];
-  tripleSupport: PendingSectionView;
+  tripleSupport: TripleSupportView;
+  /** Waits for the line-up counts; see issue 126. */
   lineups: PendingSectionView;
 }
 
@@ -54,10 +67,16 @@ export interface TeamCompsView {
  * list. Within a role the pairs are ranked by win rate pulled toward 50%, so a short run cannot top
  * the list, and the rate shown is the plain one.
  *
- * The triple-support and line-up sections have no source yet, so they are always pending.
+ * The triple-support section is built from `trios` (null when they could not be loaded, which the
+ * section says, without hiding the duos). The line-up section has no source yet, so it is pending.
  */
-export function buildTeamCompsView(synergies: HeroSynergies, identities: HeroIdentities): TeamCompsView {
+export function buildTeamCompsView(
+  synergies: HeroSynergies,
+  trios: TripleSupportTrios | null,
+  identities: HeroIdentities,
+): TeamCompsView {
   const season = synergies.halfSeason === null ? null : seasonView(synergies.halfSeason);
+  const modeLabel = modeLabelOf(synergies);
   const minimumLabel = countLabel(synergies.minimumMatches, 'match', 'matches');
   const rolePairs = PAIR_ROLES.map((role) => ({
     role,
@@ -68,18 +87,22 @@ export function buildTeamCompsView(synergies: HeroSynergies, identities: HeroIde
 
   return {
     season,
+    modeLabel,
+    modeCaveat: modeCaveat(synergies.mode),
     fallbackNotice:
       synergies.inPlaceOf === null
         ? null
-        : halfSeasonFallbackNotice(synergies.inPlaceOf.label, season?.label ?? null),
+        : halfSeasonFallbackNotice(synergies.inPlaceOf.label, season?.label ?? null, nonDefaultModeLabel(synergies)),
+    scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     minimumLabel,
-    metaParts: rolePairs.some(({ rows }) => rows.length > 0)
-      ? [season?.label, season?.dateRange, `Pairs need ${minimumLabel} together to be listed`].filter(
-          (part): part is string => !!part,
-        )
-      : [],
+    metaParts: [
+      ALL_RANKS_FACT,
+      ...(rolePairs.some(({ rows }) => rows.length > 0)
+        ? [season?.label, season?.dateRange, `Pairs need ${minimumLabel} together to be listed`]
+        : []),
+    ].filter((part): part is string => !!part),
     rolePairs,
-    tripleSupport: { state: 'not-enough-data' },
+    tripleSupport: buildTripleSupportView(trios, season?.id ?? null, identities),
     lineups: { state: 'not-enough-data' },
   };
 }

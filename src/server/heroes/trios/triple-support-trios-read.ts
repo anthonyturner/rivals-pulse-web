@@ -1,5 +1,6 @@
 import type { TripleSupportTrios } from '../../../contracts/triple-support-trios.model.ts';
 import { heroSlugByGameId, listHeroNames, strategistTagByGameId } from '../catalog/index.ts';
+import { playModeFromQuery } from '../stats/hero-stats.ts';
 import { readHeroStatsSource } from '../stats/index.ts';
 import {
   deriveTripleSupportTrios,
@@ -19,6 +20,10 @@ interface TripleSupportTriosReadOptions {
   env?: SupabaseReadEnv;
   fetch?: typeof fetch;
   now?: () => Date;
+  /** One exact half-season instead of the current one; see `DeriveTripleSupportTriosOptions`. */
+  halfSeason?: number;
+  /** The `mode` query value, as `DeriveTripleSupportTriosOptions` takes it. */
+  mode?: string;
   /** Each hero's display name by slug; reads `hero_content` unless given. */
   loadHeroNames?: () => Promise<ReadonlyMap<string, string>>;
 }
@@ -117,12 +122,16 @@ function namesByGameId(nameBySlug: ReadonlyMap<string, string>): ReadonlyMap<num
  * The site's triple-support trios. A trio with a Strategist that has no tag, or a utility hero with no
  * name, is left out and logged; it never fails the request. The half-seasons come from the same
  * `read_hero_stats()` answer the hero stats use, so both read the same current half-season. A read
- * function that is not in the database yet is the empty state.
+ * function that is not in the database yet is the empty state, and so is a `mode` that names no
+ * mode: nothing is read for it.
  */
 export async function getTripleSupportTrios(options: TripleSupportTriosReadOptions = {}): Promise<TripleSupportTrios> {
   const env = options.env ?? process.env;
+  const mode = playModeFromQuery(options.mode);
   const [rows, source] = await Promise.all([
-    orWhenNotDeployed(fetchTripleSupportRows(env, options.fetch), READ_FUNCTION, []),
+    mode === undefined
+      ? []
+      : orWhenNotDeployed(fetchTripleSupportRows(env, options.fetch, mode.playModeIds), READ_FUNCTION, []),
     readHeroStatsSource(env, options.fetch),
   ]);
   const nameBySlug =
@@ -131,13 +140,16 @@ export async function getTripleSupportTrios(options: TripleSupportTriosReadOptio
       : await (options.loadHeroNames ?? (() => listHeroNames(getSupabaseClient())))();
   const { trios, unnamedGameIds } = deriveTripleSupportTrios(rows, source, {
     now: (options.now ?? (() => new Date()))(),
+    halfSeason: options.halfSeason,
+    mode: options.mode,
     tagByGameId: strategistTagByGameId,
     nameByGameId: namesByGameId(nameBySlug),
+    slugByGameId: heroSlugByGameId,
   });
 
   if (unnamedGameIds.length > 0) {
     console.warn(
-      `Triple support left out trios with Strategists that have no tag in strategist-tags.json, or a utility hero with no name: ${unnamedGameIds.join(', ')}`,
+      `Triple support left out trios with a hero that cannot be named (no tag in strategist-tags.json, no entry in hero-game-ids.json, or a utility hero with no name): ${unnamedGameIds.join(', ')}`,
     );
   }
 
