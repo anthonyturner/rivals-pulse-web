@@ -106,6 +106,7 @@ repo's build. This is a move, not a redesign.
 | `20261108140000_team_lineup_thin_shape_counts.sql` | `read_team_lineup_shapes` returns a shape's `teams` while it is under `team_lineup_min_teams()`; its `wins` and `enough_data` are still withheld (issue 616). Same signature, gate and grants |
 | `20261108150000_hero_score_busiest_share.sql` | `read_community_hero_scores` flags the busiest player as `top * 100 > n * community_max_recorder_share_percent()` instead of a fixed half, so the flags are false at a 100% limit (issue 616). Same signature, security and grants |
 | `20261108160000_hero_aggregate_recorders.sql` | `hero_aggregates.recorders`, the different recorders behind each hero per half-season and mode (null where never counted, such as a half-season frozen earlier); `fill_hero_aggregates` fills it and `read_hero_stats` returns it. The database only counts; the website gates on it (issues 628, 640). Same signatures and grants |
+| `20261108170000_hero_blended_recorders.sql` | `hero_aggregates.blended_recorders`, the different recorders behind each hero across Quick Match and Competitive together, each person once; the same value on the hero's Quick Match and Competitive rows, null on any other mode and where never counted (a frozen half-season). `fill_hero_aggregates` fills it and `read_hero_stats` returns it, and the blended view of hero stats and the tier list gates on it (issue 644). Same signatures and grants |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -331,11 +332,13 @@ the service role reaches them.
   the matches a hero appeared in, per half-season and mode. `fill_hero_aggregates` writes it, so the
   hourly rebuild and the purge's freeze fill it with no change of their own. It is null in a
   half-season frozen before the migration (the raw rows are gone) and never read as 0. Distinct
-  recorders cannot be added across modes, so `read_hero_stats()` returns one count per mode row and
-  the website takes the largest any one mode has. Hero stats and the tier list use it as a gate (issue
-  640): a hero is placed only with 10 appearances and 2 recorders, and a null count falls back to the
-  match-only rule. The count also reaches the Pulse Atlas ([pulse-atlas.md](pulse-atlas.md)). After `supabase db push`, run
-  `supabase/checks/hero_aggregate_recorders.sql`.
+  recorders cannot be added across modes, so `read_hero_stats()` returns the count per mode row and a
+  separate `blended_recorders` (issue 644, `20261108170000_hero_blended_recorders.sql`): the distinct
+  recorders over Quick Match and Competitive together, written on the hero's row of each of those two
+  modes and null on any other mode. Hero stats and the tier list use it as a gate (issue 640): a hero
+  is placed only with 10 appearances and 2 recorders, read from `recorders` for one mode and from
+  `blended_recorders` for the blend, and a null count falls back to the match-only rule. The count also reaches the Pulse Atlas ([pulse-atlas.md](pulse-atlas.md)). After `supabase db push`, run
+  `supabase/checks/hero_aggregate_recorders.sql` and `supabase/checks/hero_blended_recorders.sql`.
 - A matchup is stored, in each mode it was seen in, only when its decided matches summed over all
   modes of the half-season reach `hero_matchup_min_matches()`. The per-hero minimum (10, the tier
   rule) belongs to the code that derives tiers.

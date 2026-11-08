@@ -30,11 +30,10 @@ players" beside "6 of 10 matches"; a hero with enough of both carries no `player
 A `players` field that is missing means the database never counted it, which is the case
 for every half-season that was frozen before the count existed and for every hero until
 the database migration that adds the count has run; it is never `0`, and a hero without
-it is placed on the match minimum alone, so past half-seasons keep their placements. A hero's count is the
-largest any one game mode has, because one player records in more than one mode and
-two modes cannot be added without counting that player twice: it can fall short of the
-true number of players and never exceeds it, so a hero whose players each recorded in a
-different mode is held in the blend until one mode has enough. There is still no per-shape `players` in
+it is placed on the match minimum alone, so past half-seasons keep their placements. A hero's count is for the
+mode asked for; in the Quick Match and Competitive blend it counts each person once
+whichever of the two they played, so two players who each recorded in a different mode
+are 2. There is still no per-shape `players` in
 `team-lineups.json`. The site records no bans at all, so there is no `minimumBanMatches`
 or `banMatches`. A reader must not infer a rule from a field that is missing.
 
