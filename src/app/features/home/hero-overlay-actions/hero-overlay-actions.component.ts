@@ -14,7 +14,7 @@ import { RouterLink } from '@angular/router';
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { GetAppButtonComponent } from '../../../shared/components/get-app-button/get-app-button.component';
 import { OVERWOLF_LISTING_STATS } from '../../../shared/overwolf-app';
-import { HomeHeroStatsService } from '../home-hero-stats.service';
+import { CurrentHeroStatsService } from '../../insights/current-hero-stats.service';
 import { buildHeroStatRow } from './hero-stat-row-view';
 
 /** The hero's two buttons and the row of figures under them: downloads, rating and matches counted. */
@@ -35,7 +35,7 @@ export class HeroOverlayActionsComponent {
   constructor() {
     // The server render shows the listing figures and a reserved matches slot; the browser fetches the stats.
     if (isPlatformBrowser(inject(PLATFORM_ID))) {
-      inject(HomeHeroStatsService)
+      inject(CurrentHeroStatsService)
         .getHeroStats()
         .pipe(takeUntilDestroyed(inject(DestroyRef)))
         .subscribe((stats) => this.stats.set(stats));

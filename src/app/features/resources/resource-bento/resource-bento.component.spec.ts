@@ -9,7 +9,7 @@ import { heroOf } from '../../insights/hero-matchup.fixtures';
 import { statsHero, statsOf } from '../../insights/hero-stats.fixtures';
 import { synergiesOf, synergy } from '../../insights/hero-synergies.fixtures';
 import type { GlossaryTerm } from '../../reference/glossary/glossary.model';
-import { LOCAL_DATE } from '../../home/word-of-day/word-of-day.component';
+import { LOCAL_DATE } from '../../../shared/utilities/local-date';
 import { ResourceBentoComponent } from './resource-bento.component';
 
 const links = (NAVIGATION_CATEGORIES.find((category) => category.label === 'Resources')?.items ?? []).filter(

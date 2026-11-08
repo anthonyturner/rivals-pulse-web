@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { map } from 'rxjs';
 
-import { LOCAL_DATE } from '../../../home/word-of-day/word-of-day.component';
-import { selectWordOfDay } from '../../../home/word-of-day/word-of-day-term';
+import { LOCAL_DATE } from '../../../../shared/utilities/local-date';
+import { selectWordOfDay } from '../../../reference/glossary/word-of-day-term';
 import { GlossaryDataService } from '../../../reference/glossary/glossary-data.service';
 import type { GlossaryTerm } from '../../../reference/glossary/glossary.model';
 import { previewData } from '../preview-data';

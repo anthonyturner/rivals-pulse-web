@@ -1,12 +1,12 @@
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, inject, signal, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, of, type Observable } from 'rxjs';
+import { catchError, of, type Observable } from 'rxjs';
 
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import type { Hero } from '../../heroes/hero.model';
 import { HeroDataService } from '../../heroes/hero-data.service';
-import { HomeHeroStatsService } from '../../home/home-hero-stats.service';
+import { CurrentHeroStatsService } from '../../insights/current-hero-stats.service';
 
 /**
  * The answer a tile's preview draws from, or null while it loads, if it fails or on the server.
@@ -23,7 +23,7 @@ export function previewData<T>(load: () => Observable<T | null>): Signal<T | nul
 
 /** The current hero stats, fetched once however many previews ask. */
 export function previewHeroStats(): Signal<HeroStats | null> {
-  const stats = inject(HomeHeroStatsService);
+  const stats = inject(CurrentHeroStatsService);
 
   return previewData(() => stats.getHeroStats());
 }
@@ -32,5 +32,5 @@ export function previewHeroStats(): Signal<HeroStats | null> {
 export function previewRoster(): Signal<readonly Hero[] | null> {
   const heroes = inject(HeroDataService);
 
-  return previewData(() => heroes.getHeroes().pipe(map((roster) => (roster.length > 0 ? roster : null))));
+  return previewData(() => heroes.getHeroRoster());
 }

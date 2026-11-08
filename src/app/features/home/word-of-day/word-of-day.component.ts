@@ -1,16 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, InjectionToken, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 
 import { GlossaryDataService } from '../../reference/glossary/glossary-data.service';
 import type { GlossaryTerm } from '../../reference/glossary/glossary.model';
-import { selectWordOfDay } from './word-of-day-term';
-
-export const LOCAL_DATE = new InjectionToken<() => Date>('LOCAL_DATE', {
-  providedIn: 'root',
-  factory: () => () => new Date(),
-});
+import { LOCAL_DATE } from '../../../shared/utilities/local-date';
+import { selectWordOfDay } from '../../reference/glossary/word-of-day-term';
 
 @Component({
   selector: 'app-word-of-day',

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
+import type { NavigationCategory } from '../../../core/navigation/navigation-category.data';
 import { GlossaryPreviewComponent } from '../previews/glossary-preview/glossary-preview.component';
 import { HeroStatsPreviewComponent } from '../previews/hero-stats-preview/hero-stats-preview.component';
 import { RosterPreviewComponent } from '../previews/roster-preview/roster-preview.component';
@@ -10,11 +11,7 @@ import { ResourceTileComponent } from '../resource-tile/resource-tile.component'
 import type { ResourceTileConfig } from '../resource-tile.types';
 import { RESOURCE_TILES } from '../resource-tiles.data';
 
-export interface ResourceLink {
-  label: string;
-  path: string;
-  description: string;
-}
+export type ResourceLink = Pick<NavigationCategory['items'][number], 'label' | 'path' | 'description'>;
 
 const PLAIN_TILE: Omit<ResourceTileConfig, 'path'> = { size: 'third', chip: null, preview: null, imageUrl: null };
 
