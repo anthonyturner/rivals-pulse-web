@@ -7,7 +7,7 @@ import { PULSE_RECORDS_PAGES, type PulseRecordsPage } from './pulse-records.data
  * board's row count is also its count of distinct uploaders (a board holds up to 50 rows, well past
  * this). With fewer, one account could put up the whole board, so the page says "not enough data yet".
  */
-export const PULSE_RECORDS_MIN_ROWS = 5;
+export const PULSE_RECORDS_MIN_ROWS = 2;
 
 /** The rows `/records` shows for each board. */
 export const PULSE_RECORDS_PREVIEW_ROWS = 5;

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { ReturnTrail } from '../../../core/navigation/return-trail';
 import { HeroDetailsComponent } from '../hero-details/hero-details.component';
 import type { HeroesPageComponent } from '../heroes-page.component';
 import { Hero } from '../hero.model';
@@ -15,9 +16,13 @@ import { HeroRoleSwitcherComponent } from '../hero-role-switcher/hero-role-switc
 })
 export class HeroContentComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly returnTrail = inject(ReturnTrail);
 
   readonly hero = input<Hero>();
   readonly controller = input.required<HeroesPageComponent>();
+
+  /** The page the reader opened this hero from, such as Your stats; null when they started on the Heroes page. */
+  protected readonly origin = computed(() => this.returnTrail.originOutside('/heroes'));
 
   /** The selected hero as a one-item list: tracking by id gives each hero fresh details with the long sections collapsed. */
   readonly detailHeroes = computed(() => {

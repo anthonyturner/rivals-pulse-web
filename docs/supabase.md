@@ -102,6 +102,7 @@ repo's build. This is a move, not a redesign.
 | `20261107100000_account_settings.sql` | `account_settings` (`show_in_records`, off by default; the owner selects, no client writes) |
 | `20261107100100_pulse_records_read.sql` | `records_hidden` (closed to every API role), the ceiling helpers `pulse_records_value_cap` and `pulse_records_rate_cap`, and `read_pulse_records()` (service role only) |
 | `20261107130000_records_opt_in.sql` | The "Show me in Pulse Records" switch: `set_records_opt_in(boolean)` (granted to `authenticated` only) and a trigger on `player_links` that switches the setting off whenever a link row is deleted |
+| `20261108120000_two_player_community_minimum.sql` | Restates `hero_figure_qualifies` and `community_bucket_shown` with a player minimum of 2 instead of 3, and a limit on the busiest player read from the new `community_max_recorder_share_percent()` (100, so no cap; it was 50) (issue 603). The 10-match minimum is unchanged |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -419,7 +420,7 @@ The reply's `extended` gains `ability_uses` (rows written) only when the upload 
 
 `hero_figure_aggregates` records `recorders` and `top_recorder_segments` per hero, and the same pair per figure. `hero_kill_aggregates` records `recorders` and `top_recorder_matches`. Numbers only, never who. A row frozen before these columns existed reads 0 and never qualifies.
 
-`hero_figure_qualifies(matches, recorders, top)` is the one rule: 10 or more matches, 3 or more players, nobody above 50%. "Matches" means segments (one player on one hero in one match), so two uploaders in one lobby count twice. These are starting values. Restate that one function in a new migration to change them; nothing needs rebuilding, because the rule runs when the numbers are read. If the player minimum changes, change `COMMUNITY_FIGURES_MINIMUMS` and `COMMUNITY_KILLS_MINIMUMS` too, which only print it (a test compares them). To lower the 10, also lower the website's own `heroLines` and `pairMatches`, which filter again after pooling.
+`hero_figure_qualifies(matches, recorders, top)` is the one rule: 10 or more matches, 2 or more players, and the busiest player at most `community_max_recorder_share_percent()` of the matches (100, so no cap; the starting rule was 50). "Matches" means segments (one player on one hero in one match), so two uploaders in one lobby count twice. These are starting values. Restate that one function in a new migration to change them; nothing needs rebuilding, because the rule runs when the numbers are read. If the player minimum changes, change `COMMUNITY_FIGURES_MINIMUMS` and `COMMUNITY_KILLS_MINIMUMS` too, which only print it (a test compares them). To lower the 10, also lower the website's own `heroLines` and `pairMatches`, which filter again after pooling.
 
 The website reads through `read_community_hero_figures()` and `read_community_kill_feed()` (service role only). A figure that fails is sent as zero lines, sum and seconds, a hero whose three figures all fail is absent, and a kill pair that fails is absent. The rule is applied per half-season and mode before anything is summed.
 
@@ -754,8 +755,8 @@ row.
 - **Gate.** `community_tab_bucket_shown` lets a bucket (a map in a mode, a mode, a day) through at 10
   matches, on the same numbers as the Insights read, from any number of players (issue 449).
   `read_community_matches()` applies it, so a hidden bucket never leaves the database, and every total
-  the site shows is computed over the shown buckets only. The stricter `community_bucket_shown` (3
-  players, none above 50%) now gates only the hero pair rank bands.
+  the site shows is computed over the shown buckets only. The stricter `community_bucket_shown` (2
+  players, with the same share limit) now gates only the hero pair, triple support and line-up rank bands.
 - `recompute_community_match_aggregates()` rebuilds every half-season that has raw rows and is not
   frozen; the hourly `recompute-community-match-aggregates` pg_cron job runs it. It freezes a
   half-season a week after the next one began (uploads are refused once a match is a week old), or
@@ -1152,7 +1153,7 @@ value, name }] }] }` for `kills`, `assists`, `final_hits`, `damage`, `healing` a
 never a uid, recorder, line id or match time. The website reads it through `GET /api/records`
 (`src/server/records/`, `api/records.ts`, one Express route), which sends `public, max-age=0, s-maxage=60` and no
 stale window, so a name is gone within two minutes of its owner switching naming off
-(`scripts/pulse-records-route.test.ts`). The Pulse Records pages (`/records` and `/records/:category`) read it through that route and show a board only from 5 rows. The read keeps one row per uploader per board (`per_uploader`), so 5 rows are 5 distinct uploaders; changing that step changes what the gate means.
+(`scripts/pulse-records-route.test.ts`). The Pulse Records pages (`/records` and `/records/:category`) read it through that route and show a board only from 2 rows. The read keeps one row per uploader per board (`per_uploader`), so 2 rows are 2 distinct uploaders; changing that step changes what the gate means.
 
 A line counts only if it passes every guard, all in the `lines` step:
 

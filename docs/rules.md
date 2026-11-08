@@ -24,8 +24,12 @@ optional.
 3. Never force-push, rewrite history, delete remote branches, bypass branch
    protection, or commit directly to `master`. Merging goes
    through the pull request and nowhere else. The one branch deletion allowed
-   is a local branch that `git branch --merged master` lists, with
-   `git branch -d`; never force the deletion with `-D`.
+   is local: once an agent's pull request shows `MERGED` and its linked issue
+   shows `CLOSED` (both read from `gh`), the agent deletes the local branches
+   it created for that work, after removing its worktree, with
+   `git branch -d`. Never force the deletion with `-D`; when `-d` refuses,
+   leave the branch and report it. Never delete `master`, a branch another
+   session created, or any remote branch.
 4. Never commit or print real secrets. Reference credentials by name only.
 5. Preserve unrelated working-tree changes; stop if they block safe isolation.
 6. Do not add or upgrade dependencies without discussing it first.

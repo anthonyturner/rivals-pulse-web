@@ -263,13 +263,30 @@ that a merge happened. Do it when you notice a merged worktree, or when asked.
 
 Check the worktree is clean first (`git status --porcelain`), and check it
 holds no link that points outside it. Uncommitted work inside one is the only
-thing a removal can actually destroy — branches and commits survive, because
-the branch is never deleted. If anything is uncommitted, leave the worktree
+thing a removal can actually destroy — committed work survives on the pushed
+branch and the pull request. If anything is uncommitted, leave the worktree
 alone and report it.
 
-Removing a worktree is not deleting a branch, which rule 3 forbids. Leave the
-branch alone; GitHub disposes of the remote one on merge if the repository is
-set to.
+### Delete your local branches once the issue is closed
+
+After the worktree is gone, delete the local branches you created for the
+work, so finished branches do not pile up
+([rule 3](../rules.md)). If you branched in place, return the checkout to
+`master` first, per **Return the checkout to `master`** below; git will not
+delete the branch you are on. Do it only when both hold, read from GitHub:
+
+```sh
+gh pr view <n> --json state --jq .state        # MERGED
+gh issue view <issue> --json state --jq .state # CLOSED
+git branch -d <branch>
+```
+
+Use `git branch -d`, never `-D`. A squash merge leaves the branch out of
+`git branch --merged master`, but `-d` still deletes it when every commit is
+pushed to its upstream, and refuses when something is not. That refusal is the
+guard: when `-d` refuses, leave the branch and report it rather than forcing
+it. Delete only branches you created for this issue, never `master` or a
+branch another session is working on, and never a remote branch.
 
 Abandoned worktrees accumulate. Each one is a full checkout on disk, and
 together they make `git worktree list` useless for seeing what is actually in
@@ -417,7 +434,9 @@ Leave that pull request open and ready for review. Never close the issue by
 hand ([rule 12](../rules.md)) — the merge closes it through `Closes #n`.
 
 After merging, remove the worktree if the work used one, per **Remove the
-worktree once the pull request is merged** above, and report the squash commit.
+worktree once the pull request is merged** above, delete your local branches
+once the issue shows closed, per **Delete your local branches once the issue is
+closed**, and report the squash commit.
 
 Merged or left open, finish by returning the checkout, per **Return the
 checkout to `master`** below.
@@ -478,7 +497,7 @@ When it fails, look for a bare `#<number>` in the body first. That is the cause
 far more often than anything else.
 
 Never force-push, rewrite history, delete remote branches, bypass branch
-protection, or commit directly to `master`. A local branch may be deleted only
-once `git branch --merged master` lists it, and only with `git branch -d`. A
-squash-merged branch never appears in that list, so leave it in place. Never
+protection, or commit directly to `master`. Delete your own local branches once
+the pull request is merged and the issue is closed, with `git branch -d` only,
+per **Delete your local branches once the issue is closed** above. Never
 close an issue by hand — the merge closes it through `Closes #n`.

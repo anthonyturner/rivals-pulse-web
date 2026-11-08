@@ -17,8 +17,8 @@ import { getSupabaseClient } from '../../supabase/index.ts';
 
 /**
  * The extended upload's numbers (damage, healing and damage blocked per minute, and the kill feed),
- * read through functions whose sums are only for the buckets the database lets through: at least 3
- * distinct recorders and none above half of a bucket. All are granted to the service role alone.
+ * read through functions whose sums are only for the buckets the database lets through: at least 2
+ * distinct recorders (and no limit on the busiest one). All are granted to the service role alone.
  */
 
 export interface CommunityExtendedReadOptions {

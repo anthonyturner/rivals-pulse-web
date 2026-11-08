@@ -350,7 +350,7 @@ shown, listed in the manifest:
 ```json
 {
   "provenance": "rivals-pulse-community",
-  "minimums": { "matches": 10, "contributors": 3, "busiestContributorShare": 0.5, "rankedHeroes": 5 },
+  "minimums": { "matches": 10, "contributors": 2, "busiestContributorShare": 1, "rankedHeroes": 5 },
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
   "heroes": [
@@ -358,7 +358,7 @@ shown, listed in the manifest:
       "heroId": 1042,
       "damage": { "status": "scored", "score": 7, "label": "measured", "matches": 42, "contributors": null, "oneContributorAboveHalf": null, "measures": { "damagePerMinute": 812.5 } },
       "sustain": { "status": "ranking-too-small", "score": null, "label": "measured", "matches": 42, "contributors": null, "oneContributorAboveHalf": null, "measures": { "healingPerMinute": 0, "blockedPerMinute": 412.5, "sustainPerMinute": 412.5 } },
-      "ultimate": { "status": "collecting", "score": null, "label": "estimated", "matches": 5, "contributors": 2, "oneContributorAboveHalf": false, "measures": null },
+      "ultimate": { "status": "collecting", "score": null, "label": "estimated", "matches": 5, "contributors": 1, "oneContributorAboveHalf": false, "measures": null },
       "utility": { "status": "no-measurable-ability", "score": null, "label": "estimated", "matches": 0, "contributors": null, "oneContributorAboveHalf": null, "measures": null },
       "abilities": [{ "slot": "ability_1", "ability": "Bionic Spider-Nest", "tag": null, "usesPerTenMinutes": 12.5, "takedownsPerUse": 0.4, "matches": 42 }]
     }
@@ -382,7 +382,7 @@ shown, listed in the manifest:
 - **`matches`** is lines (one player on one hero in one match), so two uploaders in
   one lobby count twice. While `collecting` it is rounded down to a multiple of 5, and
   the generator refuses anything else, because an exact count could be one person's own
-  games. A reader takes progress from it, such as "5 of 10 matches, 2 of 3 players".
+  games. A reader takes progress from it, such as "5 of 10 matches, 1 of 2 players".
 - **`abilities`** lists a slot only once that slot passes the rule on its own.
   `ability` is null when the slot holds several abilities. `tag` is null when the
   ability is untagged, when several disagree and, for `ultimate`, always.

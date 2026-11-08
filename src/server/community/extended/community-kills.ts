@@ -15,8 +15,8 @@ import { chooseHalfSeason, halfSeasonTimeline, type HalfSeasonStart } from '../.
 export const COMMUNITY_KILLS_MINIMUMS: CommunityKillsMinimums = {
   pairMatches: 10,
   // Mirrors `hero_figure_qualifies` in the database, which is where the privacy rule is applied: a
-  // pair that fewer players recorded (or that one player mostly recorded) never reaches this code.
-  recorders: 3,
+  // pair that fewer players recorded never reaches this code.
+  recorders: 2,
 };
 
 /** Pairs kept per hero as killer and as victim; the payload holds no pair that is in neither list. */

@@ -43,6 +43,7 @@ export const routes: Routes = [
   })),
   {
     path: 'hero-guides',
+    title: 'Guides | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/guides/guide-library/hero-guides-page.component').then(
         (module) => module.HeroGuidesPageComponent,
@@ -50,6 +51,7 @@ export const routes: Routes = [
   },
   {
     path: 'hero-guides/first-time',
+    title: 'How to play: first-time guide | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/guides/beginner-guide/first-time-guide-page.component').then(
         (module) => module.FirstTimeGuidePageComponent,
@@ -72,6 +74,7 @@ export const routes: Routes = [
   },
   {
     path: 'glossary',
+    title: 'Glossary | RivalsPulse',
     loadComponent: () =>
       import('./features/reference/glossary/glossary-page.component').then(
         (module) => module.GlossaryPageComponent,
@@ -79,6 +82,7 @@ export const routes: Routes = [
   },
   {
     path: 'techniques',
+    title: 'Techniques | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/guides/techniques/techniques-page.component').then(
         (module) => module.TechniquesPageComponent,
@@ -86,6 +90,7 @@ export const routes: Routes = [
   },
   {
     path: 'beginner-interactive-guide',
+    title: 'How to play: interactive course | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/guides/beginner-guide/beginner-guide-page.component').then(
         (module) => module.BeginnerGuidePageComponent,
@@ -93,6 +98,7 @@ export const routes: Routes = [
   },
   {
     path: 'build-theory',
+    title: 'Build theory | RivalsPulse',
     loadComponent: () =>
       import(
         './features/learning/guides/composition/build-theory/build-theory-page.component'
@@ -102,6 +108,7 @@ export const routes: Routes = [
   },
   {
     path: 'triple-support-counter',
+    title: 'How to break triple support | RivalsPulse',
     loadComponent: () =>
       import(
         './features/learning/guides/composition/triple-support/triple-support-guide-page.component'
@@ -111,6 +118,7 @@ export const routes: Routes = [
   },
   {
     path: 'power-positions',
+    title: 'Power positions | RivalsPulse',
     loadComponent: () =>
       import(
         './features/learning/guides/positioning/power-positions/power-positions-page.component'
@@ -120,6 +128,7 @@ export const routes: Routes = [
   },
   {
     path: 'strategic-cover',
+    title: 'Strategic cover | RivalsPulse',
     loadComponent: () =>
       import(
         './features/learning/guides/positioning/strategic-cover/strategic-cover-page.component'
@@ -129,6 +138,7 @@ export const routes: Routes = [
   },
   {
     path: 'learning-paths',
+    title: 'Learning paths | RivalsPulse',
     canMatch: [releasedPageGuard],
     loadComponent: () =>
       import('./features/learning/learning-paths/learning-paths-page.component').then(
@@ -137,6 +147,7 @@ export const routes: Routes = [
   },
   {
     path: 'media-tutorials',
+    title: 'Video tutorials | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/media-tutorials/media-tutorials-page.component').then(
         (module) => module.MediaTutorialsPageComponent,
@@ -144,6 +155,7 @@ export const routes: Routes = [
   },
   {
     path: 'strategist-guides',
+    title: 'Strategist guides | RivalsPulse',
     loadComponent: () =>
       import('./features/learning/guides/strategist-guides/strategist-guides-page.component').then(
         (module) => module.StrategistGuidesPageComponent,
@@ -168,6 +180,7 @@ export const routes: Routes = [
   },
   {
     path: 'user-highlights',
+    title: 'User highlights | RivalsPulse',
     loadComponent: () =>
       import('./features/community/user-highlights/user-highlights-page.component').then(
         (module) => module.UserHighlightsPageComponent,
@@ -175,6 +188,7 @@ export const routes: Routes = [
   },
   {
     path: 'game-stats',
+    title: 'Game stats | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/game-stats/game-stats-page.component').then(
         (module) => module.GameStatsPageComponent,
@@ -182,6 +196,7 @@ export const routes: Routes = [
   },
   {
     path: 'tier-list',
+    title: 'Tier list | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/tier-list/tier-list-page.component').then(
         (module) => module.TierListPageComponent,
@@ -194,6 +209,7 @@ export const routes: Routes = [
   },
   {
     path: 'win-rates',
+    title: 'Hero stats | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/win-rates/win-rates-page.component').then(
         (module) => module.WinRatesPageComponent,
@@ -201,6 +217,7 @@ export const routes: Routes = [
   },
   {
     path: 'win-rates/:season',
+    title: 'Hero stats | RivalsPulse',
     loadComponent: () =>
       import('./features/insights/win-rates/win-rates-page.component').then(
         (module) => module.WinRatesPageComponent,
@@ -235,6 +252,7 @@ export const routes: Routes = [
   })),
   {
     path: 'watch-next',
+    title: 'Watch next quiz | RivalsPulse',
     canMatch: [releasedPageGuard],
     loadComponent: () =>
       import('./features/learning/watch-next/watch-next-page.component').then(
@@ -243,6 +261,7 @@ export const routes: Routes = [
   },
   {
     path: 'counters',
+    title: 'Hero counters | RivalsPulse',
     loadComponent: () =>
       import('./features/tools/counters/counters-page.component').then(
         (module) => module.CountersPageComponent,
@@ -258,6 +277,7 @@ export const routes: Routes = [
   },
   {
     path: 'team-builder',
+    title: 'Team builder | RivalsPulse',
     loadComponent: () =>
       import('./features/tools/team-builder/team-builder-page.component').then(
         (module) => module.TeamBuilderPageComponent,
