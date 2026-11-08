@@ -191,15 +191,19 @@ export interface Tally {
 }
 
 /**
- * How many different players back a hero in the modes counted. One mode reads that mode's count;
- * the blended modes read the count the database made over both, so a player who recorded in each
- * counts once and two players who each recorded in a different mode count as two. Undefined when any
- * row was never counted. A hero whose rows are split across game ids takes the most any one row has,
- * which can only fall short of the true count.
+ * How many different players back a hero in the modes counted. A single mode reads that mode's
+ * count. The blended modes read the count the database made over both, so a player who recorded in
+ * each counts once and two players who each recorded in a different mode count as two. Where the
+ * blended count was never made (a half-season frozen after the per-mode count but before the blended
+ * one), the blend reads the largest per-mode count instead: one player can record in both modes, so
+ * that can only undercount. Undefined when a row has neither count. A hero whose rows are split
+ * across game ids takes the most any one row has, which can also only undercount.
  */
 function playersBehind(rows: readonly HeroAggregateRow[], playModeIds: readonly number[]): number | undefined {
+  const isBlend =
+    playModeIds.length === BLENDED_PLAY_MODE_IDS.length && BLENDED_PLAY_MODE_IDS.every((id) => playModeIds.includes(id));
   const countOf = (row: HeroAggregateRow): number | null =>
-    playModeIds.length === 1 ? row.recorders : row.blendedRecorders;
+    isBlend ? (row.blendedRecorders ?? row.recorders) : row.recorders;
 
   return rows.some((row) => countOf(row) === null)
     ? undefined

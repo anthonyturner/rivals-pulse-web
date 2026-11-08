@@ -2,7 +2,9 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, signal, viewC
 import { RouterLink } from '@angular/router';
 
 import { FilterOption, FilterSelectComponent } from '../../../../shared/components/filter-select/filter-select.component';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
+import { HubTileComponent } from '../../../hub/hub-tile/hub-tile.component';
 import { GuideCardComponent } from '../guide-card/guide-card.component';
 import { STRATEGIST_GUIDES, STRATEGIST_PLAYLIST_URL } from './strategist-guides.data';
 
@@ -10,13 +12,14 @@ const ALL_CATEGORIES = 'All';
 
 @Component({
   selector: 'app-strategist-guides-page',
-  imports: [FilterSelectComponent, GuideCardComponent, RouterLink, StatePanelComponent],
+  imports: [FilterSelectComponent, GuideCardComponent, HubTileComponent, PageHeaderComponent, RouterLink, StatePanelComponent],
   templateUrl: './strategist-guides-page.component.html',
   styleUrls: ['../../../../shared/styles/guide-article.css', './strategist-guides-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StrategistGuidesPageComponent {
   readonly playlistUrl = STRATEGIST_PLAYLIST_URL;
+  readonly leadImage = '/images/site/banners/strategist-guides-banner.webp';
   readonly categoryOptions: readonly FilterOption[] = [
     { value: ALL_CATEGORIES, label: 'All categories' },
     ...[...new Set(STRATEGIST_GUIDES.map((guide) => guide.category))].map((category) => ({

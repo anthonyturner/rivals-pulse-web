@@ -33,7 +33,8 @@ the database migration that adds the count has run; it is never `0`, and a hero 
 it is placed on the match minimum alone, so past half-seasons keep their placements. A hero's count is for the
 mode asked for; in the Quick Match and Competitive blend it counts each person once
 whichever of the two they played, so two players who each recorded in a different mode
-are 2. There is still no per-shape `players` in
+are 2. A half-season frozen after the per-mode count but before the blended one has no blended
+count, and its blend reads the largest per-mode count, which can only undercount. There is still no per-shape `players` in
 `team-lineups.json`. The site records no bans at all, so there is no `minimumBanMatches`
 or `banMatches`. A reader must not infer a rule from a field that is missing.
 

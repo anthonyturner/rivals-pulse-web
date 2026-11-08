@@ -337,7 +337,7 @@ the service role reaches them.
   recorders over Quick Match and Competitive together, written on the hero's row of each of those two
   modes and null on any other mode. Hero stats and the tier list use it as a gate (issue 640): a hero
   is placed only with 10 appearances and 2 recorders, read from `recorders` for one mode and from
-  `blended_recorders` for the blend, and a null count falls back to the match-only rule. The count also reaches the Pulse Atlas ([pulse-atlas.md](pulse-atlas.md)). After `supabase db push`, run
+  `blended_recorders` for the blend, and a missing blended count falls back to the largest per-mode count (it can only undercount), and a hero with neither falls back to the match-only rule. The count also reaches the Pulse Atlas ([pulse-atlas.md](pulse-atlas.md)). After `supabase db push`, run
   `supabase/checks/hero_aggregate_recorders.sql` and `supabase/checks/hero_blended_recorders.sql`.
 - A matchup is stored, in each mode it was seen in, only when its decided matches summed over all
   modes of the half-season reach `hero_matchup_min_matches()`. The per-hero minimum (10, the tier

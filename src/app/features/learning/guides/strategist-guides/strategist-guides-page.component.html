@@ -1,19 +1,24 @@
 <div class="hub page-container page-container--wide">
-  <header class="hub-header">
-    <h1>Turn support decisions into repeatable wins.</h1>
-    <p class="lede">
-      Ten transcript-built guides covering positioning, healing priorities, damage windows, ultimate
-      economy, anti-dive survival and Rocket Raccoon mastery: about 4½ hours of video distilled into
-      drills and decision rules.
-    </p>
-    <div class="actions">
+  <app-page-header
+    title="Strategist guides"
+    description="Ten transcript-built guides from the Strategist video playlist."
+  />
+
+  <app-hub-tile
+    class="lead"
+    title="Turn support decisions into repeatable wins."
+    description="Positioning, healing priorities, damage windows, ultimate economy, anti-dive survival and Rocket Raccoon mastery: about 4½ hours of video distilled into drills and decision rules."
+    [imageUrl]="leadImage"
+    imageFit="cover"
+  >
+    <div class="actions" tile-actions>
       <a class="guide-button guide-button--primary" [href]="playlistUrl" target="_blank" rel="noopener">
         Watch the full playlist
         <span class="visually-hidden">(opens YouTube in a new tab)</span>
       </a>
       <a class="guide-button" routerLink="/techniques">Review all techniques</a>
     </div>
-  </header>
+  </app-hub-tile>
 
   <div class="guide-toolbar">
     <label class="guide-search">

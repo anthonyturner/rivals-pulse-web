@@ -183,8 +183,12 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
       expect('players' in hero).toBeFalse();
     });
 
-    it('carries no count in the blend where only the per-mode counts exist, and never falls back to them', () => {
-      const [hero] = belowOf([row(QUICK, 2, HERO_A, null), row(COMPETITIVE, 1, HERO_A, null)]);
+    it('falls back in the blend to the largest per-mode count where no blended count was made', () => {
+      expect(belowOf([row(QUICK, 2, HERO_A, null), row(COMPETITIVE, 1, HERO_A, null)])[0].players).toBe(2);
+    });
+
+    it('carries no count in the blend where a row has neither a blended nor a per-mode count', () => {
+      const [hero] = belowOf([row(QUICK, 2, HERO_A, null), row(COMPETITIVE, null, HERO_A, null)]);
 
       expect('players' in hero).toBeFalse();
     });
@@ -216,6 +220,19 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
         expect(stats.tiers.flatMap((tier) => tier.heroes)[0]).toEqual(jasmine.objectContaining({ hero: 'hulk' }));
         expect(stats.belowMinimum).toEqual([]);
         expect(JSON.stringify(stats.tiers)).not.toContain('players');
+      });
+
+      it('gates the blend on the largest per-mode count where no blended count was made', () => {
+        const heroes = (recorders: number) => [
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.quickMatch, recorders, blendedRecorders: null }),
+          heroRow(HERO_A, MIN, MIN, { playModeId: PLAY_MODE_IDS.competitive, recorders: 1, blendedRecorders: null }),
+        ];
+        const stats = (recorders: number) =>
+          deriveHeroStats(sourceOf([{ heroes: heroes(recorders), matches: 2 * MIN }]), { now: NOW, heroSlugByGameId: SLUGS })
+            .stats;
+
+        expect(stats(2).tiers.flatMap((tier) => tier.heroes)).toHaveSize(1);
+        expect(stats(1).belowMinimum).toEqual([{ hero: 'hulk', appearances: 2 * MIN, players: 1 }]);
       });
 
       it('places on the matches alone where nobody counted the players (a frozen half-season)', () => {
