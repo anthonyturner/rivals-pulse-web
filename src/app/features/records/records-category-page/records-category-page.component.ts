@@ -5,11 +5,10 @@ import { map } from 'rxjs';
 
 import { PULSE_RECORDS_BOARD_SIZE } from '../../../../contracts/pulse-records.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { injectRecordsView } from '../inject-records-view';
 import { PULSE_RECORDS_PAGES, type PulseRecordsPage } from '../pulse-records.data';
 import { PULSE_RECORDS_MIN_ROWS } from '../pulse-records-view';
-import { RecordsCoverageComponent } from '../records-coverage/records-coverage.component';
+import { RecordsBodyComponent, RecordsContentDirective } from '../records-body/records-body.component';
 import { RecordTableComponent } from '../record-table/record-table.component';
 
 /** `/records/<list>`: one board in full. Each list has its own route, which carries the list in its `data`. */
@@ -17,11 +16,11 @@ import { RecordTableComponent } from '../record-table/record-table.component';
   selector: 'app-records-category-page',
   imports: [
     PageHeaderComponent,
-    RecordsCoverageComponent,
+    RecordsBodyComponent,
+    RecordsContentDirective,
     RecordTableComponent,
     RouterLink,
     RouterLinkActive,
-    StatePanelComponent,
   ],
   templateUrl: './records-category-page.component.html',
   styleUrl: './records-category-page.component.css',
