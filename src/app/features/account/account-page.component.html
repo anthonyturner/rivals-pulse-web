@@ -99,30 +99,40 @@
       <h2 id="account-records-title">Pulse Records</h2>
       <p id="records-opt-in-about">
         Pulse Records is a public page of the best single-match figures from matches the desktop app
-        uploaded. It is off until you switch it on, and you can switch it off at any time.
+        uploaded. It is off until you switch it on, and you can switch it off at any time. Read
+        <a class="guide-link" routerLink="/privacy" fragment="pulse-records">what Pulse Records publishes</a>
+        first, including about lines from players who did not agree.
       </p>
-      <div class="choice">
-        <input
-          id="records-opt-in"
-          type="checkbox"
-          [checked]="recordsOptIn()"
-          [disabled]="!canChangeRecordsOptIn()"
-          [attr.aria-busy]="recordsOptInSaving() ? 'true' : null"
-          aria-describedby="records-opt-in-help"
-          (change)="onRecordsOptInChange($event)"
-        />
-        <label for="records-opt-in">Show me in Pulse Records</label>
-      </div>
-      <p id="records-opt-in-help" class="hint">
-        @if (player()) {
-          Your in-game name, as stored with your link, appears beside the entries from matches your
-          own desktop app uploaded. Your avatar never does. Switching it off takes your name and
-          those entries off the page within a few minutes. Unlinking the desktop app, or linking a
-          different player, switches it off again.
-        } @else {
-          Link the desktop app above to turn this on. Until then your name is not shown.
-        }
-      </p>
+      @if (recordsOptInKnown()) {
+        <div class="choice">
+          <input
+            id="records-opt-in"
+            type="checkbox"
+            [checked]="recordsOptIn()"
+            [disabled]="recordsOptInDisabled()"
+            [attr.aria-busy]="recordsOptInSaving() ? 'true' : null"
+            aria-describedby="records-opt-in-help"
+            (change)="onRecordsOptInChange($event)"
+          />
+          <label for="records-opt-in">Show me in Pulse Records</label>
+        </div>
+        <p id="records-opt-in-help" class="hint">
+          @if (player()) {
+            Your in-game name, as stored with your link, appears beside the entries from matches your
+            own desktop app uploaded. Your avatar never does. Switching it off takes your name and
+            those entries off the page within a few minutes. Unlinking the desktop app, or linking a
+            different player, switches it off again.
+          } @else {
+            Link the desktop app above to turn this on. Until then your name is not shown.
+          }
+        </p>
+      } @else if (recordsOptInLoadFailed()) {
+        <div class="actions">
+          <button class="guide-button" type="button" (click)="retryRecordsOptIn()">Try again</button>
+        </div>
+      } @else {
+        <p class="hint">Loading your setting…</p>
+      }
       @if (recordsOptInError(); as message) {
         <app-state-panel kind="error" [announce]="false">{{ message }}</app-state-panel>
       }

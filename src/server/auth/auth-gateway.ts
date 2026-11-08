@@ -365,7 +365,18 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
 
       const rows = (await response.json()) as unknown;
 
-      return Array.isArray(rows) && (rows[0] as { show_in_records?: unknown } | undefined)?.show_in_records === true;
+      // No row is the default, off. Anything else that is not a boolean is not an answer, and must not read as one.
+      if (Array.isArray(rows) && rows.length === 0) {
+        return false;
+      }
+
+      const saved = Array.isArray(rows) ? (rows[0] as { show_in_records?: unknown } | null)?.show_in_records : undefined;
+
+      if (typeof saved !== 'boolean') {
+        throw new AuthUnavailableError('Supabase answered the Pulse Records setting read with an unknown shape');
+      }
+
+      return saved;
     },
 
     async setRecordsOptIn(tokens, show) {

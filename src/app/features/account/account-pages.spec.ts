@@ -567,14 +567,64 @@ describe('AccountPageComponent Pulse Records switch', () => {
     expect(announcement(harness)).toContain('could not be saved right now');
   });
 
-  it('stays off and says so when the saved setting cannot be loaded, rather than guessing', async () => {
-    setup(LINKED, undefined, undefined, undefined, {
+  it('shows no box, rather than an unticked one, when the saved setting cannot be loaded, and offers another try', async () => {
+    const { auth } = setup(LINKED, undefined, undefined, undefined, {
       loaded: { status: 'failed', message: 'Your Pulse Records setting could not be loaded right now.' },
     });
     const harness = await open();
+    const retry = Array.from(page(harness).querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Try again');
 
-    expect(checkbox(harness).disabled).toBeTrue();
+    expect(checkbox(harness)).toBeNull();
     expect(page(harness).textContent).toContain('could not be loaded right now');
+    expect(auth.loadRecordsOptIn).toHaveBeenCalledTimes(1);
+
+    auth.loadRecordsOptIn.and.callFake(async () => ({ status: 'ready', showInRecords: true }));
+    retry?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(auth.loadRecordsOptIn).toHaveBeenCalledTimes(2);
+    expect(checkbox(harness).checked).toBeTrue();
+    expect(page(harness).textContent).not.toContain('could not be loaded right now');
+  });
+
+  it('keeps the box enabled and focused while a save is in flight, and takes one change at a time', async () => {
+    const { auth } = setup(LINKED);
+    let finish: (result: RecordsOptInResult) => void = () => undefined;
+
+    auth.setRecordsOptIn.and.callFake(() => new Promise<RecordsOptInResult>((resolve) => (finish = resolve)));
+    const harness = await open();
+
+    checkbox(harness).focus();
+    checkbox(harness).click();
+    harness.detectChanges();
+
+    expect(checkbox(harness).disabled).toBeFalse();
+    expect(checkbox(harness).getAttribute('aria-busy')).toBe('true');
+    expect(document.activeElement).toBe(checkbox(harness));
+
+    checkbox(harness).click();
+    harness.detectChanges();
+
+    expect(auth.setRecordsOptIn).toHaveBeenCalledTimes(1);
+    expect(checkbox(harness).checked).toBeTrue();
+
+    finish({ status: 'ready', showInRecords: true });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(checkbox(harness).checked).toBeTrue();
+    expect(checkbox(harness).getAttribute('aria-busy')).toBeNull();
+    expect(document.activeElement).toBe(checkbox(harness));
+  });
+
+  it('links to what Pulse Records publishes, in the privacy notes', async () => {
+    setup(LINKED);
+    const harness = await open();
+    const link = page(harness).querySelector('#account-records-title ~ p a') as HTMLAnchorElement;
+
+    expect(link.textContent?.trim()).toBe('what Pulse Records publishes');
+    expect(link.getAttribute('href')).toBe('/privacy#pulse-records');
   });
 
   it('is switched off and fixed once the desktop app is unlinked', async () => {

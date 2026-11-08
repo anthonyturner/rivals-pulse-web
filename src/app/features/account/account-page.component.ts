@@ -61,9 +61,11 @@ export class AccountPageComponent {
   readonly recordsOptInLoaded = signal(false);
   readonly recordsOptInSaving = signal(false);
   readonly recordsOptInError = signal<string | null>(null);
-  readonly canChangeRecordsOptIn = computed(
-    () => this.player() !== null && this.recordsOptInLoaded() && !this.recordsOptInSaving(),
-  );
+  readonly recordsOptInLoadFailed = signal(false);
+  /** True once the box can say something true: there is no link (off), or the saved setting has been read. */
+  readonly recordsOptInKnown = computed(() => this.player() === null || this.recordsOptInLoaded());
+  /** Disabled only for want of a link. It stays enabled while saving, because a control that disables itself drops keyboard focus. */
+  readonly recordsOptInDisabled = computed(() => this.player() === null || !this.recordsOptInLoaded());
   /** Which load is current, so an answer for a link that has since changed is dropped. */
   private recordsOptInLoad = 0;
 
@@ -162,6 +164,7 @@ export class AccountPageComponent {
 
     this.recordsOptIn.set(false);
     this.recordsOptInError.set(null);
+    this.recordsOptInLoadFailed.set(false);
     this.recordsOptInLoaded.set(!linked);
 
     if (!linked) {
@@ -183,17 +186,23 @@ export class AccountPageComponent {
         await this.router.navigate(['/sign-in'], { queryParams: { next: '/account' } });
         break;
       case 'failed':
+        this.recordsOptInLoadFailed.set(true);
         this.recordsOptInError.set(result.message);
         break;
     }
+  }
+
+  retryRecordsOptIn(): void {
+    void this.loadRecordsOptIn(this.player() !== null);
   }
 
   async onRecordsOptInChange(event: Event): Promise<void> {
     const box = event.target as HTMLInputElement;
     const show = box.checked;
 
-    if (!this.canChangeRecordsOptIn()) {
-      box.checked = this.recordsOptIn();
+    // One save at a time. A change made while one is in flight is undone, so the box keeps showing the one being saved.
+    if (this.recordsOptInDisabled() || this.recordsOptInSaving()) {
+      box.checked = !show;
 
       return;
     }

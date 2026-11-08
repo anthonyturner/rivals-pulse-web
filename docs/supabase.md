@@ -1153,7 +1153,10 @@ relink racing it waits and then switches the setting off.
 - **Checks.** `npx supabase db query --linked -f supabase/checks/records_opt_in.sql` plants accounts and links, asserts the
   owner-only rules (another account reads no row and writes none, `anon` and `service_role` cannot call the function, no
   client writes the table), the not-linked refusal, `updated_at`, and the reset on website unlink, app unlink, relink over a
-  live link and losing a link to another account, and rolls back. Judge it by its exit status.
+  live link, losing a link to another account and deleting the account, and rolls back. Judge it by its exit status.
+- **A rename keeps the switch on.** `refresh_linked_player` updates the link's name and avatar in place, so the trigger does
+  not fire and the setting stays on: it is the same recorder and the same player, only the name the app reports changed
+  (ADR-0006 ties naming to the link, not to the name). The new name is what the boards show.
 - **Release order.** Push `20261107130000` by hand (`npx supabase db push`) before the pull request merges; the two
   Pulse Records migrations before it are already applied. **Do not merge the pull request for this switch before
   `anthonyturner/rivals_pulse#1386` (the desktop app privacy policy) ships**: the switch is what lets a name appear

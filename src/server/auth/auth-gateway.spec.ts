@@ -299,11 +299,15 @@ describe('createSupabaseAuthGateway', () => {
       expect(calls[0].headers['authorization']).toBe('Bearer access');
     });
 
-    it('reads no row, an off row and an answer of an unknown shape as off', async () => {
+    it('reads no row and an off row as off', async () => {
       expect(await ask({ status: 200, body: [] }).result).toBeFalse();
       expect(await ask({ status: 200, body: [{ show_in_records: false }] }).result).toBeFalse();
-      expect(await ask({ status: 200, body: [{ show_in_records: 'yes' }] }).result).toBeFalse();
-      expect(await ask({ status: 200, body: { show_in_records: true } }).result).toBeFalse();
+    });
+
+    it('reports an answer of an unknown shape as unavailable, never as off', async () => {
+      for (const body of [[{ show_in_records: 'yes' }], [{}], [null], { show_in_records: true }, null, 'true']) {
+        await expectAsync(ask({ status: 200, body }).result).toBeRejectedWithError(AuthUnavailableError);
+      }
     });
 
     it('reports a refusal or a server error as unavailable, never as off', async () => {
