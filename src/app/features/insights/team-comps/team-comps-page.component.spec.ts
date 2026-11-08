@@ -474,12 +474,31 @@ describe('TeamCompsPageComponent', () => {
       expect(failed.querySelectorAll('.toolbar select').length).toBe(2);
     });
 
-    it('says why Deadpool is not in the duo lists', async () => {
+    it('lists Deadpool under the role of the form played, named with it and linked to his page', async () => {
+      const roster = [...ROSTER, heroOf('deadpool', 'Deadpool', 'Multi-Role')];
+      const element = await open(
+        synergiesOf([
+          { ...synergy('loki', 'deadpool', 9, 12), allyRole: 'Strategist' },
+          { ...synergy('hulk', 'deadpool', 7, 12), allyRole: 'Vanguard' },
+          synergy('hela', 'deadpool', 11, 12),
+        ]),
+        roster,
+      );
+      const tables = element.querySelectorAll('table');
+
+      expect(tables.length).toBe(2);
+      expect(text(tables[0] as HTMLElement, 'tbody th .hero-name')).toEqual(['Hulk', 'Deadpool (Vanguard)']);
+      expect(text(tables[1] as HTMLElement, 'tbody th .hero-name')).toEqual(['Loki', 'Deadpool (Strategist)']);
+      expect(
+        Array.from(tables[1].querySelectorAll('tbody th a')).map((link) => link.getAttribute('href')),
+      ).toEqual(['/heroes/loki', '/heroes/deadpool']);
+    });
+
+    it('no longer carries a note saying Deadpool is left out', async () => {
       const element = await open(PAIRS);
 
-      expect(text(element, '#pairs-title + p')[0]).toContain(
-        'Deadpool is not listed: he plays as a Vanguard, Duelist or Strategist depending on his form',
-      );
+      expect(element.textContent).not.toContain('Deadpool is not listed');
+      expect(text(element, '#pairs-title + p')[0]).toContain('Deadpool is listed under the role of the form he played');
     });
   });
 });

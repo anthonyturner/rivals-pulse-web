@@ -2,7 +2,7 @@ import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
 import type { TierName } from '../../../../contracts/tier-list.model';
 import { heroIdentities, type HeroCellView } from '../../insights/hero-identity';
-import { buildTeamCompsView } from '../../insights/team-comps/team-comps-view';
+import { rolePairsOf } from '../../insights/team-comps/team-comps-view';
 import { buildTierListView } from '../../insights/tier-list/tier-list-view';
 import { buildWinRatesView } from '../../insights/win-rates/win-rates-view';
 import type { Hero } from '../../heroes/hero.model';
@@ -54,7 +54,7 @@ export function winRatePreview(stats: HeroStats, roster: readonly Hero[]): WinRa
 
 /** The best duo of each role that has one. */
 export function pairPreview(synergies: HeroSynergies, roster: readonly Hero[]): PairPreviewRow[] {
-  return buildTeamCompsView(synergies, null, null, heroIdentities(roster)).rolePairs.flatMap(({ role, rows }) =>
+  return rolePairsOf(synergies, heroIdentities(roster)).flatMap(({ role, rows }) =>
     rows.length === 0
       ? []
       : [

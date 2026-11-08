@@ -1,6 +1,13 @@
 import type { HeroStatsHalfSeason, HeroStatsMode, HeroStatsModeId } from './hero-stats.model.ts';
 
 /**
+ * The mode `/api/team-lineups` counts when asked for none. Line-ups are a ranked-play question
+ * (issue 126), so the default is Competitive, not the Quick Match blend the other hero endpoints
+ * open on.
+ */
+export const TEAM_LINEUP_DEFAULT_MODE_ID: HeroStatsModeId = 'competitive';
+
+/**
  * One team line-up shape: how many Vanguards, Duelists and Strategists one team ran at the end of a
  * match, such as 1-2-3 (shown in that order), and how teams with that shape fared.
  *

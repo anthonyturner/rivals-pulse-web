@@ -60,12 +60,8 @@ export interface TeamCompsView {
 }
 
 /**
- * Turns the hero pairs into what the Team comps page draws. A pair is listed under a role only when
- * both heroes have that role; a pair across roles, or with a hero the roster does not know, is in no
- * list. Within a role the pairs are ranked by win rate pulled toward 50%, so a short run cannot top
- * the list, and the rate shown is the plain one.
- *
- * The triple-support section is built from `trios` and the line-up section from `lineups`; each is
+ * Turns the hero pairs into what the Team comps page draws. The duos are `rolePairsOf`; the
+ * triple-support section is built from `trios` and the line-up section from `lineups`; each is
  * null when its request failed, which its section says, without hiding the duos.
  */
 export function buildTeamCompsView(
@@ -77,12 +73,7 @@ export function buildTeamCompsView(
   const season = synergies.halfSeason === null ? null : seasonView(synergies.halfSeason);
   const modeLabel = modeLabelOf(synergies);
   const minimumLabel = countLabel(synergies.minimumMatches, 'match', 'matches');
-  const rolePairs = PAIR_ROLES.map((role) => ({
-    role,
-    id: `pairs-${role.toLowerCase()}`,
-    heading: `${role} duos`,
-    rows: rolePairRows(role, synergies.synergies, identities),
-  }));
+  const rolePairs = rolePairsOf(synergies, identities);
 
   return {
     season,
@@ -107,9 +98,31 @@ export function buildTeamCompsView(
   };
 }
 
+/**
+ * The top duos of each role, always the three roles in order so a role with no pair says so. A pair
+ * is listed under a role only when both heroes were played in that role; a pair across roles, or
+ * with a hero the roster does not know, is in no list. A hero the game splits by role (Deadpool)
+ * counts in the role of the form played and is named with it ("Deadpool (Strategist)"); his
+ * pairs with no form recorded are in no list. Within a role the pairs are ranked by win rate
+ * pulled toward 50%, so a short run cannot top the list, and the rate shown is the plain one.
+ */
+export function rolePairsOf(synergies: HeroSynergies, identities: HeroIdentities): RolePairSectionView[] {
+  return PAIR_ROLES.map((role) => ({
+    role,
+    id: `pairs-${role.toLowerCase()}`,
+    heading: `${role} duos`,
+    rows: rolePairRows(role, synergies.synergies, identities),
+  }));
+}
+
 function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identities: HeroIdentities): RolePairRowView[] {
   return synergies
-    .filter((pair) => Number.isFinite(pair.winRate) && roleOf(pair.hero, identities) === role && roleOf(pair.ally, identities) === role)
+    .filter(
+      (pair) =>
+        Number.isFinite(pair.winRate) &&
+        playedRole(pair.hero, pair.heroRole, identities) === role &&
+        playedRole(pair.ally, pair.allyRole, identities) === role,
+    )
     .sort(
       (a, b) =>
         b.shrunkWinRate - a.shrunkWinRate ||
@@ -118,20 +131,22 @@ function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identit
         a.ally.localeCompare(b.ally),
     )
     .slice(0, PAIRS_PER_ROLE)
-    .map((pair, index) => {
-      const first = heroCell(pair.hero, identities);
-      const second = heroCell(pair.ally, identities);
-
-      return {
-        rank: index + 1,
-        first,
-        second,
-        matches: pair.matches,
-        winRateLabel: percentLabel(pair.winRate),
-      };
-    });
+    .map((pair, index) => ({
+      rank: index + 1,
+      first: pairHeroCell(pair.hero, pair.heroRole, identities),
+      second: pairHeroCell(pair.ally, pair.allyRole, identities),
+      matches: pair.matches,
+      winRateLabel: percentLabel(pair.winRate),
+    }));
 }
 
-function roleOf(hero: string, identities: HeroIdentities): string | null {
-  return identities.get(hero)?.role ?? null;
+/** The role a hero was played in: the form's, or the roster's for a hero with one role. */
+function playedRole(hero: string, formRole: string | undefined, identities: HeroIdentities): string | null {
+  return formRole ?? identities.get(hero)?.role ?? null;
+}
+
+function pairHeroCell(hero: string, formRole: string | undefined, identities: HeroIdentities): HeroCellView {
+  const cell = heroCell(hero, identities);
+
+  return formRole === undefined ? cell : { ...cell, name: `${cell.name} (${formRole})`, role: formRole };
 }

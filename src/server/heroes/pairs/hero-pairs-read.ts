@@ -1,6 +1,6 @@
 import type { HeroPairs } from '../../../contracts/hero-pairs.model.ts';
 import type { HeroSynergies } from '../../../contracts/hero-synergies.model.ts';
-import { baseGameIdByGameId, heroSlugByGameId } from '../catalog/index.ts';
+import { baseGameIdByGameId, heroPlacementByGameId } from '../catalog/index.ts';
 import {
   deriveHeroPairs,
   HERO_PAIR_PLAY_MODE_IDS,
@@ -108,14 +108,30 @@ function kindOf(value: string): HeroPairKind {
   return value;
 }
 
+/** Every game hero id the site knows, as itself: the pairs of a role form are not merged into its hero's. */
+const gameIdByGameId: ReadonlyMap<number, number> = new Map(
+  [...heroPlacementByGameId.keys()].map((gameId) => [gameId, gameId]),
+);
+
 /**
- * The site's hero pair counts. A game hero id with no mapping is left out and logged (hero id 0 is
- * "no hero recorded" and always lands here); it never fails the request. The half-seasons and the
- * per-hero counts come from the same `read_hero_stats()` answer the hero stats use, so both read the
- * same current half-season. A read function that is not in the database yet is the empty state, and
- * so is a `mode` that names no mode: nothing is read for it.
+ * The site's hero pair counts, with a hero the game splits by role (Deadpool) merged under its base
+ * id: the shape the Pulse Atlas publishes.
  */
-export async function getHeroPairs(options: HeroPairsReadOptions = {}): Promise<HeroPairs> {
+export function getHeroPairs(options: HeroPairsReadOptions = {}): Promise<HeroPairs> {
+  return readHeroPairs(options, baseGameIdByGameId);
+}
+
+/**
+ * A game hero id with no mapping is left out and logged (hero id 0 is "no hero recorded" and always
+ * lands here); it never fails the request. The half-seasons and the per-hero counts come from the
+ * same `read_hero_stats()` answer the hero stats use, so both read the same current half-season. A
+ * read function that is not in the database yet is the empty state, and so is a `mode` that names
+ * no mode: nothing is read for it.
+ */
+async function readHeroPairs(
+  options: HeroPairsReadOptions,
+  baseGameIdByGameId: ReadonlyMap<number, number>,
+): Promise<HeroPairs> {
   const env = options.env ?? process.env;
   const mode = playModeFromQuery(options.mode);
   const [rows, source] = await Promise.all([
@@ -138,7 +154,11 @@ export async function getHeroPairs(options: HeroPairsReadOptions = {}): Promise<
   return pairs;
 }
 
-/** The pairs that played together, named by hero and with their rates; see `deriveHeroSynergies`. */
+/**
+ * The pairs that played together, named by hero and with their rates; see `deriveHeroSynergies`.
+ * Unlike `getHeroPairs` it keeps Deadpool's role forms apart, so a pair is placed under the role
+ * that was played.
+ */
 export async function getHeroSynergies(options: HeroPairsReadOptions = {}): Promise<HeroSynergies> {
-  return deriveHeroSynergies(await getHeroPairs(options), heroSlugByGameId);
+  return deriveHeroSynergies(await readHeroPairs(options, gameIdByGameId), heroPlacementByGameId);
 }
