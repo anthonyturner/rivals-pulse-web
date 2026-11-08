@@ -1152,7 +1152,7 @@ value, name }] }] }` for `kills`, `assists`, `final_hits`, `damage`, `healing` a
 never a uid, recorder, line id or match time. The website reads it through `GET /api/records`
 (`src/server/records/`, `api/records.ts`, one Express route), which sends `public, max-age=0, s-maxage=60` and no
 stale window, so a name is gone within two minutes of its owner switching naming off
-(`scripts/pulse-records-route.test.ts`). Nothing in the app reads it yet; the pages are issue 567.
+(`scripts/pulse-records-route.test.ts`). The Pulse Records pages (`/records` and `/records/:category`) read it through that route and show a board only from 5 rows. The read keeps one row per uploader per board (`per_uploader`), so 5 rows are 5 distinct uploaders; changing that step changes what the gate means.
 
 A line counts only if it passes every guard, all in the `lines` step:
 

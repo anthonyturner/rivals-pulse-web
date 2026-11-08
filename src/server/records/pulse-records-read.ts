@@ -6,6 +6,7 @@ import {
   type PulseRecords,
   type PulseRecordsCategory,
 } from '../../contracts/pulse-records.model.ts';
+import { heroSlugByGameId } from '../heroes/catalog/hero-game-ids.ts';
 import { answerReader, getSupabaseClient } from '../supabase/index.ts';
 
 interface PulseRecordsReadOptions {
@@ -84,8 +85,11 @@ function categoriesFrom(rowsByKey: ReadonlyMap<string, PulseRecord[]>): PulseRec
 }
 
 function parseRecord(row: Record<string, unknown>): PulseRecord {
+  const heroId = numberOf(row, 'heroId');
+
   return {
-    heroId: numberOf(row, 'heroId'),
+    heroId,
+    hero: heroSlugByGameId.get(heroId) ?? null,
     value: numberOf(row, 'value'),
     name: row['name'] === null ? null : cleanName(stringOf(row, 'name')),
   };

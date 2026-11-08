@@ -25,4 +25,5 @@ export const RESOURCE_TILES: readonly HubTileConfig[] = [
   { path: '/game-stats', size: 'third', chip: STATS, preview: RosterPreviewComponent, imageUrl: null },
   { path: '/glossary', size: 'note', chip: REFERENCE, preview: GlossaryPreviewComponent, imageUrl: null },
   { path: '/team-comps', size: 'wide', chip: STATS, preview: TeamCompsPreviewComponent, imageUrl: null },
+  { path: '/records', size: 'wide', chip: COMMUNITY, preview: null, imageUrl: null },
 ];

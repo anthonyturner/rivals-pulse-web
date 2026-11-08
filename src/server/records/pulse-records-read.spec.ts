@@ -32,9 +32,18 @@ describe('parsePulseRecords', () => {
       'Damage Blocked',
     ]);
     expect(records.categories[0].rows).toEqual([
-      { heroId: 1031, value: 66, name: null },
-      { heroId: 1024, value: 58, name: 'Aurora' },
+      { heroId: 1031, hero: 'luna-snow', value: 66, name: null },
+      { heroId: 1024, hero: 'hela', value: 58, name: 'Aurora' },
     ]);
+  });
+
+  it('files a hero id the roster lacks under no hero, so the page can still draw the line', () => {
+    const records = parsePulseRecords({
+      coveredFrom: null,
+      categories: [{ key: 'kills', rows: [{ heroId: 999999, value: 4, name: null }] }],
+    });
+
+    expect(records.categories[0].rows).toEqual([{ heroId: 999999, hero: null, value: 4, name: null }]);
   });
 
   it('keeps only the fields it knows, so a later column cannot reach the page', () => {
@@ -45,7 +54,7 @@ describe('parsePulseRecords', () => {
       ],
     });
 
-    expect(Object.keys(records.categories[0].rows[0]).sort()).toEqual(['heroId', 'name', 'value']);
+    expect(Object.keys(records.categories[0].rows[0]).sort()).toEqual(['hero', 'heroId', 'name', 'value']);
   });
 
   it('fills a board the answer lacks with no rows, and ignores one it does not know', () => {
