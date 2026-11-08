@@ -12,7 +12,7 @@ import { chooseHalfSeason, halfSeasonTimeline, type HeroStatsSource } from '../s
  * `public.team_lineup_min_teams()`, which the database applies first (it withholds the counts of a
  * thinner shape); applying it again here keeps a thinner shape's figures out if that function changes.
  */
-export const TEAM_LINEUP_MIN_TEAMS = 200;
+export const TEAM_LINEUP_MIN_TEAMS = 50;
 
 /** Competitive only (issue 126); a blend with Quick Match would answer a different question. */
 export const TEAM_LINEUP_PLAY_MODE_IDS: readonly number[] = [PLAY_MODE_IDS.competitive];

@@ -52,7 +52,7 @@ describe('deriveTeamLineups', () => {
   });
 
   it('lists a shape under the minimum as not enough data, with no figures, after the shapes that have them', () => {
-    const lineups = derive([row([3, 2, 1], null, null), row([2, 2, 2], 400, 200), row([1, 2, 3], 199, 90)]);
+    const lineups = derive([row([3, 2, 1], null, null), row([2, 2, 2], 400, 200), row([1, 2, 3], TEAM_LINEUP_MIN_TEAMS - 1, 20)]);
 
     expect(lineups.shapes.map((shape) => [shape.shape, shape.status, shape.teams, shape.winRate])).toEqual([
       ['2-2-2', 'ready', 400, 0.5],
@@ -62,7 +62,7 @@ describe('deriveTeamLineups', () => {
   });
 
   it('withholds figures the database sent for a shape under the minimum', () => {
-    const lineups = derive([row([2, 2, 2], 400, 200), row([1, 2, 3], 199, 90, { enoughData: true })]);
+    const lineups = derive([row([2, 2, 2], 400, 200), row([1, 2, 3], TEAM_LINEUP_MIN_TEAMS - 1, 20, { enoughData: true })]);
 
     expect(lineups.shapes[1]).toEqual(jasmine.objectContaining({ status: 'not-enough-data', teams: null, wins: null, pickRate: null }));
   });

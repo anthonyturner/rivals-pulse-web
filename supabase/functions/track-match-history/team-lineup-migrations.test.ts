@@ -159,7 +159,7 @@ describe('the team line-up migration', () => {
   it('checks the gate and the minimum when it runs, and rolls the fixtures back', () => {
     assert.match(sql, /assert not one_recorder_returned/);
     assert.match(sql, /assert thin_enough = false and thin_teams is null/);
-    assert.match(sql, /assert both_modes_classified = 449/);
+    assert.match(sql, /assert both_modes_classified = 2 \* min_teams \+ 49/);
     assert.match(sql, /raise exception 'roll back the lineup fixtures' using errcode = 'P0042'/);
     assert.match(sql, /exception when sqlstate 'P0042' then\s+null;/);
   });

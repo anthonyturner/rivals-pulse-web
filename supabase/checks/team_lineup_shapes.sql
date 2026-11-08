@@ -2,10 +2,18 @@
 -- does not exist, then rolls everything back. Run after applying the migration:
 --   npx supabase db query --linked -f supabase/checks/team_lineup_shapes.sql
 -- It fails with an exception naming the rule that broke; it ends with a rollback, never a commit.
+-- The fixture sizes follow public.team_lineup_min_teams(), so changing the minimum needs no edit here.
 begin;
 
 do $$
 declare
+  m constant integer := public.team_lineup_min_teams();
+  -- Matches whose team 1 is 2-2-2, and how many of them team 1 wins.
+  a_end constant integer := m - 3;
+  a_wins constant integer := (m - 3) / 2;
+  -- Matches whose team 1 is 3-2-1: one team short of the minimum.
+  b_len constant integer := m - 1;
+  total_matches constant integer := 2 * m;
   n integer;
   players jsonb;
   first_players jsonb;
@@ -24,34 +32,38 @@ declare
   stored_shapes integer;
   listed integer;
 begin
+  if m <= 4 then
+    raise exception 'this check needs a minimum above 4 teams';
+  end if;
   if exists (select 1 from public.participants where half_season = 995) then
     raise exception 'test half-season already exists';
   end if;
 
   -- Competitive matches, one recorder, team 1 against a team 2 that is 1-2-3 unless noted (1 Vanguard,
-  -- 2 Duelists, 3 Strategists):
-  --   1 to 200   team 1 is 2-2-2; it wins the first 120
-  --   201 to 204 team 1 is 3-2-1 (four teams, far under the minimum) and wins
-  --   205        a mirror match: both teams are 2-2-2, team 1 wins
-  --   206        team 1 has hero id 0 (no hero recorded): unclassified; it wins
-  --   207        team 1 has Deadpool's base id 1057 (no role): unclassified; it wins
-  --   208        team 1 has Deadpool's Strategist form 10573: a classified 2-2-2; it wins
-  for n in 1..208 loop
+  -- 2 Duelists, 3 Strategists). With the minimum m, a_end = m - 3:
+  --   1 to a_end            team 1 is 2-2-2; it wins the first a_end / 2
+  --   next b_len = m - 1    team 1 is 3-2-1 (m - 1 teams, one under the minimum) and wins
+  --   then 1                a mirror match: both teams are 2-2-2, team 1 wins
+  --   then 1                team 1 has hero id 0 (no hero recorded): unclassified; it wins
+  --   then 1                team 1 has Deadpool's base id 1057 (no role): unclassified; it wins
+  --   then 1                team 1 has Deadpool's Strategist form 10573: a classified 2-2-2; it wins
+  -- So 2-2-2 has exactly m teams (a_end + 2 + 1), on the boundary, 1-2-3 has 2m - 1 and 3-2-1 m - 1.
+  for n in 1..total_matches loop
     team_one := case
-      when n <= 200 then two_two_two
-      when n <= 204 then three_two_one
-      when n = 205 then two_two_two
-      when n = 206 then unknown_hero
-      when n = 207 then deadpool_base
+      when n <= a_end then two_two_two
+      when n <= a_end + b_len then three_two_one
+      when n = a_end + b_len + 1 then two_two_two
+      when n = a_end + b_len + 2 then unknown_hero
+      when n = a_end + b_len + 3 then deadpool_base
       else deadpool_strategist
     end;
-    team_two := case when n = 205 then two_two_two else one_two_three end;
+    team_two := case when n = a_end + b_len + 1 then two_two_two else one_two_three end;
 
     select jsonb_agg(jsonb_build_object(
              'uid', 'tst-' || n || '-' || t.team || '-' || t.ord,
              'name', 'tst-' || n || '-' || t.team || '-' || t.ord,
              'team', t.team, 'hero_id', t.hero, 'kills', 1, 'deaths', 1, 'assists', 1,
-             'is_win', (t.team = 1) = (n > 200 or n <= 120)))
+             'is_win', (t.team = 1) = (n > a_end or n <= a_wins)))
       into players
     from (
       select 1 as team, h.hero, h.ord from unnest(team_one) with ordinality as h(hero, ord)
@@ -79,47 +91,49 @@ begin
     raise exception 'exactly the shapes 2-2-2, 1-2-3 and 3-2-1 must be stored, got %', stored_shapes;
   end if;
 
-  -- 2-2-2: 200 + both teams of the mirror match + the Deadpool Strategist form. Wins: 120, the mirror's
-  -- winner and match 208. A match recorded twice counts once, or this would be higher.
+  -- 2-2-2: a_end + both teams of the mirror match + the Deadpool Strategist form = m teams, exactly the
+  -- minimum. Wins: a_wins, the mirror's winner and the last match. A match recorded twice counts once,
+  -- or this would be higher.
   select * into shape from public.team_lineup_shapes
     where half_season = 995 and vanguards = 2 and duelists = 2 and strategists = 2;
-  if not found or shape.play_mode_id <> 1 or shape.rank_bucket <> -1 or shape.teams <> 203 or shape.wins <> 122 then
+  if not found or shape.play_mode_id <> 1 or shape.rank_bucket <> -1 or shape.teams <> m or shape.wins <> a_wins + 2 then
     raise exception 'shape 2-2-2 is wrong (a mirror match counts both teams, a duplicate upload once): %', shape;
   end if;
 
   -- 1-2-3: team 2 in every match but the mirror, including against the two unclassified teams. It wins
-  -- exactly the matches team 1 loses in the first 200: matches 121 to 200.
+  -- exactly the matches team 1 loses among the first a_end.
   select * into shape from public.team_lineup_shapes
     where half_season = 995 and vanguards = 1 and duelists = 2 and strategists = 3;
-  if not found or shape.teams <> 207 or shape.wins <> 80 then
+  if not found or shape.teams <> 2 * m - 1 or shape.wins <> a_end - a_wins then
     raise exception 'shape 1-2-3 is wrong: %', shape;
   end if;
 
   select * into shape from public.team_lineup_shapes
     where half_season = 995 and vanguards = 3 and duelists = 2 and strategists = 1;
-  if not found or shape.teams <> 4 or shape.wins <> 4 then
+  if not found or shape.teams <> m - 1 or shape.wins <> m - 1 then
     raise exception 'shape 3-2-1 is wrong: %', shape;
   end if;
 
   select * into totals from public.triple_support_totals where half_season = 995;
-  if totals.matches <> 208 or totals.recorders <> 1 then
+  if not found or totals.matches <> total_matches or totals.recorders <> 1 then
     raise exception 'wrong totals: %', totals;
   end if;
-  if totals.classified_teams <> 414 or totals.unclassified_teams <> 2 then
+  if totals.classified_teams <> 4 * m - 2 or totals.unclassified_teams <> 2 then
     raise exception 'a team with an unknown hero must be unclassified, not dropped: %', totals;
   end if;
   if totals.classified_teams <> (select sum(teams) from public.team_lineup_shapes where half_season = 995) then
     raise exception 'the classified teams must be exactly the teams of the shapes';
   end if;
 
-  -- The trio family shares the rebuild and must be unchanged: team 2 is the one trio in 207 matches.
+  -- The trio family shares the rebuild and must be unchanged: team 2 is the one trio in 2m - 1 matches.
   select * into shape from public.triple_support_trios where half_season = 995;
   if not found or (select count(*) from public.triple_support_trios where half_season = 995) <> 1
-     or (shape.hero_a, shape.hero_b, shape.hero_c) <> (1016, 1025, 1031) or shape.teams <> 207 then
+     or (shape.hero_a, shape.hero_b, shape.hero_c) <> (1016, 1025, 1031) or shape.teams <> 2 * m - 1 then
     raise exception 'the trio rebuild changed: %', shape;
   end if;
 
-  -- The reader: the two shapes at or over the minimum carry their counts; 3-2-1 is "not enough data".
+  -- The reader: 2-2-2 sits exactly on the minimum and 1-2-3 is over it, so both carry their counts;
+  -- 3-2-1, one under it, is "not enough data".
   select count(*) into listed from public.read_team_lineup_shapes(array[1]::smallint[]) where half_season = 995;
   if listed <> 3 then
     raise exception 'the reader must list every stored shape, thin ones included, got %', listed;
@@ -127,14 +141,14 @@ begin
 
   select * into read_back from public.read_team_lineup_shapes(array[1]::smallint[])
     where half_season = 995 and vanguards = 2 and duelists = 2 and strategists = 2;
-  if not read_back.enough_data or read_back.teams <> 203 or read_back.wins <> 122
-     or read_back.classified_teams <> 414 or read_back.unclassified_teams <> 2 then
-    raise exception 'the reader must return a shape at the minimum with its counts: %', read_back;
+  if not found or not read_back.enough_data or read_back.teams <> m or read_back.wins <> a_wins + 2
+     or read_back.classified_teams <> 4 * m - 2 or read_back.unclassified_teams <> 2 then
+    raise exception 'the reader must return a shape exactly at the minimum with its counts: %', read_back;
   end if;
 
   select * into read_back from public.read_team_lineup_shapes(array[1]::smallint[])
     where half_season = 995 and vanguards = 3 and duelists = 2 and strategists = 1;
-  if read_back.enough_data or read_back.teams is not null or read_back.wins is not null then
+  if not found or read_back.enough_data or read_back.teams is not null or read_back.wins is not null then
     raise exception 'a shape under the minimum must be withheld: %', read_back;
   end if;
 

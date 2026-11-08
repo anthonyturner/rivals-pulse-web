@@ -34,7 +34,7 @@ create or replace function public.team_lineup_min_teams() returns integer
 language sql
 immutable
 set search_path = ''
-as $$ select 200 $$;
+as $$ select 50 $$;
 
 -- Per half-season, game mode, rank bucket and shape. play_mode_id and rank_bucket are as in
 -- `triple_support_trios`. One occurrence is one classified team in a match with a result; wins is the
@@ -215,8 +215,9 @@ $$;
 --    team counts alike (see `read_triple_support_trios`). Rank bucket -1 (unknown) is returned ungated.
 --  * A shape whose summed teams are under `team_lineup_min_teams()` comes back with `enough_data`
 --    false and null teams and wins: its figures are withheld, its existence is not.
---  * A half-season and bucket with classified teams but no shape cannot happen; one with only
---    unclassified teams comes back as a single row with null shape columns, so they are not dropped.
+--  * A half-season and bucket with no shape row (only unclassified teams, or one frozen before this
+--    migration, which has totals but no shapes) comes back as a single row with null shape columns,
+--    so its team counts are not dropped.
 -- classified_teams is the denominator of a shape's pick rate. The rows come back in a stable order so
 -- a caller can page through them (PostgREST cuts a page at 1000 rows).
 create or replace function public.read_team_lineup_shapes(
@@ -278,9 +279,9 @@ end
 $$;
 
 -- The gate and the minimum are exercised on fixtures in a half-season that does not exist: a bucket of
--- one recorder (mode 0) and a bucket of three (mode 1). In the second, one shape has 250 teams, one has
--- 199. Only the second bucket may come back, the thin shape must come back without figures, and the
--- team counts must not include the first bucket. The fixtures are rolled back by the sentinel
+-- one recorder (mode 0) and a bucket of three (mode 1). In the second, one shape has 50 teams over the
+-- minimum, one has 1 under it. Only the second bucket may come back, the thin shape must come back
+-- without figures, and the team counts must not include the first bucket. The fixtures are rolled back by the sentinel
 -- exception (P0042). If the fixtures cannot be written, the check is skipped with a warning; an error
 -- from the reader itself, or a failed assertion, fails the push.
 do $$
@@ -293,16 +294,18 @@ declare
   thin_enough boolean;
   thin_teams integer;
   both_modes_classified integer;
+  min_teams constant integer := public.team_lineup_min_teams();
 begin
   begin
     begin
       insert into public.team_lineup_shapes
         (half_season, play_mode_id, rank_bucket, vanguards, duelists, strategists, teams, wins)
-      values (99.0, 0, 0, 2, 2, 2, 250, 125), (99.0, 1, 0, 2, 2, 2, 250, 100), (99.0, 1, 0, 1, 2, 3, 199, 99);
+      values (99.0, 0, 0, 2, 2, 2, min_teams + 50, 1), (99.0, 1, 0, 2, 2, 2, min_teams + 50, 2),
+             (99.0, 1, 0, 1, 2, 3, min_teams - 1, 1);
       insert into public.triple_support_totals
         (half_season, play_mode_id, rank_bucket, matches, decided_matches, recorders, top_recorder_matches,
          classified_teams, unclassified_teams, four_plus_teams)
-      values (99.0, 0, 0, 10, 10, 1, 10, 250, 0, 0), (99.0, 1, 0, 10, 10, 3, 5, 449, 2, 0);
+      values (99.0, 0, 0, 10, 10, 1, 10, min_teams + 50, 0, 0), (99.0, 1, 0, 10, 10, 3, 5, 2 * min_teams + 49, 2, 0);
       written := true;
     exception when others then
       raise warning 'team lineup gate check skipped (%)', sqlerrm;
@@ -329,9 +332,9 @@ begin
   if written then
     assert not one_recorder_returned, 'a one-recorder rank bucket must be hidden';
     assert rows_returned = 2, 'both shapes of the bucket that passes must come back';
-    assert enough_teams = 250 and enough_wins = 100, 'a shape at the minimum must come back with its counts';
+    assert enough_teams = min_teams + 50 and enough_wins = 2, 'a shape over the minimum must come back with its counts';
     assert thin_enough = false and thin_teams is null, 'a shape under the minimum must come back without figures';
-    assert both_modes_classified = 449, 'team counts must come only from the buckets that pass';
+    assert both_modes_classified = 2 * min_teams + 49, 'team counts must come only from the buckets that pass';
   end if;
 end
 $$;

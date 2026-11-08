@@ -91,7 +91,7 @@ repo's build. This is a move, not a redesign.
 | `20261101060000_dashboard_read.sql` | `read_own_dashboard()`: a linked account's own `participants` lines and hero figures (newest 2,000), granted to `authenticated` only |
 | `20261101070000_hero_pair_aggregates.sql` | Anonymous hero pair counts, against (`vs`) and together (`with`): `hero_pair_aggregates`, `hero_pair_totals`, `hero_pair_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_hero_pairs(smallint[])` (granted to `anon`) and an hourly `recompute-hero-pair-aggregates` job; `purge_expired_participants` freezes them before it deletes |
 | `20261107120000_triple_support_trios.sql` | Anonymous triple-support trio counts: `hero_game_roles` (the role of each game hero id), `triple_support_trios`, `triple_support_totals`, `triple_support_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_triple_support_trios(smallint[])` (granted to `anon`), an hourly `recompute-triple-support-aggregates` job, and a `purge_expired_participants` that also freezes them |
-| `20261107140000_team_lineup_shapes.sql` | Anonymous team line-up counts, written by the triple-support rebuild: `team_lineup_shapes`, `team_lineup_min_teams()` (200), `read_team_lineup_shapes(smallint[])` (granted to `anon`), and restated `fill_triple_support_aggregates` and `rebuild_triple_support_aggregates` that also write and empty the shapes. No new job, freeze or purge: the existing ones cover it |
+| `20261107140000_team_lineup_shapes.sql` | Anonymous team line-up counts, written by the triple-support rebuild: `team_lineup_shapes`, `team_lineup_min_teams()` (50), `read_team_lineup_shapes(smallint[])` (granted to `anon`), and restated `fill_triple_support_aggregates` and `rebuild_triple_support_aggregates` that also write and empty the shapes. No new job, freeze or purge: the existing ones cover it |
 | `20261101090000_cron_run_history_cleanup.sql` | A daily `purge-cron-run-history` pg_cron job that deletes `cron.job_run_details` rows whose run ended (or started, if it never ended) more than seven days ago (pg_cron keeps every run forever otherwise); creates no table or function |
 | `20261103120000_voice_ai_token_requests.sql` | Renames `jarvis_token_requests` to `voice_ai_token_requests`, with its key, index and sequence, so the name does not depend on the assistant's name |
 | `20261104120000_hero_figure_contributors.sql` | How many players contributed to each hero figure and kill pair, in numbers only; the rule `hero_figure_qualifies`; `read_community_hero_figures` and `read_community_kill_feed`; `participant_hero_ability_uses`, `hero_ability_aggregates` and `record_match_ability_uses`. Drops all-zero segments and figures with no time played from the aggregates |
@@ -554,12 +554,14 @@ id, RLS is on with no policy, and only the service role reaches it.
   in `hero_game_roles` (id 0, Deadpool's base id 1057, an unknown id) is unclassified, counted in
   `triple_support_totals.unclassified_teams`, and never in a shape. A classified team with a result adds
   one occurrence to its shape, so a mirror match adds two; a match uploaded twice is one match (the
-  second upload is dropped on arrival). The number of players on a team is not checked, so a team that
-  lost a line to `forget_player` is classified from the lines that remain and can show a shape one short.
+  second upload is dropped on arrival). The number of players on a team is not checked, so a team with
+  fewer than six lines (a player who set `do_not_store` is skipped at upload, and `forget_player` removes
+  a line later) is classified from the lines that remain and shows a shape one short. A follow-up should
+  treat such a team as unresolved in both families.
 - **Pick rate and win rate.** The pick rate is a shape's `teams` over `classified_teams` of the same
   half-season, mode and bucket (always the sum of that bucket's shapes); the win rate is `wins` over
   `teams`. Both are computed by the website from counts.
-- **The minimum.** Every shape seen is stored (three small numbers each). `team_lineup_min_teams()` (200,
+- **The minimum.** Every shape seen is stored (three small numbers each). `team_lineup_min_teams()` (50,
   matched by `TEAM_LINEUP_MIN_TEAMS` on the website; a test compares the two) is applied by the reader to
   the teams summed over the modes asked for: a shape under it comes back with `enough_data` false and
   null `teams` and `wins`, which the site shows as "not enough data yet".
@@ -577,7 +579,7 @@ id, RLS is on with no policy, and only the service role reaches it.
 - The migration checks the gate and the minimum when it runs, on fixtures in a half-season that does not
   exist, and rolls them back. Nothing in the repository runs the SQL counting itself (no test
   database), so after applying the migration run
-  `npx supabase db query --linked -f supabase/checks/team_lineup_shapes.sql`: it records 208 fixture
+  `npx supabase db query --linked -f supabase/checks/team_lineup_shapes.sql`: it records 100 fixture
   Competitive matches in a half-season that does not exist (shapes at and under the minimum, a mirror
   match, a duplicate upload, hero id 0, Deadpool's base id and role form), rebuilds, asserts the counts,
   the reader, the freeze and the permissions, and rolls back.
