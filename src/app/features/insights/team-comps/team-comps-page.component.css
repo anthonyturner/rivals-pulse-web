@@ -1,0 +1,117 @@
+/* Tall enough that the footer starts below the fold, so it does not jump when the numbers replace the loading panel. */
+.team-comps-page {
+  min-height: 100vh;
+}
+
+.meta {
+  margin-bottom: 4px;
+}
+
+.comps-section {
+  margin-top: 16px;
+}
+
+.comps-section > .section-heading {
+  padding: 0 0 4px;
+}
+
+h3 {
+  font-size: var(--type-small);
+  font-weight: 800;
+}
+
+table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--type-small);
+}
+
+th,
+td {
+  padding: 4px 8px;
+  box-shadow: inset 0 1px 0 var(--border);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: left;
+}
+
+thead th {
+  box-shadow: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.col-rank {
+  width: 40px;
+  text-align: right;
+}
+
+.col-matches {
+  width: 132px;
+  text-align: right;
+}
+
+.col-rate {
+  width: 84px;
+  text-align: right;
+}
+
+.pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.plus {
+  color: var(--text-soft);
+}
+
+.hero-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  line-height: 1.2;
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.hero-link:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.hero-link img {
+  flex: none;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.empty {
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+@media (max-width: 560px) {
+  th,
+  td {
+    padding: 3px 4px;
+  }
+
+  .col-rank {
+    display: none;
+  }
+
+  .col-matches {
+    width: 76px;
+  }
+
+  .col-rate {
+    width: 60px;
+  }
+}

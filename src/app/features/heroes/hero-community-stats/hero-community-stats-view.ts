@@ -26,6 +26,7 @@ export type HeroCommunityStatsView =
       fallbackFor: string | null;
       /** Says how many appearances the hero has so far, which is none when no recorded match has it. */
       summary: string;
+      figures: HeroCommunityFigure[];
     };
 
 const NOT_RECORDED = 'Not recorded';
@@ -66,6 +67,7 @@ export function buildHeroCommunityStatsView(
       figures: [
         { label: 'Win rate', value: percentLabel(line.winRate) },
         { label: 'Pick rate', value: percentLabel(line.pickRate) },
+        { label: 'Ban rate', value: 'Not collected' },
         { label: 'KDA', value: line.kda === null ? NOT_RECORDED : line.kda.toFixed(2) },
         {
           label: 'Final hits per match',
@@ -83,6 +85,11 @@ export function buildHeroCommunityStatsView(
     kind: 'not-enough-data',
     halfSeasonLabel,
     fallbackFor,
+    figures: [
+      { label: 'Win rate', value: 'Building sample' },
+      { label: 'Pick rate', value: 'Building sample' },
+      { label: 'Ban rate', value: 'Not collected' },
+    ],
     summary:
       appearances > 0
         ? `${heroName} has ${countLabel(appearances, 'appearance', 'appearances')} so far${where}, from matches recorded by RivalsPulse players. ${needed}`

@@ -56,6 +56,7 @@ describe('buildHeroCommunityStatsView', () => {
       figures: [
         { label: 'Win rate', value: '54.2%' },
         { label: 'Pick rate', value: '16.0%' },
+        { label: 'Ban rate', value: 'Not collected' },
         { label: 'KDA', value: '3.46' },
         { label: 'Final hits per match', value: '9.0' },
       ],
@@ -72,6 +73,7 @@ describe('buildHeroCommunityStatsView', () => {
     expect(view.kind === 'ready' && view.figures.map((figure) => figure.value)).toEqual([
       '54.2%',
       '16.0%',
+      'Not collected',
       'Not recorded',
       'Not recorded',
     ]);
@@ -100,6 +102,11 @@ describe('buildHeroCommunityStatsView', () => {
 
     expect(view).toEqual({
       kind: 'not-enough-data',
+      figures: [
+        { label: 'Win rate', value: 'Building sample' },
+        { label: 'Pick rate', value: 'Building sample' },
+        { label: 'Ban rate', value: 'Not collected' },
+      ],
       halfSeasonLabel: 'Season 10.5',
       fallbackFor: null,
       summary:
@@ -122,6 +129,11 @@ describe('buildHeroCommunityStatsView', () => {
 
     expect(view).toEqual({
       kind: 'not-enough-data',
+      figures: [
+        { label: 'Win rate', value: 'Building sample' },
+        { label: 'Pick rate', value: 'Building sample' },
+        { label: 'Ban rate', value: 'Not collected' },
+      ],
       halfSeasonLabel: 'Season 10',
       fallbackFor: 'Season 10.5',
       summary:
@@ -138,6 +150,11 @@ describe('buildHeroCommunityStatsView', () => {
 
     expect(view).toEqual({
       kind: 'not-enough-data',
+      figures: [
+        { label: 'Win rate', value: 'Building sample' },
+        { label: 'Pick rate', value: 'Building sample' },
+        { label: 'Ban rate', value: 'Not collected' },
+      ],
       halfSeasonLabel: null,
       fallbackFor: null,
       summary:

@@ -206,6 +206,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'team-comps',
+    title: 'Team Comps | RivalsPulse',
+    loadComponent: () =>
+      import('./features/insights/team-comps/team-comps-page.component').then(
+        (module) => module.TeamCompsPageComponent,
+      ),
+  },
+  {
     path: 'watch-next',
     canMatch: [releasedPageGuard],
     loadComponent: () =>

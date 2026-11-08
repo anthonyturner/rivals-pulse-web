@@ -22,7 +22,7 @@ import { getCommunityFigures, getCommunityHeroScores, getCommunityKills } from '
 import { getCommunityInsights } from './server/community/insights';
 import { getCommunityMatches } from './server/community/matches';
 import { getHeroMatchups } from './server/heroes/matchups';
-import { getHeroPairs } from './server/heroes/pairs';
+import { getHeroPairs, getHeroSynergies } from './server/heroes/pairs';
 import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
 import { syncHomeNews } from './server/content/home';
@@ -78,6 +78,10 @@ app.get('/api/hero-matchups', (_req, res) => {
 
 app.get('/api/hero-pairs', (_req, res) => {
   handleApiResponse(res, () => getHeroPairs());
+});
+
+app.get('/api/hero-synergies', (_req, res) => {
+  handleApiResponse(res, () => getHeroSynergies());
 });
 
 app.get('/api/triple-support-trios', (_req, res) => {

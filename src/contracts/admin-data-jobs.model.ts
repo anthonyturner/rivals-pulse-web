@@ -182,14 +182,15 @@ export const DATA_JOBS = [
     kind: 'rebuild',
     summary: 'Rebuilds the counts of heroes against and with each other.',
     updates: 'How often two heroes met on opposite teams and how often they played on the same team, with the wins behind each.',
-    pages: [],
+    pages: [{ name: 'Team comps', path: '/team-comps', section: 'Top duos by role' }],
     atlasFiles: ['community-stats.json'],
     caveat:
-      'No page on the site shows hero pairs yet. They reach only the public Pulse Atlas file, which changes at its next ' +
-      'publish (scheduled every six hours, though GitHub can start it late). A pair is counted after 10 matches with a result.',
+      'The Team comps page shows the pairs that played together within about 5 minutes of each hourly rebuild, because the site ' +
+      'caches the answer. The public Pulse Atlas file changes only at its next publish (scheduled every six hours, though GitHub ' +
+      'can start it late). A pair is counted after 10 matches with a result.',
     example:
-      'After the next Pulse Atlas publish, the "matches" and "wins" of a pair in community-stats.json change if new matches ' +
-      'with a result featured a pair that already has 10.',
+      'After a run, the "Matches together" and win rate of a pair under "Top duos by role" on Team comps change within about ' +
+      '5 minutes if new matches with a result featured a pair that already has 10. community-stats.json changes at the next publish.',
   },
   {
     key: 'home-news',
