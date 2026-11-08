@@ -19,6 +19,8 @@ export const PULSE_RECORDS_BOARD_SIZE = 50;
  */
 export interface PulseRecord {
   heroId: number;
+  /** The hero's id on this site (the `:id` of `/heroes/:id`), or null when the game's hero id is not on the roster. */
+  hero: string | null;
   value: number;
   /** The linked player's name, or null for an anonymous line. */
   name: string | null;

@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+/* Tall enough that the footer starts below the fold, so it does not jump when the boards replace the loading panel. */
+.records-page {
+  min-height: 100vh;
+  padding-block: 16px;
+}
+
+.meta {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+app-state-panel {
+  margin-top: 12px;
+}
+
+.boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.board {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--type-h3);
+}
+
+.more {
+  justify-self: start;
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.thin {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+@media (max-width: 560px) {
+  .records-page {
+    padding-block: var(--mobile-page-gutter);
+  }
+
+  .board {
+    padding: var(--mobile-panel-padding);
+  }
+}
