@@ -25,6 +25,11 @@ export type RedeemResult =
   | { status: 'invalid' }
   | { status: 'rate-limited'; retryAfterSeconds: number };
 
+export type RecordsOptInResult =
+  | { status: 'saved'; showInRecords: boolean }
+  /** Turning it on needs a link; nothing was written. */
+  | { status: 'not-linked' };
+
 export type OwnDashboardRead =
   | { linked: false }
   | { linked: true; player: LinkedPlayer; truncated: boolean; lines: OwnDashboardLine[] };
@@ -59,6 +64,17 @@ export interface AuthGateway {
   redeemLinkCode(tokens: SessionTokens, code: string): Promise<RedeemResult>;
   /** Removes the account's link. Removing none is not an error. */
   unlinkPlayer(tokens: SessionTokens): Promise<void>;
+  /**
+   * Whether the account switched "Show me in Pulse Records" on. Row-level security lets the account read
+   * its own row only, and no row reads as off. Throws AuthUnavailableError when the database cannot
+   * answer, which must not be shown as "off": the page would then claim a name is hidden that may not be.
+   */
+  readRecordsOptIn(tokens: SessionTokens): Promise<boolean>;
+  /**
+   * Switches the setting for the account the tokens belong to, and for no other: the database function
+   * takes no account id. The database also switches it off whenever the link ends or is replaced.
+   */
+  setRecordsOptIn(tokens: SessionTokens, show: boolean): Promise<RecordsOptInResult>;
   /**
    * The newest matches the account's link can prove are its own (capped by the database), or that it
    * has no link. The database decides whose lines these are; nothing here says whose to read.
@@ -336,6 +352,37 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
       await rpc('unlink_player', {}, tokens.accessToken);
     },
 
+    async readRecordsOptIn(tokens) {
+      const response = await call(
+        '/rest/v1/account_settings?select=show_in_records&limit=1',
+        { method: 'GET' },
+        tokens.accessToken,
+      );
+
+      if (!response.ok) {
+        throw new AuthUnavailableError(`Supabase answered ${response.status} to the Pulse Records setting read`);
+      }
+
+      const rows = (await response.json()) as unknown;
+
+      // No row is the default, off. Anything else that is not a boolean is not an answer, and must not read as one.
+      if (Array.isArray(rows) && rows.length === 0) {
+        return false;
+      }
+
+      const saved = Array.isArray(rows) ? (rows[0] as { show_in_records?: unknown } | null)?.show_in_records : undefined;
+
+      if (typeof saved !== 'boolean') {
+        throw new AuthUnavailableError('Supabase answered the Pulse Records setting read with an unknown shape');
+      }
+
+      return saved;
+    },
+
+    async setRecordsOptIn(tokens, show) {
+      return recordsOptInResultOf(await rpc('set_records_opt_in', { p_show: show }, tokens.accessToken), show);
+    },
+
     async readOwnDashboard(tokens) {
       return dashboardReadOf(await rpc('read_own_dashboard', {}, tokens.accessToken));
     },
@@ -483,6 +530,21 @@ function redeemResultOf(answer: unknown): RedeemResult {
   }
 
   throw new AuthUnavailableError('Supabase answered redeem_link_code with an unknown shape');
+}
+
+function recordsOptInResultOf(answer: unknown, asked: boolean): RecordsOptInResult {
+  const result = answer as { status?: unknown; showInRecords?: unknown } | null;
+
+  // The saved value must be the one asked for, so a function that answered something else is never shown as saved.
+  if (result?.status === 'saved' && result.showInRecords === asked) {
+    return { status: 'saved', showInRecords: asked };
+  }
+
+  if (result?.status === 'not_linked' && asked) {
+    return { status: 'not-linked' };
+  }
+
+  throw new AuthUnavailableError('Supabase answered set_records_opt_in with an unknown shape');
 }
 
 function dashboardReadOf(answer: unknown): OwnDashboardRead {

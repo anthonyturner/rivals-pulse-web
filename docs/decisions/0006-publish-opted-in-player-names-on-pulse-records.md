@@ -10,7 +10,11 @@
   two-key naming rule, "the name comes from the link, not the scoreboard line",
   the list of what is never shown, the defaults in decision 4 and the mechanism
   in decision 6. The maintainer can override any of it, and a change must amend
-  this record and the website copy together.
+  this record and the website copy together. **Amended on 2026-11-08:** the
+  maintainer decided that the pages (issue 567) and the account switch (issue
+  568) ship before overlay issue 1386 updates the desktop app policy, and that
+  the policy update follows in that issue. The website's `/privacy` section on
+  Pulse Records is the notice in the meantime. See Compliance.
 - **Date:** 2026-11-07
 - **Deciders:** Anthony (maintainer).
 - **Related:** issue 564 (Pulse Records) and its children: this issue 565, 566
@@ -186,7 +190,8 @@ states "Matches since" the earliest date it covers, taken from the data.
   genuine opted-in name. Accepted for the first version.
 - The legal basis for showing lines publicly extends the one the desktop app
   policy gives today (decision 3). The maintainer accepts that as a risk, and it
-  takes effect once overlay issue 1386 updates section 8 of that policy.
+  takes effect once overlay issue 1386 updates section 8 of that policy. On
+  2026-11-08 the maintainer accepted shipping before that update (see Status).
 - A short cache lifetime (60 seconds) on the records API is a cost in load
   against the site-wide five minutes plus an hour of stale answers, which would
   show a name for about 65 minutes after its owner switched it off.
@@ -227,5 +232,7 @@ A reviewer checks a change against this decision by looking for:
   a public records page, and sections 7, 8 and 9 do not mention entries on the
   website or a name the player chose to show. The policy change must ship before
   the first name can appear on the live site; issue 568 lists it as a blocker.
+  **Superseded on 2026-11-08:** the maintainer decided the switch ships first,
+  with the website's `/privacy` section as the notice until issue 1386 ships.
 - Any later change to the defaults in decision 4 amends this record and the
   website copy in the same pull request.
