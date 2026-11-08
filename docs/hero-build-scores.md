@@ -84,10 +84,13 @@ its own.
   waits, because leaving it out would understate the hero. An input with no lines
   at all, such as a figure the feed never sent for this hero, is left out rather
   than counted as 0.
-- **A ranking needs 5 qualifying heroes.** Below that the status is
+- **A ranking needs 3 qualifying heroes.** Below that the status is
   `ranking-too-small`: the hero's figures are shown, with no score. A ranking of two
-  heroes would call one of them 10 and the other 1. This number is `rankedHeroes` in
-  `HERO_SCORE_MINIMUMS`.
+  heroes would call one of them 10 and the other 1; three is the smallest with a
+  middle. It is a temporary floor while contributors are few (it was 5, which held
+  every stat back with three heroes qualifying), to be raised as more heroes pass.
+  This number is `rankedHeroes` in `HERO_SCORE_MINIMUMS`, and the Pulse Atlas file
+  publishes how many heroes qualify per stat as `qualifiedHeroes`.
 - **A hero with nothing to measure says so.** A hero with no ability that is tagged
   Utility and prints a plain cooldown has the status `no-measurable-ability`, which
   is not the same as scoring low.

@@ -20,8 +20,10 @@ export const HERO_SCORE_MINIMUMS: HeroScoreMinimums = {
   matches: 10,
   contributors: 1,
   busiestContributorShare: 1,
-  // A ranking of two heroes would call one of them 10 and the other 1.
-  rankedHeroes: 5,
+  // A ranking of two heroes would call one of them 10 and the other 1; three is the smallest that has a
+  // middle. A temporary floor while contributors are few: with 5, only three heroes qualified and every
+  // stat waited. Raise it again once more heroes pass the rule.
+  rankedHeroes: 3,
 };
 
 /** How much each ranked measure counts toward a score made of two. Change a stat's weights here. */
