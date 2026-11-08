@@ -26,8 +26,9 @@ export type TileTint = 'danger';
  * How key art sits in a lead tile:
  * - `banner`: a wide picture, zoomed in and pinned to the lower left so its centre falls out of frame.
  * - `portrait`: a square picture at the tile's height, against the right edge, with the text to its left.
+ * - `cover`: a wide picture that fills the tile, trimmed at the sides or bottom and anchored to the top, for art composed to the tile so its faces stay in frame.
  */
-export type TileImageFit = 'banner' | 'portrait';
+export type TileImageFit = 'banner' | 'portrait' | 'cover';
 
 /** A hub link as the navigation data spells it. */
 export interface HubLink {

@@ -114,6 +114,18 @@ describe('buildHeroCommunityStatsView', () => {
     });
   });
 
+  it('gives the players so far for a hero held back for want of players', () => {
+    const view = buildHeroCommunityStatsView(
+      stats({ minimumPlayers: 2, belowMinimum: [{ hero: 'storm', appearances: 12, players: 1 }], tiers: [] }),
+      'storm',
+      'Storm',
+    );
+
+    expect(view.kind === 'not-enough-data' && view.summary).toBe(
+      'Storm has 12 appearances and 1 player so far, from matches recorded by RivalsPulse players. The numbers appear at 10 appearances and 2 players.',
+    );
+  });
+
   it('says which half-season the appearances are from when the previous one stands in', () => {
     const view = buildHeroCommunityStatsView(
       stats({

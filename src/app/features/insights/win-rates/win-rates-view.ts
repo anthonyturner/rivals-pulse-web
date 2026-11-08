@@ -1,9 +1,14 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import {
+  countLabel,
+  halfSeasonFallbackNotice,
+  percentLabel,
+  placementRequirementLabel,
+} from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
-import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
+import { heroProgressRows, minimumsOf, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
 export interface WinRateRowView extends HeroCellView {
   rank: number;
@@ -71,6 +76,8 @@ export interface WinRatesView {
   minimumMatches: number;
   /** "10 appearances", or "1 appearance". */
   minimumLabel: string;
+  /** What a hero needs to be listed: "10 appearances and 2 players", or the appearances alone. */
+  placementLabel: string;
   matchesCountedLabel: string;
   /** The toolbar's facts in reading order; empty when there is no table or progress list to describe. */
   metaParts: string[];
@@ -107,6 +114,7 @@ export function buildWinRatesView(
     fallbackNotice: null,
     minimumMatches: stats.minimumMatches,
     minimumLabel: countLabel(stats.minimumMatches, 'appearance', 'appearances'),
+    placementLabel: placementRequirementLabel(stats),
     matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
     metaParts: [],
     scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
@@ -133,7 +141,7 @@ export function buildWinRatesView(
         b.winRate - a.winRate || b.appearances - a.appearances || a.name.localeCompare(b.name),
     )
     .map((row, index) => ({ ...row, rank: index + 1 }));
-  const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
+  const building = heroProgressRows(stats.belowMinimum, minimumsOf(stats), identities);
   const fallbackNotice =
     stats.inPlaceOf === null
       ? null
@@ -147,7 +155,7 @@ export function buildWinRatesView(
           season?.label,
           season?.dateRange,
           `${base.matchesCountedLabel} counted`,
-          `Heroes need ${base.minimumLabel} to be listed`,
+          `Heroes need ${base.placementLabel} to be listed`,
           state === 'full' ? 'Bars show win rate; the line marks 50%.' : null,
         ].filter((part): part is string => !!part);
 

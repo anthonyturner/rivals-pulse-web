@@ -141,7 +141,7 @@ describe('The Resources hub', () => {
 
       expect(images.length).toBe(1);
       expect(images[0].getAttribute('alt')).toBe('');
-      expect(images[0].getAttribute('src')).toBe('/images/site/heroes-banner.jpg');
+      expect(images[0].getAttribute('src')).toBe('/images/site/banners/resources-banner.webp');
       expect(tile('Media Tutorials').querySelector('.marker')?.getAttribute('aria-hidden')).toBe('true');
     });
 
