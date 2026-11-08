@@ -4,7 +4,7 @@
   padding-block: 16px 32px;
 }
 
-.hub app-hub-tile {
+app-hub-tile.lead {
   /* Taller than the lead tile's own minimum, so the heroes' faces sit above the text rather than under it. */
   min-height: 300px;
 }
@@ -30,7 +30,7 @@
 }
 
 @media (max-width: 560px) {
-  .hub app-hub-tile {
-    min-height: 340px;
+  app-hub-tile.lead {
+    min-height: 360px;
   }
 }
