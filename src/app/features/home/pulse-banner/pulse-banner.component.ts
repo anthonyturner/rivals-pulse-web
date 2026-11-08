@@ -45,9 +45,11 @@ export class PulseBannerComponent {
     const destroyRef = inject(DestroyRef);
 
     afterNextRender(() => {
+      const view = this.document.defaultView;
+      if (!view) return;
       const grid = new CircuitGrid(this.canvas().nativeElement, this.readPalette());
-      this.watchSize(grid, destroyRef);
-      this.watchPlayback(grid, destroyRef);
+      this.watchSize(grid, view, destroyRef);
+      this.watchPlayback(grid, view, destroyRef);
       destroyRef.onDestroy(() => grid.destroy());
       this.grid.set(grid);
     });
@@ -60,11 +62,10 @@ export class PulseBannerComponent {
     });
   }
 
-  private watchSize(grid: CircuitGrid, destroyRef: DestroyRef): void {
-    const view = this.document.defaultView;
+  private watchSize(grid: CircuitGrid, view: Window, destroyRef: DestroyRef): void {
     const resize = (): void => {
       const { width, height } = this.host.nativeElement.getBoundingClientRect();
-      grid.resize(width, height, view?.devicePixelRatio || 1);
+      grid.resize(width, height, view.devicePixelRatio || 1);
     };
     resize();
     const observer = new ResizeObserver(resize);
@@ -72,8 +73,8 @@ export class PulseBannerComponent {
     destroyRef.onDestroy(() => observer.disconnect());
   }
 
-  private watchPlayback(grid: CircuitGrid, destroyRef: DestroyRef): void {
-    const reducedMotion = this.document.defaultView!.matchMedia(REDUCED_MOTION_QUERY);
+  private watchPlayback(grid: CircuitGrid, view: Window, destroyRef: DestroyRef): void {
+    const reducedMotion = view.matchMedia(REDUCED_MOTION_QUERY);
     const update = (): void => {
       const next: CircuitPlayback = reducedMotion.matches
         ? 'still'

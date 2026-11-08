@@ -96,6 +96,7 @@ describe('CircuitGrid', () => {
       grid.setPlayback('playing');
       runFor(8_000);
       grid.setPlayback('paused');
+      clock += 5_000;
 
       grid.setPlayback('playing');
       runFor(800);
