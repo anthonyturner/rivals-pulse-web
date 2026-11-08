@@ -47,7 +47,7 @@ describe('buildRoleFiguresView', () => {
 
     expect(view.kind).toBe('not-enough-data');
     expect(view.kind === 'not-enough-data' && view.summary).toContain('50 lines');
-    expect(view.kind === 'not-enough-data' && view.summary).toContain('at least 3 different players');
+    expect(view.kind === 'not-enough-data' && view.summary).toContain('at least 2 different players');
     expect(view.kind === 'not-enough-data' && view.summary).not.toContain(' in ');
   });
 

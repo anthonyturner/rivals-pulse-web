@@ -131,8 +131,8 @@ describe('the Pulse Records pages', () => {
       expect(page).toContain('For kills, assists and final hits the hero is the one the game recorded');
     });
 
-    it('holds back a board with fewer than five rows and keeps the others', async () => {
-      const { element } = await open('/records', recordsOf({ kills: recordRows(7), assists: recordRows(4) }));
+    it('holds back a board with fewer than two rows and keeps the others', async () => {
+      const { element } = await open('/records', recordsOf({ kills: recordRows(7), assists: recordRows(1) }));
       const boards = Array.from(element.querySelectorAll('section.board'));
 
       expect(boards.length).toBe(6);
@@ -142,10 +142,11 @@ describe('the Pulse Records pages', () => {
     });
 
     it('says there is not enough data yet when no board has enough rows, without a date', async () => {
-      const { element } = await open('/records', recordsOf({ kills: recordRows(4) }));
+      const { element } = await open('/records', recordsOf({ kills: recordRows(1) }));
 
       expect(element.querySelector('table')).toBeNull();
       expect(text(element)).toContain('Not enough data yet');
+      expect(text(element)).toContain('A list is shown from 2 different uploading players');
       expect(text(element)).not.toContain('Matches since');
       expect(element.querySelector('app-records-coverage')).toBeTruthy();
     });
@@ -207,10 +208,11 @@ describe('the Pulse Records pages', () => {
     });
 
     it('says there is not enough data yet for a thin board', async () => {
-      const { element } = await open('/records/healing', recordsOf({ healing: recordRows(3), kills: recordRows(9) }));
+      const { element } = await open('/records/healing', recordsOf({ healing: recordRows(1), kills: recordRows(9) }));
 
       expect(element.querySelector('table')).toBeNull();
       expect(text(element)).toContain('Not enough data yet');
+      expect(text(element)).toContain('This list appears once 2 different uploading players have a record for it');
       expect(text(element)).not.toContain('Matches since');
       expect(element.querySelector('app-state-panel a[href="/records"]')?.textContent).toBe('other records');
       expect(element.querySelector('app-records-coverage')).toBeTruthy();

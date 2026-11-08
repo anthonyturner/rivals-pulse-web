@@ -122,7 +122,10 @@ export function scoresSourceNote(answer: HeroScoresAnswer): string | null {
     return `Built from ${from}Quick Match and Competitive matches recorded by RivalsPulse players. During solo testing, one player can supply all matches. Figures appear after at least ${matches} matches per hero and mode; scores need ${answer.minimums.rankedHeroes} qualifying heroes.`;
   }
 
-  return `Built from ${from}Quick Match and Competitive matches recorded by RivalsPulse players. A hero gets a score once it has at least ${matches} matches from at least ${contributors} players, with no single player making up more than half.`;
+  const share =
+    busiestContributorShare < 1 ? `, with no single player making up more than ${shareLabel(busiestContributorShare)}` : '';
+
+  return `Built from ${from}Quick Match and Competitive matches recorded by RivalsPulse players. A hero gets a score once it has at least ${matches} matches from at least ${contributors} players${share}.`;
 }
 
 /** The hero's team builder card: its scores once it has any, or how far along it is. */
@@ -337,7 +340,8 @@ function withoutNumber(
 /**
  * Match counts arrive in steps of 5 while a hero is below the rule, so an exact count never shows.
  * One busy player can hold a hero back past both minimums, so the counts stop at each minimum. The
- * busiest player is only named as the reason once there are enough players for it to be one.
+ * busiest player is only named as the reason while the minimums cap a player's share, and once there are
+ * enough players for it to be one.
  */
 function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores): string {
   const { matches, contributors, busiestContributorShare } = answer.minimums;
@@ -350,9 +354,14 @@ function progressLabel(stat: HeroScoreStat | null, answer: CommunityHeroScores):
 
   const progress = `${matchesSoFar} of ${matches} matches, ${playersSoFar} of ${contributors} players`;
 
-  return stat?.oneContributorAboveHalf && (stat.contributors ?? 0) >= contributors
+  return busiestContributorShare < 1 && stat?.oneContributorAboveHalf && (stat.contributors ?? 0) >= contributors
     ? `${progress}. One player has more than half of these matches, so it needs more players.`
     : progress;
+}
+
+/** "half" for the starting rule, otherwise the share as a percentage. */
+function shareLabel(share: number): string {
+  return share === 0.5 ? 'half' : `${Math.round(share * 100)}%`;
 }
 
 function teamDetail(type: HeroBuildType, uses: string, names: readonly string[], notMeasurable: number): string {

@@ -46,7 +46,7 @@ describe('buildCountersKillFeedView', () => {
 
     expect(view.kind).toBe('not-enough-data');
     expect(view.kind === 'not-enough-data' && view.summary).toContain('10 recorded matches');
-    expect(view.kind === 'not-enough-data' && view.summary).toContain('at least 3 different players');
+    expect(view.kind === 'not-enough-data' && view.summary).toContain('at least 2 different players');
   });
 
   it('says the previous half-season stands in', () => {
