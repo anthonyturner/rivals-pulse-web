@@ -156,6 +156,10 @@ UX design handoff, the engineer's technical approach for substantial work,
 escalation signals, a code review — is posted as a comment on the issue or the
 pull request, whichever it scopes.
 
+Every comment, issue body and pull-request body an agent writes carries the
+agent's signature, and every commit its `Agent:` trailer, as
+[crew.md](crew.md) defines. The maintainer's own comments carry neither.
+
 A decision that constrains future work is promoted to an ADR under
 [docs/decisions/](../decisions/); a constraint that recurs across issues is
 promoted to a rule in `/docs`. Issues close and are read only by whoever goes
