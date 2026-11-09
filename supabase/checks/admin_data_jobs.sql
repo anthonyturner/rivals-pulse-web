@@ -120,7 +120,7 @@ begin
   set local role authenticated;
 
   begin
-    perform public.admin_begin_run('game-stats');
+    perform public.admin_begin_run('home-news');
     raise exception 'check failed: a signed-in stranger began a run';
   exception when insufficient_privilege then
     raise notice 'ok: a signed-in stranger cannot begin a run';
@@ -155,7 +155,7 @@ begin
   end;
 
   begin
-    perform public.data_job_cooldown('game-stats');
+    perform public.data_job_cooldown('home-news');
     raise exception 'check failed: a signed-in account called an internal helper';
   exception when insufficient_privilege then
     raise notice 'ok: the helpers are not callable by a signed-in account';
@@ -166,7 +166,7 @@ begin
   set local role anon;
 
   begin
-    perform public.admin_begin_run('game-stats');
+    perform public.admin_begin_run('home-news');
     raise exception 'check failed: the anon role began a run';
   exception when insufficient_privilege then
     raise notice 'ok: the anon role cannot begin a run';
@@ -177,7 +177,7 @@ begin
   set local role service_role;
 
   begin
-    perform public.admin_begin_run('game-stats');
+    perform public.admin_begin_run('home-news');
     raise exception 'check failed: the service role began a run';
   exception when insufficient_privilege then
     raise notice 'ok: the service role cannot begin a run, so the website''s service key cannot start one';
@@ -332,7 +332,7 @@ begin
     reset role;
     select e into entry from jsonb_array_elements(answer) e where e ->> 'job' = 'recompute-hero-aggregates';
 
-    if jsonb_array_length(answer) <> 7
+    if jsonb_array_length(answer) <> 6
        or (jsonb_typeof(entry -> 'lastScheduled') = 'object' and entry -> 'lastScheduled' ->> 'startedAt' is null) then
       raise exception 'check failed: a history row with no start time broke or filled the status (%)', entry;
     end if;
@@ -439,12 +439,12 @@ begin
   reset role;
   insert into public.sync_runs (source_key, status, message, started_at, finished_at, by_admin)
   values
-    ('game-stats', 'success', 'jobs check scheduled', clock_timestamp() + interval '1 day', clock_timestamp() + interval '1 day', false),
-    ('game-stats', 'success', 'jobs check manual', clock_timestamp() + interval '2 days', clock_timestamp() + interval '2 days', true);
+    ('home-news', 'success', 'jobs check scheduled', clock_timestamp() + interval '1 day', clock_timestamp() + interval '1 day', false),
+    ('home-news', 'success', 'jobs check manual', clock_timestamp() + interval '2 days', clock_timestamp() + interval '2 days', true);
 
   set local role authenticated;
   answer := public.admin_data_jobs_status();
-  select e into entry from jsonb_array_elements(answer) e where e ->> 'job' = 'game-stats';
+  select e into entry from jsonb_array_elements(answer) e where e ->> 'job' = 'home-news';
   if entry -> 'lastScheduled' ->> 'message' is distinct from 'jobs check scheduled' then
     raise exception 'check failed: the last scheduled run included an administrator''s run (%)', entry;
   end if;
@@ -453,16 +453,16 @@ begin
   select count(*) into seen from jsonb_array_elements(answer) e
   where e ->> 'job' in (
     'recompute-hero-aggregates', 'recompute-extended-aggregates', 'recompute-community-match-aggregates',
-    'recompute-play-time-aggregates', 'recompute-hero-pair-aggregates', 'home-news', 'game-stats'
+    'recompute-play-time-aggregates', 'recompute-hero-pair-aggregates', 'home-news'
   );
-  if jsonb_array_length(answer) <> 7 or seen <> 7 then
-    raise exception 'check failed: the status does not list exactly the seven jobs (%)', answer;
+  if jsonb_array_length(answer) <> 6 or seen <> 6 then
+    raise exception 'check failed: the status does not list exactly the six jobs (%)', answer;
   end if;
-  raise notice 'ok: the status lists exactly the seven jobs';
+  raise notice 'ok: the status lists exactly the six jobs';
 
   -- The audit log outlives an account: the actor is cleared, the row stays.
   reset role;
-  insert into public.admin_audit_log (actor_id, job) values (admin_b, 'game-stats') returning id into other_run;
+  insert into public.admin_audit_log (actor_id, job) values (admin_b, 'home-news') returning id into other_run;
   delete from auth.users where id = admin_b;
 
   select * into audit from public.admin_audit_log where id = other_run;

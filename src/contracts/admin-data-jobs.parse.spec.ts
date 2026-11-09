@@ -133,7 +133,6 @@ describe('dataJobStatusesOf', () => {
 
     for (const bad of [
       { ...good, job: 'drop-everything' },
-      { ...good, job: 'game-stats' },
       { ...good, lastManual: { ...run, outcome: 'nearly' } },
       { ...good, wait: { reason: 'cooldown', retryAt: 'soon' } },
       { job: 'home-news', lastScheduled: null, lastManual: null },
