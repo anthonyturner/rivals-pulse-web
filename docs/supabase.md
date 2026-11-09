@@ -234,6 +234,9 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
   transaction unless the hour already has one (the first capture of an hour wins), and returns the
   hour's capture with the one before it. `GET /api/game-stats` writes this way too, on every request
   the CDN does not answer from its five-minute copy.
+  Numbers that could not be stored (`snapshot.persisted` false) are cached by the CDN for 15 seconds only, with no stale
+  window (`public, max-age=0, s-maxage=15`), so an outage costs a few Steam reads a minute instead of one per visit and a
+  real answer returns within seconds of recovery.
 - The hourly Vercel cron `/api/sync/game-stats` and `npm run sync:game-stats` record each run in
   `sync_runs` under `game-stats`; a capture that could not be stored is an `error` run. The public
   endpoint records no run. Vercel needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
