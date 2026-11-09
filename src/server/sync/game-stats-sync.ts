@@ -22,6 +22,8 @@ export const GAME_STATS_SYNC_KEY = 'game-stats';
 interface GameStatsSyncOptions {
   /** Reaches Steam; a test passes a stand-in. */
   fetch?: typeof fetch;
+  /** How long one Steam read may take before it counts as unanswered. */
+  steamTimeoutMs?: number;
   now?: () => Date;
   /** Marks the `sync_runs` row as an administrator's run. */
   byAdmin?: boolean;
@@ -32,13 +34,14 @@ interface SteamGameDefinition extends Omit<GameComparison, 'currentPlayers' | 'c
 }
 
 /**
- * A capture, and why it could not be stored when it was not. An hour that already has a capture
- * keeps it: the numbers read this time are returned but not stored (`alreadyCaptured`). A game Steam
- * did not answer for carries its built-in number, and `steamFallbacks` counts them.
+ * A capture, and why it was not stored when it was not (`failure`). An hour that already has a
+ * capture keeps it: the numbers read this time are returned but not stored (`alreadyCaptured`). A
+ * game Steam did not answer for carries its built-in number, and `steamFallbacks` counts them; when
+ * Steam answers for none, the built-in numbers are returned but never stored.
  */
 export interface GameStatsCapture {
   response: GameStatsResponse;
-  storeFailure?: string;
+  failure?: string;
   steamFallbacks: number;
   alreadyCaptured: boolean;
 }
@@ -52,6 +55,8 @@ interface PersistedSnapshotContext {
 const SNAPSHOT_TABLE = 'game_stat_snapshots';
 const SNAPSHOT_GAME_TABLE = 'game_stat_snapshot_games';
 const RECORD_FUNCTION = 'record_game_stat_snapshot';
+/** Well inside the 60-second function limit, with room for the five reads to run side by side. */
+const STEAM_READ_TIMEOUT_MS = 5000;
 const currentPlayerSource = 'Valve ISteamUserStats GetNumberOfCurrentPlayers';
 const steamCurrentPlayersUrl =
   'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/';
@@ -126,8 +131,8 @@ const games: SteamGameDefinition[] = [
 
 /**
  * Reads the current Steam player counts, stores them as this hour's capture unless the hour already
- * has one, and compares them with the capture before it. When storing fails the live values are
- * still returned, with `snapshot.persisted` false and no comparison.
+ * has one, and compares them with the capture before it. When storing fails, or Steam answers for
+ * no game at all, the values are still returned, with `snapshot.persisted` false and no comparison.
  */
 export async function syncGameStats(
   client: SupabaseClient,
@@ -165,18 +170,19 @@ export function runGameStatsCapture(
 }
 
 /**
- * How a sync run is recorded: a capture that could not be stored is a failed run. A run that stored
- * nothing because the hour already had a capture, or stored built-in numbers because Steam did not
- * answer, is still a success, but its message says so rather than claiming a clean capture.
+ * How a sync run is recorded: a capture that was not stored is a failed run. A run that stored
+ * nothing because the hour already had a capture, or stored some built-in numbers because Steam did
+ * not answer for every game, is still a success, but its message says so rather than claiming a
+ * clean capture.
  */
 export function gameStatsRunResult(capture: GameStatsCapture): SyncRunResult {
-  const { response, storeFailure, steamFallbacks } = capture;
+  const { response, failure, steamFallbacks } = capture;
   const { snapshot } = response;
 
-  if (!snapshot.persisted) {
+  if (failure !== undefined) {
     return {
       status: 'error',
-      message: `Could not store the game stats captured at ${response.fetchedAt}: ${storeFailure ?? 'unknown error'}`,
+      message: `Could not store the game stats captured at ${response.fetchedAt}: ${failure}`,
     };
   }
 
@@ -202,8 +208,8 @@ export function gameStatsRunResult(capture: GameStatsCapture): SyncRunResult {
 }
 
 /**
- * What a capture that was stored came to, for the admin page. A capture that could not be stored is
- * a failure with `storeFailure` as its message, so it has no outcome here.
+ * What a capture that was stored came to, for the admin page. A capture that was not stored is a
+ * failure with `failure` as its message, so it has no outcome here.
  */
 export function describeGameStatsCapture({ response, steamFallbacks, alreadyCaptured }: GameStatsCapture): GameStatsOutcome {
   const games = response.games.length;
@@ -231,12 +237,13 @@ async function captureGameStats(
   options: GameStatsSyncOptions,
 ): Promise<GameStatsCapture> {
   const fetcher = options.fetch ?? fetch;
+  const timeoutMs = options.steamTimeoutMs ?? STEAM_READ_TIMEOUT_MS;
   const fetchedAt = (options.now?.() ?? new Date()).toISOString();
   const snapshotDate = formatSnapshotDate(fetchedAt);
   let steamFallbacks = 0;
   const liveGames = await Promise.all(games.map(async (game) => {
     const { fallbackCurrentPlayers, ...metadata } = game;
-    const reading = await getCurrentPlayers(fetcher, game.appId);
+    const reading = await getCurrentPlayers(fetcher, game.appId, timeoutMs);
 
     if (reading === undefined) {
       steamFallbacks += 1;
@@ -257,13 +264,19 @@ async function captureGameStats(
     previousGames: new Map(),
   };
 
-  let storeFailure: string | undefined;
+  let failure: string | undefined;
 
-  try {
-    context = await persistSnapshot(client, snapshotDate, fetchedAt, liveGames);
-  } catch (error) {
-    storeFailure = error instanceof Error ? error.message : String(error);
-    console.error('Game stat snapshot persistence failed; serving live values without history', error);
+  // The hour's first capture wins, so built-in numbers stored during an outage would hide the real
+  // ones for the rest of the hour. Store nothing, and a later run can.
+  if (steamFallbacks === games.length) {
+    failure = `Steam did not answer for any of the ${games.length} games, so nothing was stored`;
+  } else {
+    try {
+      context = await persistSnapshot(client, snapshotDate, fetchedAt, liveGames);
+    } catch (error) {
+      failure = error instanceof Error ? error.message : String(error);
+      console.error('Game stat snapshot persistence failed; serving live values without history', error);
+    }
   }
 
   const response: GameStatsResponse = {
@@ -287,7 +300,7 @@ async function captureGameStats(
   // capture was made rather than this one's.
   const alreadyCaptured = context.current.persisted && context.current.capturedAt !== fetchedAt;
 
-  return { response, storeFailure, steamFallbacks, alreadyCaptured };
+  return { response, failure, steamFallbacks, alreadyCaptured };
 }
 
 export function buildSnapshotComparison(
@@ -424,10 +437,18 @@ async function countRows(client: SupabaseClient, table: string): Promise<number>
   return count ?? 0;
 }
 
-/** The player count Steam reports, or undefined when Steam did not give one. */
-async function getCurrentPlayers(fetcher: typeof fetch, appId: number): Promise<number | undefined> {
+/**
+ * The player count Steam reports, or undefined when Steam did not give one. A read that outlasts
+ * `timeoutMs` is one Steam did not give, so a hung call cannot hold the run to the function limit.
+ */
+async function getCurrentPlayers(
+  fetcher: typeof fetch,
+  appId: number,
+  timeoutMs: number,
+): Promise<number | undefined> {
   try {
     const response = await fetcher(`${steamCurrentPlayersUrl}?appid=${appId}`, {
+      signal: AbortSignal.timeout(timeoutMs),
       headers: {
         accept: 'application/json',
         'user-agent': 'rivals-pulse-game-stats/2.0',

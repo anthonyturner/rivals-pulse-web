@@ -151,12 +151,62 @@ describe('syncGameStats', () => {
     expect(response.snapshot.persisted).toBeFalse();
   });
 
-  it('falls back to the built-in player count when Steam cannot be reached', async () => {
-    const { client } = fakeSupabaseClient(() => rpcAnswer(null));
+  it('stores a capture when Steam answers for some games, with the built-in number for the rest', async () => {
+    const { client, calls } = fakeSupabaseClient(() => rpcAnswer(null));
+    const onlyMarvelRivals = (async (url: string) => {
+      if (!url.includes(`appid=${MARVEL_RIVALS}`)) {
+        throw new Error('offline');
+      }
+
+      return { ok: true, json: async () => ({ response: { player_count: 60000 } }) };
+    }) as unknown as typeof fetch;
+
+    const response = await syncGameStats(client, { fetch: onlyMarvelRivals, now: () => NOW });
+
+    expect(response.snapshot.persisted).toBeTrue();
+    expect(calls.length).toBe(1);
+    expect(response.games.find((game) => game.appId === MARVEL_RIVALS)!.currentPlayers).toBe(60000);
+    expect(response.games.find((game) => game.appId === 730)!.currentPlayers).toBe(854652);
+  });
+
+  it('serves the built-in numbers without storing them when Steam cannot be reached for any game', async () => {
+    const { client, calls } = fakeSupabaseClient(() => rpcAnswer(previousSnapshot));
 
     const response = await syncGameStats(client, { fetch: steam(undefined), now: () => NOW });
 
+    expect(calls).toEqual([]);
+    expect(response.snapshot).toEqual({
+      snapshotDate: 'October 31, 2026',
+      capturedAt: '2026-10-31T12:10:03.279Z',
+      persisted: false,
+    });
+    expect(response.previousSnapshot).toBeUndefined();
     expect(response.games.find((game) => game.appId === MARVEL_RIVALS)!.currentPlayers).toBe(59562);
+    expect(response.games.every((game) => game.comparison === undefined)).toBeTrue();
+  });
+
+  it('lets a later run in the same hour store a real capture after an outage', async () => {
+    const { client, calls } = fakeSupabaseClient(() => rpcAnswer(null));
+
+    await syncGameStats(client, { fetch: steam(undefined), now: () => NOW });
+    const later = await syncGameStats(client, { fetch: steam(60000), now: () => new Date('2026-10-31T12:40:00.000Z') });
+
+    expect(calls.length).toBe(1);
+    expect(rpcArgs(calls)['p_capture_bucket']).toBe('2026-10-31T12:00:00.000Z');
+    expect(later.snapshot.persisted).toBeTrue();
+  });
+
+  it('gives up on a Steam fetch that never answers and counts it as unavailable', async () => {
+    const { client, calls } = fakeSupabaseClient(() => rpcAnswer(null));
+    const hung = ((_url: string, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      })) as unknown as typeof fetch;
+
+    const response = await syncGameStats(client, { fetch: hung, now: () => NOW, steamTimeoutMs: 20 });
+
+    expect(response.snapshot.persisted).toBeFalse();
+    expect(calls).toEqual([]);
   });
 });
 
@@ -237,18 +287,45 @@ describe('runGameStatsSync', () => {
   it('counts the games Steam did not answer for, and says their built-in numbers were stored', async () => {
     const { client } = fakeSupabaseClient(() => rpcAnswer(null));
     const { record, recorded } = recorder();
+    const onlyMarvelRivals = (async (url: string) => {
+      if (!url.includes(`appid=${MARVEL_RIVALS}`)) {
+        throw new Error('offline');
+      }
 
-    const capture = await runGameStatsCapture(client, record, { fetch: steam(undefined), now: () => NOW });
+      return { ok: true, json: async () => ({ response: { player_count: 60000 } }) };
+    }) as unknown as typeof fetch;
 
-    expect(capture.steamFallbacks).toBe(5);
+    const capture = await runGameStatsCapture(client, record, { fetch: onlyMarvelRivals, now: () => NOW });
+
+    expect(capture.steamFallbacks).toBe(4);
     expect(capture.alreadyCaptured).toBeFalse();
     expect(describeGameStatsCapture(capture)).toEqual({
       result: 'stored-with-fallbacks',
       capturedAt: '2026-10-31T12:10:03.279Z',
       games: 5,
-      fallbackGames: 5,
+      fallbackGames: 4,
     });
-    expect(recorded[0].message).toContain('Steam did not answer for 5 of 5 games, so their built-in numbers were stored');
+    expect(recorded[0].status).toBe('success');
+    expect(recorded[0].message).toContain('Steam did not answer for 4 of 5 games, so their built-in numbers were stored');
+  });
+
+  it('records a run as failed, and stores nothing, when Steam did not answer for any game', async () => {
+    const { client, calls } = fakeSupabaseClient(() => rpcAnswer(null));
+    const { record, recorded } = recorder();
+
+    const capture = await runGameStatsCapture(client, record, { fetch: steam(undefined), now: () => NOW });
+
+    expect(calls).toEqual([]);
+    expect(capture.steamFallbacks).toBe(5);
+    expect(capture.failure).toBe('Steam did not answer for any of the 5 games, so nothing was stored');
+    expect(recorded).toEqual([
+      {
+        status: 'error',
+        message:
+          'Could not store the game stats captured at 2026-10-31T12:10:03.279Z: ' +
+          'Steam did not answer for any of the 5 games, so nothing was stored',
+      },
+    ]);
   });
 
   it('counts a Steam answer with no player count as unavailable too', async () => {
@@ -259,6 +336,7 @@ describe('runGameStatsSync', () => {
     const capture = await runGameStatsCapture(client, record, { fetch: noCount, now: () => NOW });
 
     expect(capture.steamFallbacks).toBe(5);
+    expect(capture.failure).toBeDefined();
   });
 
   it('records a capture that could not be stored as a failed run, with the reason', async () => {
