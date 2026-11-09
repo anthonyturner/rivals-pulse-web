@@ -12,6 +12,7 @@ import { createdFunctions, escapeRegExp, MIGRATIONS, read, withoutComments } fro
 const RECORDER = '20261108200000_hero_timeline_recorder.sql';
 const TIMELINES = '20261108180000_match_hero_timelines.sql';
 const SWITCH_INS = '20261108190000_hero_switch_in_aggregates.sql';
+const HERO_FORMS = '20261108210000_hero_switch_in_hero_forms.sql';
 
 const sql = withoutComments(read(RECORDER));
 const squash = (text: string): string => text.replace(/\s+/g, ' ').trim();
@@ -58,9 +59,9 @@ describe('the timeline recorder migration', () => {
     assert.equal(latestDefiner('purge_expired_participants'), SWITCH_INS);
   });
 
-  it('is the latest definition of the writer and of the fill', () => {
+  it('is the latest definition of the writer, and of the fill until the hero forms migration (issue 667) restates it', () => {
     assert.equal(latestDefiner('record_match_hero_timelines'), RECORDER);
-    assert.equal(latestDefiner('fill_hero_switch_in_aggregates'), RECORDER);
+    assert.equal(latestDefiner('fill_hero_switch_in_aggregates'), HERO_FORMS);
   });
 });
 

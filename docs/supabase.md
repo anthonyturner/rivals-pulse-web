@@ -110,6 +110,7 @@ repo's build. This is a move, not a redesign.
 | `20261108180000_match_hero_timelines.sql` | `match_hero_timelines` (each player's hero picks with the second they happened, by team, no uid or name, once per match), `record_match_hero_timelines`, the helper `json_whole_number`, and `purge_expired_participants` restated to delete timelines on the schedule of `match_hero_kills`, with every freeze still called |
 | `20261108190000_hero_switch_in_aggregates.sql` | `hero_switch_ins` and its half-season table (how often a team won after a player switched to a hero while an enemy hero was on the field, per half-season and mode, counts only), its fill, rebuild, recompute (hourly) and freeze, `read_hero_switch_ins` (gated by `hero_figure_qualifies`), and `purge_expired_participants` restated to call the new freeze before its first delete |
 | `20261108200000_hero_timeline_recorder.sql` | `match_hero_timelines.recorded_by` (nullable, the keyed recorder hash, closed to `anon` and `authenticated` like the rest of the table), `record_match_hero_timelines` replaced by a four argument version whose `p_recorded_by` defaults to null, and `fill_hero_switch_in_aggregates` restated to count players from the timeline uploader. The purge is not touched |
+| `20261108210000_hero_switch_in_hero_forms.sql` | `fill_hero_switch_in_aggregates` restated to read every hero id as its base id from `hero_game_roles`, so Deadpool's role forms are one hero (1057): a change of form is no switch, and a match is counted once however many forms it switches to (issue 667). Same signature, grants and everything else |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -643,7 +644,12 @@ that restates the purge must keep calling every freeze**; a test reads the lates
 if one is gone or comes after a delete.
 
 - **A switch** is a pick that follows a player's first pick and names a different hero than the pick
-  before it. The first pick is not a switch, and neither is a repeat of the same hero.
+  before it. The first pick is not a switch, and neither is a repeat of the same hero. A hero is its
+  base id from `hero_game_roles` (issue 667): Deadpool's role forms 10571 to 10573 are all 1057, so a change of
+  form is no switch, and the rows are stored under 1057, as the hero and as the enemy. The overlay already folds
+  back-to-back picks of one hero into one, so a direct form change rarely arrives; a change through another
+  hero (Deadpool, Rocket, Deadpool on another form) is a real switch to Deadpool. The merge is done here, before
+  counting, because a count cannot be un-merged: summing rows of several forms would count a match in each.
 - **Credit.** A switch is credited once to every distinct enemy hero on the field at its `at_second`:
   for each timeline of a team other than the switching team, the latest pick at or before that second.
   Two enemy players on one hero are one credit. A switch with no enemy pick yet is credited to nobody.
@@ -678,14 +684,17 @@ if one is gone or comes after a delete.
 - The website reads it through `GET /api/hero-switch-ins`
   ([`src/server/heroes/switch-ins/hero-switch-ins-read.ts`](../src/server/heroes/switch-ins/hero-switch-ins-read.ts)),
   which sets each pairing beside the hero's overall record against that enemy from `read_hero_matchups`
-  in the same half-season, with Deadpool's role forms merged under one hero. It prints the 10 matches
+  in the same half-season, with Deadpool's role forms merged under one hero. The rows already hold
+  Deadpool as 1057; if several game ids of one hero ever reach it (a form kept from before issue 667), it
+  takes the largest `matches` of them rather than their sum, since a match may sit in each, and adds their
+  switches and wins. It prints the 10 matches
   and 2 players of `hero_figure_qualifies` (`SWITCH_IN_MIN_MATCHES`, `SWITCH_IN_MIN_PLAYERS`), which a
   test compares with the latest definition. The hero page's Matchups tab shows it as "Switch-ins".
 - Players switch more when they are losing, so a switch-in win rate runs low. The page says so and
   shows the hero's overall record against the same enemy beside it. A switch is credited to every enemy
   hero on the field, so it is a co-occurrence, not proof that the switch was made to counter that hero.
 - **Run the check** after `supabase db push`:
-  `npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql` (fixtures in half-seasons 995 to 998, rolled back; includes nine matches from three players that must stay hidden, and ten matches whose timelines one player uploaded though two uploaded the scoreboards, which must stay hidden). It proves the counting rules, the reader, and that the purge freezes the counts
+  `npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql` (fixtures in half-seasons 994 to 998, rolled back; includes nine matches from three players that must stay hidden, ten matches whose timelines one player uploaded though two uploaded the scoreboards, which must stay hidden, and ten matches of Deadpool's role forms that must come out as one hero). It proves the counting rules, the reader, and that the purge freezes the counts
   before it deletes the timelines.
 - Until the overlay sends `hero_timelines` (issue 654), the table stays empty and the hero page shows
   its empty state. Half-seasons whose raw rows were purged before this migration cannot be filled.

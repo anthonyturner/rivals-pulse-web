@@ -1,4 +1,4 @@
--- Proves the switch-in rules (migrations 20261108190000 and 20261108200000, issues 655 and 666) on fixture
+-- Proves the switch-in rules (migrations 20261108190000, 20261108200000 and 20261108210000, issues 655, 666 and 667) on fixture
 -- matches in half-seasons that do not exist, then rolls everything back. Run after applying the migrations:
 --   npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql
 -- It fails with an exception naming the rule that broke; it ends with a rollback, never a commit.
@@ -263,6 +263,96 @@ begin
     raise exception 'the recreated timeline writer must stay closed to the publishable key';
   end if;
   raise notice 'ok: the recreated timeline writer is closed to the publishable key';
+end
+$$;
+
+-- Issue 667: Deadpool's role forms (10571 to 10573) are one hero, base id 1057. Half-season 994 holds ten
+-- decided matches, five uploaded by each of two players, that all go the same way. Team 1 wins each.
+--  * Player A goes from form 10571 to form 10572 at second 50: a form change is no switch.
+--  * Player B goes 1011, then Deadpool 10571 at second 60, 1014 at second 120, Deadpool 10573 at second 180:
+--    two switches to Deadpool in different forms, and one to 1014.
+--  * Team 2 fields 1033, a Deadpool on 10571 who changes to 10573 at second 10, and a Deadpool on 10572:
+--    two Deadpools on different forms are one enemy hero, 1057, so each switch is credited to it once.
+-- Expected rows: 1057 against 1033 and against 1057 (10 matches, 20 switches), 1014 against 1033 and
+-- against 1057 (10 matches, 10 switches), and no row under any form id, as hero or as enemy.
+do $$
+declare
+  n integer;
+  played timestamptz;
+  stored record;
+begin
+  if exists (select 1 from public.participants where half_season = 994) then
+    raise exception 'test half-season already exists';
+  end if;
+
+  for n in 1..10 loop
+    played := now() - make_interval(hours => n);
+
+    perform public.record_match_participants('tst-form-' || n, 994, played, 'tst-form-' || (n % 2),
+      jsonb_build_array(
+        jsonb_build_object('uid', 'tst-form-' || n || '-a', 'name', 'tst-form-' || n || '-a', 'team', 1, 'hero_id', 10572, 'is_win', true),
+        jsonb_build_object('uid', 'tst-form-' || n || '-b', 'name', 'tst-form-' || n || '-b', 'team', 1, 'hero_id', 10573, 'is_win', true),
+        jsonb_build_object('uid', 'tst-form-' || n || '-c', 'name', 'tst-form-' || n || '-c', 'team', 2, 'hero_id', 1033, 'is_win', false),
+        jsonb_build_object('uid', 'tst-form-' || n || '-d', 'name', 'tst-form-' || n || '-d', 'team', 2, 'hero_id', 10573, 'is_win', false),
+        jsonb_build_object('uid', 'tst-form-' || n || '-e', 'name', 'tst-form-' || n || '-e', 'team', 2, 'hero_id', 10572, 'is_win', false)),
+      1::smallint, null);
+
+    if public.record_match_hero_timelines('tst-form-' || n, played,
+         '[{"team": 1, "picks": [{"hero_id": 10571, "at_second": 0}, {"hero_id": 10572, "at_second": 50}]},
+           {"team": 1, "picks": [{"hero_id": 1011, "at_second": 0}, {"hero_id": 10571, "at_second": 60},
+                                 {"hero_id": 1014, "at_second": 120}, {"hero_id": 10573, "at_second": 180}]},
+           {"team": 2, "picks": [{"hero_id": 1033, "at_second": 0}]},
+           {"team": 2, "picks": [{"hero_id": 10571, "at_second": 0}, {"hero_id": 10573, "at_second": 10}]},
+           {"team": 2, "picks": [{"hero_id": 10572, "at_second": 0}]}]'::jsonb) <> 5 then
+      raise exception 'all five timelines of match % must be stored', n;
+    end if;
+  end loop;
+
+  if not public.rebuild_hero_switch_in_aggregates(994) then
+    raise exception 'a half-season with raw rows must be rebuilt';
+  end if;
+
+  if (select count(*) from public.hero_switch_ins where half_season = 994) <> 4 then
+    raise exception 'exactly four switch-ins must be stored: %',
+      (select jsonb_agg(to_jsonb(s)) from public.hero_switch_ins s where s.half_season = 994);
+  end if;
+  if exists (
+    select 1 from public.hero_switch_ins
+    where half_season = 994 and (hero_id in (10571, 10572, 10573) or enemy_hero_id in (10571, 10572, 10573))
+  ) then
+    raise exception 'a role form must be stored under its base id, as the hero switched to and as the enemy';
+  end if;
+  raise notice 'ok: Deadpool''s role forms are stored as one hero, 1057';
+
+  select * into stored from public.hero_switch_ins where half_season = 994 and hero_id = 1057 and enemy_hero_id = 1033;
+  if not found or stored.matches <> 10 or stored.decided_matches <> 10 or stored.switches <> 20
+     or stored.decided_switches <> 20 or stored.wins <> 20 or stored.recorders <> 2 or stored.top_recorder_matches <> 5 then
+    raise exception 'a match with two switches to different Deadpool forms must count once in matches and twice in switches, and a form change must add none: %', stored;
+  end if;
+  select * into stored from public.hero_switch_ins where half_season = 994 and hero_id = 1057 and enemy_hero_id = 1057;
+  if not found or stored.matches <> 10 or stored.switches <> 20 or stored.wins <> 20 then
+    raise exception 'two enemy Deadpools on different forms must be credited once, to 1057: %', stored;
+  end if;
+  select * into stored from public.hero_switch_ins where half_season = 994 and hero_id = 1014 and enemy_hero_id = 1057;
+  if not found or stored.matches <> 10 or stored.switches <> 10 or stored.wins <> 10 then
+    raise exception 'a switch away from Deadpool must be credited to the enemy Deadpool once: %', stored;
+  end if;
+  if not exists (select 1 from public.hero_switch_ins where half_season = 994 and hero_id = 1014 and enemy_hero_id = 1033 and switches = 10) then
+    raise exception 'a switch must still be credited to an enemy that is not a Deadpool';
+  end if;
+  raise notice 'ok: a form change is no switch, and a match is counted once however many forms it switches to';
+
+  if not exists (
+    select 1 from jsonb_to_recordset(public.read_hero_switch_ins(array[1]::smallint[]) -> 'switch_ins')
+         as r(half_season numeric, hero_id integer, enemy_hero_id integer, decided_matches integer, decided_switches integer)
+    where r.half_season = 994 and r.hero_id = 1057 and r.enemy_hero_id = 1033 and r.decided_matches = 10 and r.decided_switches = 20
+  ) or exists (
+    select 1 from jsonb_to_recordset(public.read_hero_switch_ins(array[1]::smallint[]) -> 'switch_ins') as r(half_season numeric, hero_id integer, enemy_hero_id integer)
+    where r.half_season = 994 and (r.hero_id in (10571, 10572, 10573) or r.enemy_hero_id in (10571, 10572, 10573))
+  ) then
+    raise exception 'the reader must return Deadpool as 1057 with ten matches, and no form id';
+  end if;
+  raise notice 'ok: the reader returns Deadpool merged';
 end
 $$;
 

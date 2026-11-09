@@ -126,7 +126,11 @@ function snapshotOf(
 
     const key = `${hero}|${enemy}`;
     const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, switches: 0, wins: 0 } };
-    entry.tally.matches += row.decidedMatches;
+    // The database stores a hero under its base game id, so one pairing normally arrives as one row. Rows
+    // of several game ids (a role form kept from before that) cannot be told apart by match, and a match
+    // can sit in each of them, so the largest never overstates where the sum could. Every switch is
+    // its own event on the hero side, so those add.
+    entry.tally.matches = Math.max(entry.tally.matches, row.decidedMatches);
     entry.tally.switches += row.decidedSwitches;
     entry.tally.wins += row.wins;
     tallies.set(key, entry);

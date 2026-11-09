@@ -86,13 +86,29 @@ describe('deriveHeroSwitchIns', () => {
     expect(switchIns.switchIns.map((line) => `${line.hero}>${line.enemy}`)).toEqual(['hulk>storm', 'hulk>thor', 'thor>hulk']);
   });
 
-  it('counts every Deadpool id as the one hero and sums their rows', () => {
-    const { switchIns } = derive([row(10571, THOR, 6, 4), row(10572, THOR, 5, 2), row(THOR, 1057, 11, 7)]);
+  it('counts every Deadpool id as the one hero, naming one row per id as it is', () => {
+    const { switchIns } = derive([row(1057, THOR, 11, 6), row(THOR, 1057, 11, 7)]);
 
     expect(switchIns.switchIns.map((line) => [line.hero, line.enemy, line.matches, line.wins])).toEqual([
       ['deadpool', 'thor', 11, 6],
       ['thor', 'deadpool', 11, 7],
     ]);
+  });
+
+  it('counts a match once when two Deadpool forms are switched to in it, and still adds every switch', () => {
+    // One match can hold a switch into 10571 and a later one into 10572: it sits in both rows, so the
+    // merged matches are the larger of the two, never the sum.
+    const { switchIns } = derive([row(10571, THOR, 11, 6), row(10572, THOR, 10, 4)]);
+
+    expect(switchIns.switchIns).toEqual([
+      { hero: 'deadpool', enemy: 'thor', matches: 11, switches: 21, wins: 10, winRate: (10 / 21) * 100, overall: null },
+    ]);
+  });
+
+  it('does not let forms that each fall short of the minimum add up to a pairing', () => {
+    const { switchIns } = derive([row(10571, THOR, 6, 4), row(10572, THOR, 5, 2)]);
+
+    expect(switchIns.switchIns).toEqual([]);
   });
 
   it('drops a hero against itself, including one Deadpool form against another', () => {
