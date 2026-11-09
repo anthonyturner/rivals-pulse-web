@@ -1,8 +1,12 @@
-import { recordSyncRun, runGameStatsSync } from '../src/server/sync/index.ts';
+import { recordSyncRun, runGameStatsCapture } from '../src/server/sync/index.ts';
+import { reportGameStatsCapture } from './game-stats-report.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 
-const result = await runGameStatsSync(getSupabaseClient(), recordSyncRun);
+const report = reportGameStatsCapture(await runGameStatsCapture(getSupabaseClient(), recordSyncRun));
 
-console.log(`Saved game-stat snapshot for ${result.snapshotDate}.`);
-console.log(`Games: ${result.games.length}`);
-console.log(`Compared with: ${result.previousSnapshot?.snapshotDate ?? 'first stored snapshot'}`);
+if (report.failed) {
+  console.error(report.lines.join('\n'));
+  process.exitCode = 1;
+} else {
+  console.log(report.lines.join('\n'));
+}
