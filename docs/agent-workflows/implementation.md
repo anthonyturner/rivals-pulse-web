@@ -69,24 +69,90 @@ request was ever opened. That is the wrong order — the section above is the
 right one — but it happens, and the recovery is not a different workflow. It is
 this one, entered late. The `open-pr` skill runs it.
 
-1. Read `git status` and `git diff --stat` to see what is uncommitted, and
-   preserve anything unrelated ([rule 5](../rules.md)).
+1. Read `git status` and `git diff --stat` in the primary checkout (both
+   read-only) and list the files that belong to the issue. Everything else is
+   unrelated; leave it exactly where it is ([rule 5](../rules.md)).
 2. Resolve the issue the work belongs to (`gh issue view <n>`), and confirm the
    uncommitted changes actually match its scope and acceptance criteria before
    going further. If no issue exists, file one first — see
    [planning.md](planning.md). Untracked work does not get a pull request
    ([rule 11](../rules.md)).
-3. Verify as **Implement and verify** below describes, and report pass or fail
-   plainly. Never silently skip a failing check.
-4. Summarise the diff for the requester and carry straight on. Do not wait for
-   approval ([rule 2](../rules.md)).
-5. Branch, stage only the files the issue covers (never `git add -A` or
-   `git add .`), then commit, push and open the pull request as **Publish**
-   below describes.
+3. Check the primary checkout is not ahead of upstream. Run `git fetch origin`,
+   then in the primary checkout:
 
-The branch still precedes the commit here. What is skipped is opening the pull
-request before the first edit, because the edits already happened; nothing else
-about the workflow changes.
+   ```sh
+   git merge-base --is-ancestor HEAD origin/master
+   ```
+
+   Passing while the checkout is *behind* `origin/master` is
+   normal: agents do not pull for the requester. If the check fails, the
+   checkout holds commits that are not on it, for example an unmerged feature
+   branch. Stop and report instead of guessing which base the edits belong on
+   ([rule 5](../rules.md)).
+4. Create the worktree and branch at the primary checkout's `HEAD`, not at
+   `origin/master`:
+
+   ```sh
+   git check-ignore -q .claude/worktrees/x ||
+     echo '.claude/worktrees/' >> "$(git rev-parse --git-common-dir)/info/exclude"
+   git worktree add .claude/worktrees/<issue-number>-<short-description> \
+     -b <type>/<issue-number>-<short-description> HEAD
+   ```
+
+   This **deliberately differs from the normal Prepare step**. The edits were
+   made on top of `HEAD`, so a patch reproduces them exactly only on that same
+   base. On `origin/master`, upstream changes to a file the work
+   also touches would mix into the result, and the comparison in the next step
+   could not succeed without overwriting upstream work. Everything else in
+   **Work in a worktree** applies, including the dependency install. The
+   primary checkout's branch is never switched, and its uncommitted files stay
+   where they are.
+5. Move the issue's files into the worktree, and only those. Run these from the
+   worktree root, because `git apply` resolves paths against the directory it
+   runs in:
+   - tracked changes, including deletions, renames and mode changes:
+
+     ```sh
+     git -C <primary-checkout-root> diff --binary HEAD -- <paths> | git apply --index
+     ```
+
+     The patch lands on the same base it was cut from, and `git apply` is
+     all-or-nothing: it applies completely or changes nothing. `--index` also
+     stages the result, which is what records a deletion or a mode-only change.
+     List both the old and the new path of a rename, or the old file stays and
+     the new one arrives as a plain addition;
+   - new untracked files: `cp -p` them to the same paths. This cannot overwrite
+     anything, because a file untracked in the primary checkout is not in
+     `HEAD`, and the worktree starts at `HEAD`.
+
+   Then verify nothing was lost: `git status --short` in the worktree lists
+   exactly the issue's files, and each one matches its original
+   (`diff <original> <copy>`; a deleted file is absent). Do not go on until it
+   does.
+6. Stage the untracked files by path (never `git add -A` or `git add .`) and
+   commit locally, with a Conventional Commit as **Publish** below describes.
+   The tracked changes are already staged. Do not push yet, and note the commit
+   with `git rev-parse HEAD`.
+7. Bring the branch up to date inside the worktree, with the stale-branch
+   guidance above: `git fetch origin`, then `git rebase
+   origin/master`. The branch is unpublished, so the rebase
+   rewrites nothing anyone has. If it conflicts, resolve only what the issue
+   makes clear; otherwise stop and report ([rule 5](../rules.md)).
+8. Verify, in the worktree, as **Implement and verify** below describes, and
+   report pass or fail plainly. Never silently skip a failing check.
+9. Summarise the diff for the requester and carry straight on. Do not wait for
+   approval ([rule 2](../rules.md)).
+10. Push and open the pull request as **Publish** below describes.
+
+The originals stay in the primary checkout. Never delete, revert, stash or
+overwrite them unless the requester explicitly asks: they are the requester's,
+and **Clear the originals when the pull request opens** above says how they are
+handed back. If the rebase in step 7 brought in upstream changes to those files,
+the pushed branch rightly differs from the originals there, so run that
+section's comparison against the commit from step 6 instead of
+`origin/<branch>`. What differs from the normal order is only that the code
+existed first; the branch is still created before the commit, and in a worktree
+like any other.
 
 ## Work in a worktree, never the primary checkout
 
@@ -107,8 +173,8 @@ In the primary checkout an agent runs only:
 - read-only git, for example `git status`, `git diff`, `git log`, `git show`,
   `git branch --show-current`, `git check-ignore`, `git rev-parse`;
 - `git fetch`;
-- `git worktree add`, `git worktree list`, `git worktree move` and
-  `git worktree remove`.
+- `git worktree add`, `git worktree list`, `git worktree move`,
+  `git worktree remove` and `git worktree prune`.
 
 Never `git switch` or `git checkout` a branch there, and never commit, pull,
 merge, rebase, reset or stash there. Never edit its files unless the requester
@@ -118,7 +184,8 @@ explicitly asks.
 git check-ignore -q .claude/worktrees/x ||
   echo '.claude/worktrees/' >> "$(git rev-parse --git-common-dir)/info/exclude"
 git fetch origin
-git worktree add .claude/worktrees/<issue-number>-<short-description>   -b <type>/<issue-number>-<short-description> origin/master
+git worktree add .claude/worktrees/<issue-number>-<short-description> \
+  -b <type>/<issue-number>-<short-description> origin/master
 ```
 
 The first line keeps the folder out of `git status`. Without it the primary
