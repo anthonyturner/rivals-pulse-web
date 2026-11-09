@@ -195,6 +195,12 @@ describe('heroAbilitySlots', () => {
     ]);
   });
 
+  it('names a slot of two same-named base abilities even when a team-up shares the key', () => {
+    expect(slotsOf(row('Gamma Burst', 'ability_2', 'Damage', 8), row('Gamma Burst', 'ability_2', 'Damage', 8), row('Duo', 'ability_2', 'Utility', 20, 'Team-Up Ability'))).toEqual([
+      { slot: 'ability_2', ability: 'Gamma Burst', alsoIncludes: ['Duo'], tag: 'Damage', cooldownSeconds: 8 },
+    ]);
+  });
+
   it('judges a slot of team-ups alone by all of them together', () => {
     expect(slotsOf(row('Duo', 'team_up_0', 'Utility', 10, 'Team-Up Ability'), row('Trio', 'team_up_0', 'Damage', 10, 'Team-Up Ability'))).toEqual([
       { slot: 'team_up_0', ability: null, alsoIncludes: ['Duo', 'Trio'], tag: null, cooldownSeconds: 10 },

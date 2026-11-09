@@ -38,12 +38,11 @@ export const bundledHeroAbilityTagTable = bundledTable as unknown as HeroAbility
 /** The row types that are the hero's own kit, as opposed to a team-up, a passive or a normal attack. */
 const BASE_ABILITY_TYPES: ReadonlySet<string> = new Set(['Ability', 'Ultimate']);
 
-// A team-up only replaces the base ability while its partner is on the team, so with one base ability
-// on the key a count is essentially that ability's. Without one, the slot is only as certain as all
-// of its abilities together.
+// A team-up only replaces the base ability while its partner is on the team, so a count on a key is
+// essentially its base abilities'. Only a key with no base ability is judged on its team-ups.
 function slotOf(slot: string, rows: readonly HeroAbilityTagRow[]): HeroAbilitySlot {
   const bases = rows.filter((row) => BASE_ABILITY_TYPES.has(row.type));
-  const deciding = bases.length === 1 ? bases : rows;
+  const deciding = bases.length > 0 ? bases : rows;
   const agreed = <T>(valueOf: (row: HeroAbilityTagRow) => T): T | null =>
     new Set(deciding.map(valueOf)).size === 1 ? valueOf(deciding[0]) : null;
   const ability = agreed((row) => row.ability);
@@ -58,9 +57,10 @@ function slotOf(slot: string, rows: readonly HeroAbilityTagRow[]): HeroAbilitySl
 }
 
 /**
- * Each hero's slots by hero id. A key can hold several abilities (a team-up, a form, an upgrade) and
- * nothing says which one a count came from. A slot the hero's page does not list is absent, which is what makes a hero's unused slots drop out:
- * the overlay sends every slot, at 0 when the hero has no such ability.
+ * Each hero's slots by hero id. A key can hold several abilities (a team-up, a form, an upgrade), and
+ * `slotOf` decides which one a count is named after. A slot the hero's page does not list is absent,
+ * which is what makes a hero's unused slots drop out: the overlay sends every slot, at 0 when the
+ * hero has no such ability.
  */
 export function heroAbilitySlots(table: HeroAbilityTagTable = bundledHeroAbilityTagTable): ReadonlyMap<string, readonly HeroAbilitySlot[]> {
   return new Map(
