@@ -54,6 +54,6 @@ export const PLANNED_UPLOAD_FIELDS: readonly UploadField[] = [
   {
     label: 'Hero changes during the match',
     detail:
-      'For every player, the heroes they played and how many seconds into the match each pick happened, grouped by team. It carries no player names or ids and is stored once per match. It is used to count how often switching to a hero while an enemy hero is in play goes on to win.',
+      'For every player, the heroes they played and how many seconds into the match each pick happened, grouped by team. It carries no player names or ids and is stored once per match, with the one-way code of the player who uploaded it (described under what the app uploads today). It is used to count how often switching to a hero while an enemy hero is in play goes on to win.',
   },
 ];
