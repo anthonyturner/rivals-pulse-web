@@ -48,10 +48,15 @@ at the end.
 
 ```sh
 # in the worktree, whose branch came off origin/master when it was created
-git commit --allow-empty -m "chore(scope): start <thing>"
+git commit --allow-empty -m "chore(scope): start <thing>" -m "Agent: <Name>"
 git push -u origin <type>/<n>-<short-description>
-gh pr create --draft --base master   # body carries Closes #<n>
+gh pr create --draft --base master   # body carries your signature and Closes #<n>
 ```
+
+The draft's body carries your signature from the moment it opens: that is what
+reserves your developer name, because the next agent finds the free names by
+reading the open drafts ([crew.md](crew.md)). A draft with no signature holds a
+slot but no name. The start commit carries your `Agent: <Name>` trailer too.
 
 The empty commit is not ceremony: GitHub refuses a pull request whose head
 branch is not ahead of base, so a branch with no commits cannot have one. The
@@ -431,13 +436,15 @@ reaches it.
 
 1. Use a Conventional Commit. Refer to the issue in prose in a commit body
    ("issue 123"), and keep the `#<number>` link for the pull-request body — see
-   **Issue references in commits** below.
+   **Issue references in commits** below. Add the `Agent: <Name>` trailer above
+   `Co-Authored-By` ([crew.md](crew.md)).
 2. Push without force.
 3. Update the pull request to the shape of `.github/pull_request_template.md` —
    Summary, Type, Verification, Changelog, Manual testing, Risks, Escalation
    signals — titled
    with the Conventional Commit subject, with `Closes #<n>` in the body. Replace
-   the scaffold body; do not leave a stub.
+   the scaffold body; do not leave a stub. Keep the signature at the top of the
+   body ([crew.md](crew.md)).
 4. Report the GitHub issue and pull-request URLs and the branch.
 
 Then carry on to **Review and merge**.

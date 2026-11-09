@@ -40,6 +40,10 @@ agent tool. The adapters are entry points, not separate pipeline definitions.
 5. **QA Reviewer** performs read-only acceptance-criteria and pull-request
    review. Follow [qa-review.md](qa-review.md).
 
+Whoever starts an agent, a session or the team lead, names it in the agent's
+prompt from the roster in [crew.md](crew.md), and the agent signs everything it
+writes with that name.
+
 ## Defect lane
 
 The order above is for feature work, where the problem is known and the
@@ -202,7 +206,8 @@ anything else, per [implementation.md](implementation.md).
 
 Every other comment you post on an issue or a pull request starts with the
 hidden line `<!-- agent -->` (or `<!-- agent: <name> -->` for an agent with a
-callsign name), so that it is never read as his answer.
+callsign name), so that it is never read as his answer. Sign it as
+[crew.md](crew.md) says; the `Waiting on Tony:` question is signed too.
 
 ## Running the pipeline end to end
 

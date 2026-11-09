@@ -1,3 +1,7 @@
+<!-- agent: <your crew name, lowercase> -->
+**<Your crew name>** · <emoji> <role>
+<!-- Signature: see docs/agent-workflows/crew.md. Delete these two lines if a person wrote this PR. -->
+
 ## Summary
 
 - Describe the change and its purpose.

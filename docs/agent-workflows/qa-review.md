@@ -44,7 +44,8 @@ and file and line references kept as evidence.
 10. Post the review on the pull request as a comment (`gh pr review <n>
    --comment` or `gh pr comment <n>`). GitHub does not let an account approve
    its own pull request, so the verdict is stated in the comment rather than
-   submitted as an approval. Never close the issue — a review verdict is not a
+   submitted as an approval. Sign the verdict as the reviewer, per
+   [crew.md](crew.md), even when another session posts it. Never close the issue — a review verdict is not a
    state change, and closure follows the merge.
 
 The review itself is read-only: do not edit files, commit, push, merge, close
