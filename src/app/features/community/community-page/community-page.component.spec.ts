@@ -55,10 +55,8 @@ describe('CommunityPageComponent', () => {
   }
 
   async function answerMatchesTab(): Promise<void> {
-    // The lead tile's totals ask for the same answer, so every request for it is answered.
-    TestBed.inject(HttpTestingController)
-      .match('/api/community/matches')
-      .forEach((request) => request.flush(MATCHES_NOT_ENOUGH_DATA));
+    // The lead tile and the tab read one shared answer, so a second request would fail here.
+    TestBed.inject(HttpTestingController).expectOne('/api/community/matches').flush(MATCHES_NOT_ENOUGH_DATA);
     await harness.fixture.whenStable();
     harness.detectChanges();
   }
@@ -280,10 +278,10 @@ describe('CommunityPageComponent', () => {
     await open('/heroes');
 
     const http = TestBed.inject(HttpTestingController);
-    const requests = http.match('/api/community/matches');
+    const request = http.expectOne('/api/community/matches');
     expect(host().querySelector('app-community-totals-preview .figure')).toBeNull();
 
-    requests.forEach((request) => request.flush({ ...MATCHES_NOT_ENOUGH_DATA, status: 'ready', matchesBand: 250, halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null }, averageLengthMinutes: 12 }));
+    request.flush({ ...MATCHES_NOT_ENOUGH_DATA, status: 'ready', matchesBand: 250, halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null }, averageLengthMinutes: 12 });
     await harness.fixture.whenStable();
     harness.detectChanges();
 
