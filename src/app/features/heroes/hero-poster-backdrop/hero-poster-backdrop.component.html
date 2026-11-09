@@ -8,7 +8,7 @@
       [src]="videoUrl()"
       [title]="heroName() + ' gameplay video'"
       allow="autoplay; encrypted-media"
-      (load)="videoLoaded.set(true)"
+      (load)="onVideoLoaded()"
     ></iframe>
   }
 </span>

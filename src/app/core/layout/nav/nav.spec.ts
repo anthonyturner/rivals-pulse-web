@@ -199,6 +199,7 @@ describe('Nav', () => {
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
         player: null,
         isAdmin: false,
+        mediaDefaults: null,
       });
       fixture.detectChanges();
       await go('/profile');
@@ -224,6 +225,7 @@ describe('Nav', () => {
       account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
       player: null,
       isAdmin: false,
+      mediaDefaults: null,
     });
     fixture.detectChanges();
 
@@ -238,6 +240,7 @@ describe('Nav', () => {
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
         player: { name, avatarUrl },
         isAdmin: false,
+        mediaDefaults: null,
       });
       fixture.detectChanges();
     };
@@ -288,6 +291,7 @@ describe('Nav', () => {
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
         player: null,
         isAdmin: false,
+        mediaDefaults: null,
       });
       fixture.detectChanges();
 
@@ -313,6 +317,7 @@ describe('Nav', () => {
       account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
       player: null,
       isAdmin: false,
+      mediaDefaults: null,
     });
     fixture.detectChanges();
 
@@ -341,14 +346,14 @@ describe('Nav', () => {
     const ACCOUNT = { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' };
 
     it('is shown to an administrator, between My stats and the account link', () => {
-      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true });
+      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: null });
 
       expect(adminLink()?.getAttribute('href')).toBe('/admin');
       expect(labels().slice(-3)).toEqual(['My stats', 'Admin', 'Account']);
     });
 
     it('is not shown to a signed-in visitor who is not an administrator', () => {
-      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
 
       expect(adminLink()).toBeUndefined();
     });
@@ -362,7 +367,7 @@ describe('Nav', () => {
     }
 
     it('goes away when the administrator signs out', () => {
-      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true });
+      show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: null });
       show({ status: 'signedOut' });
 
       expect(adminLink()).toBeUndefined();

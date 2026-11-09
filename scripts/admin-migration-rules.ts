@@ -21,6 +21,8 @@ export const GUARDED_FROM = '20261104140000';
 export const NOT_ADMIN_FUNCTIONS: readonly string[] = [
   // The "Show me in Pulse Records" switch (issue 568): any linked player changes their own setting. It names no account and touches only the caller's row.
   'public.set_records_opt_in',
+  // The media defaults (issue 705): any signed-in account sets its own hero video and sound defaults. It names no account and touches only the caller's row.
+  'public.set_media_defaults',
 ];
 
 const IS_ADMIN = 'public.is_admin';

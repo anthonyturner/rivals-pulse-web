@@ -138,6 +138,54 @@
       }
     </section>
 
+    <section class="panel" aria-labelledby="account-media-title">
+      <h2 id="account-media-title">Video and sound</h2>
+      <p>
+        How hero pages and the home page open for you on any browser you sign in on. A switch on a
+        page changes it for that visit only, and these settings come back on your next visit.
+      </p>
+      @if (mediaDefaults(); as saved) {
+        <div class="choice">
+          <input
+            id="hero-video-default"
+            type="checkbox"
+            [checked]="saved.heroVideo"
+            [attr.aria-busy]="mediaDefaultsSaving() ? 'true' : null"
+            aria-describedby="hero-video-default-help"
+            (change)="onMediaDefaultChange('heroVideo', $event)"
+          />
+          <label for="hero-video-default">Hero page gameplay video</label>
+        </div>
+        <p id="hero-video-default-help" class="hint">
+          Hero pages open on the hero's gameplay video instead of the portrait art.
+          @if (reducedMotion()) {
+            Your device asks for less motion, so the video never starts by itself, whatever this says.
+            You can still switch it on from a hero page.
+          }
+        </p>
+        <div class="choice">
+          <input
+            id="sound-default"
+            type="checkbox"
+            [checked]="saved.sound"
+            [attr.aria-busy]="mediaDefaultsSaving() ? 'true' : null"
+            aria-describedby="sound-default-help"
+            (change)="onMediaDefaultChange('sound', $event)"
+          />
+          <label for="sound-default">Gameplay video sound</label>
+        </div>
+        <p id="sound-default-help" class="hint">
+          The gameplay video and the home page banner start with sound. Browsers only allow sound after
+          you have pressed or tapped something on the page, so until then they can start muted.
+        </p>
+      } @else {
+        <p class="hint">Your video and sound settings could not be loaded. Reload the page to try again.</p>
+      }
+      @if (mediaDefaultsError(); as message) {
+        <app-state-panel kind="error" [announce]="false">{{ message }}</app-state-panel>
+      }
+    </section>
+
     <section class="panel" aria-labelledby="account-delete-title">
       <h2 id="account-delete-title">Delete your account</h2>
       <p>

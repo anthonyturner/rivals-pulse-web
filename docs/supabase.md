@@ -102,6 +102,7 @@ repo's build. This is a move, not a redesign.
 | `20261107100000_account_settings.sql` | `account_settings` (`show_in_records`, off by default; the owner selects, no client writes) |
 | `20261107100100_pulse_records_read.sql` | `records_hidden` (closed to every API role), the ceiling helpers `pulse_records_value_cap` and `pulse_records_rate_cap`, and `read_pulse_records()` (service role only) |
 | `20261107130000_records_opt_in.sql` | The "Show me in Pulse Records" switch: `set_records_opt_in(boolean)` (granted to `authenticated` only) and a trigger on `player_links` that switches the setting off whenever a link row is deleted |
+| `20261109120000_media_defaults.sql` | `account_settings.hero_video_default` and `sound_default` (off by default) and `set_media_defaults(boolean, boolean)` (granted to `authenticated` only): a signed-in account's defaults for the hero page gameplay video and for sound (issue 705) |
 | `20261108120000_two_player_community_minimum.sql` | Restates `hero_figure_qualifies` and `community_bucket_shown` with a player minimum of 2 instead of 3, and a limit on the busiest player read from the new `community_max_recorder_share_percent()` (100, so no cap; it was 50) (issue 603). The 10-match minimum is unchanged |
 | `20261108140000_team_lineup_thin_shape_counts.sql` | `read_team_lineup_shapes` returns a shape's `teams` while it is under `team_lineup_min_teams()`; its `wins` and `enough_data` are still withheld (issue 616). Same signature, gate and grants |
 | `20261108150000_hero_score_busiest_share.sql` | `read_community_hero_scores` flags the busiest player as `top * 100 > n * community_max_recorder_share_percent()` instead of a fixed half, so the flags are false at a 100% limit (issue 616). Same signature, security and grants |
@@ -1378,6 +1379,36 @@ relink racing it waits and then switches the setting off.
   Pulse Records migrations before it are already applied. It was applied to production on 2026-11-08. The maintainer
   decided on 2026-11-08 that the switch ships before `anthonyturner/rivals_pulse#1386` (the desktop app privacy
   policy), which follows; the website's `/privacy` section is the notice until then (ADR-0006, amended).
+
+## The media defaults
+
+A signed-in account chooses two defaults on the account page (issue 705): whether hero pages open on the gameplay video, and
+whether the gameplay video and the home pulse banner start with sound. One sound default serves both places, by the maintainer's
+decision of 2026-11-09. They are two more columns on `account_settings` (`hero_video_default`, `sound_default`, both
+`boolean not null default false`), so they follow the pattern of the Pulse Records switch: the owner can select their own row, no
+client writes the table, and an account with no row reads as both off.
+
+- **Writing it.** `set_media_defaults(p_hero_video boolean default null, p_sound boolean default null)` is `security definer`, empty
+  `search_path`, granted to `authenticated` only (`public`, `anon` and `service_role` are revoked), and takes no account id: it acts on
+  `auth.uid()`. A null parameter means "leave that one", so the two controls save independently; both null is refused (22004) and a caller
+  with no account is refused (28000). It upserts the row, sets `updated_at` itself (the table has no trigger), and returns
+  `{"status":"saved","heroVideo":bool,"sound":bool}` with both stored values. It does not touch `show_in_records`, and unlinking the player
+  does not reset these (they belong to the account, not to the link).
+- **Reading it.** The website reads the owner's own row with `GET /rest/v1/account_settings?select=hero_video_default,sound_default` and the
+  account's own token while it answers `GET /api/auth/session`, so every page knows the defaults without a second request. A read that
+  fails is `null` in the session, which pages treat as a signed-out visitor: unlike the Pulse Records switch, a wrong "off" here only
+  leaves a page as it is today. The routes are `POST /api/account/media-defaults` and the session answer (see
+  [api-specification.md](api-specification.md)).
+- **In the browser.** Signed in, the saved default is what a page opens with; the banner and video toggles change it for that visit
+  only and write nothing, and the saved default returns on the next visit (`accountDefaultedSetting`). Signed out, or when the defaults
+  could not be read, the browser-remembered toggles work as before. `prefers-reduced-motion` stops a saved "video on" from starting by
+  itself. A saved "sound on" is applied to the hero video only once the player reports ready and the browser reports the visitor has
+  interacted with the page (`navigator.userActivation.hasBeenActive`); until then the video stays muted and its Sound button shows off.
+- **Checks.** `npx supabase db query --linked -f supabase/checks/media_defaults.sql` plants accounts and asserts the defaults are off, each
+  saves alone and sets `updated_at`, only the owner reads or changes their row, no client writes the table, the Pulse Records switch is
+  untouched, an empty choice and a caller with no account are refused, and `anon` and `service_role` cannot call the function; it rolls back.
+  Judge it by its exit status.
+- **Release order.** Push `20261109120000` by hand (`npx supabase db push`) before the pull request merges (see the opening of this file).
 
 ## Tests
 

@@ -25,6 +25,7 @@ import {
   isDeletionConfirmed,
   type DeleteAccountRequest,
 } from '../../app/core/auth/account-deletion.types.ts';
+import { parseMediaDefaultsChange } from '../../app/core/auth/media-defaults.types.ts';
 import type { OwnDashboardResponse } from '../../app/core/auth/own-dashboard.types.ts';
 
 /** Sign-in is open on the live site and on a developer's machine only; a preview gets none. */
@@ -39,6 +40,7 @@ const LINK_CODE_REFUSED = 'That code is wrong or has expired. Get a new one from
 const LINK_UNAVAILABLE = 'Linking is unavailable right now. Try again in a moment.';
 const RECORDS_OPT_IN_UNAVAILABLE = 'Your Pulse Records setting is unavailable right now. Try again in a moment.';
 const RECORDS_OPT_IN_NEEDS_LINK = 'Link the desktop app first. Pulse Records can only show the name of a linked player.';
+const MEDIA_DEFAULTS_UNAVAILABLE = 'Your video and sound settings are unavailable right now. Try again in a moment.';
 const DASHBOARD_UNAVAILABLE = 'Your dashboard is unavailable right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
@@ -81,6 +83,8 @@ async function route(request: AccountRequest, gateway: () => AuthGateway): Promi
         : method === 'POST'
           ? setRecordsOptIn(request, gateway)
           : methodNotAllowed();
+    case 'account/media-defaults':
+      return method === 'POST' ? setMediaDefaults(request, gateway) : methodNotAllowed();
     case 'account/dashboard':
       return method === 'GET' ? readDashboard(request, gateway) : methodNotAllowed();
     default:
@@ -101,13 +105,14 @@ async function readSession(request: AccountRequest, gateway: () => AuthGateway):
     return { ...json(200, { signedIn: false }), cookies: [clearSessionCookie()] };
   }
 
-  const [player, isAdmin] = await Promise.all([
+  const [player, isAdmin, mediaDefaults] = await Promise.all([
     gateway().linkedPlayer(resolved.tokens),
     gateway().isAdmin(resolved.tokens).catch(adminCheckFailed),
+    gateway().readMediaDefaults(resolved.tokens),
   ]);
 
   return {
-    ...json(200, { signedIn: true, account: resolved.account, player, isAdmin }),
+    ...json(200, { signedIn: true, account: resolved.account, player, isAdmin, mediaDefaults }),
     cookies: refreshedCookies(tokens, resolved.tokens),
   };
 }
@@ -195,6 +200,26 @@ async function setRecordsOptIn(request: AccountRequest, gateway: () => AuthGatew
     return result.status === 'saved'
       ? json(200, { showInRecords: result.showInRecords })
       : json(409, { error: RECORDS_OPT_IN_NEEDS_LINK });
+  });
+}
+
+/**
+ * Saves the signed-in account's own hero video and sound defaults. The body names the ones to change,
+ * as `{ heroVideo?: boolean, sound?: boolean }`, and nothing in it names an account: the database acts
+ * on the session's account alone.
+ */
+async function setMediaDefaults(request: AccountRequest, gateway: () => AuthGateway): Promise<AccountResponse> {
+  const refusal = { signedOutMessage: 'Sign in to change this setting.', unavailableMessage: MEDIA_DEFAULTS_UNAVAILABLE };
+
+  return withSession(request, gateway, refusal, async (tokens) => {
+    const change = parseMediaDefaultsChange(request.body);
+
+    // Anything but a real boolean is no choice at all, so it must not become "off" by accident.
+    if (!change) {
+      return json(400, { error: 'Choose on or off.' });
+    }
+
+    return json(200, await gateway().setMediaDefaults(tokens, change));
   });
 }
 

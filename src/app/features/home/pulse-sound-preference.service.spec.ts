@@ -1,6 +1,7 @@
 import { ApplicationRef, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
+import { AuthService } from '../../core/auth/auth.service';
 import { PULSE_SOUND_STORAGE_KEY, PulseSoundPreferenceService } from './pulse-sound-preference.service';
 
 describe('PulseSoundPreferenceService', () => {
@@ -70,6 +71,75 @@ describe('PulseSoundPreferenceService', () => {
 
     preference.set(true);
     expect(preference.enabled()).toBeTrue();
+    expect(localStorage.getItem(PULSE_SOUND_STORAGE_KEY)).toBe('on');
+  });
+});
+
+describe('PulseSoundPreferenceService for a signed-in visitor', () => {
+  const ACCOUNT = { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' };
+
+  beforeEach(() => {
+    localStorage.removeItem(PULSE_SOUND_STORAGE_KEY);
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+  });
+
+  afterEach(() => localStorage.removeItem(PULSE_SOUND_STORAGE_KEY));
+
+  const signIn = (sound: boolean): void =>
+    TestBed.inject(AuthService).state.set({
+      status: 'signedIn',
+      account: ACCOUNT,
+      player: null,
+      isAdmin: false,
+      mediaDefaults: { heroVideo: false, sound },
+    });
+
+  it('follows the account sound default', () => {
+    const preference = TestBed.inject(PulseSoundPreferenceService);
+
+    signIn(true);
+
+    expect(preference.enabled()).toBeTrue();
+
+    signIn(false);
+
+    expect(preference.enabled()).toBeFalse();
+  });
+
+  it('beats what this browser remembered', async () => {
+    localStorage.setItem(PULSE_SOUND_STORAGE_KEY, 'on');
+    const preference = TestBed.inject(PulseSoundPreferenceService);
+    signIn(false);
+    TestBed.inject(ApplicationRef).tick();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(preference.enabled()).toBeFalse();
+  });
+
+  it('changes for this visit only: the toggle saves nothing, and the account default returns next visit', () => {
+    signIn(true);
+    TestBed.inject(PulseSoundPreferenceService).set(false);
+
+    expect(TestBed.inject(PulseSoundPreferenceService).enabled()).toBeFalse();
+    expect(localStorage.getItem(PULSE_SOUND_STORAGE_KEY)).toBeNull();
+    expect(TestBed.inject(AuthService).mediaDefaults()).toEqual({ heroVideo: false, sound: true });
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    signIn(true);
+
+    expect(TestBed.inject(PulseSoundPreferenceService).enabled()).toBeTrue();
+  });
+
+  it('is the browser-remembered choice once the visitor signs out', () => {
+    const preference = TestBed.inject(PulseSoundPreferenceService);
+    signIn(true);
+    TestBed.inject(AuthService).state.set({ status: 'signedOut' });
+
+    expect(preference.enabled()).toBeFalse();
+
+    preference.set(true);
+
     expect(localStorage.getItem(PULSE_SOUND_STORAGE_KEY)).toBe('on');
   });
 });

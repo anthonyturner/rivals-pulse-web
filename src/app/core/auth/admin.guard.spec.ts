@@ -21,11 +21,11 @@ describe('adminGuard', () => {
   };
 
   it('lets an administrator through', async () => {
-    expect(await run({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true })).toBeTrue();
+    expect(await run({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: null })).toBeTrue();
   });
 
   it('sends a signed-in visitor who is not an administrator to the home page', async () => {
-    const result = await run({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+    const result = await run({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
 
     expect(result instanceof UrlTree).toBeTrue();
     expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/');

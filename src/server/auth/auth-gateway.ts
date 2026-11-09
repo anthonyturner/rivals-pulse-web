@@ -1,4 +1,5 @@
 import type { LinkedPlayer } from '../../app/core/auth/linked-player.types.ts';
+import { parseMediaDefaults, type MediaDefaults, type MediaDefaultsChange } from '../../app/core/auth/media-defaults.types.ts';
 import type { DataJobDetail, DataJobKey, DataJobStatus } from '../../contracts/admin-data-jobs.model.ts';
 import { beginResultOf, dataJobStatusesOf, type BeginDataJobResult } from '../../contracts/admin-data-jobs.parse.ts';
 import type { SessionTokens } from './auth-cookies.ts';
@@ -75,6 +76,18 @@ export interface AuthGateway {
    * takes no account id. The database also switches it off whenever the link ends or is replaced.
    */
   setRecordsOptIn(tokens: SessionTokens, show: boolean): Promise<RecordsOptInResult>;
+  /**
+   * The account's hero video and sound defaults, off when it has chosen none, or null when they cannot be
+   * read. Never throws: they only decide how a page opens, so a Supabase that cannot answer leaves pages
+   * as they are for a signed-out visitor.
+   */
+  readMediaDefaults(tokens: SessionTokens): Promise<MediaDefaults | null>;
+  /**
+   * Saves the defaults the change names for the account the tokens belong to, and for no other: the
+   * database function takes no account id. Returns both defaults as stored. Throws AuthUnavailableError
+   * when the database cannot answer.
+   */
+  setMediaDefaults(tokens: SessionTokens, change: MediaDefaultsChange): Promise<MediaDefaults>;
   /**
    * The newest matches the account's link can prove are its own (capped by the database), or that it
    * has no link. The database decides whose lines these are; nothing here says whose to read.
@@ -383,6 +396,27 @@ export function createSupabaseAuthGateway(env: AuthEnv, fetcher: typeof fetch = 
       return recordsOptInResultOf(await rpc('set_records_opt_in', { p_show: show }, tokens.accessToken), show);
     },
 
+    async readMediaDefaults(tokens) {
+      try {
+        const response = await call(
+          '/rest/v1/account_settings?select=hero_video_default,sound_default&limit=1',
+          { method: 'GET' },
+          tokens.accessToken,
+        );
+
+        return response.ok ? mediaDefaultsOf(await response.json()) : failedMediaDefaultsRead(response.status);
+      } catch (error) {
+        return failedMediaDefaultsRead(error instanceof Error ? error.message : 'unknown error');
+      }
+    },
+
+    async setMediaDefaults(tokens, change) {
+      return savedMediaDefaultsOf(
+        await rpc('set_media_defaults', { p_hero_video: change.heroVideo ?? null, p_sound: change.sound ?? null }, tokens.accessToken),
+        change,
+      );
+    },
+
     async readOwnDashboard(tokens) {
       return dashboardReadOf(await rpc('read_own_dashboard', {}, tokens.accessToken));
     },
@@ -545,6 +579,45 @@ function recordsOptInResultOf(answer: unknown, asked: boolean): RecordsOptInResu
   }
 
   throw new AuthUnavailableError('Supabase answered set_records_opt_in with an unknown shape');
+}
+
+function failedMediaDefaultsRead(reason: string | number): null {
+  console.warn('The media defaults could not be read:', reason);
+
+  return null;
+}
+
+/** No row is the default, both off. A row that is not two booleans is not an answer, and must not read as one. */
+function mediaDefaultsOf(rows: unknown): MediaDefaults | null {
+  if (!Array.isArray(rows)) {
+    return failedMediaDefaultsRead('an unknown shape');
+  }
+
+  if (rows.length === 0) {
+    return { heroVideo: false, sound: false };
+  }
+
+  const row = rows[0] as { hero_video_default?: unknown; sound_default?: unknown } | null;
+  const read = parseMediaDefaults({ heroVideo: row?.hero_video_default, sound: row?.sound_default });
+
+  return read ?? failedMediaDefaultsRead('an unknown shape');
+}
+
+function savedMediaDefaultsOf(answer: unknown, asked: MediaDefaultsChange): MediaDefaults {
+  const result = answer as { status?: unknown } | null;
+  const saved = parseMediaDefaults(answer);
+
+  // A default that was asked for must come back as asked, so a function that answered otherwise is never shown as saved.
+  if (
+    result?.status === 'saved' &&
+    saved &&
+    (asked.heroVideo === undefined || saved.heroVideo === asked.heroVideo) &&
+    (asked.sound === undefined || saved.sound === asked.sound)
+  ) {
+    return saved;
+  }
+
+  throw new AuthUnavailableError('Supabase answered set_media_defaults with an unknown shape');
 }
 
 function dashboardReadOf(answer: unknown): OwnDashboardRead {
