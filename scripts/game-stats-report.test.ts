@@ -29,7 +29,7 @@ describe('reportGameStatsCapture', () => {
 
     assert.equal(report.failed, false);
     assert.match(report.lines[0], /^Captured 2 games; the hour's snapshot is 7/);
-    assert.deepEqual(report.lines.slice(1), ['Games: 2', 'Compared with: no earlier snapshot']);
+    assert.deepEqual(report.lines.slice(1), ['Games: 2', 'Compared with: first stored snapshot']);
   });
 
   it('names the earlier snapshot it was compared with', () => {

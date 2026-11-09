@@ -25,7 +25,7 @@ export function reportGameStatsCapture(capture: GameStatsCapture): GameStatsRepo
     lines: [
       message,
       `Games: ${response.games.length}`,
-      `Compared with: ${response.previousSnapshot?.snapshotDate ?? 'no earlier snapshot'}`,
+      `Compared with: ${response.previousSnapshot?.snapshotDate ?? 'first stored snapshot'}`,
     ],
     failed: false,
   };
