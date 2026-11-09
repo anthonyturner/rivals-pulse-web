@@ -14,6 +14,11 @@ const EARLIER_PURGE = '20261108180000_match_hero_timelines.sql';
 const READER = 'public.read_hero_switch_ins(smallint[])';
 
 const sql = withoutComments(read(SWITCH_INS));
+/** The fill is restated by a later migration (issue 666), so its rules are read from the latest definition. */
+const latestFill = readdirSync(MIGRATIONS)
+  .filter(name => name.endsWith('.sql') && withoutComments(read(name)).includes('function public.fill_hero_switch_in_aggregates('))
+  .sort()
+  .at(-1)!;
 const squash = (text: string): string => text.replace(/\s+/g, ' ').trim();
 const bodyOf = (text: string, name: string): string => {
   const start = text.indexOf(`create or replace function public.${name}(`);
@@ -89,10 +94,10 @@ describe('the switch-in migration', () => {
   });
 
   describe('fill_hero_switch_in_aggregates', () => {
-    const fill = bodyOf(sql, 'fill_hero_switch_in_aggregates');
+    const fill = bodyOf(withoutComments(read(latestFill)), 'fill_hero_switch_in_aggregates');
 
     it('reads only the half-season it was asked for, from the scoreboard and the timelines', () => {
-      assert.match(fill, /from public\.participants p\s+where p\.half_season = p_half_season\s+group by p\.fingerprint, p\.played_at/);
+      assert.match(fill, /from public\.participants p\s+left join timeline_recorders r on r\.fingerprint = p\.fingerprint and r\.played_at = p\.played_at\s+where p\.half_season = p_half_season\s+group by p\.fingerprint, p\.played_at/);
       assert.match(fill, /from public\.match_hero_timelines k\s+where k\.half_season = p_half_season/);
     });
 
@@ -130,11 +135,11 @@ describe('the switch-in migration', () => {
 
     it('needs the enemy team\'s timeline: a switch with no enemy pick has no credit row, and no outer join invents one', () => {
       assert.match(fill, /cross join lateral \(/);
-      assert.doesNotMatch(fill, /left join/);
+      assert.deepEqual([...fill.matchAll(/left join (\w+)/g)].map(match => match[1]), ['timeline_recorders']);
     });
 
-    it('counts recorders as the other families do, from the scoreboard\'s recorder, and keeps the busiest one\'s matches', () => {
-      assert.match(fill, /min\(p\.recorded_by\) as recorder/);
+    it('counts recorders from the timeline uploader, falling back to the scoreboard\'s recorder, and keeps the busiest one\'s matches', () => {
+      assert.match(fill, /coalesce\(min\(r\.recorder\), min\(p\.recorded_by\)\) as recorder/);
       assert.match(fill, /count\(distinct m\.match_no\) as matches/);
     });
   });
