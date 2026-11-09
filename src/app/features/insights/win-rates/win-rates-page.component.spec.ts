@@ -259,7 +259,7 @@ describe('WinRatesPageComponent', () => {
     expect(image.getAttribute('alt')).toBe('');
     expect(image.getAttribute('src')).toBe('/images/site/banners/hero-stats-strip.webp');
     expect(image.hasAttribute('loading')).toBeFalse();
-    expect(strip.previousElementSibling?.tagName).toBe('HEADER');
+    expect(strip.previousElementSibling?.tagName).toBe('APP-PAGE-HEADER');
   });
 
   it('is a page inside the shell: it adds no main landmark of its own', async () => {

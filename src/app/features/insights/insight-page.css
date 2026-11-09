@@ -8,7 +8,6 @@
   padding-block: 16px;
 }
 
-h1,
 h2,
 p,
 dl,
@@ -25,19 +24,6 @@ a {
   text-decoration: underline;
 }
 
-.intro {
-  display: grid;
-  gap: 4px;
-  padding-block: 8px 12px;
-}
-
-h1 {
-  font-size: var(--type-page-title);
-  font-weight: 850;
-  line-height: 1.1;
-}
-
-.lede,
 .meta {
   color: var(--text-soft);
   font-size: var(--type-small);
