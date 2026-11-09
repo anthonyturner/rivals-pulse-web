@@ -183,6 +183,22 @@
   --ink-tertiary: #e070ff;
 }
 
+/* The one role-to-colour mapping. An element with a role's `data-role` gets `--hero-role-color` (the fill, edge and dot) and `--hero-role-ink` (the same role as text) for the Heroes grid, the art-led hero tile and the Community role cards to read. A role with no entry here, such as Multi-Role, leaves both unset, so each reader picks its own fallback. */
+[data-role='vanguard'] {
+  --hero-role-color: var(--role-vanguard);
+  --hero-role-ink: var(--role-vanguard-ink);
+}
+
+[data-role='duelist'] {
+  --hero-role-color: var(--role-duelist);
+  --hero-role-ink: var(--role-duelist-ink);
+}
+
+[data-role='strategist'] {
+  --hero-role-color: var(--role-strategist);
+  --hero-role-ink: var(--role-strategist-ink);
+}
+
 :root {
   /* Type scale, chosen by a heading's visual role rather than its tag. At 1366px: the home hero 60px, a page title 40px, a section heading 32px, a card or panel heading 18px. */
   --type-hero: clamp(2.25rem, 4.4vw, 3.75rem);

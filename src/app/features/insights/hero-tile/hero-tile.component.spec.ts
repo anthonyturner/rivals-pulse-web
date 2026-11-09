@@ -74,6 +74,16 @@ describe('HeroTileComponent', () => {
     expect(tile('art-norole').hasAttribute('data-role')).toBeFalse();
   });
 
+  it('reads its tint from the shared role colours, and falls back to the accent with no role', () => {
+    const value = (target: HTMLElement, name: string): string => getComputedStyle(target).getPropertyValue(name).trim();
+    const root = document.documentElement;
+
+    expect(value(tile('art'), '--tile-role-color')).toBe(value(root, '--role-strategist'));
+    expect(value(tile('art'), '--tile-role-ink')).toBe(value(root, '--role-strategist-ink'));
+    expect(value(tile('art-norole'), '--tile-role-color')).toBe(value(root, '--accent'));
+    expect(value(tile('art-norole'), '--tile-role-ink')).toBe(value(root, '--accent-strong'));
+  });
+
   it('swaps a portrait that fails to load for the default hero portrait', () => {
     const image = tile('plain').querySelector('img') as HTMLImageElement;
 
