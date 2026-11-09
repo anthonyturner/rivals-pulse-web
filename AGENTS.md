@@ -81,6 +81,7 @@ authorization and its limits are in
 | take on substantial, ambiguous or user-facing work | [agent-workflows/pipeline.md](docs/agent-workflows/pipeline.md) |
 | scope a request into a filed issue | [agent-workflows/planning.md](docs/agent-workflows/planning.md) |
 | create or update a work item | [agent-workflows/tracking.md](docs/agent-workflows/tracking.md) and [agile/github-integration.md](docs/agile/github-integration.md) |
+| find or act on Tony's answer to a `needs-tony` item | [agent-workflows/tony-answers.md](docs/agent-workflows/tony-answers.md) |
 | implement a filed issue | [agent-workflows/implementation.md](docs/agent-workflows/implementation.md) |
 | review a pull request | [agent-workflows/qa-review.md](docs/agent-workflows/qa-review.md) |
 | run a grilling session — only when asked for by name | [agent-workflows/grilling.md](docs/agent-workflows/grilling.md) |
