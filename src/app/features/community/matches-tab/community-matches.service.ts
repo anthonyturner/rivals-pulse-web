@@ -11,9 +11,9 @@ export class CommunityMatchesService {
   private matches$: Observable<CommunityMatches | null> | null = null;
 
   /**
-   * The community match figures, or null when the request fails or the answer is not that. The lead
-   * tile and the Matches tab share one request; an answer is kept for the life of the app, a failed
-   * one is not, so the next caller tries again.
+   * The community match figures, or null when the request fails or the answer is not that. Every
+   * reader shares one request; an answer is kept for the life of the app, a failed one is not, so
+   * the next caller tries again.
    */
   getMatches(): Observable<CommunityMatches | null> {
     this.matches$ ??= this.http.get<unknown>('/api/community/matches').pipe(
