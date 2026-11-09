@@ -1,4 +1,5 @@
 import type { CommunityKills } from '../../../../contracts/community-kills.model';
+import type { HeroMatchup } from '../../../../contracts/hero-matchups.model';
 import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
 import { matchup, matchupsOf, season } from '../../insights/hero-matchup.fixtures';
 import { buildHeadToHeadView } from './hero-matchup-detail-view';
@@ -67,6 +68,59 @@ describe('buildHeadToHeadView', () => {
     expect(thor.edge).toEqual({ points: '−25.0 points', usual: '50.0%' });
     expect(thor.killsBand).toBeNull();
     expect(thor.overall).toEqual({ kda: 'Not recorded', finalHits: 'Not recorded' });
+  });
+
+  describe('while facing the other hero', () => {
+    const withFigures = matchupsOf([
+      matchup('hulk', 'thor', 9, 12, { kda: 3.456, finalHitsAverage: 5.25 }),
+      matchup('thor', 'hulk', 3, 12, { kda: 0.5, finalHitsAverage: null }),
+    ]);
+
+    it('shows each hero its own figures in the matches against the other, beside the overall ones', () => {
+      const [hulk, thor] = buildHeadToHeadView(withFigures, stats, kills, 'hulk', 'thor', roster)!.sides;
+
+      expect(hulk.encounter).toEqual({ kda: '3.46', finalHits: '5.3' });
+      expect(hulk.overall).toEqual({ kda: '2.35', finalHits: '4.3' });
+      expect(thor.encounter).toEqual({ kda: '0.50', finalHits: 'Not recorded' });
+    });
+
+    it('shows them even where the usual figures are not placed, as they come from the matchup alone', () => {
+      const view = buildHeadToHeadView(withFigures, undefined, null, 'hulk', 'thor', roster);
+
+      expect(view?.sides[0].overall).toBeNull();
+      expect(view?.sides[0].encounter).toEqual({ kda: '3.46', finalHits: '5.3' });
+    });
+
+    it('leaves them out, rather than showing zero, when the matchup carries neither figure', () => {
+      const [hulk, thor] = buildHeadToHeadView(bothSides, stats, kills, 'hulk', 'thor', roster)!.sides;
+
+      expect(hulk.encounter).toBeNull();
+      expect(thor.encounter).toBeNull();
+    });
+
+    it('leaves them out for a side with no record against the other', () => {
+      const view = buildHeadToHeadView(matchupsOf([matchup('thor', 'hulk', 3, 12, { kda: 2, finalHitsAverage: 1 })]), stats, kills, 'hulk', 'thor', roster);
+
+      expect(view?.sides[0].encounter).toBeNull();
+      expect(view?.sides[1].encounter).toEqual({ kda: '2.00', finalHits: '1.0' });
+    });
+
+    it('reads a record from a server that sent no figures, or one that is not a number, as missing and never prints NaN', () => {
+      const older: Partial<HeroMatchup> = matchup('hulk', 'thor', 9, 12);
+      delete older.kda;
+      delete older.finalHitsAverage;
+      const view = buildHeadToHeadView(
+        matchupsOf([older as HeroMatchup, matchup('thor', 'hulk', 3, 12, { kda: Number.NaN, finalHitsAverage: Number.NaN })]),
+        stats,
+        kills,
+        'hulk',
+        'thor',
+        roster,
+      );
+
+      expect(view?.sides.map((side) => side.encounter)).toEqual([null, null]);
+      expect(JSON.stringify(view)).not.toContain('NaN');
+    });
   });
 
   it('says "Even" when the matchup rate rounds to the usual one', () => {

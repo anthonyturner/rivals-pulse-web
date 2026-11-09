@@ -1,5 +1,5 @@
--- Proves the switch-in rules (migration 20261108190000, issue 655) on fixture matches in half-seasons
--- that do not exist, then rolls everything back. Run after applying the migration:
+-- Proves the switch-in rules (migrations 20261108190000 and 20261108200000, issues 655 and 666) on fixture
+-- matches in half-seasons that do not exist, then rolls everything back. Run after applying the migrations:
 --   npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql
 -- It fails with an exception naming the rule that broke; it ends with a rollback, never a commit.
 begin;
@@ -164,6 +164,105 @@ begin
     raise exception 'function permissions changed';
   end if;
   raise notice 'ok: only the reader is open to the publishable key';
+end
+$$;
+
+-- Issue 666: the players behind a switch-in are the uploaders of the match's timelines, and a match whose
+-- timelines carry no uploader falls back to the scoreboard's. Each half-season holds ten decided matches
+-- of the same switch (1011 to 1020 against 1033).
+--  * 996: one player recorded every scoreboard; two others recorded the timelines (5 and 4 matches) and
+--    the tenth match's timelines carry no recorder. Three players, the busiest with 5: the reader returns it.
+--  * 995: two players recorded the scoreboards, one other recorded every timeline. One player: the reader
+--    must hide it, though counting the scoreboard recorders would have let it through.
+do $$
+declare
+  hs numeric;
+  n integer;
+  played timestamptz;
+  board_recorder text;
+  timeline_recorder text;
+  stored record;
+begin
+  if exists (select 1 from public.participants where half_season in (995, 996)) then
+    raise exception 'test half-seasons already exist';
+  end if;
+
+  foreach hs in array array[996, 995]::numeric[] loop
+    for n in 1..10 loop
+      played := now() - make_interval(hours => n);
+      board_recorder := case when hs = 996 then 'tst-rec-board' else 'tst-rec-board-' || (n % 2) end;
+      timeline_recorder := case
+        when hs = 995 then 'tst-rec-timeline-c'
+        when n <= 5 then 'tst-rec-timeline-a'
+        when n <= 9 then 'tst-rec-timeline-b'
+      end;
+
+      perform public.record_match_participants('tst-rec-' || hs || '-' || n, hs, played, board_recorder,
+        jsonb_build_array(
+          jsonb_build_object('uid', 'tst-rec-' || hs || '-' || n || '-1', 'name', 'tst-rec-' || hs || '-' || n || '-1',
+                             'team', 1, 'hero_id', 1011, 'kills', 1, 'deaths', 1, 'assists', 1, 'is_win', true),
+          jsonb_build_object('uid', 'tst-rec-' || hs || '-' || n || '-2', 'name', 'tst-rec-' || hs || '-' || n || '-2',
+                             'team', 2, 'hero_id', 1033, 'kills', 1, 'deaths', 1, 'assists', 1, 'is_win', false)),
+        1::smallint, null);
+
+      if public.record_match_hero_timelines('tst-rec-' || hs || '-' || n, played,
+           '[{"team": 1, "picks": [{"hero_id": 1011, "at_second": 0}, {"hero_id": 1020, "at_second": 100}]},
+             {"team": 2, "picks": [{"hero_id": 1033, "at_second": 0}]}]'::jsonb,
+           timeline_recorder) <> 2 then
+        raise exception 'both timelines of match % in half-season % must be stored', n, hs;
+      end if;
+    end loop;
+  end loop;
+
+  if exists (select 1 from public.match_hero_timelines where fingerprint like 'tst-rec-%' and recorded_by is null and fingerprint not like '%-10')
+     or not exists (select 1 from public.match_hero_timelines where fingerprint = 'tst-rec-996-10' and recorded_by is null) then
+    raise exception 'the writer must store the recorder it was given, and a null when it was given none';
+  end if;
+  if exists (select 1 from public.match_hero_timelines where recorded_by = 'tst-rec-board') then
+    raise exception 'a timeline must not take the scoreboard recorder when it was given its own';
+  end if;
+  raise notice 'ok: the timeline writer stores the recorder it is given';
+
+  perform public.rebuild_hero_switch_in_aggregates(996);
+  perform public.rebuild_hero_switch_in_aggregates(995);
+
+  select * into stored from public.hero_switch_ins where half_season = 996 and hero_id = 1020 and enemy_hero_id = 1033;
+  if not found or stored.decided_matches <> 10 or stored.recorders <> 3 or stored.top_recorder_matches <> 5 then
+    raise exception 'the players must be the timeline uploaders, with the scoreboard recorder standing in for a match whose timelines carry none: %', stored;
+  end if;
+  raise notice 'ok: the switch-in players are the timeline uploaders, falling back to the scoreboard recorder';
+
+  select * into stored from public.hero_switch_ins where half_season = 995 and hero_id = 1020 and enemy_hero_id = 1033;
+  if not found or stored.decided_matches <> 10 or stored.recorders <> 1 or stored.top_recorder_matches <> 10 then
+    raise exception 'two scoreboard recorders must not count as two players when one player uploaded every timeline: %', stored;
+  end if;
+  raise notice 'ok: the scoreboard recorders are not counted when the timelines have their own';
+
+  if not exists (
+    select 1 from jsonb_to_recordset(public.read_hero_switch_ins(array[1]::smallint[]) -> 'switch_ins') as r(half_season numeric, hero_id integer)
+    where r.half_season = 996 and r.hero_id = 1020
+  ) then
+    raise exception 'ten matches from three timeline uploaders must be returned';
+  end if;
+  if exists (
+    select 1 from jsonb_to_recordset(public.read_hero_switch_ins(array[1]::smallint[]) -> 'switch_ins') as r(half_season numeric, hero_id integer)
+    where r.half_season = 995 and r.hero_id = 1020
+  ) then
+    raise exception 'ten matches from one timeline uploader must stay hidden';
+  end if;
+  raise notice 'ok: the two-player gate counts the timeline uploaders';
+
+  if has_column_privilege('anon', 'public.match_hero_timelines', 'recorded_by', 'select')
+     or has_column_privilege('authenticated', 'public.match_hero_timelines', 'recorded_by', 'select') then
+    raise exception 'the timeline recorder must not be readable by the publishable key';
+  end if;
+  raise notice 'ok: the timeline recorder is closed to the publishable key';
+
+  if has_function_privilege('anon', 'public.record_match_hero_timelines(text, timestamptz, jsonb, text)', 'execute')
+     or has_function_privilege('authenticated', 'public.record_match_hero_timelines(text, timestamptz, jsonb, text)', 'execute') then
+    raise exception 'the recreated timeline writer must stay closed to the publishable key';
+  end if;
+  raise notice 'ok: the recreated timeline writer is closed to the publishable key';
 end
 $$;
 

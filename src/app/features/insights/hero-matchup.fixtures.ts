@@ -5,8 +5,17 @@ import type { Hero, HeroRole } from '../heroes/hero.model';
 /** Fixtures the matchup specs share; nothing imports this outside a spec. */
 export const season = (id: number): HeroStatsHalfSeason => ({ id, label: `Season ${id}`, startsAt: null, endsAt: null });
 
-/** `hero` won `wins` of `appearances` lines against `enemy`; the shrunk rate is worked out as the server does. */
-export function matchup(hero: string, enemy: string, wins: number, appearances: number): HeroMatchup {
+/**
+ * `hero` won `wins` of `appearances` lines against `enemy`; the shrunk rate is worked out as the server does.
+ * The scoreboard figures are not recorded unless `figures` gives them.
+ */
+export function matchup(
+  hero: string,
+  enemy: string,
+  wins: number,
+  appearances: number,
+  figures: Partial<Pick<HeroMatchup, 'kda' | 'finalHitsAverage'>> = {},
+): HeroMatchup {
   return {
     hero,
     enemy,
@@ -15,6 +24,9 @@ export function matchup(hero: string, enemy: string, wins: number, appearances: 
     wins,
     winRate: (wins / appearances) * 100,
     shrunkWinRate: ((wins + 5) / (appearances + 10)) * 100,
+    kda: null,
+    finalHitsAverage: null,
+    ...figures,
   };
 }
 

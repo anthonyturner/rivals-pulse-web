@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
-import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
+import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups.model';
 import { matchup, matchupsOf } from './hero-matchup.fixtures';
 import { HeroMatchupsService, isHeroMatchups } from './hero-matchups.service';
 
@@ -55,6 +55,14 @@ describe('isHeroMatchups', () => {
   it('accepts the empty state and a list of readable records', () => {
     expect(isHeroMatchups(matchupsOf([]))).toBeTrue();
     expect(isHeroMatchups(matchupsOf([matchup('hulk', 'thor', 9, 12)]))).toBeTrue();
+  });
+
+  it('accepts a record from a server that does not send the encounter figures yet', () => {
+    const older: Partial<HeroMatchup> = matchup('hulk', 'thor', 9, 12);
+    delete older.kda;
+    delete older.finalHitsAverage;
+
+    expect(isHeroMatchups(matchupsOf([older as HeroMatchup]))).toBeTrue();
   });
 
   it('rejects anything a page could not print safely', () => {

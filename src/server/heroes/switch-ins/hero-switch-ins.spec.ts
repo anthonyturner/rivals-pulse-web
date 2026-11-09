@@ -35,7 +35,7 @@ function matchup(
   wins: number,
   extra: Partial<HeroMatchupRow> = {},
 ): HeroMatchupRow {
-  return { halfSeason: 10.5, gameHeroId, enemyGameHeroId, decidedMatches: matches, decidedLines: matches, wins, ...extra };
+  return { halfSeason: 10.5, gameHeroId, enemyGameHeroId, decidedMatches: matches, decidedLines: matches, wins, figures: null, ...extra };
 }
 
 function derive(rows: HeroSwitchInRow[], matchups: HeroMatchupRow[] = [], seasons = SEASONS) {

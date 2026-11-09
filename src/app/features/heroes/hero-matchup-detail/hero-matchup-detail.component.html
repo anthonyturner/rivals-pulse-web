@@ -61,6 +61,17 @@
           </div>
           }
 
+          @if (side.encounter; as encounter) {
+          <div>
+            <dt>KDA while facing {{ other.name }}</dt>
+            <dd>{{ encounter.kda }}</dd>
+          </div>
+          <div>
+            <dt>Final hits per match while facing {{ other.name }}</dt>
+            <dd>{{ encounter.finalHits }}</dd>
+          </div>
+          }
+
           @if (side.overall; as overall) {
           <div>
             <dt>KDA, all matches</dt>
@@ -78,7 +89,8 @@
 
     <p class="head-to-head__caveat">
       Win rates describe how each hero fared when the other was on the enemy team. They are not advice on whom to pick
-      or ban. KDA and final hits cover each hero's matches overall, not only this encounter.
+      or ban. The "while facing" figures cover only the matches where the two heroes met; the "all matches" figures
+      cover each hero's matches overall.
     </p>
     @if (current.showKillFeed) {
     <p class="head-to-head__caveat">{{ current.killFeedCaveat }}</p>
