@@ -1,6 +1,6 @@
 name: Sync Work Queue board
 
-# Derives every card's Status on the "Rivals Pulse Work Queue" board (GitHub user
+# Derives every card's Status and Iteration on the "Rivals Pulse Work Queue" board (GitHub user
 # Project 2) from the open issues of both Rivals Pulse repositories. The board is a
 # computed view (overlay ADR-0024); nobody writes to it by hand. The schedule covers
 # pull request state and the overlay repository, which carries no workflow of its own.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { desiredStatus } from './work-queue-sync.mjs';
+import { desiredStatus, iterationOn, missingIterations, workStartedOn } from './work-queue-sync.mjs';
 
 const issue = ({ labels = [], pullRequests = [] } = {}) => ({
   labels: { nodes: labels.map((name) => ({ name })) },
@@ -28,4 +28,37 @@ test('the ready label without an open pull request means Ready', () => {
 
 test('any other open issue is Backlog', () => {
   assert.equal(desiredStatus(issue({ labels: ['bug'] })), 'Backlog');
+});
+
+const pr = (state, createdAt) => ({ state, isDraft: false, createdAt });
+const weeks = [
+  { id: 'a', title: 'Week of Nov 9', startDate: '2026-11-09', duration: 7 },
+  { id: 'b', title: 'Week of Nov 16', startDate: '2026-11-16', duration: 7 },
+];
+
+test('work starts with the earliest open or merged closing pull request, ignoring closed ones', () => {
+  const pullRequests = [pr('OPEN', '2026-11-12T10:00:00Z'), pr('CLOSED', '2026-11-01T00:00:00Z'), pr('MERGED', '2026-11-10T23:00:00Z')];
+  assert.equal(workStartedOn(issue({ pullRequests })), '2026-11-10');
+  assert.equal(workStartedOn(issue({ pullRequests: [pr('CLOSED', '2026-11-12T00:00:00Z')] })), null);
+});
+
+test('a date maps to the iteration that holds it, and to none before the first', () => {
+  assert.equal(iterationOn('2026-11-15', weeks)?.id, 'a');
+  assert.equal(iterationOn('2026-11-16', weeks)?.id, 'b');
+  assert.equal(iterationOn('2026-11-08', weeks), null);
+  assert.equal(iterationOn('2026-11-23', weeks), null);
+});
+
+test('nothing is added while the current and next week exist', () => {
+  assert.deepEqual(missingIterations(weeks, '2026-11-09'), []);
+});
+
+test('missing weeks are appended so the current and next week exist', () => {
+  assert.deepEqual(missingIterations(weeks, '2026-11-18'), [
+    { title: 'Week of Nov 23', startDate: '2026-11-23', duration: 7 },
+  ]);
+  assert.deepEqual(
+    missingIterations(weeks, '2026-12-01').map((iteration) => iteration.title),
+    ['Week of Nov 23', 'Week of Nov 30', 'Week of Dec 7'],
+  );
 });

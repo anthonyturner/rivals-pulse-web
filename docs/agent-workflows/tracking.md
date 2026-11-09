@@ -58,7 +58,16 @@ ten minutes and on issue events. The first rule that matches wins:
 | Backlog | Any other open issue |
 | Done | The issue is closed (the project's own "Item closed" workflow) |
 
-**Never write to the board.** Do not add cards, move them or set their Status.
+The **Iteration** field is derived too, and feeds the board's weekly "Current
+iteration" view of what agents started. An issue's iteration is the week that
+holds the creation date of its earliest open or merged closing pull request. It
+stays empty when that date falls before the field's first iteration, and once
+set it never changes, so an issue stays in the week its work started. The sync
+adds a 7-day "Week of <Mon d>" iteration whenever the current or the next week
+is missing.
+
+**Never write to the board.** Do not add cards, move them, or set their Status
+or Iteration.
 Change the issue or its pull request and the board follows on the next run. See
 overlay [ADR-0024](https://github.com/anthonyturner/rivals_pulse/blob/main/docs/decisions/0024-show-agent-work-as-a-computed-project-view.md) for
 why.
