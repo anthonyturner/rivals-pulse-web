@@ -93,6 +93,12 @@
         </button>
       }
 
+      @if (pulseSoundAvailable()) {
+        <button class="home-page-pulse-sound-toggle" type="button" (click)="togglePulseSound()">
+          Pulse sound {{ pulseSoundOn() ? 'on' : 'off' }}
+        </button>
+      }
+
       <button
         class="home-page-video-toggle"
         type="button"
@@ -105,7 +111,7 @@
     </div>
 
     <header #heroBanner class="season-hero" [class.has-pulse-backdrop]="!heroVideoOn()">
-      <app-pulse-banner class="hero-banner" [layout]="bannerLayout()" />
+      <app-pulse-banner class="hero-banner" [layout]="bannerLayout()" [sound]="pulseSoundOn()" />
 
       <div class="hero-copy">
         <app-eyebrow>Live counters in game. Real stats on the web.</app-eyebrow>

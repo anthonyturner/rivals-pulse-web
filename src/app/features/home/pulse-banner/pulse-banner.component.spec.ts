@@ -1,9 +1,20 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { WritableSignal, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { THEME_STORAGE_KEY, ThemeService } from '../../../core/theme/theme.service';
 import { CircuitGrid } from './circuit-grid';
+import { PulseAudioService } from './pulse-audio.service';
 import { PulseBannerComponent } from './pulse-banner.component';
+import { COLLISION_CUE, PULSE_CUES } from './pulse-cues';
+import { PulseLoopClock } from './pulse-loop-clock';
+import { PulseSoundScheduler } from './pulse-sound-scheduler';
+
+/** Stands in for the browser's audio, which needs a gesture and a speaker to run. */
+class FakeAudio {
+  readonly ready: WritableSignal<boolean> = signal(true);
+  readonly unlockOnNextGesture = jasmine.createSpy('unlockOnNextGesture');
+  readonly open = jasmine.createSpy('open').and.callFake(() => ({ now: () => 0, play: () => undefined, close: () => undefined }));
+}
 
 describe('PulseBannerComponent', () => {
   let fixture: ComponentFixture<PulseBannerComponent>;
@@ -117,6 +128,62 @@ describe('PulseBannerComponent', () => {
     });
   });
 
+  describe('sound and picture', () => {
+    function find(selector: string): Element {
+      return banner().querySelector(selector) as Element;
+    }
+
+    /** Holds the animation of `selector` at `fraction` of its loop. */
+    function holdAt(selector: string, fraction: number): void {
+      const [animation] = find(selector).getAnimations();
+      const duration = animation.effect?.getComputedTiming().duration as number;
+      animation.pause();
+      animation.currentTime = fraction * duration;
+    }
+
+    beforeEach(async () => {
+      create();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    });
+
+    it('runs one 2.8 second loop, which the sound reads from the animation itself', () => {
+      const reading = new PulseLoopClock(() => find('.pulse-banner__spark')).read();
+
+      expect(reading?.loopMs).toBe(2800);
+      expect(reading?.positionMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it('reads nothing when there is no animation to read', () => {
+      expect(new PulseLoopClock(() => null).read()).toBeNull();
+    });
+
+    it('cracks when the spark flashes: the collision cue is where the picture collides', () => {
+      holdAt('.pulse-banner__spark', COLLISION_CUE.at - 0.1);
+      expect(Number(getComputedStyle(find('.pulse-banner__spark')).opacity)).toBeLessThan(0.05);
+
+      holdAt('.pulse-banner__spark', COLLISION_CUE.at);
+      expect(Number(getComputedStyle(find('.pulse-banner__spark')).opacity)).toBeGreaterThan(0.95);
+    });
+
+    it('thumps as each pulse passes the bumps of its spike: the heartbeat cues are where those bumps are drawn', () => {
+      const spikes: [number, string, number][] = [
+        [0, '.pulse-banner__window--left', 208],
+        [1, '.pulse-banner__window--left', 240],
+        [2, '.pulse-banner__window--right', -222],
+        [3, '.pulse-banner__window--right', -256],
+      ];
+
+      for (const [index, selector, translated] of spikes) {
+        holdAt(selector, PULSE_CUES[index].at);
+
+        expect(new DOMMatrix(getComputedStyle(find(selector)).transform).m41)
+          .withContext(`${PULSE_CUES[index].side} ${PULSE_CUES[index].kind}`)
+          .toBeCloseTo(translated, -1);
+      }
+    });
+  });
+
   describe('motion', () => {
     /**
      * Stands in for the browser's observer, so a spec says when the banner is on screen instead of
@@ -177,6 +244,192 @@ describe('PulseBannerComponent', () => {
       expect(setPlayback).toHaveBeenCalledWith('still');
       expect(setPlayback).not.toHaveBeenCalledWith('playing');
       expect(banner().classList).toContain('pulse-banner--still');
+    });
+
+    describe('sound', () => {
+      let audio: FakeAudio;
+      let hidden: jasmine.Spy;
+      let start: jasmine.Spy;
+      let stop: jasmine.Spy;
+
+      /** Lets the banner's effects run after a change. */
+      async function flush(): Promise<void> {
+        fixture.detectChanges();
+        await fixture.whenStable();
+      }
+
+      async function turnSoundOn(): Promise<void> {
+        fixture.componentRef.setInput('sound', true);
+        await flush();
+      }
+
+      beforeEach(() => {
+        audio = new FakeAudio();
+        TestBed.overrideProvider(PulseAudioService, { useValue: audio });
+        hidden = spyOnProperty(document, 'hidden').and.returnValue(false);
+        start = spyOn(PulseSoundScheduler.prototype, 'start');
+        stop = spyOn(PulseSoundScheduler.prototype, 'stop');
+      });
+
+      it('is silent until it is turned on, even while it plays', async () => {
+        create();
+        bringOnScreen();
+        await flush();
+
+        expect(audio.open).not.toHaveBeenCalled();
+        expect(start).not.toHaveBeenCalled();
+      });
+
+      it('sounds once it is turned on and plays, and not before it is on screen', async () => {
+        create();
+        await turnSoundOn();
+        expect(start).not.toHaveBeenCalled();
+
+        bringOnScreen();
+        await flush();
+
+        expect(audio.open).toHaveBeenCalledTimes(1);
+        expect(start).toHaveBeenCalledTimes(1);
+      });
+
+      it('stops when the tab is hidden and starts again, in step with the picture, when it is back', async () => {
+        create();
+        await turnSoundOn();
+        bringOnScreen();
+        await flush();
+
+        hidden.and.returnValue(true);
+        document.dispatchEvent(new Event('visibilitychange'));
+        await flush();
+        expect(stop).toHaveBeenCalledTimes(1);
+
+        hidden.and.returnValue(false);
+        document.dispatchEvent(new Event('visibilitychange'));
+        await flush();
+        expect(start).toHaveBeenCalledTimes(2);
+      });
+
+      it('stops when the banner scrolls off screen', async () => {
+        create();
+        await turnSoundOn();
+        bringOnScreen();
+        await flush();
+
+        FakeIntersectionObserver.latest?.report(false);
+        await flush();
+
+        expect(stop).toHaveBeenCalledTimes(1);
+      });
+
+      it('stops when it is turned off, and when the banner goes', async () => {
+        create();
+        await turnSoundOn();
+        bringOnScreen();
+        await flush();
+
+        fixture.componentRef.setInput('sound', false);
+        await flush();
+        expect(stop).toHaveBeenCalledTimes(1);
+
+        await turnSoundOn();
+        fixture.destroy();
+        expect(stop).toHaveBeenCalledTimes(2);
+      });
+
+      it('never sounds under prefers-reduced-motion, though it is turned on', async () => {
+        create(true);
+        await turnSoundOn();
+        bringOnScreen();
+        await flush();
+
+        expect(audio.open).not.toHaveBeenCalled();
+        expect(start).not.toHaveBeenCalled();
+      });
+
+      it('waits for the browser to allow audio, then sounds', async () => {
+        audio.ready.set(false);
+        create();
+        await turnSoundOn();
+        bringOnScreen();
+        await flush();
+
+        expect(audio.unlockOnNextGesture).toHaveBeenCalled();
+        expect(audio.open).not.toHaveBeenCalled();
+
+        audio.ready.set(true);
+        await flush();
+
+        expect(start).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('the pointer', () => {
+      let setPointer: jasmine.Spy;
+
+      /** Moves the pointer to (`x`, `y`) from the banner's top left corner. */
+      function moveTo(x: number, y: number, pointerType = 'mouse'): void {
+        const box = fixture.nativeElement.getBoundingClientRect();
+        document.dispatchEvent(new PointerEvent('pointermove', { clientX: box.left + x, clientY: box.top + y, pointerType }));
+      }
+
+      beforeEach(() => {
+        spyOnProperty(document, 'hidden').and.returnValue(false);
+        setPointer = spyOn(CircuitGrid.prototype, 'setPointer');
+      });
+
+      it('is handed to the grid, relative to the banner, while it plays', async () => {
+        create();
+        await fixture.whenStable();
+        bringOnScreen();
+
+        moveTo(40, 30);
+
+        const [point] = setPointer.calls.mostRecent().args;
+        expect(point.x).toBeCloseTo(40, 3);
+        expect(point.y).toBeCloseTo(30, 3);
+      });
+
+      it('is taken away when it is outside the banner, or leaves the page', async () => {
+        create();
+        await fixture.whenStable();
+        bringOnScreen();
+
+        moveTo(40, 3000);
+        expect(setPointer.calls.mostRecent().args).toEqual([null]);
+
+        moveTo(40, 30);
+        document.documentElement.dispatchEvent(new Event('pointerleave'));
+        expect(setPointer.calls.mostRecent().args).toEqual([null]);
+      });
+
+      it('is not a finger dragging across the page', async () => {
+        create();
+        await fixture.whenStable();
+        bringOnScreen();
+
+        moveTo(40, 30, 'touch');
+
+        expect(setPointer).not.toHaveBeenCalled();
+      });
+
+      it('is ignored while the banner is paused', async () => {
+        create();
+        await fixture.whenStable();
+
+        moveTo(40, 30);
+
+        expect(setPointer).not.toHaveBeenCalled();
+      });
+
+      it('is ignored under prefers-reduced-motion', async () => {
+        create(true);
+        await fixture.whenStable();
+        bringOnScreen();
+
+        moveTo(40, 30);
+
+        expect(setPointer).not.toHaveBeenCalled();
+      });
     });
   });
 

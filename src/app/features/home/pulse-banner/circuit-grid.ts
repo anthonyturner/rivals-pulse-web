@@ -1,3 +1,5 @@
+import { COLLISION_CUE, LoopReading, cuesInWindow } from './pulse-cues';
+
 /** Whether the grid animates, holds its picture until it may animate again, or shows one still frame. */
 export type CircuitPlayback = 'playing' | 'paused' | 'still';
 
@@ -6,6 +8,22 @@ export interface CircuitPalette {
   readonly line: string;
   /** Pulses take these in turn. */
   readonly currents: readonly [string, string, string];
+}
+
+/** Tells the grid when the banner's two heartbeats collide, and where, so each collision sends a shockwave across it. */
+export interface ClashSource {
+  readonly clock: { read(): LoopReading | null };
+  /** Where the collision is on the canvas, in CSS pixels. */
+  origin(): readonly [number, number];
+}
+
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+interface Shockwave extends Point {
+  age: number;
 }
 
 interface Pulse {
@@ -41,13 +59,28 @@ const TRAIL_BANDS = 4;
 const STILL_PULSES = 6;
 const STILL_STEPS = 40;
 const STILL_STEP_S = 0.016;
+/** The pointer bends pulses within this distance, and brightens the grid lines inside it. */
+const POINTER_REACH = 150;
+/** The most likely a pulse right beside the pointer is to turn toward it at a crossing; it fades to none at the edge of the reach. */
+const POINTER_PULL = 0.9;
+const POINTER_GLOW_ALPHA = 0.55;
+const SHOCKWAVE_S = 1.1;
+const SHOCKWAVE_SPEED = 700;
+/** How wide the band of grid lines lit by the front of a shockwave is. */
+const SHOCKWAVE_BAND = 70;
+const SHOCKWAVE_GLOW_ALPHA = 0.7;
+/** Lit lines are drawn in this many steps of brightness, one stroke each, rather than one stroke per line. */
+const GLOW_BANDS = 4;
 
 /**
  * The banner's circuit board: a faint grid with pulses of current racing along its lines and leaving
  * fading trails, drawn on a canvas it owns and animated outside Angular's change detection (it keeps
  * plain fields, and the app is zoneless, so a frame never triggers a check). Every few seconds
- * while it plays, a stronger pulse crosses the grid in one straight line. Playback is the owner's
- * decision: it knows whether the window is visible and whether the player asked for less motion.
+ * while it plays, a stronger pulse crosses the grid in one straight line. A pointer set with
+ * `setPointer` pulls nearby pulses toward it and lights the lines around it, and each collision
+ * reported by the `ClashSource` sends a shockwave outward. Playback is the owner's decision: it knows
+ * whether the window is visible and whether the player asked for less motion, and the pointer and
+ * the shockwaves show only while the grid plays.
  */
 export class CircuitGrid {
   private width = 0;
@@ -60,6 +93,10 @@ export class CircuitGrid {
   private ambientSurgeTimer: number;
   private spawned = 0;
   private surgesFired = 0;
+  private pointer: Point | null = null;
+  private shockwaves: Shockwave[] = [];
+  private clash: ClashSource | null = null;
+  private lastLoopPositionMs: number | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -77,6 +114,21 @@ export class CircuitGrid {
   /** The stronger pulses still on the grid. */
   get strongPulses(): number {
     return this.pulses.filter(pulse => pulse.strong).length;
+  }
+
+  /** Where the pointer is on the canvas, in CSS pixels, or null once it has gone. Ignored unless the grid is playing. */
+  setPointer(point: Point | null): void {
+    this.pointer = this.playback === 'playing' ? point : null;
+  }
+
+  setClash(clash: ClashSource | null): void {
+    this.clash = clash;
+    this.lastLoopPositionMs = null;
+  }
+
+  /** The shockwaves still travelling across the grid. */
+  get activeShockwaves(): number {
+    return this.shockwaves.length;
   }
 
   setPalette(palette: CircuitPalette): void {
@@ -99,8 +151,11 @@ export class CircuitGrid {
     if (playback === this.playback) return;
     this.playback = playback;
     this.stopLoop();
+    this.lastLoopPositionMs = null;
+    if (playback !== 'playing') this.pointer = null;
 
     if (playback === 'still') {
+      this.shockwaves = [];
       this.renderStill();
     } else if (playback === 'playing') {
       this.lastFrameAt = 0;
@@ -116,6 +171,7 @@ export class CircuitGrid {
   private tick(now: number): void {
     const elapsed = this.lastFrameAt ? (now - this.lastFrameAt) / 1000 : 0;
     this.lastFrameAt = now;
+    this.watchForClash();
     this.advance(Math.min(MAX_FRAME_S, elapsed));
     this.render();
     this.frame = requestAnimationFrame(next => this.tick(next));
@@ -134,6 +190,22 @@ export class CircuitGrid {
     }
     this.pulses = this.pulses.filter(pulse => pulse.life > 0);
     for (const pulse of this.pulses) this.step(pulse, seconds);
+    for (const wave of this.shockwaves) wave.age += seconds;
+    this.shockwaves = this.shockwaves.filter(wave => wave.age < SHOCKWAVE_S);
+  }
+
+  /** A shockwave leaves the collision each time the banner's loop passes it. */
+  private watchForClash(): void {
+    const reading = this.clash?.clock.read();
+    if (!this.clash || !reading) return;
+    if (this.lastLoopPositionMs !== null) {
+      const passed = cuesInWindow([COLLISION_CUE], reading.loopMs, this.lastLoopPositionMs, reading.positionMs);
+      if (passed.length > 0) {
+        const [x, y] = this.clash.origin();
+        this.shockwaves.push({ x, y, age: 0 });
+      }
+    }
+    this.lastLoopPositionMs = reading.positionMs;
   }
 
   private nextAmbientSurgeGap(): number {
@@ -204,7 +276,10 @@ export class CircuitGrid {
       pulse.travelled = 0;
       pulse.x = Math.round(pulse.x / CELL) * CELL;
       pulse.y = Math.round(pulse.y / CELL) * CELL;
-      if (!pulse.strong && this.random() < TURN_CHANCE) {
+      const pulled = pulse.strong ? null : this.towardPointer(pulse);
+      if (pulled) {
+        [pulse.dx, pulse.dy] = pulled;
+      } else if (!pulse.strong && this.random() < TURN_CHANCE) {
         const sign = this.random() < 0.5 ? -1 : 1;
         if (pulse.dy === 0) {
           pulse.dy = sign;
@@ -220,6 +295,32 @@ export class CircuitGrid {
     if (pulse.trail.length > pulse.trailLength) pulse.trail.shift();
     const outside = pulse.x < -CELL || pulse.x > this.width + CELL || pulse.y < -CELL || pulse.y > this.height + CELL;
     if (outside) pulse.life -= seconds * 2;
+  }
+
+  /**
+   * At a crossing near the pointer, the way to turn toward it: whichever of ahead, left and right
+   * leads closest, never back the way it came. Null leaves the pulse to its usual turning, which also
+   * lets a pulse that has reached the pointer wander off again.
+   */
+  private towardPointer(pulse: Pulse): [number, number] | null {
+    if (!this.pointer) return null;
+    const toX = this.pointer.x - pulse.x;
+    const toY = this.pointer.y - pulse.y;
+    const distance = Math.hypot(toX, toY);
+    if (distance > POINTER_REACH || distance < CELL / 2) return null;
+    if (this.random() >= POINTER_PULL * (1 - distance / POINTER_REACH)) return null;
+
+    let best: [number, number] | null = null;
+    let bestScore = -Infinity;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+      if (dx === -pulse.dx && dy === -pulse.dy) continue;
+      const score = dx * toX + dy * toY;
+      if (score > bestScore) {
+        bestScore = score;
+        best = [dx, dy];
+      }
+    }
+    return best;
   }
 
   private renderStill(): void {
@@ -241,7 +342,72 @@ export class CircuitGrid {
     if (!ctx) return;
     ctx.clearRect(0, 0, this.width, this.height);
     this.drawGrid(ctx);
+    if (this.pointer) {
+      this.lightLines(ctx, this.pointer, POINTER_REACH, distance => 1 - distance / POINTER_REACH, this.palette.currents[0], POINTER_GLOW_ALPHA);
+    }
+    for (const wave of this.shockwaves) this.drawShockwave(ctx, wave);
     for (const pulse of this.pulses) this.drawPulse(ctx, pulse);
+  }
+
+  /** The ring of a shockwave, and the grid lines its front is passing, both fading as it goes. */
+  private drawShockwave(ctx: CanvasRenderingContext2D, wave: Shockwave): void {
+    const radius = wave.age * SHOCKWAVE_SPEED;
+    const fade = 1 - wave.age / SHOCKWAVE_S;
+    const colour = this.palette.currents[2];
+    const strength = (distance: number): number => Math.max(0, 1 - Math.abs(distance - radius) / SHOCKWAVE_BAND) * fade;
+    this.lightLines(ctx, wave, radius + SHOCKWAVE_BAND, strength, colour, SHOCKWAVE_GLOW_ALPHA);
+
+    ctx.strokeStyle = colour;
+    ctx.shadowColor = colour;
+    ctx.shadowBlur = 14;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6 * fade;
+    ctx.beginPath();
+    ctx.arc(wave.x, wave.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  }
+
+  /**
+   * Draws the grid lines within `reach` of `centre` over the plain grid, each cell-long stretch as
+   * bright as `strength` says of its distance from the centre (0 to 1; 0 draws nothing).
+   */
+  private lightLines(
+    ctx: CanvasRenderingContext2D,
+    centre: Point,
+    reach: number,
+    strength: (distance: number) => number,
+    colour: string,
+    alpha: number,
+  ): void {
+    const bands = Array.from({ length: GLOW_BANDS }, () => new Path2D());
+    const light = (x1: number, y1: number, x2: number, y2: number): void => {
+      const weight = strength(Math.hypot((x1 + x2) / 2 - centre.x, (y1 + y2) / 2 - centre.y));
+      if (weight <= 0) return;
+      const band = bands[Math.min(GLOW_BANDS - 1, Math.floor(weight * GLOW_BANDS))];
+      band.moveTo(x1, y1);
+      band.lineTo(x2, y2);
+    };
+
+    const left = Math.max(0, centre.x - reach);
+    const right = Math.min(this.width, centre.x + reach);
+    const top = Math.max(0, centre.y - reach);
+    const bottom = Math.min(this.height, centre.y + reach);
+    for (let x = 0.5 + Math.ceil((left - 0.5) / CELL) * CELL; x < right; x += CELL) {
+      for (let y = Math.floor(top / CELL) * CELL; y < bottom; y += CELL) light(x, y, x, y + CELL);
+    }
+    for (let y = 0.5 + Math.ceil((top - 0.5) / CELL) * CELL; y < bottom; y += CELL) {
+      for (let x = Math.floor(left / CELL) * CELL; x < right; x += CELL) light(x, y, x + CELL, y);
+    }
+
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = 1;
+    bands.forEach((path, band) => {
+      ctx.globalAlpha = (alpha * (band + 1)) / GLOW_BANDS;
+      ctx.stroke(path);
+    });
+    ctx.globalAlpha = 1;
   }
 
   private drawGrid(ctx: CanvasRenderingContext2D): void {

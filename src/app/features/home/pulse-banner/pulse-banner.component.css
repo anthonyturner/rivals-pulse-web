@@ -133,7 +133,10 @@
 @keyframes pulse-banner-hit {
   0%, 52% { opacity: 0.85; transform: none; }
   56% { opacity: 1; transform: translateX(2px); text-shadow: 0 0 22px var(--ink-tertiary); }
-  60% { transform: translateX(-2px); }
+  58% { opacity: 0.55; }
+  60% { opacity: 1; transform: translateX(-2px); }
+  62% { opacity: 0.6; }
+  64% { opacity: 1; transform: translateX(1px); text-shadow: 0 0 22px var(--ink-tertiary); }
   70%, 100% { opacity: 0.92; transform: none; text-shadow: none; }
 }
 

@@ -1,17 +1,23 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { signal, provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 
 import { fullHomeContent } from './home-content.fixtures';
 import { HOME_HERO_VIDEO_STORAGE_KEY } from './home-hero-video-preference.service';
 import { HomePageComponent } from './home-page.component';
+import { PulseAudioService } from './pulse-banner/pulse-audio.service';
+import { PulseBannerComponent } from './pulse-banner/pulse-banner.component';
+import { PULSE_SOUND_STORAGE_KEY } from './pulse-sound-preference.service';
 
 describe('HomePageComponent', () => {
   let fixture: ComponentFixture<HomePageComponent>;
   let http: HttpTestingController;
   let element: HTMLElement;
+  /** Stands in for the browser's audio, which needs a gesture and a speaker to run. */
+  let audio: { ready: ReturnType<typeof signal<boolean>>; unlock: jasmine.Spy; unlockOnNextGesture: jasmine.Spy; open: jasmine.Spy };
 
   async function render(): Promise<void> {
     fixture = TestBed.createComponent(HomePageComponent);
@@ -37,8 +43,20 @@ describe('HomePageComponent', () => {
   }
 
   function configure(): void {
+    audio = {
+      ready: signal(false),
+      unlock: jasmine.createSpy('unlock'),
+      unlockOnNextGesture: jasmine.createSpy('unlockOnNextGesture'),
+      open: jasmine.createSpy('open').and.returnValue(null),
+    };
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: PulseAudioService, useValue: audio },
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   }
@@ -55,6 +73,7 @@ describe('HomePageComponent', () => {
     fixture.destroy();
     http.verify();
     localStorage.removeItem(HOME_HERO_VIDEO_STORAGE_KEY);
+    localStorage.removeItem(PULSE_SOUND_STORAGE_KEY);
   });
 
   /** A new visit: nothing is kept in memory, so the choice has to come back from storage. */
@@ -85,6 +104,8 @@ describe('HomePageComponent', () => {
   const watchButton = (): HTMLButtonElement => element.querySelector('.actions__watch') as HTMLButtonElement;
   const closeButton = (): HTMLButtonElement | null => element.querySelector('.home-page-video-close');
   const videoToggle = (): HTMLButtonElement => element.querySelector('.home-page-video-toggle') as HTMLButtonElement;
+  const pulseSoundToggle = (): HTMLButtonElement => element.querySelector('.home-page-pulse-sound-toggle') as HTMLButtonElement;
+  const bannerSound = (): boolean => fixture.debugElement.query(By.directive(PulseBannerComponent)).componentInstance.sound();
   const banner = (): HTMLElement => element.querySelector('app-pulse-banner') as HTMLElement;
   const hero = (): HTMLElement => element.querySelector('header.season-hero') as HTMLElement;
 
@@ -287,6 +308,77 @@ describe('HomePageComponent', () => {
     });
   });
 
+  describe('the pulse sound switch', () => {
+    async function toggle(): Promise<void> {
+      pulseSoundToggle().click();
+      await settle();
+    }
+
+    it('is off on a first visit: it says so, the banner is silent and no audio has started', () => {
+      expect(text(pulseSoundToggle())).toBe('Pulse sound off');
+      expect(bannerSound()).toBeFalse();
+      expect(audio.unlock).not.toHaveBeenCalled();
+    });
+
+    it('is a native button the keyboard can reach, beside the video switch', () => {
+      expect(pulseSoundToggle().tagName).toBe('BUTTON');
+      expect(pulseSoundToggle().type).toBe('button');
+      expect(pulseSoundToggle().tabIndex).toBe(0);
+      expect(pulseSoundToggle().nextElementSibling).toBe(videoToggle());
+    });
+
+    it('turns the sound on from the click itself, so the browser lets audio start, and the name follows', async () => {
+      await toggle();
+
+      expect(audio.unlock).toHaveBeenCalledTimes(1);
+      expect(bannerSound()).toBeTrue();
+      expect(text(pulseSoundToggle())).toBe('Pulse sound on');
+      expect(localStorage.getItem(PULSE_SOUND_STORAGE_KEY)).toBe('on');
+    });
+
+    it('turns the sound off again without starting any audio', async () => {
+      await toggle();
+      audio.unlock.calls.reset();
+      await toggle();
+
+      expect(audio.unlock).not.toHaveBeenCalled();
+      expect(bannerSound()).toBeFalse();
+      expect(text(pulseSoundToggle())).toBe('Pulse sound off');
+      expect(localStorage.getItem(PULSE_SOUND_STORAGE_KEY)).toBe('off');
+    });
+
+    it('is not tied to the video: the video switch leaves it where it was', async () => {
+      await toggle();
+      videoToggle().click();
+      await settle();
+
+      expect(bannerSound()).toBeTrue();
+      expect(text(pulseSoundToggle())).toBe('Pulse sound on');
+    });
+
+    it('survives a reload, but starts no audio until the visitor interacts', async () => {
+      localStorage.setItem(PULSE_SOUND_STORAGE_KEY, 'on');
+      await visit('on');
+
+      expect(text(pulseSoundToggle())).toBe('Pulse sound on');
+      expect(bannerSound()).toBeTrue();
+      expect(audio.unlock).not.toHaveBeenCalled();
+    });
+
+    it('is not offered under prefers-reduced-motion, and the banner there makes no sound', async () => {
+      const real = window.matchMedia.bind(window);
+      spyOn(window, 'matchMedia').and.callFake(query =>
+        query === '(prefers-reduced-motion: reduce)'
+          ? ({ matches: true, addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as MediaQueryList)
+          : real(query));
+      localStorage.setItem(PULSE_SOUND_STORAGE_KEY, 'on');
+      await visit('on');
+
+      expect(element.querySelector('.home-page-pulse-sound-toggle')).toBeNull();
+      expect(audio.open).not.toHaveBeenCalled();
+    });
+  });
+
   describe('the hero video switch', () => {
     async function toggle(): Promise<void> {
       videoToggle().click();
@@ -352,14 +444,14 @@ describe('HomePageComponent', () => {
       expect(video()).toBeNull();
     });
 
-    it('sits next to the sound toggle, last in the row so it stays at the edge when the sound toggle goes', async () => {
+    it('sits next to the pulse sound toggle, last in the row so it stays at the edge when the sound toggle goes', async () => {
       const row = element.querySelector('.hero-controls') as HTMLElement;
 
-      expect(Array.from(row.children)).toEqual([soundToggle(), videoToggle()]);
+      expect(Array.from(row.children)).toEqual([soundToggle(), pulseSoundToggle(), videoToggle()]);
 
       await toggle();
 
-      expect(Array.from(row.children)).toEqual([videoToggle()]);
+      expect(Array.from(row.children)).toEqual([pulseSoundToggle(), videoToggle()]);
     });
 
     it('keeps one name, "Background video", while the pressed state changes, so a screen reader does not contradict itself', async () => {

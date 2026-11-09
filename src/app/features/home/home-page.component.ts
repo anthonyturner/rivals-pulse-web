@@ -19,6 +19,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
+import { ReducedMotionService } from '../../core/accessibility/reduced-motion.service';
 import { EyebrowComponent } from '../../shared/components/eyebrow/eyebrow.component';
 import { ClosingCtaComponent } from './closing-cta/closing-cta.component';
 import { GameNewsBandComponent } from './game-news-band/game-news-band.component';
@@ -29,7 +30,9 @@ import { HomeHeroVideoPreferenceService } from './home-hero-video-preference.ser
 import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
+import { PulseAudioService } from './pulse-banner/pulse-audio.service';
 import { PulseBannerComponent, PulseBannerLayout } from './pulse-banner/pulse-banner.component';
+import { PulseSoundPreferenceService } from './pulse-sound-preference.service';
 import { ReleaseMediaOnDestroyDirective } from './release-media-on-destroy.directive';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 import { WordOfDayComponent } from './word-of-day/word-of-day.component';
@@ -79,6 +82,13 @@ export class HomePageComponent implements AfterViewInit {
   /** Whether the visitor wants the hero video; with it off the Pulse banner is the hero's background. */
   readonly heroVideoOn = this.heroVideoPreference.enabled;
   readonly bannerLayout = computed<PulseBannerLayout>(() => (this.heroVideoOn() ? 'strip' : 'backdrop'));
+  private readonly pulseSoundPreference = inject(PulseSoundPreferenceService);
+  private readonly pulseAudio = inject(PulseAudioService);
+  private readonly reducedMotion = inject(ReducedMotionService);
+  /** Whether the visitor has asked to hear the banner. */
+  readonly pulseSoundOn = this.pulseSoundPreference.enabled;
+  /** The banner stays silent, so offers no switch, for a visitor whose device asks for less motion. */
+  readonly pulseSoundAvailable = computed(() => !this.reducedMotion.reduced());
   readonly videoPlacement = computed<VideoPlacement>(() => {
     const mode = this.floatingVideoMode();
 
@@ -135,6 +145,13 @@ export class HomePageComponent implements AfterViewInit {
     if (this.videoPlacement() !== before) {
       this.keepFocusInPage(focused);
     }
+  }
+
+  /** Turning the sound on starts the browser's audio here, inside the click, because browsers refuse to start it anywhere else. */
+  togglePulseSound(): void {
+    const turningOn = !this.pulseSoundOn();
+    if (turningOn) this.pulseAudio.unlock();
+    this.pulseSoundPreference.set(turningOn);
   }
 
   toggleHeroVideo(): void {
