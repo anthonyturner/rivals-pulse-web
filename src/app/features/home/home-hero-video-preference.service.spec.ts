@@ -16,19 +16,46 @@ describe('HomeHeroVideoPreferenceService', () => {
     await TestBed.inject(ApplicationRef).whenStable();
   }
 
-  it('plays the video on a first visit', async () => {
+  it('keeps the video off on a first visit', async () => {
     const preference = TestBed.inject(HomeHeroVideoPreferenceService);
+
+    expect(preference.enabled()).toBeFalse();
+
+    await firstRender();
+
+    expect(preference.enabled()).toBeFalse();
+  });
+
+  it('restores a saved "on" after the first render', async () => {
+    localStorage.setItem(HOME_HERO_VIDEO_STORAGE_KEY, 'on');
+    const preference = TestBed.inject(HomeHeroVideoPreferenceService);
+
+    expect(preference.enabled()).toBeFalse();
+
     await firstRender();
 
     expect(preference.enabled()).toBeTrue();
   });
 
-  it('restores a saved "off" after the first render', async () => {
+  it('keeps a saved "off" off', async () => {
     localStorage.setItem(HOME_HERO_VIDEO_STORAGE_KEY, 'off');
     const preference = TestBed.inject(HomeHeroVideoPreferenceService);
+    await firstRender();
 
-    expect(preference.enabled()).toBeTrue();
+    expect(preference.enabled()).toBeFalse();
+  });
 
+  it('falls back to off when the saved text is not a choice', async () => {
+    localStorage.setItem(HOME_HERO_VIDEO_STORAGE_KEY, 'maybe');
+    const preference = TestBed.inject(HomeHeroVideoPreferenceService);
+    await firstRender();
+
+    expect(preference.enabled()).toBeFalse();
+  });
+
+  it('falls back to off when storage is blocked', async () => {
+    spyOn(Storage.prototype, 'getItem').and.throwError('blocked');
+    const preference = TestBed.inject(HomeHeroVideoPreferenceService);
     await firstRender();
 
     expect(preference.enabled()).toBeFalse();
