@@ -119,6 +119,6 @@ describe('getPulseRecords', () => {
   it('throws on any other failure, so an outage is never shown as no records', async () => {
     const { client } = fakeSupabaseClient(() => failure('42501', 'permission denied'));
 
-    await expectAsync(getPulseRecords({ getClient: () => client })).toBeRejectedWithError(/read_pulse_records answered 42501/);
+    await expectAsync(getPulseRecords({ getClient: () => client })).toBeRejectedWithError(/read_pulse_records failed \(42501\)/);
   });
 });

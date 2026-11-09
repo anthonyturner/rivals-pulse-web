@@ -12,7 +12,7 @@ import type { CommunityKills } from '../../../contracts/community-kills.model.ts
 import type { CommunityHeroScores } from '../../../contracts/hero-scores.model.ts';
 import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId, listHeroRoles } from '../../heroes/catalog/index.ts';
 import type { HalfSeasonStart } from '../../heroes/stats/hero-stats.ts';
-import { aggregatePayloadReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
+import { answerReader, callReadFunction, getSupabaseClient, type AnswerReader } from '../../supabase/index.ts';
 
 /**
  * The extended upload's numbers (damage, healing and damage blocked per minute, and the kill feed),
@@ -41,34 +41,34 @@ const NO_FIGURES: CommunityFiguresSource = { halfSeasons: [], figures: [] };
 const NO_KILLS: CommunityKillsSource = { halfSeasons: [], pairs: [] };
 const NO_HERO_SCORES: HeroScoresSource = { halfSeasons: [], figures: [], abilities: [] };
 
-function halfSeasonsOf(reader: ReturnType<typeof aggregatePayloadReader>, payload: Record<string, unknown>): HalfSeasonStart[] {
-  return reader.list(payload['half_seasons'], 'half_seasons').map((row) => ({
-    halfSeason: reader.number(row, 'half_season'),
-    startsAt: reader.string(row, 'starts_at'),
+function halfSeasonsOf(reader: AnswerReader, payload: Record<string, unknown>): HalfSeasonStart[] {
+  return reader.recordsOf(payload['half_seasons'], 'half_seasons').map((row) => ({
+    halfSeason: reader.numberOf(row, 'half_season'),
+    startsAt: reader.stringOf(row, 'starts_at'),
   }));
 }
 
 /** Picks the known fields out of `read_community_hero_figures()` and rejects anything that is not a number. */
 export function parseCommunityFiguresSource(body: unknown): CommunityFiguresSource {
-  const reader = aggregatePayloadReader(FIGURES_FUNCTION);
-  const payload = reader.object(body, 'the answer');
+  const reader = answerReader(FIGURES_FUNCTION);
+  const payload = reader.answerOf(body);
 
   return {
     halfSeasons: halfSeasonsOf(reader, payload),
-    figures: reader.list(payload['figures'], 'figures').map(
+    figures: reader.recordsOf(payload['figures'], 'figures').map(
       (row): HeroFigureRow => ({
-        halfSeason: reader.number(row, 'half_season'),
-        playModeId: reader.number(row, 'play_mode_id'),
-        gameHeroId: reader.number(row, 'hero_id'),
-        damageSum: reader.number(row, 'damage_sum'),
-        damageN: reader.number(row, 'damage_n'),
-        damageSeconds: reader.number(row, 'damage_seconds'),
-        healingSum: reader.number(row, 'healing_sum'),
-        healingN: reader.number(row, 'healing_n'),
-        healingSeconds: reader.number(row, 'healing_seconds'),
-        blockedSum: reader.number(row, 'blocked_sum'),
-        blockedN: reader.number(row, 'blocked_n'),
-        blockedSeconds: reader.number(row, 'blocked_seconds'),
+        halfSeason: reader.numberOf(row, 'half_season'),
+        playModeId: reader.numberOf(row, 'play_mode_id'),
+        gameHeroId: reader.numberOf(row, 'hero_id'),
+        damageSum: reader.numberOf(row, 'damage_sum'),
+        damageN: reader.numberOf(row, 'damage_n'),
+        damageSeconds: reader.numberOf(row, 'damage_seconds'),
+        healingSum: reader.numberOf(row, 'healing_sum'),
+        healingN: reader.numberOf(row, 'healing_n'),
+        healingSeconds: reader.numberOf(row, 'healing_seconds'),
+        blockedSum: reader.numberOf(row, 'blocked_sum'),
+        blockedN: reader.numberOf(row, 'blocked_n'),
+        blockedSeconds: reader.numberOf(row, 'blocked_seconds'),
       }),
     ),
   };
@@ -76,60 +76,60 @@ export function parseCommunityFiguresSource(body: unknown): CommunityFiguresSour
 
 /** Picks the known fields out of `read_community_kill_feed()` and rejects anything that is not a number. */
 export function parseCommunityKillsSource(body: unknown): CommunityKillsSource {
-  const reader = aggregatePayloadReader(KILL_FEED_FUNCTION);
-  const payload = reader.object(body, 'the answer');
+  const reader = answerReader(KILL_FEED_FUNCTION);
+  const payload = reader.answerOf(body);
 
   return {
     halfSeasons: halfSeasonsOf(reader, payload),
-    pairs: reader.list(payload['pairs'], 'pairs').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      killerHero: reader.string(row, 'killer_hero'),
-      victimHero: reader.string(row, 'victim_hero'),
-      kills: reader.number(row, 'kills'),
-      matches: reader.number(row, 'matches'),
+    pairs: reader.recordsOf(payload['pairs'], 'pairs').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      killerHero: reader.stringOf(row, 'killer_hero'),
+      victimHero: reader.stringOf(row, 'victim_hero'),
+      kills: reader.numberOf(row, 'kills'),
+      matches: reader.numberOf(row, 'matches'),
     })),
   };
 }
 
 /** Picks the known fields out of `read_community_hero_scores()` and rejects anything of the wrong type. */
 export function parseHeroScoresSource(body: unknown): HeroScoresSource {
-  const reader = aggregatePayloadReader(HERO_SCORES_FUNCTION);
-  const payload = reader.object(body, 'the answer');
+  const reader = answerReader(HERO_SCORES_FUNCTION);
+  const payload = reader.answerOf(body);
   const figure = (row: Record<string, unknown>, name: string): FigureCount => ({
-    lines: reader.number(row, `${name}_n`),
-    contributors: reader.number(row, `${name}_recorders`),
-    busiestAboveHalf: reader.boolean(row, `${name}_busiest_above_half`),
-    qualifies: reader.boolean(row, `${name}_qualifies`),
-    sum: reader.number(row, `${name}_sum`),
-    seconds: reader.number(row, `${name}_seconds`),
+    lines: reader.numberOf(row, `${name}_n`),
+    contributors: reader.numberOf(row, `${name}_recorders`),
+    busiestAboveHalf: reader.booleanOf(row, `${name}_busiest_above_half`),
+    qualifies: reader.booleanOf(row, `${name}_qualifies`),
+    sum: reader.numberOf(row, `${name}_sum`),
+    seconds: reader.numberOf(row, `${name}_seconds`),
   });
 
   return {
     halfSeasons: halfSeasonsOf(reader, payload),
-    figures: reader.list(payload['figures'], 'figures').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      playModeId: reader.number(row, 'play_mode_id'),
-      gameHeroId: reader.number(row, 'hero_id'),
+    figures: reader.recordsOf(payload['figures'], 'figures').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      playModeId: reader.numberOf(row, 'play_mode_id'),
+      gameHeroId: reader.numberOf(row, 'hero_id'),
       damage: figure(row, 'damage'),
       healing: figure(row, 'healing'),
       blocked: figure(row, 'blocked'),
     })),
-    abilities: reader.list(payload['abilities'], 'abilities').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      playModeId: reader.number(row, 'play_mode_id'),
-      gameHeroId: reader.number(row, 'hero_id'),
-      slot: reader.string(row, 'slot'),
-      lines: reader.number(row, 'segments'),
-      contributors: reader.number(row, 'recorders'),
-      busiestAboveHalf: reader.boolean(row, 'busiest_above_half'),
-      qualifies: reader.boolean(row, 'qualifies'),
-      usesSum: reader.number(row, 'uses_sum'),
-      usesTimedSum: reader.number(row, 'uses_timed_sum'),
-      seconds: reader.number(row, 'seconds_sum'),
-      killsAfterSum: reader.number(row, 'kills_after_sum'),
-      killsAfterN: reader.number(row, 'kills_after_n'),
-      assistsAfterSum: reader.number(row, 'assists_after_sum'),
-      assistsAfterN: reader.number(row, 'assists_after_n'),
+    abilities: reader.recordsOf(payload['abilities'], 'abilities').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      playModeId: reader.numberOf(row, 'play_mode_id'),
+      gameHeroId: reader.numberOf(row, 'hero_id'),
+      slot: reader.stringOf(row, 'slot'),
+      lines: reader.numberOf(row, 'segments'),
+      contributors: reader.numberOf(row, 'recorders'),
+      busiestAboveHalf: reader.booleanOf(row, 'busiest_above_half'),
+      qualifies: reader.booleanOf(row, 'qualifies'),
+      usesSum: reader.numberOf(row, 'uses_sum'),
+      usesTimedSum: reader.numberOf(row, 'uses_timed_sum'),
+      seconds: reader.numberOf(row, 'seconds_sum'),
+      killsAfterSum: reader.numberOf(row, 'kills_after_sum'),
+      killsAfterN: reader.numberOf(row, 'kills_after_n'),
+      assistsAfterSum: reader.numberOf(row, 'assists_after_sum'),
+      assistsAfterN: reader.numberOf(row, 'assists_after_n'),
     })),
   };
 }

@@ -5,7 +5,7 @@ import {
   type CommunityMatchesSource,
 } from './community-matches.ts';
 import type { CommunityMatches } from '../../../contracts/community-matches.model.ts';
-import { aggregatePayloadReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
+import { answerReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
 
 interface CommunityMatchesReadOptions {
   client?: SupabaseClient;
@@ -18,7 +18,7 @@ const READ_FUNCTION = 'read_community_matches';
 
 const NOTHING_COUNTED: CommunityMatchesSource = { halfSeasons: [], modes: [], maps: [], days: [] };
 
-const reader = aggregatePayloadReader(READ_FUNCTION);
+const reader = answerReader(READ_FUNCTION);
 
 /**
  * Reads `public.read_community_matches()`, which is granted to the service role alone; the aggregate
@@ -35,32 +35,32 @@ export async function fetchCommunityMatchesSource(
 
 /** Picks the known fields out of the function's answer and rejects anything that is not a number. */
 export function parseCommunityMatchesSource(body: unknown): CommunityMatchesSource {
-  const payload = reader.object(body, 'the answer');
+  const payload = reader.answerOf(body);
 
   return {
-    halfSeasons: reader.list(payload['half_seasons'], 'half_seasons').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      startsAt: reader.string(row, 'starts_at'),
+    halfSeasons: reader.recordsOf(payload['half_seasons'], 'half_seasons').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      startsAt: reader.stringOf(row, 'starts_at'),
     })),
-    modes: reader.list(payload['modes'], 'modes').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      playModeId: reader.number(row, 'play_mode_id'),
-      matches: reader.number(row, 'matches'),
-      durationSumSeconds: reader.number(row, 'duration_sum_seconds'),
-      durationN: reader.number(row, 'duration_n'),
+    modes: reader.recordsOf(payload['modes'], 'modes').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      playModeId: reader.numberOf(row, 'play_mode_id'),
+      matches: reader.numberOf(row, 'matches'),
+      durationSumSeconds: reader.numberOf(row, 'duration_sum_seconds'),
+      durationN: reader.numberOf(row, 'duration_n'),
     })),
-    maps: reader.list(payload['maps'], 'maps').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      playModeId: reader.number(row, 'play_mode_id'),
-      mapName: reader.string(row, 'map_name'),
-      matches: reader.number(row, 'matches'),
-      decidedMatches: reader.number(row, 'decided_matches'),
-      wins: reader.number(row, 'wins'),
+    maps: reader.recordsOf(payload['maps'], 'maps').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      playModeId: reader.numberOf(row, 'play_mode_id'),
+      mapName: reader.stringOf(row, 'map_name'),
+      matches: reader.numberOf(row, 'matches'),
+      decidedMatches: reader.numberOf(row, 'decided_matches'),
+      wins: reader.numberOf(row, 'wins'),
     })),
-    days: reader.list(payload['days'], 'days').map((row) => ({
-      halfSeason: reader.number(row, 'half_season'),
-      day: dayOf(reader.string(row, 'day')),
-      matches: reader.number(row, 'matches'),
+    days: reader.recordsOf(payload['days'], 'days').map((row) => ({
+      halfSeason: reader.numberOf(row, 'half_season'),
+      day: dayOf(reader.stringOf(row, 'day')),
+      matches: reader.numberOf(row, 'matches'),
     })),
   };
 }

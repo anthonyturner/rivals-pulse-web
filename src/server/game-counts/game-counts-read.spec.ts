@@ -49,7 +49,7 @@ describe('parseGameCounts', () => {
   });
 
   it('rejects an answer it cannot trust', () => {
-    expect(() => parseGameCounts(null)).toThrowError(/not an object/);
+    expect(() => parseGameCounts(null)).toThrowError(/did not return an object/);
     expect(() => parseGameCounts({ ...ANSWER, matches: '733' })).toThrowError(/matches is not a number/);
     expect(() => parseGameCounts({ ...ANSWER, half_seasons: 'none' })).toThrowError(/half_seasons is not a list/);
     expect(() => parseGameCounts({ ...ANSWER, half_seasons: [{ half_season: 10, matches: 1 }] })).toThrowError(
