@@ -108,19 +108,19 @@ function setStatus(board, itemId, status) {
 
 function sync({ apply }) {
   const board = findBoard();
-  const changes = [];
+  let changes = 0;
   for (const repository of REPOSITORIES) {
     for (const issue of openIssues(repository)) {
       const item = issue.projectItems.nodes.find((node) => node.project.id === board.projectId);
       const current = item?.fieldValueByName?.name ?? null;
       const wanted = desiredStatus(issue);
       if (current === wanted) continue;
-      changes.push(`${repository}#${issue.number}: ${current ?? '(not on board)'} -> ${wanted}`);
       if (apply) setStatus(board, item?.id ?? addToBoard(board, issue), wanted);
+      console.log(`  ${repository}#${issue.number}: ${current ?? '(not on board)'} -> ${wanted}`);
+      changes += 1;
     }
   }
-  console.log(`${apply ? 'Applied' : 'Dry run:'} ${changes.length} change(s)`);
-  for (const change of changes) console.log(`  ${change}`);
+  console.log(`${apply ? 'Applied' : 'Dry run:'} ${changes} change(s)`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

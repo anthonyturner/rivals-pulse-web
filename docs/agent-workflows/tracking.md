@@ -27,7 +27,8 @@ Each work item is one GitHub issue, referred to by its number.
 ## Status
 
 Status is the issue's open/closed state plus its pull request's state. There is
-no separate status field to keep in step, and nothing to transition.
+no separate status field to keep in step, and nothing to transition. The Work
+Queue board's Status column is computed from these; see below.
 
 | Stage | After the stage |
 | --- | --- |
@@ -59,7 +60,7 @@ ten minutes and on issue events. The first rule that matches wins:
 
 **Never write to the board.** Do not add cards, move them or set their Status.
 Change the issue or its pull request and the board follows on the next run. See
-overlay [ADR-0024](https://github.com/anthonyturner/rivals_pulse/pull/1560) for
+overlay [ADR-0024](https://github.com/anthonyturner/rivals_pulse/blob/main/docs/decisions/0024-show-agent-work-as-a-computed-project-view.md) for
 why.
 
 ### When only Tony can decide

@@ -24,14 +24,16 @@ jobs:
     name: Sync board
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # User-owned projects reject GITHUB_TOKEN and fine-grained tokens, so this is
+    # a classic personal access token with the repo and project scopes.
+    env:
+      GH_TOKEN: ${{ secrets.WORK_QUEUE_TOKEN }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Sync
-        # User-owned projects reject GITHUB_TOKEN and fine-grained tokens, so this is
-        # a classic personal access token with the repo and project scopes.
-        env:
-          GH_TOKEN: ${{ secrets.WORK_QUEUE_TOKEN }}
+        # Skipped rather than failed until the maintainer creates the secret.
+        if: env.GH_TOKEN != ''
         run: node scripts/work-queue-sync.mjs --apply
