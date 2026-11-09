@@ -136,10 +136,12 @@ so nothing maps to them.
   ability (an `Ability` or `Ultimate`) while its partner is on the team, so a slot
   with exactly one base ability takes its name, tag and cooldown, and lists the
   team-ups on the key in `alsoIncludes`.
-- **Otherwise a slot is only as certain as all of its abilities.** Several forms or
-  upgrades can share a key, and a count cannot say which one it was. The slot is
-  named only if they all share a name, has a tag only if they all agree, and a
-  cooldown only if they all print the same one.
+- **Otherwise a slot is only as certain as its base abilities together.** Several
+  forms or upgrades can share a key, and a count cannot say which one it was. With
+  several base abilities, the slot is named only if they share a name, has a tag
+  only if they agree, and a cooldown only if they print the same one; team-ups do
+  not count against them. A key with no base ability is judged on its team-ups
+  together the same way.
 - **An ability the page prints twice unchanged is kept once.** A repeat with the
   same name, type, keys, cooldown and tag adds nothing, so the script drops it.
 - **Utility counts a slot only with a plain cooldown.** Without one there is no way

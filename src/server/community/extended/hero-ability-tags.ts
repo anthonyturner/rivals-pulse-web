@@ -22,13 +22,13 @@ export interface HeroAbilityTagTable {
 /** What one upload slot means for one hero. */
 export interface HeroAbilitySlot {
   slot: string;
-  /** The slot's base ability, or the one name every ability on it shares; null when neither exists. */
+  /** The name its base abilities share (its team-ups', when it has none); null when they differ. */
   ability: string | null;
   /** Every other name on the slot, such as the team-ups that replace the base ability; empty when none. */
   alsoIncludes: string[];
-  /** The base ability's tag, or the tag every ability on the slot shares; null otherwise. */
+  /** The tag its base abilities share (its team-ups', when it has none); null otherwise. */
   tag: AbilityTag | null;
-  /** The base ability's plain cooldown, or the one every ability on the slot prints; null otherwise. */
+  /** The plain cooldown its base abilities share (its team-ups', when it has none); null otherwise. */
   cooldownSeconds: number | null;
 }
 

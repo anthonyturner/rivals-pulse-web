@@ -469,14 +469,14 @@ shown, listed in the manifest:
 - **`abilities`** lists a slot only once that slot passes the rule on its own.
   `ability` is the slot's base ability (an `Ability` or `Ultimate` in the hero's kit),
   named even when team-ups share the key, because a team-up only replaces it while
-  its partner is on the team. It is null only when the slot holds no single base
-  ability and its abilities do not all share one name. `alsoIncludes` lists every
+  its partner is on the team. It is null only when the slot's base abilities (or its
+  team-ups, when it has none) do not all share one name. `alsoIncludes` lists every
   other name on the slot, once each, such as the team-up variants, whose uses are
   counted in with the base ability's; it is empty when there are none. It is
   additive: an answer or file from before it existed has none and still passes, and
   a reader that does not know the key ignores it, so `schemaVersion` stays 1. `tag`
-  is the base ability's (or, with no single base ability, the one all of them
-  share), null when untagged or they disagree and, for `ultimate`, always.
+  is the one its base abilities share (or, with no base ability, the one its
+  team-ups share), null when untagged or they disagree and, for `ultimate`, always.
 - **The season** works as in `community-stats`, including `inPlaceOfSeasonId`.
 - **Only these keys are published.** The generator allows exactly the keys above
   (`readHeroScores` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and
