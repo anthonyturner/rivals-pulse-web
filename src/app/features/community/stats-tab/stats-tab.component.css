@@ -42,38 +42,20 @@
   gap: 12px;
 }
 
-/* A role sets one colour for its card's wash, its edge and its dot; `--hero-role-ink` is the same role used as text. */
+/* A role sets one colour for its card's wash, its edge and its dot (the shared mapping in `styles.css`); `--hero-role-ink` is the same role used as text. */
 .role {
-  --hero-role-color: var(--text-muted);
-  --hero-role-ink: var(--text-muted);
-
   display: grid;
   align-content: start;
   gap: 8px;
   min-width: 0;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--hero-role-color) 40%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 40%, var(--border));
   border-radius: 12px;
   background: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--hero-role-color) 16%, var(--bg-panel)),
+    color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 16%, var(--bg-panel)),
     var(--bg-panel) 70%
   );
-}
-
-.role[data-role='vanguard'] {
-  --hero-role-color: var(--role-vanguard);
-  --hero-role-ink: var(--role-vanguard-ink);
-}
-
-.role[data-role='duelist'] {
-  --hero-role-color: var(--role-duelist);
-  --hero-role-ink: var(--role-duelist-ink);
-}
-
-.role[data-role='strategist'] {
-  --hero-role-color: var(--role-strategist);
-  --hero-role-ink: var(--role-strategist-ink);
 }
 
 .role-header {
@@ -88,7 +70,7 @@
   display: inline-flex;
   gap: 8px;
   align-items: center;
-  color: var(--hero-role-ink);
+  color: var(--hero-role-ink, var(--text-muted));
   font-size: var(--type-h3);
   font-weight: 800;
   line-height: 1.2;
@@ -98,7 +80,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--hero-role-color);
+  background: var(--hero-role-color, var(--text-muted));
 }
 
 .role-sample,

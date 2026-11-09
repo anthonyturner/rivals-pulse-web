@@ -11,19 +11,7 @@
   white-space: nowrap;
 }
 
-/* A hero's role sets one colour for its card and its filter chip: the fill, the edge and the dot. `--hero-role-ink` is the same role used as text. */
-[data-role='vanguard'] {
-  --hero-role-color: var(--role-vanguard);
-  --hero-role-ink: var(--role-vanguard-ink);
-}
-[data-role='duelist'] {
-  --hero-role-color: var(--role-duelist);
-  --hero-role-ink: var(--role-duelist-ink);
-}
-[data-role='strategist'] {
-  --hero-role-color: var(--role-strategist);
-  --hero-role-ink: var(--role-strategist-ink);
-}
+/* A hero's role sets one colour for its card and its filter chip (the shared mapping in `styles.css`): the fill, the edge and the dot. `--hero-role-ink` is the same role used as text. Multi-Role has no tint there, so it is muted. */
 [data-role='multi-role'] {
   --hero-role-color: var(--text-muted);
   --hero-role-ink: var(--text-muted);

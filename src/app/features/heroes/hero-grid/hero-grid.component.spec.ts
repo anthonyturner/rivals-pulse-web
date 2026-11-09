@@ -167,12 +167,15 @@ describe('HeroGridComponent', () => {
      * asks for whatever an earlier spec left in the shared Karma page. `overflow-anchor: none` is the part that
      * makes it steady at every window height: with anchoring on, the browser shifts the page by itself when the
      * roster above the viewport anchor changes height, which a page-scroll spec reads as the component moving the page.
+     * The vertical list gets a fixed height and no flex shrinking: the stylesheet lets the roster's own list shrink
+     * to fit the host, whose `max-height` follows the window, so in a short window the list would collapse to a few
+     * pixels and no card could sit inside its box.
      */
     beforeEach(() => {
       geometry = document.createElement('style');
       geometry.textContent = `
         html, body { overflow-anchor: none !important; display: block !important; height: auto !important; max-height: none !important; overflow: visible !important; scroll-behavior: auto !important; scroll-snap-type: none !important; }
-        .test-list-vertical { display: block !important; max-height: 200px !important; overflow: auto !important; }
+        .test-list-vertical { display: block !important; flex: none !important; height: 200px !important; max-height: none !important; overflow: auto !important; }
         .test-list-horizontal { display: flex !important; width: 300px !important; padding: 0 !important; overflow-x: auto !important; overflow-y: hidden !important; max-height: none !important; }
         .test-list-horizontal > li { flex: none !important; width: 68px !important; }
       `;

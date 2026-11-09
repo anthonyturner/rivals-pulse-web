@@ -96,8 +96,8 @@ img {
 
 /* The art-led tile of the redesigned pages. A role sets one colour for the wash, the ring and the edge. */
 :host(.art-led) {
-  --tile-role-color: var(--accent);
-  --tile-role-ink: var(--accent-strong);
+  --tile-role-color: var(--hero-role-color, var(--accent));
+  --tile-role-ink: var(--hero-role-ink, var(--accent-strong));
 
   box-sizing: border-box;
   height: 100%;
@@ -108,21 +108,6 @@ img {
     color-mix(in srgb, var(--tile-role-color) 16%, var(--bg-panel)),
     var(--bg-panel) 75%
   );
-}
-
-:host(.art-led[data-role='vanguard']) {
-  --tile-role-color: var(--role-vanguard);
-  --tile-role-ink: var(--role-vanguard-ink);
-}
-
-:host(.art-led[data-role='duelist']) {
-  --tile-role-color: var(--role-duelist);
-  --tile-role-ink: var(--role-duelist-ink);
-}
-
-:host(.art-led[data-role='strategist']) {
-  --tile-role-color: var(--role-strategist);
-  --tile-role-ink: var(--role-strategist-ink);
 }
 
 :host(.art-led) img {
