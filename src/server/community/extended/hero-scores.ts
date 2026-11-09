@@ -21,8 +21,7 @@ export const HERO_SCORE_MINIMUMS: HeroScoreMinimums = {
   contributors: 1,
   busiestContributorShare: 1,
   // A ranking of two heroes would call one of them 10 and the other 1; three is the smallest that has a
-  // middle. A temporary floor while contributors are few: with 5, only three heroes qualified and every
-  // stat waited. Raise it again once more heroes pass the rule.
+  // middle. A temporary floor while contributors are few; raise it again once more heroes pass the rule.
   rankedHeroes: 3,
 };
 

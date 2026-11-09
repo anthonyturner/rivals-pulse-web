@@ -87,8 +87,8 @@ its own.
 - **A ranking needs 3 qualifying heroes.** Below that the status is
   `ranking-too-small`: the hero's figures are shown, with no score. A ranking of two
   heroes would call one of them 10 and the other 1; three is the smallest with a
-  middle. It is a temporary floor while contributors are few (it was 5, which held
-  every stat back with three heroes qualifying), to be raised as more heroes pass.
+  middle. It is a temporary floor while contributors are few, to be raised as more
+  heroes pass.
   This number is `rankedHeroes` in `HERO_SCORE_MINIMUMS`, and the Pulse Atlas file
   publishes how many heroes qualify per stat as `qualifiedHeroes`.
 - **A hero with nothing to measure says so.** A hero with no ability that is tagged
