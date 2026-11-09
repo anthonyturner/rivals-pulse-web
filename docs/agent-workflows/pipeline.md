@@ -201,7 +201,8 @@ issue that was in the inbox reads every comment after the question before
 anything else, per [implementation.md](implementation.md).
 
 Every other comment you post on an issue or a pull request starts with the
-hidden line `<!-- agent -->`, so that it is never read as his answer.
+hidden line `<!-- agent -->` (or `<!-- agent: <name> -->` for an agent with a
+callsign name), so that it is never read as his answer.
 
 ## Running the pipeline end to end
 
