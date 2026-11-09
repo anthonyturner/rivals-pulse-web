@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { slackAnswerComment } from '../src/server/slack-answer/answer-comment.ts';
 import {
   AGENT_MARKER,
-  SLACK_MARKER,
   answerKind,
   decide,
   isAgentComment,
@@ -82,7 +82,7 @@ test('anything else, or anything long, is a free-text answer', () => {
 });
 
 test('the Slack footer and hidden comments do not change what the answer says', () => {
-  const body = `merge 714\n\n${SLACK_MARKER}\n_Answered from Slack._`;
+  const body = slackAnswerComment('merge 714', '1731158400.000200');
   assert.equal(visibleAnswer(body), 'merge 714');
   assert.equal(answerKind(body), 'approve');
   assert.equal(decide(event({ body })).record, true);
