@@ -1,12 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import { syncGameStats } from '../src/server/sync/index.ts';
-import { getSupabaseClient } from '../src/server/supabase/index.ts';
-import { gameStatsCacheControl, handleJsonRequest } from '../src/server/http/index.ts';
+import { getGameCounts } from '../src/server/game-counts/index.ts';
+import { handleJsonRequest } from '../src/server/http/index.ts';
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
-  return handleJsonRequest(req, res, () => syncGameStats(getSupabaseClient()), {
-    allowCors: true,
-    cacheControl: gameStatsCacheControl,
-  });
+  return handleJsonRequest(req, res, () => getGameCounts(), { allowCors: true });
 }

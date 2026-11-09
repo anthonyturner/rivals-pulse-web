@@ -65,27 +65,8 @@ describe('beginResultOf', () => {
 
 describe('dataJobDetailOf', () => {
   it('reads each shape a run can come to', () => {
-    const captured = '2026-11-04T10:10:00.000Z';
-
     expect(dataJobDetailOf({ result: 'rebuilt', halfSeasons: 2 })).toEqual({ result: 'rebuilt', halfSeasons: 2 });
     expect(dataJobDetailOf({ result: 'news-synced', cards: 4 })).toEqual({ result: 'news-synced', cards: 4 });
-    expect(dataJobDetailOf({ result: 'stored', capturedAt: captured, games: 5 })).toEqual({
-      result: 'stored',
-      capturedAt: captured,
-      games: 5,
-    });
-    expect(dataJobDetailOf({ result: 'stored-with-fallbacks', capturedAt: captured, games: 5, fallbackGames: 2 })).toEqual({
-      result: 'stored-with-fallbacks',
-      capturedAt: captured,
-      games: 5,
-      fallbackGames: 2,
-    });
-    expect(dataJobDetailOf({ result: 'already-captured', capturedAt: captured, games: 5, fallbackGames: 0 })).toEqual({
-      result: 'already-captured',
-      capturedAt: captured,
-      games: 5,
-      fallbackGames: 0,
-    });
     expect(dataJobDetailOf({ result: 'failed', message: 'x' })).toEqual({ result: 'failed', message: 'x' });
   });
 
@@ -96,8 +77,8 @@ describe('dataJobDetailOf', () => {
       {},
       { result: 'rebuilt' },
       { result: 'rebuilt', halfSeasons: '2' },
-      { result: 'stored', games: 5 },
-      { result: 'already-captured', capturedAt: '2026-11-04T10:10:00Z', games: 5 },
+      { result: 'news-synced' },
+      { result: 'stored', capturedAt: '2026-11-04T10:10:00.000Z', games: 5 },
       { result: 'failed', message: 4 },
       { result: 'exploded' },
     ]) {
@@ -147,16 +128,17 @@ describe('dataJobStatusesOf', () => {
   });
 
   it('leaves out only the job whose entry cannot be read, so one odd row does not hide the rest', () => {
-    const good = { job: 'game-stats', lastScheduled: null, lastManual: null, wait: null };
-    const other = { ...good, job: 'home-news' };
+    const good = { job: 'home-news', lastScheduled: null, lastManual: null, wait: null };
+    const other = { ...good, job: 'recompute-hero-aggregates' };
 
     for (const bad of [
       { ...good, job: 'drop-everything' },
+      { ...good, job: 'game-stats' },
       { ...good, lastManual: { ...run, outcome: 'nearly' } },
       { ...good, wait: { reason: 'cooldown', retryAt: 'soon' } },
-      { job: 'game-stats', lastScheduled: null, lastManual: null },
+      { job: 'home-news', lastScheduled: null, lastManual: null },
     ]) {
-      expect(dataJobStatusesOf([bad, other])?.map((status) => status.job)).toEqual(['home-news']);
+      expect(dataJobStatusesOf([bad, other])?.map((status) => status.job)).toEqual(['recompute-hero-aggregates']);
     }
   });
 
@@ -164,12 +146,12 @@ describe('dataJobStatusesOf', () => {
     const noStart = { outcome: 'running', startedAt: null, finishedAt: null, message: null };
     const statuses = dataJobStatusesOf([
       { job: 'recompute-hero-aggregates', lastScheduled: noStart, lastManual: null, wait: null },
-      { job: 'game-stats', lastScheduled: { ...run, startedAt: 'soon' }, lastManual: null, wait: null },
+      { job: 'home-news', lastScheduled: { ...run, startedAt: 'soon' }, lastManual: null, wait: null },
     ]);
 
     expect(statuses?.map((status) => [status.job, status.lastScheduled])).toEqual([
       ['recompute-hero-aggregates', null],
-      ['game-stats', null],
+      ['home-news', null],
     ]);
   });
 });

@@ -90,13 +90,9 @@ Stores cached payloads from external APIs such as Fandom. This lets the app read
 
 Stores update history for external sync jobs.
 
-### `game_stat_snapshots` (now in Supabase)
+### `game_stat_snapshots` and `game_stat_snapshot_games` (in Supabase, unused)
 
-Stores one game-stat capture header per UTC hour. The unique `capture_bucket` prevents page traffic and cron retries from creating duplicate hourly snapshots.
-
-### `game_stat_snapshot_games` (now in Supabase)
-
-Stores the per-game values for each snapshot, including current players, 24-hour peak, all-time peak, daily rank, seller rank, review text, and source URL. The Game Stats API joins the latest incoming values with the preceding snapshot to calculate historical deltas.
+The hourly Steam player-count captures the Game Stats page used to show. Nothing reads or writes them since issue 381: the page now counts the app's own matches and players through `read_game_counts()` ([supabase.md](supabase.md#website-game-stats)). The tables, their rows and `record_game_stat_snapshot` are kept until a separate migration drops them.
 
 ## Triple-support aggregates (Supabase)
 
@@ -126,10 +122,9 @@ The Express SSR server exposes read-only routes:
 - `GET /api/home/portals`
 - `GET /api/glossary`
 - `GET /api/external-sources/:sourceKey`
-- `GET /api/game-stats`
+- `GET /api/game-stats` (the matches and players the app has seen: `matches`, `players`, `since` and `halfSeasons`)
 - `GET /api/triple-support-trios`
 - `GET /api/team-lineups`
-- `GET /api/sync/game-stats` (cron or authorized manual sync)
 
 ## Update Flow
 

@@ -37,7 +37,7 @@ same data-access code (`src/server/content/content-database.ts`):
   `npm run serve:ssr:rivals-pulse-coach`), backed by `@angular/ssr/node`.
 
 Scheduled content refresh runs via Vercel cron (`vercel.json` `crons`)
-hitting `api/sync/home-news.ts` and `api/sync/game-stats.ts`. Content is also refreshed manually through the
+hitting `api/sync/home-news.ts`. Content is also refreshed manually through the
 `scripts/*.mjs` sync scripts (see `package.json` `sync:*` / `refresh:*`).
 
 ### Server code layout
@@ -76,8 +76,7 @@ The server code lives in `src/server/<feature>/`, one folder per feature
   file. The `hero-stats` and `account` entry points leave their pure module
   out for the same reason.
 - **A sync job lives with the content it feeds** (`content/home/home-news-sync.ts`),
-  unless it feeds several areas, in which case it lives in `sync/`
-  (`sync/game-stats-sync.ts`).
+  unless it feeds several areas, in which case it lives in `sync/`.
 - **Specs import the files they test.** Spec files and the `supabase/functions`
   tests are exempt from the entry-point rule. `pulse-atlas` has no entry point
   because only `scripts/build-pulse-atlas.mjs` uses it.
@@ -128,7 +127,7 @@ The session lives on the server side of the boundary:
   Admin link read `isAdmin` from the session answer, and the lazily loaded `/admin` area (`src/app/features/admin/`, menu and
   routes from `ADMIN_PAGES`) is client-rendered and carries `robots: noindex, nofollow`. Those are conveniences; the API and
   the database are what refuse.
-- The admin "Data jobs" page (issue 494) runs the five hourly rebuilds and the two syncs on demand through `admin/data-jobs` and
+- The admin "Data jobs" page (issue 494) runs the five hourly rebuilds and the home news sync on demand through `admin/data-jobs` and
   `admin/data-jobs-run`: a database call under the admin's own token writes the audit row and checks the cooldown, then a rebuild
   runs in the database and a sync runs in `src/server/admin/sync-jobs.ts`, the one place the admin area uses the service-role key
   (ADR-0005, decision 6). See "Running the data jobs on demand" in [supabase.md](supabase.md).

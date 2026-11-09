@@ -37,14 +37,6 @@ function setup(overrides: Partial<AuthGateway> = {}) {
 
       return { outcome: 'succeeded', detail: { result: 'news-synced', cards: 4 } };
     },
-    'game-stats': async (): Promise<SyncJobResult> => {
-      order.push('sync game-stats');
-
-      return {
-        outcome: 'succeeded',
-        detail: { result: 'stored', capturedAt: '2026-11-04T10:10:00.000Z', games: 5 },
-      };
-    },
   };
   const context = (body: unknown): AdminContext => ({
     request: {
@@ -88,8 +80,9 @@ describe('runDataJob', () => {
         { job: 'recompute-hero-aggregates; drop table public.admins' },
         { job: '' },
         { job: 7 },
-        { job: ['game-stats'] },
-        'game-stats',
+        { job: 'game-stats' },
+        { job: ['home-news'] },
+        'home-news',
       ]) {
         const response = await runDataJob(context(body), syncs);
 
@@ -102,7 +95,7 @@ describe('runDataJob', () => {
 
   describe('when the job is busy', () => {
     it('answers 409 with why and when to retry, and runs nothing, for a rebuild and for a sync', async () => {
-      for (const job of ['recompute-hero-aggregates', 'game-stats'] as const) {
+      for (const job of ['recompute-hero-aggregates', 'home-news'] as const) {
         const { order, context, syncs } = setup({
           beginDataJob: async (): Promise<BeginDataJobResult> => ({ status: 'busy', reason: 'cooldown', retryAt: RETRY_AT }),
         });
@@ -175,14 +168,10 @@ describe('runDataJob', () => {
       const finish = jasmine.createSpy('finishDataJob').and.resolveTo(true);
       const { order, context, syncs } = setup({ finishDataJob: finish });
 
-      const response = await runDataJob(context({ job: 'game-stats' }), syncs);
+      const response = await runDataJob(context({ job: 'home-news' }), syncs);
 
-      expect(order).toEqual(['begin game-stats', 'sync game-stats']);
-      expect(finish).toHaveBeenCalledOnceWith(TOKENS, 41, 'succeeded', {
-        result: 'stored',
-        capturedAt: '2026-11-04T10:10:00.000Z',
-        games: 5,
-      });
+      expect(order).toEqual(['begin home-news', 'sync home-news']);
+      expect(finish).toHaveBeenCalledOnceWith(TOKENS, 41, 'succeeded', { result: 'news-synced', cards: 4 });
       expect(asRun(response.body).recorded).toBeTrue();
     });
 
@@ -214,23 +203,6 @@ describe('runDataJob', () => {
       });
     });
 
-    it('passes on what a game stats capture really came to rather than saying plain success', async () => {
-      const { context, syncs } = setup();
-      const cases: SyncJobResult['detail'][] = [
-        { result: 'already-captured', capturedAt: '2026-11-04T10:02:00.000Z', games: 5, fallbackGames: 0 },
-        { result: 'stored-with-fallbacks', capturedAt: '2026-11-04T10:10:00.000Z', games: 5, fallbackGames: 3 },
-      ];
-
-      for (const detail of cases) {
-        const response = await runDataJob(
-          context({ job: 'game-stats' }),
-          { ...syncs, 'game-stats': async () => ({ outcome: 'succeeded', detail }) },
-        );
-
-        expect(asRun(response.body).detail).toEqual(detail);
-      }
-    });
-
     it('still answers how the run ended when its audit row cannot be closed, and says it was not recorded', async () => {
       spyOn(console, 'warn');
       const { context, syncs } = setup({
@@ -239,7 +211,7 @@ describe('runDataJob', () => {
         },
       });
 
-      const response = await runDataJob(context({ job: 'game-stats' }), syncs);
+      const response = await runDataJob(context({ job: 'home-news' }), syncs);
 
       expect(response.status).toBe(200);
       expect(asRun(response.body).outcome).toBe('succeeded');
@@ -255,7 +227,7 @@ describe('runDataJob', () => {
       },
     });
 
-    await expectAsync(runDataJob(context({ job: 'game-stats' }), syncs)).toBeRejectedWithError('down');
-    expect(order).toEqual(['begin game-stats']);
+    await expectAsync(runDataJob(context({ job: 'home-news' }), syncs)).toBeRejectedWithError('down');
+    expect(order).toEqual(['begin home-news']);
   });
 });

@@ -1,8 +1,8 @@
 import type { DataJobDetail, DataJobOutcome, DataJobRun } from '../../../../contracts/admin-data-jobs.model';
 
 /**
- * How a run is worded on the page. Success is never the default word: a game stats capture that
- * stored nothing, or stored built-in numbers, is told as what it was.
+ * How a run is worded on the page. Success is never the default word: a rebuild that found
+ * nothing to rebuild is told as what it was.
  */
 export type Tone = 'good' | 'notice' | 'warning' | 'bad';
 
@@ -55,29 +55,6 @@ export function describeDetail(detail: DataJobDetail): RunWords {
           };
     case 'news-synced':
       return { tone: 'good', headline: `Home news refreshed with ${plural(detail.cards, 'card', 'cards')}.`, note: null };
-    case 'stored':
-      return {
-        tone: 'good',
-        headline: `Stored a new capture for ${easternLabel(detail.capturedAt)}, with all ${detail.games} player counts read from Steam.`,
-        note: null,
-      };
-    case 'stored-with-fallbacks':
-      return {
-        tone: 'warning',
-        headline:
-          `Stored a capture, but Steam did not answer for ${detail.fallbackGames} of ${detail.games} games, ` +
-          'so their player counts are built-in fallback numbers.',
-        note: 'The hour keeps the first capture it gets, so a later run in the same hour will not replace these.',
-      };
-    case 'already-captured':
-      return {
-        tone: 'notice',
-        headline: `Nothing new was stored: this hour was already captured at ${easternLabel(detail.capturedAt)}.`,
-        note:
-          (detail.fallbackGames > 0
-            ? `Steam did not answer for ${detail.fallbackGames} of ${detail.games} games on this run, and none of what it read was kept. `
-            : '') + 'Opening the game stats page can also take the hour. The next hour will store a new capture.',
-      };
     case 'failed':
       return { tone: 'bad', headline: detail.message, note: null };
   }

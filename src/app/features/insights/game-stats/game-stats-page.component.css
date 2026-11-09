@@ -1,12 +1,6 @@
-/* Six columns do not fit a phone, so the table scrolls inside its own region. Its focus ring sits outside the region, because the sticky first column would paint over an inset one. */
-.scroll {
-  margin-top: 8px;
-  overflow-x: auto;
-}
-
 table {
   width: 100%;
-  min-width: 600px;
+  margin-top: 8px;
   border-collapse: collapse;
   font-size: var(--type-small);
   line-height: 1.3;
@@ -33,34 +27,12 @@ thead th {
 }
 
 th:first-child {
-  position: sticky;
-  left: 0;
-  background: inherit;
+  font-weight: 700;
   text-align: left;
 }
 
-.subject {
-  background: color-mix(in srgb, var(--secondary) 14%, var(--bg-panel));
-}
-
-.game-name {
-  display: block;
+thead th:first-child {
   font-weight: 700;
-}
-
-.subject .game-name {
-  font-weight: 850;
-}
-
-th small {
-  color: var(--text-soft);
-  font-size: var(--type-caption);
-  font-weight: 400;
-}
-
-.rank .delta {
-  display: inline;
-  margin-left: 4px;
 }
 
 app-state-panel,
@@ -105,22 +77,8 @@ app-state-panel,
   overflow-wrap: anywhere;
 }
 
-.stats--milestones {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-}
-
 .note {
   margin-top: 8px;
   color: var(--text-soft);
   font-size: var(--type-small);
-}
-
-.sources {
-  margin-top: 12px;
-  color: var(--text-soft);
-  font-size: var(--type-caption);
-}
-
-.sources span[aria-hidden] {
-  margin-inline: 6px;
 }

@@ -19,10 +19,6 @@
     {
       "path": "/api/sync/home-news",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/sync/game-stats",
-      "schedule": "10 * * * *"
     }
   ],
   "headers": [

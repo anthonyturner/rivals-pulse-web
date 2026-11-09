@@ -10,7 +10,7 @@ import type { AdminContext } from './admin-routes.ts';
 import type { SyncJobResult } from './sync-jobs.ts';
 
 /** The syncs, by job key. A test passes stand-ins. */
-export type SyncJobRunners = Readonly<Record<'home-news' | 'game-stats', () => Promise<SyncJobResult>>>;
+export type SyncJobRunners = Readonly<Record<'home-news', () => Promise<SyncJobResult>>>;
 
 /**
  * The real syncs. `sync-jobs.ts` is loaded only when one is called, which is after `admin_begin_run`
@@ -19,7 +19,6 @@ export type SyncJobRunners = Readonly<Record<'home-news' | 'game-stats', () => P
  */
 const SYNC_JOB_RUNNERS: SyncJobRunners = {
   'home-news': async () => (await import('./sync-jobs.ts')).runHomeNewsJob(),
-  'game-stats': async () => (await import('./sync-jobs.ts')).runGameStatsJob(),
 };
 
 /** What a rebuild that failed or was stopped says. The cause stays in the server log. */
@@ -80,7 +79,7 @@ async function execute(
   rebuild: () => Promise<{ halfSeasons: number }>,
   syncs: SyncJobRunners,
 ): Promise<Execution> {
-  const sync = job === 'home-news' || job === 'game-stats' ? syncs[job] : undefined;
+  const sync = job === 'home-news' ? syncs[job] : undefined;
 
   if (sync) {
     return { ...(await sync()), closed: false };

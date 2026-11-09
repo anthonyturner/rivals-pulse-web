@@ -210,26 +210,6 @@ export const DATA_JOBS = [
       'If the official site has posted something new since the last run, it appears first under "Latest news and patch ' +
       'notes" in "What\'s new in the game".',
   },
-  {
-    key: 'game-stats',
-    schedule: '10 * * * *',
-    label: 'Game stats',
-    kind: 'sync',
-    summary: 'Reads the Steam player counts and stores them as this hour\'s capture.',
-    updates:
-      "This hour's saved capture of the Steam player counts for Marvel Rivals and four other games. " +
-      'The page measures its changes from the capture before the current hour.',
-    pages: [{ name: 'Game stats', path: '/game-stats', section: 'Where Marvel Rivals sits in the pack' }],
-    atlasFiles: [],
-    caveat:
-      '"Players now" comes from Steam and the page\'s answer is cached for up to 5 minutes, so this job does not change it, ' +
-      'and nothing on the page changes during the hour of the run. The hour keeps its first capture, which a visit to the ' +
-      'page can also take. If Steam does not answer for a game, a built-in number is stored for it; it becomes the next ' +
-      'hour\'s starting point, and it shows as "Players now" if the page\'s own Steam read fails too. The page does not mark it.',
-    example:
-      'From the next hour, "Compared with" under the page title shows this hour\'s capture time, and the up or down changes ' +
-      'under "Players now" are measured from it.',
-  },
 ] as const satisfies readonly DataJobDefinition[];
 
 export type DataJobKey = (typeof DATA_JOBS)[number]['key'];
@@ -252,19 +232,10 @@ export function isDataJobKey(value: unknown): value is DataJobKey {
   return DATA_JOBS.some((job) => job.key === value);
 }
 
-/** What a game stats capture came to. Only the first stores numbers that all came from Steam. */
-export type GameStatsOutcome =
-  | { result: 'stored'; capturedAt: string; games: number }
-  /** Steam did not answer for some games, so their built-in numbers were stored and the hour keeps them. */
-  | { result: 'stored-with-fallbacks'; capturedAt: string; games: number; fallbackGames: number }
-  /** The hour already had a capture, so nothing was stored. `capturedAt` is when that one was made. */
-  | { result: 'already-captured'; capturedAt: string; games: number; fallbackGames: number };
-
 /** What a run came to, as the page words it. A failed run carries only a message. */
 export type DataJobDetail =
   | { result: 'rebuilt'; halfSeasons: number }
   | { result: 'news-synced'; cards: number }
-  | GameStatsOutcome
   | { result: 'failed'; message: string };
 
 /**

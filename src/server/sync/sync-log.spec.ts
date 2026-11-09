@@ -138,7 +138,7 @@ describe('recordSyncRun', () => {
   it('closes the run with the description of what the work returned, and returns it', async () => {
     const { client, calls } = fakeSupabaseClient(respondToRuns);
 
-    const value = await recordSyncRun(client, 'game-stats', 'Capturing', async () => 5, (count) => ({
+    const value = await recordSyncRun(client, 'home-news', 'Capturing', async () => 5, (count) => ({
       status: 'success',
       message: `Captured ${count}`,
     }));
@@ -154,7 +154,7 @@ describe('recordSyncRun', () => {
     const describe = jasmine.createSpy('describe');
 
     await expectAsync(
-      recordSyncRun(client, 'game-stats', 'Capturing', () => Promise.reject(new Error('boom')), describe),
+      recordSyncRun(client, 'home-news', 'Capturing', () => Promise.reject(new Error('boom')), describe),
     ).toBeRejectedWithError('boom');
 
     const update = calls[1].steps.find(([method]) => method === 'update')!;
@@ -167,8 +167,8 @@ describe('recordSyncRun', () => {
     const work = jasmine.createSpy('work');
 
     await expectAsync(
-      recordSyncRun(client, 'game-stats', 'Capturing', work, () => ({ status: 'success', message: '' })),
-    ).toBeRejectedWithError('Recording the game-stats sync run failed: down');
+      recordSyncRun(client, 'home-news', 'Capturing', work, () => ({ status: 'success', message: '' })),
+    ).toBeRejectedWithError('Recording the home-news sync run failed: down');
     expect(work).not.toHaveBeenCalled();
   });
 });

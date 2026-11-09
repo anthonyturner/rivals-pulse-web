@@ -4,53 +4,29 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import type { TileChip } from '../../hub/hub-tile.types';
 import { HubTileComponent } from '../../hub/hub-tile/hub-tile.component';
 import { KindChipComponent } from '../../hub/kind-chip/kind-chip.component';
-import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { buildGameStatsView } from './game-stats-view';
 import { GameStatsService } from './game-stats.service';
-import { SAVED_GAME_STATS } from './saved-game-stats';
-import { StatDeltaComponent } from './stat-delta/stat-delta.component';
-
-const MILESTONES = [
-  { value: '10M', label: 'Players in 72 hours' },
-  { value: '20M', label: 'Players by December 17, 2024' },
-  { value: '40M+', label: 'Players by February 2025 (NetEase, all platforms)' },
-];
-
-const SOURCES = [
-  {
-    label: 'Steam current-players API',
-    url: 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=2767030',
-  },
-  { label: 'SteamDB', url: 'https://steamdb.info/app/2767030/charts/' },
-  { label: 'Steam most played', url: 'https://store.steampowered.com/charts/mostplayed' },
-  { label: 'Wikipedia (milestones)', url: 'https://en.wikipedia.org/wiki/Marvel_Rivals' },
-];
 
 @Component({
   selector: 'app-game-stats-page',
-  imports: [HubTileComponent, KindChipComponent, NoticeComponent, PageHeaderComponent, StatDeltaComponent, StatePanelComponent],
+  imports: [HubTileComponent, KindChipComponent, PageHeaderComponent, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-stats-page.component.html',
   styleUrls: ['../insight-page.css', './game-stats-page.component.css'],
 })
 export class GameStatsPageComponent {
   // undefined while the request runs, null once it has failed.
-  private readonly stats = toSignal(inject(GameStatsService).getGameStats());
+  private readonly counts = toSignal(inject(GameStatsService).getGameCounts());
 
-  /** Null while the numbers load. */
-  readonly view = computed(() => {
-    const stats = this.stats();
+  readonly view = computed(() => buildGameStatsView(this.counts()));
+  /** The line under the title, once there are counts to describe. */
+  readonly meta = computed(() => {
+    const view = this.view();
 
-    if (stats === undefined) {
-      return null;
-    }
-
-    return stats === null ? buildGameStatsView(SAVED_GAME_STATS, true) : buildGameStatsView(stats, false);
+    return view.status === 'ready' ? view.meta : null;
   });
   readonly leadImage = '/images/site/banners/game-stats-banner.webp';
-  readonly leadChip: TileChip = { kind: 'secondary', label: 'Steam' };
-  readonly milestones = MILESTONES;
-  readonly sources = SOURCES;
+  readonly leadChip: TileChip = { kind: 'secondary', label: 'From the app' };
 }
