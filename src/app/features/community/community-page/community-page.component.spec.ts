@@ -296,6 +296,28 @@ describe('CommunityPageComponent', () => {
     ]);
   });
 
+  it('labels the lead tile season as the previous half-season while it stands in', async () => {
+    await open('/heroes');
+
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/community/matches').flush({
+      ...MATCHES_NOT_ENOUGH_DATA,
+      status: 'ready',
+      matchesBand: 250,
+      halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null },
+      inPlaceOf: { id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null },
+      averageLengthMinutes: 12,
+    });
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const figures = Array.from(host().querySelectorAll('app-community-totals-preview .figure')).map((figure) => [
+      figure.querySelector('dt')?.textContent,
+      figure.querySelector('dd')?.textContent,
+    ]);
+    expect(figures).toContain(['Previous half-season', 'Season 10']);
+  });
+
   describe('on a narrow screen', () => {
     beforeEach(() => {
       (harness.fixture.nativeElement as HTMLElement).style.width = '384px';

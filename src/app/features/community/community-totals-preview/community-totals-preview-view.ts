@@ -8,7 +8,8 @@ export interface TotalsFigure {
 
 /**
  * The figures the lead tile shows, each only if the answer really carries it. The matches band is
- * the answer's own rounded count (such as "250+"), never an exact number.
+ * the answer's own rounded count (such as "250+"), never an exact number. The season figure is labelled
+ * "Previous half-season" when the answer is the previous half-season standing in for the current one.
  */
 export function communityTotalsPreview(data: CommunityMatches | null): TotalsFigure[] {
   if (data === null || data.status !== 'ready') {
@@ -26,7 +27,11 @@ export function communityTotalsPreview(data: CommunityMatches | null): TotalsFig
   }
 
   if (data.halfSeason !== null) {
-    figures.push({ label: 'Season', value: data.halfSeason.label });
+    // When the previous half-season stands in, the figure says so: a bare "Season" would read as current.
+    figures.push({
+      label: data.inPlaceOf === null ? 'Season' : 'Previous half-season',
+      value: data.halfSeason.label,
+    });
   }
 
   return figures;
