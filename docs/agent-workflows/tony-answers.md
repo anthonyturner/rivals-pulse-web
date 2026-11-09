@@ -45,9 +45,10 @@ The rule is the comment's content, in two parts:
 1. **Every comment an agent posts on an issue or a pull request starts with the
    hidden line `<!-- agent -->`**, invisible when rendered. A comment that
    carries it is never an answer.
-2. The question itself, which starts with `Waiting on Tony:`, and a comment that
-   ends with the `Generated with [Claude Code]` line, are agent comments even
-   without the marker, so the likeliest omissions are still covered.
+2. **The question starts with `Waiting on Tony:`** on its first line. It is
+   posted after `needs-tony` is on, so without this the workflow would read the
+   question as an answer. A comment that ends with the `Generated with [Claude
+   Code]` line is an agent's too, so the likeliest omissions are still covered.
 
 An agent that posts an unsigned comment on a `needs-tony` issue can therefore
 swap the label by mistake. It is why an agent adds the marker every time, and

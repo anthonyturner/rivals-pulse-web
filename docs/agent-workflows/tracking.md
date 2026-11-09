@@ -81,8 +81,10 @@ why.
 When work cannot go on without a decision only the maintainer can make, follow
 **Questions for the maintainer** in [pipeline.md](pipeline.md): the question and
 your recommended answer are the latest comment on the issue, the issue carries
-`needs-tony` (and keeps `ready`), and the card moves to Needs Tony. Remove the
-label once the answer is in.
+`needs-tony` (and keeps `ready`), and the card moves to Needs Tony. When Tony
+answers by commenting, a workflow removes `needs-tony` and adds
+`tony-answered`; see [tony-answers.md](tony-answers.md). Remove the label
+yourself only if he answered somewhere else.
 
 Your label and comment come from Tony's own account, so GitHub never notifies him
 of them. Once a day, `.github/workflows/needs-tony-digest.yml` posts one comment
