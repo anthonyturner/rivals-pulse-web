@@ -109,7 +109,7 @@ describe('getCommunityInsights', () => {
       const { client } = clientAnswering({ code: 'PGRST301', message: 'JWT expired' }, status);
 
       await expectAsync(getCommunityInsights({ getClient: () => client })).toBeRejectedWithError(
-        /read_community_insights answered/,
+        /read_community_insights failed/,
       );
     });
   }

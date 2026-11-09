@@ -85,7 +85,7 @@ describe('parseCommunityFiguresSource', () => {
   });
 
   it('rejects an answer it cannot trust', () => {
-    expect(() => parseCommunityFiguresSource(null)).toThrowError(/not an object/);
+    expect(() => parseCommunityFiguresSource(null)).toThrowError(/did not return an object/);
     expect(() => parseCommunityFiguresSource({ ...FIGURES_ANSWER, figures: 'none' })).toThrowError(/figures is not a list/);
     expect(() =>
       parseCommunityFiguresSource({ ...FIGURES_ANSWER, figures: [{ ...FIGURES_ANSWER.figures[0], damage_sum: '36000' }] }),
@@ -111,7 +111,7 @@ describe('parseCommunityKillsSource', () => {
   });
 
   it('rejects an answer it cannot trust', () => {
-    expect(() => parseCommunityKillsSource([])).toThrowError(/not an object/);
+    expect(() => parseCommunityKillsSource([])).toThrowError(/did not return an object/);
     expect(() => parseCommunityKillsSource({ ...KILLS_ANSWER, pairs: [{ ...KILLS_ANSWER.pairs[0], kills: 'many' }] })).toThrowError(
       /kills is not a number/,
     );

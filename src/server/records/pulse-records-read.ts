@@ -7,7 +7,7 @@ import {
   type PulseRecordsCategory,
 } from '../../contracts/pulse-records.model.ts';
 import { heroSlugByGameId } from '../heroes/catalog/hero-game-ids.ts';
-import { answerReader, getSupabaseClient } from '../supabase/index.ts';
+import { answerReader, callReadFunction, getSupabaseClient } from '../supabase/index.ts';
 
 interface PulseRecordsReadOptions {
   /** Defaults to the shared server client. */
@@ -15,11 +15,7 @@ interface PulseRecordsReadOptions {
 }
 
 const READ_FUNCTION = 'read_pulse_records';
-const READ_TIMEOUT_MS = 5000;
 const { answerOf, recordsOf, numberOf, stringOf } = answerReader(READ_FUNCTION);
-
-/** PGRST202 (HTTP 404), 42883 and 42P01 mean the migration has not been applied yet. */
-const NOT_DEPLOYED_CODES = new Set(['PGRST202', '42883', '42P01']);
 
 /**
  * Control characters, then the invisible ones that reorder or hide text. The database already strips
@@ -40,19 +36,9 @@ const CALENDAR_DAY = /^\d{4}-\d{2}-\d{2}$/;
  */
 export async function getPulseRecords(options: PulseRecordsReadOptions = {}): Promise<PulseRecords> {
   const client = (options.getClient ?? getSupabaseClient)();
-  const { data, error } = await client.rpc(READ_FUNCTION).abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+  const body = await callReadFunction(client, READ_FUNCTION);
 
-  if (error) {
-    if (NOT_DEPLOYED_CODES.has(error.code)) {
-      console.warn(`${READ_FUNCTION} is not deployed yet, answering no records`);
-
-      return emptyPulseRecords();
-    }
-
-    throw new Error(`${READ_FUNCTION} answered ${error.code || 'an error'}: ${error.message}`);
-  }
-
-  return parsePulseRecords(data);
+  return body === null ? emptyPulseRecords() : parsePulseRecords(body);
 }
 
 export function emptyPulseRecords(): PulseRecords {

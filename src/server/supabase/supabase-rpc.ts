@@ -1,3 +1,6 @@
+import { isRecord } from './answer-reader.ts';
+import { isNotAppliedCode } from './not-applied.ts';
+
 const SUPABASE_READ_ENV_NAMES = ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'] as const;
 
 /** One page of a function that returns a set of rows; see `callSupabaseFunction`. */
@@ -13,12 +16,6 @@ interface SupabasePage {
 export type SupabaseReadEnv = Readonly<Record<string, string | undefined>>;
 
 const READ_TIMEOUT_MS = 5000;
-
-/**
- * PostgREST answers 404 with `PGRST202` for a function that is not in the database, and a missing
- * table or function inside a query comes back as Postgres `42P01` or `42883`.
- */
-const NOT_DEPLOYED_CODES: readonly string[] = ['PGRST202', '42P01', '42883'];
 
 /** A refused call. It keeps the status and the error code, never the response body or the key. */
 class SupabaseFunctionError extends Error {
@@ -39,7 +36,7 @@ class SupabaseFunctionError extends Error {
 function isNotDeployedError(error: unknown): boolean {
   return (
     error instanceof SupabaseFunctionError &&
-    (error.status === 404 || (error.code !== undefined && NOT_DEPLOYED_CODES.includes(error.code)))
+    (error.status === 404 || isNotAppliedCode(error.code))
   );
 }
 
@@ -120,82 +117,4 @@ async function errorCodeOf(response: Response): Promise<string | undefined> {
     // An error body that is not JSON has no code; the status alone is reported.
     return undefined;
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/**
- * Typed readers for a function's answer. Each one rejects anything off-shape with an error that
- * names the function, so a changed answer fails the request instead of printing NaN.
- */
-export function answerReader(functionName: string) {
-  const recordOf = (value: unknown, what: string): Record<string, unknown> => {
-    if (!isRecord(value)) {
-      throw new Error(`${functionName}: ${what} is not an object`);
-    }
-
-    return value;
-  };
-
-  return {
-    /** The top-level answer, which must be an object. */
-    answerOf(value: unknown): Record<string, unknown> {
-      if (!isRecord(value)) {
-        throw new Error(`${functionName} did not return an object`);
-      }
-
-      return value;
-    },
-    recordOf,
-    recordsOf(value: unknown, what: string): Record<string, unknown>[] {
-      if (!Array.isArray(value)) {
-        throw new Error(`${functionName}: ${what} is not a list`);
-      }
-
-      return value.map((row) => recordOf(row, `an entry of ${what}`));
-    },
-    numberOf(row: Record<string, unknown>, key: string): number {
-      const value = row[key];
-
-      if (typeof value !== 'number' || !Number.isFinite(value)) {
-        throw new Error(`${functionName}: ${key} is not a number`);
-      }
-
-      return value;
-    },
-    /** A number, or null where the function leaves the column null (a figure it withholds). */
-    nullableNumberOf(row: Record<string, unknown>, key: string): number | null {
-      const value = row[key];
-
-      if (value === null) {
-        return null;
-      }
-
-      if (typeof value !== 'number' || !Number.isFinite(value)) {
-        throw new Error(`${functionName}: ${key} is not a number or null`);
-      }
-
-      return value;
-    },
-    booleanOf(row: Record<string, unknown>, key: string): boolean {
-      const value = row[key];
-
-      if (typeof value !== 'boolean') {
-        throw new Error(`${functionName}: ${key} is not a boolean`);
-      }
-
-      return value;
-    },
-    stringOf(row: Record<string, unknown>, key: string): string {
-      const value = row[key];
-
-      if (typeof value !== 'string') {
-        throw new Error(`${functionName}: ${key} is not a string`);
-      }
-
-      return value;
-    },
-  };
 }

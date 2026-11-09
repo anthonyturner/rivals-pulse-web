@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { CommunityInsights } from '../../../contracts/community-insights.model.ts';
 import { deriveCommunityInsights, type InsightsBucketRow, type InsightsSource } from './community-insights.ts';
-import { answerReader, getSupabaseClient } from '../../supabase/index.ts';
+import { answerReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
 
 interface CommunityInsightsReadOptions {
   /** Defaults to the shared server client. */
@@ -10,20 +10,12 @@ interface CommunityInsightsReadOptions {
 }
 
 const READ_FUNCTION = 'read_community_insights';
-const READ_TIMEOUT_MS = 5000;
 const { answerOf, recordsOf, numberOf, stringOf } = answerReader(READ_FUNCTION);
 
 /**
- * PostgREST answers PGRST202 (HTTP 404) for a function it does not know, and Postgres 42883 / 42P01
- * for a missing function or table. They mean the migration has not been applied yet.
- */
-const NOT_DEPLOYED_CODES = new Set(['PGRST202', '42883', '42P01']);
-
-/**
  * The Insights tab's numbers. `read_community_insights()` is the only door to the aggregates, and it
- * is open to the service role alone, so this reads with the shared server client. The shared
- * publishable-key reader (`supabase-rpc.ts`) cannot reach it, which is why this keeps its own call;
- * the answer is parsed with the same `answerReader` as the hero readers.
+ * is open to the service role alone, so this reads with the shared server client through
+ * `callReadFunction`, and parses the answer with the same `answerReader` as the hero readers.
  *
  * A function or table that does not exist yet (the migration is applied by hand) is the designed
  * "not enough data yet" state. Every other failure (a refused key, a server error, a timeout, a
@@ -31,19 +23,9 @@ const NOT_DEPLOYED_CODES = new Set(['PGRST202', '42883', '42P01']);
  */
 export async function getCommunityInsights(options: CommunityInsightsReadOptions = {}): Promise<CommunityInsights> {
   const client = (options.getClient ?? getSupabaseClient)();
-  const { data, error } = await client.rpc(READ_FUNCTION).abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
+  const body = await callReadFunction(client, READ_FUNCTION);
 
-  if (error) {
-    if (NOT_DEPLOYED_CODES.has(error.code)) {
-      console.warn(`${READ_FUNCTION} is not deployed yet, answering not enough data`);
-
-      return deriveCommunityInsights(null);
-    }
-
-    throw new Error(`${READ_FUNCTION} answered ${error.code || 'an error'}: ${error.message}`);
-  }
-
-  return deriveCommunityInsights(parseInsightsSource(data));
+  return deriveCommunityInsights(body === null ? null : parseInsightsSource(body));
 }
 
 /** Picks the known fields out of the function's answer and rejects anything that is not a number. */

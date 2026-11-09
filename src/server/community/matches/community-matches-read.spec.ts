@@ -47,7 +47,7 @@ describe('parseCommunityMatchesSource', () => {
   });
 
   it('rejects an answer it cannot trust', () => {
-    expect(() => parseCommunityMatchesSource(null)).toThrowError(/not an object/);
+    expect(() => parseCommunityMatchesSource(null)).toThrowError(/did not return an object/);
     expect(() => parseCommunityMatchesSource({ ...ANSWER, modes: 'none' })).toThrowError(/modes is not a list/);
     expect(() => parseCommunityMatchesSource({ ...ANSWER, modes: [null] })).toThrowError(/not an object/);
     expect(() =>
