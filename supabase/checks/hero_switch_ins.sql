@@ -1,4 +1,4 @@
--- Proves the switch-in rules (migrations 20261108190000, 20261108200000 and 20261108210000, issues 655, 666 and 667) on fixture
+-- Proves the switch-in rules (migrations 20261108190000, 20261108200000 and 20261108220000, issues 655, 666 and 667) on fixture
 -- matches in half-seasons that do not exist, then rolls everything back. Run after applying the migrations:
 --   npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql
 -- It fails with an exception naming the rule that broke; it ends with a rollback, never a commit.

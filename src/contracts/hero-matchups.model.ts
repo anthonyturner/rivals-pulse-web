@@ -18,6 +18,13 @@ export interface HeroMatchup {
   winRate: number;
   /** The win rate pulled toward 50%, so a short run cannot read as a clear edge. */
   shrunkWinRate: number;
+  /**
+   * (kills + assists) over deaths across `hero`'s lines while facing `enemy`, or null where those
+   * were not recorded, including every half-season counted before the figures existed.
+   */
+  kda: number | null;
+  /** Final hits per line while facing `enemy`; null on the same terms as `kda`. */
+  finalHitsAverage: number | null;
 }
 
 /**

@@ -12,7 +12,7 @@ import { createdFunctions, escapeRegExp, MIGRATIONS, read, withoutComments } fro
 const RECORDER = '20261108200000_hero_timeline_recorder.sql';
 const TIMELINES = '20261108180000_match_hero_timelines.sql';
 const SWITCH_INS = '20261108190000_hero_switch_in_aggregates.sql';
-const HERO_FORMS = '20261108210000_hero_switch_in_hero_forms.sql';
+const HERO_FORMS = '20261108220000_hero_switch_in_hero_forms.sql';
 
 const sql = withoutComments(read(RECORDER));
 const squash = (text: string): string => text.replace(/\s+/g, ' ').trim();

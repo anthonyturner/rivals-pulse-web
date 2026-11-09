@@ -60,6 +60,10 @@ measures one player's own games must follow the same rounding.
 | `team-lineups.json` | The community's team line-up shapes (how many Vanguards, Duelists and Strategists a team ran, such as 1-2-3) with the teams and wins behind each, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
 
+The per-matchup KDA and final hits that `GET /api/hero-matchups` carries (the hero's figures while
+facing one enemy hero) are not published here yet: `community-stats.json` holds win and loss counts only. Its
+`counters` are directional hero-against-enemy records, so that is where they would go, and the work is tracked in [#680](https://github.com/anthonyturner/rivals-pulse-web/issues/680).
+
 Every dataset file has this shape:
 
 ```json

@@ -110,7 +110,8 @@ repo's build. This is a move, not a redesign.
 | `20261108180000_match_hero_timelines.sql` | `match_hero_timelines` (each player's hero picks with the second they happened, by team, no uid or name, once per match), `record_match_hero_timelines`, the helper `json_whole_number`, and `purge_expired_participants` restated to delete timelines on the schedule of `match_hero_kills`, with every freeze still called |
 | `20261108190000_hero_switch_in_aggregates.sql` | `hero_switch_ins` and its half-season table (how often a team won after a player switched to a hero while an enemy hero was on the field, per half-season and mode, counts only), its fill, rebuild, recompute (hourly) and freeze, `read_hero_switch_ins` (gated by `hero_figure_qualifies`), and `purge_expired_participants` restated to call the new freeze before its first delete |
 | `20261108200000_hero_timeline_recorder.sql` | `match_hero_timelines.recorded_by` (nullable, the keyed recorder hash, closed to `anon` and `authenticated` like the rest of the table), `record_match_hero_timelines` replaced by a four argument version whose `p_recorded_by` defaults to null, and `fill_hero_switch_in_aggregates` restated to count players from the timeline uploader. The purge is not touched |
-| `20261108210000_hero_switch_in_hero_forms.sql` | `fill_hero_switch_in_aggregates` restated to read every hero id as its base id from `hero_game_roles`, so Deadpool's role forms are one hero (1057): a change of form is no switch, and a match is counted once however many forms it switches to (issue 667). Same signature, grants and everything else |
+| `20261108210000_hero_matchup_encounter_figures.sql` | `hero_matchups` also stores the kills, deaths, assists and final hits (a sum and a count each) of a matchup's decided lines, null for a half-season frozen before it; `fill_hero_aggregates` and `read_hero_matchups` return them |
+| `20261108220000_hero_switch_in_hero_forms.sql` | `fill_hero_switch_in_aggregates` restated to read every hero id as its base id from `hero_game_roles`, so Deadpool's role forms are one hero (1057): a change of form is no switch, and a match is counted once however many forms it switches to (issue 667). Same signature, grants and everything else |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -737,7 +738,11 @@ limit never applies), made only of counts and `half_seasons` start dates:
 - `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
   (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
   matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
-  again to the chosen modes' own sum. The website reads it through `GET /api/hero-matchups`
+  again to the chosen modes' own sum. Each row also carries `kills_sum`, `kills_n`, `deaths_sum`,
+  `deaths_n`, `assists_sum`, `assists_n`, `final_hits_sum` and `final_hits_n` (issue 651): the figures of
+  the decided lines, one line per enemy hero faced, summed over the modes. They are null for a
+  half-season the purge froze before they existed, and `rebuild_hero_aggregates` cannot refill a
+  frozen one. The server reads a missing or null figure as "not counted", never as 0. The website reads it through `GET /api/hero-matchups`
   ([`src/server/heroes/matchups/hero-matchups-read.ts`](../src/server/heroes/matchups/hero-matchups-read.ts)), always for Competitive and Quick Match.
 
 Every rate, tier and KDA is derived in one pure module, [`src/server/heroes/stats/hero-stats.ts`](../src/server/heroes/stats/hero-stats.ts),

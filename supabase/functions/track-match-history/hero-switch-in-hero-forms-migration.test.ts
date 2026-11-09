@@ -8,7 +8,7 @@ import { createdFunctions, escapeRegExp, read, withoutComments } from './migrati
  * (Deadpool) is one hero in the switch-in counts, nothing else about the fill changed, and the
  * restated function keeps its posture. `supabase/checks/hero_switch_ins.sql` proves the behaviour.
  */
-const HERO_FORMS = '20261108210000_hero_switch_in_hero_forms.sql';
+const HERO_FORMS = '20261108220000_hero_switch_in_hero_forms.sql';
 const EARLIER = '20261108200000_hero_timeline_recorder.sql';
 
 const sql = withoutComments(read(HERO_FORMS));

@@ -16,6 +16,11 @@ export interface HeadToHeadSide {
   killsBand: string | null;
   /** Its form across all its matches, not only this encounter; null when the hero is not placed. */
   overall: { kda: string; finalHits: string } | null;
+  /**
+   * Its form in the matches where it faced the other hero. Null when the matchup carries neither
+   * figure (a half-season counted before they existed), so they are never shown as zero.
+   */
+  encounter: { kda: string; finalHits: string } | null;
 }
 
 export interface HeadToHeadView {
@@ -76,6 +81,7 @@ export function buildHeadToHeadView(
               kda: kdaLabel(usual.kda),
               finalHits: finalHitsLabel(usual.finalHitsAverage),
             },
+      encounter: encounterOf(record),
     };
   };
 
@@ -86,6 +92,16 @@ export function buildHeadToHeadView(
     showKillFeed: killPairs !== null,
     killFeedCaveat: KILL_FEED_CAVEAT,
   };
+}
+
+function encounterOf(record: HeroMatchup | undefined): HeadToHeadSide['encounter'] {
+  // A payload cached from before the figures existed has neither key; a figure that is not a number is as good as missing.
+  const figure = (value: number | null | undefined): number | null =>
+    typeof value === 'number' && Number.isFinite(value) ? value : null;
+  const kda = figure(record?.kda);
+  const finalHits = figure(record?.finalHitsAverage);
+
+  return kda === null && finalHits === null ? null : { kda: kdaLabel(kda), finalHits: finalHitsLabel(finalHits) };
 }
 
 function sameHalfSeason(a: HeroStatsHalfSeason | null | undefined, b: HeroStatsHalfSeason | null): boolean {
