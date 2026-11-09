@@ -170,24 +170,24 @@ cannot go on, it goes to the inbox as well.
 
 When work cannot go on without a decision only the maintainer can make:
 
-1. **Post the question as a comment on the issue**, and make it the latest
-   comment: what is being decided, why it blocks the work, the options, and your
-   recommended answer, so a one-word reply is enough. A question about a pull
-   request goes on the issue it closes, with the pull-request number in the
-   text.
-2. **Add the `needs-tony` label** to the issue. Keep `ready` on, so removing
-   `needs-tony` alone returns the card to Ready and the next agent resumes.
-   Where no issue exists yet, file one with the label and the question.
+1. **Add the `needs-tony` label** to the issue, and keep `ready` on, so
+   removing `needs-tony` alone returns the card to Ready and the next agent
+   resumes. Where no issue exists yet, file one with the label. A question
+   about a pull request goes on the issue it closes.
+2. **Post the question as a comment on the issue, after the label**, and make
+   it the latest comment: what is being decided, why it blocks the work, the
+   options, and your recommended answer, so a one-word reply is enough. Name the
+   pull request in the text when there is one.
 3. **Hand an open draft pull request back** the way a paused job is handed back
    (see **Your own job pauses for days** above): push, close the draft with a
    comment naming the branch, keep the branch. That frees the slot.
 4. **Move on** to other work that does not depend on the answer.
 
-Post the comment *after* adding the label where you can. GitHub's Slack app
-posts to #rivals-needs-tony only when an issue is opened, closed or commented
-on while it carries `needs-tony` (the subscription is filtered by
-`+label:"needs-tony"`). It does not post when the label is added, so the comment
-is what notifies the maintainer, not the label.
+The order matters. GitHub's Slack app posts to #rivals-needs-tony only when an
+issue is opened, closed or commented on while it carries `needs-tony` (the
+subscription is filtered by `+label:"needs-tony"`). It does not post when the
+label is added, so the comment is what notifies the maintainer, and it only
+counts once the label is already on.
 
 The maintainer answers in a comment on the issue and removes the label. Anyone
 resuming an issue that was in the inbox reads that answer first, per
