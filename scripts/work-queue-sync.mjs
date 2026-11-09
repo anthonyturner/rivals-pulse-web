@@ -47,7 +47,7 @@ export function desiredStatus(issue) {
   if (labels.includes('needs-tony')) return 'Needs Tony';
   if (openPullRequests.some((pullRequest) => !pullRequest.isDraft)) return 'In review';
   if (openPullRequests.length > 0) return 'Agent working';
-  if (labels.includes('ready')) return 'Ready';
+  if (labels.includes('ready') || labels.includes('tony-answered')) return 'Ready';
   return 'Backlog';
 }
 

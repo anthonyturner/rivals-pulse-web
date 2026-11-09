@@ -39,6 +39,18 @@ test('the ready label without an open pull request means Ready', () => {
   assert.equal(desiredStatus(issue({ labels: ['ready'], pullRequests: [mergedPr] })), 'Ready');
 });
 
+test('tony-answered without an open pull request means Ready, with or without the ready label', () => {
+  assert.equal(desiredStatus(issue({ labels: ['tony-answered'] })), 'Ready');
+  assert.equal(desiredStatus(issue({ labels: ['tony-answered', 'ready'] })), 'Ready');
+  assert.equal(desiredStatus(issue({ labels: ['tony-answered'], pullRequests: [mergedPr] })), 'Ready');
+});
+
+test('needs-tony and an open closing pull request both win over tony-answered', () => {
+  assert.equal(desiredStatus(issue({ labels: ['needs-tony', 'tony-answered'] })), 'Needs Tony');
+  assert.equal(desiredStatus(issue({ labels: ['tony-answered'], pullRequests: [openPr] })), 'In review');
+  assert.equal(desiredStatus(issue({ labels: ['tony-answered'], pullRequests: [draftPr] })), 'Agent working');
+});
+
 test('any other open issue is Backlog', () => {
   assert.equal(desiredStatus(issue({ labels: ['bug'] })), 'Backlog');
 });

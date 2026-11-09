@@ -33,7 +33,8 @@ comment on an issue labelled `needs-tony`. It acts only when all of these hold:
 It then adds `tony-answered`, removes `needs-tony`, and reacts to the comment (a
 thumbs-up for an approval, eyes for the rest) so Tony sees it was picked up.
 The card leaves the Needs Tony column on the next Work Queue sync (it runs every
-thirty minutes). Nothing in the workflow merges, pushes, edits files or runs the
+thirty minutes) and shows Ready, because `tony-answered` ranks with `ready`
+(an open pull request still moves it on to Agent working or In review). Nothing in the workflow merges, pushes, edits files or runs the
 text of the comment; the comment is matched against fixed words and nothing
 else.
 
