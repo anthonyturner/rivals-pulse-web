@@ -1,14 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, of, shareReplay, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
+import { cachedRetryRequest } from '../../../shared/utilities/cached-retry-request';
 
 /** The site's own `/api/community/matches`: anonymous match totals, with no outside request. */
 @Injectable({ providedIn: 'root' })
 export class CommunityMatchesService {
   private readonly http = inject(HttpClient);
-  private matches$: Observable<CommunityMatches | null> | null = null;
+  private readonly loadMatches = cachedRetryRequest({
+    request: () => this.http.get<unknown>('/api/community/matches'),
+    accept: (body) => (isCommunityMatches(body) ? body : null),
+    failureMessage: 'Failed to load community matches from /api/community/matches',
+  });
 
   /**
    * The community match figures, or null when the request fails or the answer is not that. Every
@@ -16,22 +21,7 @@ export class CommunityMatchesService {
    * the next caller tries again.
    */
   getMatches(): Observable<CommunityMatches | null> {
-    this.matches$ ??= this.http.get<unknown>('/api/community/matches').pipe(
-      map((body) => (isCommunityMatches(body) ? body : null)),
-      catchError((error: unknown) => {
-        console.error('Failed to load community matches from /api/community/matches', error);
-
-        return of(null);
-      }),
-      tap((matches) => {
-        if (matches === null) {
-          this.matches$ = null;
-        }
-      }),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
-
-    return this.matches$;
+    return this.loadMatches();
   }
 }
 

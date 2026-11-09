@@ -49,8 +49,9 @@ closes an issue is asserting a result no merge has recorded.
 Open issues from this repository and `anthonyturner/rivals_pulse` appear on the
 **Rivals Pulse Work Queue** board (GitHub user Project 2). Its Status column is
 derived from the table above and the labels below by
-`scripts/work-queue-sync.mjs`, which `.github/workflows/work-queue.yml` runs every
-ten minutes and on issue events. The first rule that matches wins:
+`scripts/work-queue-sync.mjs`, which `.github/workflows/work-queue.yml` runs for
+every open issue every thirty minutes, and for one issue alone, after a short
+debounce, on that issue's events. The first rule that matches wins:
 
 | Board status | Comes from |
 | --- | --- |

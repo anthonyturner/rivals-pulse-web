@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { desiredStatus, iterationConfiguration, iterationOn, missingIterations, workStartedOn } from './work-queue-sync.mjs';
+import {
+  MIN_REMAINING_POINTS,
+  createCostMeter,
+  desiredStatus,
+  issueArgument,
+  iterationConfiguration,
+  iterationOn,
+  missingIterations,
+  shouldStandDown,
+  workStartedOn,
+} from './work-queue-sync.mjs';
 
 const issue = ({ labels = [], pullRequests = [] } = {}) => ({
   labels: { nodes: labels.map((name) => ({ name })) },
@@ -71,4 +81,31 @@ test('extending sends every existing iteration back with its id, completed ones 
     duration: 7,
     iterations: [completed, ...weeks, added],
   });
+});
+
+test('the cost meter adds query costs, counts each mutation as a point and keeps the latest remaining budget', () => {
+  const meter = createCostMeter();
+  meter.recordQuery({ cost: 1, remaining: 4999 });
+  meter.recordQuery({ cost: 3, remaining: 4996 });
+  meter.recordMutation();
+  meter.recordMutation();
+  assert.equal(meter.remaining, 4996);
+  assert.equal(meter.summary(), 'GraphQL cost: 6 point(s) (2 queries, 2 mutation(s)); 4996 remaining');
+});
+
+test('the cost meter reports an unknown budget before any query has answered', () => {
+  assert.equal(createCostMeter().summary(), 'GraphQL cost: 0 point(s) (0 queries, 0 mutation(s)); unknown');
+});
+
+test('the sync stands down only when the known budget is below the floor', () => {
+  assert.equal(shouldStandDown(MIN_REMAINING_POINTS - 1), true);
+  assert.equal(shouldStandDown(MIN_REMAINING_POINTS), false);
+  assert.equal(shouldStandDown(null), false);
+});
+
+test('--issue selects a single-issue sync and its absence a full sweep', () => {
+  assert.equal(issueArgument(['node', 'sync.mjs', '--apply']), null);
+  assert.equal(issueArgument(['node', 'sync.mjs', '--apply', '--issue', 'I_kwDOabc']), 'I_kwDOabc');
+  assert.throws(() => issueArgument(['node', 'sync.mjs', '--issue']), /node id/);
+  assert.throws(() => issueArgument(['node', 'sync.mjs', '--issue', '--apply']), /node id/);
 });
