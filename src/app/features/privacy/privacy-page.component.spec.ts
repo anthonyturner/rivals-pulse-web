@@ -209,6 +209,14 @@ describe('PrivacyPageComponent', () => {
     expect(retention).toContain('one-way recorder code kept next to each of its matches');
   });
 
+  it('says who can read uploaded match histories today, and what changes', () => {
+    const uploads = (section('uploaded-today').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(uploads).toContain('anyone who takes that key out of the app can read every uploaded match history');
+    expect(uploads).toContain('read only the matches that player uploaded');
+    expect(uploads).toContain('the public key will no longer read match histories');
+  });
+
   it('says uploads are automatic rather than chosen', () => {
     const text = page.textContent ?? '';
 
