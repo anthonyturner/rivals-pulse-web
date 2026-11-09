@@ -1,10 +1,11 @@
 name: Sync Work Queue board
 
-# Derives every card's Status and Iteration on the "Rivals Pulse Work Queue" board (GitHub user
+# Derives every card's Status, Iteration and Agent on the "Rivals Pulse Work Queue" board (GitHub user
 # Project 2) from the open issues of both Rivals Pulse repositories. The board is a
 # computed view (overlay ADR-0024); nobody writes to it by hand. An issue event syncs
-# only that issue's card. The scheduled sweep covers pull request state and the overlay
-# repository, which carries no workflow of its own.
+# only that issue's card. The scheduled sweep covers pull request state, new agent signatures
+# (a comment fires no event, so a new signature reaches the board on the next sweep) and the
+# overlay repository, which carries no workflow of its own.
 # Every agent session shares this token's GraphQL budget, so a full sweep runs only on the
 # schedule, never per event. There is deliberately no pull_request trigger, so the token
 # never meets pull request code.

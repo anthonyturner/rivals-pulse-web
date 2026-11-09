@@ -70,6 +70,14 @@ set it never changes, so an issue stays in the week its work started. The sync
 adds a 7-day "Week of <Mon d>" iteration whenever the current or the next week
 is missing.
 
+The **Agent** field names the agent holding each card. It comes from the newest
+`<!-- agent: <name> -->` signature on the issue's open closing pull request (the
+body first, then its comments), otherwise on the issue's newest comment, and is
+capitalised as the roster writes it. A card with no signature stays blank, and
+an existing value is never cleared. A comment fires no sync event, so a new
+signature reaches the board on the next thirty-minute sweep. GitHub's API cannot
+add a field to a view, so the column is shown by hand in each view.
+
 **Never write to the board.** Do not add cards, move them, or set their Status
 or Iteration.
 Change the issue or its pull request and the board follows on the next run. See
