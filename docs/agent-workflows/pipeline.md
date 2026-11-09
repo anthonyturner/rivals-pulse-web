@@ -128,6 +128,33 @@ The `plan-issue` skill forces the planning stages when the requester wants them
 run regardless, and `ship-feature` forces the whole sequence. They are ways to
 ask for the pipeline, not the only way to get it.
 
+## How many run at once
+
+At most **three** issues in this repository are in progress at a time. The
+count is the board, not any session's memory. A job in progress is an issue
+whose card on the Rivals Pulse Work Queue reads **Agent working**, meaning it
+has an open draft pull request (see
+[tracking.md](tracking.md#the-work-queue-board-is-a-computed-view)). The
+overlay repository, `anthonyturner/rivals_pulse`, has its own three, counted
+separately.
+
+Before you branch for a new issue, count this repository's jobs in progress:
+
+```bash
+gh project item-list 2 --owner anthonyturner --limit 1000 --format json -q '[.items[] | select(.status=="Agent working" and .repository=="https://github.com/anthonyturner/rivals-pulse-web")] | length'
+```
+
+- **Under three:** start as usual. Your draft pull request takes a slot.
+- **Three or more:** do not start. Leave the issue in the Ready queue, report
+  that the cap is full and name the three jobs holding the slots. Finishing or
+  unblocking one of them is the way to free a slot.
+- **Your own job pauses for days:** close its draft pull request with a comment
+  naming the branch (keep the branch) and label the issue `ready`, so the slot
+  frees and the next agent resumes from that branch.
+
+Work the requester explicitly says to start now is exempt, and the report says
+the cap was over.
+
 ## Running the pipeline end to end
 
 The stages above can be run one at a time or in a single pass. Both are the
