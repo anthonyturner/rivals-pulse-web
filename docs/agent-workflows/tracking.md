@@ -59,6 +59,7 @@ debounce, on that issue's events. The first rule that matches wins:
 | In review | An open, non-draft pull request closes the issue |
 | Agent working | An open draft pull request closes the issue |
 | Ready | `ready` label |
+| Ready | `tony-answered` label (Tony's answer is in; the same rule as `ready`) |
 | Backlog | Any other open issue |
 | Done | The issue is closed (the project's own "Item closed" workflow) |
 
