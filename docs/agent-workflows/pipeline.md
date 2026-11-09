@@ -195,8 +195,10 @@ counts once the label is already on.
 The maintainer answers in a comment on the issue. A workflow then swaps
 `needs-tony` for `tony-answered`, and a coordinator picks the answer up, acts
 on it and removes `tony-answered`; all of it is in
-[tony-answers.md](tony-answers.md). Anyone resuming an issue that was in the
-inbox reads that answer first, per [implementation.md](implementation.md).
+[tony-answers.md](tony-answers.md). Agents post as the maintainer's own
+account, so his answer cannot be picked out by its author. Anyone resuming an
+issue that was in the inbox reads every comment after the question before
+anything else, per [implementation.md](implementation.md).
 
 Every other comment you post on an issue or a pull request starts with the
 hidden line `<!-- agent -->`, so that it is never read as his answer.
