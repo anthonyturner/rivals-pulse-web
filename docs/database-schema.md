@@ -6,7 +6,7 @@
 > `home_content_blocks`) and the home news sync followed in issue 107; see
 > [supabase.md](supabase.md#website-home-content). The Turso copies are frozen and are dropped
 > with Turso (issue 110). `hero_videos`, `glossary_terms` and `external_sources` followed in issue
-> 106 ([supabase.md](supabase.md#website-reference-content)), and the game stat tables in issue 109
+> 106 ([supabase.md](supabase.md#website-reference-content)), and the game stat tables in issue 109, since dropped
 > ([supabase.md](supabase.md#website-game-stats)).
 >
 > The anonymous hero counts that outlive the purge (hero pairs against and with each other, among them) are
@@ -90,9 +90,9 @@ Stores cached payloads from external APIs such as Fandom. This lets the app read
 
 Stores update history for external sync jobs.
 
-### `game_stat_snapshots` and `game_stat_snapshot_games` (in Supabase, unused)
+### Dropped: the Steam game stat snapshots
 
-The hourly Steam player-count captures the Game Stats page used to show. Nothing reads or writes them since issue 381: the page now counts the app's own matches and players through `read_game_counts()` ([supabase.md](supabase.md#website-game-stats)). The tables, their rows and `record_game_stat_snapshot` are kept until a separate migration drops them.
+The hourly Steam player-count captures the Game Stats page used to show (`game_stat_snapshots` and `game_stat_snapshot_games`, with the `record_game_stat_snapshot` function) are gone. Nothing read or wrote them after issue 381, when the page began counting the app's own matches and players through `read_game_counts()` ([supabase.md](supabase.md#website-game-stats)). Migration `20261109160000_drop_steam_game_stat_snapshots.sql` (issue 743) dropped the tables with their history, which Tony agreed to destroy, and deleted the `sync_runs` rows whose `source_key` was `game-stats`.
 
 ## Triple-support aggregates (Supabase)
 

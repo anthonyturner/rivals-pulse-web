@@ -78,8 +78,8 @@ repo's build. This is a move, not a redesign.
 | `20261030061259_reference_content_data.sql` | The one-off copy of the Turso glossary terms and the four `external_sources` rows the hero and home slices did not copy |
 | `20261030120000_extended_upload.sql` | `participant_hero_figures` (the recorder's damage, healing, blocked and seconds per hero, tied to their `participants` line), `match_hero_kills` (a match's kill feed by hero) and `record_match_extras`, the new function that writes them |
 | `20261030120100_extended_aggregates.sql` | Anonymous counts of those: `hero_figure_aggregates`, `hero_kill_aggregates`, `hero_kill_totals`, `extended_aggregate_half_seasons` and the functions that rebuild and freeze them; `purge_expired_participants` freezes them before it deletes; an hourly `recompute-extended-aggregates` job |
-| `20261031011746_game_stats.sql` | `game_stat_snapshots`, `game_stat_snapshot_games` and the `record_game_stat_snapshot` function (the website's game stats, moved from Turso) |
-| `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables |
+| `20261031011746_game_stats.sql` | `game_stat_snapshots`, `game_stat_snapshot_games` and the `record_game_stat_snapshot` function (the website's game stats, moved from Turso); dropped by `20261109160000` |
+| `20261031015025_game_stats_data.sql` | The one-off copy of the Turso game stat history into those tables; dropped with them by `20261109160000` |
 | `20261031020000_community_match_aggregates.sql` | Anonymous match counts for the Community Matches tab: `community_map_aggregates`, `community_mode_aggregates`, `community_day_aggregates`, `community_match_half_seasons`, the functions that rebuild and freeze them, `read_community_matches()` (service role only) and an hourly `recompute-community-match-aggregates` job |
 | `20261031020100_play_time_aggregates.sql` | Anonymous play-time counts for the Community Insights tab: `play_time_aggregates`, `play_time_aggregate_half_seasons`, the functions that rebuild and freeze them, `read_community_insights()` (service role only) and an hourly `recompute-play-time-aggregates` job |
 | `20261031060000_extended_aggregates_gate.sql` | The first recorder gate on the extended aggregates, from PR 235; recovered from the live project's migration history, where it was already applied. `20261104120000` replaces its functions |
@@ -116,6 +116,7 @@ repo's build. This is a move, not a redesign.
 | `20261109000000_verified_match_history_reads.sql` | `read_own_tracked_matches` and `read_player_scoreboard_lines` (service role only, keyed on the verified recorder, rate limited as `history` and `scoreboard`), the `link_attempt_log` kinds for them, and an index on `tracked_match_recorders (recorded_by, recorded_at desc)`. Additive: the `anon` select on `players`, `player_matches` and `tracked_matches` stays until shipped overlays use the new reads (issue 189) |
 | `20261109100000_backfill_tracked_match_recorders.sql` | `backfill_tracked_match_recorders()` (service role only, adds `tracked_match_recorders` rows only) and one call of it: ties matches uploaded before the recorder table to the single recorder of their player, so `read_own_tracked_matches` returns them (issue 697) |
 | `20261109140000_game_counts.sql` | `read_game_counts()` (service role only, read-only): the matches and different players in `participants`, in total and per half-season, for the Game Stats page (issue 381). Additive: no table is touched. Check with `supabase/checks/game_counts.sql` |
+| `20261109160000_drop_steam_game_stat_snapshots.sql` | Drops `game_stat_snapshots`, `game_stat_snapshot_games` and `record_game_stat_snapshot`, deletes the `sync_runs` rows for the `game-stats` key, and restates `data_job_cooldown()` and `admin_data_jobs_status()` without `game-stats` (issue 743) |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -243,11 +244,13 @@ nothing from outside the app (issue 381). Steam, SteamDB, Wikipedia and NetEase 
   failure is a 500 and the page says the counts could not be loaded. The CDN keeps an answer for five minutes.
 - `supabase/checks/game_counts.sql` proves the totals against the raw rows. Run it after `supabase db push`:
   `npx supabase db query --linked -f supabase/checks/game_counts.sql`.
-- `game_stat_snapshots`, `game_stat_snapshot_games` and `record_game_stat_snapshot` (migrations `20261031011746_game_stats.sql`
-  and `20261031015025_game_stats_data.sql`) are no longer read or written. They are kept, with their rows, until a separate
-  migration drops them. The hourly Vercel cron, `npm run sync:game-stats`, the Turso copy and verification scripts and the
-  admin "Game stats" data job were removed with Steam. `data_job_cooldown()` and `admin_data_jobs_status()` still list
-  `game-stats` until that migration restates them; the server refuses the key before it asks the database.
+- The Steam snapshots are gone. `20261109160000_drop_steam_game_stat_snapshots.sql` (issue 743) drops `game_stat_snapshots`,
+  `game_stat_snapshot_games` (their migrations are `20261031011746_game_stats.sql` and `20261031015025_game_stats_data.sql`)
+  and `record_game_stat_snapshot`, with about 2,400 hourly captures; only a Supabase backup brings them back. Tony agreed to
+  that on 2026-11-09. The same migration deletes the `sync_runs` rows with `source_key = 'game-stats'`, since no job has that
+  key any more, and restates `data_job_cooldown()` and `admin_data_jobs_status()` without `game-stats`. The `admin_audit_log`
+  rows for that key stay, because the audit log is kept for good. The hourly Vercel cron, `npm run sync:game-stats`, the Turso
+  copy and verification scripts and the admin "Game stats" data job were removed with Steam.
 
 ## Edge Functions
 
@@ -1233,7 +1236,7 @@ rebuilds (`recompute-hero-aggregates`, `recompute-extended-aggregates`, `recompu
 `recompute-play-time-aggregates`, `recompute-hero-pair-aggregates`, each named by its `pg_cron` job) and the home news sync the
 website runs on Vercel (`home-news`). Player uploads cannot be forced, and the page says so. The list is in
 `src/contracts/admin-data-jobs.model.ts` and again in `data_job_cooldown()` (the allow-list: null for any other key);
-`scripts/admin-data-jobs.test.ts` fails when the two disagree (apart from the retired `game-stats` key, which the database still lists) or when a rebuild is not the function its cron job runs.
+`scripts/admin-data-jobs.test.ts` fails when the two disagree or when a rebuild is not the function its cron job runs.
 `20261104150000_admin_data_jobs.sql` is the design:
 
 1. **`admin_begin_run(job)`** checks `is_admin()`, the allow-list, whether the job's latest run is open (started less than ten minutes

@@ -80,7 +80,6 @@ describe('runDataJob', () => {
         { job: 'recompute-hero-aggregates; drop table public.admins' },
         { job: '' },
         { job: 7 },
-        { job: 'game-stats' },
         { job: ['home-news'] },
         'home-news',
       ]) {
