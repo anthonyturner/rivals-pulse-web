@@ -121,7 +121,7 @@ creates it.
 - `needs-tony` — stopped on a decision only the maintainer can make; the
   question and a recommended answer are the latest comment.
 - `tony-answered` — a workflow sets it, in place of `needs-tony`, when Tony
-  comments on a `needs-tony` issue. The coordinator acts on his latest comment,
+  comments on a `needs-tony` issue. The team lead acts on his latest comment,
   then removes it; see [tony-answers.md](tony-answers.md).
 - `duplicate` — comment with a link to the original. A person closes the
   duplicate; an agent never closes an issue by hand.

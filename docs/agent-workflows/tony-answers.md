@@ -3,7 +3,7 @@
 An agent that cannot go on without the maintainer's decision labels the issue
 `needs-tony` and posts the question as the latest comment, per
 [tracking.md](tracking.md). This document covers the other half: how the answer
-gets back to an agent without Tony having to open a coordinator window.
+gets back to an agent without Tony having to open a team lead window.
 
 ## How Tony answers
 
@@ -63,7 +63,7 @@ marker is what he said.
 
 ## How an agent picks an answer up
 
-Every coordinator does this, in any repository that uses the label:
+Every team lead does this, in any repository that uses the label:
 
 1. **When**: at the start of a session, after each merge, and before going idle
    or ending. A scheduled routine does the same with no session open (see
@@ -115,7 +115,7 @@ issue, and from there it is exactly the flow above.
 Slack thread reply  ->  POST /api/slack/events (Vercel function)
                     ->  comment on the GitHub issue, signed with a footer
                     ->  Record Tony's answer workflow: needs-tony out, tony-answered in
-                    ->  a coordinator picks it up
+                    ->  a team lead picks it up
 ```
 
 The function (`api/slack/events.ts`, logic in `src/server/slack-answer/`)
@@ -148,7 +148,7 @@ production push is still done by an agent session, never by Slack.
 | --- | --- |
 | Events API to a Vercel function (chosen) | Replying in the thread is the whole action; the answer lands as a GitHub comment (audit trail) and reuses the comment flow unchanged; works with no agent session open; the repo owns and tests the code. Costs a one-time Slack app setup. |
 | The GitHub Slack app's own comment action | Needs a button click and a form per answer rather than a thread reply, and cannot be driven or tested from the repo. It already works with this flow, because a comment from Tony's linked account on a `needs-tony` issue triggers the workflow; use it as a manual fallback. |
-| A Slack connector the coordinator reads | Works only while a coordinator session is open and polling, leaves no GitHub record unless the agent writes one, and cannot tell Tony's reply from a pasted one without more rules. |
+| A Slack connector the team lead reads | Works only while a team lead session is open and polling, leaves no GitHub record unless the agent writes one, and cannot tell Tony's reply from a pasted one without more rules. |
 | Claude in Slack | Answers an @-mention of the Claude app, not a plain reply, and has no link to the label flow; not a fit for "reply and it is picked up". |
 
 ### Setup Tony does himself
@@ -185,7 +185,7 @@ Check for Needs Tony answers. In anthonyturner/rivals-pulse-web and anthonyturne
 
 Alternatives, and why they come second:
 
-- Every interactive coordinator runs the same check at session start, after each
+- Every interactive team lead runs the same check at session start, after each
   merge and before idling. It covers the hours a session is open and costs
   nothing, but no session may be open when Tony answers; keep it as the
   backstop.

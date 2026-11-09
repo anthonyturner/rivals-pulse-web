@@ -70,6 +70,7 @@ authorization and its limits are in
 | --- | --- |
 | write any response, issue, PR body or comment | [response-style.md](docs/response-style.md) |
 | sign a comment, issue, PR or commit, or name an agent you start | [crew.md](docs/agent-workflows/crew.md) |
+| lead or hand off a team lead session, or route work between repositories | [agent-workflows/team-leads.md](docs/agent-workflows/team-leads.md) |
 | generate any code | [rules.md](docs/rules.md) |
 | write or cut a code comment | [comments.md](docs/comments.md) |
 | write TypeScript or touch dependencies | [stack/typescript.md](docs/stack/typescript.md) |
