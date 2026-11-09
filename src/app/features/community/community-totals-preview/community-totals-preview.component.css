@@ -2,7 +2,7 @@
   display: block;
 }
 
-/* The lead tile is dark in both themes, so the figures read with the ink tokens. */
+/* The lead tile is dark in both themes; the hub tile remaps `--text` and `--text-muted` for its preview, so these read as on any other tile. */
 .figures {
   display: flex;
   flex-wrap: wrap;
@@ -18,13 +18,13 @@
 }
 
 dt {
-  color: var(--on-ink-muted);
+  color: var(--text-muted);
   font-size: var(--type-caption);
 }
 
 dd {
   margin: 0;
-  color: var(--on-ink);
+  color: var(--text);
   font-size: var(--type-title);
   font-variant-numeric: tabular-nums;
   font-weight: 850;
