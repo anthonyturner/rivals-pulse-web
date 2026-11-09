@@ -113,6 +113,7 @@ repo's build. This is a move, not a redesign.
 | `20261108210000_hero_matchup_encounter_figures.sql` | `hero_matchups` also stores the kills, deaths, assists and final hits (a sum and a count each) of a matchup's decided lines, null for a half-season frozen before it; `fill_hero_aggregates` and `read_hero_matchups` return them |
 | `20261108220000_hero_switch_in_hero_forms.sql` | `fill_hero_switch_in_aggregates` restated to read every hero id as its base id from `hero_game_roles`, so Deadpool's role forms are one hero (1057): a change of form is no switch, and a match is counted once however many forms it switches to (issue 667). Same signature, grants and everything else |
 | `20261109000000_verified_match_history_reads.sql` | `read_own_tracked_matches` and `read_player_scoreboard_lines` (service role only, keyed on the verified recorder, rate limited as `history` and `scoreboard`), the `link_attempt_log` kinds for them, and an index on `tracked_match_recorders (recorded_by, recorded_at desc)`. Additive: the `anon` select on `players`, `player_matches` and `tracked_matches` stays until shipped overlays use the new reads (issue 189) |
+| `20261109100000_backfill_tracked_match_recorders.sql` | `backfill_tracked_match_recorders()` (service role only, adds `tracked_match_recorders` rows only) and one call of it: ties matches uploaded before the recorder table to the single recorder of their player, so `read_own_tracked_matches` returns them (issue 697) |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -1142,8 +1143,8 @@ until the overlays in use read through these two functions instead:
   newest written first, at most 500, only those written after `after` when given. Answers
   `200 { "matches": [{ matchUid, playedAt, recordedAt, rawPayload, performance }] }`, `400` for an `after` that
   is not a time, and `429` past 120 calls an hour. A name in the body is ignored: the recorder alone decides
-  whose history is read. Matches uploaded before the recorder table existed (issue 328) have no recorder row and
-  are not returned; the app already holds them locally.
+  whose history is read. Matches uploaded before the recorder table existed (issue 328) are returned only once
+  `backfill_tracked_match_recorders` has tied them to a recorder (see "Older uploads" below).
 - `read-player-scoreboard`: `POST` with `{ "playerUid": "..." }`. It calls `read_player_scoreboard_lines`, which
   returns that player's kills, deaths and assists per match, from the uploader's own line and from any upload's
   scoreboard listing the uid (as text, or as the same safe integer an older upload stored), at most 500, newest
@@ -1154,6 +1155,20 @@ until the overlays in use read through these two functions instead:
 - Deploy order: the migration by hand, then `npx supabase functions deploy read-match-history
   read-player-scoreboard`. The secrets are the ones `link-status` already uses.
 - Dropping the `anon` select is a separate, later migration, taken once the overlays in use call these functions.
+
+**Older uploads (issue 697).** An upload from before `tracked_match_recorders` existed stored no recorder, and its
+scoreboard lines carry no recorder code either (only uid, nick_name, camp, hero, kills, deaths and assists), so nothing
+on the row names the uploader. The one evidence left is the player it was filed under. `20261109100000_backfill_tracked_match_recorders.sql`
+creates `backfill_tracked_match_recorders()` (service role only, adds rows only, returns the count) and runs it once.
+It ties an untied match to a recorder when every match already recorded under that player names the same one recorder
+and the match's own `player_uid`, if it has one, is a uid those recorded matches carry. A player whose recorded matches
+name two recorders, or none, stays untied. A name is the app's claim, so this is the best evidence and not proof; it
+can only give a match to the recorder already holding every other match filed under that name, and those matches were
+already readable through the `anon` select. Production on 2026-11-09: 878 matches, 199 with a recorder, 679 without;
+the rule ties 670 of the 679 (one recorder in all), and the other 9 belong to players with no recorded match and
+stay untied. The function can be run again to tie a match whose recorder write failed
+(`npx supabase db query --linked "select public.backfill_tracked_match_recorders()"`). Prove the rule with
+`npx supabase db query --linked -f supabase/checks/backfill_tracked_match_recorders.sql` after `db push`.
 
 ### The site administrator role (issue 290)
 
