@@ -189,9 +189,10 @@ subscription is filtered by `+label:"needs-tony"`). It does not post when the
 label is added, so the comment is what notifies the maintainer, and it only
 counts once the label is already on.
 
-The maintainer answers in a comment on the issue and removes the label. Anyone
-resuming an issue that was in the inbox reads that answer first, per
-[implementation.md](implementation.md).
+The maintainer answers in a comment on the issue and removes the label. Agents
+post as the maintainer's own account, so his answer cannot be picked out by its
+author. Anyone resuming an issue that was in the inbox reads every comment after
+the question before anything else, per [implementation.md](implementation.md).
 
 ## Running the pipeline end to end
 
