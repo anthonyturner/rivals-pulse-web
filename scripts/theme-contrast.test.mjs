@@ -1,9 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluate, hues, ratio, readRoleTokens, readTheme } from './theme-contrast.mjs';
+import { evaluate, hues, parseColour, ratio, readRoleTokens, readTheme } from './theme-contrast.mjs';
 
 const THEME = new URL('../src/styles.css', import.meta.url);
+const PUBLIC = new URL('../public/', import.meta.url);
+
+/** The panel, gold, periwinkle and orchid colours of a logo file, in drawing order. */
+function logoColours(file) {
+  const svg = readFileSync(new URL(file, PUBLIC), 'utf8');
+  return [...svg.matchAll(/(?:fill|stroke)="(#[0-9a-f]{6})"/gi)].map((match) => match[1].toLowerCase());
+}
 
 /** Distance between two hues on the colour wheel, in degrees. */
 function apart(a, b) {
@@ -100,4 +107,23 @@ test('every role token points at a palette token that exists', () => {
     .filter(([, palette]) => !dark.has(palette))
     .map(([name, palette]) => `${name} -> ${palette}`);
   assert.deepEqual(missing, []);
+});
+
+test('the light logo draws in the light theme tokens, each at least 3:1 on its panel', () => {
+  const { light } = readTheme(readFileSync(THEME, 'utf8'));
+  const tokens = ['surface', 'accent', 'secondary', 'tertiary'].map((token) => light.get(`--aurora-${token}`));
+  const colours = logoColours('images/site/rivals-pulse-logo-light.svg');
+  assert.deepEqual(colours, tokens);
+  const [panel, ...strokes] = colours.map((colour) => parseColour(colour, light));
+  for (const [index, stroke] of strokes.entries()) {
+    assert.ok(ratio(stroke, panel) >= 3, `${colours[index + 1]} is below 3:1 on the panel`);
+  }
+});
+
+test('the favicon carries both logo colour sets', () => {
+  const favicon = readFileSync(new URL('favicon.svg', PUBLIC), 'utf8');
+  const [dark, light] = favicon.split('@media (prefers-color-scheme: light)');
+  const inOrder = (css) => [...css.matchAll(/(?:fill|stroke):\s*(#[0-9a-f]{6})/gi)].map((match) => match[1].toLowerCase());
+  assert.deepEqual(inOrder(dark), logoColours('images/site/rivals-pulse-logo.svg'));
+  assert.deepEqual(inOrder(light), logoColours('images/site/rivals-pulse-logo-light.svg'));
 });

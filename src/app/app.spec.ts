@@ -30,12 +30,17 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const brand = (fixture.nativeElement as HTMLElement).querySelector('.brand') as HTMLElement;
-    const mark = brand.querySelector('img.brand-mark');
+    const marks = Array.from(brand.querySelectorAll('img.brand-mark'));
 
-    expect(mark?.getAttribute('src')).toBe('/images/site/rivals-pulse-logo.svg');
-    expect(mark?.getAttribute('alt')).toBe('');
-    expect(mark?.getAttribute('width')).toBe('32');
-    expect(mark?.getAttribute('height')).toBe('32');
+    expect(marks.map((mark) => mark.getAttribute('src'))).toEqual([
+      '/images/site/rivals-pulse-logo.svg',
+      '/images/site/rivals-pulse-logo-light.svg',
+    ]);
+    for (const mark of marks) {
+      expect(mark.getAttribute('alt')).toBe('');
+      expect(mark.getAttribute('width')).toBe('32');
+      expect(mark.getAttribute('height')).toBe('32');
+    }
     expect(brand.querySelector('.brand-name')?.textContent).toBe('RivalsPulse');
     expect(brand.getAttribute('aria-label')).toBe('RivalsPulse home');
     expect(brand.textContent).not.toContain('Draft smarter');

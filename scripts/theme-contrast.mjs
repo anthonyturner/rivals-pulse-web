@@ -40,7 +40,7 @@ export function readRoleTokens(css) {
   return new Map([...outside.matchAll(ANY_DECLARATION)].map((match) => [match[1], match[2].trim()]));
 }
 
-function parseColour(value, tokens) {
+export function parseColour(value, tokens) {
   const reference = value.match(/^var\((--aurora-[a-z0-9-]+)\)$/);
   if (reference) return parseColour(tokens.get(reference[1]), tokens);
   const hex = value.match(/^#([0-9a-f]{6})$/i);
