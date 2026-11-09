@@ -153,6 +153,10 @@ describe('WinRatesPageComponent', () => {
           }
           expect(table.getBoundingClientRect().right).withContext(`${theme} at ${width}px`).toBeLessThanOrEqual(width);
           expect(page.scrollWidth).withContext(`${theme} at ${width}px`).toBeLessThanOrEqual(page.clientWidth);
+          const strip = frameDocument.querySelector<HTMLElement>('.strip');
+          expect(strip?.getBoundingClientRect().height)
+            .withContext(`strip ${theme} at ${width}px`)
+            .toBe(width <= 560 ? 56 : 96);
         }
       }
     } finally {
@@ -246,6 +250,18 @@ describe('WinRatesPageComponent', () => {
     expect(image.getAttribute('width')).toBe('28');
   });
 
+  it('draws a decorative banner strip between the header and the toolbar, hidden from assistive technology', async () => {
+    const element = await open('/win-rates', full);
+    const strip = element.querySelector('.strip') as HTMLElement;
+    const image = strip.querySelector('img') as HTMLImageElement;
+
+    expect(strip.getAttribute('aria-hidden')).toBe('true');
+    expect(image.getAttribute('alt')).toBe('');
+    expect(image.getAttribute('src')).toBe('/images/site/banners/hero-stats-strip.webp');
+    expect(image.hasAttribute('loading')).toBeFalse();
+    expect(strip.previousElementSibling?.tagName).toBe('HEADER');
+  });
+
   it('is a page inside the shell: it adds no main landmark of its own', async () => {
     const element = await open('/win-rates', full);
 
@@ -263,7 +279,7 @@ describe('WinRatesPageComponent', () => {
   it('shows heroes still short of the minimum as not enough data yet, beside the full table', async () => {
     const element = await open('/win-rates', full);
 
-    expect(text(element, '.building h2')).toEqual(['Progress toward 10 appearances']);
+    expect(text(element, '.building h2')).toEqual(['Progress toward a win rate']);
     expect(text(element, '.building-name')).toEqual(['Storm', 'Thor']);
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
   });
@@ -271,7 +287,6 @@ describe('WinRatesPageComponent', () => {
   it('says "1 appearance" when one is all a hero needs', async () => {
     const element = await open('/win-rates', { ...full, minimumMatches: 1 });
 
-    expect(text(element, '.building h2')).toEqual(['Progress toward 1 appearance']);
     expect(squash(text(element, '.meta')[0])).toContain('Heroes need 1 appearance to be listed');
   });
 

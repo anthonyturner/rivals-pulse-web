@@ -100,6 +100,20 @@ describe('buildTierListView', () => {
     expect(view.building.map((row) => [row.name, row.progressLabel])).toEqual([['Luna Snow', '4 of 10']]);
   });
 
+  it('says what a hero needs to be placed, with the players only where they are counted', () => {
+    expect(buildTierListView(statsOf(), identities).placementLabel).toBe('10 appearances');
+    const counted = { minimumPlayers: 2, belowMinimum: [{ hero: 'luna-snow', appearances: 4, players: 1 }] };
+
+    expect(buildTierListView(statsOf(counted), identities).placementLabel).toBe('10 appearances and 2 players');
+    expect(buildTierListView(statsOf({ minimumPlayers: 2 }), identities).placementLabel).toBe('10 appearances');
+  });
+
+  it('shows a hero with enough appearances waiting on its players as progress toward the players', () => {
+    const stats = { ...statsOf(), minimumPlayers: 2, belowMinimum: [{ hero: 'luna-snow', appearances: 12, players: 1 }] };
+
+    expect(buildTierListView(stats, identities).building.map((row) => row.progressLabel)).toEqual(['1 of 2 players']);
+  });
+
   it('draws no tier rows when matches are counted but no hero has enough data', () => {
     const view = buildTierListView(statsOf(nothingPlaced), identities);
 

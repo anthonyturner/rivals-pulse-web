@@ -20,10 +20,12 @@ import { distinctUntilChanged, filter, forkJoin, map, pairwise } from 'rxjs';
 import { HERO_GUIDES, HeroUltimateGuide } from '../learning/guides/hero-guides/hero-guide-data';
 import type { CommunityKills } from '../../../contracts/community-kills.model';
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
+import type { HeroSwitchIns } from '../../../contracts/hero-switch-ins.model';
 import type { CommunityHeroScores } from '../../../contracts/hero-scores.model';
 import type { HeroStats } from '../../../contracts/hero-stats.model';
 import { CommunityKillsService } from '../insights/community-kills.service';
 import { HeroMatchupsService } from '../insights/hero-matchups.service';
+import { HeroSwitchInsService } from '../insights/hero-switch-ins.service';
 import { HeroStatsService } from '../insights/hero-stats.service';
 import { HeroScoresService } from './hero-scores.service';
 import { HeroDataService } from './hero-data.service';
@@ -102,6 +104,7 @@ export class HeroesPageComponent implements OnInit {
   private readonly heroStatsService = inject(HeroStatsService);
   private readonly heroScoresService = inject(HeroScoresService);
   private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly heroSwitchInsService = inject(HeroSwitchInsService);
   private readonly communityKillsService = inject(CommunityKillsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
@@ -125,6 +128,8 @@ export class HeroesPageComponent implements OnInit {
   readonly heroScores = signal<CommunityHeroScores | null | undefined>(undefined);
   /** RivalsPulse player matchups for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroMatchups = signal<HeroMatchups | null | undefined>(undefined);
+  /** RivalsPulse hero switch-ins for every hero: `undefined` while loading, `null` when unreadable. */
+  readonly heroSwitchIns = signal<HeroSwitchIns | null | undefined>(undefined);
   /** RivalsPulse player kill-feed counters for every hero: `undefined` while loading, `null` when unreadable. */
   readonly heroKills = signal<CommunityKills | null | undefined>(undefined);
   /** Every hero, for the counters section to name and picture the heroes in a matchup. */
@@ -552,6 +557,11 @@ export class HeroesPageComponent implements OnInit {
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.heroMatchups.set(matchups));
+
+    this.heroSwitchInsService
+      .getHeroSwitchIns()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((switchIns) => this.heroSwitchIns.set(switchIns));
 
     this.communityKillsService
       .getKills()

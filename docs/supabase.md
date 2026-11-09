@@ -43,9 +43,9 @@ repo's build. This is a move, not a redesign.
   `purge_expired_participants`, `record_match_extras` (called by the deployed `track-match-history`
   once it carries the extended upload, so renaming it or changing its arguments silently drops
   every newer overlay's extras; a signature change follows "Changing a database function's
-  signature" below), `record_match_ability_uses` (the same).
+  signature" below), `record_match_ability_uses` and `record_match_hero_timelines` (the same).
 - Tables the deployed functions write: `participant_hero_figures` and `match_hero_kills` (written by
-  `record_match_extras`), `participant_hero_ability_uses` (written by `record_match_ability_uses`), `tracked_match_recorders` (written by `track-match-history` itself) and
+  `record_match_extras`), `participant_hero_ability_uses` (written by `record_match_ability_uses`), `match_hero_timelines` (written by `record_match_hero_timelines`), `tracked_match_recorders` (written by `track-match-history` itself) and
   `voice_ai_token_requests` (written by `elevenlabs-agent-token`; the publishable key cannot reach it). The
   aggregate tables are read by the website only.
 - The body that `track-match-history` accepts. Newer overlays add optional fields to it (see
@@ -105,7 +105,12 @@ repo's build. This is a move, not a redesign.
 | `20261108120000_two_player_community_minimum.sql` | Restates `hero_figure_qualifies` and `community_bucket_shown` with a player minimum of 2 instead of 3, and a limit on the busiest player read from the new `community_max_recorder_share_percent()` (100, so no cap; it was 50) (issue 603). The 10-match minimum is unchanged |
 | `20261108140000_team_lineup_thin_shape_counts.sql` | `read_team_lineup_shapes` returns a shape's `teams` while it is under `team_lineup_min_teams()`; its `wins` and `enough_data` are still withheld (issue 616). Same signature, gate and grants |
 | `20261108150000_hero_score_busiest_share.sql` | `read_community_hero_scores` flags the busiest player as `top * 100 > n * community_max_recorder_share_percent()` instead of a fixed half, so the flags are false at a 100% limit (issue 616). Same signature, security and grants |
-| `20261108160000_hero_aggregate_recorders.sql` | `hero_aggregates.recorders`, the different recorders behind each hero per half-season and mode (null where never counted, such as a half-season frozen earlier); `fill_hero_aggregates` fills it and `read_hero_stats` returns it. Counts only, gates nothing (issue 628). Same signatures and grants |
+| `20261108160000_hero_aggregate_recorders.sql` | `hero_aggregates.recorders`, the different recorders behind each hero per half-season and mode (null where never counted, such as a half-season frozen earlier); `fill_hero_aggregates` fills it and `read_hero_stats` returns it. The database only counts; the website gates on it (issues 628, 640). Same signatures and grants |
+| `20261108170000_hero_blended_recorders.sql` | `hero_aggregates.blended_recorders`, the different recorders behind each hero across Quick Match and Competitive together, each person once; the same value on the hero's Quick Match and Competitive rows, null on any other mode and where never counted (a frozen half-season). `fill_hero_aggregates` fills it and `read_hero_stats` returns it, and the blended view of hero stats and the tier list gates on it (issue 644). Same signatures and grants |
+| `20261108180000_match_hero_timelines.sql` | `match_hero_timelines` (each player's hero picks with the second they happened, by team, no uid or name, once per match), `record_match_hero_timelines`, the helper `json_whole_number`, and `purge_expired_participants` restated to delete timelines on the schedule of `match_hero_kills`, with every freeze still called |
+| `20261108190000_hero_switch_in_aggregates.sql` | `hero_switch_ins` and its half-season table (how often a team won after a player switched to a hero while an enemy hero was on the field, per half-season and mode, counts only), its fill, rebuild, recompute (hourly) and freeze, `read_hero_switch_ins` (gated by `hero_figure_qualifies`), and `purge_expired_participants` restated to call the new freeze before its first delete |
+| `20261108200000_hero_timeline_recorder.sql` | `match_hero_timelines.recorded_by` (nullable, the keyed recorder hash, closed to `anon` and `authenticated` like the rest of the table), `record_match_hero_timelines` replaced by a four argument version whose `p_recorded_by` defaults to null, and `fill_hero_switch_in_aggregates` restated to count players from the timeline uploader. The purge is not touched |
+| `20261108210000_hero_matchup_encounter_figures.sql` | `hero_matchups` also stores the kills, deaths, assists and final hits (a sum and a count each) of a matchup's decided lines, null for a half-season frozen before it; `fill_hero_aggregates` and `read_hero_matchups` return them |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -331,11 +336,13 @@ the service role reaches them.
   the matches a hero appeared in, per half-season and mode. `fill_hero_aggregates` writes it, so the
   hourly rebuild and the purge's freeze fill it with no change of their own. It is null in a
   half-season frozen before the migration (the raw rows are gone) and never read as 0. Distinct
-  recorders cannot be added across modes, so `read_hero_stats()` returns one count per mode row and
-  the website takes the largest any one mode has. It gates nothing: hero stats and the tier list are
-  still held back by matches alone, and the count only reaches the Pulse Atlas
-  ([pulse-atlas.md](pulse-atlas.md)). After `supabase db push`, run
-  `supabase/checks/hero_aggregate_recorders.sql`.
+  recorders cannot be added across modes, so `read_hero_stats()` returns the count per mode row and a
+  separate `blended_recorders` (issue 644, `20261108170000_hero_blended_recorders.sql`): the distinct
+  recorders over Quick Match and Competitive together, written on the hero's row of each of those two
+  modes and null on any other mode. Hero stats and the tier list use it as a gate (issue 640): a hero
+  is placed only with 10 appearances and 2 recorders, read from `recorders` for one mode and from
+  `blended_recorders` for the blend, and a missing blended count falls back to the largest per-mode count (it can only undercount), and a hero with neither falls back to the match-only rule. The count also reaches the Pulse Atlas ([pulse-atlas.md](pulse-atlas.md)). After `supabase db push`, run
+  `supabase/checks/hero_aggregate_recorders.sql` and `supabase/checks/hero_blended_recorders.sql`.
 - A matchup is stored, in each mode it was seen in, only when its decided matches summed over all
   modes of the half-season reach `hero_matchup_min_matches()`. The per-hero minimum (10, the tier
   rule) belongs to the code that derives tiers.
@@ -428,6 +435,21 @@ stored exactly as before.
 - At most 160 entries (20 heroes in 8 slots); a longer list is dropped whole. The first entry of a hero and slot wins, and a repeat of the match writes nothing.
 
 The reply's `extended` gains `ability_uses` (rows written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. `hero_ability_aggregates` keeps the counts, rebuilt and frozen with the other extended aggregates, and no read function publishes them yet.
+
+### Hero timelines
+
+Issue 654. A newer overlay may add a fourth optional field. A body without it is stored exactly as
+before, and its reply is unchanged.
+
+`match.hero_timelines` is `[{ team, picks: [{ hero_id, at_second }] }]`, one entry per human player, with no uid and no name:
+
+- `team` is the scoreboard's `camp`, 0 to 9. `hero_id` is the game hero id. `at_second` counts from the start of the match, 0 to 7200 (fractions are rounded), and never goes back within a player's picks.
+- At most 12 players and 20 picks per player; a longer list is not a real one and the whole field is dropped. An entry with a bad team, no picks, a bad pick or seconds that go back is dropped alone.
+- A team is kept only when the last hero of each of its timelines matches that team's scoreboard heroes (`match.match_players`) as a multiset. A team with a missing or dropped timeline, or a different final hero, is dropped whole; the other team is kept.
+- The database stores a timeline whole or not at all, once per match: the roster fingerprint plus the start time, the first uploader's wins, within the 4 minute window `record_match_participants` uses. `match_hero_timelines` is deleted by `purge_expired_participants` on the schedule of `match_hero_kills`.
+- Issue 666. Every stored pick also carries `recorded_by`, the hash of the user whose upload stored the timelines (the same keyed hash `participants.recorded_by` holds, never a username). The function takes it as `p_recorded_by`, a fourth argument that defaults to null, so the Edge Function deployed before this change keeps working until it is redeployed; the migration drops the three argument version because a plain `create or replace` would leave two overloads and PostgREST could not choose between them (PGRST203). Rows stored before the migration, or by a caller that sends none, stay null. The column is never granted to `anon` or `authenticated`. Push the migration before deploying the Edge Function: an Edge Function that sends `p_recorded_by` to the old function fails that call, which is logged and costs only the timelines.
+
+The reply's `extended` gains `hero_timelines` (player timelines written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. Check the migration with `npx supabase db query --linked -f supabase/checks/match_hero_timelines.sql`.
 
 ### Who contributed, and when a figure is published
 
@@ -608,6 +630,67 @@ id, RLS is on with no policy, and only the service role reaches it.
   wrong or stray row, Vanguard and Duelist included; `scripts/hero-game-roles-seed.test.ts` can only check
   the Strategists offline. Run it after the hero sync and after any migration that touches the table.
 
+## Hero switch-in aggregates
+
+Issue 655. `hero_switch_ins` keeps, per half-season, game mode, hero switched to and enemy hero, how
+often a team won after one of its players switched to the hero while the enemy hero was on the field,
+from `match_hero_timelines` (see "Hero timelines") and the scoreboard.
+`hero_switch_in_aggregate_half_seasons` holds the rebuild and freeze times. Neither holds a uid, name,
+fingerprint or per-player row, both have RLS on with no policy, and only the service role reaches them.
+It is a family of its own, built like the hero pair aggregates: `fill_`, `rebuild_`, `recompute_` and
+`freeze_hero_switch_in_aggregates`, the hourly job `recompute-hero-switch-in-aggregates` (minute 53),
+and `purge_expired_participants()` calling the freeze before its first delete. **Any later migration
+that restates the purge must keep calling every freeze**; a test reads the latest definition and fails
+if one is gone or comes after a delete.
+
+- **A switch** is a pick that follows a player's first pick and names a different hero than the pick
+  before it. The first pick is not a switch, and neither is a repeat of the same hero.
+- **Credit.** A switch is credited once to every distinct enemy hero on the field at its `at_second`:
+  for each timeline of a team other than the switching team, the latest pick at or before that second.
+  Two enemy players on one hero are one credit. A switch with no enemy pick yet is credited to nobody.
+  Rows hold `switches` (credits) and `matches` (distinct matches they came from), whatever the result,
+  `decided_switches` and `decided_matches` (the same over teams with a result), and `wins` (credits
+  whose switching team won). A win rate is `wins / decided_switches`.
+- **Outcome** is the switching team's result in `participants`, read as the pair family reads a team's
+  result. A switch whose team has no result stays in `switches` and `matches` and out of every
+  `decided_` figure until a late upload fills the result in and the next hourly rebuild counts it.
+- **Teams are independent.** The first uploader's timelines are all a match has, and a team that failed
+  the upload's scoreboard check was dropped, so a match can have timelines for one team only. A switch
+  needs its own team's timeline and an enemy team's timeline; one without either is skipped and the
+  rest of the match still counts.
+- **Recorders.** A row records how many distinct recorders its matches came from and how many matches
+  the busiest one did, over the decided matches, as numbers only. The recorder of a match is the one whose
+  upload stored its timelines (`match_hero_timelines.recorded_by`, issue 666), and the one whose upload stored its
+  scoreboard when the timelines carry none (rows stored before issue 666 or sent by an app that sent none), decided
+  match by match. Both the player count and the busiest player's share use it, so a scoreboard from one player
+  and timelines from another credit the player who sent the timelines.
+- **Mode.** The match's mode, read once per match. The reader's default is Quick Match and Competitive.
+- `read_hero_switch_ins(p_play_mode_ids)` (granted to `anon` and `service_role`) returns one jsonb value
+  `{ "switch_ins": [{ half_season, hero_id, enemy_hero_id, decided_matches, decided_switches, wins }] }`, summed over
+  the modes asked for, so PostgREST's 1000-row page limit never cuts it short. A (half-season, mode)
+  row is included only when `hero_figure_qualifies` passes for it (10 decided matches from 2 players, the
+  busiest player within `community_max_recorder_share_percent()`), checked before any modes are summed:
+  gating a combined figure would let a caller subtract one list of modes from another and recover a
+  hidden mode. The rows are stored whatever their size and the gate runs when they are read, as for the
+  kill feed. Recorder counts are never returned. The migration checks the gate when it runs, on
+  fixtures in a half-season that does not exist (a one-recorder row must not come back, a
+  three-recorder row must, and a three-recorder row of 9 matches must not, alone and with the other
+  modes asked for); the fixtures are rolled back.
+- The website reads it through `GET /api/hero-switch-ins`
+  ([`src/server/heroes/switch-ins/hero-switch-ins-read.ts`](../src/server/heroes/switch-ins/hero-switch-ins-read.ts)),
+  which sets each pairing beside the hero's overall record against that enemy from `read_hero_matchups`
+  in the same half-season, with Deadpool's role forms merged under one hero. It prints the 10 matches
+  and 2 players of `hero_figure_qualifies` (`SWITCH_IN_MIN_MATCHES`, `SWITCH_IN_MIN_PLAYERS`), which a
+  test compares with the latest definition. The hero page's Matchups tab shows it as "Switch-ins".
+- Players switch more when they are losing, so a switch-in win rate runs low. The page says so and
+  shows the hero's overall record against the same enemy beside it. A switch is credited to every enemy
+  hero on the field, so it is a co-occurrence, not proof that the switch was made to counter that hero.
+- **Run the check** after `supabase db push`:
+  `npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql` (fixtures in half-seasons 995 to 998, rolled back; includes nine matches from three players that must stay hidden, and ten matches whose timelines one player uploaded though two uploaded the scoreboards, which must stay hidden). It proves the counting rules, the reader, and that the purge freezes the counts
+  before it deletes the timelines.
+- Until the overlay sends `hero_timelines` (issue 654), the table stays empty and the hero page shows
+  its empty state. Half-seasons whose raw rows were purged before this migration cannot be filled.
+
 ## Backfilling participants from stored matches
 
 `npm run backfill:participants` replays the rows of `tracked_matches` through
@@ -646,13 +729,19 @@ limit never applies), made only of counts and `half_seasons` start dates:
 - `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
   (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
   matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
-  again to the chosen modes' own sum. The website reads it through `GET /api/hero-matchups`
+  again to the chosen modes' own sum. Each row also carries `kills_sum`, `kills_n`, `deaths_sum`,
+  `deaths_n`, `assists_sum`, `assists_n`, `final_hits_sum` and `final_hits_n` (issue 651): the figures of
+  the decided lines, one line per enemy hero faced, summed over the modes. They are null for a
+  half-season the purge froze before they existed, and `rebuild_hero_aggregates` cannot refill a
+  frozen one. The server reads a missing or null figure as "not counted", never as 0. The website reads it through `GET /api/hero-matchups`
   ([`src/server/heroes/matchups/hero-matchups-read.ts`](../src/server/heroes/matchups/hero-matchups-read.ts)), always for Competitive and Quick Match.
 
 Every rate, tier and KDA is derived in one pure module, [`src/server/heroes/stats/hero-stats.ts`](../src/server/heroes/stats/hero-stats.ts),
 and served by `GET /api/hero-stats`. The rules, which are the overlay's personal tier list:
 
-- A hero is placed once it has 10 appearances in matches with a win or a loss. Its tier comes from
+- A hero is placed once it has 10 appearances in matches with a win or a loss and at least 2 recorders
+  (`COMMUNITY_BUCKET_MIN_PLAYERS`). A hero whose recorders were never counted (null, in a half-season
+  frozen before the count) is placed on the 10 appearances alone. Its tier comes from
   the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
 - A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
   as in the overlay); the pick rate is those lines over the matches counted.

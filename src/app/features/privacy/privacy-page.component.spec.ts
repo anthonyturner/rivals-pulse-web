@@ -7,6 +7,7 @@ import { PrivacyPageComponent } from './privacy-page.component';
 import {
   EXTENDED_UPLOAD_FIELDS,
   EXTENDED_UPLOAD_STATUS,
+  PLANNED_UPLOAD_FIELDS,
   PULSE_RECORDS_STATUS,
   TODAY_UPLOAD_FIELDS,
 } from './privacy-notes.data';
@@ -177,12 +178,24 @@ describe('PrivacyPageComponent', () => {
     expect(planned).toContain('Never uploaded for other players');
   });
 
+  it('lists hero changes as planned, by team and time, with no player named', () => {
+    const entry = PLANNED_UPLOAD_FIELDS.find((field) => field.label === 'Hero changes during the match');
+    const planned = section('planned-fields').textContent ?? '';
+
+    expect(entry?.detail).toContain('carries no player names or ids');
+    expect(entry?.detail).toContain('seconds into the match');
+    expect(planned).toContain('Hero changes during the match');
+    expect(planned).toContain('stored once per match');
+    expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Hero changes during the match');
+  });
+
   it('states the retention rule', () => {
     const text = section('retention').textContent ?? '';
 
     expect(text).not.toContain('being added');
     expect(text).toContain('six months');
     expect(text).toContain('half-season');
+    expect(text.replace(/\s+/g, ' ')).toContain('hero changes once the app sends them, are kept for the same time');
     expect(text).toContain('no time limit');
     expect(text).toContain('5,000');
   });

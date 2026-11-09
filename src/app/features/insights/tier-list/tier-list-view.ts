@@ -1,10 +1,15 @@
 import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
 import type { TierName } from '../../../../contracts/tier-list.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import {
+  countLabel,
+  halfSeasonFallbackNotice,
+  percentLabel,
+  placementRequirementLabel,
+} from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
-import { heroProgressRows, type HeroProgressRow } from '../hero-progress-list/hero-progress';
+import { heroProgressRows, minimumsOf, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
 /** Best first. The page always draws all six, so a tier with no hero is an empty row, not a missing one. */
 export const TIER_NAMES: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
@@ -38,12 +43,14 @@ export interface TierListView {
   /** Set when the numbers are the previous half-season's, shown until the current one has enough data. */
   fallbackNotice: string | null;
   minimumMatches: number;
+  /** What a hero needs to be placed: "10 appearances and 2 players", or the appearances alone. */
+  placementLabel: string;
   matchesCountedLabel: string;
   /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
   scopeLabel: string;
   /** All six tiers when `ready`; none otherwise. */
   tiers: TierRowView[];
-  /** Heroes short of the minimum, drawn in the same place whether or not other heroes are placed. */
+  /** Heroes short of a minimum, drawn in the same place whether or not other heroes are placed. */
   building: HeroProgressRow[];
 }
 
@@ -55,7 +62,7 @@ export function buildTierListView(stats: HeroStats, identities: HeroIdentities):
   const season = stats.halfSeason === null ? null : seasonView(stats.halfSeason);
   const rows = tierRowsOf(stats, TIER_NAMES, identities);
   const placed = rows.some((row) => row.heroes.length > 0);
-  const building = heroProgressRows(stats.belowMinimum, stats.minimumMatches, identities);
+  const building = heroProgressRows(stats.belowMinimum, minimumsOf(stats), identities);
   const modeLabel = modeLabelOf(stats);
 
   return {
@@ -68,6 +75,7 @@ export function buildTierListView(stats: HeroStats, identities: HeroIdentities):
         ? null
         : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null, nonDefaultModeLabel(stats)),
     minimumMatches: stats.minimumMatches,
+    placementLabel: placementRequirementLabel(stats),
     matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
     scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     tiers: placed ? rows : [],

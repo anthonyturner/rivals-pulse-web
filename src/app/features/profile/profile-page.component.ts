@@ -19,9 +19,11 @@ import { PlayerAvatarComponent } from '../../shared/components/player-avatar/pla
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
 import { CommunityHeroListComponent } from '../community/community-hero-list/community-hero-list.component';
 import { HeroDataService } from '../heroes/hero-data.service';
+import { HubTileComponent } from '../hub/hub-tile/hub-tile.component';
 import { heroIdentities } from '../insights/hero-identity';
 import { ProfileFigureListComponent } from './figure-list/profile-figure-list.component';
 import { OwnActivityTablesComponent } from './own-activity/own-activity-tables.component';
+import { profileLead } from './profile-lead';
 import { buildProfileView, DEPTH_NOTE } from './profile-view';
 
 /** The signed-in player's own stats, read from the matches their linked desktop app uploaded. */
@@ -29,6 +31,7 @@ import { buildProfileView, DEPTH_NOTE } from './profile-view';
   selector: 'app-profile-page',
   imports: [
     CommunityHeroListComponent,
+    HubTileComponent,
     NoticeComponent,
     OwnActivityTablesComponent,
     PageHeaderComponent,
@@ -52,11 +55,14 @@ export class ProfilePageComponent {
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
 
   protected readonly depthNote = DEPTH_NOTE;
-  protected readonly view = computed(() => {
+  private readonly identities = computed(() => {
     const roster = this.roster();
 
-    return buildProfileView(this.result(), roster === undefined ? undefined : heroIdentities(roster));
+    return roster === undefined ? undefined : heroIdentities(roster);
   });
+
+  protected readonly view = computed(() => buildProfileView(this.result(), this.identities()));
+  protected readonly lead = computed(() => profileLead(this.result(), this.identities()));
 
   constructor() {
     inject(DestroyRef).onDestroy(() => (this.destroyed = true));

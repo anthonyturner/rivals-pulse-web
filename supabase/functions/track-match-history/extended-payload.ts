@@ -1,7 +1,8 @@
 /**
  * The optional part of an uploaded match that newer overlays add: the recorder's own damage,
  * healing, damage blocked and time per hero, the match's kill feed (issue 176), and the recorder's
- * own ability and ultimate use counts (issue 457). Shipped overlays send none, and
+ * own ability and ultimate use counts (issue 457), and each player's hero timeline (issue 654).
+ * Shipped overlays send none, and
  * `readExtendedUpload` then returns null.
  *
  * A value that is malformed is dropped for that field alone; nothing here throws, so a bad new
@@ -10,7 +11,7 @@
  * goes for ability counts.
  * No Deno or Supabase imports, so `node --test` runs its specs.
  */
-import { asRecord, readUid, type JsonRecord } from './match-payload.ts';
+import { asRecord, readTeam, readUid, type JsonRecord, type ParticipantRow } from './match-payload.ts';
 
 export interface HeroFigure {
   /** The game's hero id, the same id space as a scoreboard line's `cur_hero_id`. */
@@ -39,12 +40,26 @@ export interface HeroAbilityUse {
   assists_after: number | null;
 }
 
+/** One hero pick in a timeline: `at_second` counts from the start of the match. */
+export interface HeroPick {
+  hero_id: number;
+  at_second: number;
+}
+
+/** One player's heroes in the order they were played. It carries no uid and no name. */
+export interface HeroTimeline {
+  team: number;
+  picks: HeroPick[];
+}
+
 export interface ExtendedUpload {
   /** The recorder's uid, which ties their figures to their own scoreboard line; null without one. */
   recorder_uid: string | null;
   hero_figures: HeroFigure[];
   hero_kills: HeroKill[];
   hero_ability_uses: HeroAbilityUse[];
+  /** Whole teams only: a team whose final heroes do not match its scoreboard is left out. */
+  hero_timelines: HeroTimeline[];
 }
 
 /** The live game feed's timer slots, plus the ultimate. The table's check constraint holds the same list. */
@@ -68,6 +83,10 @@ export const MAX_KILLS_PER_PAIR = 999;
 /** Every hero a list can hold, in every slot. */
 export const MAX_ABILITY_USES = MAX_HERO_FIGURES * ABILITY_SLOTS.length;
 export const MAX_ABILITY_COUNT = 999;
+/** A 6v6 lobby has 12 players; a longer list is not a real one. */
+export const MAX_TIMELINE_PLAYERS = 12;
+/** The overlay keeps up to 20 heroes per player. */
+export const MAX_TIMELINE_PICKS = 20;
 const MAX_INT4 = 2_147_483_647;
 /** Longest match a custom lobby can run, in seconds. */
 const MAX_SEGMENT_SECONDS = 7_200;
@@ -76,7 +95,11 @@ const MAX_FIGURE = 1_000_000;
 const HERO_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SLUG_LENGTH = 40;
 
-export function readExtendedUpload(match: JsonRecord): ExtendedUpload | null {
+/**
+ * `participants` are the match's scoreboard lines, which decide whether a team's timelines can be
+ * trusted; without them no timeline is kept.
+ */
+export function readExtendedUpload(match: JsonRecord, participants: readonly ParticipantRow[] = []): ExtendedUpload | null {
   const local = asRecord(match['match_player']);
   const recorderUid = readUid(local?.['player_uid']);
   // Without a uid the figures cannot be tied to the recorder's line, so they are not kept.
@@ -84,8 +107,62 @@ export function readExtendedUpload(match: JsonRecord): ExtendedUpload | null {
   const heroKills = readHeroKills(match['hero_kills']);
   const heroAbilityUses = recorderUid === null ? [] : readHeroAbilityUses(local?.['hero_ability_uses']);
 
-  if (heroFigures.length === 0 && heroKills.length === 0 && heroAbilityUses.length === 0) return null;
-  return { recorder_uid: recorderUid, hero_figures: heroFigures, hero_kills: heroKills, hero_ability_uses: heroAbilityUses };
+  const heroTimelines = readHeroTimelines(match['hero_timelines'], participants);
+
+  if (heroFigures.length === 0 && heroKills.length === 0 && heroAbilityUses.length === 0 && heroTimelines.length === 0) return null;
+  return {
+    recorder_uid: recorderUid,
+    hero_figures: heroFigures,
+    hero_kills: heroKills,
+    hero_ability_uses: heroAbilityUses,
+    hero_timelines: heroTimelines,
+  };
+}
+
+function readHeroTimelines(value: unknown, participants: readonly ParticipantRow[]): HeroTimeline[] {
+  // A list longer than a lobby, or a picks list longer than the overlay keeps, is not a real one.
+  if (!Array.isArray(value) || value.length > MAX_TIMELINE_PLAYERS) return [];
+
+  const timelines: HeroTimeline[] = [];
+  for (const entry of value) {
+    const record = asRecord(entry);
+    const picks = record === null ? null : readHeroPicks(record['picks']);
+    if (picks === 'oversized') return [];
+    const team = readTeam(record?.['team']);
+    if (picks === null || team === null) continue;
+    timelines.push({ team, picks });
+  }
+
+  // A player whose timeline was dropped leaves their team short, so that team fails the check below.
+  return timelines.filter(timeline => teamMatchesScoreboard(timeline.team, timelines, participants));
+}
+
+/** Null for a list that is not a usable timeline; 'oversized' for one no real player could have. */
+function readHeroPicks(value: unknown): HeroPick[] | 'oversized' | null {
+  if (!Array.isArray(value)) return null;
+  if (value.length > MAX_TIMELINE_PICKS) return 'oversized';
+  if (value.length === 0) return null;
+
+  const picks: HeroPick[] = [];
+  for (const entry of value) {
+    const pick = asRecord(entry);
+    const heroId = readId(pick?.['hero_id']);
+    const atSecond = readWhole(pick?.['at_second'], MAX_SEGMENT_SECONDS);
+    // Time only moves forward, so a list that goes back was not recorded in order.
+    if (heroId === null || atSecond === null || atSecond < (picks.at(-1)?.at_second ?? 0)) return null;
+    picks.push({ hero_id: heroId, at_second: atSecond });
+  }
+  return picks;
+}
+
+/** A team's last picks must be the heroes its scoreboard lines show, or the timelines are not about this match. */
+function teamMatchesScoreboard(team: number, timelines: readonly HeroTimeline[], participants: readonly ParticipantRow[]): boolean {
+  const finalHeroes = timelines.filter(timeline => timeline.team === team).map(timeline => timeline.picks.at(-1)!.hero_id);
+  const scoreboardHeroes = participants.filter(row => row.team === team).map(row => row.hero_id);
+  if (finalHeroes.length !== scoreboardHeroes.length) return false;
+
+  const sortedScoreboard = scoreboardHeroes.sort((a, b) => (a ?? -1) - (b ?? -1));
+  return finalHeroes.sort((a, b) => a - b).every((heroId, index) => heroId === sortedScoreboard[index]);
 }
 
 function readHeroAbilityUses(value: unknown): HeroAbilityUse[] {

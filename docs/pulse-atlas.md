@@ -21,19 +21,20 @@ and a field a file does not carry means "no progress to show": fall back to plai
 | `hero-scores.json` | `minimums`, and `qualifiedHeroes` for how many heroes pass | `matches` (in steps of 5) and `contributors` on a stat that is `collecting` |
 | `team-lineups.json` | `minimumTeams`, `minimumPlayers` | `teams` on a shape with status `not-enough-data` |
 
-**Players are counts, not a gate.** Hero stats, the tier list and the hero pairs are
-held back by a match minimum alone. The database counts the different players who
-recorded the matches a hero appeared in, so `hero-stats.json` and the tier list state
-`minimumPlayers` (2, the community rule) and give a hero below the match minimum the
-`players` counted so far, which lets a reader draw "1 of 2 players" beside "6 of 10
-matches". `minimumPlayers` is informational there: no hero is held back, hidden or
-placed differently for want of players, and a hero with enough matches carries no
-`players`. A `players` field that is missing means the database never counted it, which
-is the case for every half-season that was frozen before the count existed and for every
-hero until the database migration that adds the count has run; it is never `0`. A hero's count is the
-largest any one game mode has, because one player records in more than one mode and
-two modes cannot be added without counting that player twice: it can fall short of the
-true number of players and never exceeds it. There is still no per-shape `players` in
+**Players are a gate on hero stats and the tier list.** The database counts the
+different players who recorded the matches a hero appeared in. `hero-stats.json` and the
+tier list state `minimumPlayers` (2, the community rule), and a hero is placed (and gets
+`enoughData: true`) only once it has the match minimum **and** that many players. A hero
+short of either keeps its `matches` and `players`, which lets a reader draw "1 of 2
+players" beside "6 of 10 matches"; a hero with enough of both carries no `players`.
+A `players` field that is missing means the database never counted it, which is the case
+for every half-season that was frozen before the count existed and for every hero until
+the database migration that adds the count has run; it is never `0`, and a hero without
+it is placed on the match minimum alone, so past half-seasons keep their placements. A hero's count is for the
+mode asked for; in the Quick Match and Competitive blend it counts each person once
+whichever of the two they played, so two players who each recorded in a different mode
+are 2. A half-season frozen after the per-mode count but before the blended one has no blended
+count, and its blend reads the largest per-mode count, which can only undercount. There is still no per-shape `players` in
 `team-lineups.json`. The site records no bans at all, so there is no `minimumBanMatches`
 or `banMatches`. A reader must not infer a rule from a field that is missing.
 
@@ -58,6 +59,10 @@ measures one player's own games must follow the same rounding.
 | `hero-scores.json` | Each hero's 1 to 10 Damage, Sustain, Ultimate and Utility scores with the figures behind them, or how far along a hero below the rule is, in the half-season shown. Shape below. Optional: absent until the first successful run that can build it. |
 | `team-lineups.json` | The community's team line-up shapes (how many Vanguards, Duelists and Strategists a team ran, such as 1-2-3) with the teams and wins behind each, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
+
+The per-matchup KDA and final hits that `GET /api/hero-matchups` carries (the hero's figures while
+facing one enemy hero) are not published here yet: `community-stats.json` holds win and loss counts only. Its
+`counters` are directional hero-against-enemy records, so that is where they would go, and the work is tracked in [#680](https://github.com/anthonyturner/rivals-pulse-web/issues/680).
 
 Every dataset file has this shape:
 
@@ -157,11 +162,11 @@ season has a file too, so a client can treat every season the same way.
   are pooled from. `minimumMatches` is the appearances a hero needs before it is
   placed (10), so `matches` over `minimumMatches` is a hero's progress; it is a
   whole number above 0 and absent from a file published before it existed.
-  `minimumPlayers` is the different players the community rule asks for (2); it
-  is informational here, because a hero is placed on matches alone. `belowMinimum` lists the heroes that have data but too few
-  matches to be placed, as `{ heroId, matches, players? }`, with `matches` always present and
+  `minimumPlayers` is the different players a hero needs besides the matches (2),
+  not applied to a hero with no `players`. `belowMinimum` lists the heroes that have data but too few
+  matches or too few players to be placed, as `{ heroId, matches, players? }`, with `matches` always present and
   exact and `players` the different players counted so far when the database counted them
-  (see "Players are counts, not a gate" above); such a hero has no tier, which
+  (see "Players are a gate on hero stats and the tier list" above); such a hero has no tier, which
   is not the same as the lowest one. No name or id is published below the minimum
   that is not in this list. `fallbackFromSeasonId` is set only when the
   current season has no placed hero yet and the snapshot holds the previous
@@ -234,8 +239,10 @@ nothing else. It is **one file for every half-season**, listed in the manifest:
   lines, and `finalHitsAverage` is final hits per line, all to two decimals.
   A hero with no match in a half-season has no cell.
 - **`enoughData`** is `true` exactly when `appearances` is at least
-  `minimumMatches` (the same minimum that places a hero in the tier list); the
-  generator refuses a cell where the two disagree. A cell with
+  `minimumMatches` and the hero is not held for players: a cell with `players` below
+  `minimumPlayers` is `false` whatever its appearances (the same rule that places a hero
+  in the tier list). The generator refuses a cell where they disagree, including an
+  `enoughData: false` cell with enough appearances and no `players` to explain it. A cell with
   `enoughData: false` is "not enough data yet": it still carries its
   `appearances`, but its four figures are `null`, because the API reports only
   the appearances of a hero below the minimum. A cell with `enoughData: true`
@@ -243,9 +250,9 @@ nothing else. It is **one file for every half-season**, listed in the manifest:
   when no line carried that figure.
 - **`players`** is the different players who recorded the matches the hero appeared in,
   a count so far and never who, on a cell with `enoughData: false` only, whole and
-  `0` or more. `minimumPlayers` (2, the community rule) is the file's matching minimum.
-  Neither gates anything: a hero is placed on `minimumMatches` alone. A cell the
-  database never counted has no `players`; see "Players are counts, not a gate" above.
+  `0` or more. `minimumPlayers` (2, the community rule) is the file's matching minimum,
+  and it is enforced. A cell the database never counted has no `players` and is placed
+  on `minimumMatches` alone; see "Players are a gate on hero stats and the tier list" above.
 - **With no matches the file is still valid.** A half-season nobody has played
   is `{ "decidedMatches": 0, "heroes": [] }`, and the file as a whole stays in
   the same shape.

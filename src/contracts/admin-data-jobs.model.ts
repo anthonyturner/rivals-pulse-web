@@ -70,8 +70,8 @@ export const DATA_JOBS = [
     ],
     atlasFiles: ['hero-stats.json', 'tier-list.json', 'community-stats.json'],
     caveat:
-      'A hero gets a win rate and a tier after 10 appearances, a matchup appears after 10 recorded matches, and a role ' +
-      'average after 50 appearances. Until the current half-season has a hero with 10 appearances, the pages show the ' +
+      'A hero gets a win rate and a tier after 10 appearances recorded by at least 2 players, a matchup appears after 10 recorded matches, and a role ' +
+      'average after 50 appearances. Until the current half-season has a hero with 10 appearances and 2 players, the pages show the ' +
       'previous half-season. Quick Match and Competitive are counted together unless a page lets you pick a mode.',
     example:
       'The "Matches counted" figure at the top of the home page goes up if new Quick Match or Competitive matches with a ' +

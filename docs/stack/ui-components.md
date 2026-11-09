@@ -112,7 +112,7 @@ This section always applies, whatever the styling conventions above. The site ha
 | Warnings and errors | `--danger`, `--danger-ink`, `--danger-soft` |
 | Hero roles | `--role-vanguard`, `--role-duelist`, `--role-strategist`, each with `-ink` (as text) |
 | Shadows | `--shadow-color`, `--shadow-soft` |
-| Bands that stay dark in both themes (the home hero over its photo, the overlay section, the closing call to action, the house ad; also small dark chips and icon tiles) | `--ink`, `--ink-raised`, `--ink-line`, `--ink-control-border`, `--on-ink`, `--on-ink-muted`, `--ink-accent`, `--on-ink-accent`, `--ink-focus` |
+| Bands that stay dark in both themes (the home hero over its photo, the news band, the trust block, the house ad; also small dark chips and icon tiles) | `--ink`, `--ink-raised`, `--ink-line`, `--ink-control-border`, `--on-ink`, `--on-ink-muted`, `--ink-accent`, `--on-ink-accent`, `--ink-focus`, `--ink-secondary`, `--ink-tertiary` |
 
 - **A component writes no colour literal**: no hex, `rgb()` or `hsl()`. A see-through version of a token is `color-mix(in srgb, var(--token) 40%, transparent)`. Where the site needs a role the palette lacks, derive it from a palette value and say so in the pull request; do not add a new hue.
 - **The only literals left in component styles are data, not theme**: the six tier colours in `tier-rows.component.css`. `npm run test:theme` fails on any other literal in `src/app/**/*.css`, on a component reading `--aurora-*`, and on a `var(--x)` that nothing declares.

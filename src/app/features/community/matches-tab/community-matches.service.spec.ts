@@ -55,6 +55,29 @@ describe('CommunityMatchesService', () => {
     expect(result).toEqual(ready);
   });
 
+  it('sends one request however many readers ask, and replays the answer to a later one', () => {
+    const results: (CommunityMatches | null)[] = [];
+
+    service.getMatches().subscribe((matches) => results.push(matches));
+    service.getMatches().subscribe((matches) => results.push(matches));
+    http.expectOne('/api/community/matches').flush(ready);
+    service.getMatches().subscribe((matches) => results.push(matches));
+
+    expect(results).toEqual([ready, ready, ready]);
+  });
+
+  it('asks again after a failed answer, and keeps a good one', () => {
+    let result: CommunityMatches | null | undefined;
+
+    service.getMatches().subscribe();
+    http.expectOne('/api/community/matches').flush('down', { status: 500, statusText: 'Server Error' });
+    service.getMatches().subscribe((matches) => (result = matches));
+    http.expectOne('/api/community/matches').flush(ready);
+    service.getMatches().subscribe();
+
+    expect(result).toEqual(ready);
+  });
+
   it('answers null when the request fails', () => {
     let result: CommunityMatches | null | undefined;
 

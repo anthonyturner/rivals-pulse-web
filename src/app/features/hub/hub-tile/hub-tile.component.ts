@@ -13,7 +13,11 @@ import { KindChipComponent } from '../kind-chip/kind-chip.component';
  * behind a scrim, which makes the card the hub's lead tile, and `playMarker` to add a play button
  * over it for a card that opens video; `imageFit` says how the art sits, and `lazyArt` defers loading
  * it for a card that starts below the fold. A card with no key art can
- * give `thumbnailUrl` for a small square picture beside its text.
+ * give `thumbnailUrl` for a small square picture beside its text. A lead tile with no `route`
+ * can carry its own links or buttons: content marked `tile-actions` sits under the description and,
+ * unlike the preview, stays visible to assistive technology. It needs a tile with no route because
+ * a routed card's title link stretches over the whole card and would cover the actions, and it is
+ * placed only in the lead layout, not in the `thumbnailUrl` or `split` ones.
  */
 @Component({
   selector: 'app-hub-tile',

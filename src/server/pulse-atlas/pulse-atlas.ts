@@ -285,7 +285,7 @@ interface StatsHero {
 interface HeroStatsView {
   /** Appearances a hero needs before it is placed. */
   minimumMatches: number;
-  /** Players the community rule asks for; informational, as this API gates nothing by it. Absent in an older answer. */
+  /** Players a hero needs, besides the matches, before it is placed; not applied where the players were never counted. Absent in an older answer. */
   minimumPlayers?: number;
   /** Every half-season that has started, oldest first. */
   halfSeasons: StatsHalfSeason[];
@@ -455,9 +455,10 @@ export function communityHalfSeasonRequests(current: unknown): number[] {
  * half-season as a season (id = half-season x 2, as in the tier list), each with one cell per hero
  * that has any match. `current` is the default answer, which lists the half-seasons and says which
  * is current; `exact` holds the answer asked for each of them, which is the only place a season's
- * numbers come from. A hero at or above the minimum carries its win rate, pick rate, KDA and final
- * hits; one below it carries only its appearances, because that is all the API reports for it, and
- * is flagged `enoughData: false`. Hero ids become the game's numeric ids through `heroGameIds`
+ * numbers come from. A hero at or above both minimums (the matches and, where the players were
+ * counted, the players) carries its win rate, pick rate, KDA and final hits; one below either carries
+ * only its appearances and players, because that is all the API reports for it, and is flagged
+ * `enoughData: false`. Hero ids become the game's numeric ids through `heroGameIds`
  * (a hero without an entry is left out, with a warning). Throws if an answer is missing, is for
  * another half-season, or stands in for one.
  */
@@ -1136,11 +1137,11 @@ interface SlimHeroRow {
   wins: number;
 }
 
-/** A hero with too few matches to be placed in a tier. */
+/** A hero with too few matches, or too few players, to be placed in a tier. */
 interface BelowMinimumRow {
   heroId: number;
   matches: number;
-  /** Players counted so far, when the database counted them. */
+  /** Players counted so far; absent where the database never counted them, and the hero is then placed on its matches alone. */
   players?: number;
 }
 
@@ -1149,7 +1150,7 @@ interface SlimSnapshot {
   matchesCounted?: number;
   /** Appearances a hero needs before it is placed; what each `belowMinimum` row counts toward. */
   minimumMatches?: number;
-  /** Players the community rule asks for; informational, nothing is gated by it. */
+  /** Players a hero needs, besides the matches, before it is placed; not applied where the players were never counted. */
   minimumPlayers?: number;
   belowMinimum?: BelowMinimumRow[];
   /** Set when the numbers are the previous season's, standing in for a season with no placed hero yet. */
@@ -1509,7 +1510,7 @@ interface ReadHeroStats {
  * Checks the hero-stats dataset and, when it is sound, returns it cut down to what is published.
  * Faults are reported together so one run names them all. It refuses a table that is not the
  * community's, a key outside the allow-list (so nothing can reach a cell by accident), a cell whose
- * `enoughData` disagrees with `minimumMatches`, and a cell flagged as having enough data without a
+ * `enoughData` disagrees with `minimumMatches` and `minimumPlayers`, and a cell flagged as having enough data without a
  * win rate and pick rate. A season with no hero, or no match at all, is valid.
  */
 function readHeroStatsTable(data: unknown): ReadHeroStats {
@@ -1577,7 +1578,13 @@ function readHeroStatsTable(data: unknown): ReadHeroStats {
 
     const seen = new Set<number>();
     const rows = cells.flatMap((cell: unknown, position: number) => {
-      const row = readHeroStatsCell(cell, minimumMatches, `${where} hero ${position}`, checkKeys, problems);
+      const row = readHeroStatsCell(
+        cell,
+        { minimumMatches, minimumPlayers },
+        `${where} hero ${position}`,
+        checkKeys,
+        problems,
+      );
 
       if (!row) {
         return [];
@@ -1626,7 +1633,7 @@ function readHeroStatsTable(data: unknown): ReadHeroStats {
 // One cell, cut to the allow-listed keys with rates to two decimals; a fault goes to `problems`.
 function readHeroStatsCell(
   cell: unknown,
-  minimumMatches: unknown,
+  minimums: { minimumMatches: unknown; minimumPlayers: unknown },
   where: string,
   checkKeys: (record: Record<string, unknown>, allowed: readonly string[], where: string) => void,
   problems: string[],
@@ -1672,8 +1679,19 @@ function readHeroStatsCell(
     return undefined;
   }
 
-  if (isPositiveInteger(minimumMatches) && enoughData !== Number(appearances) >= minimumMatches) {
-    problems.push(`${where} says enoughData ${enoughData} with ${appearances} appearances and a minimum of ${minimumMatches}`);
+  const { minimumMatches, minimumPlayers } = minimums;
+
+  if (isPositiveInteger(minimumMatches)) {
+    // `players` rides only on cells held back, so a cell with enough matches but no count is placed on
+    // its matches alone, and a held-back one must show the players that hold it.
+    const heldForPlayers = isPositiveInteger(minimumPlayers) && players !== undefined && Number(players) < minimumPlayers;
+    const expected = Number(appearances) >= minimumMatches && !heldForPlayers;
+
+    if (enoughData !== expected) {
+      problems.push(
+        `${where} says enoughData ${enoughData} with ${appearances} appearances and ${players === undefined ? 'no player count' : `${players} players`}, against a minimum of ${minimumMatches} appearances${isPositiveInteger(minimumPlayers) ? ` and ${minimumPlayers} players` : ''}`,
+      );
+    }
   }
 
   if (enoughData && (rates['winRate'] === null || rates['pickRate'] === null)) {

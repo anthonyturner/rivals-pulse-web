@@ -309,6 +309,9 @@ describe('HeroDetailsComponent', () => {
       stage?.querySelector('#hero-panel-matchups-mantis app-hero-community-counters'),
     ).not.toBeNull();
     expect(
+      stage?.querySelector('#hero-panel-matchups-mantis app-hero-switch-ins'),
+    ).not.toBeNull();
+    expect(
       stage?.querySelector('#hero-panel-stats-mantis app-hero-community-stats'),
     ).not.toBeNull();
     expect(stage?.querySelector('#hero-panel-stats-mantis app-hero-kill-feed')).not.toBeNull();

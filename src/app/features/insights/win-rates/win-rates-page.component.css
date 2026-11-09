@@ -3,6 +3,44 @@
   min-height: 100vh;
 }
 
+/* The art is 12:1: wide desktops crop a few pixels of height, and 30% keeps the heads in; narrower screens crop the sides, so phones show the centre of the row. */
+.strip {
+  position: relative;
+  height: 96px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  border-radius: 12px;
+  background: var(--ink);
+}
+
+.strip__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.strip::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--ink) 10%, transparent),
+    color-mix(in srgb, var(--ink) 45%, transparent)
+  );
+  content: '';
+}
+
+@media (max-width: 560px) {
+  .strip {
+    height: 56px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+}
+
 table {
   width: 100%;
   margin-top: 8px;

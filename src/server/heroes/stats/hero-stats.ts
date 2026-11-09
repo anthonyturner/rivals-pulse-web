@@ -22,6 +22,16 @@ import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../../community/community-minimums
 /** Appearances a hero needs before it is placed in a tier. */
 export const HERO_STATS_MIN_MATCHES = 10;
 
+/**
+ * A hero is placed once it has `HERO_STATS_MIN_MATCHES` appearances and `COMMUNITY_BUCKET_MIN_PLAYERS`
+ * recorders. A hero with no recorder count (a frozen half-season) is placed on the matches alone.
+ * `minimumPlayers` on the response publishes this same constant, so the gate and its published
+ * figure cannot differ.
+ */
+function isPlaced(appearances: number, players: number | undefined): boolean {
+  return appearances >= HERO_STATS_MIN_MATCHES && (players === undefined || players >= COMMUNITY_BUCKET_MIN_PLAYERS);
+}
+
 /** Pseudo-matches at 50% added to a hero's record, so a short run of wins cannot top the list. */
 export const WIN_RATE_PRIOR_MATCHES = 10;
 
@@ -99,6 +109,13 @@ export interface HeroAggregateRow {
    * never added, as one player can record in both.
    */
   recorders: number | null;
+  /**
+   * Different players who recorded the matches this hero appeared in across Quick Match and
+   * Competitive together, each counted once whichever of the two they played. Stored on the hero's
+   * row of each of those two modes with the same value; null on any other mode's row, and where
+   * nobody counted (a half-season frozen before the count existed).
+   */
+  blendedRecorders: number | null;
 }
 
 /** Matches with a win or a loss in one half-season and mode. */
@@ -174,14 +191,23 @@ export interface Tally {
 }
 
 /**
- * How many players are known to back a hero in the modes counted: the most any one mode row has. The
- * same player records in more than one mode, so rows are never added, and the figure can only fall
- * short of the true count, never exceed it. Undefined when any row was never counted.
+ * How many different players back a hero in the modes counted. A single mode reads that mode's
+ * count. The blended modes read the count the database made over both, so a player who recorded in
+ * each counts once and two players who each recorded in a different mode count as two. Where the
+ * blended count was never made (a half-season frozen after the per-mode count but before the blended
+ * one), the blend reads the largest per-mode count instead: one player can record in both modes, so
+ * that can only undercount. Undefined when a row has neither count. A hero whose rows are split
+ * across game ids takes the most any one row has, which can also only undercount.
  */
-function playersBehind(rows: readonly HeroAggregateRow[]): number | undefined {
-  return rows.some((row) => row.recorders === null)
+function playersBehind(rows: readonly HeroAggregateRow[], playModeIds: readonly number[]): number | undefined {
+  const isBlend =
+    playModeIds.length === BLENDED_PLAY_MODE_IDS.length && BLENDED_PLAY_MODE_IDS.every((id) => playModeIds.includes(id));
+  const countOf = (row: HeroAggregateRow): number | null =>
+    isBlend ? (row.blendedRecorders ?? row.recorders) : row.recorders;
+
+  return rows.some((row) => countOf(row) === null)
     ? undefined
-    : rows.reduce((most, row) => Math.max(most, row.recorders ?? 0), 0);
+    : rows.reduce((most, row) => Math.max(most, countOf(row) ?? 0), 0);
 }
 
 interface HalfSeasonSnapshot {
@@ -384,11 +410,16 @@ function snapshotOf(
 
   const lines = [...tallies]
     .filter(([, tally]) => tally.appearances > 0)
-    .map(([hero, tally]) => ({ hero, tally, shrunk: shrunkWinRate(tally.wins, tally.appearances) }));
+    .map(([hero, tally]) => ({
+      hero,
+      tally,
+      shrunk: shrunkWinRate(tally.wins, tally.appearances),
+      players: playersBehind(rowsBySlug.get(hero) ?? [], playModeIds),
+    }));
 
   const byTier = new Map<TierName, HeroStatsHero[]>();
   lines
-    .filter(({ tally }) => tally.appearances >= HERO_STATS_MIN_MATCHES)
+    .filter(({ tally, players }) => isPlaced(tally.appearances, players))
     .sort((a, b) => b.shrunk - a.shrunk || b.tally.appearances - a.tally.appearances || a.hero.localeCompare(b.hero))
     .forEach(({ hero, tally, shrunk }) => {
       const tier = tierForShrunkWinRate(shrunk);
@@ -399,12 +430,14 @@ function snapshotOf(
     matchesCounted,
     tiers: TIER_ORDER.filter((name) => byTier.has(name)).map((name) => ({ name, heroes: byTier.get(name) ?? [] })),
     belowMinimum: lines
-      .filter(({ tally }) => tally.appearances < HERO_STATS_MIN_MATCHES)
-      .map(({ hero, tally }): HeroStatsBelowMinimum => {
-        const players = playersBehind(rowsBySlug.get(hero) ?? []);
-
-        return { hero, appearances: tally.appearances, ...(players === undefined ? {} : { players }) };
-      })
+      .filter(({ tally, players }) => !isPlaced(tally.appearances, players))
+      .map(
+        ({ hero, tally, players }): HeroStatsBelowMinimum => ({
+          hero,
+          appearances: tally.appearances,
+          ...(players === undefined ? {} : { players }),
+        }),
+      )
       .sort((a, b) => b.appearances - a.appearances || a.hero.localeCompare(b.hero)),
     excludedGameIds,
   };
@@ -421,12 +454,34 @@ function heroLine(hero: string, tally: Tally, shrunk: number, tier: TierName, ma
     pickRate: matchesCounted > 0 ? (tally.appearances / matchesCounted) * 100 : 0,
     shrunkWinRate: shrunk * 100,
     tier,
-    kda:
-      tally.killsN > 0 && tally.deathsN > 0 && tally.assistsN > 0
-        ? killDeathAssistRatio(tally.killsSum, tally.deathsSum, tally.assistsSum)
-        : null,
-    finalHitsAverage: tally.finalHitsN > 0 ? tally.finalHitsSum / tally.finalHitsN : null,
+    kda: tallyKda(tally),
+    finalHitsAverage: tallyFinalHitsAverage(tally),
   };
+}
+
+/** The scoreboard sums and the counts of lines that recorded each, without the win counts of a full tally. */
+export type TallyFigures = Pick<
+  Tally,
+  | 'killsSum'
+  | 'killsN'
+  | 'deathsSum'
+  | 'deathsN'
+  | 'assistsSum'
+  | 'assistsN'
+  | 'finalHitsSum'
+  | 'finalHitsN'
+>;
+
+/** The KDA of a tally, or null when kills, deaths or assists were never recorded. */
+export function tallyKda(tally: TallyFigures): number | null {
+  return tally.killsN > 0 && tally.deathsN > 0 && tally.assistsN > 0
+    ? killDeathAssistRatio(tally.killsSum, tally.deathsSum, tally.assistsSum)
+    : null;
+}
+
+/** Final hits per line recorded, or null when none were recorded. */
+export function tallyFinalHitsAverage(tally: TallyFigures): number | null {
+  return tally.finalHitsN > 0 ? tally.finalHitsSum / tally.finalHitsN : null;
 }
 
 export function emptyTally(): Tally {

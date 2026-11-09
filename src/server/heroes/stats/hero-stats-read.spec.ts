@@ -247,6 +247,7 @@ describe('parseHeroStatsSource', () => {
     expect(Object.keys(source.heroes[0]).sort()).toEqual([
       'assistsN',
       'assistsSum',
+      'blendedRecorders',
       'deathsN',
       'deathsSum',
       'decidedLines',
@@ -273,6 +274,24 @@ describe('parseHeroStatsSource', () => {
     answer['heroes'] = [counted, uncounted, missing];
 
     expect(parseHeroStatsSource(answer).heroes.map((row) => row.recorders)).toEqual([3, null, null]);
+  });
+
+  it('reads the blended recorder count, and a null or missing count as not counted', () => {
+    const answer = functionAnswer();
+    const [counted, uncounted, missing] = (answer['heroes'] as Record<string, unknown>[]).map((row) => ({ ...row }));
+    counted['blended_recorders'] = 2;
+    uncounted['blended_recorders'] = null;
+    delete missing['blended_recorders'];
+    answer['heroes'] = [counted, uncounted, missing];
+
+    expect(parseHeroStatsSource(answer).heroes.map((row) => row.blendedRecorders)).toEqual([2, null, null]);
+  });
+
+  it('rejects a blended recorder count that is not a number', () => {
+    const answer = functionAnswer();
+    answer['heroes'] = [{ ...(answer['heroes'] as Record<string, unknown>[])[0], blended_recorders: 'two' }];
+
+    expect(() => parseHeroStatsSource(answer)).toThrowError(/blended_recorders is not a number or null/);
   });
 
   it('rejects a recorder count that is not a number', () => {

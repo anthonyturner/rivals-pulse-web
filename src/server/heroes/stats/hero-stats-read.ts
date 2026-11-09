@@ -88,8 +88,9 @@ export function parseHeroStatsSource(body: unknown): HeroStatsSource {
         assistsN: numberOf(row, 'assists_n'),
         finalHitsSum: numberOf(row, 'final_hits_sum'),
         finalHitsN: numberOf(row, 'final_hits_n'),
-        // Missing before the migration that counts players is applied; null is never read as 0.
+        // Missing before the migrations that count players are applied; null is never read as 0.
         recorders: row['recorders'] === undefined ? null : nullableNumberOf(row, 'recorders'),
+        blendedRecorders: row['blended_recorders'] === undefined ? null : nullableNumberOf(row, 'blended_recorders'),
       }),
     ),
   };

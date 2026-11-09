@@ -4,7 +4,10 @@ import {
   BLENDED_PLAY_MODE_IDS,
   halfSeasonTimeline,
   shrunkWinRate,
+  tallyFinalHitsAverage,
+  tallyKda,
   type HalfSeasonStart,
+  type TallyFigures,
 } from '../stats/hero-stats.ts';
 
 /**
@@ -25,6 +28,12 @@ export const HERO_MATCHUP_MIN_MATCHES = 10;
 /** The modes the matchups blend: the same Competitive and Quick Match blend as the hero stats. */
 export const HERO_MATCHUP_PLAY_MODE_IDS: readonly number[] = BLENDED_PLAY_MODE_IDS;
 
+/**
+ * The scoreboard figures of a matchup's decided lines, as sums and the counts of lines that recorded
+ * each, so rows add up before anything is divided.
+ */
+export type HeroMatchupFigures = TallyFigures;
+
 /** One hero against one enemy hero in one half-season, summed over the modes asked for. */
 export interface HeroMatchupRow {
   halfSeason: number;
@@ -35,6 +44,11 @@ export interface HeroMatchupRow {
   /** `gameHeroId`'s scoreboard lines in those matches, one per enemy hero it faced. */
   decidedLines: number;
   wins: number;
+  /**
+   * Null where the database did not count them: an answer from before the figures existed, or a
+   * half-season frozen before then. A null is not a row of zeros.
+   */
+  figures: HeroMatchupFigures | null;
 }
 
 interface DeriveHeroMatchupsOptions {
@@ -53,6 +67,7 @@ interface Tally {
   matches: number;
   appearances: number;
   wins: number;
+  figures: HeroMatchupFigures;
 }
 
 interface HalfSeasonSnapshot {
@@ -110,7 +125,11 @@ export function deriveHeroMatchups(
   return finish(describe(current), null, now.matchups);
 }
 
-function snapshotOf(
+/**
+ * The matchups at the minimum in one half-season, with the game hero ids named by hero. Exported for
+ * the readers that compare another figure with a hero's overall record in the same half-season.
+ */
+export function snapshotOf(
   rows: readonly HeroMatchupRow[],
   halfSeason: number,
   heroSlugByGameId: ReadonlyMap<number, string>,
@@ -135,10 +154,11 @@ function snapshotOf(
     }
 
     const key = `${hero}|${enemy}`;
-    const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, appearances: 0, wins: 0 } };
+    const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, appearances: 0, wins: 0, figures: noFigures() } };
     entry.tally.matches += row.decidedMatches;
     entry.tally.appearances += row.decidedLines;
     entry.tally.wins += row.wins;
+    addFigures(entry.tally.figures, row.figures);
     tallies.set(key, entry);
   }
 
@@ -149,6 +169,34 @@ function snapshotOf(
       .map(({ hero, enemy, tally }) => matchupLine(hero, enemy, tally)),
     excludedGameIds,
   };
+}
+
+function noFigures(): HeroMatchupFigures {
+  return {
+    killsSum: 0,
+    killsN: 0,
+    deathsSum: 0,
+    deathsN: 0,
+    assistsSum: 0,
+    assistsN: 0,
+    finalHitsSum: 0,
+    finalHitsN: 0,
+  };
+}
+
+function addFigures(tally: HeroMatchupFigures, figures: HeroMatchupFigures | null): void {
+  if (figures === null) {
+    return;
+  }
+
+  tally.killsSum += figures.killsSum;
+  tally.killsN += figures.killsN;
+  tally.deathsSum += figures.deathsSum;
+  tally.deathsN += figures.deathsN;
+  tally.assistsSum += figures.assistsSum;
+  tally.assistsN += figures.assistsN;
+  tally.finalHitsSum += figures.finalHitsSum;
+  tally.finalHitsN += figures.finalHitsN;
 }
 
 // Built field by field, so a field added to the rows can never reach the public response without
@@ -162,5 +210,7 @@ function matchupLine(hero: string, enemy: string, tally: Tally): HeroMatchup {
     wins: tally.wins,
     winRate: (tally.wins / tally.appearances) * 100,
     shrunkWinRate: shrunkWinRate(tally.wins, tally.appearances) * 100,
+    kda: tallyKda(tally.figures),
+    finalHitsAverage: tallyFinalHitsAverage(tally.figures),
   };
 }

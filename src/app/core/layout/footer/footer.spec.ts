@@ -38,6 +38,7 @@ describe('Footer', () => {
 
   it('shows the shared brand linking home, a tagline and the get-app button', () => {
     expect(page().querySelector('app-brand a.brand')?.getAttribute('aria-label')).toBe('RivalsPulse home');
+    expect(page().querySelector('app-brand img.brand-mark')?.getAttribute('alt')).toBe('');
     expect(page().querySelector('.site-footer__tagline')?.textContent).toContain('Marvel Rivals');
     expect(page().querySelector('app-get-app-button')).withContext('the shared get-app button').toBeTruthy();
   });
