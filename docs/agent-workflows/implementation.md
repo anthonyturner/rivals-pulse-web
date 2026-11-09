@@ -27,7 +27,7 @@ line references kept as evidence.
    worktree, never the primary checkout** below.
 4. Count this repository's jobs in progress before branching, per **How many
    run at once** in [pipeline.md](pipeline.md). At three or more, stop and
-   report that the cap is full.
+   report that the cap is full, unless the requester said to start now.
 5. Use a branch named `<type>/<issue-number>-<short-description>` based on the
    current `master`, e.g. `feature/123-saved-filters`. The type follows this
    repository's branch prefixes, per [tracking.md](tracking.md).
