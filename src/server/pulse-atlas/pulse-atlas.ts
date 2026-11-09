@@ -2188,7 +2188,7 @@ const HERO_SCORES_KEYS: readonly string[] = [
 const HERO_SCORES_MINIMUM_KEYS: readonly string[] = ['matches', 'contributors', 'busiestContributorShare', 'rankedHeroes'];
 const HERO_SCORES_HERO_KEYS: readonly string[] = ['heroId', ...HERO_SCORE_STATS, 'abilities'];
 const HERO_SCORES_STAT_KEYS: readonly string[] = ['status', 'score', 'label', 'matches', 'contributors', 'oneContributorAboveHalf', 'measures'];
-const HERO_SCORES_ABILITY_KEYS: readonly string[] = ['slot', 'ability', 'tag', 'usesPerTenMinutes', 'takedownsPerUse', 'matches'];
+const HERO_SCORES_ABILITY_KEYS: readonly string[] = ['slot', 'ability', 'alsoIncludes', 'tag', 'usesPerTenMinutes', 'takedownsPerUse', 'matches'];
 const HERO_SCORES_STATUSES: readonly unknown[] = ['scored', 'collecting', 'ranking-too-small', 'no-measurable-ability'];
 /** The statuses of a hero that passes the rule, whether or not enough heroes do for a ranking. */
 const HERO_SCORE_QUALIFIED_STATUSES: readonly unknown[] = ['scored', 'ranking-too-small'];
@@ -2353,10 +2353,13 @@ function findHeroScoreAbilityProblems(ability: unknown, where: string, checkKeys
 
   checkKeys(ability, HERO_SCORES_ABILITY_KEYS, where);
 
-  const { slot, ability: name, tag, usesPerTenMinutes, takedownsPerUse, matches } = ability;
+  const { slot, ability: name, alsoIncludes, tag, usesPerTenMinutes, takedownsPerUse, matches } = ability;
+  // An answer from a web app deployed before alsoIncludes existed has none, and neither does a file
+  // published before it, which a failed run keeps as the last good file.
   const valid =
     isNonEmptyString(slot) &&
     isNullableString(name) &&
+    (alsoIncludes === undefined || (Array.isArray(alsoIncludes) && alsoIncludes.every(isNonEmptyString))) &&
     HERO_SCORE_TAGS.includes(tag) &&
     isFiniteNumber(usesPerTenMinutes) &&
     usesPerTenMinutes >= 0 &&
@@ -2364,7 +2367,7 @@ function findHeroScoreAbilityProblems(ability: unknown, where: string, checkKeys
     isInteger(matches) &&
     matches >= 0;
 
-  return valid ? [] : [`${where} is not a slot, ability, tag, usesPerTenMinutes, takedownsPerUse and matches`];
+  return valid ? [] : [`${where} is not a slot, ability, alsoIncludes, tag, usesPerTenMinutes, takedownsPerUse and matches`];
 }
 
 /**

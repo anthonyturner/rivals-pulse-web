@@ -22,35 +22,45 @@ export interface HeroAbilityTagTable {
 /** What one upload slot means for one hero. */
 export interface HeroAbilitySlot {
   slot: string;
-  /** Null when the slot holds several abilities. */
+  /** The name its base abilities share (its team-ups', when it has none); null when they differ. */
   ability: string | null;
-  /** Null unless every ability on the slot has the same tag. */
+  /** Every other name on the slot, such as the team-ups that replace the base ability; empty when none. */
+  alsoIncludes: string[];
+  /** The tag its base abilities share (its team-ups', when it has none); null otherwise. */
   tag: AbilityTag | null;
-  /** Null unless every ability on the slot prints the same plain cooldown. */
+  /** The plain cooldown its base abilities share (its team-ups', when it has none); null otherwise. */
   cooldownSeconds: number | null;
 }
 
 // A JSON import widens string unions to string; the spec checks every row of this table.
 export const bundledHeroAbilityTagTable = bundledTable as unknown as HeroAbilityTagTable;
 
+/** The row types that are the hero's own kit, as opposed to a team-up, a passive or a normal attack. */
+const BASE_ABILITY_TYPES: ReadonlySet<string> = new Set(['Ability', 'Ultimate']);
+
+// A team-up only replaces the base ability while its partner is on the team, so a count on a key is
+// essentially its base abilities'. Only a key with no base ability is judged on its team-ups.
 function slotOf(slot: string, rows: readonly HeroAbilityTagRow[]): HeroAbilitySlot {
-  const names = new Set(rows.map((row) => row.ability));
-  const tags = new Set(rows.map((row) => row.tag));
-  const cooldowns = new Set(rows.map((row) => row.cooldown?.value ?? null));
+  const bases = rows.filter((row) => BASE_ABILITY_TYPES.has(row.type));
+  const deciding = bases.length > 0 ? bases : rows;
+  const agreed = <T>(valueOf: (row: HeroAbilityTagRow) => T): T | null =>
+    new Set(deciding.map(valueOf)).size === 1 ? valueOf(deciding[0]) : null;
+  const ability = agreed((row) => row.ability);
 
   return {
     slot,
-    ability: names.size === 1 ? rows[0].ability : null,
-    tag: tags.size === 1 ? rows[0].tag : null,
-    cooldownSeconds: cooldowns.size === 1 ? (rows[0].cooldown?.value ?? null) : null,
+    ability,
+    alsoIncludes: [...new Set(rows.map((row) => row.ability))].filter((name) => name !== ability),
+    tag: agreed((row) => row.tag),
+    cooldownSeconds: agreed((row) => row.cooldown?.value ?? null),
   };
 }
 
 /**
- * Each hero's slots by hero id. A key can hold several abilities (a team-up, a form, an upgrade) and
- * nothing says which one a count came from, so a slot is only as certain as all of them together. A
- * slot the hero's page does not list is absent, which is what makes a hero's unused slots drop out:
- * the overlay sends every slot, at 0 when the hero has no such ability.
+ * Each hero's slots by hero id. A key can hold several abilities (a team-up, a form, an upgrade), and
+ * `slotOf` decides which one a count is named after. A slot the hero's page does not list is absent,
+ * which is what makes a hero's unused slots drop out: the overlay sends every slot, at 0 when the
+ * hero has no such ability.
  */
 export function heroAbilitySlots(table: HeroAbilityTagTable = bundledHeroAbilityTagTable): ReadonlyMap<string, readonly HeroAbilitySlot[]> {
   return new Map(

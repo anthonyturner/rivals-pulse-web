@@ -1,7 +1,7 @@
 import officialSnapshot from '../../../../data/turso-cutover/106/external-sources-official-heroes.json';
 import mobilityTable from '../../../app/features/heroes/hero-kit-mobility.table.json';
 import { heroGameIdEntries } from '../../heroes/catalog/hero-game-ids';
-import { bundledHeroAbilityTagTable as table, heroAbilitySlots, type HeroAbilityTagTable } from './hero-ability-tags';
+import { bundledHeroAbilityTagTable as table, heroAbilitySlots, type HeroAbilityTagRow, type HeroAbilityTagTable } from './hero-ability-tags';
 
 interface OfficialAbility {
   name: string;
@@ -12,26 +12,53 @@ interface OfficialAbility {
 
 const officialHeroes = (officialSnapshot as unknown as { heroes: { id: string; abilities: OfficialAbility[] }[] }).heroes;
 const movementRows = (mobilityTable as unknown as { heroes: { heroId: string; abilities: { ability: string }[] }[] }).heroes;
-const rows = table.heroes.flatMap((hero) => hero.abilities.map((row, index) => ({ heroId: hero.heroId, row, index })));
 const KNOWN_SLOTS = ['ability_0', 'ability_1', 'ability_2', 'ability_3', 'team_up_0', 'ultimate'];
 
-function officialOf(heroId: string, index: number): OfficialAbility {
+function officialAbilitiesOf(heroId: string): OfficialAbility[] {
   const hero = officialHeroes.find((candidate) => candidate.id === heroId);
 
   if (!hero) {
     throw new Error(`${heroId} is not in the official pages`);
   }
 
-  return hero.abilities[index];
+  return hero.abilities;
 }
+
+/** The page's abilities in order, each with its row, or with no row when the table dropped it as a repeat. */
+function pairedAbilities(heroId: string, abilities: readonly HeroAbilityTagRow[]): { official: OfficialAbility; row: HeroAbilityTagRow | null }[] {
+  let next = 0;
+
+  return officialAbilitiesOf(heroId).map((official) => {
+    const row = abilities[next]?.ability === official.name ? abilities[next++] : null;
+
+    return { official, row };
+  });
+}
+
+const keysOf = (ability: OfficialAbility) => (ability.technicalDetails ?? []).filter((detail) => detail.label === 'Key').map((detail) => String(detail.value));
+const cooldownTextOf = (ability: OfficialAbility) => (ability.technicalDetails ?? []).find((detail) => detail.label === 'Cooldown')?.value;
+const pairs = table.heroes.flatMap((hero) => pairedAbilities(hero.heroId, hero.abilities).map((pair) => ({ heroId: hero.heroId, ...pair })));
+const rows = pairs.flatMap(({ heroId, official, row }) => (row ? [{ heroId, official, row }] : []));
 
 describe('the hero ability tag table', () => {
   it('has every ability of every hero on the official pages, in their order', () => {
     expect(table.heroes.map((hero) => hero.heroId)).toEqual(officialHeroes.map((hero) => hero.id));
 
     for (const hero of table.heroes) {
-      expect(hero.abilities.map((row) => row.ability)).withContext(hero.heroId).toEqual(officialHeroes.find((one) => one.id === hero.heroId)?.abilities.map((one) => one.name) ?? []);
+      expect(pairedAbilities(hero.heroId, hero.abilities).filter(({ row }) => row).length).withContext(hero.heroId).toBe(hero.abilities.length);
     }
+  });
+
+  it('leaves out only an ability the page prints again with the same name, type, keys and cooldown', () => {
+    const dropped = pairs.filter(({ row }) => row === null);
+
+    for (const { heroId, official } of dropped) {
+      const kept = rows.find((one) => one.heroId === heroId && one.row.ability === official.name)?.official;
+
+      expect(kept && [kept.type, keysOf(kept).join(), cooldownTextOf(kept)]).withContext(`${heroId} ${official.name}`).toEqual([official.type, keysOf(official).join(), cooldownTextOf(official)]);
+    }
+
+    expect(dropped.find(({ heroId, official }) => heroId === 'doctor-strange' && official.name === 'PSIONIC VORTEX')).toBeDefined();
   });
 
   it('covers every hero the game ids know', () => {
@@ -56,9 +83,8 @@ describe('the hero ability tag table', () => {
   });
 
   it('holds evidence that really is in the source it names', () => {
-    for (const { heroId, row, index } of rows) {
+    for (const { heroId, row, official } of rows) {
       const { evidence } = row;
-      const official = officialOf(heroId, index);
       const where = `${heroId} ${row.ability}`;
 
       if (evidence?.source === 'hero-kit-mobility') {
@@ -78,8 +104,8 @@ describe('the hero ability tag table', () => {
   });
 
   it('takes each cooldown from the page, as a plain number of seconds only', () => {
-    for (const { heroId, row, index } of rows.filter((one) => one.row.cooldown)) {
-      const printed = officialOf(heroId, index).technicalDetails?.find((detail) => detail.label === 'Cooldown');
+    for (const { heroId, row, official } of rows.filter((one) => one.row.cooldown)) {
+      const printed = official.technicalDetails?.find((detail) => detail.label === 'Cooldown');
 
       expect(String(printed?.value)).withContext(`${heroId} ${row.ability}`).toBe(row.cooldown?.raw ?? '');
       expect(row.cooldown?.raw).withContext(`${heroId} ${row.ability}`).toMatch(/^\s*\d+(\.\d+)?\s*s?\s*$/i);
@@ -102,7 +128,7 @@ describe('the hero ability tag table', () => {
     const notDealt = /damage (?:boost|reduction|increase|taken|received|passing)|(?:incoming|absorbing|taking|you take|amplify|reducing) damage/gi;
     const named = rows
       .filter(({ row }) => row.tag === 'Utility')
-      .filter(({ heroId, index }) => /damag/i.test(officialOf(heroId, index).description.replace(notDealt, '')))
+      .filter(({ official }) => /damag/i.test(official.description.replace(notDealt, '')))
       .map(({ heroId, row }) => `${heroId} ${row.ability}`);
 
     expect(named).toEqual([]);
@@ -118,9 +144,9 @@ describe('the hero ability tag table', () => {
 });
 
 describe('heroAbilitySlots', () => {
-  const row = (ability: string, slot: string | null, tag: 'Utility' | 'Damage' | null, cooldown: number | null) => ({
+  const row = (ability: string, slot: string | null, tag: 'Utility' | 'Damage' | null, cooldown: number | null, type = 'Ability') => ({
     ability,
-    type: 'Ability',
+    type,
     keys: [],
     slot,
     tag,
@@ -133,22 +159,67 @@ describe('heroAbilitySlots', () => {
   };
 
   it('gives a slot with one ability that ability, tag and cooldown', () => {
-    expect(slotsOf(row('Stun', 'ability_0', 'Utility', 10))).toEqual([{ slot: 'ability_0', ability: 'Stun', tag: 'Utility', cooldownSeconds: 10 }]);
-  });
-
-  it('keeps the tag and cooldown when every ability on the slot agrees, but names no one ability', () => {
-    expect(slotsOf(row('Stun', 'ability_0', 'Utility', 10), row('Upgraded Stun', 'ability_0', 'Utility', 10))).toEqual([
-      { slot: 'ability_0', ability: null, tag: 'Utility', cooldownSeconds: 10 },
+    expect(slotsOf(row('Stun', 'ability_0', 'Utility', 10))).toEqual([
+      { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 10 },
     ]);
   });
 
-  it('leaves a slot untagged when its abilities disagree, since a count cannot say which one it was', () => {
-    expect(slotsOf(row('Stun', 'team_up_0', 'Utility', 10), row('Blast', 'team_up_0', 'Damage', 12))).toEqual([
-      { slot: 'team_up_0', ability: null, tag: null, cooldownSeconds: null },
+  it('names a slot after its one base ability and lists its team-up variants once each', () => {
+    expect(
+      slotsOf(
+        row('Maelstrom of Madness', 'ability_2', 'Damage', 6),
+        row('PSIONIC VORTEX', 'ability_2', null, 6, 'Team-Up Ability'),
+        row('GAMMA MAELSTROM', 'ability_2', 'Utility', 8, 'Team-Up Ability'),
+        row('PSIONIC VORTEX', 'ability_2', null, 6, 'Team-Up Ability'),
+      ),
+    ).toEqual([
+      { slot: 'ability_2', ability: 'Maelstrom of Madness', alsoIncludes: ['PSIONIC VORTEX', 'GAMMA MAELSTROM'], tag: 'Damage', cooldownSeconds: 6 },
+    ]);
+  });
+
+  it('takes the base ultimate on the ultimate slot over a team-up sharing its key', () => {
+    expect(slotsOf(row('Big One', 'ultimate', 'Damage', null, 'Ultimate'), row('Duo Strike', 'ultimate', 'Utility', 30, 'Team-Up Ability'))).toEqual([
+      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: 'Damage', cooldownSeconds: null },
+    ]);
+  });
+
+  it('keeps the tag and cooldown when two base abilities on the slot agree, but names no one ability', () => {
+    expect(slotsOf(row('Stun', 'ability_0', 'Utility', 10), row('Upgraded Stun', 'ability_0', 'Utility', 10))).toEqual([
+      { slot: 'ability_0', ability: null, alsoIncludes: ['Stun', 'Upgraded Stun'], tag: 'Utility', cooldownSeconds: 10 },
+    ]);
+  });
+
+  it('leaves a slot of two base abilities untagged when they disagree, since a count cannot say which one it was', () => {
+    expect(slotsOf(row('Stun', 'ability_1', 'Utility', 10), row('Blast', 'ability_1', 'Damage', 12), row('Duo', 'ability_1', null, 12, 'Team-Up Ability'))).toEqual([
+      { slot: 'ability_1', ability: null, alsoIncludes: ['Stun', 'Blast', 'Duo'], tag: null, cooldownSeconds: null },
+    ]);
+  });
+
+  it('names a slot of two same-named base abilities even when a team-up shares the key', () => {
+    expect(slotsOf(row('Gamma Burst', 'ability_2', 'Damage', 8), row('Gamma Burst', 'ability_2', 'Damage', 8), row('Duo', 'ability_2', 'Utility', 20, 'Team-Up Ability'))).toEqual([
+      { slot: 'ability_2', ability: 'Gamma Burst', alsoIncludes: ['Duo'], tag: 'Damage', cooldownSeconds: 8 },
+    ]);
+  });
+
+  it('judges a slot of team-ups alone by all of them together', () => {
+    expect(slotsOf(row('Duo', 'team_up_0', 'Utility', 10, 'Team-Up Ability'), row('Trio', 'team_up_0', 'Damage', 10, 'Team-Up Ability'))).toEqual([
+      { slot: 'team_up_0', ability: null, alsoIncludes: ['Duo', 'Trio'], tag: null, cooldownSeconds: 10 },
     ]);
   });
 
   it('has no slot for an ability on a key the overlay does not count', () => {
     expect(slotsOf(row('Jump', null, 'Utility', 4))).toEqual([]);
+  });
+});
+
+describe('the bundled slots', () => {
+  it("name Doctor Strange's E after Maelstrom of Madness and list its team-ups", () => {
+    expect(heroAbilitySlots().get('doctor-strange')?.find((slot) => slot.slot === 'ability_2')).toEqual({
+      slot: 'ability_2',
+      ability: 'Maelstrom of Madness',
+      alsoIncludes: ['PSIONIC VORTEX', 'GAMMA MAELSTROM'],
+      tag: 'Damage',
+      cooldownSeconds: 6,
+    });
   });
 });

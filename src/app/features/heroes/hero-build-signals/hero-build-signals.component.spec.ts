@@ -24,7 +24,7 @@ const scored: CommunityHeroScores = {
       sustain: { status: 'collecting', score: null, label: 'measured', matches: 5, contributors: 2, oneContributorAboveHalf: false, measures: null },
       ultimate: { status: 'scored', score: 8, label: 'estimated', matches: 42, contributors: null, oneContributorAboveHalf: null, measures: { usesPerTenMinutes: 1.6, takedownsPerUse: 2.1 } },
       utility: { status: 'no-measurable-ability', score: null, label: 'estimated', matches: 0, contributors: null, oneContributorAboveHalf: null, measures: null },
-      abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', tag: null, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }],
+      abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', alsoIncludes: [], tag: null, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }],
     },
   ],
 };

@@ -314,6 +314,7 @@ function abilitiesOf(rows: readonly HeroScoreAbilityRow[], slots: readonly HeroA
       {
         slot: slot.slot,
         ability: slot.ability,
+        alsoIncludes: slot.alsoIncludes,
         tag: slot.slot === ULTIMATE_SLOT ? null : slot.tag,
         usesPerTenMinutes: rounded(uses),
         takedownsPerUse: takedowns === null ? null : rounded(takedowns),
