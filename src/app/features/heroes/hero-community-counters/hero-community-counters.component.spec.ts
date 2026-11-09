@@ -5,7 +5,6 @@ import { provideRouter } from '@angular/router';
 import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
 import { matchup, matchupsOf, season } from '../../insights/hero-matchup.fixtures';
 import { HeroCommunityCountersComponent } from './hero-community-counters.component';
-import { waitUntil } from '../../../testing/wait-until';
 
 const roster = [
   { id: 'hulk', name: 'Hulk', imageUrl: '/hulk.png' },
@@ -236,9 +235,9 @@ describe('HeroCommunityCountersComponent', () => {
       opener.focus();
       opener.click();
       await fixture.whenStable();
+      const closed = new Promise((resolve) => dialog(root).addEventListener('close', resolve, { once: true }));
       root.querySelector<HTMLButtonElement>('.head-to-head__close')!.click();
-      // The dialog's close event is queued as a task, not dispatched during close().
-      await waitUntil(() => !dialog(root).open && dialog(root).textContent?.trim() === '', 'the dialog has closed and emptied');
+      await closed;
       await fixture.whenStable();
 
       expect(dialog(root).open).toBeFalse();

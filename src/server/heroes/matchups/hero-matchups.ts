@@ -2,13 +2,11 @@ import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups
 import type { HeroStatsHalfSeason } from '../../../contracts/hero-stats.model.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
-  emptyTally,
   halfSeasonTimeline,
   shrunkWinRate,
   tallyFinalHitsAverage,
   tallyKda,
   type HalfSeasonStart,
-  type Tally as FigureTally,
 } from '../stats/hero-stats.ts';
 
 /**
@@ -77,7 +75,7 @@ interface Tally {
   matches: number;
   appearances: number;
   wins: number;
-  figures: FigureTally;
+  figures: HeroMatchupFigures;
 }
 
 interface HalfSeasonSnapshot {
@@ -164,7 +162,7 @@ export function snapshotOf(
     }
 
     const key = `${hero}|${enemy}`;
-    const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, appearances: 0, wins: 0, figures: emptyTally() } };
+    const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, appearances: 0, wins: 0, figures: noFigures() } };
     entry.tally.matches += row.decidedMatches;
     entry.tally.appearances += row.decidedLines;
     entry.tally.wins += row.wins;
@@ -181,7 +179,20 @@ export function snapshotOf(
   };
 }
 
-function addFigures(tally: FigureTally, figures: HeroMatchupFigures | null): void {
+function noFigures(): HeroMatchupFigures {
+  return {
+    killsSum: 0,
+    killsN: 0,
+    deathsSum: 0,
+    deathsN: 0,
+    assistsSum: 0,
+    assistsN: 0,
+    finalHitsSum: 0,
+    finalHitsN: 0,
+  };
+}
+
+function addFigures(tally: HeroMatchupFigures, figures: HeroMatchupFigures | null): void {
   if (figures === null) {
     return;
   }

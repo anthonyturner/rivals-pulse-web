@@ -61,9 +61,8 @@ measures one player's own games must follow the same rounding.
 | `manifest.json` | Every file above with its hash. |
 
 The per-matchup KDA and final hits that `GET /api/hero-matchups` carries (the hero's figures while
-facing one enemy hero) are not published here: `community-stats.json` holds win and loss counts only, and
-no file holds a matchup's scoreboard figures. Publishing them would be a new field for the overlays to
-read, so it needs its own decision.
+facing one enemy hero) are not published here yet: `community-stats.json` holds win and loss counts only. Its
+`counters` are directional hero-against-enemy records, so that is where they would go, and the work is tracked in [#680](https://github.com/anthonyturner/rivals-pulse-web/issues/680).
 
 Every dataset file has this shape:
 
