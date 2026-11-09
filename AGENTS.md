@@ -16,7 +16,7 @@ that matches the work before starting it.
 | Command | What it does |
 | --- | --- |
 | `npm ci` | Installs dependencies from the lockfile. |
-| `npm run build` | Builds the app and typechecks the API (`ng build && npm run typecheck:api`). Run it before calling any change finished. |
+| `npm run build` | Builds the app and typechecks the API and `scripts/` (`ng build`, then `typecheck:api` and `typecheck:scripts`). Run it before calling any change finished. |
 | `npm test` | Runs the Karma/Jasmine tests. |
 
 There is no lint command yet. The default branch is `master`. Infer the layout

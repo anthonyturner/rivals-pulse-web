@@ -131,6 +131,10 @@ describe('the data job endpoints', () => {
       linkedPlayer: unused,
       redeemLinkCode: unused,
       unlinkPlayer: unused,
+      readRecordsOptIn: unused,
+      setRecordsOptIn: unused,
+      readMediaDefaults: unused,
+      setMediaDefaults: unused,
       readOwnDashboard: unused,
       isAdmin: async () => isAdmin,
       beginDataJob: async () => {

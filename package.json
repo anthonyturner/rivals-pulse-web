@@ -5,9 +5,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build && npm run typecheck:api",
+    "build": "ng build && npm run typecheck:api && npm run typecheck:scripts",
     "vercel:build": "npm run build && npm run sync:glossary:missing -- --vercel-production-only",
     "typecheck:api": "tsc -p tsconfig.api.json --noEmit",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
     "icons": "node scripts/render-brand-icons.mjs",
     "check:browser-bundle": "node scripts/check-browser-bundle.mjs",
     "watch": "ng build --watch --configuration development",

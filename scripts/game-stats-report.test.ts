@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import type { GameStatsResponse } from '../src/contracts/game-stats.model.ts';
 import { runGameStatsCapture } from '../src/server/sync/game-stats-sync.ts';
+import type { recordSyncRun } from '../src/server/sync/sync-log.ts';
 import type { GameStatsCapture } from '../src/server/sync/game-stats-sync.ts';
 import { reportGameStatsCapture } from './game-stats-report.ts';
 
@@ -22,6 +23,9 @@ function capture(overrides: Partial<GameStatsCapture> = {}, response: Partial<Ga
     ...overrides,
   };
 }
+
+/** Runs the work and skips the sync log, so the capture touches no database. */
+const passThrough: typeof recordSyncRun = (_client, _key, _start, work) => work();
 
 describe('reportGameStatsCapture', () => {
   it('says a stored capture was stored, and is not a failure', () => {
@@ -65,7 +69,7 @@ describe('reportGameStatsCapture', () => {
   it('fails for a real capture when Steam answers for no game, without touching the database', async () => {
     const result = await runGameStatsCapture(
       {} as never,
-      (async (_client, _key, _start, work) => work()) as never,
+      passThrough,
       { fetch: (async () => { throw new Error('offline'); }) as typeof fetch },
     );
     const report = reportGameStatsCapture(result);

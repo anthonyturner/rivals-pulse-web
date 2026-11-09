@@ -19,7 +19,7 @@ the documents that hold the rules, and holds none of its own.
 ## Commands
 
 - Install: `npm ci`
-- Build: `npm run build` (app build plus API typecheck)
+- Build: `npm run build` (app build plus the API and `scripts/` typechecks)
 - Test: `npm test`
 - Lint: none yet
 
