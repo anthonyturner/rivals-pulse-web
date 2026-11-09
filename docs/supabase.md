@@ -72,6 +72,7 @@ repo's build. This is a move, not a redesign.
 | `20261030042403_hero_content.sql` | `hero_content`, `hero_list_items`, `hero_abilities`, `sync_runs`, `external_sources` and the `save_hero` function (the website's hero data, moved from Turso) |
 | `20261030042500_hero_content_data.sql` | The one-off copy of the Turso hero rows into those tables |
 | `20261030050000_hero_stats_read.sql` | `read_hero_stats()` and `read_hero_matchups(smallint[])`: the only way the publishable key reads the hero aggregates (security definer, counts only, granted to `anon`) |
+| `20261108210000_hero_matchup_encounter_figures.sql` | `hero_matchups` also stores the kills, deaths, assists and final hits (a sum and a count each) of a matchup's decided lines, null for a half-season frozen before it; `fill_hero_aggregates` and `read_hero_matchups` return them |
 | `20261030060309_home_content.sql` | `home_portals` and `home_content_blocks` (the website's home page content, moved from Turso) |
 | `20261030060507_home_content_data.sql` | The one-off copy of the Turso home rows, and the home news sync's `external_sources` snapshot, into those tables |
 | `20261030060939_reference_content.sql` | `glossary_terms` (the website's glossary, moved from Turso) |
@@ -724,7 +725,11 @@ limit never applies), made only of counts and `half_seasons` start dates:
 - `read_hero_matchups(p_play_mode_ids)` returns hero against enemy hero, summed over the chosen modes
   (default Competitive and Quick Match). `hero_matchups` keeps a matchup only when its decided
   matches over all modes reach `hero_matchup_min_matches()`, so the function applies the minimum
-  again to the chosen modes' own sum. The website reads it through `GET /api/hero-matchups`
+  again to the chosen modes' own sum. Each row also carries `kills_sum`, `kills_n`, `deaths_sum`,
+  `deaths_n`, `assists_sum`, `assists_n`, `final_hits_sum` and `final_hits_n` (issue 651): the figures of
+  the decided lines, one line per enemy hero faced, summed over the modes. They are null for a
+  half-season the purge froze before they existed, and `rebuild_hero_aggregates` cannot refill a
+  frozen one. The server reads a missing or null figure as "not counted", never as 0. The website reads it through `GET /api/hero-matchups`
   ([`src/server/heroes/matchups/hero-matchups-read.ts`](../src/server/heroes/matchups/hero-matchups-read.ts)), always for Competitive and Quick Match.
 
 Every rate, tier and KDA is derived in one pure module, [`src/server/heroes/stats/hero-stats.ts`](../src/server/heroes/stats/hero-stats.ts),

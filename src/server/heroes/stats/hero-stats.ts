@@ -454,12 +454,21 @@ function heroLine(hero: string, tally: Tally, shrunk: number, tier: TierName, ma
     pickRate: matchesCounted > 0 ? (tally.appearances / matchesCounted) * 100 : 0,
     shrunkWinRate: shrunk * 100,
     tier,
-    kda:
-      tally.killsN > 0 && tally.deathsN > 0 && tally.assistsN > 0
-        ? killDeathAssistRatio(tally.killsSum, tally.deathsSum, tally.assistsSum)
-        : null,
-    finalHitsAverage: tally.finalHitsN > 0 ? tally.finalHitsSum / tally.finalHitsN : null,
+    kda: tallyKda(tally),
+    finalHitsAverage: tallyFinalHitsAverage(tally),
   };
+}
+
+/** The KDA of a tally, or null when kills, deaths or assists were never recorded. */
+export function tallyKda(tally: Tally): number | null {
+  return tally.killsN > 0 && tally.deathsN > 0 && tally.assistsN > 0
+    ? killDeathAssistRatio(tally.killsSum, tally.deathsSum, tally.assistsSum)
+    : null;
+}
+
+/** Final hits per line recorded, or null when none were recorded. */
+export function tallyFinalHitsAverage(tally: Tally): number | null {
+  return tally.finalHitsN > 0 ? tally.finalHitsSum / tally.finalHitsN : null;
 }
 
 export function emptyTally(): Tally {

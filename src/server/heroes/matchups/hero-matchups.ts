@@ -2,9 +2,13 @@ import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups
 import type { HeroStatsHalfSeason } from '../../../contracts/hero-stats.model.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
+  emptyTally,
   halfSeasonTimeline,
   shrunkWinRate,
+  tallyFinalHitsAverage,
+  tallyKda,
   type HalfSeasonStart,
+  type Tally as FigureTally,
 } from '../stats/hero-stats.ts';
 
 /**
@@ -25,6 +29,21 @@ export const HERO_MATCHUP_MIN_MATCHES = 10;
 /** The modes the matchups blend: the same Competitive and Quick Match blend as the hero stats. */
 export const HERO_MATCHUP_PLAY_MODE_IDS: readonly number[] = BLENDED_PLAY_MODE_IDS;
 
+/**
+ * The scoreboard figures of a matchup's decided lines, as sums and the counts of lines that recorded
+ * each, so rows add up before anything is divided.
+ */
+export interface HeroMatchupFigures {
+  killsSum: number;
+  killsN: number;
+  deathsSum: number;
+  deathsN: number;
+  assistsSum: number;
+  assistsN: number;
+  finalHitsSum: number;
+  finalHitsN: number;
+}
+
 /** One hero against one enemy hero in one half-season, summed over the modes asked for. */
 export interface HeroMatchupRow {
   halfSeason: number;
@@ -35,6 +54,11 @@ export interface HeroMatchupRow {
   /** `gameHeroId`'s scoreboard lines in those matches, one per enemy hero it faced. */
   decidedLines: number;
   wins: number;
+  /**
+   * Null where the database did not count them: an answer from before the figures existed, or a
+   * half-season frozen before then. A null is not a row of zeros.
+   */
+  figures: HeroMatchupFigures | null;
 }
 
 interface DeriveHeroMatchupsOptions {
@@ -53,6 +77,7 @@ interface Tally {
   matches: number;
   appearances: number;
   wins: number;
+  figures: FigureTally;
 }
 
 interface HalfSeasonSnapshot {
@@ -139,10 +164,11 @@ export function snapshotOf(
     }
 
     const key = `${hero}|${enemy}`;
-    const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, appearances: 0, wins: 0 } };
+    const entry = tallies.get(key) ?? { hero, enemy, tally: { matches: 0, appearances: 0, wins: 0, figures: emptyTally() } };
     entry.tally.matches += row.decidedMatches;
     entry.tally.appearances += row.decidedLines;
     entry.tally.wins += row.wins;
+    addFigures(entry.tally.figures, row.figures);
     tallies.set(key, entry);
   }
 
@@ -153,6 +179,21 @@ export function snapshotOf(
       .map(({ hero, enemy, tally }) => matchupLine(hero, enemy, tally)),
     excludedGameIds,
   };
+}
+
+function addFigures(tally: FigureTally, figures: HeroMatchupFigures | null): void {
+  if (figures === null) {
+    return;
+  }
+
+  tally.killsSum += figures.killsSum;
+  tally.killsN += figures.killsN;
+  tally.deathsSum += figures.deathsSum;
+  tally.deathsN += figures.deathsN;
+  tally.assistsSum += figures.assistsSum;
+  tally.assistsN += figures.assistsN;
+  tally.finalHitsSum += figures.finalHitsSum;
+  tally.finalHitsN += figures.finalHitsN;
 }
 
 // Built field by field, so a field added to the rows can never reach the public response without
@@ -166,5 +207,7 @@ function matchupLine(hero: string, enemy: string, tally: Tally): HeroMatchup {
     wins: tally.wins,
     winRate: (tally.wins / tally.appearances) * 100,
     shrunkWinRate: shrunkWinRate(tally.wins, tally.appearances) * 100,
+    kda: tallyKda(tally.figures),
+    finalHitsAverage: tallyFinalHitsAverage(tally.figures),
   };
 }
