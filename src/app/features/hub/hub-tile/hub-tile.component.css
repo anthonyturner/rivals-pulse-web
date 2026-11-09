@@ -98,7 +98,8 @@
 }
 
 :host(.featured) .preview {
-  /* A preview labels itself with the muted text token, which is dark in the light theme and would sit unreadable on the art. */
+  /* A preview reads the site's text tokens, which are dark in the light theme and would sit unreadable on the art, so they are remapped to the ink tokens here. */
+  --text: var(--on-ink);
   --text-muted: var(--on-ink-muted);
 
   margin-top: 0;
