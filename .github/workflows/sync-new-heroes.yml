@@ -109,11 +109,14 @@ jobs:
             git checkout "$work" -- public/images/heroes
             if git diff --cached --quiet; then
               echo "The open portrait pull request on ${existing} already carries these portraits."
-              exit 0
+            else
+              git commit -m 'chore(heroes): add portraits for newly released heroes'
+              git push origin "$existing"
+              echo "Updated the open portrait pull request on ${existing}."
             fi
-            git commit -m 'chore(heroes): add portraits for newly released heroes'
-            git push origin "$existing"
-            echo "Updated the open portrait pull request on ${existing}."
+            # The steps after this one read the repository's source, so leave the
+            # checkout on the default branch's code rather than the older PR branch.
+            git checkout --quiet "$work"
             exit 0
           fi
 
