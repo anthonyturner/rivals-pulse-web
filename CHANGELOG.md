@@ -61,6 +61,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The header and footer logo follows the site theme: a light version on a white panel in the light theme, the dark version in the dark theme, chosen before the page first paints so it never swaps. The browser tab icon and the Apple home-screen icon now use the new logo too, and the tab icon turns light when the device prefers a light scheme ([#673](https://github.com/anthonyturner/rivals-pulse-web/issues/673)).
 - The home hero now starts with the background video off: a first visit shows the animated Rivals Pulse banner as the full hero background and downloads no video. Turn on Video on to play it, and the browser remembers the choice; Watch update video still opens the player ([#672](https://github.com/anthonyturner/rivals-pulse-web/pull/672)).
 - The site header and footer show the desktop app's new Rivals Pulse logo, the Rival clash mark of a gold pulse and a periwinkle pulse meeting at an orchid spark, in place of the "RP" text badge, beside the same RivalsPulse name and home link. The tab icon and social preview images are unchanged ([#662](https://github.com/anthonyturner/rivals-pulse-web/pull/662)).
 - On the home page, the "The overlay does the work while you play" section and the closing "Get RivalsPulse" section now follow the theme: grey in light mode, dark in dark mode, with their cards, links and icons in the theme's colours ([#661](https://github.com/anthonyturner/rivals-pulse-web/pull/661)).

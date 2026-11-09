@@ -10,13 +10,27 @@
   text-decoration: none;
 }
 
-/* The logo carries its own dark panel; the 1px ring gives that panel an edge where it meets the dark theme background. */
+/* Each logo carries its own panel; the 1px ring gives that panel an edge against the page. */
 .brand-mark {
   flex: none;
   width: 32px;
   height: 32px;
   border-radius: 8px;
   box-shadow: 0 0 0 1px var(--border);
+}
+
+/* Both marks are in the markup and the theme attribute, set before first paint, picks one, so the
+   right mark shows from the server render on, with no swap after hydration. */
+.brand-mark-light {
+  display: none;
+}
+
+:host-context([data-theme='light']) .brand-mark-dark {
+  display: none;
+}
+
+:host-context([data-theme='light']) .brand-mark-light {
+  display: block;
 }
 
 .brand-name {
