@@ -21,6 +21,7 @@ import {
 import { getCommunityFigures, getCommunityHeroScores, getCommunityKills } from './server/community/extended';
 import { getCommunityInsights } from './server/community/insights';
 import { getCommunityMatches } from './server/community/matches';
+import { gameStatsCacheControl } from './server/http';
 import { handlePulseRecordsRequest } from './server/records';
 import { getHeroMatchups } from './server/heroes/matchups';
 import { getHeroPairs, getHeroSynergies } from './server/heroes/pairs';
@@ -143,7 +144,7 @@ app.get('/api/glossary', (_req, res) => {
 });
 
 app.get('/api/game-stats', (_req, res) => {
-  handleApiResponse(res, () => syncGameStats(getSupabaseClient()));
+  handleApiResponse(res, () => syncGameStats(getSupabaseClient()), gameStatsCacheControl);
 });
 
 app.get('/api/sync/game-stats', (req, res) => {
@@ -220,9 +221,18 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
  */
 export const reqHandler = createNodeRequestHandler(app);
 
-async function handleApiResponse(res: express.Response, getBody: () => unknown | Promise<unknown>): Promise<void> {
+async function handleApiResponse<T>(
+  res: express.Response,
+  getBody: () => T | Promise<T>,
+  cacheControlFor?: (body: T) => string,
+): Promise<void> {
   try {
-    res.json(await getBody());
+    const body = await getBody();
+
+    if (cacheControlFor) {
+      res.set('Cache-Control', cacheControlFor(body));
+    }
+    res.json(body);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected API error';
 

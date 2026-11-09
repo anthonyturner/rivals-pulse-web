@@ -1,8 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 
+/** What a shared cache (the CDN) may keep of an answer when a route says nothing more specific. */
+export const DEFAULT_CACHE_CONTROL = 's-maxage=300, stale-while-revalidate=3600';
+
+/** For an answer no cache may keep: every error, and any answer that is only a stand-in. */
+export const NO_STORE_CACHE_CONTROL = 'no-store';
+
 const jsonHeaders = {
   'content-type': 'application/json; charset=utf-8',
-  'cache-control': 's-maxage=300, stale-while-revalidate=3600',
+  'cache-control': DEFAULT_CACHE_CONTROL,
 };
 
 const corsHeaders = {
@@ -11,39 +17,50 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-interface JsonRequestOptions {
+/** A fixed `Cache-Control` value, or one chosen from the body about to be sent. */
+export type CacheControlFor<T> = string | ((body: T) => string);
+
+interface JsonRequestOptions<T> {
   allowCors?: boolean;
-  cacheControl?: string;
+  /** The `Cache-Control` of a successful answer; errors are never cached. */
+  cacheControl?: CacheControlFor<T>;
 }
 
-export async function handleJsonRequest(
+export async function handleJsonRequest<T = unknown>(
   req: IncomingMessage,
   res: ServerResponse,
-  getBody: () => unknown | Promise<unknown>,
-  options: JsonRequestOptions = {},
+  getBody: () => T | Promise<T>,
+  options: JsonRequestOptions<T> = {},
 ): Promise<void> {
-  const extraHeaders = {
-    ...(options.allowCors ? corsHeaders : {}),
-    ...(options.cacheControl ? { 'cache-control': options.cacheControl } : {}),
-  };
+  const corsOnly = options.allowCors ? corsHeaders : {};
+  const uncached = { ...corsOnly, 'cache-control': NO_STORE_CACHE_CONTROL };
 
   if (req.method === 'OPTIONS') {
-    res.writeHead(204, extraHeaders);
+    res.writeHead(204, corsOnly);
     res.end();
     return;
   }
 
   if (req.method && req.method !== 'GET') {
-    sendJson(res, 405, { error: 'Method not allowed' }, extraHeaders);
+    sendJson(res, 405, { error: 'Method not allowed' }, uncached);
     return;
   }
 
   try {
-    sendJson(res, 200, await getBody(), extraHeaders);
+    const body = await getBody();
+
+    const cacheControl = resolveCacheControl(options.cacheControl, body);
+
+    sendJson(res, 200, body, { ...corsOnly, ...(cacheControl ? { 'cache-control': cacheControl } : {}) });
   } catch (error) {
     console.error('Vercel API request failed', error);
-    sendJson(res, 500, { error: getErrorMessage(error) }, extraHeaders);
+    sendJson(res, 500, { error: getErrorMessage(error) }, uncached);
   }
+}
+
+/** The `Cache-Control` for `body`, or none when the route sets none and the default applies. */
+function resolveCacheControl<T>(choice: CacheControlFor<T> | undefined, body: T): string | undefined {
+  return typeof choice === 'function' ? choice(body) : choice;
 }
 
 export function sendJson(
