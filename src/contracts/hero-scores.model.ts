@@ -39,8 +39,13 @@ export interface HeroScoreStat {
 export interface HeroScoreAbility {
   /** `ability_0` Right Click, `ability_1` Shift, `ability_2` E, `ability_3` F, `team_up_0` C, or `ultimate`. */
   slot: string;
-  /** Null when the slot holds several abilities (a team-up, a form or an upgrade). */
+  /**
+   * The slot's base ability. With team-ups on the key it is still named, since a team-up only replaces it
+   * while its partner is on the team. Null when the slot holds several base abilities (a form or an upgrade).
+   */
   ability: string | null;
+  /** Every other ability on the key, such as its team-up variants; empty when none. Its uses are counted in. */
+  alsoIncludes: string[];
   /** Null when untagged or, for the ultimate, not tagged at all. */
   tag: 'Utility' | 'Damage' | 'Mobility' | 'Sustain' | null;
   usesPerTenMinutes: number;

@@ -1,12 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- The site logo (images/site/rivals-pulse-logo.svg), switching to its light twin when the device prefers a light scheme. Keep both colour sets in step with those files. -->
+  <style>
+    .panel { fill: #141828; }
+    .ally { stroke: #e8c547; }
+    .enemy { stroke: #7b7bff; }
+    .spark { fill: #e070ff; }
+    @media (prefers-color-scheme: light) {
+      .panel { fill: #ffffff; }
+      .ally { stroke: #b38600; }
+      .enemy { stroke: #5b55e6; }
+      .spark { fill: #b44fd6; }
+    }
+  </style>
   <defs>
-    <!-- The header badge's 145deg split, mapped to the square. -->
-    <linearGradient id="split" gradientUnits="userSpaceOnUse" x1="3.2" y1="-2.27" x2="28.8" y2="34.27">
-      <stop offset="0.68" stop-color="#e9eaf6"/>
-      <stop offset="0.69" stop-color="#b38600"/>
-    </linearGradient>
+    <filter id="spark-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
-  <rect width="32" height="32" rx="8" fill="url(#split)"/>
-  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" fill="none" stroke="#e0e1ef"/>
-  <text x="16" y="16.5" fill="#151735" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="900" letter-spacing="0.3" text-anchor="middle" dominant-baseline="central">RP</text>
+  <rect class="panel" width="256" height="256"/>
+  <polyline class="ally" points="8,140 40,140 56,112 72,170 92,84 110,140 120,140" fill="none"
+            stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline class="enemy" points="248,140 216,140 200,168 184,110 164,196 146,140 136,140" fill="none"
+            stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="spark" d="M128 104 L136 132 L162 140 L136 148 L128 176 L120 148 L94 140 L120 132 Z"
+        filter="url(#spark-glow)"/>
 </svg>

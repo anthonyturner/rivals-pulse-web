@@ -3,8 +3,8 @@
 Written by `scripts/build-hero-ability-tags.mjs`; do not edit by hand. The rules are in
 [hero-build-scores.md](hero-build-scores.md).
 
-The official pages could not decide a tag for 221 of 619 abilities, so none of them counts toward Utility.
-46 of them are on a key the overlay does not count, such as Left Click, Space or a passive. The 175 below are on a key it counts.
+The official pages could not decide a tag for 220 of 614 abilities, so none of them counts toward Utility.
+46 of them are on a key the overlay does not count, such as Left Click, Space or a passive. The 174 below are on a key it counts.
 
 | Hero | Slot | Ability | Why |
 | --- | --- | --- | --- |
@@ -61,7 +61,6 @@ The official pages could not decide a tag for 221 of 619 abilities, so none of t
 | Doctor Strange | ability_0 | Shield of the Seraphim | More than one tag: Damage (description: damage); Sustain (description: protective) |
 | Doctor Strange | ability_2 | PSIONIC VORTEX | More than one tag: Damage (description: damages); Sustain (description: Bonus Health); Utility (description: Invisible) |
 | Doctor Strange | ability_2 | GAMMA MAELSTROM | More than one tag: Sustain (description: Heal); Utility (description: boosts) |
-| Doctor Strange | ability_2 | PSIONIC VORTEX | More than one tag: Damage (description: damage); Sustain (description: Shield); Utility (description: Invisible) |
 | Elsa Bloodstone | ability_0 | LIVING BULLET | More than one tag: Damage (description: damage); Sustain (description: shields); Utility (description: boost) |
 | Elsa Bloodstone | ability_3 | SMOKY SNARE | More than one tag: Damage (description: Damages); Mobility (description: dash); Utility (description: trap) |
 | Elsa Bloodstone | ability_0 | BLOODSTONE'S BOOMBOX BULLETS | More than one tag: Damage (description: damaging); Sustain (description: healed); Utility (description: Taunt) |

@@ -53,8 +53,8 @@
     {
       "dataset": "hero-scores",
       "path": "pulse-atlas/v1/hero-scores.json",
-      "sha256": "9056d2bc5183f38b171e534403e779b63fc6ff9d6b43b2c98d0de13bf0682411",
-      "bytes": 1214
+      "sha256": "bbe4ece9a7b12d48a72819520bff5392086db0b5ab086c29f29341e1a2e454de",
+      "bytes": 1232
     },
     {
       "dataset": "team-lineups",

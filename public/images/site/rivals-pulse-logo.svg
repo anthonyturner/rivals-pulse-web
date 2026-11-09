@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
   <title id="title">RivalsPulse</title>
-  <!-- Your team's gold pulse meets the enemy's periwinkle pulse at an orchid spark, in the desktop theme's colours; npm run icons renders the Overwolf icons from it. -->
+  <!-- Your team's gold pulse meets the enemy's periwinkle pulse at an orchid spark, in the desktop theme's colours (the overlay's app-icon.svg); npm run icons renders favicon.ico and apple-touch-icon.png from it. -->
   <defs>
     <filter id="spark-glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="5" result="blur"/>

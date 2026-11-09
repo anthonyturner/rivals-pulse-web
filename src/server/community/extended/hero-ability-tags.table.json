@@ -2387,24 +2387,6 @@
      "reason": "More than one tag: Mobility (description: dash); Utility (description: knocks)"
     },
     {
-     "ability": "HEALING HOP",
-     "type": "Ability",
-     "keys": [
-      "Space"
-     ],
-     "slot": null,
-     "cooldown": {
-      "value": 6,
-      "raw": "6s"
-     },
-     "tag": "Mobility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "jump"
-     }
-    },
-    {
      "ability": "DUAL DESERT EAGLES - STRATEGIST UPGRADED",
      "type": "Normal Attack",
      "keys": [
@@ -2847,20 +2829,6 @@
      },
      "tag": null,
      "reason": "More than one tag: Sustain (description: Heal); Utility (description: boosts)"
-    },
-    {
-     "ability": "PSIONIC VORTEX",
-     "type": "Team-Up Ability",
-     "keys": [
-      "E"
-     ],
-     "slot": "ability_2",
-     "cooldown": {
-      "value": 6,
-      "raw": "6s"
-     },
-     "tag": null,
-     "reason": "More than one tag: Damage (description: damage); Sustain (description: Shield); Utility (description: Invisible)"
     }
    ]
   },
@@ -4202,21 +4170,6 @@
      "reason": "The page names no effect these rules know."
     },
     {
-     "ability": "Heavy Blow",
-     "type": "Normal Attack",
-     "keys": [
-      "Left Click"
-     ],
-     "slot": null,
-     "cooldown": null,
-     "tag": "Damage",
-     "evidence": {
-      "source": "official-kit",
-      "field": "type",
-      "raw": "Normal Attack"
-     }
-    },
-    {
      "ability": "World Breaker",
      "type": "Ultimate",
      "keys": [
@@ -4229,21 +4182,6 @@
       "source": "official-kit",
       "field": "Damage",
       "raw": "Delivers 5 hits, each dealing 40 damage"
-     }
-    },
-    {
-     "ability": "Incredible Leap",
-     "type": "Ability",
-     "keys": [
-      "Space"
-     ],
-     "slot": null,
-     "cooldown": null,
-     "tag": "Mobility",
-     "evidence": {
-      "source": "hero-kit-mobility",
-      "field": "abilities",
-      "raw": "Incredible Leap"
      }
     },
     {
@@ -5790,24 +5728,6 @@
       "source": "official-kit",
       "field": "description",
       "raw": "slows"
-     }
-    },
-    {
-     "ability": "CHAIN OF CYTTORAK",
-     "type": "Team-Up Ability",
-     "keys": [
-      "C"
-     ],
-     "slot": "team_up_0",
-     "cooldown": {
-      "value": 20,
-      "raw": "20s"
-     },
-     "tag": "Utility",
-     "evidence": {
-      "source": "official-kit",
-      "field": "description",
-      "raw": "tether"
      }
     },
     {

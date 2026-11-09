@@ -45,8 +45,8 @@ const hela: HeroScores = {
   ultimate: scored(8, { usesPerTenMinutes: 1.6, takedownsPerUse: 2.1 }, 'estimated'),
   utility: scored(4, { useOfAvailable: 0.62, takedownsPerUse: 0.38 }, 'estimated'),
   abilities: [
-    { slot: 'ability_2', ability: 'Soul Drainer', tag: 'Utility', usesPerTenMinutes: 31, takedownsPerUse: 0.38, matches: 42 },
-    { slot: 'team_up_0', ability: null, tag: null, usesPerTenMinutes: 2.5, takedownsPerUse: null, matches: 12 },
+    { slot: 'ability_2', ability: 'Soul Drainer', alsoIncludes: [], tag: 'Utility', usesPerTenMinutes: 31, takedownsPerUse: 0.38, matches: 42 },
+    { slot: 'team_up_0', ability: null, alsoIncludes: [], tag: null, usesPerTenMinutes: 2.5, takedownsPerUse: null, matches: 12 },
   ],
 };
 
@@ -319,7 +319,7 @@ describe('heroAbilityUseRows', () => {
   });
 
   it('calls the ultimate slot an ultimate, though the feed sends it no tag', () => {
-    const ultimate = { ...hela, abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', tag: null, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }] };
+    const ultimate = { ...hela, abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', alsoIncludes: [], tag: null, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }] };
 
     expect(heroAbilityUseRows('hela', answer([ultimate]))[0].type).toBe('Ultimate');
   });
