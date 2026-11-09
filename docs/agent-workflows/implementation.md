@@ -20,11 +20,20 @@ line references kept as evidence.
    design comment, and every relevant `/docs` instruction file, including the
    files under `docs/stack/`.
    Read `.github/copilot-instructions.md` too. If the issue was in the
+<<<<<<< HEAD
    `needs-tony` inbox, read every comment after the question the last agent
    left, before anything else: the maintainer's answer is among them, and it
    overrides that agent's recommendation. Agents post as the maintainer's own
    account, so his answer cannot be picked out by its author. See **Questions
    for the maintainer** in [pipeline.md](pipeline.md).
+=======
+   `needs-tony` inbox (or carries `tony-answered`, see
+   [tony-answers.md](tony-answers.md)), read the latest maintainer comment
+   first: it is the
+   answer to the question the last agent left, and it overrides that agent's
+   recommendation. See **Questions for the maintainer** in
+   [pipeline.md](pipeline.md).
+>>>>>>> origin/master
 2. Confirm GitHub authentication, repository identity, default branch, remotes
    and the primary checkout's `git status --short`, all read-only.
 3. Leave whatever is in the primary checkout alone, however much there is
