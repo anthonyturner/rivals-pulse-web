@@ -144,6 +144,12 @@ describe('PulseBannerComponent', () => {
     });
     afterEach(() => (window.IntersectionObserver = realIntersectionObserver));
 
+    function bringOnScreen(): void {
+      const observer = FakeIntersectionObserver.latest;
+      expect(observer).withContext('the banner watches whether it is on screen').not.toBeNull();
+      observer?.report(true);
+    }
+
     it('plays once it is on screen, and holds when the tab is hidden', async () => {
       const hidden = spyOnProperty(document, 'hidden').and.returnValue(false);
       create();
@@ -151,7 +157,7 @@ describe('PulseBannerComponent', () => {
 
       expect(setPlayback).not.toHaveBeenCalledWith('playing');
 
-      FakeIntersectionObserver.latest!.report(true);
+      bringOnScreen();
 
       expect(setPlayback.calls.mostRecent().args).toEqual(['playing']);
 
@@ -165,7 +171,8 @@ describe('PulseBannerComponent', () => {
 
     it('shows a still frame under prefers-reduced-motion, whatever is on screen', async () => {
       create(true);
-      await settle();
+      await fixture.whenStable();
+      bringOnScreen();
 
       expect(setPlayback).toHaveBeenCalledWith('still');
       expect(setPlayback).not.toHaveBeenCalledWith('playing');
