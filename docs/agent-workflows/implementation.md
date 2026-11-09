@@ -20,7 +20,9 @@ line references kept as evidence.
    design comment, and every relevant `/docs` instruction file, including the
    files under `docs/stack/`.
    Read `.github/copilot-instructions.md` too. If the issue was in the
-   `needs-tony` inbox, read the latest maintainer comment first: it is the
+   `needs-tony` inbox (or carries `tony-answered`, see
+   [tony-answers.md](tony-answers.md)), read the latest maintainer comment
+   first: it is the
    answer to the question the last agent left, and it overrides that agent's
    recommendation. See **Questions for the maintainer** in
    [pipeline.md](pipeline.md).
