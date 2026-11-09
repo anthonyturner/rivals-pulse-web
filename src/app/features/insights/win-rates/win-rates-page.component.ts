@@ -6,6 +6,7 @@ import { BehaviorSubject, map, switchMap, tap } from 'rxjs';
 import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { HeroImageFallbackDirective } from '../../../shared/directives/hero-image-fallback.directive';
 import { DEFAULT_MODE_ID, heroStatsModeOptions, type ModeOption } from '../../../shared/utilities/play-modes';
@@ -22,6 +23,7 @@ import { buildWinRatesView, selectHeroStatsRows, type HeroStatsSort } from './wi
     HeroImageFallbackDirective,
     HeroProgressListComponent,
     NoticeComponent,
+    PageHeaderComponent,
     RouterLink,
     StatePanelComponent,
   ],

@@ -1,14 +1,13 @@
 <div class="insight-page page-container page-container--wide">
-  <header class="intro">
-    <h1>Marvel Rivals vs other major games</h1>
-    <p class="lede">
+  <app-page-header title="Marvel Rivals vs other major games">
+    <p lede class="lede">
       Steam player counts and rankings for Marvel Rivals next to other major games. A Steam-only
       snapshot, not a count of everyone who plays.
     </p>
     @if (view(); as v) {
-      <p class="meta">{{ v.meta }}</p>
+      <p lede class="meta">{{ v.meta }}</p>
     }
-  </header>
+  </app-page-header>
 
   @if (view(); as v) {
     @if (v.saved) {
