@@ -62,6 +62,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Switch-ins block counts the players behind a pairing by whoever sent the hero picks, not whoever sent the scoreboard, so a pairing no longer appears early when an older app sent the scoreboard and a newer one the picks. Matches stored before this change keep counting the scoreboard's sender. The anonymous sender code is stored with the picks and is never readable from the site. It needs `supabase db push` before the Edge Function is redeployed ([#666](https://github.com/anthonyturner/rivals-pulse-web/issues/666)).
 - The home hero now starts with the background video off: a first visit shows the animated Rivals Pulse banner as the full hero background and downloads no video. Turn on Video on to play it, and the browser remembers the choice; Watch update video still opens the player ([#672](https://github.com/anthonyturner/rivals-pulse-web/pull/672)).
 - The site header and footer show the desktop app's new Rivals Pulse logo, the Rival clash mark of a gold pulse and a periwinkle pulse meeting at an orchid spark, in place of the "RP" text badge, beside the same RivalsPulse name and home link. The tab icon and social preview images are unchanged ([#662](https://github.com/anthonyturner/rivals-pulse-web/pull/662)).
 - On the home page, the "The overlay does the work while you play" section and the closing "Get RivalsPulse" section now follow the theme: grey in light mode, dark in dark mode, with their cards, links and icons in the theme's colours ([#661](https://github.com/anthonyturner/rivals-pulse-web/pull/661)).
@@ -158,6 +159,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- Opening a Community tab address directly, such as `/community/heroes` or `/community/stats`, on the local server no longer redirects to itself, so the tab renders on a full page load. The live site was not affected ([#677](https://github.com/anthonyturner/rivals-pulse-web/pull/677)).
 - The home hero's waiting-for-data stat value is drawn in full-strength text, so it stays readable when the video or the pulse currents pass behind it ([#665](https://github.com/anthonyturner/rivals-pulse-web/issues/665)).
 - If the Heroes page cannot load the hero list, it says "Heroes could not be loaded" and now has a "Try again" button that asks for the list again, so you no longer have to reload the page ([#556](https://github.com/anthonyturner/rivals-pulse-web/pull/556)).
 - On a hero that can play several roles, such as Deadpool, the banner's role name and colour now follow the ability kit you pick, along with the stats, instead of showing "Multi-Role" over one role's stats ([#555](https://github.com/anthonyturner/rivals-pulse-web/pull/555)).

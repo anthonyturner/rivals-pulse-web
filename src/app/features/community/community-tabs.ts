@@ -1,5 +1,5 @@
 import type { Type } from '@angular/core';
-import type { UrlMatcher } from '@angular/router';
+import type { CanMatchFn } from '@angular/router';
 
 import { CountersTabComponent } from './counters-tab/counters-tab.component';
 import { HeroesTabComponent } from './heroes-tab/heroes-tab.component';
@@ -26,9 +26,6 @@ export const COMMUNITY_TABS: readonly CommunityTab[] = [
 
 export const DEFAULT_COMMUNITY_TAB_ID = COMMUNITY_TABS[0].id;
 
-/** Matches a single URL segment that names a tab and exposes it as the `tab` param. */
-export const communityTabMatcher: UrlMatcher = (segments) => {
-  const [segment] = segments;
-  const isTab = segments.length === 1 && COMMUNITY_TABS.some((tab) => tab.id === segment.path);
-  return isTab ? { consumed: segments, posParams: { tab: segment } } : null;
-};
+/** Lets the `:tab` route match only an address that names one of the tabs. */
+export const isCommunityTab: CanMatchFn = (_route, segments) =>
+  segments.length === 1 && COMMUNITY_TABS.some((tab) => tab.id === segments[0].path);

@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { THEME_STORAGE_KEY, ThemeService } from '../../../core/theme/theme.service';
 import { CircuitGrid } from './circuit-grid';
 import { PulseBannerComponent } from './pulse-banner.component';
+import { waitUntil } from '../../../testing/wait-until';
 
 describe('PulseBannerComponent', () => {
   let fixture: ComponentFixture<PulseBannerComponent>;
@@ -28,6 +29,11 @@ describe('PulseBannerComponent', () => {
   function settle(): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 100));
   }
+
+  // The layout specs size the box that holds the banner, which is the page's body: put it back.
+  let bodyStyle = '';
+  beforeEach(() => (bodyStyle = document.body.style.cssText));
+  afterEach(() => (document.body.style.cssText = bodyStyle));
 
   beforeEach(() => {
     setPlayback = spyOn(CircuitGrid.prototype, 'setPlayback');
@@ -115,7 +121,9 @@ describe('PulseBannerComponent', () => {
   describe('motion', () => {
     it('plays once it is on screen, and holds when the tab is hidden', async () => {
       create();
-      await settle();
+      // Pin it inside the viewport, wherever earlier specs left the runner's page scrolled.
+      (fixture.nativeElement as HTMLElement).style.cssText = 'position: fixed; top: 0; left: 0; width: 600px';
+      await waitUntil(() => setPlayback.calls.allArgs().some(([state]) => state === 'playing'), 'the banner plays');
 
       expect(setPlayback).toHaveBeenCalledWith('playing');
 
