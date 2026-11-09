@@ -2,7 +2,7 @@ name: Record Tony's answer
 
 # Tony answers a Needs Tony item by commenting on its issue. This swaps `needs-tony` for
 # `tony-answered` and reacts to the comment, so the card leaves the Needs Tony column and the
-# coordinator can find the answered item. It never merges, pushes or runs anything from the
+# team lead can find the answered item. It never merges, pushes or runs anything from the
 # comment: the text is matched against fixed words by scripts/tony-answer.mjs and is passed
 # in the event file, never interpolated into a command.
 # See docs/agent-workflows/tony-answers.md.

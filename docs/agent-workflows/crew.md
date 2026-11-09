@@ -9,7 +9,7 @@ himself, unsigned, and that is how his words are told apart.
 
 | Role | Names |
 | --- | --- |
-| Team lead (the session that orchestrates the others) | Polaris |
+| Team lead, one per repository ([team-leads.md](team-leads.md)) | Capella (this repository), Polaris (the overlay `rivals_pulse`) |
 | Developer, this repository (one name per concurrent-job slot) | Altair, Deneb, Sirius |
 | Developer, the overlay repository `rivals_pulse` | Vega, Rigel, Lyra |
 | QA reviewer | Argus |

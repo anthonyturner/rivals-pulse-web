@@ -40,7 +40,8 @@ agent tool. The adapters are entry points, not separate pipeline definitions.
 5. **QA Reviewer** performs read-only acceptance-criteria and pull-request
    review. Follow [qa-review.md](qa-review.md).
 
-Whoever starts an agent, a session or the team lead, names it in the agent's
+Whoever starts an agent, a session or the repository's team lead
+([team-leads.md](team-leads.md)), names it in the agent's
 prompt from the roster in [crew.md](crew.md), and the agent signs everything it
 writes with that name.
 
@@ -197,7 +198,7 @@ label is added, so the comment is what notifies the maintainer, and it only
 counts once the label is already on.
 
 The maintainer answers in a comment on the issue. A workflow then swaps
-`needs-tony` for `tony-answered`, and a coordinator picks the answer up, acts
+`needs-tony` for `tony-answered`, and a team lead picks the answer up, acts
 on it and removes `tony-answered`; all of it is in
 [tony-answers.md](tony-answers.md). Agents post as the maintainer's own
 account, so his answer cannot be picked out by its author. Anyone resuming an
