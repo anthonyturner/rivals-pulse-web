@@ -116,14 +116,22 @@ function findBoard() {
 }
 
 /**
+ * The configuration that appends `added` to the field. GitHub replaces the whole list,
+ * so every existing iteration, completed ones included, goes back with its id.
+ */
+export function iterationConfiguration(existing, added) {
+  const iterations = [...existing, ...added]
+    .sort((a, b) => a.startDate.localeCompare(b.startDate))
+    .map(({ id, title, startDate, duration }) => (id ? { id, title, startDate, duration } : { title, startDate, duration }));
+  return { startDate: iterations[0].startDate, duration: ITERATION_DAYS, iterations };
+}
+
+/**
  * Appends iterations to the field. Every existing iteration is sent back with its id,
  * which keeps its id and the items already in it; without the ids GitHub would
  * recreate every iteration and clear all item values.
  */
 function extendIterations(board, added) {
-  const iterations = [...board.iterations, ...added].map(({ id, title, startDate, duration }) =>
-    id ? { id, title, startDate, duration } : { title, startDate, duration },
-  );
   const field = graphql(
     `mutation($field: ID!, $configuration: ProjectV2IterationFieldConfigurationInput!) {
       updateProjectV2Field(input: { fieldId: $field, iterationConfiguration: $configuration }) {
@@ -133,10 +141,7 @@ function extendIterations(board, added) {
         } } }
       }
     }`,
-    {
-      field: board.iterationFieldId,
-      configuration: { startDate: iterations[0].startDate, duration: ITERATION_DAYS, iterations },
-    },
+    { field: board.iterationFieldId, configuration: iterationConfiguration(board.iterations, added) },
   ).updateProjectV2Field.projectV2Field.configuration;
   const kept = [...field.completedIterations, ...field.iterations];
   const lost = board.iterations.filter((iteration) => !kept.some((k) => k.id === iteration.id));
@@ -234,6 +239,6 @@ function sync({ apply, today = new Date().toISOString().slice(0, 10) }) {
   console.log(`${apply ? 'Applied' : 'Dry run:'} ${changes} change(s)`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   sync({ apply: process.argv.includes('--apply') });
 }

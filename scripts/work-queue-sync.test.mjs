@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { desiredStatus, iterationOn, missingIterations, workStartedOn } from './work-queue-sync.mjs';
+import { desiredStatus, iterationConfiguration, iterationOn, missingIterations, workStartedOn } from './work-queue-sync.mjs';
 
 const issue = ({ labels = [], pullRequests = [] } = {}) => ({
   labels: { nodes: labels.map((name) => ({ name })) },
@@ -61,4 +61,14 @@ test('missing weeks are appended so the current and next week exist', () => {
     missingIterations(weeks, '2026-12-01').map((iteration) => iteration.title),
     ['Week of Nov 23', 'Week of Nov 30', 'Week of Dec 7'],
   );
+});
+
+test('extending sends every existing iteration back with its id, completed ones included', () => {
+  const completed = { id: 'old', title: 'Week of Nov 2', startDate: '2026-11-02', duration: 7 };
+  const added = { title: 'Week of Nov 23', startDate: '2026-11-23', duration: 7 };
+  assert.deepEqual(iterationConfiguration([...weeks, completed], [added]), {
+    startDate: '2026-11-02',
+    duration: 7,
+    iterations: [completed, ...weeks, added],
+  });
 });

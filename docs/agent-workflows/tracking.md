@@ -41,6 +41,9 @@ Queue board's Status column is computed from these; see below.
 | QA review | Review posted as a PR comment; findings fixed |
 | Squash merge | Issue closed by `Closes #n` |
 
+**No agent closes an issue by hand.** Completion follows a merge. An agent that
+closes an issue is asserting a result no merge has recorded.
+
 ### The Work Queue board is a computed view
 
 Open issues from this repository and `anthonyturner/rivals_pulse` appear on the
@@ -60,7 +63,8 @@ ten minutes and on issue events. The first rule that matches wins:
 
 The **Iteration** field is derived too, and feeds the board's weekly "Current
 iteration" view of what agents started. An issue's iteration is the week that
-holds the creation date of its earliest open or merged closing pull request. It
+holds the creation date (in UTC) of its earliest open or merged closing pull
+request. It
 stays empty when that date falls before the field's first iteration, and once
 set it never changes, so an issue stays in the week its work started. The sync
 adds a 7-day "Week of <Mon d>" iteration whenever the current or the next week
@@ -79,8 +83,6 @@ When work cannot go on without a decision only the maintainer can make, add the
 question and your recommended answer. The question is always the latest comment,
 and the card moves to Needs Tony. Remove the label once the answer is in.
 
-**No agent closes an issue by hand.** Completion follows a merge. An agent that
-closes an issue is asserting a result no merge has recorded.
 
 ## Labels
 
