@@ -12,6 +12,7 @@ import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
+import { SLACK_ANSWER_MARKER_PATTERN } from '../src/server/slack-answer/answer-comment.ts';
 
 const run = promisify(execFile);
 
@@ -20,9 +21,6 @@ export const TONY_ANSWERED = 'tony-answered';
 
 /** Agents act as the maintainer's own GitHub account, so the author cannot tell Tony from an agent. Agents sign their comments instead. */
 export const AGENT_MARKER = '<!-- agent -->';
-/** The Slack route (api/slack-answer.ts) signs the comment it posts for Tony, so the audit trail shows where the answer came from. */
-export const SLACK_MARKER = '<!-- tony-answer:slack -->';
-
 const AGENT_SIGNATURES = [/<!--\s*agent\s*-->/i, /^\s*waiting on tony:/i, /generated with \[claude code\]/i];
 
 const APPROVE_WORDS = new Set(['approve', 'approved', 'merge', 'yes', 'lgtm', 'ship']);
@@ -36,7 +34,7 @@ export function isAgentComment(body) {
 
 /** What Tony wrote, without the signed footer the Slack route adds and without hidden comments. */
 export function visibleAnswer(body) {
-  const beforeSlackFooter = (body ?? '').split(SLACK_MARKER)[0];
+  const beforeSlackFooter = (body ?? '').split(SLACK_ANSWER_MARKER_PATTERN)[0];
 
   return beforeSlackFooter.replace(/<!--[\s\S]*?-->/g, '').trim();
 }

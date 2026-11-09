@@ -30,6 +30,9 @@ GET /api/account/dashboard
 GET /api/admin/me
 GET /api/admin/data-jobs
 POST /api/admin/data-jobs-run
+POST /api/slack/events
+
+`POST /api/slack/events` is the Slack Events API endpoint that lets Tony answer a Needs Tony item from Slack (not a site route; Slack calls it). Every request must carry a Slack signature (`X-Slack-Signature` and `X-Slack-Request-Timestamp`, made with `SLACK_SIGNING_SECRET`, at most five minutes old) over the exact body; otherwise it answers 401, and 503 while the setting is missing. It echoes a signed `url_verification` challenge. A signed `message` event posts a comment on a GitHub issue only when it is a plain thread reply from `SLACK_TONY_USER_ID` in `SLACK_NEEDS_TONY_CHANNEL_ID` under a message that links an open `needs-tony` issue; the answer is `{ "outcome": "posted" | "duplicate" | "ignored" | "unanswerable" }`, never his text, and 502 when GitHub or Slack failed (Slack then delivers it again; a retry never posts twice). Never cached. See [agent-workflows/tony-answers.md](agent-workflows/tony-answers.md).
 
 Static reference data for other tools is published separately as Pulse Atlas; see [pulse-atlas.md](pulse-atlas.md).
 
