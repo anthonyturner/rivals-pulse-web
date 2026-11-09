@@ -35,6 +35,10 @@ function gateway(isAdmin: () => Promise<boolean>, calls: string[] = []): AuthGat
     linkedPlayer: unused,
     redeemLinkCode: unused,
     unlinkPlayer: unused,
+    readRecordsOptIn: unused,
+    setRecordsOptIn: unused,
+    readMediaDefaults: unused,
+    setMediaDefaults: unused,
     readOwnDashboard: unused,
     isAdmin: async () => {
       calls.push('isAdmin');

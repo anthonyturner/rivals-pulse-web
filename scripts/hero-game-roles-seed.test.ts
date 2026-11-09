@@ -20,6 +20,20 @@ interface RoleRow {
   role: string;
 }
 
+type HeroGameIds = (typeof heroGameIds)[number];
+
+/** The role-specific game ids of a hero the game splits by role, and none for any other hero. */
+function variantsOf(entry: HeroGameIds): { gameId: number; role: string }[] {
+  return 'gameIdVariants' in entry ? (entry.gameIdVariants ?? []) : [];
+}
+
+/** Every game id the hero answers to: its role forms when it has them, otherwise its own id. */
+function gameIdsOf(entry: HeroGameIds): number[] {
+  const variants = variantsOf(entry);
+
+  return variants.length > 0 ? variants.map((variant) => variant.gameId) : [entry.gameId];
+}
+
 function seededRoles(): Map<number, RoleRow> {
   const roles = new Map<number, RoleRow>();
 
@@ -41,27 +55,21 @@ describe('hero_game_roles as the migrations seed it', () => {
 
   it('has a row for every game hero id in hero-game-ids.json, under the right base id', () => {
     for (const entry of heroGameIds) {
-      const ids = 'gameIdVariants' in entry ? entry.gameIdVariants.map((variant) => variant.gameId) : [entry.gameId];
-
-      for (const gameId of ids) {
+      for (const gameId of gameIdsOf(entry)) {
         assert.equal(roles.get(gameId)?.baseGameId, entry.gameId, `${entry.id} ${gameId}`);
       }
     }
   });
 
   it('has no row for a base id the game splits by role, or for any id that belongs to no hero', () => {
-    const known = new Set(
-      heroGameIds.flatMap((entry) =>
-        'gameIdVariants' in entry ? entry.gameIdVariants.map((variant) => variant.gameId) : [entry.gameId],
-      ),
-    );
+    const known = new Set(heroGameIds.flatMap(gameIdsOf));
 
     assert.deepEqual([...roles.keys()].filter((gameId) => !known.has(gameId)), []);
   });
 
   it('gives a role form of a split hero the role the data says it has', () => {
     for (const entry of heroGameIds) {
-      for (const variant of 'gameIdVariants' in entry ? entry.gameIdVariants : []) {
+      for (const variant of variantsOf(entry)) {
         assert.equal(roles.get(variant.gameId)?.role, variant.role, `${entry.id} ${variant.gameId}`);
       }
     }
@@ -72,8 +80,8 @@ describe('hero_game_roles as the migrations seed it', () => {
     const expected = heroGameIds
       .filter((entry) => tagged.has(entry.id))
       .flatMap((entry) =>
-        'gameIdVariants' in entry
-          ? entry.gameIdVariants.filter((variant) => variant.role === 'Strategist').map((variant) => variant.gameId)
+        variantsOf(entry).length > 0
+          ? variantsOf(entry).filter((variant) => variant.role === 'Strategist').map((variant) => variant.gameId)
           : [entry.gameId],
       );
     const seeded = [...roles].filter(([, row]) => row.role === 'Strategist').map(([gameId]) => gameId);
