@@ -34,3 +34,9 @@ verify_jwt = false
 
 [functions.unlink-player-app]
 verify_jwt = false
+
+[functions.read-match-history]
+verify_jwt = false
+
+[functions.read-player-scoreboard]
+verify_jwt = false

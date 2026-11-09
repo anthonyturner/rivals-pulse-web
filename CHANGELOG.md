@@ -8,6 +8,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Security
+
+- The desktop app can now read its own match history, and a looked-up player's kills, deaths and assists, through the player's verified Overwolf sign-in instead of the public key built into the app. Released app versions still read with that key, which lets anyone who takes it out of the app read every uploaded match history; the privacy page now says so, and that read is removed once the app versions in use have moved. It needs `supabase db push` and a deploy of the two new functions ([#688](https://github.com/anthonyturner/rivals-pulse-web/pull/688)).
+
 ### Added
 
 - The head-to-head on a hero page's Matchups tab now shows each hero's KDA and final hits per match while facing the other hero, beside its all-matches figures, so you can see how a hero actually plays against a specific enemy. A figure that was not recorded shows as not recorded or is left out, never as zero; half-seasons counted before this change have no such figures ([#674](https://github.com/anthonyturner/rivals-pulse-web/pull/674)).

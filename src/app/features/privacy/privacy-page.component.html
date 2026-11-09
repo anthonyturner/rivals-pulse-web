@@ -91,6 +91,14 @@
       time limit; it is capped per player (currently the most recent 5,000 matches).
     </p>
     <p>
+      Desktop app versions released so far read match histories with the public key built into
+      the app, so anyone who takes that key out of the app can read every uploaded match history
+      and the names stored with it. We are moving those reads behind the player's own Overwolf
+      sign-in, which our server checks: the app will then read only the matches that player
+      uploaded, plus the kills, deaths and assists of a player it looks up. Once the app versions
+      in use have moved, the public key will no longer read match histories.
+    </p>
+    <p>
       Names and player ids are stored so that players can be looked up inside the desktop app.
       This website never publishes a player id. It publishes an in-game name only on
       <a routerLink="." fragment="pulse-records">Pulse Records</a>, and only for a player who

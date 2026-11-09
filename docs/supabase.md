@@ -112,6 +112,7 @@ repo's build. This is a move, not a redesign.
 | `20261108200000_hero_timeline_recorder.sql` | `match_hero_timelines.recorded_by` (nullable, the keyed recorder hash, closed to `anon` and `authenticated` like the rest of the table), `record_match_hero_timelines` replaced by a four argument version whose `p_recorded_by` defaults to null, and `fill_hero_switch_in_aggregates` restated to count players from the timeline uploader. The purge is not touched |
 | `20261108210000_hero_matchup_encounter_figures.sql` | `hero_matchups` also stores the kills, deaths, assists and final hits (a sum and a count each) of a matchup's decided lines, null for a half-season frozen before it; `fill_hero_aggregates` and `read_hero_matchups` return them |
 | `20261108220000_hero_switch_in_hero_forms.sql` | `fill_hero_switch_in_aggregates` restated to read every hero id as its base id from `hero_game_roles`, so Deadpool's role forms are one hero (1057): a change of form is no switch, and a match is counted once however many forms it switches to (issue 667). Same signature, grants and everything else |
+| `20261109000000_verified_match_history_reads.sql` | `read_own_tracked_matches` and `read_player_scoreboard_lines` (service role only, keyed on the verified recorder, rate limited as `history` and `scoreboard`), the `link_attempt_log` kinds for them, and an index on `tracked_match_recorders (recorded_by, recorded_at desc)`. Additive: the `anon` select on `players`, `player_matches` and `tracked_matches` stays until shipped overlays use the new reads (issue 189) |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -259,6 +260,7 @@ The Game Stats page's Steam player counts moved from Turso in issue 109.
 | `issue-link-code` | yes, needs the secrets below |
 | `refresh-linked-player` | yes, needs the secrets below |
 | `link-status`, `unlink-player-app` | yes, need the secrets below |
+| `read-match-history`, `read-player-scoreboard` | not yet; deploy with the secrets below (issue 189) |
 
 The live deployments can be older than the source here. Check
 `npx supabase functions list` before assuming they match.
@@ -290,8 +292,8 @@ Set with `npx supabase secrets set NAME=value`. Names only here.
 | Secret | Used by | Note |
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | all | Supplied by Supabase itself |
-| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token`, `issue-link-code`, `refresh-linked-player`, `link-status`, `unlink-player-app` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
-| `RECORDER_ID_SECRET` | `track-match-history`, `issue-link-code`, `refresh-linked-player`, `link-status`, `unlink-player-app` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. **Rotating it breaks every account link**: `player_links.recorder_id` holds the old hash, so no new code (made with the new key) can match it, and every linked player has to link again; it also resets everyone's rate-limit history and detaches the `recorded_by` already stored on matches. Do not rotate it without a plan for both. |
+| `OVERWOLF_EXTENSION_ID` | `track-match-history`, `elevenlabs-agent-token`, `issue-link-code`, `refresh-linked-player`, `link-status`, `unlink-player-app`, `read-match-history`, `read-player-scoreboard` | The overlay's Overwolf extension id (the long id in its `overwolf-extension://<id>/` window URLs). A packed store build and an unpacked dev build differ. |
+| `RECORDER_ID_SECRET` | `track-match-history`, `issue-link-code`, `refresh-linked-player`, `link-status`, `unlink-player-app`, `read-match-history`, `read-player-scoreboard` | Random 32+ bytes (`openssl rand -hex 32`). Keys the hash that replaces the Overwolf username. **Rotating it breaks every account link**: `player_links.recorder_id` holds the old hash, so no new code (made with the new key) can match it, and every linked player has to link again; it also resets everyone's rate-limit history and detaches the `recorded_by` already stored on matches. Do not rotate it without a plan for both. |
 | `ELEVENLABS_MAIN_API_KEY`, `ELEVENLABS_AGENT_ID` | `elevenlabs-agent-token` | See that function's header |
 | `TEBEX_STORE_PUBLIC_TOKEN` | `elevenlabs-agent-token` | The Tebex store's public token. The premium gate switch, which also needs `OVERWOLF_EXTENSION_ID` on this function: unset or empty and the function mints tokens for anyone; set and every caller needs a verified Overwolf session and a paid plan (401, 403 `premium-required`, 503 when Overwolf is down). |
 | `HERO_STATS_SYNC_COOLDOWN_SECONDS`, `MATCH_HISTORY_SYNC_COOLDOWN_SECONDS` | `sync-hero-stats`, `sync-match-history` | Optional. Seconds before the same player can be synced again. |
@@ -1124,6 +1126,31 @@ action, never a broad table grant.
 - Deploy order: the migrations by hand, then `npx supabase functions deploy refresh-linked-player link-status
   unlink-player-app`. `issue-link-code` now runs on the same shared module, so redeploy it too. The secrets are the
   ones it already uses.
+
+### Verified match history reads (issue 189)
+
+`players`, `player_matches` and `tracked_matches` grant `select` to `anon` with `using (true)`, and the
+publishable key ships inside the desktop app, so anyone holding it can list every uploader's name and match
+history. Shipped overlays read their Match history and player details that way, so the grant cannot be dropped
+until the overlays in use read through these two functions instead:
+
+- `read-match-history`: `POST` with `{ "after": "<ISO time>" }` or no body. It calls `read_own_tracked_matches`,
+  which returns the matches whose `tracked_match_recorders.recorded_by` is the verified session's recorder,
+  newest written first, at most 500, only those written after `after` when given. Answers
+  `200 { "matches": [{ matchUid, playedAt, recordedAt, rawPayload, performance }] }`, `400` for an `after` that
+  is not a time, and `429` past 120 calls an hour. A name in the body is ignored: the recorder alone decides
+  whose history is read. Matches uploaded before the recorder table existed (issue 328) have no recorder row and
+  are not returned; the app already holds them locally.
+- `read-player-scoreboard`: `POST` with `{ "playerUid": "..." }`. It calls `read_player_scoreboard_lines`, which
+  returns that player's kills, deaths and assists per match, from the uploader's own line and from any upload's
+  scoreboard listing the uid (as text, or as the same safe integer an older upload stored), at most 500, newest
+  played first. Answers `200 { "lines": [{ matchUid, kills, deaths, assists }], "limited": bool }`, `400` for a
+  missing uid, and `429` past 240 calls an hour. No name, uploader or other player's line leaves.
+- `supabase/checks/verified_match_history_reads.sql` proves the rules against the linked project and rolls back.
+  Run it after `db push`.
+- Deploy order: the migration by hand, then `npx supabase functions deploy read-match-history
+  read-player-scoreboard`. The secrets are the ones `link-status` already uses.
+- Dropping the `anon` select is a separate, later migration, taken once the overlays in use call these functions.
 
 ### The site administrator role (issue 290)
 
