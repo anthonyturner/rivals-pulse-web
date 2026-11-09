@@ -63,8 +63,7 @@ ten minutes and on issue events. The first rule that matches wins:
 
 The **Iteration** field is derived too, and feeds the board's weekly "Current
 iteration" view of what agents started. An issue's iteration is the week that
-holds the creation date (in UTC) of its earliest open or merged closing pull
-request. It
+holds the creation date (in UTC) of its earliest open or merged closing pull request. It
 stays empty when that date falls before the field's first iteration, and once
 set it never changes, so an issue stays in the week its work started. The sync
 adds a 7-day "Week of <Mon d>" iteration whenever the current or the next week
@@ -82,7 +81,6 @@ When work cannot go on without a decision only the maintainer can make, add the
 `needs-tony` label and post a comment on the issue (or its pull request) with the
 question and your recommended answer. The question is always the latest comment,
 and the card moves to Needs Tony. Remove the label once the answer is in.
-
 
 ## Labels
 

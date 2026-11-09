@@ -126,11 +126,7 @@ export function iterationConfiguration(existing, added) {
   return { startDate: iterations[0].startDate, duration: ITERATION_DAYS, iterations };
 }
 
-/**
- * Appends iterations to the field. Every existing iteration is sent back with its id,
- * which keeps its id and the items already in it; without the ids GitHub would
- * recreate every iteration and clear all item values.
- */
+/** Appends iterations to the field, and throws if GitHub dropped any existing one. */
 function extendIterations(board, added) {
   const field = graphql(
     `mutation($field: ID!, $configuration: ProjectV2IterationFieldConfigurationInput!) {

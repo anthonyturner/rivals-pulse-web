@@ -37,3 +37,7 @@ jobs:
         # Skipped rather than failed until the maintainer creates the secret.
         if: env.GH_TOKEN != ''
         run: node scripts/work-queue-sync.mjs --apply
+
+      - name: Explain the skipped sync
+        if: env.GH_TOKEN == ''
+        run: echo "::notice title=Work Queue sync skipped::The WORK_QUEUE_TOKEN secret is not set. Add a classic personal access token with the repo and project scopes to enable the sync."
