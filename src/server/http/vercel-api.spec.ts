@@ -45,21 +45,10 @@ describe('handleJsonRequest cache headers', () => {
     expect(sent.headers['cache-control']).toBe('public, s-maxage=60');
   });
 
-  it('chooses the cache header from the body', async () => {
-    const cacheControl = (body: Body) => (body.stored ? 'public, s-maxage=60' : NO_STORE_CACHE_CONTROL);
-
-    const stored = await answer('GET', () => ({ stored: true }), { cacheControl });
-    const unstored = await answer('GET', () => ({ stored: false }), { cacheControl });
-
-    expect(stored.headers['cache-control']).toBe('public, s-maxage=60');
-    expect(unstored.headers['cache-control']).toBe(NO_STORE_CACHE_CONTROL);
-    expect(JSON.parse(unstored.body)).toEqual({ stored: false });
-  });
-
   it('keeps the CORS headers beside a chosen cache header', async () => {
     const sent = await answer('GET', () => ({ stored: false }), {
       allowCors: true,
-      cacheControl: () => NO_STORE_CACHE_CONTROL,
+      cacheControl: NO_STORE_CACHE_CONTROL,
     });
 
     expect(sent.headers['Access-Control-Allow-Origin']).toBe('*');

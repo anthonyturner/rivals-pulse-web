@@ -3,7 +3,6 @@ export {
   finishSyncRun,
   getExternalSourcePayload,
   getStoredExternalSourcePayload,
-  recordSyncRun,
   saveExternalSource,
   startSyncRun,
 } from './sync-log.ts';

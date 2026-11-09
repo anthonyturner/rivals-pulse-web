@@ -27,7 +27,7 @@ describe('buildGameStatsView', () => {
     expect(view).toEqual(
       jasmine.objectContaining({
         status: 'ready',
-        meta: 'Counted from RivalsPulse overlay uploads since Sep 20, 2026',
+        meta: 'Counted from RivalsPulse overlay uploads',
         tiles: [
           { label: 'Matches seen', value: '1,234' },
           { label: 'Players seen', value: '56,789' },
@@ -50,6 +50,5 @@ describe('buildGameStatsView', () => {
     const view = buildGameStatsView({ ...COUNTS, since: null });
 
     expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual(['Matches seen', 'Players seen']);
-    expect(view.status === 'ready' && view.meta).toBe('Counted from RivalsPulse overlay uploads');
   });
 });

@@ -8,7 +8,7 @@ RivalsPulse is an Angular coaching companion for learning Marvel Rivals heroes, 
 - **Draft and matchup tools** - a six-player team builder with composition scoring, a two-way hero counter explorer, and hero build signals, mostly from matches recorded by RivalsPulse players.
 - **Current meta views** - a community tier list built from matches that Rivals Pulse players record, the matches and players the app has seen, and hero win rates counted from matches that Rivals Pulse players record.
 - **Structured coaching** - hero guides, beginner lessons, learning paths, positioning and cover guides, build theory, glossary terms, media tutorials, and a "watch next" quiz.
-- **Refreshable content** - Turso-backed hero, home, news, glossary, video, and game-stat data populated from official and community sources.
+- **Refreshable content** - Turso-backed hero, home, news, glossary, and video data populated from official and community sources, plus match and player counts from the app's own uploads.
 
 ## Explore the App
 

@@ -31,10 +31,6 @@ th:first-child {
   text-align: left;
 }
 
-thead th:first-child {
-  font-weight: 700;
-}
-
 app-state-panel,
 .card {
   border-radius: 12px;

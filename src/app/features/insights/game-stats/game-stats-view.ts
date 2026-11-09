@@ -47,7 +47,7 @@ export function buildGameStatsView(counts: GameCounts | null | undefined): GameS
 
   return {
     status: 'ready',
-    meta: since === null ? 'Counted from RivalsPulse overlay uploads' : `Counted from RivalsPulse overlay uploads since ${since}`,
+    meta: 'Counted from RivalsPulse overlay uploads',
     tiles: [
       { label: 'Matches seen', value: numbers.format(counts.matches) },
       { label: 'Players seen', value: numbers.format(counts.players) },

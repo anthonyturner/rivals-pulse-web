@@ -108,7 +108,7 @@ describe('GameStatsPageComponent', () => {
   it('names where the numbers come from and shows nothing from outside the app', async () => {
     const element = await open(live);
 
-    expect(text(element, '.meta')).toEqual(['Counted from RivalsPulse overlay uploads since Sep 20, 2026']);
+    expect(text(element, '.meta')).toEqual(['Counted from RivalsPulse overlay uploads']);
     expect(element.querySelector('a')).toBeNull();
     expect(element.textContent).not.toMatch(/steam|netease|wikipedia|milestone/i);
   });

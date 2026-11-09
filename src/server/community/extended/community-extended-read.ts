@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { aggregatePayloadReader } from '../aggregate-payload.ts';
 import {
   deriveCommunityFigures,
   type CommunityFiguresSource,
@@ -13,7 +12,7 @@ import type { CommunityKills } from '../../../contracts/community-kills.model.ts
 import type { CommunityHeroScores } from '../../../contracts/hero-scores.model.ts';
 import { buildHeroRoleByGameId, heroGameIdEntries, heroSlugByGameId, listHeroRoles } from '../../heroes/catalog/index.ts';
 import type { HalfSeasonStart } from '../../heroes/stats/hero-stats.ts';
-import { getSupabaseClient } from '../../supabase/index.ts';
+import { aggregatePayloadReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
 
 /**
  * The extended upload's numbers (damage, healing and damage blocked per minute, and the kill feed),
@@ -37,39 +36,10 @@ export interface CommunityFiguresReadOptions extends CommunityExtendedReadOption
 export const FIGURES_FUNCTION = 'read_community_hero_figures';
 export const KILL_FEED_FUNCTION = 'read_community_kill_feed';
 export const HERO_SCORES_FUNCTION = 'read_community_hero_scores';
-const READ_TIMEOUT_MS = 5000;
-
-// What Postgres and PostgREST answer when the migration has not been applied yet: PGRST202 is "no
-// such function in the schema cache", 42883 an undefined function and 42P01 an undefined table.
-const NOT_APPLIED_CODES: ReadonlySet<string> = new Set(['PGRST202', '42883', '42P01']);
 
 const NO_FIGURES: CommunityFiguresSource = { halfSeasons: [], figures: [] };
 const NO_KILLS: CommunityKillsSource = { halfSeasons: [], pairs: [] };
 const NO_HERO_SCORES: HeroScoresSource = { halfSeasons: [], figures: [], abilities: [] };
-
-/**
- * Calls one read function with the server's service-role client. Resolves to null while the
- * migration is not applied, which is the designed "not enough data yet" state; any other failure (a
- * refused key, a server error, a timeout) throws, so an outage is never hidden behind that state.
- */
-async function callReadFunction(client: SupabaseClient, functionName: string): Promise<unknown> {
-  const { data, error } = await client
-    .rpc(functionName)
-    .retry(false)
-    .abortSignal(AbortSignal.timeout(READ_TIMEOUT_MS));
-
-  if (error) {
-    if (error.code !== undefined && NOT_APPLIED_CODES.has(error.code)) {
-      console.warn(`${functionName} is not available yet: the extended aggregates are not applied.`);
-
-      return null;
-    }
-
-    throw new Error(`${functionName} failed${error.code ? ` (${error.code})` : ''}: ${error.message}`);
-  }
-
-  return data;
-}
 
 function halfSeasonsOf(reader: ReturnType<typeof aggregatePayloadReader>, payload: Record<string, unknown>): HalfSeasonStart[] {
   return reader.list(payload['half_seasons'], 'half_seasons').map((row) => ({
