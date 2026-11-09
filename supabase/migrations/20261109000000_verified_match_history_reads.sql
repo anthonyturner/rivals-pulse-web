@@ -34,7 +34,7 @@ set search_path = ''
 as $$
 declare
   wait integer := public.take_link_app_call('history', p_recorder_id, p_limit);
-  found jsonb;
+  answer_rows jsonb;
 begin
   if wait > 0 then
     return jsonb_build_object('status', 'rate_limited', 'retryAfter', wait);
@@ -47,7 +47,7 @@ begin
            'rawPayload', own.raw_payload,
            'performance', own.performance
          ) order by own.recorded_at desc), '[]'::jsonb)
-    into found
+    into answer_rows
   from (
     select tm.match_uid, tm.played_at, tm.recorded_at, tm.raw_payload, tm.performance
     from public.tracked_match_recorders r
@@ -58,7 +58,7 @@ begin
     limit least(greatest(coalesce(p_max, 0), 0), 200)
   ) own;
 
-  return jsonb_build_object('status', 'ok', 'matches', found);
+  return jsonb_build_object('status', 'ok', 'matches', answer_rows);
 end
 $$;
 
@@ -82,7 +82,7 @@ declare
   uid text := btrim(coalesce(p_player_uid, ''));
   numeric_uid jsonb;
   cap integer := least(greatest(coalesce(p_max, 0), 0), 200);
-  found jsonb;
+  answer_rows jsonb;
 begin
   if wait > 0 then
     return jsonb_build_object('status', 'rate_limited', 'retryAfter', wait);
@@ -91,8 +91,11 @@ begin
     return jsonb_build_object('status', 'ok', 'lines', '[]'::jsonb);
   end if;
   -- An older upload may store the uid as a number; never coerce a zero-prefixed or unsafe integer.
-  if uid ~ '^(0|[1-9][0-9]{0,15})$' and uid::numeric <= 9007199254740991 then
-    numeric_uid := to_jsonb(uid::bigint);
+  -- Nested, because SQL does not promise to test the pattern before the cast.
+  if uid ~ '^(0|[1-9][0-9]{0,15})$' then
+    if uid::bigint <= 9007199254740991 then
+      numeric_uid := to_jsonb(uid::bigint);
+    end if;
   end if;
 
   with own_lines as (
@@ -124,10 +127,10 @@ begin
            'deaths', picked.line -> 'deaths',
            'assists', picked.line -> 'assists'
          ) order by picked.played_at desc nulls last), '[]'::jsonb)
-    into found
+    into answer_rows
   from (select * from best order by played_at desc nulls last limit cap) picked;
 
-  return jsonb_build_object('status', 'ok', 'lines', found);
+  return jsonb_build_object('status', 'ok', 'lines', answer_rows);
 end
 $$;
 
