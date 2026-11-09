@@ -2,12 +2,15 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   MIN_REMAINING_POINTS,
+  agentFor,
+  agentNameIn,
   createCostMeter,
   desiredStatus,
   issueArgument,
   iterationConfiguration,
   iterationOn,
   missingIterations,
+  pullRequestsAwaitingComments,
   shouldStandDown,
   workStartedOn,
 } from './work-queue-sync.mjs';
@@ -108,4 +111,85 @@ test('--issue selects a single-issue sync and its absence a full sweep', () => {
   assert.equal(issueArgument(['node', 'sync.mjs', '--apply', '--issue', 'I_kwDOabc']), 'I_kwDOabc');
   assert.throws(() => issueArgument(['node', 'sync.mjs', '--issue']), /node id/);
   assert.throws(() => issueArgument(['node', 'sync.mjs', '--issue', '--apply']), /node id/);
+});
+
+test('the roster name is read from a named marker and capitalised', () => {
+  assert.equal(agentNameIn('<!-- agent: altair -->\n**Altair** · dev'), 'Altair');
+  assert.equal(agentNameIn('<!--agent:POLARIS-->'), 'Polaris');
+  assert.equal(agentNameIn('text above <!--   agent :  sirius   --> text below'), 'Sirius');
+});
+
+test('the unnamed marker, no marker and empty text name nobody', () => {
+  assert.equal(agentNameIn('<!-- agent -->\nWaiting on Tony: which one?'), null);
+  assert.equal(agentNameIn('<!-- agent: -->'), null);
+  assert.equal(agentNameIn('an agent: altair, in plain text'), null);
+  assert.equal(agentNameIn(''), null);
+  assert.equal(agentNameIn(null), null);
+});
+
+test('the last named marker in a text wins', () => {
+  assert.equal(agentNameIn('<!-- agent: vega -->\n...\n<!-- agent: rigel -->'), 'Rigel');
+});
+
+const comment = (body, createdAt) => ({ body, createdAt });
+const signedPr = ({ body = '', comments, state = 'OPEN', createdAt = '2026-11-09T00:00:00Z' } = {}) => ({
+  state,
+  isDraft: false,
+  createdAt,
+  body,
+  ...(comments ? { comments: { nodes: comments } } : {}),
+});
+const withComments = (comments, pullRequests = []) => ({
+  ...issue({ pullRequests }),
+  comments: { nodes: comments },
+});
+
+test('an open closing pull request body beats the issue comments', () => {
+  const found = withComments([comment('<!-- agent: argus -->', '2026-11-09T05:00:00Z')], [signedPr({ body: '<!-- agent: altair -->' })]);
+  assert.equal(agentFor(found), 'Altair');
+});
+
+test('pull request comments are read when its body names nobody, newest first', () => {
+  const pullRequest = signedPr({
+    body: '<!-- agent -->',
+    comments: [
+      comment('<!-- agent: deneb -->', '2026-11-09T01:00:00Z'),
+      comment('<!-- agent: argus -->', '2026-11-09T03:00:00Z'),
+      comment('Looks fine to me', '2026-11-09T04:00:00Z'),
+    ],
+  });
+  assert.equal(agentFor(withComments([comment('<!-- agent: orion -->', '2026-11-09T05:00:00Z')], [pullRequest])), 'Argus');
+});
+
+test('the newest named issue comment is used when no open pull request names an agent', () => {
+  const comments = [
+    comment('<!-- agent: atlas -->', '2026-11-08T00:00:00Z'),
+    comment('<!-- agent: orion -->', '2026-11-08T06:00:00Z'),
+    comment('<!-- agent -->\nWaiting on Tony: pick one', '2026-11-08T07:00:00Z'),
+    comment('Tony: go with the first', '2026-11-08T08:00:00Z'),
+  ];
+  assert.equal(agentFor(withComments(comments)), 'Orion');
+  assert.equal(agentFor(withComments(comments, [signedPr({ body: 'no signature', comments: [] })])), 'Orion');
+});
+
+test('closed and merged pull requests are ignored, and the newest open one is asked first', () => {
+  const pullRequests = [
+    signedPr({ body: '<!-- agent: lyra -->', state: 'MERGED' }),
+    signedPr({ body: '<!-- agent: vega -->', createdAt: '2026-11-08T00:00:00Z' }),
+    signedPr({ body: '<!-- agent: rigel -->', createdAt: '2026-11-09T00:00:00Z' }),
+  ];
+  assert.equal(agentFor(withComments([], pullRequests)), 'Rigel');
+});
+
+test('an issue nobody signed has no agent', () => {
+  assert.equal(agentFor(withComments([comment('<!-- agent -->', '2026-11-08T00:00:00Z'), comment('plain', '2026-11-08T01:00:00Z')])), null);
+  assert.equal(agentFor(issue()), null);
+});
+
+test('pull request comments are fetched only for open pull requests whose body names nobody and that have none loaded', () => {
+  const unsigned = signedPr({ body: 'no signature' });
+  const signed = signedPr({ body: '<!-- agent: altair -->' });
+  const loaded = signedPr({ body: '<!-- agent -->', comments: [] });
+  const merged = signedPr({ body: 'no signature', state: 'MERGED' });
+  assert.deepEqual(pullRequestsAwaitingComments(issue({ pullRequests: [unsigned, signed, loaded, merged] })), [unsigned]);
 });
