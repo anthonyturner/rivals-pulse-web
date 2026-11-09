@@ -195,4 +195,138 @@ describe('CircuitGrid', () => {
       expect(window.requestAnimationFrame).not.toHaveBeenCalled();
     });
   });
+
+  describe('the pointer', () => {
+    function alphaAt(x: number, y: number): number {
+      return canvas.getContext('2d')?.getImageData(x, y, 1, 1).data[3] ?? 0;
+    }
+
+    function firstPulse(): { dx: number; dy: number } {
+      return (grid as unknown as { pulses: { dx: number; dy: number }[] }).pulses[0];
+    }
+
+    it('lights the grid lines around it while the grid plays, and no others', () => {
+      grid.setPlayback('playing');
+      grid.setPointer({ x: 48, y: 40 });
+      runFor(16);
+
+      expect(alphaAt(48, 30)).withContext('a line beside the pointer').toBeGreaterThan(alphaAt(432, 30) + 30);
+    });
+
+    it('turns a pulse that comes within its reach toward it', () => {
+      grid.setPlayback('playing');
+      grid.setPointer({ x: 264, y: 110 });
+      runFor(160);
+
+      expect([firstPulse().dx, firstPulse().dy]).toEqual([0, 1]);
+    });
+
+    it('leaves a pulse going straight without it', () => {
+      grid.setPlayback('playing');
+      runFor(160);
+
+      expect([firstPulse().dx, firstPulse().dy]).toEqual([1, 0]);
+    });
+
+    it('leaves a pulse out of its reach alone', () => {
+      grid.setPlayback('playing');
+      grid.setPointer({ x: 264, y: 128 + 400 });
+      runFor(160);
+
+      expect([firstPulse().dx, firstPulse().dy]).toEqual([1, 0]);
+    });
+
+    it('is ignored while the grid is paused or still', () => {
+      for (const playback of ['paused', 'still'] as const) {
+        grid.setPlayback(playback);
+        grid.setPointer({ x: 48, y: 40 });
+        grid.resize(480, 128, 1);
+
+        expect(alphaAt(48, 30)).withContext(playback).toBe(alphaAt(432, 30));
+      }
+    });
+
+    it('goes when the grid pauses, and is not back when it plays again', () => {
+      grid.setPlayback('playing');
+      grid.setPointer({ x: 48, y: 40 });
+      grid.setPlayback('paused');
+      grid.setPlayback('playing');
+      runFor(16);
+
+      expect(alphaAt(48, 30)).toBe(alphaAt(432, 30));
+    });
+  });
+
+  describe('the shockwave', () => {
+    const loopMs = 2800;
+    let positionMs: number;
+
+    beforeEach(() => {
+      positionMs = 1000;
+      grid.setClash({ clock: { read: () => ({ loopMs, positionMs }) }, origin: () => [240, 72] });
+    });
+
+    it('leaves the collision when the loop passes it', () => {
+      grid.setPlayback('playing');
+      runFor(16);
+      expect(grid.activeShockwaves).toBe(0);
+
+      positionMs = 1600;
+      runFor(16);
+
+      expect(grid.activeShockwaves).toBe(1);
+    });
+
+    it('waits for the collision: none before the loop reaches it', () => {
+      grid.setPlayback('playing');
+      runFor(16);
+
+      positionMs = 1500;
+      runFor(16);
+
+      expect(grid.activeShockwaves).toBe(0);
+    });
+
+    it('comes again on every loop', () => {
+      grid.setPlayback('playing');
+      runFor(16);
+
+      positionMs = 1600;
+      runFor(16);
+      positionMs = 2800 + 1000;
+      runFor(1_300);
+      expect(grid.activeShockwaves).toBe(0);
+      positionMs = 2800 + 1600;
+      runFor(16);
+
+      expect(grid.activeShockwaves).toBe(1);
+    });
+
+    it('runs out after about a second', () => {
+      grid.setPlayback('playing');
+      runFor(16);
+      positionMs = 1600;
+      runFor(16);
+
+      runFor(1_200);
+
+      expect(grid.activeShockwaves).toBe(0);
+    });
+
+    it('is not sent while the grid is paused, and is gone in reduced motion', () => {
+      grid.setPlayback('paused');
+      positionMs = 1600;
+      runFor(160);
+      expect(grid.activeShockwaves).toBe(0);
+
+      grid.setPlayback('playing');
+      runFor(16);
+      positionMs = 2800 + 1600;
+      runFor(16);
+      expect(grid.activeShockwaves).toBe(1);
+
+      grid.setPlayback('still');
+      expect(grid.activeShockwaves).toBe(0);
+    });
+  });
 });

@@ -96,7 +96,8 @@
 .home-page-video-control,
 .home-page-video-tab,
 .home-page-video-toggle,
-.home-page-sound-toggle {
+.home-page-sound-toggle,
+.home-page-pulse-sound-toggle {
   border: 1px solid var(--ink-control-border);
   border-radius: 999px;
   background: color-mix(in srgb, var(--ink) 74%, transparent);
@@ -156,11 +157,15 @@
   top: 24px;
   right: 32px;
   display: flex;
+  max-width: calc(100% - 64px);
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
 .home-page-video-toggle,
-.home-page-sound-toggle {
+.home-page-sound-toggle,
+.home-page-pulse-sound-toggle {
   min-height: 40px;
   padding: 0 14px;
 }
@@ -169,7 +174,8 @@
 .home-page-video-control:hover,
 .home-page-video-tab:hover,
 .home-page-video-toggle:hover,
-.home-page-sound-toggle:hover {
+.home-page-sound-toggle:hover,
+.home-page-pulse-sound-toggle:hover {
   border-color: var(--ink-accent);
   background: color-mix(in srgb, var(--ink) 94%, transparent);
 }
@@ -178,7 +184,8 @@
 .home-page-video-control:focus-visible,
 .home-page-video-tab:focus-visible,
 .home-page-video-toggle:focus-visible,
-.home-page-sound-toggle:focus-visible {
+.home-page-sound-toggle:focus-visible,
+.home-page-pulse-sound-toggle:focus-visible {
   outline: 3px solid var(--ink-focus);
   outline-offset: 3px;
 }
