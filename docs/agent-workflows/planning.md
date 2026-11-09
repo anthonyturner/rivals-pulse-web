@@ -78,6 +78,10 @@ the Product Manager to:
 
 Stop and report if no issue number comes back.
 
+A question only the maintainer can answer, raised by any stage, goes to the
+`needs-tony` inbox, not into a chat: see **Questions for the maintainer** in
+[pipeline.md](pipeline.md). File the issue with the label if none exists yet.
+
 **4. UX Design — when the threshold is met.** Evaluate the threshold in
 [ux-design.md](ux-design.md). Give it the issue and the relevant repository
 context. It returns a design handoff with a text wireframe. Skip it for

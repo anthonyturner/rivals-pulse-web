@@ -72,7 +72,12 @@ optional.
     ones forbidden by rules 3, 12 and 13 above, or when a wrong guess would
     make the whole change useless. An open question that a wrong answer would
     make expensive to revert is a reason to leave the pull request unmerged and
-    say so, not a reason to guess and merge.
+    say so, not a reason to guess and merge. A question that waits on the
+    maintainer goes to the `needs-tony` inbox, never only into a chat, per
+    **Questions for the maintainer** in
+    [agent-workflows/pipeline.md](agent-workflows/pipeline.md). The one
+    exception is a clarifying question to a requester who is in the
+    conversation right now.
 15. Write a comment only for a fact the code cannot show on its own — an
     outside constraint, a deliberately non-obvious choice, a safety margin and
     what it guards. Do not restate the code, and do not narrate the file's
