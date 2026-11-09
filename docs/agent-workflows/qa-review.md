@@ -28,16 +28,20 @@ and file and line references kept as evidence.
    non-blocking suggestions and manual-verification items.
 6. Give a verdict: **approve** only when no blocking finding remains and
    automated evidence is sufficient; otherwise **request changes**.
-7. Report **escalation signals** when they occur, as defined in
+7. A finding that only the maintainer can decide goes to the `needs-tony`
+   inbox on the issue the pull request closes, per **Questions for the
+   maintainer** in [pipeline.md](pipeline.md), and the pull request stays
+   unmerged.
+8. Report **escalation signals** when they occur, as defined in
    [refinement.md](refinement.md): you could not reach a verdict from the
    available evidence, the change is correct in a way you cannot explain, or
    the diff is large enough that you are confident about some files and not
    others. Name the files you are not confident about. "I reviewed it and it
    looks fine" over a diff you could not fully hold is the failure to avoid.
-8. Verify the tracking linkage itself: the body carries `Closes #<n>`, and
+9. Verify the tracking linkage itself: the body carries `Closes #<n>`, and
    the branch is named `<type>/<issue-number>-<short-description>`. A missing
    link is a real finding — without it the merge leaves the issue open.
-9. Post the review on the pull request as a comment (`gh pr review <n>
+10. Post the review on the pull request as a comment (`gh pr review <n>
    --comment` or `gh pr comment <n>`). GitHub does not let an account approve
    its own pull request, so the verdict is stated in the comment rather than
    submitted as an approval. Never close the issue — a review verdict is not a
