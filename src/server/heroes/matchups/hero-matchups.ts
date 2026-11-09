@@ -7,6 +7,7 @@ import {
   tallyFinalHitsAverage,
   tallyKda,
   type HalfSeasonStart,
+  type TallyFigures,
 } from '../stats/hero-stats.ts';
 
 /**
@@ -31,16 +32,7 @@ export const HERO_MATCHUP_PLAY_MODE_IDS: readonly number[] = BLENDED_PLAY_MODE_I
  * The scoreboard figures of a matchup's decided lines, as sums and the counts of lines that recorded
  * each, so rows add up before anything is divided.
  */
-export interface HeroMatchupFigures {
-  killsSum: number;
-  killsN: number;
-  deathsSum: number;
-  deathsN: number;
-  assistsSum: number;
-  assistsN: number;
-  finalHitsSum: number;
-  finalHitsN: number;
-}
+export type HeroMatchupFigures = TallyFigures;
 
 /** One hero against one enemy hero in one half-season, summed over the modes asked for. */
 export interface HeroMatchupRow {
