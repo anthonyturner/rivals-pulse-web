@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { slackAnswerComment } from '../src/server/slack-answer/answer-comment.ts';
 import {
   AGENT_MARKER,
+  AGENT_MARKER_PATTERN,
   answerKind,
   decide,
   isAgentComment,
@@ -91,6 +92,33 @@ test('the Slack footer and hidden comments do not change what the answer says', 
 test('isAgentComment tolerates a missing body', () => {
   assert.equal(isAgentComment(undefined), false);
   assert.equal(isAgentComment('<!--agent-->'), true);
+});
+
+test('the agent marker matches the bare and the named form, in any case and spacing', () => {
+  for (const marker of [
+    '<!-- agent -->',
+    '<!--agent-->',
+    '<!-- agent: vega -->',
+    '<!-- agent:vega -->',
+    '<!--   AGENT:  Vega   -->',
+    '<!-- Agent: sirius-2 -->',
+    '<!--  agent:   vega  -->',
+  ]) {
+    assert.equal(AGENT_MARKER_PATTERN.test(marker), true, marker);
+    assert.equal(isAgentComment(`${marker}\nStarted work on this.`), true, marker);
+  }
+});
+
+test('a non-agent HTML comment is not an agent marker', () => {
+  for (const comment of ['<!-- note -->', '<!-- agents -->', '<!-- agent: -->', '<!-- agent: two words -->', '<!-- not agent: vega -->']) {
+    assert.equal(AGENT_MARKER_PATTERN.test(comment), false, comment);
+    assert.equal(isAgentComment(`${comment}\nmerge 714`), false, comment);
+  }
+});
+
+test('a named agent comment from the owner account is never recorded as an answer', () => {
+  assert.equal(decide(event({ body: '<!-- agent: vega -->\nStarted work on this.' })).record, false);
+  assert.equal(decide(event({ body: '<!-- agent: vega -->\nmerge 714' })).reason, 'written by an agent');
 });
 
 const recorder = (failures = {}) => {
