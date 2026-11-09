@@ -36,10 +36,10 @@ export async function runGameStatsJob(): Promise<SyncJobResult> {
   try {
     const capture = await runGameStatsCapture(getSupabaseClient(), recordSyncRun, { byAdmin: true });
 
-    // A capture that could not be stored carries live values but no row: that is a failure, not a success.
-    return capture.response.snapshot.persisted
+    // A capture that was not stored carries values but no row: that is a failure, not a success.
+    return capture.failure === undefined
       ? { outcome: 'succeeded', detail: describeGameStatsCapture(capture) }
-      : failed(new Error(capture.storeFailure ?? 'The capture could not be stored'));
+      : failed(new Error(capture.failure));
   } catch (error) {
     return failed(error);
   }

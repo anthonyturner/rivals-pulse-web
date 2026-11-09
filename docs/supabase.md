@@ -1243,8 +1243,9 @@ The service-role key is used for the two syncs only, inside `runHomeNewsJob` and
 **What a game stats run really did.** The hour's first capture wins (`record_game_stat_snapshot` ignores a second one in the same
 UTC hour), a game Steam does not answer for is stored with a built-in number, and a visit to the game stats page can also take the
 hour. So the page reports one of: a new capture stored from Steam, a new capture stored with N built-in fallback numbers (and that the
-hour now keeps them), or nothing stored because the hour was already captured, and when. The scheduled run's `sync_runs` message says
-the same. A `home-news` read has one 30-second deadline for every page it fetches, so a slow site fails the run before anything is
+hour now keeps them), or nothing stored because the hour was already captured, and when. When Steam answers for no game at all, nothing
+is stored and the run fails, so a later run in the same hour can still store a real capture; the page still shows the built-in numbers,
+unstored. A Steam read gives up after 5 seconds and counts as unanswered. The scheduled run's `sync_runs` message says the same. A `home-news` read has one 30-second deadline for every page it fetches, so a slow site fails the run before anything is
 saved and the earlier news stays. A page that answers but holds no news card also fails the run before anything is saved (the scheduled
 run too), instead of replacing the news with a placeholder.
 
