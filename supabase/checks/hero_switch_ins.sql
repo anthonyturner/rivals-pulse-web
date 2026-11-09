@@ -257,6 +257,12 @@ begin
     raise exception 'the timeline recorder must not be readable by the publishable key';
   end if;
   raise notice 'ok: the timeline recorder is closed to the publishable key';
+
+  if has_function_privilege('anon', 'public.record_match_hero_timelines(text, timestamptz, jsonb, text)', 'execute')
+     or has_function_privilege('authenticated', 'public.record_match_hero_timelines(text, timestamptz, jsonb, text)', 'execute') then
+    raise exception 'the recreated timeline writer must stay closed to the publishable key';
+  end if;
+  raise notice 'ok: the recreated timeline writer is closed to the publishable key';
 end
 $$;
 
