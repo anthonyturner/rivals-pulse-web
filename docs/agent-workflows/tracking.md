@@ -40,6 +40,35 @@ no separate status field to keep in step, and nothing to transition.
 | QA review | Review posted as a PR comment; findings fixed |
 | Squash merge | Issue closed by `Closes #n` |
 
+### The Work Queue board is a computed view
+
+Open issues from this repository and `anthonyturner/rivals_pulse` appear on the
+**Rivals Pulse Work Queue** board (GitHub user Project 2). Its Status column is
+derived from the table above and the labels below by
+`scripts/work-queue-sync.mjs`, which `.github/workflows/work-queue.yml` runs every
+ten minutes and on issue events. The first rule that matches wins:
+
+| Board status | Comes from |
+| --- | --- |
+| Needs Tony | `needs-tony` label |
+| In review | An open, non-draft pull request closes the issue |
+| Agent working | An open draft pull request closes the issue |
+| Ready | `ready` label |
+| Backlog | Any other open issue |
+| Done | The issue is closed (the project's own "Item closed" workflow) |
+
+**Never write to the board.** Do not add cards, move them or set their Status.
+Change the issue or its pull request and the board follows on the next run. See
+overlay [ADR-0024](https://github.com/anthonyturner/rivals_pulse/pull/1560) for
+why.
+
+### When only Tony can decide
+
+When work cannot go on without a decision only the maintainer can make, add the
+`needs-tony` label and post a comment on the issue (or its pull request) with the
+question and your recommended answer. The question is always the latest comment,
+and the card moves to Needs Tony. Remove the label once the answer is in.
+
 **No agent closes an issue by hand.** Completion follows a merge. An agent that
 closes an issue is asserting a result no merge has recorded.
 
@@ -55,11 +84,13 @@ creates it.
 | Type | `enhancement`, `bug`, `chore`, `documentation` |
 | Priority | `P0`, `P1`, `P2`, `P3` |
 | Area | `area:<name>`, one per part of the product, defined by the project |
-| State | `needs-triage`, `needs-refinement`, `ready`, `blocked`, `duplicate` |
+| State | `needs-triage`, `needs-refinement`, `ready`, `blocked`, `duplicate`, `needs-tony` |
 
 - `needs-refinement` — scope is not agreed yet; not ready to start.
 - `ready` — refined and ready to start.
 - `blocked` — say what it is blocked by in the issue body, and link that issue.
+- `needs-tony` — stopped on a decision only the maintainer can make; the
+  question and a recommended answer are the latest comment.
 - `duplicate` — comment with a link to the original. A person closes the
   duplicate; an agent never closes an issue by hand.
 
