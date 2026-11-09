@@ -3,6 +3,7 @@ import { heroSlugByGameId } from '../catalog/index.ts';
 import {
   deriveHeroMatchups,
   HERO_MATCHUP_PLAY_MODE_IDS,
+  type HeroMatchupFigures,
   type HeroMatchupRow,
 } from './hero-matchups.ts';
 import { readHeroStatsSource } from '../stats/index.ts';
@@ -15,7 +16,7 @@ interface HeroMatchupsReadOptions {
 }
 
 const READ_FUNCTION = 'read_hero_matchups';
-const { recordsOf, numberOf } = answerReader(READ_FUNCTION);
+const { recordsOf, numberOf, nullableNumberOf } = answerReader(READ_FUNCTION);
 
 /**
  * Reads the matchups through `public.read_hero_matchups(smallint[])`, summed over the modes asked
@@ -42,8 +43,40 @@ export function parseHeroMatchupRows(body: unknown): HeroMatchupRow[] {
       decidedMatches: numberOf(row, 'decided_matches'),
       decidedLines: numberOf(row, 'decided_lines'),
       wins: numberOf(row, 'wins'),
+      figures: figuresOf(row),
     }),
   );
+}
+
+/**
+ * The figures of a row, or null when any is missing or null: the answer of a database that does not
+ * have them yet leaves the keys out, and a half-season frozen before then returns them as null.
+ */
+function figuresOf(row: Record<string, unknown>): HeroMatchupFigures | null {
+  const figure = (key: string): number | null => (row[key] === undefined ? null : nullableNumberOf(row, key));
+  const killsSum = figure('kills_sum');
+  const killsN = figure('kills_n');
+  const deathsSum = figure('deaths_sum');
+  const deathsN = figure('deaths_n');
+  const assistsSum = figure('assists_sum');
+  const assistsN = figure('assists_n');
+  const finalHitsSum = figure('final_hits_sum');
+  const finalHitsN = figure('final_hits_n');
+
+  if (
+    killsSum === null ||
+    killsN === null ||
+    deathsSum === null ||
+    deathsN === null ||
+    assistsSum === null ||
+    assistsN === null ||
+    finalHitsSum === null ||
+    finalHitsN === null
+  ) {
+    return null;
+  }
+
+  return { killsSum, killsN, deathsSum, deathsN, assistsSum, assistsN, finalHitsSum, finalHitsN };
 }
 
 /**
