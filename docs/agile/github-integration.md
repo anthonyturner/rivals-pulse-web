@@ -40,6 +40,14 @@ npm run build
 
 The build currently enforces Angular budget limits. If a PR fails because a component CSS file exceeds budget, either reduce CSS or create an explicit chore to change the budget policy.
 
+`Sync Work Queue board` (`.github/workflows/work-queue.yml`) runs every ten
+minutes, on manual dispatch and on issue events. It derives each card's Status and
+Iteration on the Rivals Pulse Work Queue board from issue labels and pull request
+state; see
+**The Work Queue board is a computed view** in
+[tracking.md](../agent-workflows/tracking.md). It reads the `WORK_QUEUE_TOKEN`
+secret, a classic personal access token with the `repo` and `project` scopes.
+
 ## Agents
 
 Use `AGENTS.md` for coding-agent instructions and `.github/copilot-instructions.md` for GitHub Copilot-style context.

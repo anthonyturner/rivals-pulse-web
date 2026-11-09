@@ -1,0 +1,43 @@
+name: Sync Work Queue board
+
+# Derives every card's Status and Iteration on the "Rivals Pulse Work Queue" board (GitHub user
+# Project 2) from the open issues of both Rivals Pulse repositories. The board is a
+# computed view (overlay ADR-0024); nobody writes to it by hand. The schedule covers
+# pull request state and the overlay repository, which carries no workflow of its own.
+# There is deliberately no pull_request trigger, so the token never meets pull request code.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  issues:
+    types: [opened, labeled, unlabeled, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: work-queue
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync board
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # User-owned projects reject GITHUB_TOKEN and fine-grained tokens, so this is
+    # a classic personal access token with the repo and project scopes.
+    env:
+      GH_TOKEN: ${{ secrets.WORK_QUEUE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync
+        # Skipped rather than failed until the maintainer creates the secret.
+        if: env.GH_TOKEN != ''
+        run: node scripts/work-queue-sync.mjs --apply
+
+      - name: Explain the skipped sync
+        if: env.GH_TOKEN == ''
+        run: echo "::notice title=Work Queue sync skipped::The WORK_QUEUE_TOKEN secret is not set. Add a classic personal access token with the repo and project scopes to enable the sync."
