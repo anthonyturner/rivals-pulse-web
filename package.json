@@ -30,7 +30,6 @@
     "check:official-heroes": "node scripts/sync-official-heroes.mjs --check",
     "check:hero-game-roles": "node scripts/check-hero-game-roles.mjs",
     "watch:official-heroes": "node scripts/sync-official-heroes.mjs --watch --interval-days 3",
-    "sync:game-stats": "node --experimental-strip-types scripts/sync-game-stats.mjs",
     "build:pulse-atlas": "node --experimental-strip-types scripts/build-pulse-atlas.mjs",
     "refresh:playstyles": "node scripts/refresh-playstyles.mjs",
     "content:update": "npm run db:seed && npm run db:sync && npm run sync:home-news && npm run sync:heroes && npm run sync:official-heroes",

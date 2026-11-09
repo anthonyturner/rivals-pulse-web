@@ -6,12 +6,7 @@ import { countGlossaryTerms, listGlossaryTerms } from './glossary-store.ts';
 import { countHeroes, countHeroVideos, listHeroes, listHeroVideos } from '../heroes/catalog/index.ts';
 import { countHomeContentBlocks, countHomePortals, getHomeContentBlocks, listHomePortals } from './home/index.ts';
 import { getSupabaseClient, getSupabaseStatus, type SupabaseStatus } from '../supabase/index.ts';
-import {
-  countExternalSources,
-  countGameStatSnapshotGames,
-  countGameStatSnapshots,
-  getStoredExternalSourcePayload,
-} from '../sync/index.ts';
+import { countExternalSources, getStoredExternalSourcePayload } from '../sync/index.ts';
 
 const nodeProcess = process as typeof process & {
   loadEnvFile?: (path?: string) => void;
@@ -34,8 +29,6 @@ type ContentStatus = {
   homePortals: number;
   homeContentBlocks: number;
   communityHeroStats: CommunityHeroStatsStatus;
-  gameStatSnapshots: number;
-  gameStatSnapshotGames: number;
   supabase: SupabaseStatus;
 };
 
@@ -75,8 +68,6 @@ export async function getContentStatusFromDatabase(): Promise<ContentStatus> {
     homePortals: await countHomePortals(getSupabaseClient()),
     homeContentBlocks: await countHomeContentBlocks(getSupabaseClient()),
     communityHeroStats: await readCommunityHeroStatsStatus(),
-    gameStatSnapshots: await countGameStatSnapshots(getSupabaseClient()),
-    gameStatSnapshotGames: await countGameStatSnapshotGames(getSupabaseClient()),
     supabase: await getSupabaseStatus(),
   };
 }

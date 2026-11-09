@@ -5,5 +5,3 @@ export {
   NO_STORE_CACHE_CONTROL,
   sendJson,
 } from './vercel-api.ts';
-export type { CacheControlFor } from './vercel-api.ts';
-export { gameStatsCacheControl } from './game-stats-cache.ts';

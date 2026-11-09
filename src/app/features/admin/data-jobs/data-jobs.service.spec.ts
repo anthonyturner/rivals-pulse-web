@@ -8,11 +8,11 @@ describe('DataJobsService', () => {
   const service = new DataJobsService();
 
   it('reads the jobs', async () => {
-    const fetched = answer(200, { jobs: [{ job: 'game-stats', lastScheduled: null, lastManual: null, wait: null }] });
+    const fetched = answer(200, { jobs: [{ job: 'home-news', lastScheduled: null, lastManual: null, wait: null }] });
 
     expect(await service.read()).toEqual({
       status: 'ready',
-      jobs: [{ job: 'game-stats', lastScheduled: null, lastManual: null, wait: null }],
+      jobs: [{ job: 'home-news', lastScheduled: null, lastManual: null, wait: null }],
     });
     expect(fetched).toHaveBeenCalledOnceWith('/api/admin/data-jobs');
   });
@@ -33,19 +33,19 @@ describe('DataJobsService', () => {
   it('posts only the job key and reads back how the run ended', async () => {
     const fetched = answer(200, {
       run: {
-        job: 'game-stats',
+        job: 'home-news',
         outcome: 'succeeded',
         recorded: true,
-        detail: { result: 'stored', capturedAt: '2026-11-04T10:10:00Z', games: 5 },
+        detail: { result: 'news-synced', cards: 4 },
       },
     });
 
-    const result = await service.run('game-stats');
+    const result = await service.run('home-news');
 
     expect(result.status).toBe('finished');
     expect(fetched.calls.mostRecent().args[0]).toBe('/api/admin/data-jobs-run');
     expect(fetched.calls.mostRecent().args[1]).toEqual(
-      jasmine.objectContaining({ method: 'POST', body: JSON.stringify({ job: 'game-stats' }) }),
+      jasmine.objectContaining({ method: 'POST', body: JSON.stringify({ job: 'home-news' }) }),
     );
   });
 
@@ -55,7 +55,7 @@ describe('DataJobsService', () => {
     for (const status of [400, 401, 403]) {
       fetched.and.resolveTo(new Response(JSON.stringify({ error: 'no' }), { status }));
 
-      expect(await service.run('game-stats')).toEqual({ status: 'refused' });
+      expect(await service.run('home-news')).toEqual({ status: 'refused' });
     }
   });
 
@@ -71,12 +71,12 @@ describe('DataJobsService', () => {
   it('never reports a run it cannot read as one that ran', async () => {
     const fetched = answer(500, { error: 'Something went wrong.' });
 
-    expect(await service.run('game-stats')).toEqual({ status: 'unknown' });
+    expect(await service.run('home-news')).toEqual({ status: 'unknown' });
 
-    fetched.and.resolveTo(new Response(JSON.stringify({ run: { job: 'game-stats' } }), { status: 200 }));
-    expect(await service.run('game-stats')).toEqual({ status: 'unknown' });
+    fetched.and.resolveTo(new Response(JSON.stringify({ run: { job: 'home-news' } }), { status: 200 }));
+    expect(await service.run('home-news')).toEqual({ status: 'unknown' });
 
     fetched.and.rejectWith(new TypeError('offline'));
-    expect(await service.run('game-stats')).toEqual({ status: 'unknown' });
+    expect(await service.run('home-news')).toEqual({ status: 'unknown' });
   });
 });

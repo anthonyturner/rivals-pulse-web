@@ -21,7 +21,6 @@ import {
 import { getCommunityFigures, getCommunityHeroScores, getCommunityKills } from './server/community/extended';
 import { getCommunityInsights } from './server/community/insights';
 import { getCommunityMatches } from './server/community/matches';
-import { gameStatsCacheControl } from './server/http';
 import { handlePulseRecordsRequest } from './server/records';
 import { getHeroMatchups } from './server/heroes/matchups';
 import { getHeroPairs, getHeroSynergies } from './server/heroes/pairs';
@@ -30,8 +29,7 @@ import { getTeamLineups } from './server/heroes/lineups';
 import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
 import { syncHomeNews } from './server/content/home';
-import { recordSyncRun, runGameStatsSync, syncGameStats } from './server/sync';
-import { getSupabaseClient } from './server/supabase';
+import { getGameCounts } from './server/game-counts';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -144,16 +142,7 @@ app.get('/api/glossary', (_req, res) => {
 });
 
 app.get('/api/game-stats', (_req, res) => {
-  handleApiResponse(res, () => syncGameStats(getSupabaseClient()), gameStatsCacheControl);
-});
-
-app.get('/api/sync/game-stats', (req, res) => {
-  if (!isAuthorizedSyncRequest(req)) {
-    res.status(401).json({ message: 'Missing sync authorization' });
-    return;
-  }
-
-  handleApiResponse(res, () => runGameStatsSync(getSupabaseClient(), recordSyncRun));
+  handleApiResponse(res, () => getGameCounts());
 });
 
 app.get('/api/external-sources/:sourceKey', (req, res) => {
@@ -224,15 +213,9 @@ export const reqHandler = createNodeRequestHandler(app);
 async function handleApiResponse<T>(
   res: express.Response,
   getBody: () => T | Promise<T>,
-  cacheControlFor?: (body: T) => string,
 ): Promise<void> {
   try {
-    const body = await getBody();
-
-    if (cacheControlFor) {
-      res.set('Cache-Control', cacheControlFor(body));
-    }
-    res.json(body);
+    res.json(await getBody());
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected API error';
 

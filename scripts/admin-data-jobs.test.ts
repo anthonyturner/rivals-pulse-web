@@ -22,6 +22,12 @@ const allSql = readdirSync(MIGRATIONS)
   .map((name) => read(name).replace(/--.*$/gm, ''))
   .join('\n');
 
+/**
+ * Jobs the page no longer offers but the database still lists, until a migration takes them out of
+ * its allow-list. The server refuses their keys before it asks the database (`isDataJobKey`).
+ */
+const RETIRED_IN_SQL = ['game-stats'];
+
 const keysIn = (text: string): string[] => [...text.matchAll(/'([a-z][a-z-]+)'/g)].map((match) => match[1]);
 const bodyOf = (name: string): string => {
   const match = sql.match(new RegExp(`function public\\.${name}\\([^)]*\\)[\\s\\S]*?\\$\\$([\\s\\S]*?)\\$\\$`));
@@ -36,7 +42,10 @@ describe('the job list in SQL and in code', () => {
   const rebuildKeys = DATA_JOBS.filter((job) => job.kind === 'rebuild').map((job) => job.key).sort();
 
   it('is the allow-list of the cooldown function, and nothing else', () => {
-    const cases = [...bodyOf('data_job_cooldown').matchAll(/when '([^']+)' then/g)].map((match) => match[1]).sort();
+    const cases = [...bodyOf('data_job_cooldown').matchAll(/when '([^']+)' then/g)]
+      .map((match) => match[1])
+      .filter((key) => !RETIRED_IN_SQL.includes(key))
+      .sort();
 
     assert.deepEqual(cases, codeKeys);
   });
@@ -44,7 +53,9 @@ describe('the job list in SQL and in code', () => {
   it('is the list the status function reports, rebuilds and syncs apart', () => {
     const body = bodyOf('admin_data_jobs_status');
     const rebuilds = keysIn(body.match(/v_rebuilds text\[\] := array\[([\s\S]*?)\];/)?.[1] ?? '').sort();
-    const syncs = keysIn(body.match(/v_syncs text\[\] := array\[([\s\S]*?)\];/)?.[1] ?? '').sort();
+    const syncs = keysIn(body.match(/v_syncs text\[\] := array\[([\s\S]*?)\];/)?.[1] ?? '')
+      .filter((key) => !RETIRED_IN_SQL.includes(key))
+      .sort();
 
     assert.deepEqual(rebuilds, rebuildKeys);
     assert.deepEqual(syncs, DATA_JOBS.filter((job) => job.kind === 'sync').map((job) => job.key).sort());

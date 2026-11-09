@@ -107,20 +107,20 @@ describe('the admin handlers', () => {
     }
   });
 
-  it(`${SYNC_JOBS} opens the service-key client only inside the two named sync job functions, once each`, () => {
+  it(`${SYNC_JOBS} opens the service-key client only inside the one named sync job function`, () => {
     const code = withoutComments(sources.find(({ name }) => name === SYNC_JOBS)?.source ?? '');
     const functions = [...code.matchAll(/^export async function (\w+)\([^)]*\)[^{]*\{([\s\S]*?)^\}/gm)];
     const opening = (body: string): number => body.match(/getSupabaseClient\(\)/g)?.length ?? 0;
 
     assert.deepEqual(
       functions.map((match) => match[1]),
-      ['runHomeNewsJob', 'runGameStatsJob'],
+      ['runHomeNewsJob'],
     );
     assert.deepEqual(
       functions.map((match) => opening(match[2])),
-      [1, 1],
+      [1],
     );
-    assert.equal(opening(code), 2, 'no other code in the file opens the client');
+    assert.equal(opening(code), 1, 'no other code in the file opens the client');
   });
 
   it('answer only through the shared private writer, which sets Cache-Control', () => {

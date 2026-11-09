@@ -66,10 +66,6 @@ export function beginResultOf(answer: unknown): BeginDataJobResult | undefined {
 /** What a finished run came to, or null when the row holds something else. */
 export function dataJobDetailOf(value: unknown): DataJobDetail | null {
   const detail = recordOf(value);
-  const capturedAt = instantOf(detail?.['capturedAt']);
-  const games = countOf(detail?.['games']);
-  const fallbackGames = countOf(detail?.['fallbackGames']);
-
   switch (detail?.['result']) {
     case 'rebuilt': {
       const halfSeasons = countOf(detail['halfSeasons']);
@@ -81,16 +77,6 @@ export function dataJobDetailOf(value: unknown): DataJobDetail | null {
 
       return cards === undefined ? null : { result: 'news-synced', cards };
     }
-    case 'stored':
-      return capturedAt && games !== undefined ? { result: 'stored', capturedAt, games } : null;
-    case 'stored-with-fallbacks':
-      return capturedAt && games !== undefined && fallbackGames !== undefined
-        ? { result: 'stored-with-fallbacks', capturedAt, games, fallbackGames }
-        : null;
-    case 'already-captured':
-      return capturedAt && games !== undefined && fallbackGames !== undefined
-        ? { result: 'already-captured', capturedAt, games, fallbackGames }
-        : null;
     case 'failed':
       return typeof detail['message'] === 'string' ? { result: 'failed', message: detail['message'] } : null;
     default:

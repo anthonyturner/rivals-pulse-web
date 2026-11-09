@@ -64,10 +64,10 @@ describe('DataJobsPageComponent', () => {
     ) as HTMLElement;
   const button = (label: string): HTMLButtonElement => card(label).querySelector('button') as HTMLButtonElement;
 
-  it('lists the five rebuilds and the two syncs, and says uploads cannot be forced', async () => {
+  it('lists the five rebuilds and the one sync, and says uploads cannot be forced', async () => {
     await open();
 
-    expect(el().querySelectorAll('.jobs__card').length).toBe(7);
+    expect(el().querySelectorAll('.jobs__card').length).toBe(6);
     expect(el().querySelector('.jobs__note')?.textContent).toContain('Player uploads cannot be forced');
     expect(Array.from(el().querySelectorAll('.jobs__group-title')).map((title) => title.textContent?.trim())).toEqual([
       'Rebuilds',
@@ -84,7 +84,6 @@ describe('DataJobsPageComponent', () => {
 
     expect(next('Hero stats')).toEqual(['In 7m 0s', 'Nov 4, 2026, 5:07 AM EST']);
     expect(next('Hero pairs')).toEqual(['In 43m 0s', 'Nov 4, 2026, 5:43 AM EST']);
-    expect(next('Game stats')).toEqual(['In 10m 0s', 'Nov 4, 2026, 5:10 AM EST']);
     expect(next('Home news')).toEqual(['In 17h 0m', 'Nov 4, 2026, 10:00 PM EST']);
     expect(card('Hero stats').querySelector('.jobs__runs time')?.getAttribute('datetime')).toBe('2026-11-04T10:07:00.000Z');
   });
@@ -165,7 +164,7 @@ describe('DataJobsPageComponent', () => {
     try {
       await open(
         DATA_JOBS.map((job) =>
-          status(job.key, job.key === 'game-stats' ? { lastScheduled: run({ outcome: 'running', finishedAt: null }) } : {}),
+          status(job.key, job.key === 'home-news' ? { lastScheduled: run({ outcome: 'running', finishedAt: null }) } : {}),
         ),
       );
       read.and.resolveTo({ status: 'unavailable' });
@@ -267,69 +266,43 @@ describe('DataJobsPageComponent', () => {
   it('shows each job\'s last scheduled and last manual run, and an unfinished one as not finished', async () => {
     await open(
       DATA_JOBS.map((job) =>
-        job.key === 'game-stats'
+        job.key === 'home-news'
           ? status(job.key, {
-              lastScheduled: run({ outcome: 'failed', message: 'Could not store the game stats' }),
+              lastScheduled: run({ outcome: 'failed', message: 'Could not read the official site' }),
               lastManual: run({ outcome: 'unfinished', finishedAt: null, startedAt: '2026-11-04T08:00:00.000Z' }),
             })
           : status(job.key),
       ),
     );
 
-    const text = card('Game stats').textContent ?? '';
+    const text = card('Home news').textContent ?? '';
 
     expect(text).toContain('Last scheduled run');
     expect(text).toContain('Failed.');
-    expect(text).toContain('Could not store the game stats');
+    expect(text).toContain('Could not read the official site');
     expect(text).toContain('Last manual run');
     expect(text).toContain('Did not finish.');
     expect(text).toContain('Nov 4, 2026, 3:00 AM EST');
     expect(card('Hero stats').textContent).toContain('None yet.');
   });
 
-  it('starts a job on a click, tells a capture stored with fallback numbers as a warning, and reads the jobs again', async () => {
+  it('starts a job on a click, tells the run by what it came to, and reads the jobs again', async () => {
     await open();
     runJob.and.resolveTo({
       status: 'finished',
-      run: {
-        job: 'game-stats',
-        outcome: 'succeeded',
-        recorded: true,
-        detail: { result: 'stored-with-fallbacks', capturedAt: '2026-11-04T10:00:00.000Z', games: 5, fallbackGames: 3 },
-      },
+      run: { job: 'home-news', outcome: 'succeeded', recorded: true, detail: { result: 'news-synced', cards: 4 } },
     });
 
-    button('Game stats').click();
+    button('Home news').click();
     await settle();
 
-    const result = card('Game stats').querySelector('.jobs__result') as HTMLElement;
+    const result = card('Home news').querySelector('.jobs__result') as HTMLElement;
 
-    expect(runJob).toHaveBeenCalledOnceWith('game-stats');
+    expect(runJob).toHaveBeenCalledOnceWith('home-news');
     expect(read).toHaveBeenCalledTimes(2);
-    expect(result.textContent).toContain('Steam did not answer for 3 of 5 games');
-    expect(result.textContent).not.toMatch(/succeeded/i);
-    expect(result.className).toContain('jobs__tone--warning');
-    expect(el().querySelector('[role="status"].visually-hidden')?.textContent).toContain('Steam did not answer');
-  });
-
-  it('says plainly when the hour was already captured', async () => {
-    await open();
-    runJob.and.resolveTo({
-      status: 'finished',
-      run: {
-        job: 'game-stats',
-        outcome: 'succeeded',
-        recorded: true,
-        detail: { result: 'already-captured', capturedAt: '2026-11-04T10:02:00.000Z', games: 5, fallbackGames: 0 },
-      },
-    });
-
-    button('Game stats').click();
-    await settle();
-
-    expect(card('Game stats').querySelector('.jobs__result')?.textContent).toContain(
-      'Nothing new was stored: this hour was already captured at Nov 4, 2026, 5:02 AM EST.',
-    );
+    expect(result.textContent).toContain('Home news refreshed with 4 cards.');
+    expect(result.className).toContain('jobs__tone--good');
+    expect(el().querySelector('[role="status"].visually-hidden')?.textContent).toContain('Home news refreshed');
   });
 
   it('shows a failed job as failed, and says when its audit row could not be written', async () => {
@@ -388,7 +361,7 @@ describe('DataJobsPageComponent', () => {
     try {
       await open(
         DATA_JOBS.map((job) =>
-          job.key === 'game-stats'
+          job.key === 'home-news'
             ? status(job.key, { wait: { reason: 'running', retryAt: '2026-11-04T10:00:02.000Z' } })
             : status(job.key),
         ),
@@ -426,7 +399,7 @@ describe('DataJobsPageComponent', () => {
     expect(button('Home news').disabled).toBeTrue();
     expect(card('Home news').textContent).toContain('Available again after Nov 4, 2026, 5:05:00 AM EST.');
     expect(button('Home news').getAttribute('aria-describedby')).toBe('hint-home-news');
-    expect(button('Game stats').disabled).toBeFalse();
+    expect(button('Hero stats').disabled).toBeFalse();
   });
 
   it('shows an error with a way to try again when the jobs cannot be read', async () => {
@@ -449,6 +422,6 @@ describe('DataJobsPageComponent', () => {
     (el().querySelector('app-state-panel button') as HTMLButtonElement).click();
     await settle();
 
-    expect(el().querySelectorAll('.jobs__card').length).toBe(7);
+    expect(el().querySelectorAll('.jobs__card').length).toBe(6);
   });
 });

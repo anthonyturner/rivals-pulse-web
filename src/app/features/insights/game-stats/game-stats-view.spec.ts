@@ -1,198 +1,54 @@
-import type {
-  GameComparison,
-  GameSnapshotComparison,
-  GameStatsResponse,
-  MetricComparison,
-  RankComparison,
-} from '../../../../contracts/game-stats.model';
+import type { GameCounts } from '../../../../contracts/game-counts.model';
 import { buildGameStatsView } from './game-stats-view';
 
-const flat: MetricComparison = { previous: 100, change: 0, changePercent: 0, trend: 'flat' };
-const sameRank: RankComparison = { previous: '#15', trend: 'flat' };
-
-function comparison(overrides: Partial<GameSnapshotComparison> = {}): GameSnapshotComparison {
-  return {
-    previousCapturedAt: '2026-11-02T07:10:04.228Z',
-    currentPlayers: flat,
-    dailyPeak: flat,
-    allTimePeak: flat,
-    steamDailyRank: sameRank,
-    topSellerRank: sameRank,
-    read: 'Unused',
-    ...overrides,
-  };
-}
-
-function game(name: string, overrides: Partial<GameComparison> = {}): GameComparison {
-  return {
-    appId: 1,
-    name,
-    category: 'Hero shooter',
-    currentPlayers: 43194,
-    dailyPeak: 118674,
-    allTimePeak: 644269,
-    steamDailyRank: '#15',
-    topSellerRank: '#4',
-    twitchViewers: 0,
-    reviewSummary: '',
-    sourceUrl: 'https://steamdb.info/app/1/charts/',
-    ...overrides,
-  };
-}
-
-function statsOf(games: GameComparison[], overrides: Partial<GameStatsResponse> = {}): GameStatsResponse {
-  return {
-    snapshotDate: 'November 2, 2026',
-    fetchedAt: '2026-11-02T08:51:52.762Z',
-    currentPlayerSource: 'Valve',
-    currentPlayerSourceUrl: 'https://api.steampowered.com/',
-    snapshot: { snapshotDate: 'November 2, 2026', capturedAt: '2026-11-02T08:10:03.826Z', persisted: true },
-    previousSnapshot: { snapshotDate: 'November 2, 2026', capturedAt: '2026-11-02T07:10:04.228Z', persisted: true },
-    games,
-    ...overrides,
-  };
-}
+const COUNTS: GameCounts = {
+  matches: 1234,
+  players: 56789,
+  since: '2026-09-20T02:12:49.000Z',
+  halfSeasons: [
+    { halfSeason: 10.5, matches: 900, players: 40000 },
+    { halfSeason: 10, matches: 334, players: 20000 },
+  ],
+};
 
 describe('buildGameStatsView', () => {
-  it('turns the subject game into headline tiles named after the table columns', () => {
-    const view = buildGameStatsView(statsOf([game('Overwatch'), game('Marvel Rivals', { currentPlayers: 43194 })]), false);
-
-    expect(view.columns).toEqual(['Players now', '24h peak', 'All-time peak', 'Daily rank', 'Top sellers']);
-    expect(view.headline.map((tile) => tile.label)).toEqual(view.columns);
-    expect(view.headline.map((tile) => tile.value)).toEqual(['43,194', '118,674', '644,269', '#15', '#4']);
-    expect(view.headline.map((tile) => tile.kind)).toEqual(['metric', 'metric', 'metric', 'rank', 'rank']);
+  it('is loading while the request runs and an error once it has failed', () => {
+    expect(buildGameStatsView(undefined)).toEqual({ status: 'loading' });
+    expect(buildGameStatsView(null)).toEqual({ status: 'error' });
   });
 
-  it('has no headline tiles when the subject game is not among the rows', () => {
-    expect(buildGameStatsView(statsOf([game('Overwatch')]), false).headline).toEqual([]);
+  it('is empty before any match is recorded, whatever else the answer carries', () => {
+    expect(buildGameStatsView({ matches: 0, players: 0, since: null, halfSeasons: [] })).toEqual({ status: 'empty' });
   });
 
-  it('writes one row per game with its five figures in column order', () => {
-    const view = buildGameStatsView(statsOf([game('Marvel Rivals'), game('Overwatch')]), false);
+  it('formats the totals as tiles and the earliest match as a UTC date', () => {
+    const view = buildGameStatsView(COUNTS);
 
-    expect(view.rows.map((row) => row.name)).toEqual(['Marvel Rivals', 'Overwatch']);
-    expect(view.rows[0].category).toBe('Hero shooter');
-    expect(view.rows[0].cells.map((cell) => cell.value)).toEqual(['43,194', '118,674', '644,269', '#15', '#4']);
-    expect(view.rows[0].cells.map((cell) => cell.kind)).toEqual(['metric', 'metric', 'metric', 'rank', 'rank']);
+    expect(view).toEqual(
+      jasmine.objectContaining({
+        status: 'ready',
+        meta: 'Counted from RivalsPulse overlay uploads',
+        tiles: [
+          { label: 'Matches seen', value: '1,234' },
+          { label: 'Players seen', value: '56,789' },
+          { label: 'Earliest match', value: 'Sep 20, 2026' },
+        ],
+      }),
+    );
   });
 
-  it('marks only Marvel Rivals as the row the page is about', () => {
-    const view = buildGameStatsView(statsOf([game('Overwatch'), game('Marvel Rivals')]), false);
+  it('names each half-season a season and keeps the answer newest first', () => {
+    const view = buildGameStatsView(COUNTS);
 
-    expect(view.rows.map((row) => row.subject)).toEqual([false, true]);
+    expect(view.status === 'ready' && view.rows).toEqual([
+      { label: 'Season 10.5', matches: '900', players: '40,000' },
+      { label: 'Season 10', matches: '334', players: '20,000' },
+    ]);
   });
 
-  describe('changes since the previous snapshot', () => {
-    it('shows none when nothing moved, or when there is nothing to compare with', () => {
-      const unchanged = buildGameStatsView(statsOf([game('Marvel Rivals', { comparison: comparison() })]), false);
-      const first = buildGameStatsView(statsOf([game('Marvel Rivals')], { previousSnapshot: undefined }), false);
+  it('leaves out the earliest match when the answer has no start time', () => {
+    const view = buildGameStatsView({ ...COUNTS, since: null });
 
-      expect(unchanged.rows[0].cells.map((cell) => cell.delta)).toEqual([null, null, null, null, null]);
-      expect(first.rows[0].cells.map((cell) => cell.delta)).toEqual([null, null, null, null, null]);
-    });
-
-    it('writes a rise with a plus sign and its percentage, and says it in words', () => {
-      const up: MetricComparison = { previous: 39802, change: 3392, changePercent: 8.52, trend: 'up' };
-      const view = buildGameStatsView(
-        statsOf([game('Marvel Rivals', { comparison: comparison({ currentPlayers: up }) })]),
-        false,
-      );
-
-      expect(view.rows[0].cells[0].delta).toEqual({
-        text: '+3,392 (+8.52%)',
-        spoken: 'up 3,392, 8.52 percent',
-        trend: 'up',
-      });
-    });
-
-    it('writes a fall with a real minus sign, never a hyphen', () => {
-      const down: MetricComparison = { previous: 100000, change: -7315, changePercent: -25.213, trend: 'down' };
-      const view = buildGameStatsView(
-        statsOf([game('Overwatch', { comparison: comparison({ dailyPeak: down }) })]),
-        false,
-      );
-      const delta = view.rows[0].cells[1].delta;
-
-      expect(delta?.text).toBe('−7,315 (−25.21%)');
-      expect(delta?.text).not.toContain('-');
-      expect(delta?.spoken).toBe('down 7,315, 25.21 percent');
-      expect(delta?.trend).toBe('down');
-    });
-
-    it('leaves the percentage out when the answer has none', () => {
-      const up: MetricComparison = { previous: 10, change: 5, trend: 'up' };
-      const view = buildGameStatsView(
-        statsOf([game('Marvel Rivals', { comparison: comparison({ allTimePeak: up }) })]),
-        false,
-      );
-
-      expect(view.rows[0].cells[2].delta?.text).toBe('+5');
-    });
-
-    it('shows a rank that moved as an arrow and the number of places, with the plural said correctly', () => {
-      const view = buildGameStatsView(
-        statsOf([
-          game('Marvel Rivals', {
-            comparison: comparison({
-              steamDailyRank: { previous: '#17', positionsChanged: 2, trend: 'up' },
-              topSellerRank: { previous: '#3', positionsChanged: -1, trend: 'down' },
-            }),
-          }),
-        ]),
-        false,
-      );
-      const [, , , daily, sellers] = view.rows[0].cells;
-
-      expect(daily.delta).toEqual({ text: '▲2', spoken: 'up 2 places', trend: 'up' });
-      expect(sellers.delta).toEqual({ text: '▼1', spoken: 'down 1 place', trend: 'down' });
-    });
-
-    it('ignores a change that is not a number', () => {
-      const broken: MetricComparison = { previous: 1, change: Number.NaN, trend: 'up' };
-      const view = buildGameStatsView(
-        statsOf([game('Marvel Rivals', { comparison: comparison({ currentPlayers: broken }) })]),
-        false,
-      );
-
-      expect(view.rows[0].cells[0].delta).toBeNull();
-    });
-  });
-
-  describe('the meta line', () => {
-    it('names the snapshot, when the live players were fetched and what it is compared with', () => {
-      const view = buildGameStatsView(statsOf([game('Marvel Rivals')]), false);
-
-      expect(view.meta).toBe(
-        'Snapshot November 2, 2026 · Live players fetched Nov 2, 8:51 AM UTC · Compared with Nov 2, 7:10 AM UTC',
-      );
-      expect(view.saved).toBeFalse();
-    });
-
-    it('says when this is the first stored snapshot', () => {
-      const view = buildGameStatsView(statsOf([game('Marvel Rivals')], { previousSnapshot: undefined }), false);
-
-      expect(view.meta).toContain('First stored snapshot; comparisons begin with the next capture');
-      expect(view.meta).not.toContain('Compared with');
-    });
-
-    it('names a saved snapshot by its date only', () => {
-      const view = buildGameStatsView(statsOf([game('Marvel Rivals')], { snapshotDate: 'June 19, 2026' }), true);
-
-      expect(view.meta).toBe('Saved snapshot June 19, 2026');
-      expect(view.meta).not.toContain('fetched');
-      expect(view.saved).toBeTrue();
-      expect(view.snapshotDate).toBe('June 19, 2026');
-    });
-
-    it('leaves out a time it cannot read rather than printing Invalid Date', () => {
-      const view = buildGameStatsView(statsOf([game('Marvel Rivals')], { fetchedAt: 'not a date' }), false);
-
-      expect(view.meta).not.toContain('Invalid');
-      expect(view.meta).not.toContain('fetched');
-    });
-  });
-
-  it('has no rows when the answer holds no games', () => {
-    expect(buildGameStatsView(statsOf([]), false).rows).toEqual([]);
+    expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual(['Matches seen', 'Players seen']);
   });
 });

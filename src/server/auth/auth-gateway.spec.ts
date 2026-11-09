@@ -481,9 +481,9 @@ describe('createSupabaseAuthGateway', () => {
     it('begins a run with the user token, sending only the job key', async () => {
       const { calls, gateway } = gatewayFor({ status: 200, body: { status: 'started', runId: 41, startedAt: '2026-11-04T10:00:00+00:00' } });
 
-      expect(await gateway.beginDataJob(tokens, 'game-stats')).toEqual({ status: 'started', runId: 41 });
+      expect(await gateway.beginDataJob(tokens, 'home-news')).toEqual({ status: 'started', runId: 41 });
       expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/admin_begin_run');
-      expect(calls[0].body).toEqual({ p_job: 'game-stats' });
+      expect(calls[0].body).toEqual({ p_job: 'home-news' });
       expect(calls[0].headers['authorization']).toBe('Bearer access');
       expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
     });
@@ -500,7 +500,7 @@ describe('createSupabaseAuthGateway', () => {
 
     it('treats an answer it does not recognise as unavailable, never as a started run', async () => {
       for (const body of [{ status: 'started' }, { status: 'busy', reason: 'cooldown' }, 'ok', null]) {
-        await expectAsync(gatewayFor({ status: 200, body }).gateway.beginDataJob(tokens, 'game-stats')).toBeRejectedWithError(
+        await expectAsync(gatewayFor({ status: 200, body }).gateway.beginDataJob(tokens, 'home-news')).toBeRejectedWithError(
           AuthUnavailableError,
         );
       }
