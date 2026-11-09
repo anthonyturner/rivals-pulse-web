@@ -1,5 +1,7 @@
 import { APP_BASE_HREF } from '@angular/common';
 import { mergeApplicationConfig } from '@angular/core';
+// Private Angular API: there is no public way to read the server route table from a unit test.
+// If an upgrade breaks it, look at how `traverseRoutesConfig` in @angular/ssr builds the tree.
 import { ɵextractRoutesAndCreateRouteTree as extractRoutesAndCreateRouteTree } from '@angular/ssr';
 import { bootstrapApplication } from '@angular/platform-browser';
 
@@ -9,7 +11,7 @@ import { serverRenderSandbox } from '../../testing/server-render';
 import { COMMUNITY_TABS, DEFAULT_COMMUNITY_TAB_ID } from './community-tabs';
 
 /**
- * Builds the route tree the production server matches every request against, from the real
+ * Builds the route tree the server render matches every request against, from the real
  * routes. The server answers a matched route's `redirectTo` with a 302 before rendering anything.
  */
 async function buildServerRouteTree() {
