@@ -2,8 +2,8 @@ import { json, rateLimited, unwrapStatus, type EndpointSpec } from '../_shared/o
 
 /** The app reads on launch and after each upload; one every half minute for an hour is generous. */
 const HISTORY_LIMIT = 120;
-/** The most matches one answer holds, as many as the app keeps. */
-const MAX_MATCHES = 200;
+/** The most matches one answer holds, the most the app reads at once (`MAX_UPLOADED_MATCHES`). */
+const MAX_MATCHES = 500;
 
 export interface OwnMatch {
   matchUid: string;
@@ -13,13 +13,17 @@ export interface OwnMatch {
   performance: Record<string, unknown> | null;
 }
 
-/** `after` from the body: an ISO time, or null for every match. Anything else is a bad request. */
+/**
+ * `after` from the body as an ISO time Postgres always accepts, or null for every match. Anything
+ * that is not a time is a bad request.
+ */
 function readAfter(body: unknown): string | null | undefined {
   if (body === null || typeof body !== 'object') return null;
   const after = (body as { after?: unknown }).after;
   if (after === undefined || after === null) return null;
-  if (typeof after !== 'string' || Number.isNaN(Date.parse(after))) return undefined;
-  return after;
+  if (typeof after !== 'string') return undefined;
+  const time = new Date(after);
+  return Number.isNaN(time.getTime()) ? undefined : time.toISOString();
 }
 
 const objectOrNull = (value: unknown): Record<string, unknown> | null =>

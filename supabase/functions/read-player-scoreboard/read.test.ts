@@ -20,12 +20,12 @@ describe('read-player-scoreboard', () => {
     assert.deepEqual(await response.json(), { lines: [LINE], limited: false });
     assert.deepEqual(calls, [{
       name: 'read_player_scoreboard_lines',
-      args: { p_recorder_id: await testRecorder(), p_player_uid: '123', p_max: 200, p_limit: 240 },
+      args: { p_recorder_id: await testRecorder(), p_player_uid: '123', p_max: 500, p_limit: 240 },
     }]);
   });
 
   it('says when the answer reached the cap', async () => {
-    const lines = Array.from({ length: 200 }, (_, index) => ({ ...LINE, matchUid: `m-${index}` }));
+    const lines = Array.from({ length: 500 }, (_, index) => ({ ...LINE, matchUid: `m-${index}` }));
     const { handler } = setup({ status: 'ok', lines });
     const body = await (await handler(appRequest('POST', { body: { playerUid: '123' } }))).json();
 

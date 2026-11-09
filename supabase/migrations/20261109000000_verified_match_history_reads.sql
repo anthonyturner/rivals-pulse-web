@@ -18,7 +18,7 @@ create index if not exists tracked_match_recorders_recorded_by_idx
   on public.tracked_match_recorders (recorded_by, recorded_at desc);
 
 -- The matches p_recorder_id uploaded and Supabase wrote after p_after (all of them when null),
--- newest written first, at most p_max (capped at 200). Returns {"status":"ok","matches":[{matchUid,
+-- newest written first, at most p_max (capped at 500). Returns {"status":"ok","matches":[{matchUid,
 -- playedAt, recordedAt, rawPayload, performance}]} or {"status":"rate_limited","retryAfter":seconds}.
 -- Matches uploaded before track-match-history recorded its recorder (issue 328) have no recorder row
 -- and are not returned; the app already holds them in its local history.
@@ -55,7 +55,7 @@ begin
     where r.recorded_by = p_recorder_id
       and (p_after is null or tm.recorded_at > p_after)
     order by tm.recorded_at desc
-    limit least(greatest(coalesce(p_max, 0), 0), 200)
+    limit least(greatest(coalesce(p_max, 0), 0), 500)
   ) own;
 
   return jsonb_build_object('status', 'ok', 'matches', answer_rows);
@@ -63,7 +63,7 @@ end
 $$;
 
 -- One player's kills, deaths and assists in each uploaded match they played, newest played first,
--- at most p_max (capped at 200): from the uploader's own line, and from any upload's scoreboard that
+-- at most p_max (capped at 500): from the uploader's own line, and from any upload's scoreboard that
 -- lists p_player_uid (as text, or as the same safe integer an older upload stored). Returns
 -- {"status":"ok","lines":[{matchUid, kills, deaths, assists}]} or {"status":"rate_limited",...}.
 -- Nothing else leaves: no names, no other player's line, no uploader.
@@ -81,7 +81,7 @@ declare
   wait integer := public.take_link_app_call('scoreboard', p_recorder_id, p_limit);
   uid text := btrim(coalesce(p_player_uid, ''));
   numeric_uid jsonb;
-  cap integer := least(greatest(coalesce(p_max, 0), 0), 200);
+  cap integer := least(greatest(coalesce(p_max, 0), 0), 500);
   answer_rows jsonb;
 begin
   if wait > 0 then

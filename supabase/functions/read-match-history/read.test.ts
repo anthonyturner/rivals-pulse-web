@@ -26,7 +26,7 @@ describe('read-match-history', () => {
     assert.deepEqual(await response.json(), { matches: [MATCH] });
     assert.deepEqual(calls, [{
       name: 'read_own_tracked_matches',
-      args: { p_recorder_id: await testRecorder(), p_after: '2026-11-01T00:00:00Z', p_max: 200, p_limit: 120 },
+      args: { p_recorder_id: await testRecorder(), p_after: '2026-11-01T00:00:00.000Z', p_max: 500, p_limit: 120 },
     }]);
   });
 
@@ -36,7 +36,7 @@ describe('read-match-history', () => {
       const response = await handler(appRequest('POST', { body }));
 
       assert.equal(response.status, 200, JSON.stringify(body));
-      assert.deepEqual(calls[0].args, { p_recorder_id: await testRecorder(), p_after: null, p_max: 200, p_limit: 120 });
+      assert.deepEqual(calls[0].args, { p_recorder_id: await testRecorder(), p_after: null, p_max: 500, p_limit: 120 });
     }
   });
 

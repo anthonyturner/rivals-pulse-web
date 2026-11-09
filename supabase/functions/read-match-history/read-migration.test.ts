@@ -50,7 +50,7 @@ describe('20261109000000_verified_match_history_reads.sql', () => {
     const body = functionBody('read_own_tracked_matches');
     assert.match(body, /join public\.tracked_matches tm on tm\.id = r\.tracked_match_id\s+where r\.recorded_by = p_recorder_id/);
     assert.doesNotMatch(body, /normalized_name|public\.players/);
-    assert.match(body, /limit least\(greatest\(coalesce\(p_max, 0\), 0\), 200\)/);
+    assert.match(body, /limit least\(greatest\(coalesce\(p_max, 0\), 0\), 500\)/);
   });
 
   it('answers a scoreboard with the match key and three figures, and no name or uploader', () => {

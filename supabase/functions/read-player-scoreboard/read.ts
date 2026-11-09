@@ -2,8 +2,8 @@ import { json, rateLimited, unwrapStatus, type EndpointSpec } from '../_shared/o
 
 /** Player details open one player at a time; four a minute for an hour is generous. */
 const SCOREBOARD_LIMIT = 240;
-/** The most matches one answer holds, the app's own read limit. */
-const MAX_LINES = 200;
+/** The most matches one answer holds, the app's own read limit (`PLAYER_SCOREBOARD_READ_LIMIT`). */
+const MAX_LINES = 500;
 /** Longer than any uid the game issues; a longer value is not a uid. */
 const MAX_UID_LENGTH = 64;
 

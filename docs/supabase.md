@@ -1136,14 +1136,14 @@ until the overlays in use read through these two functions instead:
 
 - `read-match-history`: `POST` with `{ "after": "<ISO time>" }` or no body. It calls `read_own_tracked_matches`,
   which returns the matches whose `tracked_match_recorders.recorded_by` is the verified session's recorder,
-  newest written first, at most 200, only those written after `after` when given. Answers
+  newest written first, at most 500, only those written after `after` when given. Answers
   `200 { "matches": [{ matchUid, playedAt, recordedAt, rawPayload, performance }] }`, `400` for an `after` that
   is not a time, and `429` past 120 calls an hour. A name in the body is ignored: the recorder alone decides
   whose history is read. Matches uploaded before the recorder table existed (issue 328) have no recorder row and
   are not returned; the app already holds them locally.
 - `read-player-scoreboard`: `POST` with `{ "playerUid": "..." }`. It calls `read_player_scoreboard_lines`, which
   returns that player's kills, deaths and assists per match, from the uploader's own line and from any upload's
-  scoreboard listing the uid (as text, or as the same safe integer an older upload stored), at most 200, newest
+  scoreboard listing the uid (as text, or as the same safe integer an older upload stored), at most 500, newest
   played first. Answers `200 { "lines": [{ matchUid, kills, deaths, assists }], "limited": bool }`, `400` for a
   missing uid, and `429` past 240 calls an hour. No name, uploader or other player's line leaves.
 - `supabase/checks/verified_match_history_reads.sql` proves the rules against the linked project and rolls back.
