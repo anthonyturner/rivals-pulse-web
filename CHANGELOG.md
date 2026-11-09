@@ -160,6 +160,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- The hero page's Switch-ins block counts Deadpool as one hero whichever role form he was played in. Changing form is no longer counted as a switch, and a match with a switch into more than one form is counted once, not once per form, so Deadpool's figures are no longer inflated. It needs `supabase db push`, and the numbers update at the next hourly rebuild ([#667](https://github.com/anthonyturner/rivals-pulse-web/issues/667)).
 - Opening a Community tab address directly, such as `/community/heroes` or `/community/stats`, on the local server no longer redirects to itself, so the tab renders on a full page load. The live site was not affected ([#677](https://github.com/anthonyturner/rivals-pulse-web/pull/677)).
 - The home hero's waiting-for-data stat value is drawn in full-strength text, so it stays readable when the video or the pulse currents pass behind it ([#665](https://github.com/anthonyturner/rivals-pulse-web/issues/665)).
 - If the Heroes page cannot load the hero list, it says "Heroes could not be loaded" and now has a "Try again" button that asks for the list again, so you no longer have to reload the page ([#556](https://github.com/anthonyturner/rivals-pulse-web/pull/556)).

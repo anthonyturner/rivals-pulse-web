@@ -101,8 +101,8 @@ describe('the switch-in migration', () => {
       assert.match(fill, /from public\.match_hero_timelines k\s+where k\.half_season = p_half_season/);
     });
 
-    it('takes a switch to be a pick after the first that names a different hero', () => {
-      assert.match(fill, /lag\(k\.hero_id\) over \(\s*partition by k\.fingerprint, k\.played_at, k\.timeline_no order by k\.pick_no\s*\) as previous_hero_id/);
+    it('takes a switch to be a pick after the first that names a different hero, a hero being its base id', () => {
+      assert.match(fill, /lag\(coalesce\(h\.base_game_id, k\.hero_id\)\) over \(\s*partition by k\.fingerprint, k\.played_at, k\.timeline_no order by k\.pick_no\s*\) as previous_hero_id/);
       assert.match(fill, /s\.previous_hero_id is not null and s\.hero_id <> s\.previous_hero_id/);
     });
 
@@ -116,7 +116,7 @@ describe('the switch-in migration', () => {
 
     it('looks up the enemy picks in the table, so its unique index serves each switch, not in a CTE that is scanned once per switch', () => {
       const lateral = fill.slice(fill.indexOf('cross join lateral ('));
-      assert.match(lateral, /from public\.match_hero_timelines k\s+where k\.fingerprint = s\.fingerprint and k\.played_at = s\.played_at/);
+      assert.match(lateral, /from public\.match_hero_timelines k\s+left join public\.hero_game_roles h on h\.game_id = k\.hero_id\s+where k\.fingerprint = s\.fingerprint and k\.played_at = s\.played_at/);
       assert.doesNotMatch(lateral, /from picks k/);
       assert.doesNotMatch(fill, /picks as materialized/);
       assert.match(read('20261108180000_match_hero_timelines.sql'), /unique \(fingerprint, played_at, timeline_no, pick_no\)/);
@@ -129,13 +129,17 @@ describe('the switch-in migration', () => {
 
     it('credits a switch once to each distinct enemy hero on the field, by each enemy timeline\'s latest pick at or before it', () => {
       assert.match(fill, /select distinct s\.fingerprint, s\.played_at, s\.timeline_no, s\.pick_no, s\.hero_id,\s+e\.hero_id as enemy_hero_id, s\.is_win/);
-      assert.match(fill, /select distinct on \(k\.timeline_no\) k\.hero_id/);
+      assert.match(fill, /select distinct on \(k\.timeline_no\) coalesce\(h\.base_game_id, k\.hero_id\) as hero_id/);
       assert.match(fill, /k\.team <> s\.team and k\.at_second <= s\.at_second\s+order by k\.timeline_no, k\.pick_no desc/);
     });
 
     it('needs the enemy team\'s timeline: a switch with no enemy pick has no credit row, and no outer join invents one', () => {
       assert.match(fill, /cross join lateral \(/);
-      assert.deepEqual([...fill.matchAll(/left join (\w+)/g)].map(match => match[1]), ['timeline_recorders']);
+      assert.deepEqual([...fill.matchAll(/left join ([\w.]+)/g)].map(match => match[1]), [
+        'timeline_recorders',
+        'public.hero_game_roles',
+        'public.hero_game_roles',
+      ]);
     });
 
     it('counts recorders from the timeline uploader, falling back to the scoreboard\'s recorder, and keeps the busiest one\'s matches', () => {
