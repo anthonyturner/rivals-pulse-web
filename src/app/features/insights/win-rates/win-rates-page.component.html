@@ -8,6 +8,10 @@
     </p>
   </header>
 
+  <div class="strip" aria-hidden="true">
+    <img class="strip__art" src="/images/site/banners/hero-stats-strip.webp" alt="" width="1536" height="128" decoding="async" />
+  </div>
+
   <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
 
   @if (showModePicker() || meta()) {
@@ -52,7 +56,7 @@
         <app-filter-select label="Role" [options]="roleChoices()" [value]="role()" (valueChange)="chooseRole($event)" />
         <app-filter-select label="Sort" [options]="sortChoices" [value]="sort()" (valueChange)="chooseSort($event)" />
       </div>
-      <p class="summary-scope">Summary for these filters, among heroes with {{ v.minimumLabel }} or more.</p>
+      <p class="summary-scope">Summary for these filters, among heroes with {{ v.placementLabel }}.</p>
       <div class="summary" aria-label="Hero stats summary">
         <button type="button" (click)="chooseSort('win-desc')" [attr.aria-pressed]="sort() === 'win-desc'">
           <span>Highest win rate</span>
@@ -93,7 +97,7 @@
         <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
             No matches are counted {{ v.scopeLabel }} yet. Win rates appear here as RivalsPulse
-            players record matches, once a hero has {{ v.minimumLabel }}.
+            players record matches, once a hero has {{ v.placementLabel }}.
           </p>
         </app-state-panel>
       }
@@ -101,7 +105,7 @@
         <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
             {{ v.matchesCountedLabel }} counted {{ v.scopeLabel }} so far, but no hero has reached
-            {{ v.minimumLabel }}. A hero's win rate appears once it has.
+            {{ v.placementLabel }}. A hero's win rate appears once it has.
           </p>
         </app-state-panel>
       }
@@ -167,8 +171,8 @@
     @if ((v.state === 'full' || v.state === 'partial') && buildingRows().length > 0) {
       <section class="building" aria-labelledby="building-title">
         <div class="section-heading">
-          <h2 id="building-title">Progress toward {{ v.minimumLabel }}</h2>
-          <p>Building sample. Heroes need {{ v.minimumLabel }} before win and pick rates appear. Ban rates are not collected.</p>
+          <h2 id="building-title">Progress toward a win rate</h2>
+          <p>Building sample. Heroes need {{ v.placementLabel }} before win and pick rates appear. Ban rates are not collected.</p>
         </div>
 
         <app-hero-progress-list [rows]="buildingRows()" />

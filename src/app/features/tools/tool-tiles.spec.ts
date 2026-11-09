@@ -132,6 +132,19 @@ describe('The Tools hub', () => {
       expect(tile('Team Builder').classList).toContain('split');
     });
 
+    it('puts its own banner behind the Counters tile only, loaded at once and decorative', () => {
+      const art = (label: string): HTMLImageElement | null => tile(label).querySelector('.art img');
+      const banner = art('Counters');
+
+      expect(banner?.getAttribute('src')).toBe('/images/site/banners/counters-banner.webp');
+      expect(banner?.getAttribute('alt')).toBe('');
+      expect(banner?.getAttribute('loading')).toBeNull();
+      expect(art('Dive Planner')).toBeNull();
+      expect(art('Team Builder')).toBeNull();
+      expect(tile('Counters').classList).toContain('featured');
+      expect(tile('Counters').classList).toContain('cover');
+    });
+
     it('draws no figure in a preview that has no data yet', () => {
       for (const link of links) {
         expect(flat(tile(link.label).querySelector('.preview'))).toBe('');

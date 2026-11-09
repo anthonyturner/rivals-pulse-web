@@ -1,5 +1,12 @@
 import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import {
+  countLabel,
+  finalHitsLabel,
+  halfSeasonFallbackNotice,
+  kdaLabel,
+  percentLabel,
+  placementRequirementLabel,
+} from '../../../shared/utilities/stat-labels';
 
 export interface HeroCommunityFigure {
   label: string;
@@ -28,8 +35,6 @@ export type HeroCommunityStatsView =
       summary: string;
       figures: HeroCommunityFigure[];
     };
-
-const NOT_RECORDED = 'Not recorded';
 
 /**
  * What a hero page shows for one hero. `undefined` means the stats have not answered yet and `null`
@@ -68,17 +73,19 @@ export function buildHeroCommunityStatsView(
         { label: 'Win rate', value: percentLabel(line.winRate) },
         { label: 'Pick rate', value: percentLabel(line.pickRate) },
         { label: 'Ban rate', value: 'Not collected' },
-        { label: 'KDA', value: line.kda === null ? NOT_RECORDED : line.kda.toFixed(2) },
-        {
-          label: 'Final hits per match',
-          value: line.finalHitsAverage === null ? NOT_RECORDED : line.finalHitsAverage.toFixed(1),
-        },
+        { label: 'KDA', value: kdaLabel(line.kda) },
+        { label: 'Final hits per match', value: finalHitsLabel(line.finalHitsAverage) },
       ],
     };
   }
 
-  const appearances = stats.belowMinimum.find((entry) => entry.hero === heroId)?.appearances ?? 0;
-  const needed = `The numbers appear at ${stats.minimumMatches} appearances.`;
+  const held = stats.belowMinimum.find((entry) => entry.hero === heroId);
+  const appearances = held?.appearances ?? 0;
+  const soFar =
+    held?.players === undefined
+      ? countLabel(appearances, 'appearance', 'appearances')
+      : `${countLabel(appearances, 'appearance', 'appearances')} and ${countLabel(held.players, 'player', 'players')}`;
+  const needed = `The numbers appear at ${placementRequirementLabel(stats)}.`;
   const where = fallbackFor === null || halfSeasonLabel === null ? '' : ` in ${halfSeasonLabel}`;
 
   return {
@@ -92,7 +99,7 @@ export function buildHeroCommunityStatsView(
     ],
     summary:
       appearances > 0
-        ? `${heroName} has ${countLabel(appearances, 'appearance', 'appearances')} so far${where}, from matches recorded by RivalsPulse players. ${needed}`
+        ? `${heroName} has ${soFar} so far${where}, from matches recorded by RivalsPulse players. ${needed}`
         : `No match recorded by RivalsPulse players has ${heroName} yet${where}. ${needed}`,
   };
 }

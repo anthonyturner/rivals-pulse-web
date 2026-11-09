@@ -44,11 +44,16 @@ export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
   },
 ];
 
-/** Planned after the extended upload, with overlay issue 1284 and issue 457, so it has no share in its status. */
+/** Planned after the extended upload (issues 457 and 654), so none of these shares its status. */
 export const PLANNED_UPLOAD_FIELDS: readonly UploadField[] = [
   {
     label: 'Ability and ultimate use',
     detail:
       'How often the uploading player used each ability and their ultimate on each hero. This shows that an ability was used, not whether it hit anyone. Never uploaded for other players.',
+  },
+  {
+    label: 'Hero changes during the match',
+    detail:
+      'For every player, the heroes they played and how many seconds into the match each pick happened, grouped by team. It carries no player names or ids and is stored once per match. It is used to count how often switching to a hero while an enemy hero is in play goes on to win.',
   },
 ];

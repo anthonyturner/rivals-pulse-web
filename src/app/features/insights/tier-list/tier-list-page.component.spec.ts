@@ -154,6 +154,7 @@ describe('TierListPageComponent', () => {
 
     expect(lead?.textContent).toContain('RivalsPulse has no rank breakdown');
     expect(lead?.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(lead?.querySelector('img')?.getAttribute('src')).toBe('/images/site/banners/tier-list-banner.webp');
   });
 
   it('draws art-led hero tiles that link to their hero', async () => {
@@ -212,7 +213,7 @@ describe('TierListPageComponent', () => {
   it('shows a partial dataset as placed heroes plus the rest as not enough data yet, in the same structure', async () => {
     const { page } = await open(partial);
 
-    expect(text(page, '.building h2')).toEqual(['Progress toward 10 appearances']);
+    expect(text(page, '.building h2')).toEqual(['Progress toward a tier']);
     expect(text(page, '.building-name')).toEqual(['Thor']);
     expect(text(page, '.building-count')).toEqual(['2 of 10']);
     expect(text(page, '.building .section-heading p')).toEqual([

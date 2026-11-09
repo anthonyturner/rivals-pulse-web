@@ -1,0 +1,186 @@
+:host {
+  display: block;
+}
+
+.pulse-banner {
+  --loop: 2.8s;
+  --spark-size: 18px;
+  position: relative;
+  height: var(--pulse-banner-height, 128px);
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  background: radial-gradient(120% 140% at 50% 0%, var(--ink-raised) 0%, color-mix(in srgb, var(--ink) 78%, transparent) 100%);
+}
+
+.pulse-banner__grid,
+.pulse-banner__stage,
+.pulse-banner__clash {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The clash is stretched to the banner's width, so its strokes keep their width on screen instead of thickening where they run steeply. A pulse is the heartbeat line in colour, revealed through a window that slides along it in drawing units; a dash would be measured in screen pixels here and stop short of the collision on a narrow banner. */
+.pulse-banner__line {
+  fill: none;
+  stroke: var(--ink-line);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.pulse-banner__pulse {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: url(#pulse-banner-glow);
+}
+
+.pulse-banner__window--left {
+  animation: pulse-banner-window-left var(--loop) infinite;
+}
+
+.pulse-banner__window--right {
+  animation: pulse-banner-window-right var(--loop) infinite;
+}
+
+.pulse-banner__pulse--left {
+  stroke: var(--ink-accent);
+}
+
+.pulse-banner__pulse--right {
+  stroke: var(--ink-secondary);
+}
+
+/* A plain element, not part of the stretched drawing, so it stays round at every width. It sits where the two pulses meet: halfway across, at 118 of the drawing's 150 units. */
+.pulse-banner__spark {
+  position: absolute;
+  top: calc(118 / 150 * 100%);
+  left: 50%;
+  width: var(--spark-size);
+  height: var(--spark-size);
+  margin: calc(var(--spark-size) / -2) 0 0 calc(var(--spark-size) / -2);
+  border-radius: 50%;
+  background: var(--ink-tertiary);
+  box-shadow: 0 0 14px 4px var(--ink-tertiary);
+  animation: pulse-banner-spark var(--loop) ease-out infinite;
+}
+
+.pulse-banner__name {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  margin: 0;
+  padding-bottom: 22px;
+  place-items: center;
+  color: var(--on-ink);
+  font-size: clamp(28px, 4.5vw, 48px);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.pulse-banner__name-text {
+  animation: pulse-banner-hit var(--loop) ease-out infinite;
+}
+
+.pulse-banner__name-accent {
+  color: var(--ink-accent);
+}
+
+/* Held while the tab is hidden or the banner is off screen, so nothing runs unseen. */
+.pulse-banner--paused .pulse-banner__window,
+.pulse-banner--paused .pulse-banner__spark,
+.pulse-banner--paused .pulse-banner__name-text {
+  animation-play-state: paused;
+}
+
+/* The collision frozen, for a visitor who asked for less motion, and for the server render. */
+.pulse-banner--still .pulse-banner__window,
+.pulse-banner--still .pulse-banner__spark,
+.pulse-banner--still .pulse-banner__name-text {
+  animation: none;
+}
+
+.pulse-banner--still .pulse-banner__pulse {
+  mask: none;
+}
+
+@keyframes pulse-banner-window-left {
+  0% { transform: translateX(0); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.6); }
+  55% { transform: translateX(500px); animation-timing-function: linear; }
+  100% { transform: translateX(700px); }
+}
+
+@keyframes pulse-banner-window-right {
+  0% { transform: translateX(0); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.6); }
+  55% { transform: translateX(-500px); animation-timing-function: linear; }
+  100% { transform: translateX(-700px); }
+}
+
+@keyframes pulse-banner-spark {
+  0%, 50% { opacity: 0; transform: scale(0.2); }
+  55% { opacity: 1; transform: scale(1.6); }
+  75%, 100% { opacity: 0; transform: scale(3); }
+}
+
+@keyframes pulse-banner-hit {
+  0%, 52% { opacity: 0.85; transform: none; }
+  56% { opacity: 1; transform: translateX(2px); text-shadow: 0 0 22px var(--ink-tertiary); }
+  60% { transform: translateX(-2px); }
+  70%, 100% { opacity: 0.92; transform: none; text-shadow: none; }
+}
+
+@media (max-width: 640px) {
+  .pulse-banner {
+    --spark-size: 12px;
+  }
+}
+
+/*
+ * As a backdrop the banner is the hero's whole background, so it has no frame, and the box that holds
+ * it is positioned by the owner. The grid fills that box; the clash keeps a band across the top of
+ * it, `--pulse-stage-height` tall, so the heartbeat stays the shape it is in the strip at any hero size
+ * and the copy below it has the grid alone behind it. The scrim keeps that copy readable: at least
+ * 64% ink wherever the copy can be, and light only to the right of the copy column on a wide hero.
+ */
+:host([data-layout='backdrop']) {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+}
+
+:host([data-layout='backdrop']) .pulse-banner {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--ink-raised) 0%, transparent 100%),
+    var(--ink);
+}
+
+:host([data-layout='backdrop']) .pulse-banner::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: color-mix(in srgb, var(--ink) 64%, transparent);
+}
+
+@media (min-width: 1201px) {
+  :host([data-layout='backdrop']) .pulse-banner::after {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 76%, transparent), color-mix(in srgb, var(--ink) 64%, transparent) 62%, color-mix(in srgb, var(--ink) 10%, transparent));
+  }
+}
+
+:host([data-layout='backdrop']) .pulse-banner__stage {
+  z-index: 1;
+  bottom: auto;
+  height: var(--pulse-stage-height, 200px);
+}

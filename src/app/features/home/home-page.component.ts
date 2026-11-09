@@ -14,6 +14,7 @@ import {
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -24,9 +25,12 @@ import { GameNewsBandComponent } from './game-news-band/game-news-band.component
 import { HeroOverlayActionsComponent } from './hero-overlay-actions/hero-overlay-actions.component';
 import { HomeFaqComponent } from './home-faq/home-faq.component';
 import { HomeContentService } from './home-content.service';
+import { HomeHeroVideoPreferenceService } from './home-hero-video-preference.service';
 import { buildHomeHeroMedia } from './home-page-hero.utils';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { OverlaySectionComponent } from './overlay-section/overlay-section.component';
+import { PulseBannerComponent, PulseBannerLayout } from './pulse-banner/pulse-banner.component';
+import { ReleaseMediaOnDestroyDirective } from './release-media-on-destroy.directive';
 import { ToolsRowComponent } from './tools-row/tools-row.component';
 import { WordOfDayComponent } from './word-of-day/word-of-day.component';
 
@@ -36,8 +40,8 @@ const RESERVE_CLASS = 'has-minimized-video';
 /** What the visitor chose for the video once the hero has scrolled out of view. */
 type FloatingVideoMode = 'floating' | 'minimized' | 'background';
 
-/** Where the video is drawn: in the hero, in the floating player, folded into the tab, or open as the dialog. */
-type VideoPlacement = 'hero' | 'floating' | 'minimized' | 'foreground';
+/** Where the video is drawn: in the hero, in the floating player, folded into the tab, open as the dialog, or not at all. */
+type VideoPlacement = 'hero' | 'floating' | 'minimized' | 'foreground' | 'off';
 
 @Component({
   selector: 'app-home-page',
@@ -49,6 +53,8 @@ type VideoPlacement = 'hero' | 'floating' | 'minimized' | 'foreground';
     HomeFaqComponent,
     HowItWorksComponent,
     OverlaySectionComponent,
+    PulseBannerComponent,
+    ReleaseMediaOnDestroyDirective,
     RouterLink,
     ToolsRowComponent,
     WordOfDayComponent,
@@ -62,17 +68,26 @@ export class HomePageComponent implements AfterViewInit {
   @ViewChild('videoClose') private videoClose?: ElementRef<HTMLButtonElement>;
   @ViewChild('videoMinimize') private videoMinimize?: ElementRef<HTMLButtonElement>;
   @ViewChild('videoTab') private videoTab?: ElementRef<HTMLButtonElement>;
+  private readonly backgroundVideo = viewChild<ElementRef<HTMLVideoElement>>('backgroundVideo');
 
   backgroundVideoMuted = true;
   private readonly foregroundOpen = signal(false);
   /** Held for the current visit only: a reload starts floating again. */
   private readonly floatingVideoMode = signal<FloatingVideoMode>('floating');
   private readonly heroScrolledPast = signal(false);
+  private readonly heroVideoPreference = inject(HomeHeroVideoPreferenceService);
+  /** Whether the visitor wants the hero video; with it off the Pulse banner is the hero's background. */
+  readonly heroVideoOn = this.heroVideoPreference.enabled;
+  readonly bannerLayout = computed<PulseBannerLayout>(() => (this.heroVideoOn() ? 'strip' : 'backdrop'));
   readonly videoPlacement = computed<VideoPlacement>(() => {
     const mode = this.floatingVideoMode();
 
     if (this.foregroundOpen()) {
       return 'foreground';
+    }
+
+    if (!this.heroVideoOn()) {
+      return 'off';
     }
 
     return this.heroScrolledPast() && mode !== 'background' ? mode : 'hero';
@@ -122,6 +137,16 @@ export class HomePageComponent implements AfterViewInit {
     }
   }
 
+  toggleHeroVideo(): void {
+    const video = this.backgroundVideo()?.nativeElement;
+
+    if (this.heroVideoOn() && video) {
+      this.muteBackgroundVideo(video);
+    }
+
+    this.heroVideoPreference.set(!this.heroVideoOn());
+  }
+
   minimizeFloatingVideo(video: HTMLVideoElement): void {
     this.muteBackgroundVideo(video);
     this.floatingVideoMode.set('minimized');
@@ -169,7 +194,13 @@ export class HomePageComponent implements AfterViewInit {
     });
   }
 
-  toggleBackgroundVideoSound(video: HTMLVideoElement): void {
+  toggleBackgroundVideoSound(): void {
+    const video = this.backgroundVideo()?.nativeElement;
+
+    if (!video) {
+      return;
+    }
+
     this.backgroundVideoMuted = !this.backgroundVideoMuted;
     video.muted = this.backgroundVideoMuted;
 
@@ -182,28 +213,28 @@ export class HomePageComponent implements AfterViewInit {
     });
   }
 
-  onBackgroundVideoSurfaceClick(video: HTMLVideoElement): void {
+  onBackgroundVideoSurfaceClick(): void {
     if (this.foregroundOpen()) {
       this.closeBackgroundVideo();
       return;
     }
 
-    this.openBackgroundVideo(video);
+    this.openBackgroundVideo();
   }
 
-  onWatchUpdateVideo(video: HTMLVideoElement): void {
+  onWatchUpdateVideo(): void {
     if (!this.foregroundOpen()) {
-      this.openBackgroundVideo(video);
+      this.openBackgroundVideo();
     }
   }
 
-  onBackgroundVideoKeydown(event: KeyboardEvent, video: HTMLVideoElement): void {
+  onBackgroundVideoKeydown(event: KeyboardEvent): void {
     if (this.foregroundOpen() || (event.key !== 'Enter' && event.key !== ' ')) {
       return;
     }
 
     event.preventDefault();
-    this.onBackgroundVideoSurfaceClick(video);
+    this.onBackgroundVideoSurfaceClick();
   }
 
   onForegroundVideoClick(event: MouseEvent): void {
@@ -232,11 +263,32 @@ export class HomePageComponent implements AfterViewInit {
     );
   }
 
-  private openBackgroundVideo(video: HTMLVideoElement): void {
+  /** With the hero video off the video is not in the page, so it is rendered first, then played. */
+  private openBackgroundVideo(): void {
+    const existing = this.backgroundVideo()?.nativeElement;
+
     this.videoOpener = this.isBrowser ? (this.document.activeElement as HTMLElement | null) : null;
     this.foregroundOpen.set(true);
-    afterNextRender(() => this.videoClose?.nativeElement.focus(), { injector: this.injector });
-    void video.play().catch(() => {
+
+    if (existing) {
+      this.playForeground(existing);
+    }
+
+    afterNextRender(
+      () => {
+        this.videoClose?.nativeElement.focus();
+
+        if (!existing) {
+          this.playForeground(this.backgroundVideo()?.nativeElement);
+        }
+      },
+      { injector: this.injector },
+    );
+  }
+
+  /** Called straight from the click when it can be: a browser may refuse to play once the gesture is over. */
+  private playForeground(video: HTMLVideoElement | undefined): void {
+    void video?.play().catch(() => {
       // Native foreground controls remain available if playback does not resume automatically.
     });
   }

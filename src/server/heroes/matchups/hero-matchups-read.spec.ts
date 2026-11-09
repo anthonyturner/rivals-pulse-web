@@ -70,6 +70,8 @@ const ALLOWED_KEYS = new Set([
   'wins',
   'winRate',
   'shrunkWinRate',
+  'kda',
+  'finalHitsAverage',
 ]);
 
 describe('getHeroMatchups', () => {
@@ -173,9 +175,102 @@ describe('parseHeroMatchupRows', () => {
       'decidedLines',
       'decidedMatches',
       'enemyGameHeroId',
+      'figures',
       'gameHeroId',
       'halfSeason',
       'wins',
     ]);
+  });
+
+  const FIGURES = {
+    kills_sum: 60,
+    kills_n: 12,
+    deaths_sum: 24,
+    deaths_n: 12,
+    assists_sum: 36,
+    assists_n: 12,
+    final_hits_sum: 48,
+    final_hits_n: 12,
+  };
+
+  it('reads the figures of a row that has them', () => {
+    const [first] = parseHeroMatchupRows([{ ...matchupAnswer()[0], ...FIGURES }]);
+
+    expect(first.figures).toEqual({
+      killsSum: 60,
+      killsN: 12,
+      deathsSum: 24,
+      deathsN: 12,
+      assistsSum: 36,
+      assistsN: 12,
+      finalHitsSum: 48,
+      finalHitsN: 12,
+    });
+  });
+
+  it('reads the old row shape, with the figures absent, as no figures rather than failing', () => {
+    const rows = parseHeroMatchupRows(matchupAnswer());
+
+    expect(rows.length).toBe(3);
+    expect(rows.every((row) => row.figures === null)).toBeTrue();
+  });
+
+  it('reads figures the database returned as null, as a frozen half-season does, as no figures', () => {
+    const frozen = Object.fromEntries(Object.keys(FIGURES).map((key) => [key, null]));
+    const [first] = parseHeroMatchupRows([{ ...matchupAnswer()[0], ...frozen }]);
+
+    expect(first.figures).toBeNull();
+  });
+
+  it('reads a row with only some figures as no figures, never as zeros', () => {
+    const [first] = parseHeroMatchupRows([{ ...matchupAnswer()[0], ...FIGURES, deaths_sum: null, deaths_n: null }]);
+
+    expect(first.figures).toBeNull();
+  });
+
+  it('rejects a figure that is neither a number nor null', () => {
+    expect(() => parseHeroMatchupRows([{ ...matchupAnswer()[0], ...FIGURES, kills_sum: 'many' }])).toThrowError(
+      /kills_sum is not a number or null/,
+    );
+  });
+});
+
+describe('getHeroMatchups with the encounter figures', () => {
+  const options = { env: ENV, now: NOW };
+
+  const withFigures = (line: Record<string, unknown>, kills: number, finalHits: number) => ({
+    ...line,
+    kills_sum: kills * 12,
+    kills_n: 12,
+    deaths_sum: 24,
+    deaths_n: 12,
+    assists_sum: 36,
+    assists_n: 12,
+    final_hits_sum: finalHits * 12,
+    final_hits_n: 12,
+  });
+
+  beforeEach(() => spyOn(console, 'warn'));
+
+  it('derives KDA and final hits per match for each direction of a pair', async () => {
+    const [hulk, captain] = matchupAnswer();
+    const body = [withFigures(hulk, 5, 4), withFigures(captain, 1, 2)];
+    const { matchups } = await getHeroMatchups({
+      ...options,
+      fetch: answering({ ...bothFunctions, read_hero_matchups: { body } }),
+    });
+
+    expect(matchups.map((matchup) => [matchup.hero, matchup.kda, matchup.finalHitsAverage])).toEqual([
+      ['captain-america', (12 + 36) / 24, 2],
+      ['hulk', (60 + 36) / 24, 4],
+    ]);
+  });
+
+  it('returns null figures, and no NaN, for an answer that predates the figures', async () => {
+    const { matchups } = await getHeroMatchups({ ...options, fetch: answering(bothFunctions) });
+
+    expect(matchups.length).toBe(2);
+    expect(matchups.every((matchup) => matchup.kda === null && matchup.finalHitsAverage === null)).toBeTrue();
+    expect(JSON.stringify(matchups)).not.toContain('NaN');
   });
 });

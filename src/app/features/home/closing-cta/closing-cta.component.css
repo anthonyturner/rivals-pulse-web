@@ -20,17 +20,17 @@
 }
 
 .link {
-  color: var(--ink-accent);
+  color: var(--accent-strong);
   font-weight: 700;
   text-underline-offset: 3px;
 }
 
 .link:hover {
-  color: var(--on-ink);
+  color: var(--text);
 }
 
 .link:focus-visible {
-  outline: 3px solid var(--ink-focus);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -47,8 +47,4 @@
   .closing {
     justify-items: stretch;
   }
-}
-
-app-get-app-button {
-  --get-app-focus: var(--ink-focus);
 }

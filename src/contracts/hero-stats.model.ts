@@ -53,17 +53,30 @@ export interface HeroStatsTier {
 export interface HeroStatsBelowMinimum {
   hero: string;
   appearances: number;
+  /**
+   * Different players who recorded the matches this hero appeared in: a count so far, never who.
+   * Absent where nobody counted it (a half-season that ended before the count existed), and there the
+   * hero is placed on `minimumMatches` alone. Below `HeroStats.minimumPlayers` the hero is held back
+   * even with enough appearances.
+   */
+  players?: number;
 }
 
 /**
  * Every hero number the site shows, from RivalsPulse app matches only.
  *
- * `ready` means at least one hero has reached `minimumMatches`; `not-enough-data` is a designed state,
+ * `ready` means at least one hero has reached `minimumMatches` and `minimumPlayers`; `not-enough-data` is a designed state,
  * not an error, and then `tiers` is empty.
  */
 export interface HeroStats {
   status: 'ready' | 'not-enough-data';
   minimumMatches: number;
+  /**
+   * Different players that must have recorded a hero, besides `minimumMatches`, before it is placed.
+   * Not applied where nobody counted the players (a half-season frozen before the count existed).
+   * Absent only in an answer the CDN cached before this field existed.
+   */
+  minimumPlayers?: number;
   /** Every half-season that has started, oldest first: the seasons a client can ask for. */
   halfSeasons: HeroStatsHalfSeason[];
   /** The half-season the numbers come from, or null before any half-season exists. */

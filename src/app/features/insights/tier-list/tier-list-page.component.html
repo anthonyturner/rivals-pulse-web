@@ -34,8 +34,8 @@
           @if (v.season?.dateRange; as range) {
             {{ range }} &middot;
           }
-          {{ v.matchesCountedLabel }} counted &middot; Heroes need {{ v.minimumMatches }}
-          appearances to be placed &middot; Each tile: win rate, then pick rate and games.
+          {{ v.matchesCountedLabel }} counted &middot; Heroes need {{ v.placementLabel }}
+          to be placed &middot; Each tile: win rate, then pick rate and games.
         </p>
       }
     </div>
@@ -72,7 +72,7 @@
         </p>
         <p>
           The tier list is built from matches that RivalsPulse players record, so it fills in as
-          they play. A hero is placed once it has {{ v.minimumMatches }} appearances.
+          they play. A hero is placed once it has {{ v.placementLabel }}.
         </p>
       </app-state-panel>
     }
@@ -80,8 +80,8 @@
     @if (v.building.length > 0) {
       <section class="building" aria-labelledby="building-title">
         <div class="section-heading">
-          <h2 id="building-title">Progress toward {{ v.minimumMatches }} appearances</h2>
-          <p>Heroes need {{ v.minimumMatches }} appearances before they are placed in a tier.</p>
+          <h2 id="building-title">Progress toward a tier</h2>
+          <p>Heroes need {{ v.placementLabel }} before they are placed in a tier.</p>
         </div>
 
         <app-hero-progress-list [rows]="v.building" />

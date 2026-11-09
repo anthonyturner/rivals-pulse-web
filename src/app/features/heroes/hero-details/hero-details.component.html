@@ -223,6 +223,14 @@
         [heroName]="hero.name"
         [matchups]="controller.heroMatchups()"
         [roster]="controller.heroRoster()"
+        [stats]="controller.heroStats()"
+        [kills]="controller.heroKills()"
+      />
+      <app-hero-switch-ins
+        [heroId]="hero.id"
+        [heroName]="hero.name"
+        [switchIns]="controller.heroSwitchIns()"
+        [roster]="controller.heroRoster()"
       />
     </section>
 

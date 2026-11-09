@@ -34,6 +34,8 @@ function row(gameHeroId: number, decidedLines: number, wins: number, extra: Part
     assistsN: 0,
     finalHitsSum: 0,
     finalHitsN: 0,
+    recorders: null,
+    blendedRecorders: null,
     ...extra,
   };
 }
@@ -51,6 +53,8 @@ function fullRow(gameHeroId: number, lines: number, wins: number, perLine: [numb
     assistsN: lines,
     finalHitsSum: finalHits * lines,
     finalHitsN: lines,
+    recorders: null,
+    blendedRecorders: null,
     ...extra,
   });
 }

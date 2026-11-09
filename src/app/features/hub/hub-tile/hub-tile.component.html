@@ -19,6 +19,7 @@
   <h2 class="title"><ng-container *ngTemplateOutlet="link" /></h2>
 }
 <p class="description">{{ description() }}</p>
+<ng-content select="[tile-actions]" />
 <div class="preview" aria-hidden="true"><ng-content /></div>
 
 <ng-template #link>

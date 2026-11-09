@@ -6,6 +6,8 @@ import {
   MAX_HERO_FIGURES,
   MAX_HERO_KILL_PAIRS,
   MAX_KILLS_PER_PAIR,
+  MAX_TIMELINE_PICKS,
+  MAX_TIMELINE_PLAYERS,
   readExtendedUpload,
 } from './extended-payload.ts';
 import { parseParticipants, readMatchContext, rosterFingerprint, storableMatch, type JsonRecord } from './match-payload.ts';
@@ -42,6 +44,7 @@ describe('readExtendedUpload', () => {
       ],
       hero_kills: [{ killer: 'iron-man', victim: 'hulk', kills: 3 }],
       hero_ability_uses: [],
+      hero_timelines: [],
     });
   });
 
@@ -134,6 +137,7 @@ describe('readExtendedUpload', () => {
       hero_figures: [],
       hero_kills: [{ killer: 'iron-man', victim: 'hulk', kills: 1 }],
       hero_ability_uses: [],
+      hero_timelines: [],
     });
   });
 
@@ -237,6 +241,19 @@ describe('a payload with the extended fields beside one without', () => {
     assert.equal(readExtendedUpload(old()), null);
     assert.notEqual(readExtendedUpload(extended()), null);
   });
+
+  it('stores the same scoreboard and history row with hero timelines as without', async () => {
+    const withTimelines = {
+      ...old(),
+      hero_timelines: [{ team: 0, picks: [{ hero_id: 1011, at_second: 0 }] }, { team: 1, picks: [{ hero_id: 1022, at_second: 0 }] }],
+    };
+
+    assert.deepEqual(parseParticipants(withTimelines), parseParticipants(old()));
+    assert.equal(await rosterFingerprint(parseParticipants(withTimelines)), await rosterFingerprint(parseParticipants(old())));
+    assert.deepEqual(storableMatch(withTimelines), storableMatch(old()));
+    assert.equal(readExtendedUpload(old(), parseParticipants(old())), null);
+    assert.equal(readExtendedUpload(withTimelines, parseParticipants(withTimelines))?.hero_timelines.length, 2);
+  });
 });
 
 describe('readExtendedUpload: ability and ultimate counts', () => {
@@ -279,5 +296,121 @@ describe('readExtendedUpload: ability and ultimate counts', () => {
   it('needs the recorder uid, and reads nothing from roster lines', () => {
     assert.equal(read([use()], { player_uid: null }), null);
     assert.equal(readExtendedUpload(match({ match_players: [{ player_uid: '100', hero_ability_uses: [use()] }] })), null);
+  });
+});
+
+describe('readExtendedUpload: hero timelines', () => {
+  const pick = (hero_id: number, at_second: number): JsonRecord => ({ hero_id, at_second });
+  const line = (uid: string, camp: number, hero: number): JsonRecord => ({ player_uid: uid, nick_name: `Player ${uid}`, camp, cur_hero_id: hero });
+  const players = [line('100', 0, 1011), line('101', 0, 1022), line('200', 1, 1033), line('201', 1, 1044)];
+  const timelines = (): JsonRecord[] => [
+    { team: 0, picks: [pick(1050, 0), pick(1011, 120)] },
+    { team: 0, picks: [pick(1022, 0)] },
+    { team: 1, picks: [pick(1033, 0)] },
+    { team: 1, picks: [pick(1060, 0), pick(1044, 300)] },
+  ];
+  const read = (value: unknown, scoreboard: JsonRecord[] = players) => {
+    const upload = readExtendedUpload(match({ match_players: scoreboard, hero_timelines: value }), parseParticipants({ match_players: scoreboard }));
+    return upload?.hero_timelines ?? [];
+  };
+
+  it('is null for the payload every shipped overlay sends', () => {
+    assert.equal(readExtendedUpload(match({ match_players: players }), parseParticipants({ match_players: players })), null);
+  });
+
+  it('keeps each players picks in order with their team, and no uid or name', () => {
+    const kept = read(timelines());
+
+    assert.equal(kept.length, 4);
+    assert.deepEqual(kept[0], { team: 0, picks: [{ hero_id: 1050, at_second: 0 }, { hero_id: 1011, at_second: 120 }] });
+    for (const timeline of kept) assert.deepEqual(Object.keys(timeline), ['team', 'picks']);
+  });
+
+  it('reads numeric strings and rounds a fractional second', () => {
+    const kept = read([{ team: '0', picks: [{ hero_id: '1011', at_second: 10.4 }] }], [line('100', 0, 1011)]);
+
+    assert.deepEqual(kept, [{ team: 0, picks: [{ hero_id: 1011, at_second: 10 }] }]);
+  });
+
+  it('drops a list that is not a list, or has more players than a lobby', () => {
+    assert.deepEqual(read({ team: 0 }), []);
+    assert.deepEqual(read('x'), []);
+    const crowd = Array.from({ length: MAX_TIMELINE_PLAYERS + 1 }, () => ({ team: 0, picks: [pick(1011, 0)] }));
+    assert.deepEqual(read(crowd, Array.from({ length: crowd.length }, (_, index) => line(String(index), 0, 1011))), []);
+  });
+
+  it('drops the whole list when one player has more picks than the overlay keeps, and keeps the other extras', () => {
+    const long = Array.from({ length: MAX_TIMELINE_PICKS + 1 }, (_, index) => pick(1011, index));
+    const upload = readExtendedUpload(
+      match({ match_players: players, hero_timelines: [...timelines(), { team: 0, picks: long }], hero_kills: [{ killer: 'iron-man', victim: 'hulk', kills: 2 }] }),
+      parseParticipants({ match_players: players }),
+    );
+
+    assert.deepEqual(upload?.hero_timelines, []);
+    assert.deepEqual(upload?.hero_kills, [{ killer: 'iron-man', victim: 'hulk', kills: 2 }]);
+  });
+
+  it('accepts exactly 12 players and exactly 20 picks', () => {
+    const picks = Array.from({ length: MAX_TIMELINE_PICKS }, (_, index) => pick(index === MAX_TIMELINE_PICKS - 1 ? 1011 : 1012, index));
+    const lobby = Array.from({ length: MAX_TIMELINE_PLAYERS }, (_, index) => line(String(index), index % 2, 1011));
+    const everyone = lobby.map(row => ({ team: row['camp'], picks }));
+
+    assert.equal(read(everyone, lobby).length, MAX_TIMELINE_PLAYERS);
+  });
+
+  it('drops a timeline whose seconds go back, whose pick is malformed or that has no picks', () => {
+    for (const picks of [[pick(1011, 50), pick(1011, 49)], [pick(0, 1)], [pick(1011, -1)], [pick(1011, 7201)], [{ hero_id: 1011 }], ['x'], [], 'x', null]) {
+      assert.deepEqual(read([{ team: 0, picks }], [line('100', 0, 1011)]), [], JSON.stringify(picks));
+    }
+  });
+
+  it('keeps two picks at the same second', () => {
+    assert.equal(read([{ team: 0, picks: [pick(1050, 5), pick(1011, 5)] }], [line('100', 0, 1011)]).length, 1);
+  });
+
+  it('drops a timeline with no usable team', () => {
+    for (const team of [-1, 10, 1.5, null, 'x']) {
+      assert.deepEqual(read([{ team, picks: [pick(1011, 0)] }], [line('100', 0, 1011)]), [], String(team));
+    }
+  });
+
+  it('drops a team whose final heroes are not the heroes on its scoreboard, and keeps the other team', () => {
+    const wrongTeamOne = timelines();
+    wrongTeamOne[3] = { team: 1, picks: [pick(1044, 0), pick(1099, 300)] };
+
+    assert.deepEqual(read(wrongTeamOne).map(timeline => timeline.team), [0, 0]);
+  });
+
+  it('matches heroes as a multiset, whoever played which, and counts a repeated hero twice', () => {
+    const pair = [line('100', 0, 1011), line('101', 0, 1011)];
+    const swapped = [line('100', 0, 1011), line('101', 0, 1022)];
+
+    assert.equal(read([{ team: 0, picks: [pick(1011, 0)] }, { team: 0, picks: [pick(1011, 0)] }], pair).length, 2);
+    assert.deepEqual(read([{ team: 0, picks: [pick(1011, 0)] }, { team: 0, picks: [pick(1011, 0)] }], swapped), []);
+    assert.equal(read([{ team: 0, picks: [pick(1022, 0)] }, { team: 0, picks: [pick(1011, 0)] }], swapped).length, 2);
+  });
+
+  it('drops a team when a player on its scoreboard has no timeline, or a timeline has no scoreboard line', () => {
+    assert.deepEqual(read(timelines().slice(0, 3)).map(timeline => timeline.team), [0, 0]);
+    assert.deepEqual(read([...timelines(), { team: 0, picks: [pick(1011, 0)] }]).map(timeline => timeline.team), [1, 1]);
+  });
+
+  it('drops a team when one of its timelines is malformed, since that player is then missing', () => {
+    const broken = timelines();
+    broken[1] = { team: 0, picks: [pick(1022, 9), pick(1022, 8)] };
+
+    assert.deepEqual(read(broken).map(timeline => timeline.team), [1, 1]);
+  });
+
+  it('keeps nothing when the scoreboard has no hero for a player, since the heroes cannot be compared', () => {
+    assert.deepEqual(read([{ team: 0, picks: [pick(1011, 0)] }], [{ player_uid: '100', nick_name: 'A', camp: 0 }]), []);
+  });
+
+  it('keeps nothing when no scoreboard is given', () => {
+    assert.deepEqual(readExtendedUpload(match({ hero_timelines: timelines() }))?.hero_timelines ?? [], []);
+  });
+
+  it('is read as extended when only the timelines are there', () => {
+    assert.notEqual(readExtendedUpload(match({ match_players: players, hero_timelines: timelines() }), parseParticipants({ match_players: players })), null);
   });
 });

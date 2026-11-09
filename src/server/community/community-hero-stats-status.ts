@@ -10,7 +10,7 @@ export interface CommunityHeroStatsStatus {
   /** Set when that half-season stands in for the current one, which has not reached the minimum yet. */
   inPlaceOf: number | null;
   matchesCounted: number;
-  /** Heroes with enough appearances to be placed in a tier. */
+  /** Heroes with enough appearances and players to be placed in a tier. */
   heroesPlaced: number;
 }
 

@@ -201,7 +201,7 @@ function readName(value: unknown): string | null {
   return name || null;
 }
 
-function readTeam(value: unknown): number | null {
+export function readTeam(value: unknown): number | null {
   return readCount(value, 9);
 }
 

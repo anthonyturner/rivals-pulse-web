@@ -11,8 +11,8 @@
     {
       "dataset": "tier-list",
       "path": "pulse-atlas/v1/tier-list.json",
-      "sha256": "0a5b109ed79bb77b5cfb8a962d92099cb33f36b546ebe58ab8adf33f02c99d4c",
-      "bytes": 1800
+      "sha256": "9457abd97c382d9950a88599f84478a90bb667a7817d0eba33132c9e535e2277",
+      "bytes": 1843
     },
     {
       "dataset": "glossary",
@@ -41,8 +41,8 @@
     {
       "dataset": "hero-stats",
       "path": "pulse-atlas/v1/hero-stats.json",
-      "sha256": "d1f67a6c37e0f86c264076ccee57df597692076293b669f8c884103c60a037b5",
-      "bytes": 798
+      "sha256": "5d21a0cad165d38df77d57529fb036573bf660f954aaedc3c21b71d988de33b9",
+      "bytes": 829
     },
     {
       "dataset": "community-stats",

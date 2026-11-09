@@ -88,9 +88,14 @@ export function tierListSeasonPath(seasonId: number): string {
 const PRIVATE_KEY =
   /secret|password|passwd|token|api[-_]?key|authorization|credential|email|puuid|player|steam|account|session/i;
 
-// A number of players, never who they are: the one key the player pattern lets through, so a file can
-// say how many players a figure waits for. Its value is checked where the key is allow-listed.
+// A number of players, never who they are: the key the player pattern lets through, so a file can say
+// how many players a figure waits for. Only a whole number passes under it.
 const PLAYER_COUNT_KEYS: readonly string[] = ['minimumPlayers'];
+
+// Hero stats and the tier list also say how many players a hero has so far, under `players`. Every
+// other file refuses that key.
+const PLAYER_TALLY_KEYS: readonly string[] = [...PLAYER_COUNT_KEYS, 'players'];
+const PLAYER_TALLY_DATASETS: readonly string[] = ['hero-stats', 'tier-list'];
 
 // `counters` are matchup picks derived from a third-party site and are never published, so the key
 // is unsafe everywhere except in community-stats, whose counters are the site's own counts.
@@ -280,6 +285,8 @@ interface StatsHero {
 interface HeroStatsView {
   /** Appearances a hero needs before it is placed. */
   minimumMatches: number;
+  /** Players a hero needs, besides the matches, before it is placed; not applied where the players were never counted. Absent in an older answer. */
+  minimumPlayers?: number;
   /** Every half-season that has started, oldest first. */
   halfSeasons: StatsHalfSeason[];
   /** The half-season the numbers come from; null before any half-season exists. */
@@ -288,7 +295,7 @@ interface HeroStatsView {
   inPlaceOf: StatsHalfSeason | null;
   matchesCounted: number;
   tiers: { name: string; heroes: StatsHero[] }[];
-  belowMinimum: { hero: string; appearances: number }[];
+  belowMinimum: { hero: string; appearances: number; players?: number }[];
 }
 
 interface HalfSeasonStats {
@@ -417,10 +424,13 @@ function snapshotOf(view: HeroStatsView, gameIdOf: (hero: string) => number | un
     })),
     matchesCounted: view.matchesCounted,
     minimumMatches: view.minimumMatches,
+    ...(view.minimumPlayers === undefined ? {} : { minimumPlayers: view.minimumPlayers }),
     belowMinimum: view.belowMinimum.flatMap((hero) => {
       const heroId = gameIdOf(hero.hero);
 
-      return heroId === undefined ? [] : [{ heroId, matches: hero.appearances }];
+      return heroId === undefined
+        ? []
+        : [{ heroId, matches: hero.appearances, ...(hero.players === undefined ? {} : { players: hero.players }) }];
     }),
     ...(view.inPlaceOf && view.shown ? { fallbackFromSeasonId: seasonIdOf(view.shown.id) } : {}),
   };
@@ -445,9 +455,10 @@ export function communityHalfSeasonRequests(current: unknown): number[] {
  * half-season as a season (id = half-season x 2, as in the tier list), each with one cell per hero
  * that has any match. `current` is the default answer, which lists the half-seasons and says which
  * is current; `exact` holds the answer asked for each of them, which is the only place a season's
- * numbers come from. A hero at or above the minimum carries its win rate, pick rate, KDA and final
- * hits; one below it carries only its appearances, because that is all the API reports for it, and
- * is flagged `enoughData: false`. Hero ids become the game's numeric ids through `heroGameIds`
+ * numbers come from. A hero at or above both minimums (the matches and, where the players were
+ * counted, the players) carries its win rate, pick rate, KDA and final hits; one below either carries
+ * only its appearances and players, because that is all the API reports for it, and is flagged
+ * `enoughData: false`. Hero ids become the game's numeric ids through `heroGameIds`
  * (a hero without an entry is left out, with a warning). Throws if an answer is missing, is for
  * another half-season, or stands in for one.
  */
@@ -463,7 +474,9 @@ export function assembleCommunityHeroStats(
 
   const seasons = currentView.halfSeasons.map((season) => {
     const view = readExactHalfSeason(season.id, exact);
-    const placed = view.tiers.flatMap((tier) => tier.heroes).map((hero) => ({ ...hero, enoughData: true }));
+    const placed = view.tiers
+      .flatMap((tier) => tier.heroes)
+      .map((hero) => ({ ...hero, enoughData: true, players: undefined }));
     const unplaced = view.belowMinimum.map((hero) => ({
       ...hero,
       enoughData: false,
@@ -489,6 +502,7 @@ export function assembleCommunityHeroStats(
                 heroId,
                 appearances: hero.appearances,
                 enoughData: hero.enoughData,
+                ...(hero.players === undefined ? {} : { players: hero.players }),
                 winRate: hero.winRate,
                 pickRate: hero.pickRate,
                 kda: hero.kda,
@@ -504,6 +518,7 @@ export function assembleCommunityHeroStats(
   return {
     provenance: COMMUNITY_PROVENANCE,
     minimumMatches: currentView.minimumMatches,
+    ...(currentView.minimumPlayers === undefined ? {} : { minimumPlayers: currentView.minimumPlayers }),
     currentSeasonId: seasonIdOf(currentId),
     seasons,
   };
@@ -562,9 +577,12 @@ function readHeroStats(response: unknown, what: string): HeroStatsView {
     };
   };
   const belowMinimum: unknown[] = Array.isArray(response['belowMinimum']) ? response['belowMinimum'] : [];
+  const optionalNumberOf = (record: Record<string, unknown>, key: string): number | undefined =>
+    record[key] === undefined ? undefined : numberOf(record, key);
 
   return {
     minimumMatches: numberOf(response, 'minimumMatches'),
+    minimumPlayers: optionalNumberOf(response, 'minimumPlayers'),
     halfSeasons: response['halfSeasons'].map(halfSeasonOf),
     shown: optionalHalfSeason(response['halfSeason']),
     inPlaceOf: optionalHalfSeason(response['inPlaceOf']),
@@ -581,7 +599,7 @@ function readHeroStats(response: unknown, what: string): HeroStatsView {
         throw problem('a below-minimum hero needs an id');
       }
 
-      return { hero: hero['hero'], appearances: numberOf(hero, 'appearances') };
+      return { hero: hero['hero'], appearances: numberOf(hero, 'appearances'), players: optionalNumberOf(hero, 'players') };
     }),
   };
 }
@@ -765,7 +783,14 @@ function findProblems(inputs: readonly PulseAtlasInput[]): string[] {
     if (shapeProblem) {
       problems.push(`${dataset}: ${shapeProblem}`);
     } else {
-      problems.push(...findUnsafeContent(input.data, dataset, dataset === 'community-stats' ? PRIVATE_KEY : UNSAFE_KEY));
+      problems.push(
+        ...findUnsafeContent(
+          input.data,
+          dataset,
+          dataset === 'community-stats' ? PRIVATE_KEY : UNSAFE_KEY,
+          PLAYER_TALLY_DATASETS.includes(dataset) ? PLAYER_TALLY_KEYS : PLAYER_COUNT_KEYS,
+        ),
+      );
     }
   }
 
@@ -1112,10 +1137,12 @@ interface SlimHeroRow {
   wins: number;
 }
 
-/** A hero with too few matches to be placed in a tier. */
+/** A hero with too few matches, or too few players, to be placed in a tier. */
 interface BelowMinimumRow {
   heroId: number;
   matches: number;
+  /** Players counted so far; absent where the database never counted them, and the hero is then placed on its matches alone. */
+  players?: number;
 }
 
 interface SlimSnapshot {
@@ -1123,6 +1150,8 @@ interface SlimSnapshot {
   matchesCounted?: number;
   /** Appearances a hero needs before it is placed; what each `belowMinimum` row counts toward. */
   minimumMatches?: number;
+  /** Players a hero needs, besides the matches, before it is placed; not applied where the players were never counted. */
+  minimumPlayers?: number;
   belowMinimum?: BelowMinimumRow[];
   /** Set when the numbers are the previous season's, standing in for a season with no placed hero yet. */
   fallbackFromSeasonId?: number;
@@ -1269,7 +1298,7 @@ function slimSnapshot(snapshot: unknown, heroes: Set<number>): SlimSnapshot | st
     tiers.push({ ...tier, heroes: rows });
   }
 
-  const { matchesCounted, minimumMatches, belowMinimum, fallbackFromSeasonId } = snapshot;
+  const { matchesCounted, minimumMatches, minimumPlayers, belowMinimum, fallbackFromSeasonId } = snapshot;
 
   if (matchesCounted !== undefined && !(isFiniteNumber(matchesCounted) && matchesCounted >= 0)) {
     return 'needs matchesCounted to be a non-negative number';
@@ -1277,6 +1306,10 @@ function slimSnapshot(snapshot: unknown, heroes: Set<number>): SlimSnapshot | st
 
   if (minimumMatches !== undefined && !isPositiveInteger(minimumMatches)) {
     return 'needs minimumMatches to be a whole number above 0';
+  }
+
+  if (minimumPlayers !== undefined && !isPositiveInteger(minimumPlayers)) {
+    return 'needs minimumPlayers to be a whole number above 0';
   }
 
   if (fallbackFromSeasonId !== undefined && !isInteger(fallbackFromSeasonId)) {
@@ -1293,6 +1326,7 @@ function slimSnapshot(snapshot: unknown, heroes: Set<number>): SlimSnapshot | st
     tiers,
     ...(matchesCounted === undefined ? {} : { matchesCounted }),
     ...(minimumMatches === undefined ? {} : { minimumMatches }),
+    ...(minimumPlayers === undefined ? {} : { minimumPlayers }),
     ...(below === undefined ? {} : { belowMinimum: below }),
     ...(fallbackFromSeasonId === undefined ? {} : { fallbackFromSeasonId }),
   };
@@ -1315,9 +1349,15 @@ function toBelowMinimum(list: unknown, heroes: Set<number>): BelowMinimumRow[] |
       return `belowMinimum item ${rows.length} needs an integer heroId and a number of matches`;
     }
 
+    const players = row['players'];
+
+    if (players !== undefined && !(isInteger(players) && players >= 0)) {
+      return `belowMinimum item ${rows.length} needs players to be a whole number of 0 or more when present`;
+    }
+
     heroes.add(row['heroId']);
 
-    rows.push({ heroId: row['heroId'], matches: row['matches'] });
+    rows.push({ heroId: row['heroId'], matches: row['matches'], ...(players === undefined ? {} : { players }) });
   }
 
   return rows;
@@ -1434,12 +1474,13 @@ function describeUnknownHeroes(listed: ReadonlySet<number>, heroes: unknown): st
 }
 
 /** The keys a hero-stats file, season and cell may carry: the allow-list. Anything else refuses the build. */
-const HERO_STATS_KEYS: readonly string[] = ['provenance', 'minimumMatches', 'currentSeasonId', 'seasons'];
+const HERO_STATS_KEYS: readonly string[] = ['provenance', 'minimumMatches', 'minimumPlayers', 'currentSeasonId', 'seasons'];
 const HERO_STATS_SEASON_KEYS: readonly string[] = ['id', 'label', 'startTime', 'endTime', 'decidedMatches', 'heroes'];
 const HERO_STATS_CELL_KEYS: readonly string[] = [
   'heroId',
   'appearances',
   'enoughData',
+  'players',
   'winRate',
   'pickRate',
   'kda',
@@ -1451,6 +1492,7 @@ const HERO_STATS_RATE_KEYS = ['winRate', 'pickRate', 'kda', 'finalHitsAverage'] 
 interface HeroStatsTable {
   provenance: typeof COMMUNITY_PROVENANCE;
   minimumMatches: number;
+  minimumPlayers?: number;
   currentSeasonId: number;
   seasons: Record<string, unknown>[];
 }
@@ -1468,7 +1510,7 @@ interface ReadHeroStats {
  * Checks the hero-stats dataset and, when it is sound, returns it cut down to what is published.
  * Faults are reported together so one run names them all. It refuses a table that is not the
  * community's, a key outside the allow-list (so nothing can reach a cell by accident), a cell whose
- * `enoughData` disagrees with `minimumMatches`, and a cell flagged as having enough data without a
+ * `enoughData` disagrees with `minimumMatches` and `minimumPlayers`, and a cell flagged as having enough data without a
  * win rate and pick rate. A season with no hero, or no match at all, is valid.
  */
 function readHeroStatsTable(data: unknown): ReadHeroStats {
@@ -1490,6 +1532,12 @@ function readHeroStatsTable(data: unknown): ReadHeroStats {
 
   if (!isPositiveInteger(minimumMatches)) {
     problems.push('minimumMatches must be a whole number above 0');
+  }
+
+  const minimumPlayers = data['minimumPlayers'];
+
+  if (minimumPlayers !== undefined && !isPositiveInteger(minimumPlayers)) {
+    problems.push('minimumPlayers must be a whole number above 0');
   }
 
   const heroes = new Set<number>();
@@ -1530,7 +1578,13 @@ function readHeroStatsTable(data: unknown): ReadHeroStats {
 
     const seen = new Set<number>();
     const rows = cells.flatMap((cell: unknown, position: number) => {
-      const row = readHeroStatsCell(cell, minimumMatches, `${where} hero ${position}`, checkKeys, problems);
+      const row = readHeroStatsCell(
+        cell,
+        { minimumMatches, minimumPlayers },
+        `${where} hero ${position}`,
+        checkKeys,
+        problems,
+      );
 
       if (!row) {
         return [];
@@ -1566,14 +1620,20 @@ function readHeroStatsTable(data: unknown): ReadHeroStats {
   return {
     problems,
     heroes,
-    table: { provenance: COMMUNITY_PROVENANCE, minimumMatches, currentSeasonId, seasons },
+    table: {
+      provenance: COMMUNITY_PROVENANCE,
+      minimumMatches,
+      ...(isPositiveInteger(minimumPlayers) ? { minimumPlayers } : {}),
+      currentSeasonId,
+      seasons,
+    },
   };
 }
 
 // One cell, cut to the allow-listed keys with rates to two decimals; a fault goes to `problems`.
 function readHeroStatsCell(
   cell: unknown,
-  minimumMatches: unknown,
+  minimums: { minimumMatches: unknown; minimumPlayers: unknown },
   where: string,
   checkKeys: (record: Record<string, unknown>, allowed: readonly string[], where: string) => void,
   problems: string[],
@@ -1612,15 +1672,33 @@ function readHeroStatsCell(
     return undefined;
   }
 
-  if (isPositiveInteger(minimumMatches) && enoughData !== Number(appearances) >= minimumMatches) {
-    problems.push(`${where} says enoughData ${enoughData} with ${appearances} appearances and a minimum of ${minimumMatches}`);
+  const players = cell['players'];
+
+  if (players !== undefined && !(isInteger(players) && Number(players) >= 0 && !enoughData)) {
+    problems.push(`${where} needs players to be a whole number of 0 or more, and only on a cell with enoughData false`);
+    return undefined;
+  }
+
+  const { minimumMatches, minimumPlayers } = minimums;
+
+  if (isPositiveInteger(minimumMatches)) {
+    // `players` rides only on cells held back, so a cell with enough matches but no count is placed on
+    // its matches alone, and a held-back one must show the players that hold it.
+    const heldForPlayers = isPositiveInteger(minimumPlayers) && players !== undefined && Number(players) < minimumPlayers;
+    const expected = Number(appearances) >= minimumMatches && !heldForPlayers;
+
+    if (enoughData !== expected) {
+      problems.push(
+        `${where} says enoughData ${enoughData} with ${appearances} appearances and ${players === undefined ? 'no player count' : `${players} players`}, against a minimum of ${minimumMatches} appearances${isPositiveInteger(minimumPlayers) ? ` and ${minimumPlayers} players` : ''}`,
+      );
+    }
   }
 
   if (enoughData && (rates['winRate'] === null || rates['pickRate'] === null)) {
     problems.push(`${where} has enough data but no winRate and pickRate`);
   }
 
-  return { heroId, appearances, enoughData, ...rates };
+  return { heroId, appearances, enoughData, ...(players === undefined ? {} : { players }), ...rates };
 }
 
 function describeHeroStatsProblem(data: unknown): string | undefined {
@@ -2689,18 +2767,27 @@ function listsAnyHero(snapshot: unknown): boolean {
   );
 }
 
-function findUnsafeContent(value: unknown, path: string, unsafeKey: RegExp = UNSAFE_KEY): string[] {
+function findUnsafeContent(
+  value: unknown,
+  path: string,
+  unsafeKey: RegExp = UNSAFE_KEY,
+  countKeys: readonly string[] = PLAYER_COUNT_KEYS,
+): string[] {
   const found: string[] = [];
 
   if (Array.isArray(value)) {
-    value.forEach((item, index) => found.push(...findUnsafeContent(item, `${path}[${index}]`, unsafeKey)));
+    value.forEach((item, index) => found.push(...findUnsafeContent(item, `${path}[${index}]`, unsafeKey, countKeys)));
   } else if (isRecord(value)) {
     for (const [key, child] of Object.entries(value)) {
-      if (unsafeKey.test(key) && !PLAYER_COUNT_KEYS.includes(key)) {
+      if (countKeys.includes(key)) {
+        if (!isInteger(child) || Number(child) < 0) {
+          found.push(`${path}.${key}: a player key may hold only a count`);
+        }
+      } else if (unsafeKey.test(key)) {
         found.push(`${path}.${key}: key is private or counter data`);
       }
 
-      found.push(...findUnsafeContent(child, `${path}.${key}`, unsafeKey));
+      found.push(...findUnsafeContent(child, `${path}.${key}`, unsafeKey, countKeys));
     }
   } else if (typeof value === 'string' && (UNSAFE_VALUE.test(value) || RIVALS_META_NAME.test(value))) {
     found.push(`${path}: value looks like a credential or names a source that must stay private`);
