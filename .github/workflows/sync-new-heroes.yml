@@ -73,28 +73,52 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Open a pull request with the new portraits
+      - name: Open or update the pull request with the new portraits
         if: steps.portraits.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ADDED: ${{ steps.roster.outputs.added }}
           SUMMARY: ${{ steps.roster.outputs.summary }}
           BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          BRANCH_PREFIX: chore/new-hero-portraits-
           PR_TITLE: 'chore(heroes): portraits for newly released heroes'
         run: |
-          # A daily schedule would re-open this pull request every morning until
-          # it is merged, so an existing open one is left alone.
-          if [ -n "$(gh pr list --state open --search "$PR_TITLE in:title" --json number --jq '.[0].number')" ]; then
-            echo 'An open portrait pull request already exists; skipping.'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # Only portraits master lacks reach this step, because the download
+          # step skips files that already exist. They are committed once, here.
+          work="portraits-${GITHUB_RUN_ID}"
+          git checkout -b "$work"
+          git add public/images/heroes
+          git commit -m 'chore(heroes): add portraits for newly released heroes'
+
+          # The open portrait pull request is found by its branch name. A title
+          # search cannot be trusted here: GitHub reads the colon and brackets in
+          # a conventional-commit title as search syntax and matches nothing, which
+          # let a new pull request open every night.
+          existing=$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&per_page=100" --paginate \
+            --jq ".[] | select(.head.repo.full_name == \"${GITHUB_REPOSITORY}\" and (.head.ref | startswith(\"${BRANCH_PREFIX}\"))) | .head.ref" \
+            | sed -n 1p)
+
+          if [ -n "$existing" ]; then
+            # Add the portraits to the open pull request's branch as a new commit,
+            # so nothing is force-pushed and no second pull request is opened.
+            git fetch origin "$existing"
+            git checkout -B "$existing" "origin/$existing"
+            git checkout "$work" -- public/images/heroes
+            if git diff --cached --quiet; then
+              echo "The open portrait pull request on ${existing} already carries these portraits."
+              exit 0
+            fi
+            git commit -m 'chore(heroes): add portraits for newly released heroes'
+            git push origin "$existing"
+            echo "Updated the open portrait pull request on ${existing}."
             exit 0
           fi
 
-          branch="chore/new-hero-portraits-${GITHUB_RUN_ID}"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git checkout -b "$branch"
-          git add public/images/heroes
-          git commit -m 'chore(heroes): add portraits for newly released heroes'
+          branch="${BRANCH_PREFIX}${GITHUB_RUN_ID}"
+          git branch -m "$work" "$branch"
           git push --set-upstream origin "$branch"
 
           cat > pr-body.md <<BODY
