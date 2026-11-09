@@ -40,10 +40,9 @@ agent tool. The adapters are entry points, not separate pipeline definitions.
 5. **QA Reviewer** performs read-only acceptance-criteria and pull-request
    review. Follow [qa-review.md](qa-review.md).
 
-Whoever starts an agent, a session or the repository's team lead
-([team-leads.md](team-leads.md)), names it in the agent's
-prompt from the roster in [crew.md](crew.md), and the agent signs everything it
-writes with that name.
+The session that starts an agent, usually the repository's team lead
+([team-leads.md](team-leads.md)), names it in the agent's prompt from the roster
+in [crew.md](crew.md). The agent signs everything it writes with that name.
 
 ## Defect lane
 
