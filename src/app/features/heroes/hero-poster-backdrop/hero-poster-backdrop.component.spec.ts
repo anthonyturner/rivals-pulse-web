@@ -26,7 +26,7 @@ describe('HeroPosterBackdropComponent', () => {
 
   beforeEach(async () => {
     localStorage.removeItem(STORAGE_KEY);
-    youtube = jasmine.createSpyObj<YoutubeEmbedCommands>('YoutubeEmbedCommands', ['send']);
+    youtube = jasmine.createSpyObj<YoutubeEmbedCommands>('YoutubeEmbedCommands', ['send', 'listen', 'canStartWithSound']);
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), { provide: YoutubeEmbedCommands, useValue: youtube }],
     });
@@ -174,11 +174,13 @@ describe('HeroPosterBackdropPreferenceService', () => {
 });
 
 describe('YoutubeEmbedCommands', () => {
+  beforeEach(() => TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] }));
+
   it('posts the command to the YouTube player as a JSON message for its origin only', () => {
     const postMessage = jasmine.createSpy('postMessage');
     const frame = { contentWindow: { postMessage } } as unknown as HTMLIFrameElement;
 
-    new YoutubeEmbedCommands().send(frame, 'unMute');
+    TestBed.inject(YoutubeEmbedCommands).send(frame, 'unMute');
 
     expect(postMessage).toHaveBeenCalledWith(
       JSON.stringify({ event: 'command', func: 'unMute', args: [] }),

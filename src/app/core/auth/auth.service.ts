@@ -1,8 +1,9 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 
 import type { DeleteAccountRequest } from './account-deletion.types';
 import type { LinkedPlayer } from './linked-player.types';
+import { parseMediaDefaults, type MediaDefaults, type MediaDefaultsChange } from './media-defaults.types';
 import { parseOwnDashboard } from './own-dashboard.parse';
 import type { OwnDashboardResponse } from './own-dashboard.types';
 
@@ -17,7 +18,14 @@ export type SessionState =
   | { status: 'loading' }
   | { status: 'signedOut' }
   /** `isAdmin` only decides what is shown: the server and the database refuse everyone else on their own. */
-  | { status: 'signedIn'; account: Account; player: LinkedPlayer | null; isAdmin: boolean }
+  | {
+      status: 'signedIn';
+      account: Account;
+      player: LinkedPlayer | null;
+      isAdmin: boolean;
+      /** The account's video and sound defaults, or null when the server could not read them. */
+      mediaDefaults: MediaDefaults | null;
+    }
   /** The session could not be read; the visitor is treated as signed out. */
   | { status: 'unavailable' };
 
@@ -44,6 +52,14 @@ export type RecordsOptInResult =
   /** The server's own words for why it refused (no link to turn it on for), or a generic line. */
   | { status: 'failed'; message: string };
 
+export type MediaDefaultsResult =
+  /** Both defaults as the server holds them, just saved. */
+  | { status: 'ready'; mediaDefaults: MediaDefaults }
+  /** There was no valid session, so nothing was changed. */
+  | { status: 'signedOut' }
+  /** The server's own words for why it refused, or a generic line. */
+  | { status: 'failed'; message: string };
+
 export type DashboardResult =
   | { status: 'ready'; dashboard: OwnDashboardResponse }
   /** There was no valid session, so there is nothing to show. */
@@ -55,6 +71,7 @@ const LINK_FAILED = 'The desktop app could not be linked right now. Try again in
 const UNLINK_FAILED = 'The desktop app could not be unlinked right now. Try again in a moment.';
 const RECORDS_OPT_IN_LOAD_FAILED = 'Your Pulse Records setting could not be loaded right now. Try again in a moment.';
 const RECORDS_OPT_IN_SAVE_FAILED = 'Your Pulse Records setting could not be saved right now. Try again in a moment.';
+const MEDIA_DEFAULTS_SAVE_FAILED = 'Your video and sound settings could not be saved right now. Try again in a moment.';
 const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. Try again in a moment.';
 
 /**
@@ -68,6 +85,13 @@ export class AuthService {
   private pending?: Promise<SessionState>;
 
   readonly state = signal<SessionState>({ status: 'loading' });
+
+  /** The signed-in account's video and sound defaults; null while signed out, loading, or when they could not be read. */
+  readonly mediaDefaults = computed(() => {
+    const state = this.state();
+
+    return state.status === 'signedIn' ? state.mediaDefaults : null;
+  });
 
   /** Reads the session once; later calls share that answer. */
   load(): Promise<SessionState> {
@@ -147,6 +171,39 @@ export class AuthService {
   /** Switches "Show me in Pulse Records" for the signed-in account. The server and database decide whose; nothing here names an account. */
   async setRecordsOptIn(show: boolean): Promise<RecordsOptInResult> {
     return this.requestRecordsOptIn({ show }, RECORDS_OPT_IN_SAVE_FAILED);
+  }
+
+  /** Saves the defaults the change names for the signed-in account and leaves the others as they are. Nothing here names an account. */
+  async setMediaDefaults(change: MediaDefaultsChange): Promise<MediaDefaultsResult> {
+    try {
+      const response = await fetch('/api/account/media-defaults', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(change),
+      });
+
+      if (response.status === 401) {
+        this.markSignedOut();
+
+        return { status: 'signedOut' };
+      }
+
+      if (!response.ok) {
+        return { status: 'failed', message: await this.errorMessage(response, MEDIA_DEFAULTS_SAVE_FAILED) };
+      }
+
+      const mediaDefaults = parseMediaDefaults(await response.json());
+
+      if (!mediaDefaults) {
+        return { status: 'failed', message: MEDIA_DEFAULTS_SAVE_FAILED };
+      }
+
+      this.showMediaDefaults(mediaDefaults);
+
+      return { status: 'ready', mediaDefaults };
+    } catch {
+      return { status: 'failed', message: MEDIA_DEFAULTS_SAVE_FAILED };
+    }
   }
 
   /** Reads the signed-in player's own stats, worked out on the server from the matches their link proves are theirs. */
@@ -239,6 +296,19 @@ export class AuthService {
     this.pending = Promise.resolve(next);
   }
 
+  private showMediaDefaults(mediaDefaults: MediaDefaults): void {
+    const current = this.state();
+
+    if (current.status !== 'signedIn') {
+      return;
+    }
+
+    const next: SessionState = { ...current, mediaDefaults };
+
+    this.state.set(next);
+    this.pending = Promise.resolve(next);
+  }
+
   private markSignedOut(): void {
     const signedOut: SessionState = { status: 'signedOut' };
 
@@ -286,10 +356,17 @@ export class AuthService {
         account?: Account;
         player?: unknown;
         isAdmin?: unknown;
+        mediaDefaults?: unknown;
       };
 
       return body.signedIn && body.account
-        ? { status: 'signedIn', account: body.account, player: playerOf(body.player), isAdmin: body.isAdmin === true }
+        ? {
+            status: 'signedIn',
+            account: body.account,
+            player: playerOf(body.player),
+            isAdmin: body.isAdmin === true,
+            mediaDefaults: parseMediaDefaults(body.mediaDefaults),
+          }
         : { status: 'signedOut' };
     } catch {
       return { status: 'unavailable' };

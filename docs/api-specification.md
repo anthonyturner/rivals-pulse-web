@@ -25,6 +25,7 @@ POST /api/account/link
 POST /api/account/unlink
 GET /api/account/records-opt-in
 POST /api/account/records-opt-in
+POST /api/account/media-defaults
 GET /api/account/dashboard
 GET /api/admin/me
 GET /api/admin/data-jobs
@@ -57,9 +58,10 @@ Neither route reads a session or an account. Your own matches and insights are i
 The `/api/auth/*` and `/api/account/*` routes belong to the Discord sign-in and the account. They are
 never cached: every answer carries `Cache-Control: private, no-store, max-age=0`. `GET /api/auth/session`
 answers `{ "signedIn": false }` with no session, or `{ "signedIn": true, "account": { email, provider,
-createdAt }, "player": { name, avatarUrl } | null, "isAdmin": boolean }` (`player` is the linked in-game player, null when
+createdAt }, "player": { name, avatarUrl } | null, "isAdmin": boolean, "mediaDefaults": { heroVideo, sound } | null }` (`player` is the linked in-game player, null when
 none or when the link could not be read; `isAdmin` is what `public.is_admin()` says, false when it could not be read, and
-only decides whether the header shows the Admin link), and never returns the account id. `GET /api/auth/discord/start?next=/path` redirects to
+only decides whether the header shows the Admin link; `mediaDefaults` is the account's hero video and sound defaults, both false when it
+has chosen none, and null when they could not be read, which pages treat as a signed-out visitor), and never returns the account id. `GET /api/auth/discord/start?next=/path` redirects to
 Discord through Supabase (`rivalspulse.com` and `localhost` only; `next` must be a path on this site)
 and `GET /api/auth/callback` finishes it, sets the `rp_session` cookie and redirects to `next`, or to
 `/sign-in?error=cancelled|failed`. `POST /api/auth/sign-out` ends the session and clears the cookie. A
@@ -91,6 +93,12 @@ turning it on without a linked player is 409 with a plain reason; 401 with no va
 failed read is never reported as off). Nothing in the body names an account: the database acts on the session's account alone.
 The setting goes back to off whenever the account's link is removed or replaced. The POST obeys the Origin check, and both
 answers are `no-store`, like the other account routes. See "The Show me in Pulse Records switch" in [supabase.md](supabase.md).
+
+`POST /api/account/media-defaults` takes `{ "heroVideo"?: boolean, "sound"?: boolean }` and the `rp_session` cookie, saves the defaults it
+names and leaves the other as it was, and answers 200 `{ "heroVideo": boolean, "sound": boolean }` with both values as the database stored them.
+A body that names neither, or names one that is not a real boolean, is 400 `{ error: "Choose on or off." }`; 401 with no valid session; 503 when
+Supabase is unavailable. Nothing in the body names an account: the database acts on the session's account alone. The POST obeys the Origin
+check, and the answer is `no-store`, like the other account routes. See "The media defaults" in [supabase.md](supabase.md).
 
 `/api/admin/*` is the site administration API (ADR-0005), and every route in it goes through one wrapper
 (`handleAdminRequest`, `src/server/admin/admin-api.ts`). It answers 401 with no valid session, 403 for a signed-in

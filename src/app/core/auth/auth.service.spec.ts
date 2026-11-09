@@ -31,21 +31,21 @@ describe('AuthService', () => {
 
     await Promise.all([service.load(), service.load()]);
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
     expect(fetchSpy).toHaveBeenCalledOnceWith('/api/auth/session');
   });
 
   it('is an admin when the server says true', async () => {
     create(answer(200, { signedIn: true, account: ACCOUNT, isAdmin: true }));
 
-    expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true });
+    expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: null });
   });
 
   for (const claim of ['true', 1, 'admin', {}, null]) {
     it(`is not an admin when the server says ${JSON.stringify(claim)}`, async () => {
       create(answer(200, { signedIn: true, account: ACCOUNT, isAdmin: claim }));
 
-      expect(await service.load()).toEqual(jasmine.objectContaining({ isAdmin: false }));
+      expect(await service.load()).toEqual(jasmine.objectContaining({ isAdmin: false, mediaDefaults: null }));
     });
   }
 
@@ -97,7 +97,7 @@ describe('AuthService', () => {
 
     await service.load();
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false, mediaDefaults: null });
   });
 
   it('ignores a player the answer does not describe properly', async () => {
@@ -105,7 +105,7 @@ describe('AuthService', () => {
 
     await service.load();
 
-    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+    expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
   });
 
   describe('linking', () => {
@@ -122,8 +122,8 @@ describe('AuthService', () => {
         '/api/account/link',
         { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'abcd-efgh' }) },
       ]);
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
-      expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false, mediaDefaults: null });
+      expect(await service.load()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false, mediaDefaults: null });
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 
@@ -135,7 +135,7 @@ describe('AuthService', () => {
         status: 'failed',
         message: 'That code is wrong or has expired. Get a new one from the desktop app.',
       });
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
     });
 
     it('gives a plain message when the answer has no readable error or the network is down', async () => {
@@ -166,7 +166,7 @@ describe('AuthService', () => {
       expect(await service.unlinkPlayer()).toEqual({ status: 'done' });
 
       expect(fetchSpy.calls.argsFor(1)[0]).toBe('/api/account/unlink');
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
     });
 
     it('keeps the player shown when unlinking fails', async () => {
@@ -174,7 +174,7 @@ describe('AuthService', () => {
       await service.load();
 
       expect(await service.unlinkPlayer()).toEqual({ status: 'failed', message: 'Linking is unavailable right now.' });
-      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false });
+      expect(service.state()).toEqual({ status: 'signedIn', account: ACCOUNT, player, isAdmin: false, mediaDefaults: null });
     });
   });
 
@@ -227,6 +227,87 @@ describe('AuthService', () => {
       const saved = await service.setRecordsOptIn(false);
 
       expect(saved.status === 'failed' && saved.message).toContain('could not be saved');
+    });
+  });
+
+  describe('the video and sound defaults', () => {
+    const SAVED = { heroVideo: true, sound: false };
+
+    it('reads them from the session, and has none while signed out', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT, mediaDefaults: SAVED }));
+
+      expect(service.mediaDefaults()).toBeNull();
+
+      await service.load();
+
+      expect(service.mediaDefaults()).toEqual(SAVED);
+    });
+
+    it('has none when the server could not read them, so pages stay as they are', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT, mediaDefaults: null }));
+      await service.load();
+
+      expect(service.mediaDefaults()).toBeNull();
+    });
+
+    for (const claim of [{ heroVideo: true }, { heroVideo: 'yes', sound: true }, 'on', 1]) {
+      it(`has none when the server says ${JSON.stringify(claim)}, never a half-read default`, async () => {
+        create(answer(200, { signedIn: true, account: ACCOUNT, mediaDefaults: claim }));
+        await service.load();
+
+        expect(service.mediaDefaults()).toBeNull();
+      });
+    }
+
+    it('posts only the named defaults as JSON, and shows what the server saved', async () => {
+      create(
+        answer(200, { signedIn: true, account: ACCOUNT, mediaDefaults: { heroVideo: false, sound: true } }),
+        answer(200, SAVED),
+      );
+      await service.load();
+
+      expect(await service.setMediaDefaults({ heroVideo: true })).toEqual({ status: 'ready', mediaDefaults: SAVED });
+      expect(fetchSpy.calls.argsFor(1)).toEqual([
+        '/api/account/media-defaults',
+        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ heroVideo: true }) },
+      ]);
+      expect(service.mediaDefaults()).toEqual(SAVED);
+      expect(await service.load()).toEqual(jasmine.objectContaining({ mediaDefaults: SAVED }));
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports an ended session as signed out', async () => {
+      create(answer(200, { signedIn: true, account: ACCOUNT, mediaDefaults: SAVED }), answer(401, { error: 'Sign in to change this setting.' }));
+      await service.load();
+
+      expect(await service.setMediaDefaults({ sound: true })).toEqual({ status: 'signedOut' });
+      expect(service.state()).toEqual({ status: 'signedOut' });
+    });
+
+    it('keeps the saved defaults and passes on the reason when a save is refused', async () => {
+      create(
+        answer(200, { signedIn: true, account: ACCOUNT, mediaDefaults: SAVED }),
+        answer(503, { error: 'Your video and sound settings are unavailable right now.' }),
+      );
+      await service.load();
+
+      expect(await service.setMediaDefaults({ sound: true })).toEqual({
+        status: 'failed',
+        message: 'Your video and sound settings are unavailable right now.',
+      });
+      expect(service.mediaDefaults()).toEqual(SAVED);
+    });
+
+    it('gives a plain message when the answer is unreadable or the network is down', async () => {
+      create(answer(200, { heroVideo: 'yes' }));
+
+      const odd = await service.setMediaDefaults({ sound: true });
+
+      expect(odd.status === 'failed' && odd.message).toContain('could not be saved');
+
+      fetchSpy.and.rejectWith(new TypeError('offline'));
+
+      expect((await service.setMediaDefaults({ sound: true })).status).toBe('failed');
     });
   });
 

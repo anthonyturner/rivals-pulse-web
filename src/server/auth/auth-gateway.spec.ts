@@ -358,6 +358,88 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('readMediaDefaults', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const ask = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).readMediaDefaults(tokens) };
+    };
+
+    beforeEach(() => spyOn(console, 'warn'));
+
+    it('reads the settings row with the user token, so row-level security picks the account', async () => {
+      const { calls, result } = ask({ status: 200, body: [{ hero_video_default: true, sound_default: false }] });
+
+      expect(await result).toEqual({ heroVideo: true, sound: false });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/account_settings?select=hero_video_default,sound_default&limit=1');
+      expect(calls[0].method).toBe('GET');
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('reads no row as both off', async () => {
+      expect(await ask({ status: 200, body: [] }).result).toEqual({ heroVideo: false, sound: false });
+    });
+
+    it('says null, and does not throw, for an answer of an unknown shape or a failure', async () => {
+      for (const body of [[{ hero_video_default: 'yes', sound_default: true }], [{}], [null], { sound_default: true }, null]) {
+        expect(await ask({ status: 200, body }).result).toBeNull();
+      }
+
+      for (const status of [401, 404, 500]) {
+        expect(await ask({ status }).result).toBeNull();
+      }
+    });
+
+    it('says null when the request itself fails', async () => {
+      const failing = (async () => {
+        throw new Error('offline');
+      }) as typeof fetch;
+
+      expect(await createSupabaseAuthGateway(ENV, failing).readMediaDefaults(tokens)).toBeNull();
+    });
+  });
+
+  describe('setMediaDefaults', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const save = (change: { heroVideo?: boolean; sound?: boolean }, answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).setMediaDefaults(tokens, change) };
+    };
+
+    it('calls the function with the named defaults and the user token, and names no account', async () => {
+      const { calls, result } = save({ heroVideo: true }, { status: 200, body: { status: 'saved', heroVideo: true, sound: false } });
+
+      expect(await result).toEqual({ heroVideo: true, sound: false });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/set_media_defaults');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({ p_hero_video: true, p_sound: null });
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+    });
+
+    it('sends null for a default it was not given, so the database leaves it alone', async () => {
+      const { calls } = save({ sound: false }, { status: 200, body: { status: 'saved', heroVideo: true, sound: false } });
+
+      expect(calls[0].body).toEqual({ p_hero_video: null, p_sound: false });
+    });
+
+    it('reports a missing function, a refusal or an answer that is not what was asked as unavailable', async () => {
+      for (const [change, answer] of [
+        [{ heroVideo: true }, { status: 404, body: { code: 'PGRST202' } }],
+        [{ heroVideo: true }, { status: 401 }],
+        [{ heroVideo: true }, { status: 500 }],
+        [{ heroVideo: true }, { status: 200, body: { status: 'surprise', heroVideo: true, sound: false } }],
+        [{ heroVideo: true }, { status: 200, body: { status: 'saved', heroVideo: false, sound: false } }],
+        [{ sound: true }, { status: 200, body: { status: 'saved', heroVideo: false, sound: false } }],
+        [{ sound: true }, { status: 200, body: { status: 'saved', sound: true } }],
+        [{ sound: true }, { status: 200 }],
+      ] as const) {
+        await expectAsync(save(change, answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
   describe('isAdmin', () => {
     const tokens = { accessToken: 'access', refreshToken: 'refresh' };
     const ask = (answer: { status: number; body?: unknown }) => {

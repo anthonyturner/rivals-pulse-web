@@ -1,4 +1,4 @@
-import { provideZonelessChangeDetection, signal } from '@angular/core';
+import { computed, provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -7,15 +7,18 @@ import {
   AuthService,
   DeleteAccountResult,
   LinkChangeResult,
+  MediaDefaultsResult,
   RecordsOptInResult,
   SessionState,
 } from '../../core/auth/auth.service';
 import type { LinkedPlayer } from '../../core/auth/linked-player.types';
+import type { MediaDefaults, MediaDefaultsChange } from '../../core/auth/media-defaults.types';
+import { ReducedMotionService } from '../../core/accessibility/reduced-motion.service';
 import { AccountPageComponent } from './account-page.component';
 import { SignInPageComponent } from './sign-in-page.component';
 
 const ACCOUNT = { email: 'player@example.com', provider: 'discord', createdAt: '2026-11-01T10:00:00Z' };
-const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false };
+const SIGNED_IN: SessionState = { status: 'signedIn', account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null };
 
 function setup(
   session: SessionState,
@@ -23,6 +26,7 @@ function setup(
   linkChange: LinkChangeResult = { status: 'done' },
   linkedAfter: LinkedPlayer | null = null,
   optIn: { loaded?: RecordsOptInResult; saved?: (show: boolean) => RecordsOptInResult } = {},
+  media: { saved?: (change: MediaDefaultsChange) => MediaDefaultsResult; reducedMotion?: boolean } = {},
 ) {
   const state = signal<SessionState>(session);
   const auth = {
@@ -41,6 +45,24 @@ function setup(
     loadRecordsOptIn: jasmine
       .createSpy('loadRecordsOptIn')
       .and.callFake(async () => optIn.loaded ?? { status: 'ready', showInRecords: false }),
+    mediaDefaults: computed(() => {
+      const current = state();
+
+      return current.status === 'signedIn' ? current.mediaDefaults : null;
+    }),
+    setMediaDefaults: jasmine.createSpy('setMediaDefaults').and.callFake(async (change: MediaDefaultsChange) => {
+      const current = state();
+      const before: MediaDefaults = (current.status === 'signedIn' && current.mediaDefaults) || { heroVideo: false, sound: false };
+      const result: MediaDefaultsResult = media.saved?.(change) ?? { status: 'ready', mediaDefaults: { ...before, ...change } };
+
+      if (result.status === 'signedOut') {
+        state.set({ status: 'signedOut' });
+      } else if (result.status === 'ready' && current.status === 'signedIn') {
+        state.set({ ...current, mediaDefaults: result.mediaDefaults });
+      }
+
+      return result;
+    }),
     setRecordsOptIn: jasmine.createSpy('setRecordsOptIn').and.callFake(async (show: boolean) => {
       const result: RecordsOptInResult = optIn.saved?.(show) ?? { status: 'ready', showInRecords: show };
 
@@ -72,6 +94,7 @@ function setup(
         { path: '', component: AccountPageComponent },
       ]),
       { provide: AuthService, useValue: auth },
+      { provide: ReducedMotionService, useValue: { reduced: signal(media.reducedMotion ?? false).asReadonly() } },
     ],
   });
 
@@ -91,7 +114,7 @@ describe('AccountPageComponent', () => {
   });
 
   it('says so when no email was shared', async () => {
-    setup({ status: 'signedIn', account: { ...ACCOUNT, email: null }, player: null, isAdmin: false });
+    setup({ status: 'signedIn', account: { ...ACCOUNT, email: null }, player: null, isAdmin: false, mediaDefaults: null });
 
     expect(page(await RouterTestingHarness.create('/account')).textContent).toContain('None shared with us');
   });
@@ -137,7 +160,7 @@ describe('AccountPageComponent deletion', () => {
       (heading) => heading.textContent?.trim(),
     );
 
-    expect(headings).toEqual(['Sign-in details', 'Link the desktop app', 'Pulse Records', 'Delete your account']);
+    expect(headings).toEqual(['Sign-in details', 'Link the desktop app', 'Pulse Records', 'Video and sound', 'Delete your account']);
   });
 
   it('keeps the delete button off until the phrase is typed', async () => {
@@ -236,7 +259,7 @@ describe('AccountPageComponent deletion', () => {
 
 describe('AccountPageComponent linking', () => {
   const AURORA = { name: 'Aurora', avatarUrl: null };
-  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA, isAdmin: false };
+  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA, isAdmin: false, mediaDefaults: null };
   const codeInput = (harness: RouterTestingHarness): HTMLInputElement =>
     page(harness).querySelector('#link-code') as HTMLInputElement;
   const linkButton = (harness: RouterTestingHarness): HTMLButtonElement =>
@@ -463,7 +486,7 @@ describe('AccountPageComponent linking', () => {
 
 describe('AccountPageComponent Pulse Records switch', () => {
   const AURORA = { name: 'Aurora', avatarUrl: null };
-  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA, isAdmin: false };
+  const LINKED: SessionState = { status: 'signedIn', account: ACCOUNT, player: AURORA, isAdmin: false, mediaDefaults: null };
   const checkbox = (harness: RouterTestingHarness): HTMLInputElement =>
     page(harness).querySelector('#records-opt-in') as HTMLInputElement;
   const announcement = (harness: RouterTestingHarness): string =>
@@ -827,5 +850,129 @@ describe('SignInPageComponent', () => {
     await harness.fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/account');
+  });
+});
+
+describe('AccountPageComponent video and sound defaults', () => {
+  const SAVED: SessionState = {
+    status: 'signedIn',
+    account: ACCOUNT,
+    player: null,
+    isAdmin: false,
+    mediaDefaults: { heroVideo: false, sound: false },
+  };
+  const box = (harness: RouterTestingHarness, id: 'hero-video-default' | 'sound-default'): HTMLInputElement =>
+    page(harness).querySelector(`#${id}`) as HTMLInputElement;
+  const announcement = (harness: RouterTestingHarness): string =>
+    page(harness).querySelector('[role="status"]')?.textContent?.trim() ?? '';
+
+  async function open(): Promise<RouterTestingHarness> {
+    const harness = await RouterTestingHarness.create('/account');
+
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    return harness;
+  }
+
+  async function press(harness: RouterTestingHarness, id: 'hero-video-default' | 'sound-default'): Promise<void> {
+    box(harness, id).click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+  }
+
+  it('has two labelled native checkboxes, each described by its help text', async () => {
+    setup(SAVED);
+    const harness = await open();
+
+    for (const [id, label] of [
+      ['hero-video-default', 'Hero page gameplay video'],
+      ['sound-default', 'Gameplay video sound'],
+    ] as const) {
+      expect(box(harness, id).type).toBe('checkbox');
+      expect(page(harness).querySelector(`label[for="${id}"]`)?.textContent?.trim()).toBe(label);
+      expect(page(harness).querySelector(`#${box(harness, id).getAttribute('aria-describedby')}`)).not.toBeNull();
+    }
+  });
+
+  it('shows the saved values, and does not save anything until a box is changed', async () => {
+    const { auth } = setup({ ...SAVED, mediaDefaults: { heroVideo: true, sound: false } });
+    const harness = await open();
+
+    expect(box(harness, 'hero-video-default').checked).toBeTrue();
+    expect(box(harness, 'sound-default').checked).toBeFalse();
+    expect(auth.setMediaDefaults).not.toHaveBeenCalled();
+  });
+
+  it('saves only the changed default, and announces it', async () => {
+    const { auth } = setup(SAVED);
+    const harness = await open();
+
+    await press(harness, 'hero-video-default');
+
+    expect(auth.setMediaDefaults).toHaveBeenCalledOnceWith({ heroVideo: true });
+    expect(box(harness, 'hero-video-default').checked).toBeTrue();
+    expect(box(harness, 'sound-default').checked).toBeFalse();
+    expect(announcement(harness)).toBe('Hero page gameplay video is on. Hero pages open on the gameplay video.');
+
+    await press(harness, 'sound-default');
+
+    expect(auth.setMediaDefaults).toHaveBeenCalledWith({ sound: true });
+    expect(box(harness, 'hero-video-default').checked).toBeTrue();
+    expect(announcement(harness)).toContain('Gameplay video sound is on.');
+
+    await press(harness, 'hero-video-default');
+
+    expect(announcement(harness)).toBe('Hero page gameplay video is off. Hero pages open on the portrait art.');
+  });
+
+  it('puts the box back to what is saved, and says why, when the save fails', async () => {
+    setup(SAVED, undefined, undefined, undefined, undefined, {
+      saved: () => ({ status: 'failed', message: 'Your video and sound settings could not be saved right now.' }),
+    });
+    const harness = await open();
+
+    await press(harness, 'sound-default');
+
+    expect(box(harness, 'sound-default').checked).toBeFalse();
+    expect(page(harness).textContent).toContain('could not be saved right now');
+    expect(announcement(harness)).toContain('could not be saved right now');
+  });
+
+  it('sends the visitor to sign in when the session has ended', async () => {
+    const { state } = setup(SAVED, undefined, undefined, undefined, undefined, { saved: () => ({ status: 'signedOut' }) });
+    const harness = await open();
+
+    await press(harness, 'sound-default');
+    await harness.fixture.whenStable();
+
+    expect(state().status).toBe('signedOut');
+    expect(TestBed.inject(Router).url).toContain('/sign-in');
+  });
+
+  it('says the settings could not be loaded, and offers no switches, when the server could not read them', async () => {
+    const { auth } = setup({ ...SAVED, mediaDefaults: null });
+    const harness = await open();
+
+    expect(box(harness, 'hero-video-default')).toBeNull();
+    expect(box(harness, 'sound-default')).toBeNull();
+    expect(page(harness).textContent).toContain('video and sound settings could not be loaded');
+    expect(auth.setMediaDefaults).not.toHaveBeenCalled();
+  });
+
+  it('says the video never starts by itself when the device asks for less motion', async () => {
+    setup(SAVED, undefined, undefined, undefined, undefined, { reducedMotion: true });
+    const harness = await open();
+    const help = page(harness).querySelector('#hero-video-default-help')?.textContent ?? '';
+
+    expect(help).toContain('asks for less motion');
+    expect(help).toContain('never starts by itself');
+  });
+
+  it('does not mention reduced motion otherwise', async () => {
+    setup(SAVED);
+    const harness = await open();
+
+    expect(page(harness).querySelector('#hero-video-default-help')?.textContent).not.toContain('less motion');
   });
 });

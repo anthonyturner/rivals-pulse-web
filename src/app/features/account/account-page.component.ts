@@ -3,7 +3,9 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, injec
 import { Router, RouterLink } from '@angular/router';
 
 import { DELETE_CONFIRMATION_PHRASE, isDeletionConfirmed } from '../../core/auth/account-deletion.types';
+import { ReducedMotionService } from '../../core/accessibility/reduced-motion.service';
 import { AuthService } from '../../core/auth/auth.service';
+import type { MediaDefaults } from '../../core/auth/media-defaults.types';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { PlayerAvatarComponent } from '../../shared/components/player-avatar/player-avatar.component';
 import { StatePanelComponent } from '../../shared/components/state-panel/state-panel.component';
@@ -13,6 +15,17 @@ const SIGN_IN_AFTER_DELETE = {
   signedOut: { next: '/account' },
   signInAgain: { next: '/account', notice: 'reauth' },
 } as const;
+
+const MEDIA_DEFAULT_ANNOUNCEMENTS: Record<keyof MediaDefaults, Record<'on' | 'off', string>> = {
+  heroVideo: {
+    on: 'Hero page gameplay video is on. Hero pages open on the gameplay video.',
+    off: 'Hero page gameplay video is off. Hero pages open on the portrait art.',
+  },
+  sound: {
+    on: 'Gameplay video sound is on. The gameplay video and the home page banner start with sound when your browser allows it.',
+    off: 'Gameplay video sound is off. The gameplay video and the home page banner start muted.',
+  },
+};
 
 const PROVIDER_LABELS: Record<string, string> = { discord: 'Discord', email: 'Email and password' };
 
@@ -26,6 +39,7 @@ const PROVIDER_LABELS: Record<string, string> = { discord: 'Discord', email: 'Em
 export class AccountPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  protected readonly reducedMotion = inject(ReducedMotionService).reduced;
 
   readonly account = computed(() => {
     const state = this.auth.state();
@@ -69,6 +83,11 @@ export class AccountPageComponent {
   readonly recordsOptInDisabled = computed(() => this.player() === null || !this.recordsOptInLoaded());
   /** Which load is current, so an answer for a link that has since changed is dropped. */
   private recordsOptInLoad = 0;
+
+  /** The saved video and sound defaults, or null when the server could not read them. */
+  readonly mediaDefaults = this.auth.mediaDefaults;
+  readonly mediaDefaultsSaving = signal(false);
+  readonly mediaDefaultsError = signal<string | null>(null);
 
   readonly confirmationPhrase = DELETE_CONFIRMATION_PHRASE;
   readonly confirmation = signal('');
@@ -246,6 +265,42 @@ export class AccountPageComponent {
         // The box flipped under the player's finger; put it back to what is really saved.
         box.checked = this.recordsOptIn();
         this.recordsOptInError.set(result.message);
+        this.announcement.set(result.message);
+        break;
+    }
+  }
+
+  /** One save at a time, so a box changed while one is in flight is put back to what is being saved. */
+  async onMediaDefaultChange(name: keyof MediaDefaults, event: Event): Promise<void> {
+    const box = event.target as HTMLInputElement;
+    const on = box.checked;
+
+    if (this.mediaDefaults() === null || this.mediaDefaultsSaving()) {
+      box.checked = !on;
+
+      return;
+    }
+
+    this.mediaDefaultsSaving.set(true);
+    this.mediaDefaultsError.set(null);
+    this.announcement.set('');
+
+    const result = await this.auth.setMediaDefaults({ [name]: on });
+
+    this.mediaDefaultsSaving.set(false);
+
+    switch (result.status) {
+      case 'ready':
+        box.checked = result.mediaDefaults[name];
+        this.announcement.set(MEDIA_DEFAULT_ANNOUNCEMENTS[name][result.mediaDefaults[name] ? 'on' : 'off']);
+        break;
+      case 'signedOut':
+        await this.router.navigate(['/sign-in'], { queryParams: { next: '/account' } });
+        break;
+      case 'failed':
+        // The box flipped under the player's finger; put it back to what is really saved.
+        box.checked = this.mediaDefaults()?.[name] ?? false;
+        this.mediaDefaultsError.set(result.message);
         this.announcement.set(result.message);
         break;
     }

@@ -23,6 +23,8 @@ function gateway(overrides: Partial<AuthGateway> = {}): AuthGateway {
     unlinkPlayer: async () => undefined,
     readRecordsOptIn: async () => false,
     setRecordsOptIn: async (_tokens, show) => ({ status: 'saved', showInRecords: show }),
+    readMediaDefaults: async () => ({ heroVideo: false, sound: false }),
+    setMediaDefaults: async (_tokens, change) => ({ heroVideo: change.heroVideo ?? false, sound: change.sound ?? false }),
     readOwnDashboard: async () => ({ linked: false }),
     isAdmin: async () => false,
     beginDataJob: async () => ({ status: 'started', runId: 1 }),
@@ -71,7 +73,7 @@ describe('GET auth/session', () => {
   it('returns the account without any id when signed in', async () => {
     const response = await run(request('auth/session', { cookieHeader: SESSION_COOKIE }));
 
-    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false });
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: { heroVideo: false, sound: false } });
     expect(JSON.stringify(response.body)).not.toContain('"id"');
     expect(response.cookies).toEqual([]);
   });
@@ -80,7 +82,7 @@ describe('GET auth/session', () => {
     const isAdmin = jasmine.createSpy('isAdmin').and.resolveTo(true);
     const response = await run(request('auth/session', { cookieHeader: SESSION_COOKIE }), gateway({ isAdmin }));
 
-    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: true });
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: { heroVideo: false, sound: false } });
     expect(isAdmin).toHaveBeenCalledOnceWith(TOKENS);
   });
 
@@ -93,7 +95,7 @@ describe('GET auth/session', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false });
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: { heroVideo: false, sound: false } });
   });
 
   it('stores the new tokens when the access token had to be refreshed', async () => {
@@ -531,7 +533,7 @@ describe('GET auth/session with a linked player', () => {
       gateway({ linkedPlayer: async () => player }),
     );
 
-    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player, isAdmin: false });
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player, isAdmin: false, mediaDefaults: { heroVideo: false, sound: false } });
   });
 
   it('reads the link with the tokens Supabase confirmed, not the ones in the cookie', async () => {
@@ -558,6 +560,119 @@ describe('GET auth/session with a linked player', () => {
     await run(request('auth/session'), gateway({ linkedPlayer: asked }));
 
     expect(asked).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET auth/session with media defaults', () => {
+  it('returns the saved defaults of the account, read with the tokens Supabase confirmed', async () => {
+    const read = jasmine.createSpy('readMediaDefaults').and.resolveTo({ heroVideo: true, sound: true });
+    const response = await run(request('auth/session', { cookieHeader: SESSION_COOKIE }), gateway({ readMediaDefaults: read }));
+
+    expect((response.body as { mediaDefaults: unknown }).mediaDefaults).toEqual({ heroVideo: true, sound: true });
+    expect(read).toHaveBeenCalledOnceWith(TOKENS);
+  });
+
+  it('says null, and still signs the visitor in, when the defaults cannot be read', async () => {
+    const response = await run(
+      request('auth/session', { cookieHeader: SESSION_COOKIE }),
+      gateway({ readMediaDefaults: async () => null }),
+    );
+
+    expect(response.body).toEqual({ signedIn: true, account: ACCOUNT, player: null, isAdmin: false, mediaDefaults: null });
+  });
+
+  it('does not read them when the visitor is signed out', async () => {
+    const read = jasmine.createSpy('readMediaDefaults').and.resolveTo({ heroVideo: true, sound: true });
+
+    await run(request('auth/session'), gateway({ readMediaDefaults: read }));
+
+    expect(read).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST account/media-defaults', () => {
+  const post = (body: unknown, overrides: Partial<AccountRequest> = {}) =>
+    request('account/media-defaults', {
+      method: 'POST',
+      originHeader: 'https://rivalspulse.com',
+      cookieHeader: SESSION_COOKIE,
+      body,
+      ...overrides,
+    });
+
+  it('saves the named defaults for the account of the session and answers both as stored', async () => {
+    const set = jasmine.createSpy('setMediaDefaults').and.resolveTo({ heroVideo: true, sound: false });
+    const response = await run(post({ heroVideo: true }), gateway({ setMediaDefaults: set }));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ heroVideo: true, sound: false });
+    expect(set).toHaveBeenCalledOnceWith(TOKENS, { heroVideo: true });
+  });
+
+  it('passes each default on only when the body names it, so the other is left alone', async () => {
+    const set = jasmine.createSpy('setMediaDefaults').and.resolveTo({ heroVideo: false, sound: true });
+
+    await run(post({ sound: true }), gateway({ setMediaDefaults: set }));
+    await run(post({ heroVideo: false, sound: true }), gateway({ setMediaDefaults: set }));
+
+    expect(set.calls.allArgs()).toEqual([
+      [TOKENS, { sound: true }],
+      [TOKENS, { heroVideo: false, sound: true }],
+    ]);
+  });
+
+  it('ignores any account named in the body, because only the session decides whose defaults change', async () => {
+    const set = jasmine.createSpy('setMediaDefaults').and.resolveTo({ heroVideo: true, sound: false });
+
+    await run(post({ heroVideo: true, userId: 'someone-else', user_id: 'someone-else' }), gateway({ setMediaDefaults: set }));
+
+    expect(set).toHaveBeenCalledOnceWith(TOKENS, { heroVideo: true });
+  });
+
+  it('refuses anything that is not a true or false, and changes nothing', async () => {
+    const set = jasmine.createSpy('setMediaDefaults').and.resolveTo({ heroVideo: false, sound: false });
+    const bodies = [undefined, null, {}, [], 'true', { heroVideo: 'true' }, { sound: 1 }, { heroVideo: true, sound: null }, { sound: undefined }];
+
+    for (const body of bodies) {
+      expect((await run(post(body), gateway({ setMediaDefaults: set }))).status).toBe(400);
+    }
+
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('needs a session cookie, and changes nothing without one', async () => {
+    const set = jasmine.createSpy('setMediaDefaults').and.resolveTo({ heroVideo: true, sound: false });
+    const response = await run(post({ heroVideo: true }, { cookieHeader: undefined }), gateway({ setMediaDefaults: set }));
+
+    expect(response.status).toBe(401);
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('refuses a POST from another origin, or with none, before doing anything', async () => {
+    const set = jasmine.createSpy('setMediaDefaults').and.resolveTo({ heroVideo: true, sound: false });
+
+    expect((await run(post({ heroVideo: true }, { originHeader: 'https://evil.example' }), gateway({ setMediaDefaults: set }))).status).toBe(403);
+    expect((await run(post({ heroVideo: true }, { originHeader: undefined }), gateway({ setMediaDefaults: set }))).status).toBe(403);
+    expect(set).not.toHaveBeenCalled();
+  });
+
+  it('says 503 when Supabase cannot be asked to save', async () => {
+    spyOn(console, 'warn');
+    const response = await run(
+      post({ heroVideo: true }),
+      gateway({
+        setMediaDefaults: async () => {
+          throw new AuthUnavailableError('down');
+        },
+      }),
+    );
+
+    expect(response.status).toBe(503);
+    expect((response.body as { error: string }).error).toContain('video and sound settings are unavailable');
+  });
+
+  it('is a POST route only', async () => {
+    expect((await run(post(undefined, { method: 'GET' }))).status).toBe(405);
   });
 });
 
@@ -1086,6 +1201,7 @@ describe('a session that was refreshed during the request', () => {
     { name: 'unlink', req: post('account/unlink'), unavailable: 'Linking is unavailable', failing: (fail) => ({ unlinkPlayer: fail }) },
     { name: 'dashboard', req: get(), unavailable: 'Your dashboard is unavailable', failing: (fail) => ({ readOwnDashboard: fail }) },
     { name: 'records setting read', req: request('account/records-opt-in', { cookieHeader: SESSION_COOKIE }), unavailable: 'Pulse Records setting is unavailable', failing: (fail) => ({ readRecordsOptIn: fail }) },
+    { name: 'media defaults save', req: { ...post('account/media-defaults'), body: { sound: true } }, unavailable: 'video and sound settings are unavailable', failing: (fail) => ({ setMediaDefaults: fail }) },
     { name: 'records setting save', req: { ...post('account/records-opt-in'), body: { show: true } }, unavailable: 'Pulse Records setting is unavailable', failing: (fail) => ({ setRecordsOptIn: fail }) },
   ];
 
