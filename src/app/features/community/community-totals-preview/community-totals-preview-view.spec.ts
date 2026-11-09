@@ -27,6 +27,23 @@ describe('communityTotalsPreview', () => {
     ]);
   });
 
+  it('labels the season as the previous half-season when it stands in for the current one', () => {
+    const previous = { id: 10, label: 'Season 10', startsAt: null, endsAt: null };
+
+    expect(
+      communityTotalsPreview(
+        answer({
+          halfSeason: previous,
+          inPlaceOf: { id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null },
+        }),
+      ),
+    ).toEqual([
+      { label: 'Matches counted', value: '250+' },
+      { label: 'Average match', value: '1 h 5 min' },
+      { label: 'Previous half-season', value: 'Season 10' },
+    ]);
+  });
+
   it('leaves out a figure the answer does not carry', () => {
     expect(communityTotalsPreview(answer({ matchesBand: null, averageLengthMinutes: null }))).toEqual([
       { label: 'Season', value: 'Season 10.5' },
