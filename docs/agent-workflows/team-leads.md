@@ -32,8 +32,9 @@ come from the crew in [crew.md](crew.md).
 - **Name and brief every agent it starts**, from the roster in
   [crew.md](crew.md): the issue, the worktree, the signing, and the standing
   merge rule.
-- **Run the QA review itself**, because an agent it starts may be unable to start
-  agents. Post the signed verdict ([qa-review.md](qa-review.md)).
+- **Own the QA review**: start the QA reviewer (Argus) itself, because an agent
+  it starts may be unable to start agents, and post the signed verdict
+  ([qa-review.md](qa-review.md)).
 - **Merge once QA approves and the checks pass**, per **Review and merge** in
   [implementation.md](implementation.md#review-and-merge): mark the pull
   request ready and squash-merge it. File and implement what the review leaves
