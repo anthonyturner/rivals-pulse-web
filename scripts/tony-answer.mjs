@@ -21,7 +21,9 @@ export const TONY_ANSWERED = 'tony-answered';
 
 /** Agents act as the maintainer's own GitHub account, so the author cannot tell Tony from an agent. Agents sign their comments instead. */
 export const AGENT_MARKER = '<!-- agent -->';
-const AGENT_SIGNATURES = [/<!--\s*agent\s*-->/i, /^\s*waiting on tony:/i, /generated with \[claude code\]/i];
+/** The bare marker, or the named form a callsigned agent writes: `<!-- agent: vega -->`. */
+export const AGENT_MARKER_PATTERN = /<!--\s*agent(?::\s*[a-z0-9-]+)?\s*-->/i;
+const AGENT_SIGNATURES = [AGENT_MARKER_PATTERN, /^\s*waiting on tony:/i, /generated with \[claude code\]/i];
 
 const APPROVE_WORDS = new Set(['approve', 'approved', 'merge', 'yes', 'lgtm', 'ship']);
 const HOLD_WORDS = new Set(['no', 'hold', 'stop', 'wait', 'reject']);
