@@ -1,7 +1,18 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PageHeaderComponent } from './page-header.component';
+
+@Component({
+  imports: [PageHeaderComponent],
+  template: `
+    <app-page-header title="Hero stats">
+      <p lede class="first">See the <a href="/tier-list">tier list</a>.</p>
+      <p lede class="second">Counted since May.</p>
+    </app-page-header>
+  `,
+})
+class LedeHostComponent {}
 
 describe('PageHeaderComponent', () => {
   let fixture: ComponentFixture<PageHeaderComponent>;
@@ -49,5 +60,29 @@ describe('PageHeaderComponent', () => {
 
     expect(header.firstElementChild?.tagName).toBe('H1');
     expect(header.textContent?.trim().startsWith('Choose a guide')).toBeTrue();
+  });
+
+  it('shows no description block when nothing is projected', () => {
+    const projected = (fixture.nativeElement as HTMLElement).querySelector(
+      '.description--projected',
+    ) as HTMLElement;
+
+    expect(projected.childElementCount).toBe(0);
+    expect(getComputedStyle(projected).display).toBe('none');
+  });
+
+  it('renders a projected lede, links included, under the title', () => {
+    const host = TestBed.createComponent(LedeHostComponent);
+    host.detectChanges();
+    const element = host.nativeElement as HTMLElement;
+    const projected = element.querySelector('.description--projected') as HTMLElement;
+
+    expect(element.querySelector('h1')?.textContent).toBe('Hero stats');
+    expect(projected.querySelector('.first a')?.getAttribute('href')).toBe('/tier-list');
+    expect(Array.from(projected.querySelectorAll('p')).map((p) => p.textContent)).toEqual([
+      'See the tier list.',
+      'Counted since May.',
+    ]);
+    expect(getComputedStyle(projected).display).not.toBe('none');
   });
 });

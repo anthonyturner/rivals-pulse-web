@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 
 import { scrapeOfficialHeroes } from './official-heroes-source.mjs';
+import { planPortraits } from './hero-portrait-plan.mjs';
 
 // Each official hero page carries a transparent full-body render (about
 // 1337x1079). Its markup does not label it consistently, so it is picked by size.
@@ -12,11 +13,6 @@ const RENDER = { minWidth: 1250, maxWidth: 1500, minHeight: 1000, maxHeight: 115
 const PORTRAIT_SIZE = 320;
 // The head and shoulders take up roughly the top 42% of a standing figure.
 const HEADSHOT_SHARE = 0.42;
-// Heroes the site lists under ids the official roster does not have.
-const ALIASES = {
-  deadpool: ['deadpool-duelist', 'deadpool-strategist', 'deadpool-vanguard'],
-  hulk: ['bruce-banner'],
-};
 
 const requestHeaders = {
   accept: 'image/png,image/*,*/*',
@@ -28,20 +24,16 @@ const heroImagesPath = join(process.cwd(), 'public', 'images', 'heroes');
 
 const payload = await scrapeOfficialHeroes();
 const written = [];
-const skipped = [];
 const missingRender = [];
 
 await mkdir(heroImagesPath, { recursive: true });
 
-for (const hero of payload.heroes) {
-  const fileNames = [hero.id, ...(ALIASES[hero.id] ?? [])].map((id) => `${id}.png`);
-  const pending = fileNames.filter((fileName) => force || !existsSync(join(heroImagesPath, fileName)));
+const { missing, present } = planPortraits(payload.heroes, {
+  exists: (fileName) => existsSync(join(heroImagesPath, fileName)),
+  force,
+});
 
-  if (pending.length === 0) {
-    skipped.push(hero.name);
-    continue;
-  }
-
+for (const { hero, fileNames } of missing) {
   const renderUrl = await findRenderUrl(hero.articleImageUrls ?? []);
 
   if (!renderUrl) {
@@ -51,7 +43,7 @@ for (const hero of payload.heroes) {
 
   const portrait = await headshot(await fetchImage(renderUrl));
 
-  for (const fileName of pending) {
+  for (const fileName of fileNames) {
     await writeFile(join(heroImagesPath, fileName), portrait);
     written.push({ hero: hero.name, fileName, bytes: portrait.length });
   }
@@ -59,7 +51,7 @@ for (const hero of payload.heroes) {
 
 console.log('Official hero image sync complete.');
 console.log(`Written: ${written.length}`);
-console.log(`Skipped existing: ${skipped.length}`);
+console.log(`Skipped existing: ${present.length}`);
 
 for (const item of written) {
   console.log(`- ${item.hero}: ${item.fileName} (${Math.round(item.bytes / 1024)} KB)`);

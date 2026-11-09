@@ -3,4 +3,7 @@
   @if (description().trim()) {
     <p class="description">{{ description() }}</p>
   }
+  <div class="description description--projected">
+    <ng-content select="[lede]" />
+  </div>
 </header>

@@ -169,6 +169,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Fixed
 
+- A fresh install or a new PC of the desktop app can now get back its match history from before the database recorded who uploaded each match, instead of only the newer matches. An older match is returned to a player when every match already recorded under that name came from that one player; a match that cannot be tied that way stays out. It needs `supabase db push` ([#707](https://github.com/anthonyturner/rivals-pulse-web/pull/707)).
 - The Community page's lead tile now labels its season figure "Previous half-season" when the previous half-season's numbers stand in for the current one, instead of a bare "Season" that read as current ([#709](https://github.com/anthonyturner/rivals-pulse-web/pull/709)).
 - During a Steam or database outage, the Game stats page's built-in numbers are now kept by the CDN for 15 seconds, so a long outage costs the site a few Steam reads a minute instead of one per visit, and real numbers come back within seconds of recovery. Stored numbers are cached as before ([#698](https://github.com/anthonyturner/rivals-pulse-web/issues/698)).
 - `npm run sync:game-stats` now says what the capture came to: stored, already captured this hour, or nothing stored and why. Before, it printed "Saved game-stat snapshot" even when the store failed or Steam answered for no game; now it exits with an error in those cases ([#699](https://github.com/anthonyturner/rivals-pulse-web/pull/699)).

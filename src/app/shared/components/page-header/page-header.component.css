@@ -28,3 +28,12 @@ h1 {
   font-size: var(--type-small);
   line-height: 1.4;
 }
+
+.description--projected {
+  display: grid;
+  gap: 4px;
+}
+
+.description--projected:empty {
+  display: none;
+}

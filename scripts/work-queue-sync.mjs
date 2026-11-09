@@ -3,8 +3,11 @@
 // (overlay ADR-0024): every card's Status and Iteration is derived here, and nobody
 // sets either by hand.
 //
-// Usage: node scripts/work-queue-sync.mjs [--apply]
+// Usage: node scripts/work-queue-sync.mjs [--apply] [--issue <node id>]
 // Dry run by default. Needs `gh` and a GH_TOKEN with `repo` and `project` scopes.
+// Without --issue it sweeps every open issue of both repositories (the scheduled run).
+// With --issue it syncs that one issue and nothing else (an issue event), at a
+// small fraction of the cost, so a burst of events cannot drain the shared API budget.
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
@@ -16,6 +19,8 @@ const ITERATION_FIELD = 'Iteration';
 const ITERATION_DAYS = 7;
 const DAY_MS = 86_400_000;
 const REPOSITORIES = ['anthonyturner/rivals_pulse', 'anthonyturner/rivals-pulse-web'];
+/** The agents share this token's hourly GraphQL budget, so the sync stands down below this many points left. */
+export const MIN_REMAINING_POINTS = 500;
 
 /** Every status this script can assign. Closed issues are moved to Done by the project's own "Item closed" workflow. */
 export const STATUSES = ['Needs Tony', 'In review', 'Agent working', 'Ready', 'Backlog'];
@@ -73,18 +78,58 @@ export function missingIterations(iterations, today) {
 const weekTitle = (date) =>
   `Week of ${new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
 
+/**
+ * What a run has spent of the GraphQL budget. Queries report their own cost through
+ * `rateLimit`; a mutation exposes none, so it is counted at the 1 point GitHub charges it.
+ */
+export function createCostMeter() {
+  let queries = 0;
+  let mutations = 0;
+  let points = 0;
+  let remaining = null;
+  return {
+    recordQuery(rateLimit) {
+      queries += 1;
+      if (!rateLimit) return;
+      points += rateLimit.cost;
+      remaining = rateLimit.remaining;
+    },
+    recordMutation() {
+      mutations += 1;
+      points += 1;
+    },
+    get remaining() {
+      return remaining;
+    },
+    summary() {
+      const left = remaining === null ? 'unknown' : `${remaining} remaining`;
+      return `GraphQL cost: ${points} point(s) (${queries} quer${queries === 1 ? 'y' : 'ies'}, ${mutations} mutation(s)); ${left}`;
+    },
+  };
+}
+
+/** True when so little budget is left that the sync should leave it to the agents. */
+export const shouldStandDown = (remaining) => remaining !== null && remaining < MIN_REMAINING_POINTS;
+
+const meter = createCostMeter();
+const RATE_LIMIT = 'rateLimit { cost remaining }';
+
 function graphql(query, variables = {}) {
+  const isMutation = query.trimStart().startsWith('mutation');
   const body = JSON.stringify({ query, variables });
   const response = JSON.parse(
     execFileSync('gh', ['api', 'graphql', '--input', '-'], { input: body, encoding: 'utf8', maxBuffer: 64e6 }),
   );
   if (response.errors) throw new Error(response.errors.map((error) => error.message).join('; '));
+  if (isMutation) meter.recordMutation();
+  else meter.recordQuery(response.data.rateLimit);
   return response.data;
 }
 
 function findBoard() {
   const { user } = graphql(
     `query($owner: String!, $number: Int!, $status: String!, $iteration: String!) {
+      ${RATE_LIMIT}
       user(login: $owner) { projectV2(number: $number) {
         id title
         status: field(name: $status) { ... on ProjectV2SingleSelectField { id options { id name } } }
@@ -145,6 +190,17 @@ function extendIterations(board, added) {
   board.iterations = kept.sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
+/** The fields the mapping reads from an issue, shared by the sweep and the single-issue query. */
+const ISSUE_FIELDS = `
+  id number
+  labels(first: 50) { nodes { name } }
+  closedByPullRequestsReferences(first: 10, includeClosedPrs: true) { nodes { state isDraft createdAt } }
+  projectItems(first: 20) { nodes {
+    id project { id }
+    status: fieldValueByName(name: "${STATUS_FIELD}") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
+    iteration: fieldValueByName(name: "${ITERATION_FIELD}") { ... on ProjectV2ItemFieldIterationValue { title } }
+  } }`;
+
 function openIssues(repository) {
   const [owner, name] = repository.split('/');
   const issues = [];
@@ -152,26 +208,31 @@ function openIssues(repository) {
   do {
     const { repository: repo } = graphql(
       `query($owner: String!, $name: String!, $after: String) {
+        ${RATE_LIMIT}
         repository(owner: $owner, name: $name) { issues(states: OPEN, first: 100, after: $after) {
           pageInfo { hasNextPage endCursor }
-          nodes {
-            id number
-            labels(first: 50) { nodes { name } }
-            closedByPullRequestsReferences(first: 10, includeClosedPrs: true) { nodes { state isDraft createdAt } }
-            projectItems(first: 20) { nodes {
-              id project { id }
-              status: fieldValueByName(name: "${STATUS_FIELD}") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
-              iteration: fieldValueByName(name: "${ITERATION_FIELD}") { ... on ProjectV2ItemFieldIterationValue { title } }
-            } }
-          }
+          nodes { ${ISSUE_FIELDS} }
         } }
       }`,
       { owner, name, ...(after ? { after } : {}) },
     );
-    issues.push(...repo.issues.nodes);
+    issues.push(...repo.issues.nodes.map((issue) => ({ ...issue, repository })));
     after = repo.issues.pageInfo.hasNextPage ? repo.issues.pageInfo.endCursor : null;
   } while (after);
   return issues;
+}
+
+/** One issue by node id, or null when it is closed, not an issue, or not in a tracked repository. */
+function findOpenIssue(nodeId) {
+  const { node } = graphql(
+    `query($id: ID!) {
+      ${RATE_LIMIT}
+      node(id: $id) { ... on Issue { state repository { nameWithOwner } ${ISSUE_FIELDS} } }
+    }`,
+    { id: nodeId },
+  );
+  if (node?.state !== 'OPEN' || !REPOSITORIES.includes(node.repository.nameWithOwner)) return null;
+  return { ...node, repository: node.repository.nameWithOwner };
 }
 
 function addToBoard(board, issue) {
@@ -194,47 +255,73 @@ function setField(board, itemId, fieldId, value) {
   );
 }
 
-function sync({ apply, today = new Date().toISOString().slice(0, 10) }) {
+/** Brings one open issue's card in line with its labels and pull requests, adding the card when it is missing. */
+function syncIssue(board, issue, { apply, report }) {
+  const label = `${issue.repository}#${issue.number}`;
+  const item = issue.projectItems.nodes.find((node) => node.project.id === board.projectId);
+  let itemId = item?.id;
+  const ensureItem = () => (itemId ??= addToBoard(board, issue));
+
+  const currentStatus = item?.status?.name ?? null;
+  const wantedStatus = desiredStatus(issue);
+  if (currentStatus !== wantedStatus) {
+    if (apply) setField(board, ensureItem(), board.statusFieldId, { singleSelectOptionId: board.optionIds[wantedStatus] });
+    report(`${label}: Status ${currentStatus ?? '(not on board)'} -> ${wantedStatus}`);
+  }
+
+  // An issue keeps the week its work started, so a set iteration is never changed.
+  if (item?.iteration) return;
+  const startedOn = workStartedOn(issue);
+  const iteration = startedOn && iterationOn(startedOn, board.iterations);
+  if (!iteration) return;
+  if (apply) setField(board, ensureItem(), board.iterationFieldId, { iterationId: iteration.id });
+  report(`${label}: ${ITERATION_FIELD} -> ${iteration.title}`);
+}
+
+function sync({ apply, issueNodeId, today = new Date().toISOString().slice(0, 10) }) {
   const board = findBoard();
+  if (shouldStandDown(meter.remaining)) {
+    console.log(`::warning title=Work Queue sync skipped::Only ${meter.remaining} GraphQL points are left, so the sync stands down until the next run.`);
+    return;
+  }
   let changes = 0;
   const report = (line) => {
     console.log(`  ${line}`);
     changes += 1;
   };
 
-  const added = missingIterations(board.iterations, today);
-  if (added.length > 0) {
-    if (apply) extendIterations(board, added);
-    else board.iterations.push(...added);
-    report(`${ITERATION_FIELD}: add ${added.map((iteration) => iteration.title).join(', ')}`);
-  }
-
-  for (const repository of REPOSITORIES) {
-    for (const issue of openIssues(repository)) {
-      const label = `${repository}#${issue.number}`;
-      const item = issue.projectItems.nodes.find((node) => node.project.id === board.projectId);
-      let itemId = item?.id;
-      const ensureItem = () => (itemId ??= addToBoard(board, issue));
-
-      const currentStatus = item?.status?.name ?? null;
-      const wantedStatus = desiredStatus(issue);
-      if (currentStatus !== wantedStatus) {
-        if (apply) setField(board, ensureItem(), board.statusFieldId, { singleSelectOptionId: board.optionIds[wantedStatus] });
-        report(`${label}: Status ${currentStatus ?? '(not on board)'} -> ${wantedStatus}`);
-      }
-
-      // An issue keeps the week its work started, so a set iteration is never changed.
-      if (item?.iteration) continue;
-      const startedOn = workStartedOn(issue);
-      const iteration = startedOn && iterationOn(startedOn, board.iterations);
-      if (!iteration) continue;
-      if (apply) setField(board, ensureItem(), board.iterationFieldId, { iterationId: iteration.id });
-      report(`${label}: ${ITERATION_FIELD} -> ${iteration.title}`);
+  if (issueNodeId) {
+    // The scheduled sweep owns the board's iterations, so an issue event never extends them.
+    const issue = findOpenIssue(issueNodeId);
+    if (issue) syncIssue(board, issue, { apply, report });
+    else console.log('  The issue is closed or outside the tracked repositories; nothing to sync.');
+  } else {
+    const added = missingIterations(board.iterations, today);
+    if (added.length > 0) {
+      if (apply) extendIterations(board, added);
+      else board.iterations.push(...added);
+      report(`${ITERATION_FIELD}: add ${added.map((iteration) => iteration.title).join(', ')}`);
+    }
+    for (const repository of REPOSITORIES) {
+      for (const issue of openIssues(repository)) syncIssue(board, issue, { apply, report });
     }
   }
   console.log(`${apply ? 'Applied' : 'Dry run:'} ${changes} change(s)`);
 }
 
+/** The value after `--issue`, or null for a full sweep. */
+export function issueArgument(argv) {
+  const at = argv.indexOf('--issue');
+  if (at === -1) return null;
+  const nodeId = argv[at + 1];
+  if (!nodeId || nodeId.startsWith('--')) throw new Error('--issue needs the issue node id.');
+  return nodeId;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  sync({ apply: process.argv.includes('--apply') });
+  try {
+    sync({ apply: process.argv.includes('--apply'), issueNodeId: issueArgument(process.argv) });
+  } finally {
+    console.log(meter.summary());
+  }
 }

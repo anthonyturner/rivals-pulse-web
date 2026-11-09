@@ -5,6 +5,7 @@ import type { TileChip } from '../../hub/hub-tile.types';
 import { HubTileComponent } from '../../hub/hub-tile/hub-tile.component';
 import { KindChipComponent } from '../../hub/kind-chip/kind-chip.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { buildGameStatsView } from './game-stats-view';
 import { GameStatsService } from './game-stats.service';
@@ -29,7 +30,7 @@ const SOURCES = [
 
 @Component({
   selector: 'app-game-stats-page',
-  imports: [HubTileComponent, KindChipComponent, NoticeComponent, StatDeltaComponent, StatePanelComponent],
+  imports: [HubTileComponent, KindChipComponent, NoticeComponent, PageHeaderComponent, StatDeltaComponent, StatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-stats-page.component.html',
   styleUrls: ['../insight-page.css', './game-stats-page.component.css'],
