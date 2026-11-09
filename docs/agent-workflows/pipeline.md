@@ -155,6 +155,44 @@ gh project item-list 2 --owner anthonyturner --limit 1000 --format json -q '[.it
 Work the requester explicitly says to start now is exempt, and the report says
 the cap was over.
 
+## Questions for the maintainer
+
+Every question that waits on the maintainer goes to one inbox: the issue,
+labelled `needs-tony`, with the question and a recommended answer as its latest
+comment. The maintainer finds everything that needs him on the board's Needs
+Tony column instead of hunting through sessions and pull requests. A question
+asked only in a chat, a closing session or a pull-request thread is not in the
+inbox and may never be read.
+
+The one exception: a clarifying question to a requester who is in the
+conversation right now may be asked there. If it goes unanswered and the work
+cannot go on, it goes to the inbox as well.
+
+When work cannot go on without a decision only the maintainer can make:
+
+1. **Add the `needs-tony` label** to the issue, and keep `ready` on, so
+   removing `needs-tony` alone returns the card to Ready and the next agent
+   resumes. Where no issue exists yet, file one with the label. A question
+   about a pull request goes on the issue it closes.
+2. **Post the question as a comment on the issue, after the label**, and make
+   it the latest comment: what is being decided, why it blocks the work, the
+   options, and your recommended answer, so a one-word reply is enough. Name the
+   pull request in the text when there is one.
+3. **Hand an open draft pull request back** the way a paused job is handed back
+   (see **Your own job pauses for days** above): push, close the draft with a
+   comment naming the branch, keep the branch. That frees the slot.
+4. **Move on** to other work that does not depend on the answer.
+
+The order matters. GitHub's Slack app posts to #rivals-needs-tony only when an
+issue is opened, closed or commented on while it carries `needs-tony` (the
+subscription is filtered by `+label:"needs-tony"`). It does not post when the
+label is added, so the comment is what notifies the maintainer, and it only
+counts once the label is already on.
+
+The maintainer answers in a comment on the issue and removes the label. Anyone
+resuming an issue that was in the inbox reads that answer first, per
+[implementation.md](implementation.md).
+
 ## Running the pipeline end to end
 
 The stages above can be run one at a time or in a single pass. Both are the

@@ -59,7 +59,8 @@ pull requests and merging a reviewed one are all pre-authorized.
 Routine judgement calls are yours to make. Pick the sensible option, state the
 assumption in one line, and carry on to a finished change. Stop and ask only
 when proceeding would be unsafe or irreversible, when a hard stop above is in
-the way, or when a wrong guess would make the whole change useless. The
+the way, or when a wrong guess would make the whole change useless; a question
+that waits on the maintainer goes to the `needs-tony` inbox, not a chat. The
 authorization and its limits are in
 [docs/agent-workflows/pipeline.md](docs/agent-workflows/pipeline.md).
 
