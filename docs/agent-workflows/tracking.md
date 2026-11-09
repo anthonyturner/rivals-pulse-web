@@ -84,6 +84,12 @@ your recommended answer are the latest comment on the issue, the issue carries
 `needs-tony` (and keeps `ready`), and the card moves to Needs Tony. Remove the
 label once the answer is in.
 
+Your label and comment come from Tony's own account, so GitHub never notifies him
+of them. Once a day, `.github/workflows/needs-tony-digest.yml` posts one comment
+from github-actions[bot] on the pinned "Needs Tony digest" issue, listing every
+open `needs-tony` item in both repositories and how long it has waited. Never
+label that digest issue `needs-tony`.
+
 ## Labels
 
 List the repository's real labels with `gh label list` before selecting any.
