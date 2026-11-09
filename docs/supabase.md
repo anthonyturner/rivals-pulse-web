@@ -109,6 +109,7 @@ repo's build. This is a move, not a redesign.
 | `20261108170000_hero_blended_recorders.sql` | `hero_aggregates.blended_recorders`, the different recorders behind each hero across Quick Match and Competitive together, each person once; the same value on the hero's Quick Match and Competitive rows, null on any other mode and where never counted (a frozen half-season). `fill_hero_aggregates` fills it and `read_hero_stats` returns it, and the blended view of hero stats and the tier list gates on it (issue 644). Same signatures and grants |
 | `20261108180000_match_hero_timelines.sql` | `match_hero_timelines` (each player's hero picks with the second they happened, by team, no uid or name, once per match), `record_match_hero_timelines`, the helper `json_whole_number`, and `purge_expired_participants` restated to delete timelines on the schedule of `match_hero_kills`, with every freeze still called |
 | `20261108190000_hero_switch_in_aggregates.sql` | `hero_switch_ins` and its half-season table (how often a team won after a player switched to a hero while an enemy hero was on the field, per half-season and mode, counts only), its fill, rebuild, recompute (hourly) and freeze, `read_hero_switch_ins` (gated by `hero_figure_qualifies`), and `purge_expired_participants` restated to call the new freeze before its first delete |
+| `20261108200000_hero_timeline_recorder.sql` | `match_hero_timelines.recorded_by` (nullable, the keyed recorder hash, closed to `anon` and `authenticated` like the rest of the table), `record_match_hero_timelines` replaced by a four argument version whose `p_recorded_by` defaults to null, and `fill_hero_switch_in_aggregates` restated to count players from the timeline uploader. The purge is not touched |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -445,6 +446,7 @@ before, and its reply is unchanged.
 - At most 12 players and 20 picks per player; a longer list is not a real one and the whole field is dropped. An entry with a bad team, no picks, a bad pick or seconds that go back is dropped alone.
 - A team is kept only when the last hero of each of its timelines matches that team's scoreboard heroes (`match.match_players`) as a multiset. A team with a missing or dropped timeline, or a different final hero, is dropped whole; the other team is kept.
 - The database stores a timeline whole or not at all, once per match: the roster fingerprint plus the start time, the first uploader's wins, within the 4 minute window `record_match_participants` uses. `match_hero_timelines` is deleted by `purge_expired_participants` on the schedule of `match_hero_kills`.
+- Issue 666. Every stored pick also carries `recorded_by`, the hash of the user whose upload stored the timelines (the same keyed hash `participants.recorded_by` holds, never a username). The function takes it as `p_recorded_by`, a fourth argument that defaults to null, so the Edge Function deployed before this change keeps working until it is redeployed; the migration drops the three argument version because a plain `create or replace` would leave two overloads and PostgREST could not choose between them (PGRST203). Rows stored before the migration, or by a caller that sends none, stay null. The column is never granted to `anon` or `authenticated`. Push the migration before deploying the Edge Function: an Edge Function that sends `p_recorded_by` to the old function fails that call, which is logged and costs only the timelines.
 
 The reply's `extended` gains `hero_timelines` (player timelines written) only when the upload carried a usable list, and appears for an upload with only that list. A missing key means unknown. If the call fails, it is logged and the match still succeeds. Check the migration with `npx supabase db query --linked -f supabase/checks/match_hero_timelines.sql`.
 
@@ -656,8 +658,11 @@ if one is gone or comes after a delete.
   needs its own team's timeline and an enemy team's timeline; one without either is skipped and the
   rest of the match still counts.
 - **Recorders.** A row records how many distinct recorders its matches came from and how many matches
-  the busiest one did, over the decided matches, as numbers only. The recorder is the one whose upload stored the match's
-  scoreboard, as in every other family (the timelines carry no recorder of their own).
+  the busiest one did, over the decided matches, as numbers only. The recorder of a match is the one whose
+  upload stored its timelines (`match_hero_timelines.recorded_by`, issue 666), and the one whose upload stored its
+  scoreboard when the timelines carry none (rows stored before issue 666 or sent by an app that sent none), decided
+  match by match. Both the player count and the busiest player's share use it, so a scoreboard from one player
+  and timelines from another credit the player who sent the timelines.
 - **Mode.** The match's mode, read once per match. The reader's default is Quick Match and Competitive.
 - `read_hero_switch_ins(p_play_mode_ids)` (granted to `anon` and `service_role`) returns one jsonb value
   `{ "switch_ins": [{ half_season, hero_id, enemy_hero_id, decided_matches, decided_switches, wins }] }`, summed over
@@ -680,8 +685,7 @@ if one is gone or comes after a delete.
   shows the hero's overall record against the same enemy beside it. A switch is credited to every enemy
   hero on the field, so it is a co-occurrence, not proof that the switch was made to counter that hero.
 - **Run the check** after `supabase db push`:
-  `npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql` (fixtures in half-seasons 997
-  and 998, rolled back; includes nine matches from three players that must stay hidden). It proves the counting rules, the reader, and that the purge freezes the counts
+  `npx supabase db query --linked -f supabase/checks/hero_switch_ins.sql` (fixtures in half-seasons 995 to 998, rolled back; includes nine matches from three players that must stay hidden, and ten matches whose timelines one player uploaded though two uploaded the scoreboards, which must stay hidden). It proves the counting rules, the reader, and that the purge freezes the counts
   before it deletes the timelines.
 - Until the overlay sends `hero_timelines` (issue 654), the table stays empty and the hero page shows
   its empty state. Half-seasons whose raw rows were purged before this migration cannot be filled.
