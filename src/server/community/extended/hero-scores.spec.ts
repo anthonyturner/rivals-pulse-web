@@ -198,13 +198,21 @@ describe('deriveHeroScores', () => {
   });
 
   it('holds back every score while too few heroes qualify, but keeps the figures that passed', () => {
-    const { scores } = derive({ figures: [1, 2, 3, 4].map((id) => figures(id)) });
+    const { scores } = derive({ figures: [1, 2].map((id) => figures(id)) });
 
+    expect(HERO_SCORE_MINIMUMS.rankedHeroes).toBe(3);
     expect(scores.status).toBe('not-enough-data');
-    expect(heroOf(scores.heroes, 'd').damage).toEqual(
-      jasmine.objectContaining({ status: 'ranking-too-small', score: null, measures: { damagePerMinute: 2400 } }),
+    expect(heroOf(scores.heroes, 'b').damage).toEqual(
+      jasmine.objectContaining({ status: 'ranking-too-small', score: null, measures: { damagePerMinute: 1200 } }),
     );
-    expect(HERO_SCORE_MINIMUMS.rankedHeroes).toBe(5);
+  });
+
+  it('ranks a stat once exactly three heroes qualify', () => {
+    const { scores } = derive({ figures: [1, 2, 3].map((id) => figures(id)) });
+
+    expect(scores.status).toBe('ready');
+    expect(scores.heroes.map((hero) => hero.damage.status)).toEqual(['scored', 'scored', 'scored']);
+    expect(scores.heroes.map((hero) => hero.damage.score)).toEqual([1, 6, 10]);
   });
 
   it('gives a hero with partial data the scores it has and none of the others', () => {
@@ -467,6 +475,19 @@ describe('the derived scores in Pulse Atlas', () => {
 
     expect(scores.heroes.length).toBe(heroes.length);
     expect(() => publishData(data)).not.toThrow();
+  });
+
+  it('publishes how many heroes qualify for each stat, whether or not that is enough to rank', () => {
+    const { scores } = derive({
+      figures: [...[1, 2, 3].map((id) => figures(id, { healing: id < 3 ? passing(id * 1000) : NO_LINES })), figures(4, { damage: WAITING })],
+    });
+    const { files } = publish(scores);
+    const published = JSON.parse(files.find((file) => file.path.endsWith('hero-scores.json'))?.content ?? 'null');
+
+    expect(published.data.qualifiedHeroes).toEqual({ damage: 3, sustain: 2, ultimate: 0, utility: 0 });
+    expect(published.data.minimums.rankedHeroes).toBe(3);
+    expect(published.data.heroes[0].damage.status).toBe('scored');
+    expect(published.data.heroes[0].sustain.status).toBe('ranking-too-small');
   });
 
   it('passes the allow-list with too few heroes to rank, and with nothing at all', () => {

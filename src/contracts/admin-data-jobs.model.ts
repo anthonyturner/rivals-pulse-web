@@ -118,7 +118,7 @@ export const DATA_JOBS = [
     caveat:
       "A figure or kill pair shows only after 10 or more lines (a player's figures on a hero in one match; for the kill feed, " +
       'matches that showed the pair) from at least 2 different players. A role also needs 50 lines, and a ' +
-      'build score needs 5 heroes that pass ("Waiting for more heroes" until then). Until then the sections say "Not enough ' +
+      'build score needs 3 heroes that pass ("Waiting for more heroes" until then). Until then the sections say "Not enough ' +
       'data yet" or "Collecting data", so a run can leave every page as it was.',
     example:
       'Once a role has 50 lines that pass the rule, its figure replaces "Not enough data" in its row under "Damage, healing and damage ' +

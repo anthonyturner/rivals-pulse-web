@@ -418,8 +418,8 @@ shown, listed in the manifest:
 ```json
 {
   "provenance": "rivals-pulse-community",
-  "minimums": { "matches": 10, "contributors": 2, "busiestContributorShare": 1, "rankedHeroes": 5 },
-  "qualifiedHeroes": { "damage": 1, "sustain": 1, "ultimate": 0, "utility": 0 },
+  "minimums": { "matches": 10, "contributors": 2, "busiestContributorShare": 1, "rankedHeroes": 3 },
+  "qualifiedHeroes": { "damage": 3, "sustain": 2, "ultimate": 0, "utility": 0 },
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
   "heroes": [
@@ -459,7 +459,7 @@ shown, listed in the manifest:
   both together, or the flag and the published share disagree.
 - **`qualifiedHeroes`** is, for each stat, how many heroes pass the rule: those whose
   stat is `scored` or `ranking-too-small`. Compared with `minimums.rankedHeroes` it is
-  the progress toward a ranking ("2 of 5 heroes"). It counts every hero the API
+  the progress toward a ranking ("2 of 3 heroes"). It counts every hero the API
   answered, including one with no `gameId` that the file leaves out. It is optional for a
   file published before it existed, and each count is a whole number of 0 or more.
 - **`matches`** is lines (one player on one hero in one match), so two uploaders in

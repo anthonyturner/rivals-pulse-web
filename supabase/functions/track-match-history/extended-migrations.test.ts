@@ -60,7 +60,7 @@ describe('the hero score read migration', () => {
     assert.match(website, /matches: 10,/);
     assert.match(website, /contributors: 1,/);
     assert.match(website, /busiestContributorShare: 1,/);
-    assert.match(website, /rankedHeroes: 5,/);
+    assert.match(website, /rankedHeroes: 3,/);
     for (const figure of ['damage', 'healing', 'blocked']) {
       assert.ok(solo.includes(`(a.${figure}_n >= 10 and a.${figure}_recorders >= 1) as ${figure}`));
     }
