@@ -44,7 +44,8 @@ describe('HomePageComponent', () => {
   }
 
   beforeEach(async () => {
-    localStorage.removeItem(HOME_HERO_VIDEO_STORAGE_KEY);
+    // The hero video starts off, so the tests about the video start from a visitor who turned it on.
+    localStorage.setItem(HOME_HERO_VIDEO_STORAGE_KEY, 'on');
     configure();
     spyOn(console, 'error');
     await render();
@@ -55,6 +56,22 @@ describe('HomePageComponent', () => {
     http.verify();
     localStorage.removeItem(HOME_HERO_VIDEO_STORAGE_KEY);
   });
+
+  /** A new visit: nothing is kept in memory, so the choice has to come back from storage. */
+  async function visit(saved: 'on' | 'off' | null): Promise<void> {
+    fixture.destroy();
+    http.verify();
+    TestBed.resetTestingModule();
+
+    if (saved) {
+      localStorage.setItem(HOME_HERO_VIDEO_STORAGE_KEY, saved);
+    } else {
+      localStorage.removeItem(HOME_HERO_VIDEO_STORAGE_KEY);
+    }
+
+    configure();
+    await render();
+  }
 
   async function settle(): Promise<void> {
     await fixture.whenStable();
@@ -276,16 +293,9 @@ describe('HomePageComponent', () => {
       await settle();
     }
 
-    /** A new visit: nothing is kept in memory, so the choice has to come back from storage. */
-    async function nextVisit(): Promise<void> {
-      fixture.destroy();
-      http.verify();
-      TestBed.resetTestingModule();
-      configure();
-      await render();
-    }
+    const nextVisit = (): Promise<void> => visit(localStorage.getItem(HOME_HERO_VIDEO_STORAGE_KEY) === 'on' ? 'on' : 'off');
 
-    it('starts on, with the video playing in the background and the banner as a strip', () => {
+    it('is on when the visitor saved "on": the video plays in the background and the banner is a strip', () => {
       expect(text(videoToggle())).toBe('Video on');
       expect(videoToggle().getAttribute('aria-pressed')).toBe('true');
       expect(videoToggle().type).toBe('button');
@@ -293,6 +303,53 @@ describe('HomePageComponent', () => {
       expect(video()).toBeTruthy();
       expect(banner().getAttribute('data-layout')).toBe('strip');
       expect(hero().classList).not.toContain('has-pulse-backdrop');
+    });
+
+    describe('with no saved choice', () => {
+      beforeEach(() => visit(null));
+
+      it('starts off: no video is in the page to download, the controls that belong to it are hidden and the banner fills the hero', () => {
+        expect(text(videoToggle())).toBe('Video off');
+        expect(videoToggle().getAttribute('aria-pressed')).toBe('false');
+        expect(videoToggle().type).toBe('button');
+        expect(videoToggle().getAttribute('aria-label')).toBe('Background video');
+        expect(video()).toBeNull();
+        expect(element.querySelector('[src$=".mp4"], [src$=".webm"]')).toBeNull();
+        expect(player()).toBeNull();
+        expect(soundToggle()).toBeNull();
+        expect(banner().getAttribute('data-layout')).toBe('backdrop');
+        expect(hero().classList).toContain('has-pulse-backdrop');
+      });
+
+      it('plays the video, muted, once the visitor turns it on', async () => {
+        await toggle();
+        const playing = video();
+        const play = spyOn(playing, 'play').and.resolveTo();
+
+        playing.dispatchEvent(new Event('canplay'));
+
+        expect(text(videoToggle())).toBe('Video on');
+        expect(playing.getAttribute('src')).toBeTruthy();
+        expect(playing.muted).toBeTrue();
+        expect(play).toHaveBeenCalledTimes(1);
+        expect(banner().getAttribute('data-layout')).toBe('strip');
+      });
+
+      it('opens the update video from the news band without ever turning the hero video on', async () => {
+        watchButton().click();
+        await settle();
+
+        expect(player().classList).toContain('is-foreground');
+        expect(video().getAttribute('src')).toBeTruthy();
+        expect(text(videoToggle())).toBe('Video off');
+      });
+    });
+
+    it('keeps the video off on the next visit after a saved "off"', async () => {
+      await visit('off');
+
+      expect(text(videoToggle())).toBe('Video off');
+      expect(video()).toBeNull();
     });
 
     it('sits next to the sound toggle, last in the row so it stays at the edge when the sound toggle goes', async () => {
