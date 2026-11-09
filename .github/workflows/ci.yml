@@ -36,6 +36,7 @@ jobs:
   unit-tests:
     name: Unit tests (Karma)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -51,7 +52,7 @@ jobs:
         run: npm ci
 
       - name: Run the Karma tests in headless Chrome
-        run: npm test -- --watch=false --browsers=ChromeHeadless
+        run: npm test -- --watch=false --browsers=ChromeHeadless --reporters=dots
 
   supabase-functions:
     name: Supabase function tests
