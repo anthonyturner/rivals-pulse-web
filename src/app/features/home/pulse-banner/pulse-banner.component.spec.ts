@@ -4,7 +4,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { THEME_STORAGE_KEY, ThemeService } from '../../../core/theme/theme.service';
 import { CircuitGrid } from './circuit-grid';
 import { PulseBannerComponent } from './pulse-banner.component';
-import { waitUntil } from '../../../testing/wait-until';
 
 describe('PulseBannerComponent', () => {
   let fixture: ComponentFixture<PulseBannerComponent>;
@@ -119,15 +118,50 @@ describe('PulseBannerComponent', () => {
   });
 
   describe('motion', () => {
+    /**
+     * Stands in for the browser's observer, so a spec says when the banner is on screen instead of
+     * depending on where the headless runner's window and scroll happen to be.
+     */
+    class FakeIntersectionObserver {
+      static latest: FakeIntersectionObserver | null = null;
+
+      constructor(private readonly callback: IntersectionObserverCallback) {
+        FakeIntersectionObserver.latest = this;
+      }
+
+      observe(): void {}
+      disconnect(): void {}
+
+      report(isIntersecting: boolean): void {
+        this.callback([{ isIntersecting } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }
+    }
+
+    const realIntersectionObserver = window.IntersectionObserver;
+    beforeEach(() => {
+      FakeIntersectionObserver.latest = null;
+      window.IntersectionObserver = FakeIntersectionObserver as unknown as typeof IntersectionObserver;
+    });
+    afterEach(() => (window.IntersectionObserver = realIntersectionObserver));
+
+    function bringOnScreen(): void {
+      const observer = FakeIntersectionObserver.latest;
+      expect(observer).withContext('the banner watches whether it is on screen').not.toBeNull();
+      observer?.report(true);
+    }
+
     it('plays once it is on screen, and holds when the tab is hidden', async () => {
+      const hidden = spyOnProperty(document, 'hidden').and.returnValue(false);
       create();
-      // Pin it inside the viewport, wherever earlier specs left the runner's page scrolled.
-      (fixture.nativeElement as HTMLElement).style.cssText = 'position: fixed; top: 0; left: 0; width: 600px';
-      await waitUntil(() => setPlayback.calls.allArgs().some(([state]) => state === 'playing'), 'the banner plays');
+      await fixture.whenStable();
 
-      expect(setPlayback).toHaveBeenCalledWith('playing');
+      expect(setPlayback).not.toHaveBeenCalledWith('playing');
 
-      spyOnProperty(document, 'hidden').and.returnValue(true);
+      bringOnScreen();
+
+      expect(setPlayback.calls.mostRecent().args).toEqual(['playing']);
+
+      hidden.and.returnValue(true);
       document.dispatchEvent(new Event('visibilitychange'));
 
       expect(setPlayback.calls.mostRecent().args).toEqual(['paused']);
@@ -137,7 +171,8 @@ describe('PulseBannerComponent', () => {
 
     it('shows a still frame under prefers-reduced-motion, whatever is on screen', async () => {
       create(true);
-      await settle();
+      await fixture.whenStable();
+      bringOnScreen();
 
       expect(setPlayback).toHaveBeenCalledWith('still');
       expect(setPlayback).not.toHaveBeenCalledWith('playing');
