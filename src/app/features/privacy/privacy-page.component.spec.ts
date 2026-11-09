@@ -186,6 +186,7 @@ describe('PrivacyPageComponent', () => {
     expect(entry?.detail).toContain('seconds into the match');
     expect(planned).toContain('Hero changes during the match');
     expect(planned).toContain('stored once per match');
+    expect(entry?.detail).toContain('one-way code of the player who uploaded it');
     expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Hero changes during the match');
   });
 
@@ -195,7 +196,7 @@ describe('PrivacyPageComponent', () => {
     expect(text).not.toContain('being added');
     expect(text).toContain('six months');
     expect(text).toContain('half-season');
-    expect(text.replace(/\s+/g, ' ')).toContain('hero changes once the app sends them, are kept for the same time');
+    expect(text.replace(/\s+/g, ' ')).toContain('hero changes once the app sends them (with the one-way recorder code stored next to each one), are kept for the same time and deleted with them');
     expect(text).toContain('no time limit');
     expect(text).toContain('5,000');
   });
@@ -205,6 +206,7 @@ describe('PrivacyPageComponent', () => {
     const retention = (section('retention').textContent ?? '').replace(/\s+/g, ' ');
 
     expect(uploads).toContain('also kept next to each match in that history');
+    expect(uploads).toContain('with every hero change that player uploads');
     expect(uploads).toContain('link a website account');
     expect(retention).toContain('one-way recorder code kept next to each of its matches');
   });

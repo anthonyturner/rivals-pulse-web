@@ -80,7 +80,8 @@
       The upload also carries a short-lived Overwolf sign-in token, which our server checks with
       Overwolf and does not store. We keep a one-way code made from the uploading player's
       Overwolf username, never the username itself, to limit how many matches one player can
-      send. The same code is stored on every scoreboard line that player records.
+      send. The same code is stored on every scoreboard line that player records and, once the
+      app sends hero changes, with every hero change that player uploads.
     </p>
     <p>
       For the uploading player we also keep a record of their own match history: the match facts
@@ -257,8 +258,8 @@
       <li>
         Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
-        The extra figures above, and the hero changes once the app sends them, are kept for the
-        same time. A Pulse Records entry is read from
+        The extra figures above, and the hero changes once the app sends them (with the one-way
+        recorder code stored next to each one), are kept for the same time and deleted with them. A Pulse Records entry is read from
         these lines, so it disappears when its line is deleted.
       </li>
       <li>
