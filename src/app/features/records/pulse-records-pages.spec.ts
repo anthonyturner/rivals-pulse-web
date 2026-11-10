@@ -8,6 +8,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { PulseRecords } from '../../../contracts/pulse-records.model';
 import { routes } from '../../app.routes';
+import { ThinContent } from '../../core/seo/thin-content';
 import { NotFoundComponent } from '../../shared/components/not-found/not-found.component';
 import { heroOf } from '../insights/hero-matchup.fixtures';
 import { RecordsCategoryPageComponent } from './records-category-page/records-category-page.component';
@@ -141,6 +142,18 @@ describe('the Pulse Records pages', () => {
       expect(element.querySelectorAll('table').length).toBe(1);
     });
 
+    it('is thin content, so ad-free and noindex, until a board has enough rows, and not after', async () => {
+      await open('/records', recordsOf({ kills: recordRows(1) }));
+
+      expect(TestBed.inject(ThinContent).thin()).toBeTrue();
+    });
+
+    it('is not thin content once a board has enough rows', async () => {
+      await open('/records', allBoards);
+
+      expect(TestBed.inject(ThinContent).thin()).toBeFalse();
+    });
+
     it('says there is not enough data yet when no board has enough rows, without a date', async () => {
       const { element } = await open('/records', recordsOf({ kills: recordRows(1) }));
 
@@ -205,6 +218,12 @@ describe('the Pulse Records pages', () => {
 
       expect(text(current as Element)).toBe('Final Hits');
       expect(element.querySelectorAll('nav a').length).toBe(7);
+    });
+
+    it('is thin content for a board without enough rows, and not for one with enough', async () => {
+      await open('/records/healing', recordsOf({ healing: recordRows(1), kills: recordRows(9) }));
+
+      expect(TestBed.inject(ThinContent).thin()).toBeTrue();
     });
 
     it('says there is not enough data yet for a thin board', async () => {

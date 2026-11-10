@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { HeroStats, HeroStatsHalfSeason, HeroStatsHero, HeroStatsMode } from '../../../../contracts/hero-stats.model';
+import { ThinContent } from '../../../core/seo/thin-content';
 import { TierListPageComponent } from './tier-list-page.component';
 
 const current: HeroStatsHalfSeason = {
@@ -146,6 +147,18 @@ describe('TierListPageComponent', () => {
     const hrefs = Array.from(page.querySelectorAll('app-hub-bento a')).map((link) => link.getAttribute('href'));
 
     expect(hrefs).toEqual(['/how-we-count', '/win-rates']);
+  });
+
+  it('is thin content, so ad-free and noindex, until a hero is placed in a tier', async () => {
+    await open(building);
+
+    expect(TestBed.inject(ThinContent).thin()).toBeTrue();
+  });
+
+  it('is no longer thin content once a hero is placed in a tier', async () => {
+    await open(partial);
+
+    expect(TestBed.inject(ThinContent).thin()).toBeFalse();
   });
 
   it('puts the method note in the lead tile, with decorative key art', async () => {

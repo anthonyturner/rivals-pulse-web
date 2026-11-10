@@ -12,10 +12,9 @@ const KEPT_LITERALS = new Map([
   ['app/features/community/user-highlights/user-highlights-page.component.css', 1],
 ]);
 
-/** Fill tokens read as text where the fill is not the text's own background: a large numeral, and the accent on the dark pill. */
+/** Fill tokens read as text where the fill is not the text's own background: a large numeral. */
 const KEPT_FILL_TEXT = new Map([
   ['app/features/home/how-it-works/how-it-works.component.css', 1],
-  ['app/shared/components/get-app-button/get-app-button.component.css', 1],
 ]);
 
 const COLOUR_LITERAL = /(?<![&\w])#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(/gi;

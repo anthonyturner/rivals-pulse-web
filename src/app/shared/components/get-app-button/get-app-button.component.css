@@ -2,6 +2,10 @@
   display: inline-flex;
 }
 
+:host:empty {
+  display: none;
+}
+
 .get-app {
   display: inline-flex;
   width: 100%;
@@ -25,25 +29,10 @@ a.get-app:hover {
   filter: brightness(1.1);
 }
 
-.get-app.is-pending {
-  cursor: not-allowed;
-}
-
 /* The ring cannot be the button's own colour, so it is the site's focus colour unless a dark host sets it. */
 .get-app:focus-visible {
   outline: 3px solid var(--get-app-focus, var(--focus));
   outline-offset: 3px;
-}
-
-.pill {
-  flex: none;
-  white-space: nowrap;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--accent-ink);
-  color: var(--accent);
-  font-size: var(--type-caption);
-  font-weight: 700;
 }
 
 .visually-hidden {

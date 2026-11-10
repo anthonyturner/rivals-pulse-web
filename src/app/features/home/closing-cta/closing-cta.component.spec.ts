@@ -19,10 +19,10 @@ describe('ClosingCtaComponent', () => {
   const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
   const discord = (): HTMLAnchorElement | null => element.querySelector('a[href^="https://"]');
 
-  it('is a themed light band named "Get RivalsPulse" with the shared get-app button', () => {
+  it('is a themed light band named "Get RivalsPulse" with the shared get-app button, which shows nothing until there is a store link', () => {
     expect(element.querySelector('section')?.classList).not.toContain('band--white');
     expect(text(element.querySelector('h2'))).toBe('Get RivalsPulse');
-    expect(element.querySelector('app-get-app-button button[aria-disabled="true"]')).toBeTruthy();
+    expect(text(element.querySelector('app-get-app-button'))).toBe('');
   });
 
   it('links the stats and How we count', () => {

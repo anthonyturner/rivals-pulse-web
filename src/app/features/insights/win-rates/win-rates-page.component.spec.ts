@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { HeroStats, HeroStatsHero, HeroStatsMode } from '../../../../contracts/hero-stats.model';
+import { ThinContent } from '../../../core/seo/thin-content';
 import { WinRatesPageComponent } from './win-rates-page.component';
 
 const season = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
@@ -310,6 +311,24 @@ describe('WinRatesPageComponent', () => {
     expect(element.querySelector('table')).toBeNull();
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
     expect(squash(text(element, '.meta')[0])).not.toContain('the line marks 50%');
+  });
+
+  it('is thin content, so ad-free and noindex, while no hero has enough data', async () => {
+    await open('/win-rates', partial);
+
+    expect(TestBed.inject(ThinContent).thin()).toBeTrue();
+  });
+
+  it('is thin content when the request fails', async () => {
+    await open('/win-rates', 'failure');
+
+    expect(TestBed.inject(ThinContent).thin()).toBeTrue();
+  });
+
+  it('is not thin content once a hero has enough data', async () => {
+    await open('/win-rates', full);
+
+    expect(TestBed.inject(ThinContent).thin()).toBeFalse();
   });
 
   it('draws a designed empty state, not blank panels, when nothing is counted', async () => {

@@ -10,18 +10,4 @@
       }
     </ul>
   }
-
-  @if (comingSoon.length > 0) {
-    <section aria-labelledby="coming-soon-title">
-      <h2 id="coming-soon-title">Coming soon</h2>
-      <ul class="grid soon">
-        @for (item of comingSoon; track item.path) {
-          <li>
-            <strong>{{ item.label }}</strong>
-            <p>{{ item.description }}</p>
-          </li>
-        }
-      </ul>
-    </section>
-  }
 </div>

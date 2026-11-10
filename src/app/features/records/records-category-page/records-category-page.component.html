@@ -3,7 +3,12 @@
     <app-page-header
       [title]="current.heading"
       description="The best lines Rivals Pulse players have recorded, best first, up to 50."
-    />
+    >
+      <p lede>
+        The list holds one line per uploading player, so one account cannot fill it.
+        <a routerLink="/how-we-count">How we count</a>
+      </p>
+    </app-page-header>
 
     <nav class="lists" aria-label="Pulse Records lists">
       <a routerLink="/records" class="chip">All records</a>

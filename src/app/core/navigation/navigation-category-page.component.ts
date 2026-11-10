@@ -17,7 +17,6 @@ import { NAVIGATION_CATEGORY_TILES } from './navigation-category-tiles.data';
 export class NavigationCategoryPageComponent {
   readonly category = inject(ActivatedRoute).snapshot.data['category'] as NavigationCategory;
   readonly released = this.category.items.filter((item) => item.enabled);
-  readonly comingSoon = this.category.items.filter((item) => !item.enabled);
 
   /** How the hub's links are laid out as tiles, or undefined for a hub drawn as a plain list of cards. */
   readonly tiles = NAVIGATION_CATEGORY_TILES[this.category.path];
