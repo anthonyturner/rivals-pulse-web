@@ -25,7 +25,9 @@ visitor's own session) and the Pulse Records lists (no player name in server HTM
   seconds. A data page whose API never answers, or a render that throws, is
   answered with the browser shell (`index.csr.html`) instead of hanging, and that
   shell is never cached. A finished render is cached by the CDN for five minutes
-  (`s-maxage=300`).
+  (`s-maxage=300`), unless one of its `/api` requests failed: then the page shows
+  its error state, and `uncachedOnFailedRequestInterceptor`
+  (`core/seo/`) sets `no-store` on the response so that state is not kept.
 - **Data in the render.** A page's `/api/*` requests go to its own host, so each
   one is a second function call (cached by the CDN like any API answer). On a
   preview deployment behind Vercel's login, those calls are refused and the page
