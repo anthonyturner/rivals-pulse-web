@@ -92,13 +92,6 @@ ul {
   margin-top: 4px;
 }
 
-.empty-tier {
-  align-self: center;
-  padding: 0 12px;
-  color: var(--text-soft);
-  font-size: var(--type-small);
-}
-
 .raised {
   gap: 12px;
 }
@@ -121,10 +114,6 @@ ul {
   gap: 10px;
   padding: 10px;
   background: var(--surface);
-}
-
-.raised .empty-tier {
-  padding-block: 12px;
 }
 
 @media (max-width: 560px) {

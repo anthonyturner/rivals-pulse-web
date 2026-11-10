@@ -757,7 +757,12 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
 - A hero is placed once it has 10 appearances in matches with a win or a loss and at least 2 recorders
   (`COMMUNITY_BUCKET_MIN_PLAYERS`). A hero whose recorders were never counted (null, in a half-season
   frozen before the count) is placed on the 10 appearances alone. Its tier comes from
-  the shrunk win rate `(wins + 5) / (matches + 10)`: S from .62, A .56, B .52, C .48, D .44, else F.
+  the shrunk win rate: the record plus a prior of pretend matches at its role's average win rate
+  (the overall average for a role with fewer than 3 heroes). The prior's size is estimated from the
+  spread of the heroes counted, between 10 and 500 pretend matches, by
+  [`win-rate-prior.ts`](../src/server/heroes/stats/win-rate-prior.ts), the overlay's own estimator;
+  with fewer than 5 heroes it is 60 pretend matches at 50%. Tiers: S from .62, A .56, B .52, C .48,
+  D .44, else F. The matchup and synergy win rates keep the fixed 10 pretend matches at 50%.
 - A hero's "appearances" are its scoreboard lines (a hero on both teams of one match counts twice,
   as in the overlay); the pick rate is those lines over the matches counted.
 - By default Competitive and Quick Match (`play_mode_id` 0 and 1) are blended, and unknown (-1) is

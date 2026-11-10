@@ -18,7 +18,7 @@ describe('buildTierListTabView', () => {
     expect(buildTierListTabView(null, identities).kind).toBe('unavailable');
   });
 
-  it('lists the S and A tiers only, in the order the hero stats give, with win rate and pick rate', () => {
+  it('lists the two best tiers only, in the order the hero stats give, with win rate and pick rate', () => {
     const view = buildTierListTabView(READY, identities);
 
     if (view.kind !== 'ready') {
@@ -37,13 +37,33 @@ describe('buildTierListTabView', () => {
     expect(JSON.stringify(view)).not.toContain('Thor');
   });
 
-  it('keeps a tier with no hero in it, so the summary says it is empty instead of hiding it', () => {
+  it('lists the two best tiers that have a hero, so an empty S is skipped rather than shown empty', () => {
     const view = buildTierListTabView(
-      statsOf([{ name: 'B', heroes: [statsHero('thor', 20, 10, 7)] }]),
+      statsOf([
+        { name: 'A', heroes: [statsHero('hulk', 20, 13, 7, 'A')] },
+        { name: 'B', heroes: [statsHero('thor', 20, 10, 7)] },
+        { name: 'C', heroes: [statsHero('hela', 12, 6, 9, 'C')] },
+      ]),
       identities,
     );
 
-    expect(view.kind === 'ready' && view.tiers.map((tier) => tier.heroes.length)).toEqual([0, 0]);
+    expect(view.kind === 'ready' && view.tiers.map((tier) => [tier.name, tier.heroes.length])).toEqual([
+      ['A', 1],
+      ['B', 1],
+    ]);
+  });
+
+  it('lists one tier when only one has a hero', () => {
+    const view = buildTierListTabView(statsOf([{ name: 'B', heroes: [statsHero('thor', 20, 10, 7)] }]), identities);
+
+    expect(view.kind === 'ready' && view.tiers.map((tier) => tier.name)).toEqual(['B']);
+  });
+
+  it('describes the pull toward the role average, not toward 50%', () => {
+    const view = buildTierListTabView(READY, identities);
+
+    expect(view.kind === 'ready' && view.footnote).toContain('average of its role');
+    expect(view.kind === 'ready' && view.footnote).not.toContain('50%');
   });
 
   it('says the previous half-season stands in for the current one', () => {

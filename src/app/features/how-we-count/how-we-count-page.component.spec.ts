@@ -64,6 +64,12 @@ describe('HowWeCountPageComponent', () => {
     expect(section('seasons')).toContain('has enough appearances and players');
   });
 
+  it('says a tier is placed from a win rate pulled toward the average of its hero role, by about 60 matches', () => {
+    expect(section('tiers')).toContain("the average of the hero's role");
+    expect(section('tiers')).toContain('about 60 more matches');
+    expect(section('tiers')).not.toContain('50%');
+  });
+
   it('says every rank is blended', () => {
     expect(section('ranks')).toContain('Every rank is counted together');
   });

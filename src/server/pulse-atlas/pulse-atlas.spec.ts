@@ -122,7 +122,6 @@ function communityStatsData(overrides: Record<string, unknown> = {}, band: Recor
     provenance: PROVENANCE,
     minimumMatches: 10,
     minimumPlayers: 2,
-    priorMatches: 10,
     currentSeasonId: 2,
     season: { id: 2, label: 'Season 2' },
     bands: [
@@ -1929,7 +1928,6 @@ describe('the community-stats dataset', () => {
       'provenance',
       'minimumMatches',
       'minimumPlayers',
-      'priorMatches',
       'currentSeasonId',
       'season',
       'bands',
@@ -2055,7 +2053,7 @@ describe('the community-stats dataset', () => {
       expect([...keys].sort()).toEqual(
         [
           'allyHeroId', 'appearances', 'bands', 'counters', 'currentSeasonId', 'decidedMatches', 'enemyHeroId', 'heroId',
-          'heroes', 'id', 'key', 'label', 'matches', 'minimumMatches', 'minimumPlayers', 'priorMatches', 'provenance', 'season', 'synergies', 'wins',
+          'heroes', 'id', 'key', 'label', 'matches', 'minimumMatches', 'minimumPlayers', 'provenance', 'season', 'synergies', 'wins',
         ].sort(),
       );
       // `minimumPlayers` is the one key that names players: a count of how many, never which.
@@ -2079,10 +2077,15 @@ describe('the community-stats dataset', () => {
       expect(() => published(withStats(communityStatsData({ bands: [{ ...band, key: 'gold' }] })))).toThrowError(/there is no "all" band/);
     });
 
-    it('refuses a minimum or a prior that is not a whole number above 0, and a season id that is not whole', () => {
+    it('refuses a minimum that is not a whole number above 0, and a season id that is not whole', () => {
       expect(() => published(withStats(communityStatsData({ minimumMatches: 0 })))).toThrowError(/minimumMatches must be a whole number above 0/);
-      expect(() => published(withStats(communityStatsData({ priorMatches: 0.5 })))).toThrowError(/priorMatches must be a whole number above 0/);
       expect(() => published(withStats(communityStatsData({ currentSeasonId: 2.5 })))).toThrowError(/currentSeasonId must be a whole number/);
+    });
+
+    it('accepts a file published with priorMatches, and publishes it without', () => {
+      const data = statsOf(published(withStats(communityStatsData({ priorMatches: 10 })))).data;
+
+      expect(Object.keys(data)).not.toContain('priorMatches');
     });
 
     it('refuses a season that does not agree with inPlaceOfSeasonId', () => {
@@ -2156,7 +2159,6 @@ describe('assembleCommunityStats', () => {
   const answer = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
     status: 'ready',
     minimumMatches: 10,
-    priorMatches: 10,
     halfSeason: NEW,
     inPlaceOf: null,
     bands,
@@ -2168,11 +2170,14 @@ describe('assembleCommunityStats', () => {
       provenance: PROVENANCE,
       minimumMatches: 10,
       minimumPlayers: 2,
-      priorMatches: 10,
       currentSeasonId: 21,
       season: { id: 21, label: 'Season 10.5' },
       bands,
     });
+  });
+
+  it('leaves out the prior the hero-pairs API still carries, which readers now estimate for themselves', () => {
+    expect(Object.keys(assembleCommunityStats(answer({ priorMatches: 10 })) as object)).not.toContain('priorMatches');
   });
 
   it('names the current season in inPlaceOfSeasonId when the previous half-season stands in for it', () => {
@@ -2733,7 +2738,6 @@ describe('resolveCommunityStats', () => {
   const PATH = 'pulse-atlas/v1/community-stats.json';
   const liveAnswer = (): Record<string, unknown> => ({
     minimumMatches: 10,
-    priorMatches: 10,
     halfSeason: { id: 1, label: 'Season 1', startsAt: null, endsAt: null },
     inPlaceOf: null,
     bands: (communityStatsData() as { bands: unknown[] }).bands,
@@ -2910,7 +2914,7 @@ describe('the minimums a figure waits on', () => {
 
   it('assembles the minimum players of community-stats and team-lineups from the one constant', () => {
     const bands = (communityStatsData() as { bands: unknown[] }).bands;
-    const stats = assembleCommunityStats({ minimumMatches: 10, priorMatches: 10, halfSeason: { id: 1, label: 'Season 1' }, inPlaceOf: null, bands }) as Record<string, unknown>;
+    const stats = assembleCommunityStats({ minimumMatches: 10, halfSeason: { id: 1, label: 'Season 1' }, inPlaceOf: null, bands }) as Record<string, unknown>;
     const lineups = assembleTeamLineups({
       status: 'not-enough-data',
       minimumTeams: 50,

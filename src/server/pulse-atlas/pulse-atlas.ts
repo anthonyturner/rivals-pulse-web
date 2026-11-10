@@ -1774,7 +1774,11 @@ function communityHalfSeasonOf(value: unknown, problem: (detail: string) => Erro
   return { id: value['id'], label: value['label'] };
 }
 
-/** The keys a community-stats file, season, band and row may carry: the allow-list. Anything else refuses the build. */
+/**
+ * The keys a community-stats file, season, band and row may carry: the allow-list. Anything else refuses the build.
+ * `priorMatches` is never published now, but the last published file may still carry it, and that file is what a
+ * run falls back to when the API does not answer.
+ */
 const COMMUNITY_STATS_KEYS: readonly string[] = [
   'provenance',
   'minimumMatches',
@@ -1821,10 +1825,9 @@ export function assembleCommunityStats(answer: unknown): unknown {
   if (
     !isRecord(answer) ||
     !isFiniteNumber(answer['minimumMatches']) ||
-    !isFiniteNumber(answer['priorMatches']) ||
     !Array.isArray(answer['bands'])
   ) {
-    throw problem('no minimumMatches, priorMatches and bands');
+    throw problem('no minimumMatches and bands');
   }
 
   const shown = halfSeasonOf(answer['halfSeason']);
@@ -1839,7 +1842,6 @@ export function assembleCommunityStats(answer: unknown): unknown {
     provenance: COMMUNITY_PROVENANCE,
     minimumMatches: answer['minimumMatches'],
     minimumPlayers: COMMUNITY_BUCKET_MIN_PLAYERS,
-    priorMatches: answer['priorMatches'],
     currentSeasonId: seasonIdOf(current.id),
     season: shown === null ? null : { id: seasonIdOf(shown.id), label: shown.label },
     ...(inPlaceOf === null ? {} : { inPlaceOfSeasonId: seasonIdOf(inPlaceOf.id) }),
@@ -1868,7 +1870,7 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
 
   checkKeys(data, COMMUNITY_STATS_KEYS, 'the file');
 
-  const { minimumMatches, minimumPlayers, priorMatches, currentSeasonId, season, inPlaceOfSeasonId } = data;
+  const { minimumMatches, minimumPlayers, currentSeasonId, season, inPlaceOfSeasonId } = data;
 
   if (!isPositiveInteger(minimumMatches)) {
     problems.push('minimumMatches must be a whole number above 0');
@@ -1876,10 +1878,6 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
 
   if (minimumPlayers !== undefined && !isPositiveInteger(minimumPlayers)) {
     problems.push('minimumPlayers must be a whole number above 0');
-  }
-
-  if (!isPositiveInteger(priorMatches)) {
-    problems.push('priorMatches must be a whole number above 0');
   }
 
   if (!isInteger(currentSeasonId)) {
@@ -1941,7 +1939,7 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
     problems.push(`there is no "${COMMUNITY_STATS_ALL_BAND}" band`);
   }
 
-  if (problems.length > 0 || !isPositiveInteger(minimumMatches) || !isPositiveInteger(priorMatches) || !isInteger(currentSeasonId)) {
+  if (problems.length > 0 || !isPositiveInteger(minimumMatches) || !isInteger(currentSeasonId)) {
     return { problems };
   }
 
@@ -1952,7 +1950,6 @@ function readCommunityStats(data: unknown): ReadCommunityStats {
       provenance: COMMUNITY_PROVENANCE,
       minimumMatches,
       ...(minimumPlayers === undefined ? {} : { minimumPlayers }),
-      priorMatches,
       currentSeasonId,
       season: shownSeason,
       ...(inPlaceOfSeasonId === undefined ? {} : { inPlaceOfSeasonId }),

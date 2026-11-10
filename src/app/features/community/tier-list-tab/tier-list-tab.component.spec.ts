@@ -47,7 +47,7 @@ describe('TierListTabComponent', () => {
     await answer(READY);
   });
 
-  it('lists the S and A tiers only and links to the full tier list', async () => {
+  it('lists the two best tiers only and links to the full tier list', async () => {
     await answer(READY);
 
     const rows = Array.from(host().querySelectorAll('.tier-row'));

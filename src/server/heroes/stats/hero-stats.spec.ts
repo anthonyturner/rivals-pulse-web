@@ -6,6 +6,7 @@ import {
   HERO_STATS_MIN_MATCHES,
   PLAY_MODE_IDS,
   PLAY_MODES,
+  WIN_RATE_PRIOR_MATCHES,
   deriveHeroStats,
   killDeathAssistRatio,
   shrunkWinRate,
@@ -14,6 +15,7 @@ import {
   type HeroStatsSource,
   type MatchTotalsRow,
 } from './hero-stats';
+import { estimateWinRatePriors } from './win-rate-prior';
 
 // Fixtures ported from the overlay's personal tier list spec (rivals_pulse,
 // src/app/services/personal-tier-list/personal-tier-list.spec.ts at commit
@@ -333,7 +335,7 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
   });
 
   it('does not let a perfect small sample outrank a proven hero inside a tier', () => {
-    const source = sourceOf([record(HERO_A, HERO_D, MIN, MIN), record(HERO_B, HERO_D, 200, 180)]);
+    const source = sourceOf([record(HERO_A, HERO_D, 20, 20), record(HERO_B, HERO_D, 200, 180)]);
 
     const heroes = derive(source).stats.tiers.find((tier) => tier.name === 'S')?.heroes ?? [];
 
@@ -343,8 +345,8 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
   it('orders tiers best first and leaves out a tier no hero reached', () => {
     const { stats } = derive(sourceOf([record(HERO_A, HERO_B, MIN, MIN)]));
 
-    expect(stats.tiers.map((tier) => tier.name)).toEqual(['S', 'F']);
-    expect(stats.tiers[0].heroes[0].tier).toBe('S');
+    expect(stats.tiers.map((tier) => tier.name)).toEqual(['A', 'F']);
+    expect(stats.tiers[0].heroes[0].tier).toBe('A');
   });
 
   it('is empty for no matches', () => {
@@ -378,6 +380,69 @@ describe('hero stat tier rule (the overlay personal tier list)', () => {
     ];
 
     cases.forEach(([rate, tier]) => expect(tierForShrunkWinRate(rate)).withContext(String(rate)).toBe(tier));
+  });
+});
+
+describe('the win-rate prior of the hero tiers', () => {
+  const GAME_IDS = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008];
+  const slugs = new Map(GAME_IDS.map((id): [number, string] => [id, `hero-${id}`]));
+  const RECORDS: [number, number][] = [
+    [120, 78],
+    [90, 55],
+    [60, 33],
+    [150, 78],
+    [80, 36],
+    [200, 90],
+    [45, 30],
+    [110, 41],
+  ];
+  const sourceOfRecords = (): HeroStatsSource =>
+    sourceOf(RECORDS.map(([matches, wins], index) => ({ heroes: [heroRow(GAME_IDS[index], matches, wins)], matches })));
+  const shrunkOf = (stats: ReturnType<typeof derive>['stats'], slug: string): number | undefined =>
+    stats.tiers.flatMap((tier) => tier.heroes).find((hero) => hero.hero === slug)?.shrunkWinRate;
+
+  it('is estimated from the heroes counted, as the overlay estimates it', () => {
+    const { stats } = deriveHeroStats(sourceOfRecords(), { now: NOW, heroSlugByGameId: slugs });
+    const priors = estimateWinRatePriors(RECORDS.map(([matches, wins]) => ({ matches, wins })));
+
+    expect(priors.estimated).toBeTrue();
+    expect(priors.strength).not.toBe(WIN_RATE_PRIOR_MATCHES);
+    RECORDS.forEach(([matches, wins], index) => {
+      expect(shrunkOf(stats, `hero-${GAME_IDS[index]}`)).withContext(`hero ${index}`).toBeCloseTo(priors.estimate({ matches, wins }).rate * 100, 8);
+    });
+  });
+
+  it('pulls a hero toward the average of its role once the role has enough heroes', () => {
+    const roleBySlug = new Map(
+      GAME_IDS.map((id, index): [string, string] => [`hero-${id}`, index < 4 ? 'Vanguard' : index < 7 ? 'Duelist' : 'Strategist']),
+    );
+    const { stats } = deriveHeroStats(sourceOfRecords(), { now: NOW, heroSlugByGameId: slugs, roleBySlug });
+    const priors = estimateWinRatePriors(
+      RECORDS.map(([matches, wins], index) => ({ matches, wins, group: roleBySlug.get(`hero-${GAME_IDS[index]}`) })),
+    );
+    const [matches, wins] = RECORDS[0];
+
+    expect(shrunkOf(stats, 'hero-2001')).toBeCloseTo(priors.estimate({ matches, wins }, 'Vanguard').rate * 100, 8);
+    expect(priors.priorFor('Vanguard').mean).not.toBeCloseTo(priors.priorFor().mean, 3);
+  });
+
+  it('stands at 60 pretend matches around 50% when fewer than five heroes are counted', () => {
+    const source = sourceOf([record(HERO_A, HERO_B, 100, 70)]);
+
+    expect(heroOf(source, 'hulk')?.shrunkWinRate).toBeCloseTo((70 + 30) / 160 * 100, 8);
+    expect(heroOf(source, 'captain-america')?.shrunkWinRate).toBeCloseTo((30 + 30) / 160 * 100, 8);
+  });
+
+  it('counts a hero below the minimum in the estimate, weighted by its few matches', () => {
+    const withShort = sourceOf([
+      ...RECORDS.map(([matches, wins], index) => ({ heroes: [heroRow(GAME_IDS[index], matches, wins)], matches })),
+      { heroes: [heroRow(2009, 3, 3)], matches: 3 },
+    ]);
+    const { stats } = deriveHeroStats(withShort, { now: NOW, heroSlugByGameId: new Map([...slugs, [2009, 'hero-2009']]) });
+    const priors = estimateWinRatePriors([...RECORDS.map(([matches, wins]) => ({ matches, wins })), { matches: 3, wins: 3 }]);
+
+    expect(stats.belowMinimum.map((hero) => hero.hero)).toEqual(['hero-2009']);
+    expect(shrunkOf(stats, 'hero-2001')).toBeCloseTo(priors.estimate({ matches: 120, wins: 78 }).rate * 100, 8);
   });
 });
 

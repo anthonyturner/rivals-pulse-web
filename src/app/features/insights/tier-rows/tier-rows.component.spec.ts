@@ -19,7 +19,7 @@ function hero(id: string, name: string): TierHeroView {
 
 const TIERS: TierRowView[] = [
   { name: 'S', heroes: [hero('storm', 'Storm')] },
-  { name: 'A', heroes: [] },
+  { name: 'A', heroes: [hero('hela', 'Hela')] },
 ];
 
 @Component({
@@ -46,13 +46,12 @@ describe('TierRowsComponent', () => {
     fixture.detectChanges();
   });
 
-  it('draws one row per tier with its letter and hero count, and says when a tier is empty', () => {
+  it('draws one row per tier with its letter and hero count', () => {
     const labels = Array.from(rows('plain').querySelectorAll('.tier-label')).map((label) =>
       label.textContent?.replace(/\s+/g, ' ').trim(),
     );
 
-    expect(labels).toEqual(['Tier S, 1 hero', 'Tier A, 0 heroes']);
-    expect(rows('plain').querySelector('.empty-tier')?.textContent).toContain('No heroes in this tier yet.');
+    expect(labels).toEqual(['Tier S, 1 hero', 'Tier A, 1 hero']);
   });
 
   it('colours each row by its tier', () => {

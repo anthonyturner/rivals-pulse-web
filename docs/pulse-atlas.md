@@ -293,7 +293,6 @@ file** for the half-season shown, listed in the manifest:
   "provenance": "rivals-pulse-community",
   "minimumMatches": 10,
   "minimumPlayers": 2,
-  "priorMatches": 10,
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
   "bands": [
@@ -310,11 +309,12 @@ file** for the half-season shown, listed in the manifest:
 - **`provenance` is `"rivals-pulse-community"`, at the top level of `data`**,
   as in the tier list. The generator refuses to build a file without it and the
   read-back check fails if the written file lacks it.
-- **Counts only.** There is no win rate, no shrunk rate and no ranking. A reader
-  computes a rate as `wins / appearances`, and pulls it toward 50% as if
-  `priorMatches` more matches had been played at 50%
-  (`(wins + priorMatches / 2) / (appearances + priorMatches)`), the rule the
-  tier list uses ([src/server/heroes/stats/hero-stats.ts](../src/server/heroes/stats/hero-stats.ts)). `minimumMatches`
+- **Counts only.** There is no win rate, no shrunk rate, no prior and no ranking. A
+  reader computes a rate as `wins / appearances`, and pulls it toward the average as
+  if a prior of pretend matches had been played. The file does not say how many: a
+  reader estimates that from the heroes' own counts, as the tier list does
+  ([src/server/heroes/stats/win-rate-prior.ts](../src/server/heroes/stats/win-rate-prior.ts),
+  which the overlay's `win-rate-prior.ts` matches). `minimumMatches`
   is the decided matches a pair needs before it is listed; a pair with fewer is
   "not enough data", which is not the same as a pair that lost. A pair below it is
   left out, so the file carries no progress count for one.
