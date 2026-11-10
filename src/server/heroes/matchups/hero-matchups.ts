@@ -12,7 +12,8 @@ import {
 
 /**
  * Every hero-against-hero number on the site is derived here, from the counts in `hero_matchups`.
- * The win rate takes the same shrinkage as the tier rule (`shrunkWinRate` in `hero-stats.ts`).
+ * The win rate is pulled toward 50% by a fixed `WIN_RATE_PRIOR_MATCHES` (`shrunkWinRate` in `hero-stats.ts`); only
+ * the hero tiers estimate their prior from the data.
  * Nothing here ranks or scores a matchup: a record is described, and that is all.
  */
 

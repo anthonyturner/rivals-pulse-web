@@ -84,8 +84,10 @@ const ALLOWED_KEYS = new Set([
   'finalHitsAverage',
 ]);
 
+const NO_ROLES: ReadonlyMap<string, string> = new Map();
+
 describe('getHeroStats', () => {
-  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z'), loadHeroRoles: async () => NO_ROLES };
 
   it('returns only allow-listed keys, whatever else the database function sends', async () => {
     const stats = await getHeroStats({ ...options, fetch: answering(functionAnswer()) });
@@ -105,8 +107,29 @@ describe('getHeroStats', () => {
   });
 });
 
+describe('getHeroStats roles', () => {
+  const now = () => new Date('2026-10-30T12:00:00Z');
+
+  it('reads the roles of the heroes, to estimate the average of each role', async () => {
+    const loadHeroRoles = jasmine.createSpy('loadHeroRoles').and.resolveTo(NO_ROLES);
+
+    await getHeroStats({ env: ENV, now, loadHeroRoles, fetch: answering(functionAnswer()) });
+
+    expect(loadHeroRoles).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads no roles while there is nothing to place', async () => {
+    const loadHeroRoles = jasmine.createSpy('loadHeroRoles').and.resolveTo(NO_ROLES);
+    spyOn(console, 'warn');
+
+    await getHeroStats({ env: ENV, now, loadHeroRoles, fetch: answering({ code: 'PGRST202' }, 404) });
+
+    expect(loadHeroRoles).not.toHaveBeenCalled();
+  });
+});
+
 describe('getHeroStats while the read function is not in the database', () => {
-  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z'), loadHeroRoles: async () => NO_ROLES };
 
   beforeEach(() => spyOn(console, 'warn'));
 
@@ -133,7 +156,7 @@ describe('getHeroStats while the read function is not in the database', () => {
 });
 
 describe('getHeroStats for one half-season', () => {
-  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z'), loadHeroRoles: async () => NO_ROLES };
 
   it('answers for exactly the half-season asked for', async () => {
     const stats = await getHeroStats({ ...options, halfSeason: 10.5, fetch: answering(functionAnswer()) });
@@ -144,7 +167,7 @@ describe('getHeroStats for one half-season', () => {
 });
 
 describe('getHeroStats for one mode', () => {
-  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z') };
+  const options = { env: ENV, now: () => new Date('2026-10-30T12:00:00Z'), loadHeroRoles: async () => NO_ROLES };
 
   it('answers for the mode asked for, and for the blend when none is', async () => {
     const answer = functionAnswer();

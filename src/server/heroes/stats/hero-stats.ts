@@ -10,13 +10,15 @@ import type {
 import { PLAY_MODE_IDS } from '../../../contracts/play-modes.ts';
 import type { TierName } from '../../../contracts/tier-list.model.ts';
 import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../../community/community-minimums.ts';
+import { estimateWinRatePriors } from './win-rate-prior.ts';
 
 /**
  * Every hero number on the site is derived here and nowhere else, from the counts in
  * `hero_aggregates`. The rule is the RivalsPulse overlay's personal tier list
  * (`personal-tier-list.ts`, overlay commit 97ff7eeb885acd91531370c6f6f262e5c839eaca), so the site
  * and the overlay place the same heroes in the same tiers; `hero-stats.spec.ts` carries the
- * overlay's fixtures.
+ * overlay's fixtures. The win rate is pulled toward its role's average by a prior estimated from
+ * the heroes counted, with the overlay's own estimator (`win-rate-prior.ts`).
  */
 
 /** Appearances a hero needs before it is placed in a tier. */
@@ -32,7 +34,10 @@ function isPlaced(appearances: number, players: number | undefined): boolean {
   return appearances >= HERO_STATS_MIN_MATCHES && (players === undefined || players >= COMMUNITY_BUCKET_MIN_PLAYERS);
 }
 
-/** Pseudo-matches at 50% added to a hero's record, so a short run of wins cannot top the list. */
+/**
+ * Pseudo-matches at 50% added to a pair's record, so a short run of wins cannot top the list. The
+ * hero tiers estimate their own prior from the data instead (`estimateWinRatePriors`).
+ */
 export const WIN_RATE_PRIOR_MATCHES = 10;
 
 /** The lowest shrunk win rate (0 to 1) each tier takes, best first; anything lower is F. */
@@ -150,6 +155,8 @@ interface DeriveHeroStatsOptions {
   mode?: string;
   /** Game hero id to the hero's id in `heroes.json`. A game id missing here is left out of the numbers. */
   heroSlugByGameId: ReadonlyMap<number, string>;
+  /** Hero id to role. A role with enough heroes pulls its heroes toward its own average; a hero with no role, toward the overall one. */
+  roleBySlug?: ReadonlyMap<string, string>;
 }
 
 interface HeroStatsDerivation {
@@ -158,7 +165,7 @@ interface HeroStatsDerivation {
   excludedGameIds: number[];
 }
 
-/** A hero's record pulled toward 50% by the prior, as a fraction from 0 to 1. */
+/** A record pulled toward 50% by `priorMatches` pretend matches, as a fraction from 0 to 1. */
 export function shrunkWinRate(
   wins: number,
   appearances: number,
@@ -305,7 +312,7 @@ export function deriveHeroStats(source: HeroStatsSource, options: DeriveHeroStat
     let result = snapshots.get(id);
 
     if (result === undefined) {
-      result = snapshotOf(source, id, mode?.playModeIds ?? [], options.heroSlugByGameId);
+      result = snapshotOf(source, id, mode?.playModeIds ?? [], options.heroSlugByGameId, options.roleBySlug);
       result.excludedGameIds.forEach((gameId) => excludedGameIds.add(gameId));
       snapshots.set(id, result);
     }
@@ -387,6 +394,7 @@ function snapshotOf(
   halfSeason: number,
   playModeIds: readonly number[],
   heroSlugByGameId: ReadonlyMap<number, string>,
+  roleBySlug: ReadonlyMap<string, string> = new Map(),
 ): HalfSeasonSnapshot {
   const matchesCounted = decidedMatchesOf(source, halfSeason, playModeIds);
   const tallies = new Map<string, Tally>();
@@ -408,14 +416,16 @@ function snapshotOf(
     rowsBySlug.set(slug, [...(rowsBySlug.get(slug) ?? []), row]);
   }
 
-  const lines = [...tallies]
-    .filter(([, tally]) => tally.appearances > 0)
-    .map(([hero, tally]) => ({
-      hero,
-      tally,
-      shrunk: shrunkWinRate(tally.wins, tally.appearances),
-      players: playersBehind(rowsBySlug.get(hero) ?? [], playModeIds),
-    }));
+  const played = [...tallies].filter(([, tally]) => tally.appearances > 0);
+  const priors = estimateWinRatePriors(
+    played.map(([hero, tally]) => ({ matches: tally.appearances, wins: tally.wins, group: roleBySlug.get(hero) })),
+  );
+  const lines = played.map(([hero, tally]) => ({
+    hero,
+    tally,
+    shrunk: priors.estimate({ matches: tally.appearances, wins: tally.wins }, roleBySlug.get(hero)).rate,
+    players: playersBehind(rowsBySlug.get(hero) ?? [], playModeIds),
+  }));
 
   const byTier = new Map<TierName, HeroStatsHero[]>();
   lines

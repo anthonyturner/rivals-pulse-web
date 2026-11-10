@@ -36,7 +36,7 @@ export interface HeroStatsHero {
   winRate: number;
   /** Lines of this hero as a share of the matches counted. */
   pickRate: number;
-  /** The win rate pulled toward 50%, which is what places the hero in a tier. */
+  /** The win rate pulled toward its role's average by a prior estimated from the heroes counted, which is what places the hero in a tier. */
   shrunkWinRate: number;
   tier: TierName;
   /** (kills + assists) / deaths over all lines, or null when no line carried the figures. */

@@ -26,13 +26,12 @@ interface HeroStatsReadOptions {
   halfSeason?: number;
   /** The `mode` query value, as `DeriveHeroStatsOptions` takes it. */
   mode?: string;
-}
-
-/** Role stats carry every mode in one answer, so they take no `mode`. */
-interface RoleStatsReadOptions extends Omit<HeroStatsReadOptions, 'mode'> {
   /** Hero id to role. By default read from `hero_content` through the shared Supabase client. */
   loadHeroRoles?: () => Promise<ReadonlyMap<string, string>>;
 }
+
+/** Role stats carry every mode in one answer, so they take no `mode`. */
+type RoleStatsReadOptions = Omit<HeroStatsReadOptions, 'mode'>;
 
 const READ_FUNCTION = 'read_hero_stats';
 const { answerOf, recordsOf, numberOf, nullableNumberOf, stringOf } = answerReader(READ_FUNCTION);
@@ -113,6 +112,16 @@ export function heroStatsQueryFrom(read: (name: 'halfSeason' | 'mode') => string
   return { halfSeason: halfSeasonFromQuery(read('halfSeason')), mode: read('mode') };
 }
 
+/** Each hero's role, read only when there are counts to place; with none, nothing needs one. */
+async function loadRoleBySlug(
+  source: HeroStatsSource,
+  options: Pick<HeroStatsReadOptions, 'loadHeroRoles'>,
+): Promise<ReadonlyMap<string, string>> {
+  return source.heroes.length === 0
+    ? new Map<string, string>()
+    : (options.loadHeroRoles ?? (() => listHeroRoles(getSupabaseClient())))();
+}
+
 /**
  * The site's hero stats. A game hero id with no mapping is left out of the numbers and logged
  * (hero id 0 is "no hero recorded" and always lands here); it never fails the request.
@@ -124,6 +133,7 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
     halfSeason: options.halfSeason,
     mode: options.mode,
     heroSlugByGameId,
+    roleBySlug: await loadRoleBySlug(source, options),
   });
 
   if (excludedGameIds.length > 0) {
@@ -142,10 +152,7 @@ export async function getHeroStats(options: HeroStatsReadOptions = {}): Promise<
  */
 export async function getRoleStats(options: RoleStatsReadOptions = {}): Promise<RoleStats> {
   const source = await readHeroStatsSource(options.env ?? process.env, options.fetch);
-  const roleBySlug =
-    source.heroes.length === 0
-      ? new Map<string, string>()
-      : await (options.loadHeroRoles ?? (() => listHeroRoles(getSupabaseClient())))();
+  const roleBySlug = await loadRoleBySlug(source, options);
   const { stats, excludedGameIds } = deriveRoleStats(source, {
     now: (options.now ?? (() => new Date()))(),
     halfSeason: options.halfSeason,
