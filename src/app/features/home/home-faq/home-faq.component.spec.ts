@@ -70,11 +70,19 @@ describe('HomeFaqComponent', () => {
     it('say names and ids are uploaded, and that only Pulse Records shows a name, by choice', () => {
       const answer = text(item('data').querySelector('.answer'));
 
+      expect(answer).toContain('At launch it will upload');
       expect(answer).toContain('automatically');
       expect(answer).toMatch(/names and player ids/);
       expect(answer).toContain('only anonymous totals and never player ids');
       expect(answer).toContain("shows a player's name only if that player chose to show it");
       expect(answer).not.toMatch(/only match results|no personal|nothing personal/i);
+    });
+
+    it('say the app records matches once it launches, not today', () => {
+      const answer = text(item('app-needed').querySelector('.answer'));
+
+      expect(answer).toContain('Once it launches, the app is what records matches');
+      expect(answer).not.toContain('every match you play');
     });
 
     it('name no minimum, season or match count that the stats payload owns', () => {

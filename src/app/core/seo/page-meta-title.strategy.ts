@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { Data, RouterStateSnapshot, TitleStrategy } from '@angular/router';
+import { ActivatedRouteSnapshot, Data, RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
 import {
   PREVIEW_IMAGE_ALT,
@@ -15,6 +15,9 @@ import {
 
 /** Route `data` for a page that must stay out of search results and link previews. */
 export const ROUTE_NOINDEX: Data = { noindex: true };
+
+/** Route `data` key for a page's own meta description. A page without one uses the site-wide description. */
+export const ROUTE_DESCRIPTION_KEY = 'description';
 
 /** What a flagged page tells crawlers. Pages that add their own `noindex` tag use the bare word. */
 const NOINDEX_CONTENT = 'noindex, nofollow';
@@ -45,15 +48,16 @@ export class PageMetaTitleStrategy extends TitleStrategy {
   override updateTitle(snapshot: RouterStateSnapshot): void {
     const title = this.buildTitle(snapshot) ?? SITE_NAME;
     const url = canonicalUrl(snapshot.url);
+    const description = routeDescription(snapshot) ?? SITE_DESCRIPTION;
     const image = `${SITE_ORIGIN}${PREVIEW_IMAGE_PATH}`;
 
     this.title.setTitle(title);
     this.setTags([
-      { name: 'description', content: SITE_DESCRIPTION },
+      { name: 'description', content: description },
       { property: 'og:type', content: 'website' },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:title', content: title },
-      { property: 'og:description', content: SITE_DESCRIPTION },
+      { property: 'og:description', content: description },
       { property: 'og:url', content: url },
       { property: 'og:image', content: image },
       { property: 'og:image:width', content: String(PREVIEW_IMAGE_WIDTH) },
@@ -61,7 +65,7 @@ export class PageMetaTitleStrategy extends TitleStrategy {
       { property: 'og:image:alt', content: PREVIEW_IMAGE_ALT },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: title },
-      { name: 'twitter:description', content: SITE_DESCRIPTION },
+      { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: image },
       { name: 'twitter:image:alt', content: PREVIEW_IMAGE_ALT },
     ]);
@@ -111,6 +115,21 @@ function asksNoIndex(snapshot: RouterStateSnapshot): boolean {
       return false;
     }
   }
+}
+
+/** The description the page's own route sets in its `data`, or null so the site-wide one applies. */
+function routeDescription(snapshot: RouterStateSnapshot): string | null {
+  let found: string | null = null;
+
+  for (let route: ActivatedRouteSnapshot | null = snapshot.root; route; route = route.firstChild) {
+    const description: unknown = route.routeConfig?.data?.[ROUTE_DESCRIPTION_KEY];
+
+    if (typeof description === 'string' && description.length > 0) {
+      found = description;
+    }
+  }
+
+  return found;
 }
 
 /** The page's own address on the production origin, without its query string or fragment. */

@@ -42,6 +42,13 @@
   line-height: 1.6;
 }
 
+.trust__more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+}
+
 .sources {
   display: flex;
   flex-wrap: wrap;

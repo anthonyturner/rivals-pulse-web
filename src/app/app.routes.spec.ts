@@ -8,7 +8,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 import { adminGuard } from './core/auth/admin.guard';
 import { signedInGuard } from './core/auth/signed-in.guard';
-import { ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
+import { ROUTE_DESCRIPTION_KEY, ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
+import { FAIR_PLAY_DESCRIPTION } from './features/fair-play/fair-play-meta';
 import { WinRatesPageComponent } from './features/insights/win-rates/win-rates-page.component';
 import { OverlayFaqPageComponent } from './features/overlay-faq/overlay-faq-page.component';
 
@@ -172,5 +173,12 @@ describe('route titles', () => {
     const privacy = routes.find((route) => route.path === 'privacy');
 
     expect(privacy?.title).toBe('Privacy notes | RivalsPulse');
+  });
+
+  it('gives the Fair play and privacy page a tab title in the site name and its own meta description', () => {
+    const fairPlay = routes.find((route) => route.path === 'fair-play');
+
+    expect(fairPlay?.title).toBe('Fair play and privacy | RivalsPulse');
+    expect(fairPlay?.data?.[ROUTE_DESCRIPTION_KEY]).toBe(FAIR_PLAY_DESCRIPTION);
   });
 });

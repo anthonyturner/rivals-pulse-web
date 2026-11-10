@@ -99,6 +99,14 @@ describe('Footer', () => {
     expect(link?.textContent?.trim()).toBe('Privacy notes');
   });
 
+  it('links to the Fair play and privacy page from the RivalsPulse column', () => {
+    const column = page().querySelector('#footer-rivalspulse')?.closest('.site-footer__column');
+    const link = column?.querySelector('a[href="/fair-play"]') as HTMLAnchorElement | null;
+
+    expect(link).withContext('the RivalsPulse column has a fair play link').toBeTruthy();
+    expect(link?.textContent?.trim()).toBe('Fair play and privacy');
+  });
+
   it('keeps saying the site is an independent fan project', () => {
     const text = (page().textContent ?? '').replace(/\s+/g, ' ');
 

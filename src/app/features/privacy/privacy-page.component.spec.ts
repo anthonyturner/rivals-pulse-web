@@ -72,8 +72,8 @@ describe('PrivacyPageComponent', () => {
         .withContext(field.label)
         .toBeTrue();
     }
-    expect(extended.querySelector('h2')?.textContent).toContain('What the app also uploads');
-    expect(extended.textContent).toContain('The app uploads these fields');
+    expect(extended.querySelector('h2')?.textContent).toContain('What the app will also upload');
+    expect(extended.textContent).toContain('the app uploads these fields');
     expect(extended.textContent).not.toContain('being added');
     expect(extended.textContent).toContain('no player');
   });
@@ -188,6 +188,30 @@ describe('PrivacyPageComponent', () => {
     expect(planned).toContain('stored once per match');
     expect(entry?.detail).toContain('one-way code of the player who uploaded it');
     expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Hero changes during the match');
+  });
+
+  it('says the app is not released yet and frames the uploads as how it works at launch', () => {
+    const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+    const uploads = (section('uploaded-today').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(summary).toContain('The RivalsPulse desktop app is not released yet');
+    expect(summary).toContain('not on Overwolf');
+    expect(section('uploaded-today-title').textContent).toBe('What the app uploads at launch');
+    expect(uploads).toContain('At launch, every match the desktop app records will be uploaded automatically');
+    expect(uploads).toContain('none of them released');
+    expect(page.textContent).not.toContain('versions released so far');
+    expect(page.textContent).not.toContain('Older versions of the app');
+  });
+
+  it('says a hero change can be linked back to a scoreboard line, as the Fair play page does', () => {
+    const entry = PLANNED_UPLOAD_FIELDS.find((field) => field.label === 'Hero changes during the match');
+
+    expect(entry?.detail).toContain('in practice be linked back to a scoreboard line');
+    expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Hero changes during the match');
+  });
+
+  it('links the Fair play and privacy page from the short version', () => {
+    expect(section('summary').querySelector('a[href="/fair-play"]')).toBeTruthy();
   });
 
   it('states the retention rule', () => {
