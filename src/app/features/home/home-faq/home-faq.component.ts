@@ -43,14 +43,14 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     id: 'app-needed',
     question: 'Do I need the app to see the stats?',
     answer:
-      'No. The stats, tier list and tools on this site are free to browse without installing anything. The app is what records matches, so every match you play with it counts toward them.',
+      'No. The stats, tier list and tools on this site are free to browse without installing anything. Once it launches, the app is what records matches, and every match played with it counts toward them.',
     more: { label: 'See the community stats', path: '/community' },
   },
   {
     id: 'counting',
     question: 'Where do the numbers come from?',
     answer:
-      'Only from matches that RivalsPulse players record with the app, with no outside tier list or other stats site. A hero appears only once it has enough appearances from enough different players, and the site says "not enough data yet" instead of guessing.',
+      'Only from matches that RivalsPulse players will record with the app, with no outside tier list or other stats site. A hero appears only once it has enough appearances from enough different players, and the site says "not enough data yet" instead of guessing.',
     more: { label: 'How we count', path: '/how-we-count' },
   },
   {

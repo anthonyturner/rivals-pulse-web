@@ -49,7 +49,7 @@ export const PLANNED_UPLOAD_FIELDS: readonly UploadField[] = [
   {
     label: 'Ability and ultimate use',
     detail:
-      'How often the uploading player used each ability and their ultimate on each hero. This shows that an ability was used, not whether it hit anyone. Never uploaded for other players.',
+      'How often the uploading player used each ability and their ultimate on each hero, with the kills and assists soon after each use. This shows that an ability was used, not whether it hit anyone. Never uploaded for other players.',
   },
   {
     label: 'Hero changes during the match',

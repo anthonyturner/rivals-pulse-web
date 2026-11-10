@@ -102,6 +102,10 @@ describe('FairPlayPageComponent', () => {
     expect(collected).toContain('apart from Pulse Records below');
   });
 
+  it('says Pulse Records already shows matches from development builds, though the app has not launched', () => {
+    expect(section('collected')).toContain('already does so today from matches played on development builds');
+  });
+
   it('keeps live teammate charge on your own overlay, unstored, and the opponent count as a rule that shows nothing today', () => {
     const collected = section('collected');
 

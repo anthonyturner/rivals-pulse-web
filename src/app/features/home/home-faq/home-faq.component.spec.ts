@@ -78,6 +78,13 @@ describe('HomeFaqComponent', () => {
       expect(answer).not.toMatch(/only match results|no personal|nothing personal/i);
     });
 
+    it('say the app records matches once it launches, not today', () => {
+      const answer = text(item('app-needed').querySelector('.answer'));
+
+      expect(answer).toContain('Once it launches, the app is what records matches');
+      expect(answer).not.toContain('every match you play');
+    });
+
     it('name no minimum, season or match count that the stats payload owns', () => {
       expect(text(item('counting').querySelector('.answer'))).not.toMatch(/\d/);
     });

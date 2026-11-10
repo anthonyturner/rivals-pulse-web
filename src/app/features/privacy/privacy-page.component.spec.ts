@@ -72,7 +72,7 @@ describe('PrivacyPageComponent', () => {
         .withContext(field.label)
         .toBeTrue();
     }
-    expect(extended.querySelector('h2')?.textContent).toContain('What the app also uploads');
+    expect(extended.querySelector('h2')?.textContent).toContain('What the app will also upload');
     expect(extended.textContent).toContain('the app uploads these fields');
     expect(extended.textContent).not.toContain('being added');
     expect(extended.textContent).toContain('no player');

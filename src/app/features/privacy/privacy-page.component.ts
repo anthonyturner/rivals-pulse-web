@@ -27,7 +27,7 @@ export class PrivacyPageComponent {
   readonly recordsBeingAdded = PULSE_RECORDS_STATUS === 'being-added';
   readonly extendedBeingAdded = EXTENDED_UPLOAD_STATUS === 'being-added';
   /** The heading of the section the app's extra fields are in, and its entry in the contents list. */
-  readonly extendedHeading = this.extendedBeingAdded ? 'What the app is adding (being added)' : 'What the app also uploads';
+  readonly extendedHeading = this.extendedBeingAdded ? 'What the app is adding (being added)' : 'What the app will also upload';
   /** One entry for each section, in page order. A spec checks the labels against the page's headings. */
   readonly contents = [
     { id: 'summary', label: 'The short version' },
