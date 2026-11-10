@@ -7,7 +7,6 @@ import { PrivacyPageComponent } from './privacy-page.component';
 import {
   EXTENDED_UPLOAD_FIELDS,
   EXTENDED_UPLOAD_STATUS,
-  PLANNED_UPLOAD_FIELDS,
   PULSE_RECORDS_STATUS,
   TODAY_UPLOAD_FIELDS,
 } from './privacy-notes.data';
@@ -170,24 +169,35 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('one player can supply nearly all of it');
   });
 
-  it('lists ability and ultimate use as planned, apart from the extended status', () => {
-    expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Ability and ultimate use');
-    const planned = section('planned-fields').textContent ?? '';
-    expect(planned).toContain('uploading player');
-    expect(planned).toContain('not whether it hit anyone');
-    expect(planned).toContain('Never uploaded for other players');
+  it('lists ability and ultimate use as an uploaded extra, for the uploading player only', () => {
+    const entry = EXTENDED_UPLOAD_FIELDS.find((field) => field.label === 'Ability and ultimate use');
+    const extended = section('extended-fields').textContent ?? '';
+
+    expect(entry?.detail).toContain('uploading player');
+    expect(entry?.detail).toContain('not whether it hit anyone');
+    expect(entry?.detail).toContain('Never uploaded for other players');
+    expect(extended).toContain('Ability and ultimate use');
   });
 
-  it('lists hero changes as planned, by team and time, with no player named', () => {
-    const entry = PLANNED_UPLOAD_FIELDS.find((field) => field.label === 'Hero changes during the match');
-    const planned = section('planned-fields').textContent ?? '';
+  it('lists hero changes as an uploaded extra, by team and time, with no player named', () => {
+    const entry = EXTENDED_UPLOAD_FIELDS.find((field) => field.label === 'Hero changes during the match');
+    const extended = section('extended-fields').textContent ?? '';
 
     expect(entry?.detail).toContain('carries no player names or ids');
     expect(entry?.detail).toContain('seconds into the match');
-    expect(planned).toContain('Hero changes during the match');
-    expect(planned).toContain('stored once per match');
+    expect(extended).toContain('Hero changes during the match');
+    expect(extended).toContain('stored once per match');
     expect(entry?.detail).toContain('one-way code of the player who uploaded it');
-    expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Hero changes during the match');
+  });
+
+  it('says a hero change can be linked back to a scoreboard line, as the Fair play page does', () => {
+    const entry = EXTENDED_UPLOAD_FIELDS.find((field) => field.label === 'Hero changes during the match');
+
+    expect(entry?.detail).toContain('in practice be linked back to a scoreboard line');
+  });
+
+  it('links the Fair play and privacy page from the short version', () => {
+    expect(section('summary').querySelector('a[href="/fair-play"]')).toBeTruthy();
   });
 
   it('states the retention rule', () => {
@@ -196,7 +206,7 @@ describe('PrivacyPageComponent', () => {
     expect(text).not.toContain('being added');
     expect(text).toContain('six months');
     expect(text).toContain('half-season');
-    expect(text.replace(/\s+/g, ' ')).toContain('hero changes once the app sends them (with the one-way recorder code stored next to each one), are kept for the same time and deleted with them');
+    expect(text.replace(/\s+/g, ' ')).toContain('including the hero changes (with the one-way recorder code stored next to each one), are kept for the same time and deleted with them');
     expect(text).toContain('no time limit');
     expect(text).toContain('5,000');
   });
@@ -206,7 +216,7 @@ describe('PrivacyPageComponent', () => {
     const retention = (section('retention').textContent ?? '').replace(/\s+/g, ' ');
 
     expect(uploads).toContain('also kept next to each match in that history');
-    expect(uploads).toContain('with every hero change that player uploads');
+    expect(uploads).toContain('and with every hero change that player uploads');
     expect(uploads).toContain('link a website account');
     expect(retention).toContain('one-way recorder code kept next to each of its matches');
   });

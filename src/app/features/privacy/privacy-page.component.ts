@@ -6,7 +6,6 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import {
   EXTENDED_UPLOAD_FIELDS,
   EXTENDED_UPLOAD_STATUS,
-  PLANNED_UPLOAD_FIELDS,
   PULSE_RECORDS_STATUS,
   TODAY_UPLOAD_FIELDS,
 } from './privacy-notes.data';
@@ -21,7 +20,6 @@ import {
 export class PrivacyPageComponent {
   readonly todayFields = TODAY_UPLOAD_FIELDS;
   readonly extendedFields = EXTENDED_UPLOAD_FIELDS;
-  readonly plannedFields = PLANNED_UPLOAD_FIELDS;
   /** Whether Google ads can appear yet, which is when an ad unit id is set. The page words the ads paragraph to match. */
   readonly adsLive = hasAdSenseSlot(inject(ADSENSE_CONFIG));
   readonly recordsBeingAdded = PULSE_RECORDS_STATUS === 'being-added';

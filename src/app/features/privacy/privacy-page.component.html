@@ -55,6 +55,10 @@
         product that runs inside the Overwolf client.
       </li>
       <li>
+        <a routerLink="/fair-play">Fair play and privacy</a> says in plain words what the app does
+        and does not show about other players, and what it stores about them.
+      </li>
+      <li>
         The desktop app's own privacy policy is the full account of what the app collects and how
         to ask for deletion. This page describes the upload and the site, and does not replace it.
       </li>
@@ -80,8 +84,8 @@
       The upload also carries a short-lived Overwolf sign-in token, which our server checks with
       Overwolf and does not store. We keep a one-way code made from the uploading player's
       Overwolf username, never the username itself, to limit how many matches one player can
-      send. The same code is stored on every scoreboard line that player records and, once the
-      app sends hero changes, with every hero change that player uploads.
+      send. The same code is stored on every scoreboard line that player records and with every
+      hero change that player uploads.
     </p>
     <p>
       For the uploading player we also keep a record of their own match history: the match facts
@@ -128,20 +132,12 @@
       }
     </ul>
     <p>
-      Damage, healing, damage blocked and time per hero describe only the player who uploaded the
-      match, the one person the app has those figures for. The app does not upload them for other
+      Damage, healing, damage blocked, time per hero and ability and ultimate use describe only the
+      player who uploaded the match, the one person the app has those figures for. The app does not upload them for other
       players. The kill feed is reduced to hero against hero counts before it is sent, so it holds
       no player names or ids at all. These figures are used for community benchmarks, such as
       damage per minute, and for hero-against-hero counter numbers.
     </p>
-    <p>Further fields are <strong>planned</strong>. They are not uploaded yet:</p>
-    <ul id="planned-fields">
-      @for (field of plannedFields; track field.label) {
-        <li>
-          <strong>{{ field.label }}.</strong> {{ field.detail }}
-        </li>
-      }
-    </ul>
   </section>
 
   <section class="reading-section" id="public-numbers" aria-labelledby="public-numbers-title">
@@ -258,7 +254,7 @@
       <li>
         Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
-        The extra figures above, and the hero changes once the app sends them (with the one-way
+        The extra figures above, including the hero changes (with the one-way
         recorder code stored next to each one), are kept for the same time and deleted with them.
         A Pulse Records entry is read from these lines, so it disappears when its line is deleted.
       </li>

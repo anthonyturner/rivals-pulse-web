@@ -153,18 +153,24 @@ describe('OverlayFaqPageComponent', () => {
     });
 
     it('leads with the Overwolf sources and keeps the NetEase terms last', () => {
-      expect(hrefs('ban-risk')).toEqual([
+      const sources = Array.from(section('ban-risk').querySelectorAll('.sources a')).map((link) => link.getAttribute('href'));
+
+      expect(sources).toEqual([
         'https://www.overwolf.com/our-commitment',
         'https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/marvel-rivals',
         'https://dev.overwolf.com/ow-native/guides/game-compliance/overview',
         'https://store.steampowered.com/eula/2767030_eula_0',
       ]);
     });
+
+    it('points to the Fair play and privacy page for what the app shows about other players', () => {
+      expect(hrefs('ban-risk')).toContain('/fair-play');
+    });
   });
 
   describe('data', () => {
     it("points to this site's privacy notes and How we count", () => {
-      expect(hrefs('data')).toEqual(['/privacy', '/how-we-count']);
+      expect(hrefs('data')).toEqual(['/privacy', '/fair-play', '/how-we-count']);
       expect(flat(section('data'))).toContain('only anonymous totals and never player ids');
       expect(flat(section('data'))).toContain("shows a player's name only if that player chose to show it");
     });

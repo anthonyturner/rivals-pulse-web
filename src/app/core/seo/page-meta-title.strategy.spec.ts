@@ -21,6 +21,12 @@ class BlankComponent {}
 const routes: Routes = [
   { path: '', title: HOME_TITLE, component: BlankComponent },
   { path: 'privacy', title: 'Privacy notes', component: BlankComponent },
+  { path: 'own-words', title: 'Own words', data: { description: 'A page with its own description.' }, component: BlankComponent },
+  {
+    path: 'group',
+    data: { description: 'The group description.' },
+    children: [{ path: 'inherits', component: BlankComponent }],
+  },
   { path: 'heroes', component: BlankComponent },
   { path: 'heroes/:heroId', component: BlankComponent },
   { path: 'elsewhere', redirectTo: 'heroes' },
@@ -53,6 +59,25 @@ describe('PageMetaTitleStrategy', () => {
   };
   const canonical = (): string | null =>
     document.head.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
+
+  it("uses a route's own description for the description and both preview descriptions", async () => {
+    await router.navigateByUrl('/own-words');
+
+    expect(tag('description')).toBe('A page with its own description.');
+    expect(tag('og:description')).toBe('A page with its own description.');
+    expect(tag('twitter:description')).toBe('A page with its own description.');
+  });
+
+  it("takes a parent route's description when the page sets none, and goes back to the site's on the next page", async () => {
+    await router.navigateByUrl('/group/inherits');
+
+    expect(tag('description')).toBe('The group description.');
+
+    await router.navigateByUrl('/heroes');
+
+    expect(tag('description')).toBe(SITE_DESCRIPTION);
+    expect(tag('og:description')).toBe(SITE_DESCRIPTION);
+  });
 
   it('sets every preview tag for the homepage', async () => {
     await router.navigateByUrl('/');

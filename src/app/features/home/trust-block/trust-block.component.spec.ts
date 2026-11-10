@@ -41,6 +41,10 @@ describe('TrustBlockComponent', () => {
     expect(element.querySelector('a[href="/faq#ban-risk"]')).toBeTruthy();
   });
 
+  it('links the Fair play and privacy page', () => {
+    expect(element.querySelector('a[href="/fair-play"]')).toBeTruthy();
+  });
+
   it('never calls the app safe or promises more than the FAQ does', () => {
     expect(text(element)).not.toMatch(/\bsafe\b|ban-proof|risk-free|100%|guarantee/i);
   });
