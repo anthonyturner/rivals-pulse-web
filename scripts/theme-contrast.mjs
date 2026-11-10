@@ -145,6 +145,28 @@ function inkBandPairs(roles) {
   ];
 }
 
+/**
+ * The circuit behind the top bar is drawn on a canvas dimmed as a whole to `--aurora-nav-pulse-opacity`, so
+ * the brightest it can get anywhere is that share of its brightest colour over the bar. The bar's
+ * text, brand word and active-link underline are measured against each of those worst cases.
+ */
+function navPulsePairs() {
+  const colours = ['accent', 'secondary', 'tertiary', 'faint'];
+  const behindPulse = (tokens, colour) => over({ ...resolve(tokens, colour), a: Number(tokens.get('--aurora-nav-pulse-opacity')) }, resolve(tokens, 'surface'));
+  const pair = (kind, foreground, colour, needs) => ({
+    kind, foreground, background: `${colour} pulse at full strength over surface`, needs,
+    measure: (tokens) => {
+      const behind = behindPulse(tokens, colour);
+      return ratio(over(resolve(tokens, foreground), behind), behind);
+    },
+  });
+  return colours.flatMap((colour) => [
+    pair('Nav text on the pulse', 'text', colour, TEXT),
+    pair('Nav text on the pulse', 'accent-ink', colour, TEXT),
+    pair('Nav active-link underline on the pulse', 'accent-ink', colour, GRAPHIC),
+  ]);
+}
+
 /** Every pair the palette promises. */
 function pairs(roles) {
   const list = [];
@@ -190,7 +212,7 @@ function pairs(roles) {
   // The Aurora gradient headline figures (large text, so 3:1) all sit on a surface card.
   for (const stop of ['accent', 'secondary', 'tertiary']) add('Gradient text (large)', stop, 'surface', GRAPHIC);
   for (const surface of ['surface', 'canvas']) add('Divider (exempt)', 'border', surface, 1);
-  return [...list, gradientSweep(), ...inkBandPairs(roles)];
+  return [...list, gradientSweep(), ...inkBandPairs(roles), ...navPulsePairs()];
 }
 
 function readCss(root) {

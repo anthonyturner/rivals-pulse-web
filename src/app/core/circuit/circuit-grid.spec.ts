@@ -1,4 +1,4 @@
-import { CircuitGrid, CircuitPalette } from './circuit-grid';
+import { CALM_LOOK, CircuitGrid, CircuitPalette } from './circuit-grid';
 
 describe('CircuitGrid', () => {
   const palette: CircuitPalette = { line: '#445566', currents: ['#aa8800', '#5555ee', '#aa44cc'] };
@@ -257,13 +257,90 @@ describe('CircuitGrid', () => {
     });
   });
 
+  describe('the calm look', () => {
+    type Probe = { pulses: { x: number; y: number; strong: boolean }[] };
+    const pulsesOf = (target: CircuitGrid): Probe['pulses'] => (target as unknown as Probe).pulses;
+
+    function calmGrid(width = 1320, height = 56, random: () => number = () => 0.5): CircuitGrid {
+      grid.destroy();
+      grid = new CircuitGrid(canvas, palette, random, CALM_LOOK);
+      grid.resize(width, height, 1);
+      return grid;
+    }
+
+    it('sends no stronger pulse across the grid, however long it plays', () => {
+      calmGrid().setPlayback('playing');
+
+      runFor(30_000);
+
+      expect(grid.strongPulses).toBe(0);
+    });
+
+    it('holds fewer ordinary pulses than the lively look at the same size', () => {
+      const lively = grid;
+      lively.resize(1320, 56, 1);
+      const livelyCapacity = lively.ambientCapacity;
+
+      expect(calmGrid().ambientCapacity).toBeLessThan(livelyCapacity);
+      expect(grid.ambientCapacity).toBeGreaterThan(0);
+    });
+
+    it('moves its pulses more slowly', () => {
+      grid.resize(1320, 56, 1);
+      grid.setPlayback('playing');
+      runFor(160);
+      const livelyReach = Math.abs(pulsesOf(grid)[0].x - Math.round(1320 / 2 / 24) * 24);
+
+      calmGrid().setPlayback('playing');
+      runFor(160);
+      const calmReach = Math.abs(pulsesOf(grid)[0].x - Math.round(1320 / 2 / 24) * 24);
+
+      expect(calmReach).toBeLessThan(livelyReach);
+    });
+
+    it('draws its pulses thinner than the lively look does', () => {
+      const widths: number[] = [];
+      const setter = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'lineWidth')?.set;
+      spyOnProperty(CanvasRenderingContext2D.prototype, 'lineWidth', 'set').and.callFake(function (this: CanvasRenderingContext2D, width: number) {
+        widths.push(width);
+        setter?.call(this, width);
+      });
+
+      calmGrid().setPlayback('playing');
+      runFor(2_000);
+
+      expect(widths.length).toBeGreaterThan(0);
+      expect(Math.max(...widths)).toBeLessThan(2);
+    });
+
+    it('starts pulses across the whole grid, not only at its centre', () => {
+      let n = 0;
+      calmGrid(1320, 56, () => (n = (n + 0.137) % 1)).setPlayback('playing');
+      const starts = new Set<number>();
+      for (let i = 0; i < 40; i++) {
+        runFor(400);
+        for (const pulse of pulsesOf(grid)) if (pulse.x < 300 || pulse.x > 1000) starts.add(Math.round(pulse.x / 24));
+      }
+
+      expect(starts.size).toBeGreaterThan(0);
+    });
+
+    it('holds a still frame of its currents without asking for an animation frame', () => {
+      calmGrid().setPlayback('still');
+
+      expect(painted()).toBeTrue();
+      expect(grid.ambientPulses).toBeGreaterThan(0);
+      expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+    });
+  });
+
   describe('the shockwave', () => {
     const loopMs = 2800;
     let positionMs: number;
 
     beforeEach(() => {
       positionMs = 1000;
-      grid.setClash({ clock: { read: () => ({ loopMs, positionMs }) }, origin: () => [240, 72] });
+      grid.setClash({ clock: { read: () => ({ loopMs, positionMs }) }, at: 0.55, origin: () => [240, 72] });
     });
 
     it('leaves the collision when the loop passes it', () => {

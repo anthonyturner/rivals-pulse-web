@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   afterNextRender,
+  computed,
   effect,
   inject,
   input,
@@ -14,9 +15,11 @@ import {
 import { DOCUMENT } from '@angular/common';
 
 import { ReducedMotionService } from '../../../core/accessibility/reduced-motion.service';
+import { CircuitPalette } from '../../../core/circuit/circuit-grid';
+import { CircuitStage } from '../../../core/circuit/circuit-stage';
 import { ThemeService } from '../../../core/theme/theme.service';
-import { CircuitGrid, CircuitPalette, CircuitPlayback } from './circuit-grid';
 import { PulseAudioService } from './pulse-audio.service';
+import { COLLISION_CUE } from './pulse-cues';
 import { PulseLoopClock } from './pulse-loop-clock';
 import { PulseSoundScheduler } from './pulse-sound-scheduler';
 
@@ -57,43 +60,44 @@ export class PulseBannerComponent {
   private readonly audio = inject(PulseAudioService);
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('grid');
   private readonly spark = viewChild<ElementRef<HTMLElement>>('spark');
-  private readonly grid = signal<CircuitGrid | null>(null);
+  private readonly stage = signal<CircuitStage | null>(null);
   private readonly loopClock = new PulseLoopClock(() => this.spark()?.nativeElement ?? null);
 
-  private onScreen = false;
-  private updatePlayback: () => void = () => undefined;
   private scheduler: PulseSoundScheduler | null = null;
 
-  protected readonly playback = signal<CircuitPlayback>('still');
+  protected readonly playback = computed(() => this.stage()?.playback() ?? 'still');
 
   constructor() {
     const destroyRef = inject(DestroyRef);
 
     afterNextRender(() => {
-      const view = this.document.defaultView;
-      if (!view) return;
-      const grid = new CircuitGrid(this.canvas().nativeElement, this.readPalette());
-      grid.setClash({ clock: this.loopClock, origin: () => this.sparkCentre() });
-      this.watchSize(grid, view, destroyRef);
-      this.watchPlayback(grid, destroyRef);
-      this.watchPointer(grid, destroyRef);
-      destroyRef.onDestroy(() => {
-        this.setSounding(false);
-        grid.destroy();
-      });
-      this.grid.set(grid);
+      const stage = new CircuitStage(
+        {
+          host: this.host.nativeElement,
+          canvas: this.canvas().nativeElement,
+          document: this.document,
+          palette: () => this.readPalette(),
+          reducedMotion: this.reducedMotion,
+        },
+        destroyRef,
+      );
+      stage.grid.setClash({ clock: this.loopClock, at: COLLISION_CUE.at, origin: () => this.sparkCentre() });
+      this.watchPointer(stage, destroyRef);
+      destroyRef.onDestroy(() => this.setSounding(false));
+      this.stage.set(stage);
     });
 
     // Canvas cannot follow CSS variables, so a theme change re-reads the palette.
     effect(() => {
       this.theme();
-      const grid = this.grid();
-      if (grid) untracked(() => grid.setPalette(this.readPalette()));
+      const stage = this.stage();
+      if (stage) untracked(() => stage.refreshPalette());
     });
 
     effect(() => {
       this.reducedMotion();
-      untracked(() => this.updatePlayback());
+      const stage = this.stage();
+      if (stage) untracked(() => stage.refreshPlayback());
     });
 
     // Sound follows the picture: only while it plays, and only once the browser lets audio start.
@@ -119,46 +123,12 @@ export class PulseBannerComponent {
     }
   }
 
-  private watchSize(grid: CircuitGrid, view: Window, destroyRef: DestroyRef): void {
-    const resize = (): void => {
-      const { width, height } = this.host.nativeElement.getBoundingClientRect();
-      grid.resize(width, height, view.devicePixelRatio || 1);
-    };
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(this.host.nativeElement);
-    destroyRef.onDestroy(() => observer.disconnect());
-  }
-
-  private watchPlayback(grid: CircuitGrid, destroyRef: DestroyRef): void {
-    this.updatePlayback = (): void => {
-      const next: CircuitPlayback = this.reducedMotion()
-        ? 'still'
-        : this.onScreen && !this.document.hidden ? 'playing' : 'paused';
-      grid.setPlayback(next);
-      this.playback.set(next);
-    };
-    const update = (): void => this.updatePlayback();
-
-    const observer = new IntersectionObserver(([entry]) => {
-      this.onScreen = entry.isIntersecting;
-      update();
-    });
-    observer.observe(this.host.nativeElement);
-
-    this.document.addEventListener('visibilitychange', update);
-    destroyRef.onDestroy(() => {
-      observer.disconnect();
-      this.document.removeEventListener('visibilitychange', update);
-    });
-    update();
-  }
-
   /**
    * The pointer is read from the page, not from the banner: as a backdrop it lets every click through
    * to the copy over it. Touch is left out, since a finger dragging to scroll is not hovering.
    */
-  private watchPointer(grid: CircuitGrid, destroyRef: DestroyRef): void {
+  private watchPointer(stage: CircuitStage, destroyRef: DestroyRef): void {
+    const grid = stage.grid;
     const move = (event: PointerEvent): void => {
       if (event.pointerType === 'touch' || this.playback() !== 'playing') return;
       const box = this.host.nativeElement.getBoundingClientRect();

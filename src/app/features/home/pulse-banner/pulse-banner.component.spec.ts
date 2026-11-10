@@ -1,8 +1,8 @@
 import { WritableSignal, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { CircuitGrid } from '../../../core/circuit/circuit-grid';
 import { THEME_STORAGE_KEY, ThemeService } from '../../../core/theme/theme.service';
-import { CircuitGrid } from './circuit-grid';
 import { PulseAudioService } from './pulse-audio.service';
 import { PulseBannerComponent } from './pulse-banner.component';
 import { COLLISION_CUE, PULSE_CUES } from './pulse-cues';
