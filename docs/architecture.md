@@ -7,17 +7,34 @@
 - Angular Signals (used throughout `src/app/features/**`)
 - RxJS
 
-Rendering: production pages render in the browser. `vercel.json` rewrites every
-non-API path to `index.csr.html`, so a `curl` of a page returns an empty
-`<app-root>`. The server render (`@angular/ssr`, `src/server.ts`) runs only for
-local dev and `npm run serve:ssr:rivals-pulse-coach`, so a feature must work
-without it. Routes that need the visitor's own session (`/sign-in`, `/account`, `/profile`)
-are declared `RenderMode.Client` in `src/app/app.routes.server.ts`.
-The not-found page answers HTTP 404 from the server render (`respondNotFound()` in
-`core/seo/response-status.ts`, which sets the status on Angular's `RESPONSE_INIT`),
-and a guide route whose id is unknown falls through to it (`knownIdGuard` in
-`core/navigation/`). Production does not run the server render, so it still
-answers 200 there (issue 430).
+Rendering: production pages are server-rendered, so a `curl` of a page returns
+its own text, title, description and canonical. `vercel.json` rewrites every
+non-API path that is not a static file to `api/ssr.mjs`, a Vercel function that
+hands the request to the Angular server render (`@angular/ssr`, `src/server.ts`;
+the same code serves local dev and `npm run serve:ssr:rivals-pulse-coach`).
+Vercel serves a real file (`ads.txt`, hashed bundles, images) before any
+rewrite, so static files never reach the function. A page the server must not
+render is declared `RenderMode.Client` in `src/app/app.routes.server.ts` and gets
+the empty browser shell: `/sign-in`, `/account`, `/profile` and `/admin` (the
+visitor's own session) and the Pulse Records lists (no player name in server HTML).
+
+- **Hosts.** The render answers only the hosts in `security.allowedHosts` in
+  `angular.json` (the site, `www`, `*.vercel.app`, `localhost`). Any other host
+  gets the browser shell, so a new domain must be added there.
+- **Time budget.** `renderWithinBudget` (`src/server/ssr/`) gives a render eight
+  seconds. A data page whose API never answers, or a render that throws, is
+  answered with the browser shell (`index.csr.html`) instead of hanging, and that
+  shell is never cached. A finished render is cached by the CDN for five minutes
+  (`s-maxage=300`).
+- **Data in the render.** A page's `/api/*` requests go to its own host, so each
+  one is a second function call (cached by the CDN like any API answer). On a
+  preview deployment behind Vercel's login, those calls are refused and the page
+  renders its empty or error state.
+- **404.** The not-found page answers HTTP 404 from the server render
+  (`respondNotFound()` in `core/seo/response-status.ts`, which sets the status on
+  Angular's `RESPONSE_INIT`), and a guide route whose id is unknown falls through
+  to it (`knownIdGuard` in `core/navigation/`). That status reaches production
+  now that the server render runs there.
 
 Hosting:
 - Vercel
@@ -33,7 +50,7 @@ same data-access code (`src/server/content/content-database.ts`):
   file under `api/` only at its own path, so every route needs its own file;
   there is no catch-all.
 - **Express**, in `src/server.ts` — serves the same `/api/*` routes for
-  local dev and the local server render (`npm start`,
+  local dev, the local server render (`npm start`,
   `npm run serve:ssr:rivals-pulse-coach`), backed by `@angular/ssr/node`.
 
 Scheduled content refresh runs via Vercel cron (`vercel.json` `crons`)
@@ -44,7 +61,7 @@ hitting `api/sync/home-news.ts`. Content is also refreshed manually through the
 
 The server code lives in `src/server/<feature>/`, one folder per feature
 (`account`, `auth`, `community`, `content`, `heroes/*`, `http`, `pulse-atlas`,
-`supabase`, `sync`). Inside a folder, a pure derivation module (for example
+`ssr`, `supabase`, `sync`). Inside a folder, a pure derivation module (for example
 `hero-matchups.ts`) sits beside the module that reads the database for it
 (`hero-matchups-read.ts`).
 

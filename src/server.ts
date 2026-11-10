@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { handleAccountHttp } from './server/account';
@@ -30,6 +31,7 @@ import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
 import { syncHomeNews } from './server/content/home';
 import { getGameCounts } from './server/game-counts';
+import { renderWithinBudget } from './server/ssr';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -179,11 +181,11 @@ app.use(
 );
 
 /**
- * Handle all other requests by rendering the Angular application.
+ * Handle all other requests by rendering the Angular application, or serving the browser shell
+ * when the render takes too long.
  */
 app.use((req, res, next) => {
-  angularApp
-    .handle(req)
+  renderWithinBudget(angularApp.handle(req), () => readFile(join(browserDistFolder, 'index.csr.html'), 'utf8'))
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
     )
