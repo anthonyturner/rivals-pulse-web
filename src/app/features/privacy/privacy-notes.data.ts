@@ -32,7 +32,7 @@ export const TODAY_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'Match id', detail: 'The identifier the game gives the match.' },
 ];
 
-/** Figures the desktop app also uploads, in the payload shape of issue 176, with the later additions of issues 457 and 654. */
+/** Figures the desktop app also uploads, in the payload shape of issue 176. */
 export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
   { label: 'Damage', detail: 'Damage dealt by the uploading player.' },
   { label: 'Healing', detail: 'Healing done by the uploading player.' },
@@ -42,6 +42,10 @@ export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
     label: 'Kill feed',
     detail: 'Which hero defeated which hero, and how many times, with no player names or ids.',
   },
+];
+
+/** Planned after the extended upload (issues 457 and 654), so none of these shares its status. */
+export const PLANNED_UPLOAD_FIELDS: readonly UploadField[] = [
   {
     label: 'Ability and ultimate use',
     detail:
@@ -50,6 +54,6 @@ export const EXTENDED_UPLOAD_FIELDS: readonly UploadField[] = [
   {
     label: 'Hero changes during the match',
     detail:
-      'For every player, the heroes they played and how many seconds into the match each pick happened, grouped by team. It carries no player names or ids and is stored once per match, with the one-way code of the player who uploaded it (described under what the app uploads today). It is stored under the same match key as the scoreboard lines of that match, so it can in practice be linked back to a scoreboard line, and anyone who reads both can tell which player made which hero changes and when. It is used to count how often switching to a hero while an enemy hero is in play goes on to win.',
+      'For every player, the heroes they played and how many seconds into the match each pick happened, grouped by team. It carries no player names or ids and is stored once per match, with the one-way code of the player who uploaded it (described under what the app uploads at launch). It is stored under the same match key as the scoreboard lines of that match, so it can in practice be linked back to a scoreboard line, and anyone who reads both can tell which player made which hero changes and when. It is used to count how often switching to a hero while an enemy hero is in play goes on to win.',
   },
 ];

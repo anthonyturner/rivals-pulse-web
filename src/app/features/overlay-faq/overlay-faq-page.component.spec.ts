@@ -77,7 +77,7 @@ describe('OverlayFaqPageComponent', () => {
 
     it('keeps a closed answer in the page text but out of the tab order', () => {
       expect(panel('data').hidden).toBeTrue();
-      expect(flat(panel('data'))).toContain('uploads each one automatically');
+      expect(flat(panel('data'))).toContain('at launch it will record the matches you play and upload each one automatically');
     });
   });
 
@@ -169,6 +169,13 @@ describe('OverlayFaqPageComponent', () => {
   });
 
   describe('data', () => {
+    it('says the app is not released yet and describes the upload as how it works at launch', () => {
+      const answer = flat(section('data'));
+
+      expect(answer).toContain('RivalsPulse is not released yet');
+      expect(answer).toContain('An upload will hold the scoreboard line');
+    });
+
     it("points to this site's privacy notes and How we count", () => {
       expect(hrefs('data')).toEqual(['/privacy', '/fair-play', '/how-we-count']);
       expect(flat(section('data'))).toContain('only anonymous totals and never player ids');

@@ -13,9 +13,12 @@ export const OVERWOLF_GAME_COMPLIANCE_URL =
  * `anthonyturner/rivals_pulse`) or from shipped code, so a sentence changes only when its source does.
  * The privacy notes and the FAQ restate parts of it and must agree with it.
  *
- * Two things are deliberately worded as "coming soon" and must stay so until they ship: the opt-out
- * from being viewable by other app users (issue 754), and limiting a player's match history to the lobby
- * or after a match (overlay pull request 1595).
+ * The app is not released, so the page is worded as how it works at launch, not as what a live app
+ * does. The opt-out from being viewable by other app users (issue 754) is "coming soon" and must stay so
+ * until it ships. The line about not looking up or showing another player's history or profile during
+ * your own live match is the overlay team's wording of the match lock (overlay pull request 1595);
+ * per-player figures from your own matches are a later change (overlay issue 1592), so claim nothing
+ * about them.
  */
 @Component({
   selector: 'app-fair-play-page',

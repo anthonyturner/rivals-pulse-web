@@ -6,7 +6,7 @@ import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.dat
 import { knownIdGuard } from './core/navigation/known-id.guard';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
-import { ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
+import { ROUTE_DESCRIPTION_KEY, ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
 import { HOME_TITLE, SITE_NAME } from './core/seo/site-meta';
 import { FAIR_PLAY_DESCRIPTION } from './features/fair-play/fair-play-meta';
 import { heroesRoutes } from './features/heroes/heroes.routes';
@@ -308,7 +308,7 @@ export const routes: Routes = [
   {
     path: 'fair-play',
     title: 'Fair play and privacy | RivalsPulse',
-    data: { description: FAIR_PLAY_DESCRIPTION },
+    data: { [ROUTE_DESCRIPTION_KEY]: FAIR_PLAY_DESCRIPTION },
     loadComponent: () =>
       import('./features/fair-play/fair-play-page.component').then(
         (module) => module.FairPlayPageComponent,

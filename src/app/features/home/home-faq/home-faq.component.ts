@@ -22,7 +22,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     id: 'what',
     question: 'What is RivalsPulse?',
     answer:
-      'An Overwolf app that runs beside Marvel Rivals and records each match you play, plus this website, which shows hero stats counted from those matches.',
+      'An Overwolf app, not released yet, that will run beside Marvel Rivals and record each match you play, plus this website, which shows hero stats counted from those matches.',
     more: { label: 'How we count', path: '/how-we-count' },
   },
   {
@@ -36,7 +36,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     id: 'data',
     question: 'What does the app send?',
     answer:
-      "It uploads each match you play automatically, including the in-game names and player ids on the scoreboard. Apart from the Pulse Records page, which shows a player's name only if that player chose to show it, this website publishes only anonymous totals and never player ids.",
+      "At launch it will upload each match you play automatically, including the in-game names and player ids on the scoreboard. Apart from the Pulse Records page, which shows a player's name only if that player chose to show it, this website publishes only anonymous totals and never player ids.",
     more: { label: 'Read the privacy notes', path: '/privacy' },
   },
   {

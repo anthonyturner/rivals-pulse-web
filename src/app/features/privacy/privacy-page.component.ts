@@ -6,6 +6,7 @@ import { PageHeaderComponent } from '../../shared/components/page-header/page-he
 import {
   EXTENDED_UPLOAD_FIELDS,
   EXTENDED_UPLOAD_STATUS,
+  PLANNED_UPLOAD_FIELDS,
   PULSE_RECORDS_STATUS,
   TODAY_UPLOAD_FIELDS,
 } from './privacy-notes.data';
@@ -20,6 +21,7 @@ import {
 export class PrivacyPageComponent {
   readonly todayFields = TODAY_UPLOAD_FIELDS;
   readonly extendedFields = EXTENDED_UPLOAD_FIELDS;
+  readonly plannedFields = PLANNED_UPLOAD_FIELDS;
   /** Whether Google ads can appear yet, which is when an ad unit id is set. The page words the ads paragraph to match. */
   readonly adsLive = hasAdSenseSlot(inject(ADSENSE_CONFIG));
   readonly recordsBeingAdded = PULSE_RECORDS_STATUS === 'being-added';
@@ -29,7 +31,7 @@ export class PrivacyPageComponent {
   /** One entry for each section, in page order. A spec checks the labels against the page's headings. */
   readonly contents = [
     { id: 'summary', label: 'The short version' },
-    { id: 'uploaded-today', label: 'What the app uploads today' },
+    { id: 'uploaded-today', label: 'What the app uploads at launch' },
     { id: 'extended-fields', label: this.extendedHeading },
     { id: 'public-numbers', label: 'What this website publishes' },
     { id: 'pulse-records', label: 'Pulse Records' },

@@ -70,6 +70,7 @@ describe('HomeFaqComponent', () => {
     it('say names and ids are uploaded, and that only Pulse Records shows a name, by choice', () => {
       const answer = text(item('data').querySelector('.answer'));
 
+      expect(answer).toContain('At launch it will upload');
       expect(answer).toContain('automatically');
       expect(answer).toMatch(/names and player ids/);
       expect(answer).toContain('only anonymous totals and never player ids');

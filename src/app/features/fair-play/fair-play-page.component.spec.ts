@@ -39,12 +39,23 @@ describe('FairPlayPageComponent', () => {
     }
   });
 
+  it('says the app is not released and describes how it works at launch, never as a live app', () => {
+    const summary = section('summary');
+
+    expect(summary).toContain('The RivalsPulse app is not released yet');
+    expect(summary).toContain('in development testing and is not on Overwolf');
+    expect(summary).toContain('designed to work at launch');
+    expect(section('collected')).toContain('At launch, uploads will be automatic');
+    expect(flat(page)).not.toMatch(/\bis uploaded\b|\bare uploaded\b|uploaded today|uploads today/i);
+  });
+
   it('says plainly that it stores scoreboard lines and anonymous hero timelines of other players', () => {
     const collected = section('collected');
 
     expect(collected).toContain('A scoreboard line for every human player');
+    expect(collected).toContain('will be stored on our server');
     expect(collected).toContain('in-game name, player id, team, hero, kills, deaths, assists, final hits');
-    expect(collected).toContain('any RivalsPulse app user can look a player up');
+    expect(collected).toContain('any RivalsPulse app user will be able to look a player up');
     expect(collected).toContain('players who never installed the app');
     expect(collected).toContain('An anonymous hero timeline for every player');
     expect(collected).toContain('with no player id and no name');
@@ -60,16 +71,51 @@ describe('FairPlayPageComponent', () => {
     const notShown = section('not-shown');
 
     expect(notShown).toContain("Other players' damage, healing, accuracy or damage blocked");
-    expect(notShown).toContain('never stores them for, or shares them with, another app user');
-    expect(notShown).toContain('a count of how many times each opponent has used their ultimate');
-    expect(notShown).toContain('nothing about their charge or timing');
+    expect(notShown).toContain("never show you, store or share another player's damage, healing, accuracy or damage blocked");
+    expect(notShown).toContain('The most the overlay is allowed to show about an opponent');
+    expect(notShown).toContain('a count of how many times they have used it');
+    expect(notShown).toContain('Today it shows nothing about it');
+    expect(notShown).toContain('never show their charge or timing');
     expect(notShown).toContain('no feature of the app predicts');
   });
 
-  it('keeps live teammate charge and the opponent count on the overlay, unstored', () => {
-    expect(section('collected')).toContain(
-      "teammates' ultimate charge and a count of each opponent's ultimates. Neither is stored or sent anywhere",
+  it("says during your own live match the app doesn't look up or show another player's history or profile, at launch", () => {
+    expect(section('not-shown')).toContain(
+      "At launch, during your own live match, the app doesn't look up or show another player's scoreboard history or profile.",
     );
+  });
+
+  it('claims nothing about per-player figures from your own matches', () => {
+    expect(flat(page)).not.toMatch(/your own matches|per-player (figures|stats)/i);
+  });
+
+  it('discloses Pulse Records: single-match figures, names only by choice, others as Anonymous', () => {
+    const collected = section('collected');
+    const link = page.querySelector('#collected a[href="/privacy#pulse-records"]');
+
+    expect(link).toBeTruthy();
+    expect(collected).toContain('Pulse Records publishes the highest single-match figures');
+    expect(collected).toContain('only if they linked an account and switched their name on');
+    expect(collected).toContain('Other players\' kills, assists and final hits appear too, as "Anonymous"');
+    expect(collected).toContain('never installed the app and never agreed to it');
+    expect(section('not-shown')).toContain('apart from Pulse Records');
+    expect(collected).toContain('apart from Pulse Records below');
+  });
+
+  it('keeps live teammate charge on your own overlay, unstored, and the opponent count as a rule that shows nothing today', () => {
+    const collected = section('collected');
+
+    expect(collected).toContain("the overlay will show your teammates' ultimate charge on your own screen");
+    expect(collected).toContain("a count of their uses, which today it does not show");
+    expect(collected).toContain('Neither is stored or sent anywhere');
+  });
+
+  it("does not hedge against the FAQ's confident ban answer", () => {
+    const policies = section('policies');
+
+    expect(policies).not.toContain('not a guarantee');
+    expect(policies).toContain('what the game allows is NetEase');
+    expect(policies).toContain('explains what our answer on bans rests on');
   });
 
   it('words bans as ban rates only, never as advice, and shows no ban figures on the site', () => {
@@ -80,23 +126,22 @@ describe('FairPlayPageComponent', () => {
     expect(notShown).toContain('This website shows no ban figures today');
   });
 
-  it("publishes the recorder's own figures only as averages per hero, held back until enough players", () => {
+  it("publishes the recorder's own figures as averages per hero, apart from Pulse Records, held back until enough players", () => {
     const collected = section('collected');
 
-    expect(collected).toContain('only as averages per hero');
+    expect(collected).toContain('as averages per hero, apart from Pulse Records below');
+    expect(collected).toContain('with the kills and assists soon after each use');
     expect(collected).toContain('held back until enough different players have contributed');
     expect(collected).toContain('can still mostly reflect one player');
   });
 
-  it('words the opt-out and lobby-or-after-match lookups as coming soon, not live', () => {
+  it('words the opt-out as coming soon, not live', () => {
     const comingSoon = section('coming-soon');
 
     expect(comingSoon).toContain('not available yet');
     expect(comingSoon).toContain('An opt-out');
-    expect(comingSoon).toContain('Lookups in the lobby or after a match only');
-    expect(comingSoon).toContain('Until this ships');
-    expect(section('summary')).toContain('coming soon and are not available yet');
-    expect(section('collected')).toContain('no setting to turn them off');
+    expect(section('summary')).toContain('coming soon and is not available yet');
+    expect(section('collected')).toContain('will have no setting to turn them off');
   });
 
   it("calls NetEase's and Overwolf's rules policies, cites Overwolf's Game compliance section with a date, and never says laws", () => {

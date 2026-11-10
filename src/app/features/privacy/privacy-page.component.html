@@ -1,7 +1,7 @@
 <div class="reading privacy page-container page-container--narrow">
   <app-page-header
     title="Privacy notes: where the community numbers come from"
-    description="RivalsPulse shows totals built from matches the RivalsPulse desktop app uploads automatically. This page says what is uploaded, what the site publishes, and how long it is kept."
+    description="RivalsPulse shows totals built from matches the RivalsPulse desktop app is designed to upload automatically once it launches. This page says what is uploaded, what the site publishes, and how long it is kept."
   />
 
   <nav class="privacy-toc" aria-labelledby="privacy-toc-title">
@@ -16,6 +16,11 @@
   <section class="reading-section" id="summary" aria-labelledby="summary-title">
     <h2 id="summary-title">The short version</h2>
     <ul>
+      <li>
+        <strong>The RivalsPulse desktop app is not released yet.</strong> It is in development testing
+        and is not on Overwolf. Where this page says what the app uploads, it describes how the app is
+        designed to work at launch.
+      </li>
       <li>
         This website has no analytics, and you never need an account to read it. You can
         <strong>sign in with Discord</strong> if you want an account; see
@@ -66,12 +71,12 @@
   </section>
 
   <section class="reading-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
-    <h2 id="uploaded-today-title">What the app uploads today</h2>
+    <h2 id="uploaded-today-title">What the app uploads at launch</h2>
     <p>
-      Every match the desktop app records is uploaded automatically: the app has no setting to
-      turn it off, and the other players in the match are not asked. The app uploads the
-      scoreboard line of every human player in it, on both teams, and a few facts about the
-      match. The scoreboard figures are what the game itself shows.
+      At launch, every match the desktop app records will be uploaded automatically: the app will
+      have no setting to turn it off, and the other players in the match will not be asked. The app
+      will upload the scoreboard line of every human player in it, on both teams, and a few facts
+      about the match. The scoreboard figures are what the game itself shows.
     </p>
     <ul>
       @for (field of todayFields; track field.label) {
@@ -84,8 +89,8 @@
       The upload also carries a short-lived Overwolf sign-in token, which our server checks with
       Overwolf and does not store. We keep a one-way code made from the uploading player's
       Overwolf username, never the username itself, to limit how many matches one player can
-      send. The same code is stored on every scoreboard line that player records and with every
-      hero change that player uploads.
+      send. The same code is stored on every scoreboard line that player records and, once the
+      app sends hero changes, with every hero change that player uploads.
     </p>
     <p>
       For the uploading player we also keep a record of their own match history: the match facts
@@ -96,11 +101,11 @@
       time limit; it is capped per player (currently the most recent 5,000 matches).
     </p>
     <p>
-      Desktop app versions released so far read match histories with the public key built into
-      the app, so anyone who takes that key out of the app can read every uploaded match history
+      The desktop app builds made so far, none of them released, read match histories with the
+      public key built into the app, so anyone who takes that key out of the app can read every uploaded match history
       and the names stored with it. We are moving those reads behind the player's own Overwolf
       sign-in, which our server checks: the app will then read only the matches that player
-      uploaded, plus the kills, deaths and assists of a player it looks up. Once the app versions
+      uploaded, plus the kills, deaths and assists of a player it looks up. Once the builds
       in use have moved, the public key will no longer read match histories.
     </p>
     <p>
@@ -120,8 +125,8 @@
       </p>
     } @else {
       <p>
-        The app uploads these fields in addition to the ones above. Older versions of the app do not
-        send them.
+        At launch the app uploads these fields in addition to the ones above. Builds made before
+        launch may not send them.
       </p>
     }
     <ul>
@@ -132,12 +137,20 @@
       }
     </ul>
     <p>
-      Damage, healing, damage blocked, time per hero and ability and ultimate use describe only the
-      player who uploaded the match, the one person the app has those figures for. The app does not upload them for other
+      Damage, healing, damage blocked and time per hero describe only the player who uploaded the
+      match, the one person the app has those figures for. The app does not upload them for other
       players. The kill feed is reduced to hero against hero counts before it is sent, so it holds
       no player names or ids at all. These figures are used for community benchmarks, such as
       damage per minute, and for hero-against-hero counter numbers.
     </p>
+    <p>Further fields are <strong>planned for launch</strong>. They are not uploaded yet:</p>
+    <ul id="planned-fields">
+      @for (field of plannedFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
   </section>
 
   <section class="reading-section" id="public-numbers" aria-labelledby="public-numbers-title">
@@ -254,7 +267,7 @@
       <li>
         Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
         match was played in has ended, and in any case no later than six months after the match.
-        The extra figures above, including the hero changes (with the one-way
+        The extra figures above, and the hero changes once the app sends them (with the one-way
         recorder code stored next to each one), are kept for the same time and deleted with them.
         A Pulse Records entry is read from these lines, so it disappears when its line is deleted.
       </li>
