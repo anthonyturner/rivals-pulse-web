@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BehaviorSubject, map, switchMap, tap } from 'rxjs';
 
 import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
+import { contentState, reportContentState } from '../../../core/seo/thin-content';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -151,6 +152,10 @@ export class WinRatesPageComponent {
       ? `Hero stats updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`
       : '';
   });
+
+  constructor() {
+    reportContentState(() => contentState(this.loading(), this.view()?.state === 'full'));
+  }
 
   chooseMode(value: string): void {
     const mode = value as HeroStatsModeId;

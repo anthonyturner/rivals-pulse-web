@@ -25,7 +25,7 @@ describe('AdSlotComponent server render', () => {
 
     expect(html).toContain('width: 300px');
     expect(html).toContain('height: 250px');
-    expect(html).toContain('Coming soon');
+    expect(html).toContain('RivalsPulse, in your match');
     expect(html).not.toMatch(/<script[\s>](?![^>]*ng-state)(?![^>]*ng-server-context)/);
     expect(html).not.toContain('<ins');
   });

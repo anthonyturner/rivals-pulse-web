@@ -13,6 +13,7 @@ import { heroOf, season } from '../hero-matchup.fixtures';
 import { synergiesOf, synergy } from '../hero-synergies.fixtures';
 import { lineupShape, lineupsOf, thinShape } from '../team-lineups.fixtures';
 import { trio, triosOf } from '../triple-support-trios.fixtures';
+import { ThinContent } from '../../../core/seo/thin-content';
 import { TeamCompsPageComponent } from './team-comps-page.component';
 
 const ROSTER = [
@@ -176,6 +177,18 @@ describe('TeamCompsPageComponent', () => {
     expect(text(sections[2] as HTMLElement, 'app-state-panel h3')).toEqual(['Not enough data yet']);
     expect(sections[1].querySelector('table')).toBeNull();
     expect(sections[2].querySelector('table')).toBeNull();
+  });
+
+  it('is thin content, so ad-free and noindex, while no pair, trio or line-up is counted', async () => {
+    await open(synergiesOf([]));
+
+    expect(TestBed.inject(ThinContent).thin()).toBeTrue();
+  });
+
+  it('is not thin content once a pair is listed', async () => {
+    await open(synergiesOf([synergy('hulk', 'thor', 9, 12)]));
+
+    expect(TestBed.inject(ThinContent).thin()).toBeFalse();
   });
 
   it('still shows every section, each empty, while no pair is counted', async () => {

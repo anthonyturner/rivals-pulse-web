@@ -30,7 +30,7 @@ describe('FairPlayPageComponent', () => {
   it('has one h1 and a labelled h2 section for each point, summary first', () => {
     expect(page.querySelectorAll('h1').length).toBe(1);
 
-    const ids = ['summary', 'not-shown', 'collected', 'coming-soon', 'policies'];
+    const ids = ['summary', 'not-shown', 'collected', 'opt-out', 'policies'];
     expect(Array.from(page.querySelectorAll('section')).map((element) => element.id)).toEqual(ids);
 
     for (const id of ids) {
@@ -139,12 +139,12 @@ describe('FairPlayPageComponent', () => {
     expect(collected).toContain('can still mostly reflect one player');
   });
 
-  it('words the opt-out as coming soon, not live', () => {
-    const comingSoon = section('coming-soon');
+  it('says there is no opt-out yet, without a coming-soon section', () => {
+    const optOut = section('opt-out');
 
-    expect(comingSoon).toContain('not available yet');
-    expect(comingSoon).toContain('An opt-out');
-    expect(section('summary')).toContain('coming soon and is not available yet');
+    expect(optOut).toContain('An opt-out does not exist yet');
+    expect(section('summary')).toContain('There is no opt-out');
+    expect(flat(page)).not.toMatch(/coming soon/i);
     expect(section('collected')).toContain('will have no setting to turn them off');
   });
 

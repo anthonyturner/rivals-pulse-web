@@ -48,7 +48,7 @@ describe('HeroOverlayActionsComponent', () => {
   it('leads with the shared get-app button, ahead of "See hero stats"', () => {
     const button = element.querySelector('app-get-app-button') as HTMLElement;
 
-    expect(text(button)).toContain('Get RivalsPulse on Overwolf');
+    expect(text(button)).not.toMatch(/coming soon/i);
     expect(button.nextElementSibling).toBe(element.querySelector('a.cta-ghost'));
   });
 

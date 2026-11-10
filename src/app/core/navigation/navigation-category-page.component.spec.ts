@@ -41,29 +41,27 @@ describe('NavigationCategoryPageComponent', () => {
     );
   });
 
-  it('shows the released tools as linked tiles and the rest as plain text', () => {
+  it('shows the released tools as linked tiles', () => {
     const element = renderCategory('Tools');
     const links = element.querySelectorAll('app-hub-tile a');
 
     expect(texts(links)).toEqual(['Counters', 'Dive Planner', 'Team Builder']);
     expect(Array.from(links).map((node) => node.getAttribute('href'))).toEqual(['/counters', '/dive-planner', '/team-builder']);
-    expect(texts(element.querySelectorAll('.soon strong'))).toEqual(['Learning Paths', 'Watch Next Quiz', 'AI Coach']);
-    expect(element.querySelectorAll('.soon a, [aria-disabled]').length).toBe(0);
   });
 
-  it('lists coming-soon items under one heading and drops "coming soon" from their descriptions', () => {
+  it('leaves out pages that do not exist yet, and has no coming-soon section', () => {
     const element = renderCategory('Tools');
+    const text = element.textContent ?? '';
 
-    expect(element.querySelector('#coming-soon-title')?.textContent).toBe('Coming soon');
-    expect(element.textContent).not.toContain('are coming soon');
-    expect(element.textContent).not.toContain('is coming soon');
+    for (const label of ['Learning Paths', 'Watch Next Quiz', 'AI Coach']) {
+      expect(text).not.toContain(label);
+    }
+
+    expect(text).not.toMatch(/coming soon/i);
   });
 
-  it('leaves out the coming-soon section when everything is released', () => {
-    const element = renderCategory('Resources');
-
-    expect(element.querySelector('#coming-soon-title')).toBeNull();
-    expect(element.querySelectorAll('app-hub-tile').length).toBe(9);
+  it('draws every Resources item', () => {
+    expect(renderCategory('Resources').querySelectorAll('app-hub-tile').length).toBe(9);
   });
 
   it('draws Resources and Tools as bento grids, each with its own tiles', () => {

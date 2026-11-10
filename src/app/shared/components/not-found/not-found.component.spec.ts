@@ -77,6 +77,7 @@ describe('NotFoundComponent', () => {
     expect(robots()).toBe('noindex');
 
     await harness.navigateByUrl('/tools');
+    await harness.fixture.whenStable();
     expect(robots()).toBeNull();
   });
 
@@ -92,6 +93,7 @@ describe('NotFoundComponent', () => {
     expect(canonical()).toBeNull();
 
     await harness.navigateByUrl('/resources');
+    await harness.fixture.whenStable();
     expect(canonical()).toMatch(/\/resources$/);
   });
 

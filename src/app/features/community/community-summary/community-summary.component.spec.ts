@@ -2,6 +2,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { ThinContent } from '../../../core/seo/thin-content';
 import { CommunitySummaryComponent } from './community-summary.component';
 
 describe('CommunitySummaryComponent', () => {
@@ -54,6 +55,21 @@ describe('CommunitySummaryComponent', () => {
     expect(panel.querySelector('h2, h3')).toBeNull();
     expect(panel.textContent).toContain('Twelve matches so far.');
     expect(panel.querySelector('a')?.getAttribute('href')).toBe('/heroes');
+  });
+
+  it('is thin content, so ad-free and noindex, unless the numbers are ready', () => {
+    const thin = TestBed.inject(ThinContent);
+
+    for (const kind of ['loading', 'unavailable', 'not-enough-data']) {
+      render({ kind });
+
+      expect(thin.thin()).withContext(kind).toBeTrue();
+      fixture.destroy();
+    }
+
+    render({ kind: 'ready' });
+
+    expect(thin.thin()).toBeFalse();
   });
 
   it('shows the notice, footnote and both links when ready', () => {

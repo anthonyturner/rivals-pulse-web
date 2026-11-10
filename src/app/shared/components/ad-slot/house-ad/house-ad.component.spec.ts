@@ -20,9 +20,9 @@ describe('HouseAdComponent', () => {
     page = fixture.nativeElement as HTMLElement;
   });
 
-  it('promotes the app and says it is coming soon', () => {
+  it('promotes the app without a coming-soon button, since there is no store listing yet', () => {
     expect(page.querySelector('.house-ad__title')?.textContent).toContain('RivalsPulse');
-    expect(page.textContent).toContain('Coming soon');
+    expect(page.textContent).not.toMatch(/coming soon/i);
   });
 
   it('adds no heading to the pages it sits beside', () => {

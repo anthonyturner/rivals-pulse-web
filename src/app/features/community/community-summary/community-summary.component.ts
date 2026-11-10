@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
+import { contentState, reportContentState } from '../../../core/seo/thin-content';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import { KindChipComponent } from '../../hub/kind-chip/kind-chip.component';
 
@@ -51,4 +52,8 @@ export class CommunitySummaryComponent {
 
     return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} could not be loaded`;
   });
+
+  constructor() {
+    reportContentState(() => contentState(this.kind() === 'loading', this.kind() === 'ready'));
+  }
 }

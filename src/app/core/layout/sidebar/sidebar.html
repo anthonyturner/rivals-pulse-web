@@ -4,7 +4,9 @@
       <ng-container [ngTemplateOutlet]="template" />
     </div>
   }
-  <aside class="sidebar__ads" aria-label="Advertisement">
-    <app-ad-slot slot="rectangle" />
-  </aside>
+  @if (!thin()) {
+    <aside class="sidebar__ads" aria-label="Advertisement">
+      <app-ad-slot slot="rectangle" />
+    </aside>
+  }
 </div>

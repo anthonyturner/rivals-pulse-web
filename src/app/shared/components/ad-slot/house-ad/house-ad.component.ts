@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { GetAppButtonComponent } from '../../get-app-button/get-app-button.component';
 import type { AdSlotId, AdSlotSize } from '../ad-slot.types';
 
-/** The default ad: RivalsPulse's own app, which has no store listing yet, so it says "coming soon". */
+/** The default ad: RivalsPulse's own app. The get-app button inside it shows only once the app has a store listing. */
 @Component({
   selector: 'app-house-ad',
   imports: [GetAppButtonComponent],
