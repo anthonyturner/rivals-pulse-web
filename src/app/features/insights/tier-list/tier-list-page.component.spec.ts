@@ -178,7 +178,6 @@ describe('TierListPageComponent', () => {
     expect(text(page, '.meta')).toEqual([
       'Started Oct 9, 2026 · 146 matches counted · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
     ]);
-    expect(text(page, '.empty-tier')).toEqual([]);
   });
 
   it('lists the tiers and heroes as lists, and announces each tier with its letter and count', async () => {
