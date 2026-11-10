@@ -144,6 +144,7 @@ The session lives on the server side of the boundary:
   Admin link read `isAdmin` from the session answer, and the lazily loaded `/admin` area (`src/app/features/admin/`, menu and
   routes from `ADMIN_PAGES`) is client-rendered and carries `robots: noindex, nofollow`. Those are conveniences; the API and
   the database are what refuse.
+- Search crawlers: `public/robots.txt` is a static file; `sitemap.xml` is written into the browser build by `scripts/write-sitemap.ts` (the last step of `npm run build`) from `src/app/core/seo/sitemap.ts`, the hero roster from the content API (the seed file if it cannot be read) and the guide data. `vercel.json` sets both files' content types. `sitemap.spec.ts` fails when a route is in neither the sitemap nor its exclusion list (issue 764).
 - The admin "Data jobs" page (issue 494) runs the five hourly rebuilds and the home news sync on demand through `admin/data-jobs` and
   `admin/data-jobs-run`: a database call under the admin's own token writes the audit row and checks the cooldown, then a rebuild
   runs in the database and a sync runs in `src/server/admin/sync-jobs.ts`, the one place the admin area uses the service-role key

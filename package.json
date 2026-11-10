@@ -5,8 +5,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build && npm run typecheck:api && npm run typecheck:scripts",
+    "build": "ng build && npm run build:sitemap && npm run typecheck:api && npm run typecheck:scripts",
     "vercel:build": "npm run build && npm run sync:glossary:missing -- --vercel-production-only",
+    "build:sitemap": "node scripts/write-sitemap.ts",
     "typecheck:api": "tsc -p tsconfig.api.json --noEmit",
     "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
     "icons": "node scripts/render-brand-icons.mjs",
