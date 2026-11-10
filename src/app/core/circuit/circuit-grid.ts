@@ -1,4 +1,4 @@
-import { COLLISION_CUE, LoopReading, cuesInWindow } from './pulse-cues';
+import { LoopReading, cuesInWindow } from './loop-cues';
 
 /** Whether the grid animates, holds its picture until it may animate again, or shows one still frame. */
 export type CircuitPlayback = 'playing' | 'paused' | 'still';
@@ -10,9 +10,34 @@ export interface CircuitPalette {
   readonly currents: readonly [string, string, string];
 }
 
+/** How the grid moves and looks. Each knob is relative to the lively look the home banner has. */
+export interface CircuitLook {
+  /** Scales how fast pulses travel. */
+  readonly speed: number;
+  /** Scales how many ordinary pulses the grid holds. */
+  readonly density: number;
+  /** Scales the width of a pulse's stroke. */
+  readonly weight: number;
+  /** Scales the glow around a pulse. */
+  readonly glow: number;
+  /** How opaque the plain grid lines are, 0 to 1. */
+  readonly gridAlpha: number;
+  /** Whether a stronger pulse crosses the grid every few seconds. */
+  readonly surges: boolean;
+  /** Whether pulses start where the banner's heartbeats collide, rather than at any crossing. */
+  readonly startAtCentre: boolean;
+}
+
+export const LIVELY_LOOK: CircuitLook = { speed: 1, density: 1, weight: 1, glow: 1, gridAlpha: 0.55, surges: true, startAtCentre: true };
+
+/** Behind other content: slower, sparser, thinner and with less glow, and nothing that crosses the whole grid at once. */
+export const CALM_LOOK: CircuitLook = { speed: 0.5, density: 0.5, weight: 0.75, glow: 0.5, gridAlpha: 0.5, surges: false, startAtCentre: false };
+
 /** Tells the grid when the banner's two heartbeats collide, and where, so each collision sends a shockwave across it. */
 export interface ClashSource {
   readonly clock: { read(): LoopReading | null };
+  /** Where the collision falls in the loop, as a fraction of it. */
+  readonly at: number;
   /** Where the collision is on the canvas, in CSS pixels. */
   origin(): readonly [number, number];
 }
@@ -52,7 +77,6 @@ const TURN_CHANCE = 0.35;
 const AMBIENT_SURGE_MIN_S = 6;
 const AMBIENT_SURGE_MAX_S = 12;
 const MAX_FRAME_S = 0.05;
-const GRID_LINE_ALPHA = 0.55;
 /** The trail fades in this many steps: fewer strokes per pulse than one per segment. */
 const TRAIL_BANDS = 4;
 /** The still frame's pulses, for a grid the size of the strip. */
@@ -73,7 +97,7 @@ const SHOCKWAVE_GLOW_ALPHA = 0.7;
 const GLOW_BANDS = 4;
 
 /**
- * The banner's circuit board: a faint grid with pulses of current racing along its lines and leaving
+ * A circuit board: a faint grid with pulses of current racing along its lines and leaving
  * fading trails, drawn on a canvas it owns and animated outside Angular's change detection (it keeps
  * plain fields, and the app is zoneless, so a frame never triggers a check). Every few seconds
  * while it plays, a stronger pulse crosses the grid in one straight line. A pointer set with
@@ -102,6 +126,7 @@ export class CircuitGrid {
     private readonly canvas: HTMLCanvasElement,
     private palette: CircuitPalette,
     private readonly random: () => number = Math.random,
+    private readonly look: CircuitLook = LIVELY_LOOK,
   ) {
     this.ambientSurgeTimer = this.nextAmbientSurgeGap();
   }
@@ -179,14 +204,16 @@ export class CircuitGrid {
 
   private advance(seconds: number): void {
     this.spawnTimer -= seconds;
-    this.ambientSurgeTimer -= seconds;
-    if (this.ambientSurgeTimer <= 0) {
-      this.spawnSurge();
-      this.ambientSurgeTimer = this.nextAmbientSurgeGap();
+    if (this.look.surges) {
+      this.ambientSurgeTimer -= seconds;
+      if (this.ambientSurgeTimer <= 0) {
+        this.spawnSurge();
+        this.ambientSurgeTimer = this.nextAmbientSurgeGap();
+      }
     }
     if (this.spawnTimer <= 0 && this.ambientPulses < this.ambientCapacity) {
       this.spawnAmbient();
-      this.spawnTimer = STRIP_SPAWN_GAP_S * (STRIP_AMBIENT_PULSES / this.ambientCapacity);
+      this.spawnTimer = STRIP_SPAWN_GAP_S * ((STRIP_AMBIENT_PULSES * this.look.density) / this.ambientCapacity);
     }
     this.pulses = this.pulses.filter(pulse => pulse.life > 0);
     for (const pulse of this.pulses) this.step(pulse, seconds);
@@ -199,7 +226,7 @@ export class CircuitGrid {
     const reading = this.clash?.clock.read();
     if (!this.clash || !reading) return;
     if (this.lastLoopPositionMs !== null) {
-      const passed = cuesInWindow([COLLISION_CUE], reading.loopMs, this.lastLoopPositionMs, reading.positionMs);
+      const passed = cuesInWindow([{ at: this.clash.at }], reading.loopMs, this.lastLoopPositionMs, reading.positionMs);
       if (passed.length > 0) {
         const [x, y] = this.clash.origin();
         this.shockwaves.push({ x, y, age: 0 });
@@ -215,16 +242,18 @@ export class CircuitGrid {
   /** How many ordinary pulses the grid holds: the strip's number at the strip's size, more in proportion to a bigger area, never fewer. */
   get ambientCapacity(): number {
     const scaled = Math.round((STRIP_AMBIENT_PULSES * this.width * this.height) / STRIP_AREA);
-    return Math.min(MAX_AMBIENT_PULSES, Math.max(STRIP_AMBIENT_PULSES, scaled));
+    const lively = Math.min(MAX_AMBIENT_PULSES, Math.max(STRIP_AMBIENT_PULSES, scaled));
+    return Math.max(1, Math.round(lively * this.look.density));
   }
 
   /**
    * Pulses start at the centre, where the heartbeat in the banner collides. On a grid bigger than the
    * strip that would leave the rest empty, so the share of the area beyond the strip's decides how
-   * often one starts at a random crossing instead. The strip itself never does.
+   * often one starts at a random crossing instead. The strip itself never does. A look that does not
+   * start at the centre has no collision to start from, so every pulse starts at a random crossing.
    */
   private spawnPoint(): [number, number] {
-    const beyondStrip = Math.max(0, 1 - STRIP_AREA / Math.max(1, this.width * this.height));
+    const beyondStrip = this.look.startAtCentre ? Math.max(0, 1 - STRIP_AREA / Math.max(1, this.width * this.height)) : 1;
     if (beyondStrip > 0 && this.random() < beyondStrip) {
       return [Math.round((this.random() * this.width) / CELL) * CELL, Math.round((this.random() * this.height) / CELL) * CELL];
     }
@@ -241,7 +270,7 @@ export class CircuitGrid {
       trail: [],
       trailLength: 26,
       colour: this.spawned++ % 3,
-      speed: 140 + this.random() * 80,
+      speed: (140 + this.random() * 80) * this.look.speed,
       travelled: 0,
       life: 1,
       strong: false,
@@ -259,7 +288,7 @@ export class CircuitGrid {
       trail: [],
       trailLength: 36,
       colour: this.spawned++ % 3,
-      speed: 460,
+      speed: 460 * this.look.speed,
       travelled: 0,
       life: 1,
       strong: true,
@@ -411,7 +440,7 @@ export class CircuitGrid {
   }
 
   private drawGrid(ctx: CanvasRenderingContext2D): void {
-    ctx.globalAlpha = GRID_LINE_ALPHA;
+    ctx.globalAlpha = this.look.gridAlpha;
     ctx.strokeStyle = this.palette.line;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -432,8 +461,8 @@ export class CircuitGrid {
     const colour = this.palette.currents[pulse.colour];
     ctx.strokeStyle = colour;
     ctx.shadowColor = colour;
-    ctx.shadowBlur = pulse.strong ? 18 : 10;
-    ctx.lineWidth = pulse.strong ? 3.5 : 2;
+    ctx.shadowBlur = (pulse.strong ? 18 : 10) * this.look.glow;
+    ctx.lineWidth = (pulse.strong ? 3.5 : 2) * this.look.weight;
 
     const segments = trail.length - 1;
     for (let band = 0; band < TRAIL_BANDS; band++) {

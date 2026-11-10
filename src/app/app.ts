@@ -5,13 +5,14 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { Footer } from './core/layout/footer/footer';
 import { Nav } from './core/layout/nav/nav';
+import { NavPulse } from './core/layout/nav-pulse/nav-pulse';
 import { Sidebar } from './core/layout/sidebar/sidebar';
 import { SidebarVisibility } from './core/layout/sidebar/sidebar-visibility';
 import { BrandComponent } from './shared/components/brand/brand.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, BrandComponent, Nav, Footer, Sidebar],
+  imports: [RouterOutlet, BrandComponent, Nav, NavPulse, Footer, Sidebar],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

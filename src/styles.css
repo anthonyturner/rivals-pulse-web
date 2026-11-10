@@ -69,6 +69,8 @@
   --aurora-on-outcome: #05201a;
   --aurora-focus: var(--aurora-secondary);
   --aurora-hover: rgba(255, 223, 0, 0.08);
+  /* How much of the circuit behind the top bar shows through. Light is lower: the brand word and the active-link underline are dark gold on a pale bar, and a stronger pulse would drop them below contrast. */
+  --aurora-nav-pulse-opacity: 0.35;
   --aurora-shadow-color: rgba(3, 4, 12, 0.55);
   --aurora-card-shadow: 0 12px 30px var(--aurora-shadow-color);
   --aurora-soft-shadow: 0 8px 22px rgba(3, 4, 12, 0.4);
@@ -111,6 +113,7 @@
   --aurora-loss-soft: rgba(230, 89, 76, 0.1);
 
   --aurora-hover: rgba(179, 134, 0, 0.07);
+  --aurora-nav-pulse-opacity: 0.18;
   --aurora-shadow-color: rgba(21, 23, 53, 0.16);
   --aurora-soft-shadow: 0 8px 22px rgba(21, 23, 53, 0.1);
 
@@ -219,6 +222,8 @@
   /* The one size for a hero portrait in a list, tile or chip; large art (detail headers, guide portraits) keeps its own. */
   --hero-thumb: 40px;
   --nav-height: 56px;
+  /* The circuit behind the top bar; the nav's text is contrast-tested against it in both themes (scripts/theme-contrast.mjs). */
+  --nav-pulse-opacity: var(--aurora-nav-pulse-opacity);
   /* Where the columns start under a page's header, for a page that fills the sidebar: the header's 36px of padding and gap plus its title and one-line lede. The sidebar uses it to start level with the page. */
   --columns-top: calc(36px + 1.1 * var(--type-h2) + 1.4 * var(--type-small));
 }

@@ -1,22 +1,12 @@
-/** Where the banner's animation loop stands: its length, and how far the animation has run (not wrapped to one loop). */
-export interface LoopReading {
-  readonly loopMs: number;
-  readonly positionMs: number;
-}
+import { LoopCue } from '../../../core/circuit/loop-cues';
 
 export type PulseCueKind = 'lub' | 'dub' | 'crack' | 'boom';
 
-/** One sound in the loop. `at` is a fraction of the loop, so it follows `--loop` without knowing its length. */
-export interface PulseCue {
+/** One sound in the loop, at a fraction of it so it follows `--loop` without knowing its length. */
+export interface PulseCue extends LoopCue {
   readonly kind: PulseCueKind;
   /** The stereo side it plays from: the pulse that makes it, or the centre for the clash. */
   readonly side: 'left' | 'right' | 'centre';
-  readonly at: number;
-}
-
-export interface TimedCue {
-  readonly cue: PulseCue;
-  readonly atMs: number;
 }
 
 /** The collision, as the 55% keyframe of the banner's stylesheet. */
@@ -70,16 +60,3 @@ export const PULSE_CUES: readonly PulseCue[] = [
   COLLISION_CUE,
   { kind: 'boom', side: 'centre', at: COLLISION_AT + 0.006 },
 ];
-
-/** Every time a cue comes round in `[fromMs, toMs)` of the animation's own clock, soonest first. */
-export function cuesInWindow(cues: readonly PulseCue[], loopMs: number, fromMs: number, toMs: number): TimedCue[] {
-  if (!(loopMs > 0) || toMs <= fromMs) return [];
-  const due: TimedCue[] = [];
-  for (const cue of cues) {
-    const offset = cue.at * loopMs;
-    for (let loop = Math.ceil((fromMs - offset) / loopMs); loop * loopMs + offset < toMs; loop++) {
-      due.push({ cue, atMs: loop * loopMs + offset });
-    }
-  }
-  return due.sort((a, b) => a.atMs - b.atMs);
-}

@@ -1,4 +1,5 @@
-import { PULSE_CUES, PulseCue, cuesInWindow } from './pulse-cues';
+import { cuesInWindow } from '../../../core/circuit/loop-cues';
+import { PULSE_CUES, PulseCue } from './pulse-cues';
 import { PulseLoopClock } from './pulse-loop-clock';
 
 /** Where sound is made: an audio clock to schedule against, and a way to sound a cue at a time on it. */

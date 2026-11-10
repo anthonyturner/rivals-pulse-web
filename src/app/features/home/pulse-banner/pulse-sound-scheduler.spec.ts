@@ -1,4 +1,5 @@
-import { COLLISION_CUE, LoopReading, PULSE_CUES, PulseCue } from './pulse-cues';
+import { LoopReading } from '../../../core/circuit/loop-cues';
+import { COLLISION_CUE, PULSE_CUES, PulseCue } from './pulse-cues';
 import { PulseCueSink, PulseSoundScheduler } from './pulse-sound-scheduler';
 
 describe('PulseSoundScheduler', () => {

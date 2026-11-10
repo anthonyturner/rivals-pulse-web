@@ -1,4 +1,4 @@
-import { LoopReading } from './pulse-cues';
+import { LoopReading } from '../../../core/circuit/loop-cues';
 
 /** The most the animation's last frame can be behind the real clock before the reading is not trusted to catch up. */
 const MAX_FRAME_LAG_MS = 100;
