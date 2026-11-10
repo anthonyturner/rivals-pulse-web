@@ -11,7 +11,7 @@ import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 import { heroProgressRows, minimumsOf, type HeroProgressRow } from '../hero-progress-list/hero-progress';
 
-/** Best first. The page always draws all six, so a tier with no hero is an empty row, not a missing one. */
+/** Best first. A tier no hero reached is left out of the rows, so these are the tiers a page may draw, not the ones it always does. */
 export const TIER_NAMES: readonly TierName[] = ['S', 'A', 'B', 'C', 'D', 'F'];
 
 export interface TierHeroView extends HeroCellView {
@@ -48,7 +48,7 @@ export interface TierListView {
   matchesCountedLabel: string;
   /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
   scopeLabel: string;
-  /** All six tiers when `ready`; none otherwise. */
+  /** The tiers that have a hero, best first, when `ready`; none otherwise. */
   tiers: TierRowView[];
   /** Heroes short of a minimum, drawn in the same place whether or not other heroes are placed. */
   building: HeroProgressRow[];
@@ -61,7 +61,7 @@ export interface TierListView {
 export function buildTierListView(stats: HeroStats, identities: HeroIdentities): TierListView {
   const season = stats.halfSeason === null ? null : seasonView(stats.halfSeason);
   const rows = tierRowsOf(stats, TIER_NAMES, identities);
-  const placed = rows.some((row) => row.heroes.length > 0);
+  const placed = rows.length > 0;
   const building = heroProgressRows(stats.belowMinimum, minimumsOf(stats), identities);
   const modeLabel = modeLabelOf(stats);
 
@@ -78,25 +78,27 @@ export function buildTierListView(stats: HeroStats, identities: HeroIdentities):
     placementLabel: placementRequirementLabel(stats),
     matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
     scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
-    tiers: placed ? rows : [],
+    tiers: rows,
     building,
   };
 }
 
-/** One row per named tier, in the order given, holding the heroes that have a readable record. */
+/** One row per named tier that has a hero with a readable record, in the order given. A tier with none is left out. */
 export function tierRowsOf(
   stats: HeroStats,
   names: readonly TierName[],
   identities: HeroIdentities,
 ): TierRowView[] {
-  return names.map((name) => ({
-    name,
-    heroes: stats.tiers
-      .filter((tier) => tier.name === name)
-      .flatMap((tier) => tier.heroes)
-      .filter(isReadable)
-      .map((hero) => tierHero(hero, identities)),
-  }));
+  return names
+    .map((name) => ({
+      name,
+      heroes: stats.tiers
+        .filter((tier) => tier.name === name)
+        .flatMap((tier) => tier.heroes)
+        .filter(isReadable)
+        .map((hero) => tierHero(hero, identities)),
+    }))
+    .filter((row) => row.heroes.length > 0);
 }
 
 function tierHero(hero: HeroStatsHero, identities: HeroIdentities): TierHeroView {

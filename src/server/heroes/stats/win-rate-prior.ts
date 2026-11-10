@@ -1,3 +1,6 @@
+// A copy of src/app/services/tier-list/win-rate-prior.ts in the overlay (rivals_pulse, commit b05fa85). The site's tiers and
+// the overlay's must place a hero the same way, so change both files together; win-rate-prior.spec.ts holds the overlay's cases.
+
 /** Wins out of matches. Counts only; whose record it is (a hero's, a pair's) is the caller's business. */
 export interface WinRecord {
   readonly matches: number;

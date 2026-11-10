@@ -1,11 +1,10 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
-import type { TierName } from '../../../../contracts/tier-list.model';
 import { countLabel, halfSeasonFallbackNotice, placementRequirementLabel } from '../../../shared/utilities/stat-labels';
 import type { HeroIdentities } from '../../insights/hero-identity';
 import { TIER_NAMES, tierRowsOf, type TierRowView } from '../../insights/tier-list/tier-list-view';
 
-/** The tiers the summary lists, best first. The full tier list shows the rest. */
-export const TIER_LIST_TAB_TIERS: readonly TierName[] = ['S', 'A'];
+/** How many tiers the summary lists: the best ones that have a hero. The full tier list shows the rest. */
+export const TIER_LIST_TAB_TIER_COUNT = 2;
 
 export type TierListTabView =
   | { kind: 'loading' }
@@ -22,8 +21,8 @@ export type TierListTabView =
     };
 
 /**
- * What the Tier list tab shows: the top tiers as the hero stats place them, strongest shrunk win
- * rate first. `undefined` means the stats have not answered yet and `null` means they could not be
+ * What the Tier list tab shows: the two best tiers that have a hero, as the hero stats place them,
+ * strongest shrunk win rate first. `undefined` means the stats have not answered yet and `null` means they could not be
  * read; neither is "not enough data", which is a real answer.
  */
 export function buildTierListTabView(
@@ -38,9 +37,9 @@ export function buildTierListTabView(
     return { kind: 'unavailable' };
   }
 
-  const placed = tierRowsOf(stats, TIER_NAMES, identities).some((row) => row.heroes.length > 0);
+  const tiers = tierRowsOf(stats, TIER_NAMES, identities).slice(0, TIER_LIST_TAB_TIER_COUNT);
 
-  if (stats.status !== 'ready' || !placed) {
+  if (stats.status !== 'ready' || tiers.length === 0) {
     const counted =
       stats.matchesCounted > 0
         ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players so far.`
@@ -59,7 +58,7 @@ export function buildTierListTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero's tier comes from its win rate pulled toward 50%, so a short run cannot place it high. Heroes need enough appearances and players to be placed.`,
-    tiers: tierRowsOf(stats, TIER_LIST_TAB_TIERS, identities),
+    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero's tier comes from its win rate pulled toward the average of its role, by about as much as 60 more matches would, so a short run cannot place it high. Heroes need enough appearances and players to be placed.`,
+    tiers,
   };
 }

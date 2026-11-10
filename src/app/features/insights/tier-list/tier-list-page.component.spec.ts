@@ -165,10 +165,10 @@ describe('TierListPageComponent', () => {
     expect(tile?.querySelector('a')?.getAttribute('href')).toMatch(/^\/heroes\//);
   });
 
-  it('draws the six tier rows with the placed heroes, their sample and the matches counted', async () => {
+  it('draws a row for each tier that has a hero, with the placed heroes, their sample and the matches counted', async () => {
     const { page } = await open(partial);
 
-    expect(text(page, '.tier-letter')).toEqual(['S', 'A', 'B', 'C', 'D', 'F']);
+    expect(text(page, '.tier-letter')).toEqual(['A']);
     expect(text(page, '.hero-name')).toEqual(['Storm', 'Hela']);
     expect(text(page, '.hero-rate')).toEqual([', win rate 66.7%', ', win rate 70.0%']);
     expect(text(page, '.hero-caption')).toEqual([
@@ -178,22 +178,15 @@ describe('TierListPageComponent', () => {
     expect(text(page, '.meta')).toEqual([
       'Started Oct 9, 2026 · 146 matches counted · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
     ]);
-    expect(text(page, '.empty-tier').length).toBe(5);
+    expect(text(page, '.empty-tier')).toEqual([]);
   });
 
   it('lists the tiers and heroes as lists, and announces each tier with its letter and count', async () => {
     const { page } = await open(partial);
 
-    expect(page.querySelectorAll('ol.tiers > li').length).toBe(6);
+    expect(page.querySelectorAll('ol.tiers > li').length).toBe(1);
     expect(page.querySelectorAll('ul.hero-grid > li').length).toBe(2);
-    expect(text(page, '.tier-label')).toEqual([
-      'Tier S, 0 heroes',
-      'Tier A, 2 heroes',
-      'Tier B, 0 heroes',
-      'Tier C, 0 heroes',
-      'Tier D, 0 heroes',
-      'Tier F, 0 heroes',
-    ]);
+    expect(text(page, '.tier-label')).toEqual(['Tier A, 2 heroes']);
     expect(page.querySelector('dl, abbr, table')).toBeNull();
     expect(page.querySelectorAll('app-hero-tile img[alt=""]').length).toBe(2);
   });
@@ -219,7 +212,7 @@ describe('TierListPageComponent', () => {
     expect(text(page, '.building .section-heading p')).toEqual([
       'Heroes need 10 appearances before they are placed in a tier.',
     ]);
-    expect(page.querySelectorAll('.tier-row').length).toBe(6);
+    expect(page.querySelectorAll('.tier-row').length).toBe(1);
   });
 
   it('draws no tier rows while no hero has enough data, and says how many matches are counted', async () => {

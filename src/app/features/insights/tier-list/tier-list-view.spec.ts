@@ -63,16 +63,16 @@ const identities: HeroIdentities = new Map([
 ]);
 
 describe('buildTierListView', () => {
-  it('always draws all six tiers once a hero is placed, with empty ones kept as rows', () => {
+  it('draws only the tiers that have a hero, best first, once a hero is placed', () => {
     const view = buildTierListView(statsOf(), identities);
 
     expect(view.state).toBe('ready');
-    expect(view.tiers.map((tier) => tier.name)).toEqual(['S', 'A', 'B', 'C', 'D', 'F']);
-    expect(view.tiers.map((tier) => tier.heroes.length)).toEqual([0, 1, 0, 1, 0, 0]);
+    expect(view.tiers.map((tier) => tier.name)).toEqual(['A', 'C']);
+    expect(view.tiers.map((tier) => tier.heroes.length)).toEqual([1, 1]);
   });
 
   it('writes every figure as a finished label, with names and portraits from the roster', () => {
-    const [storm] = buildTierListView(statsOf(), identities).tiers[1].heroes;
+    const [storm] = buildTierListView(statsOf(), identities).tiers[0].heroes;
 
     expect(storm).toEqual(
       jasmine.objectContaining({
@@ -87,7 +87,7 @@ describe('buildTierListView', () => {
   });
 
   it('falls back to a name made from the id for a hero the roster lacks', () => {
-    const thor = buildTierListView(statsOf(), identities).tiers[3].heroes[0];
+    const thor = buildTierListView(statsOf(), identities).tiers[1].heroes[0];
 
     expect(thor.name).toBe('Thor');
     expect(thor.role).toBeNull();

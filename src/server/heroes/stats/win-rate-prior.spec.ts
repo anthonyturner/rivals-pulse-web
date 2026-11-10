@@ -160,8 +160,7 @@ describe('estimateWinRatePriors', () => {
       const heroes = OVERLAY_COMMUNITY_RECORDS.map(([matches, wins]) => ({ matches, wins }));
       const community = estimateWinRatePriors(heroes);
 
-      expect(community.strength).toBeGreaterThan(45);
-      expect(community.strength).toBeLessThan(75);
+      expect(community.strength).toBeCloseTo(58.70, 2);
       expect(community.estimate({ matches: 20, wins: 13 }).rate).toBeLessThan(0.56);
     });
 
