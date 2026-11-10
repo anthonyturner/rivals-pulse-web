@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /profile
+Disallow: /sign-in
+
+Sitemap: https://rivalspulse.com/sitemap.xml
