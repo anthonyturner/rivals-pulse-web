@@ -230,5 +230,6 @@ gets a sidebar from the app shell, so a page does not add one itself. From
   fresh `<ins class="adsbygoogle">` for each new page path, because the sidebar stays
   mounted between pages. Do not add a second consent banner; the footer's "Privacy and
   cookie settings" button reopens Google's message and shows only where it applies.
+- **Thin pages.** A page with too little to read must not carry an ad or be indexed, whether it is the not-found page or a data page below its minimum. It tells the shell by calling `reportContentState()` (`core/seo/thin-content.ts`) once, with `contentState(loading, ready)` or its own `'loading' | 'thin' | 'ready'`. While any page reports and all of it is thin, the sidebar leaves out its ads and `PageMetaTitleStrategy` sets `robots: noindex` and drops the canonical link, on the server too. `loading` keeps the last answer (thin until there has been one), so an ad is not removed and rebuilt on the same page. Pages never touch the ad slot or the robots tag.
 - **Affiliate links.** Put `app-affiliate-disclosure` next to any affiliate link. There
   are none today.

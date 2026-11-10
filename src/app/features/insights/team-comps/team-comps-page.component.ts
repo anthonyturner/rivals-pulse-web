@@ -5,6 +5,7 @@ import { BehaviorSubject, forkJoin, switchMap, tap } from 'rxjs';
 
 import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
+import { contentState, reportContentState } from '../../../core/seo/thin-content';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -17,7 +18,7 @@ import { heroIdentities } from '../hero-identity';
 import { HeroSynergiesService } from '../hero-synergies.service';
 import { TeamLineupsService } from '../team-lineups.service';
 import { TripleSupportTriosService } from '../triple-support-trios.service';
-import { buildTeamCompsView } from './team-comps-view';
+import { buildTeamCompsView, hasTeamCompsData } from './team-comps-view';
 
 /** The mode the page opens on: team comps are a ranked-play question, and Competitive is where it is played. */
 const DEFAULT_TEAM_COMPS_MODE: HeroStatsModeId = 'competitive';
@@ -118,6 +119,14 @@ export class TeamCompsPageComponent {
 
     return this.choiceMade() && view !== null ? `Team comps updated ${view.scopeLabel}` : '';
   });
+
+  constructor() {
+    reportContentState(() => {
+      const view = this.view();
+
+      return contentState(this.loading(), view !== null && hasTeamCompsData(view));
+    });
+  }
 
   chooseSeason(value: string): void {
     this.request(Number(value), this.chosenMode());

@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable } from '@angular/core';
+import { DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRouteSnapshot, Data, RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
@@ -12,6 +12,7 @@ import {
   SITE_NAME,
   SITE_ORIGIN,
 } from './site-meta';
+import { ThinContent } from './thin-content';
 
 /** Route `data` for a page that must stay out of search results and link previews. */
 export const ROUTE_NOINDEX: Data = { noindex: true };
@@ -19,8 +20,9 @@ export const ROUTE_NOINDEX: Data = { noindex: true };
 /** Route `data` key for a page's own meta description. A page without one uses the site-wide description. */
 export const ROUTE_DESCRIPTION_KEY = 'description';
 
-/** What a flagged page tells crawlers. Pages that add their own `noindex` tag use the bare word. */
+/** What a flagged route tells crawlers. A page that is merely thin asks only not to be indexed. */
 const NOINDEX_CONTENT = 'noindex, nofollow';
+const THIN_CONTENT = 'noindex';
 
 /**
  * Keeps the page title and the link-preview tags in step with the route, on the
@@ -29,21 +31,31 @@ const NOINDEX_CONTENT = 'noindex, nofollow';
  * canonical URL is the production origin plus the route's own path, so no page
  * claims another page as its canonical. The exception is a page that asks not to
  * be indexed: it has no canonical, and the strategy tells by a `robots` tag with
- * `noindex` that the page added while the router activated it, before the title
- * is updated. `NotFoundComponent` adds that tag in its constructor and removes it
- * when destroyed; a page that adds the tag later would still get a canonical.
+ * `noindex` on the page.
  *
- * A route that spreads `ROUTE_NOINDEX` into its `data` (the admin area) gets the same treatment from
- * here: this strategy adds `robots: noindex, nofollow` while the route is open and removes it on the
- * next page, and the page has no canonical. A parent route's flag covers its children.
+ * Two things ask for it, and this strategy owns the tag for both. A route that spreads
+ * `ROUTE_NOINDEX` into its `data` (the admin area) gets `robots: noindex, nofollow`, and a parent
+ * route's flag covers its children. A page that reports thin content (`ThinContent`: not-found,
+ * or a data page below its minimum) gets `robots: noindex` for as long as it is thin, so the tag
+ * and the canonical follow the page's data when it arrives after the navigation. Either goes on the
+ * next page.
  */
 @Injectable({ providedIn: 'root' })
 export class PageMetaTitleStrategy extends TitleStrategy {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly document = inject(DOCUMENT);
-  /** The robots tag this strategy added for a flagged route, so it removes only its own. */
-  private flaggedTag: HTMLMetaElement | null = null;
+  private readonly thinContent = inject(ThinContent);
+  /** The robots tag this strategy added, so it removes only its own. */
+  private ownTag: HTMLMetaElement | null = null;
+  /** The page the router is on; null until its first navigation ends. */
+  private readonly page = signal<{ url: string; routeNoindex: boolean } | null>(null);
+
+  constructor() {
+    super();
+    effect(() => this.applyIndexing());
+    inject(DestroyRef).onDestroy(() => this.setRobots(null));
+  }
 
   override updateTitle(snapshot: RouterStateSnapshot): void {
     const title = this.buildTitle(snapshot) ?? SITE_NAME;
@@ -69,17 +81,35 @@ export class PageMetaTitleStrategy extends TitleStrategy {
       { name: 'twitter:image', content: image },
       { name: 'twitter:image:alt', content: PREVIEW_IMAGE_ALT },
     ]);
-    this.setRobots(asksNoIndex(snapshot));
-    this.setCanonical(this.meta.getTag('name="robots"')?.content.startsWith('noindex') ? null : url);
+    this.page.set({ url, routeNoindex: asksNoIndex(snapshot) });
+    this.applyIndexing();
   }
 
-  private setRobots(noindex: boolean): void {
-    if (noindex) {
-      this.flaggedTag ??= this.meta.addTag({ name: 'robots', content: NOINDEX_CONTENT });
-    } else if (this.flaggedTag) {
-      this.meta.removeTagElement(this.flaggedTag);
-      this.flaggedTag = null;
+  /** Runs when the page changes, and again whenever its thin-content verdict does. */
+  private applyIndexing(): void {
+    const page = this.page();
+    const thin = this.thinContent.thin();
+
+    if (page === null) {
+      return;
     }
+
+    this.setRobots(page.routeNoindex ? NOINDEX_CONTENT : thin ? THIN_CONTENT : null);
+    this.setCanonical(this.meta.getTag('name="robots"')?.content.startsWith('noindex') ? null : page.url);
+  }
+
+  private setRobots(content: string | null): void {
+    if (content === null) {
+      if (this.ownTag) {
+        this.meta.removeTagElement(this.ownTag);
+        this.ownTag = null;
+      }
+
+      return;
+    }
+
+    this.ownTag ??= this.meta.addTag({ name: 'robots', content }, true);
+    this.ownTag?.setAttribute('content', content);
   }
 
   private setTags(tags: { name?: string; property?: string; content: string }[]): void {

@@ -21,7 +21,7 @@ describe('AdSense on the server', () => {
   it('renders the house ad, with no ad unit, while no ad unit id is set', async () => {
     const html = await renderOnServer(SsrHostComponent, [provideAdSense()]);
 
-    expect(html).toContain('Coming soon');
+    expect(html).toContain('RivalsPulse, in your match');
     expect(html).not.toContain('adsbygoogle');
   });
 

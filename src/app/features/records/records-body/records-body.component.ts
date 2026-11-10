@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, contentChild, Directive, inject, input, TemplateRef } from '@angular/core';
 
+import { contentState, reportContentState } from '../../../core/seo/thin-content';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
 import type { RecordsViewState } from '../inject-records-view';
 import type { RecordsView } from '../pulse-records-view';
@@ -64,4 +65,12 @@ export class RecordsBodyComponent {
 
     return view && { $implicit: view };
   });
+
+  constructor() {
+    reportContentState(() => {
+      const state = this.state();
+
+      return contentState(state.loading() && !state.failed(), this.shown() && state.view() !== null);
+    });
+  }
 }

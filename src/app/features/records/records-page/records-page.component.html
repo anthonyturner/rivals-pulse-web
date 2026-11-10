@@ -2,7 +2,12 @@
   <app-page-header
     title="Pulse Records"
     description="The best single matches Rivals Pulse players have recorded: most kills, assists and final hits in one match, and the most damage, healing and damage blocked on one hero in one match."
-  />
+  >
+    <p lede>
+      Each list holds one line per uploading player, and appears once enough different players have a record
+      for it. <a routerLink="/how-we-count">How we count</a>
+    </p>
+  </app-page-header>
 
   <app-records-body [state]="state" [shown]="state.view()?.anyShown ?? false">
     <ng-template appRecordsContent let-view>

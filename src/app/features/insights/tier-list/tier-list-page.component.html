@@ -2,7 +2,12 @@
   <app-page-header
     title="Marvel Rivals tier list"
     description="Heroes ranked by win rate in matches RivalsPulse players recorded, all ranks together."
-  />
+  >
+    <p lede>
+      A hero is placed in a tier once it has enough recorded appearances, so the list fills in as players
+      play. <a routerLink="/how-we-count">How we count</a>
+    </p>
+  </app-page-header>
 
   <app-hub-bento class="tier-page__tiles" [links]="links" [config]="tiles" />
 

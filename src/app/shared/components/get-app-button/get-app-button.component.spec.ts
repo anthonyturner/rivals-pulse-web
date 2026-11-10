@@ -17,19 +17,11 @@ describe('GetAppButtonComponent', () => {
 
   const text = (node: Element | null): string => node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
-  it('ships as an unavailable but focusable button while there is no store URL', () => {
-    const button = element.querySelector('button.get-app') as HTMLButtonElement;
-
+  it('shows nothing while there is no store URL, not a link and not a "Coming soon" button', () => {
     // Guards against a placeholder URL reaching the page.
     expect(OVERWOLF_APP_URL).toBe('');
-    expect(button).toBeTruthy();
-    expect(button.type).toBe('button');
-    expect(button.getAttribute('aria-disabled')).toBe('true');
-    expect(button.disabled).toBeFalse();
-    expect(text(button)).toContain('Get RivalsPulse on Overwolf');
-    expect(text(button.querySelector('.pill'))).toBe('Coming soon');
-    expect(text(button.querySelector('.visually-hidden'))).toContain('not available yet');
-    expect(element.querySelector('a')).toBeNull();
+    expect(element.querySelector('a, button')).toBeNull();
+    expect(text(element)).toBe('');
   });
 
   it('becomes a link in the same slot once the store URL is set', () => {
@@ -43,6 +35,5 @@ describe('GetAppButtonComponent', () => {
     expect(link.rel).toBe('noopener noreferrer');
     expect(text(link)).toBe('Get RivalsPulse on Overwolf (opens in a new tab)');
     expect(element.querySelector('button')).toBeNull();
-    expect(element.querySelector('.pill')).toBeNull();
   });
 });

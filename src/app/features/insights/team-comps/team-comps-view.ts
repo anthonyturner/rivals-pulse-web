@@ -59,6 +59,15 @@ export interface TeamCompsView {
   lineupsNote: string | null;
 }
 
+/** Whether any of the page's three sections has numbers to show; a page where none does is empty. */
+export function hasTeamCompsData(view: TeamCompsView): boolean {
+  return (
+    view.rolePairs.some(({ rows }) => rows.length > 0) ||
+    view.tripleSupport.state === 'ready' ||
+    view.lineups.state === 'ready'
+  );
+}
+
 /**
  * Turns the hero pairs into what the Team comps page draws. The duos are `rolePairsOf`; the
  * triple-support section is built from `trios` and the line-up section from `lineups`; each is
