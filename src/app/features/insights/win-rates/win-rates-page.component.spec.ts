@@ -447,6 +447,22 @@ describe('WinRatesPageComponent', () => {
       expect(modeSelect(element).value).toBe('competitive');
     });
 
+    it('shows the shared current stats, without asking again, when the blend is chosen again', async () => {
+      const { harness, element } = await openWithPicker();
+
+      choose(modeSelect(element), 'competitive');
+      http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
+      harness.detectChanges();
+
+      choose(modeSelect(element), 'all');
+      harness.detectChanges();
+
+      http.expectNone('/api/hero-stats');
+      expect(element.querySelector('[aria-busy="true"]')).toBeNull();
+      expect(modeSelect(element).value).toBe('all');
+      expect(squash(text(element, '.meta')[0])).toContain('149 matches counted');
+    });
+
     it('names an empty mode and its half-season, and keeps the picker so the mode can be left', async () => {
       const { harness, element } = await openWithPicker();
 

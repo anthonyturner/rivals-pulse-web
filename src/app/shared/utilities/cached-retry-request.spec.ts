@@ -1,6 +1,6 @@
 import { Observable, of, Subject, throwError } from 'rxjs';
 
-import { cachedRetryRequest } from './cached-retry-request';
+import { cachedNullableRequest, cachedRetryRequest } from './cached-retry-request';
 
 describe('cachedRetryRequest', () => {
   let attempts: number;
@@ -78,5 +78,70 @@ describe('cachedRetryRequest', () => {
 
     expect(read(first)).toEqual(['answer 1']);
     expect(read(second)).toEqual(['answer 2']);
+  });
+});
+
+describe('cachedNullableRequest', () => {
+  let attempts: number;
+
+  beforeEach(() => (attempts = 0));
+
+  function reader(request: () => Observable<string | null>) {
+    return cachedNullableRequest(() => {
+      attempts += 1;
+
+      return request();
+    });
+  }
+
+  function read(get: () => Observable<string | null>): (string | null)[] {
+    const answers: (string | null)[] = [];
+
+    get().subscribe((answer) => answers.push(answer));
+
+    return answers;
+  }
+
+  it('sends nothing until the first caller asks', () => {
+    reader(() => of('a'));
+
+    expect(attempts).toBe(0);
+  });
+
+  it('keeps a non-null answer: one request however many callers ask, now or later', () => {
+    const body = new Subject<string | null>();
+    const get = reader(() => body);
+
+    const early = [read(get), read(get)];
+    body.next('a');
+    body.complete();
+    const late = read(get);
+
+    expect(attempts).toBe(1);
+    expect([...early, late]).toEqual([['a'], ['a'], ['a']]);
+  });
+
+  it('shares one in-flight request that answers null, then tries again on the next call', () => {
+    const first = new Subject<string | null>();
+    const bodies = [first, of('b')];
+    const get = reader(() => bodies.shift() as Observable<string | null>);
+
+    const waiting = [read(get), read(get)];
+    first.next(null);
+    first.complete();
+
+    expect(waiting).toEqual([[null], [null]]);
+    expect(attempts).toBe(1);
+    expect(read(get)).toEqual(['b']);
+    expect(read(get)).toEqual(['b']);
+    expect(attempts).toBe(2);
+  });
+
+  it('keeps each reader separate', () => {
+    const first = reader(() => of('a'));
+    const second = reader(() => of('b'));
+
+    expect(read(first)).toEqual(['a']);
+    expect(read(second)).toEqual(['b']);
   });
 });

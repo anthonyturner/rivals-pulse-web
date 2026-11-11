@@ -19,16 +19,30 @@ export function cachedRetryRequest<Body, Answer>({
   accept,
   failureMessage,
 }: CachedRetryRequestOptions<Body, Answer>): () => Observable<Answer | null> {
-  let answer$: Observable<Answer | null> | null = null;
-
-  return () => {
-    answer$ ??= request().pipe(
+  return cachedNullableRequest(() =>
+    request().pipe(
       map(accept),
       catchError((error: unknown) => {
         console.error(failureMessage, error);
 
         return of(null);
       }),
+    ),
+  );
+}
+
+/**
+ * The same sharing for a request that already answers null when it fails (a service that catches
+ * its own errors): every caller shares one request, a non-null answer is kept for the life of the
+ * reader, and a null answer is not kept, so the next caller tries again.
+ */
+export function cachedNullableRequest<Answer>(
+  request: () => Observable<Answer | null>,
+): () => Observable<Answer | null> {
+  let answer$: Observable<Answer | null> | null = null;
+
+  return () => {
+    answer$ ??= request().pipe(
       tap((answer) => {
         if (answer === null) {
           answer$ = null;
