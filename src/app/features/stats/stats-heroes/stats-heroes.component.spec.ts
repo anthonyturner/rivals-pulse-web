@@ -423,6 +423,18 @@ describe('StatsHeroesComponent', () => {
       });
     }
 
+    it('drops season from the address when the current half-season is chosen, and reuses the shared current numbers', async () => {
+      const page = await open('/stats/heroes?season=10', { ...full, halfSeason: previous }, {
+        scoped: '/api/hero-stats?halfSeason=10',
+      });
+
+      await choose(page, 'Season', '10.5');
+
+      expect(TestBed.inject(Router).url).toBe('/stats/heroes');
+      expect((picker(page, 'Season') as HTMLSelectElement).value).toBe('10.5');
+      expect(section(page).querySelector('table, .tier-row')).not.toBeNull();
+    });
+
     it('opens on the half-season the address names, in the layout it names', async () => {
       const page = await open('/stats/heroes?view=tiers&season=10', { ...full, halfSeason: previous }, {
         scoped: '/api/hero-stats?halfSeason=10',

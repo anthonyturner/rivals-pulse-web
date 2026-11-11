@@ -165,8 +165,11 @@ export class StatsHeroesComponent {
     );
   }
 
+  /** The newest half-season is the plain address's own, so choosing it drops `season` and reuses the shared current numbers. */
   protected chooseSeason(value: string): void {
-    this.choose(heroStatsQuery({ season: Number(value) }));
+    const season = Number(value);
+
+    this.choose(heroStatsQuery({ season: season === this.seasons()[0]?.id ? undefined : season }));
   }
 
   protected chooseMode(value: string): void {

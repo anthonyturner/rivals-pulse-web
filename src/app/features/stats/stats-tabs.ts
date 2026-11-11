@@ -33,7 +33,7 @@ export const STATS_TABS: readonly StatsTab[] = [
     id: 'heroes',
     label: 'Heroes',
     path: 'heroes',
-    heading: 'Marvel Rivals hero stats',
+    heading: 'Marvel Rivals hero stats and tier list',
     description:
       'The most picked and best-winning heroes from RivalsPulse players, each hero’s damage, healing and damage blocked per minute, and every hero’s win rate and pick rate as a table or a tier list.',
     hasContent: true,
