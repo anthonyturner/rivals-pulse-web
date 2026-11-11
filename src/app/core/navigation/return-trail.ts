@@ -80,7 +80,7 @@ function isDetail(url: UrlTree): boolean {
 }
 
 /**
- * "Your stats | RivalsPulse" reads as "Your stats". The home page is "Home", and a page whose route
+ * "Your profile | RivalsPulse" reads as "Your profile". The home page is "Home", and a page whose route
  * has no title of its own gets a plain "Back" rather than a name it does not have.
  */
 export function pageLabel(title: string | undefined, url: UrlTree): string {

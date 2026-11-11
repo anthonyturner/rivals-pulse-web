@@ -17,7 +17,7 @@ describe('ReturnTrail', () => {
         provideZonelessChangeDetection(),
         provideRouter([
           { path: '', title: 'RivalsPulse | Feel the pulse of every match', component: BlankPage },
-          { path: 'profile', title: 'Your stats | RivalsPulse', component: BlankPage },
+          { path: 'profile', title: 'Your profile | RivalsPulse', component: BlankPage },
           { path: 'stats/:tab', title: 'Stats | RivalsPulse', component: BlankPage },
           { path: 'counters', component: BlankPage },
           { path: 'heroes', title: 'Heroes | RivalsPulse', component: BlankPage },
@@ -41,7 +41,7 @@ describe('ReturnTrail', () => {
 
     const origin = trail.originOutside('/heroes');
 
-    expect(origin?.label).toBe('Your stats');
+    expect(origin?.label).toBe('Your profile');
     expect(router.serializeUrl(origin!.url)).toBe('/profile');
   });
 
@@ -54,7 +54,7 @@ describe('ReturnTrail', () => {
   it('keeps the same origin while the reader moves between heroes', async () => {
     await visit('/profile', '/heroes/mantis', '/heroes/storm', '/heroes', '/heroes/loki');
 
-    expect(trail.originOutside('/heroes')?.label).toBe('Your stats');
+    expect(trail.originOutside('/heroes')?.label).toBe('Your profile');
   });
 
   it('has no origin for a hero page opened directly', async () => {

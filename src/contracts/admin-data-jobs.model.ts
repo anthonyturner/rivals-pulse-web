@@ -53,7 +53,11 @@ export const DATA_JOBS = [
       "The counts behind each hero's win rate, pick rate, KDA and final hits, behind the tier list and the role averages, " +
       "and behind each hero's record against every other hero.",
     pages: [
-      { name: 'Hero stats', path: '/stats/heroes', section: 'Every hero, as a table or a tier list' },
+      {
+        name: 'Stats, Heroes tab',
+        path: '/stats/heroes',
+        section: 'Most picked, Highest win rate, and every hero as a table or a tier list',
+      },
       { name: 'Counters', path: '/counters', section: 'Heroes that beat a hero, and Heroes a hero beats' },
       { name: 'Dive planner', path: '/dive-planner', section: 'Choose overlap, then assign jobs' },
       {
@@ -85,6 +89,11 @@ export const DATA_JOBS = [
       'is seen killing), and how often abilities and ultimates are used. The figures and the ability counts also feed the ' +
       '1 to 10 build scores.',
     pages: [
+      {
+        name: 'Stats, Heroes tab',
+        path: '/stats/heroes',
+        section: 'Community hero damage, healing and damage blocked',
+      },
       {
         name: 'Stats, Roles tab',
         path: '/stats/roles',

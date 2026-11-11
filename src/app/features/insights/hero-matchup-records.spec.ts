@@ -139,7 +139,7 @@ describe('counter wording', () => {
 
   it('states the rule the server applies, once, with the minimum the answer names', () => {
     expect(counterRuleNote(10)).toBe(
-      'A hero is listed when its win rate against the other, adjusted for small samples, is at least 3 points above its own usual win rate, over at least 10 recorded matches. The Rivals Pulse app uses the same rule.',
+      'A hero is listed when its win rate against the other, adjusted for small samples, is at least 3 points above its own usual win rate, over at least 10 recorded matches. The usual win rate is adjusted the same way, while a card shows the plain win rate, so 76.7% against a plain 64% can show fewer than 12.7 points above usual. The Rivals Pulse app uses the same rule.',
     );
   });
 
