@@ -28,7 +28,7 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
     description: 'Check matchups and build a team before you queue.',
     items: [
       { label: 'Counters', path: '/counters', description: 'Explore practical matchup answers.', enabled: true },
-      { label: 'Dive Planner', path: '/dive-planner', description: 'Find heroes that beat several enemy divers at once.', enabled: true },
+      { label: 'Dive Planner', path: '/dive-planner', description: 'Find heroes that do better than usual against several enemy divers at once.', enabled: true },
       { label: 'Team Builder', path: '/team-builder', description: 'Sketch a team composition with intention.', enabled: true },
       { label: 'Learning Paths', path: '/learning-paths', description: 'Focused routes through your next skill.', enabled: false },
       { label: 'Watch Next Quiz', path: '/watch-next', description: 'A quiz that picks your next lesson.', enabled: false },

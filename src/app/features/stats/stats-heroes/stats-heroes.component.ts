@@ -172,12 +172,14 @@ export class StatsHeroesComponent {
   /**
    * The plain address shows the current half-season, so choosing that one drops `season` and reuses the
    * shared current numbers. Early in a half-season the plain address stands in the previous one
-   * instead, so the newest keeps its `season` and stays reachable.
+   * instead, so the newest keeps its `season` and stays reachable. The server stands in per mode, which
+   * the shared numbers only mirror for the default blend, so a picked mode always keeps `season`.
    */
   protected chooseSeason(value: string): void {
     const season = Number(value);
+    const plain = season === this.plainSeasonId() && this.selectedMode() === DEFAULT_MODE_ID;
 
-    this.choose(heroStatsQuery({ season: season === this.plainSeasonId() ? undefined : season }));
+    this.choose(heroStatsQuery({ season: plain ? undefined : season }));
   }
 
   protected chooseMode(value: string): void {

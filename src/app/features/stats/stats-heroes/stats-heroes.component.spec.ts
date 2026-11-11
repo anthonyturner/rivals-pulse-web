@@ -447,6 +447,18 @@ describe('StatsHeroesComponent', () => {
       expect((picker(page, 'Season') as HTMLSelectElement).value).toBe('10.5');
     });
 
+    it('keeps season in the address for the newest half-season when a mode is picked, since the server stands in per mode', async () => {
+      const page = await open('/stats/heroes?mode=competitive', withModes, { scoped: '/api/hero-stats?mode=competitive' });
+
+      await choose(page, 'Season', '10.5');
+
+      expect(TestBed.inject(Router).url).toBe('/stats/heroes?season=10.5&mode=competitive');
+      http.expectOne('/api/hero-stats?halfSeason=10.5&mode=competitive').flush({ ...withModes, halfSeason: current });
+      await settle();
+
+      expect((picker(page, 'Season') as HTMLSelectElement).value).toBe('10.5');
+    });
+
     it('opens on the half-season the address names, in the layout it names', async () => {
       const page = await open('/stats/heroes?view=tiers&season=10', { ...full, halfSeason: previous }, {
         scoped: '/api/hero-stats?halfSeason=10',
