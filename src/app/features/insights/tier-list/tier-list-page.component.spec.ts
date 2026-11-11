@@ -189,7 +189,7 @@ describe('TierListPageComponent', () => {
       ', pick rate 10.0% pick · , 20 games',
     ]);
     expect(text(page, '.meta')).toEqual([
-      'Started Oct 9, 2026 · 146 matches counted · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
+      'Started Oct 9, 2026 · 146 matches with a result · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
     ]);
   });
 
@@ -232,7 +232,7 @@ describe('TierListPageComponent', () => {
 
     expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive for Season 10.5']);
     expect(text(page, '.state-count')[0]).toBe(
-      '3 matches counted in Quick Match and Competitive for Season 10.5 so far.',
+      '3 matches with a result counted in Quick Match and Competitive for Season 10.5 so far.',
     );
     expect(text(page, 'app-state-panel p')[1]).toContain('built from matches that RivalsPulse players record');
     expect(page.querySelector('.tier-row')).toBeNull();
@@ -286,7 +286,7 @@ describe('TierListPageComponent', () => {
     harness.detectChanges();
 
     expect(text(page, '[aria-live]')).toEqual([
-      'Tier list updated in Quick Match and Competitive for Season 10: 146 matches counted',
+      'Tier list updated in Quick Match and Competitive for Season 10: 146 matches with a result',
     ]);
     expect(select.value).toBe('10');
   });
@@ -364,8 +364,8 @@ describe('TierListPageComponent', () => {
       http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
       harness.detectChanges();
 
-      expect(text(page, '.meta')[0]).toContain('28 matches counted');
-      expect(text(page, '[aria-live]')).toEqual(['Tier list updated in Competitive for Season 10.5: 28 matches counted']);
+      expect(text(page, '.meta')[0]).toContain('28 matches with a result');
+      expect(text(page, '[aria-live]')).toEqual(['Tier list updated in Competitive for Season 10.5: 28 matches with a result']);
       expect(modeSelect(page).value).toBe('competitive');
     });
 

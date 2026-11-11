@@ -14,7 +14,7 @@ const EMPTY: CommunityMatches = {
   halfSeasons: [SEASON],
   halfSeason: SEASON,
   inPlaceOf: null,
-  matchesBand: null,
+  matchesCounted: null,
   maps: [],
   mapsBelowMinimum: [],
   modeMix: null,
@@ -24,7 +24,7 @@ const EMPTY: CommunityMatches = {
 const READY: CommunityMatches = {
   ...EMPTY,
   status: 'ready',
-  matchesBand: 20,
+  matchesCounted: 20,
   maps: [{ map: 'Tokyo 2099', winRate: 50 }],
   mapsBelowMinimum: ['Klyntar'],
   modeMix: [{ playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: 10 }],
@@ -86,7 +86,7 @@ describe('MatchesTabComponent', () => {
     expect(text()).toContain('Tokyo 2099');
     expect(text()).toContain('50%');
     expect(text()).toContain('Not enough data yet for: Klyntar.');
-    expect(text()).toContain('20+ matches');
+    expect(text()).toContain('20 matches in Season 10.5');
     expect(text()).toContain('Quick Match');
     expect(text()).toContain('10 min');
     expect(text()).toContain('Thu 29 Oct');

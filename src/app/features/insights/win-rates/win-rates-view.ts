@@ -2,6 +2,7 @@ import type { HeroStats } from '../../../../contracts/hero-stats.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import {
   countLabel,
+  decidedMatchesLabel,
   halfSeasonFallbackNotice,
   percentLabel,
   placementRequirementLabel,
@@ -78,7 +79,7 @@ export interface WinRatesView {
   minimumLabel: string;
   /** What a hero needs to be listed: "10 appearances and 2 players", or the appearances alone. */
   placementLabel: string;
-  matchesCountedLabel: string;
+  decidedMatchesLabel: string;
   /** The toolbar's facts in reading order; empty when there is no table or progress list to describe. */
   metaParts: string[];
   /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
@@ -115,7 +116,7 @@ export function buildWinRatesView(
     minimumMatches: stats.minimumMatches,
     minimumLabel: countLabel(stats.minimumMatches, 'appearance', 'appearances'),
     placementLabel: placementRequirementLabel(stats),
-    matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
+    decidedMatchesLabel: decidedMatchesLabel(stats.matchesCounted),
     metaParts: [],
     scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     ranked: [],
@@ -154,7 +155,7 @@ export function buildWinRatesView(
       : [
           season?.label,
           season?.dateRange,
-          `${base.matchesCountedLabel} counted`,
+          base.decidedMatchesLabel,
           `Heroes need ${base.placementLabel} to be listed`,
           state === 'full' ? 'Bars show win rate; the line marks 50%.' : null,
         ].filter((part): part is string => !!part);

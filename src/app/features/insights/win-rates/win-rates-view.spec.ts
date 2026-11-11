@@ -138,7 +138,7 @@ describe('buildWinRatesView', () => {
       expect(view.metaParts).toEqual([
         'Season 10.5',
         'Started Oct 9, 2026',
-        '149 matches counted',
+        '149 matches with a result',
         'Heroes need 10 appearances to be listed',
         'Bars show win rate; the line marks 50%.',
       ]);
@@ -206,7 +206,7 @@ describe('buildWinRatesView', () => {
         label: 'Season 10.5',
         dateRange: 'Started Oct 9, 2026',
       });
-      expect(view.matchesCountedLabel).toBe('149 matches');
+      expect(view.decidedMatchesLabel).toBe('149 matches with a result');
       expect(view.fallbackNotice).toBeNull();
     });
 
@@ -284,7 +284,7 @@ describe('buildWinRatesView', () => {
       const view = buildWinRatesView(partial, null, identities);
 
       expect(view.state).toBe('partial');
-      expect(view.matchesCountedLabel).toBe('1 match');
+      expect(view.decidedMatchesLabel).toBe('1 match with a result');
       expect(view.ranked).toEqual([]);
       expect(view.building.map((row) => row.progressLabel)).toEqual(['1 of 10']);
     });
@@ -301,7 +301,7 @@ describe('buildWinRatesView', () => {
       const view = buildWinRatesView(statsOf(nothingCounted), null, identities);
 
       expect(view.state).toBe('empty');
-      expect(view.matchesCountedLabel).toBe('0 matches');
+      expect(view.decidedMatchesLabel).toBe('0 matches with a result');
       expect(view.season?.label).toBe('Season 10.5');
     });
 

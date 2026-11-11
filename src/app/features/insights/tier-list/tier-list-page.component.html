@@ -39,7 +39,7 @@
           @if (v.season?.dateRange; as range) {
             {{ range }} &middot;
           }
-          {{ v.matchesCountedLabel }} counted &middot; Heroes need {{ v.placementLabel }}
+          {{ v.decidedMatchesLabel }} &middot; Heroes need {{ v.placementLabel }}
           to be placed &middot; Each tile: win rate, then pick rate and games.
         </p>
       }
@@ -69,7 +69,7 @@
       <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
         <p class="state-count">
           @if (v.state === 'building') {
-            {{ v.matchesCountedLabel }}
+            {{ v.decidedMatchesLabel }}
           } @else {
             No matches
           }

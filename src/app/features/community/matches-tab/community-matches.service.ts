@@ -39,7 +39,7 @@ export function isCommunityMatches(body: unknown): body is CommunityMatches {
     typeof minimums === 'object' &&
     minimums !== null &&
     ['overviewMatches', 'mapMatches', 'lengthMatches'].every((key) => isCount(minimums[key])) &&
-    (data.matchesBand === null || isCount(data.matchesBand)) &&
+    (data.matchesCounted === null || isCount(data.matchesCounted)) &&
     (data.halfSeason === null || isHalfSeason(data.halfSeason)) &&
     (data.inPlaceOf === null || isHalfSeason(data.inPlaceOf)) &&
     isListOf(data.maps, (row) => isString(row['map']) && isCount(row['winRate'])) &&

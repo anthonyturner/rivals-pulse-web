@@ -2,6 +2,10 @@
 export interface GameCountsHalfSeason {
   /** The half-season number, such as 10 or 10.5. */
   halfSeason: number;
+  /**
+   * Matches counted: each match once however many players recorded it, in every mode, with or
+   * without a win or a loss. The site's one "matches counted" figure for the half-season.
+   */
   matches: number;
   /** Different players on the scoreboards of those matches. */
   players: number;

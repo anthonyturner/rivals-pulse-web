@@ -1,14 +1,13 @@
 import {
   COMMUNITY_MATCHES_MINIMUMS,
-  MATCH_VOLUME_BANDS,
   deriveCommunityMatches,
-  matchVolumeBand,
   playModeName,
   type CommunityDayRow,
   type CommunityMapRow,
   type CommunityMatchesSource,
   type CommunityModeRow,
 } from './community-matches';
+import type { GameCounts } from '../../../contracts/game-counts.model';
 import { PLAY_MODE_IDS } from '../../heroes/stats/hero-stats';
 
 const NOW = new Date('2026-10-30T12:00:00Z');
@@ -37,6 +36,17 @@ function dayRow(day: string, matches: number, halfSeason = 10.5): CommunityDayRo
   return { halfSeason, day, matches };
 }
 
+/** What `read_game_counts()` holds: each half-season's matches, every mode, with or without a result. */
+function gameCounts(matchesByHalfSeason: Record<number, number>): GameCounts {
+  const halfSeasons = Object.entries(matchesByHalfSeason).map(([halfSeason, matches]) => ({
+    halfSeason: Number(halfSeason),
+    matches,
+    players: matches,
+  }));
+
+  return { matches: halfSeasons.reduce((sum, season) => sum + season.matches, 0), players: 0, since: null, halfSeasons };
+}
+
 function source(parts: Partial<CommunityMatchesSource> = {}): CommunityMatchesSource {
   return { halfSeasons: HALF_SEASONS, modes: [], maps: [], days: [], ...parts };
 }
@@ -48,7 +58,7 @@ describe('deriveCommunityMatches', () => {
     expect(result.status).toBe('not-enough-data');
     expect(result.halfSeason).toBeNull();
     expect(result.halfSeasons).toEqual([]);
-    expect(result.matchesBand).toBeNull();
+    expect(result.matchesCounted).toBeNull();
     expect(result.maps).toEqual([]);
     expect(result.modeMix).toBeNull();
     expect(result.averageLengthMinutes).toBeNull();
@@ -138,10 +148,10 @@ describe('deriveCommunityMatches', () => {
             modeRow(PLAY_MODE_IDS.unknown, 20, { durationSumSeconds: 12000, durationN: 20 }),
           ],
         }),
-        { now: NOW },
+        { now: NOW, counts: gameCounts({ 10.5: 40 }) },
       );
 
-      expect(result.matchesBand).toBe(20);
+      expect(result.matchesCounted).toBe(40);
       expect(result.modeMix).toEqual([{ playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: null }]);
       expect(result.averageLengthMinutes).toBe(10);
     });
@@ -295,24 +305,24 @@ describe('deriveCommunityMatches', () => {
     it('shows the previous half-season, labelled, while the current one is below the minimum', () => {
       const result = deriveCommunityMatches(
         source({ ...previous, modes: [...previous.modes, modeRow(PLAY_MODE_IDS.quickMatch, 4)] }),
-        { now: NOW },
+        { now: NOW, counts: gameCounts({ 10: 50, 10.5: 4 }) },
       );
 
       expect(result.halfSeason?.id).toBe(10);
       expect(result.inPlaceOf?.id).toBe(10.5);
-      expect(result.matchesBand).toBe(50);
+      expect(result.matchesCounted).toBe(50);
       expect(result.maps.map((record) => record.map)).toEqual(['Tokyo 2099']);
     });
 
     it('shows the current half-season once it has enough, with nothing standing in', () => {
       const result = deriveCommunityMatches(
         source({ ...previous, modes: [...previous.modes, modeRow(PLAY_MODE_IDS.quickMatch, overviewMatches)] }),
-        { now: NOW },
+        { now: NOW, counts: gameCounts({ 10: 50, 10.5: overviewMatches }) },
       );
 
       expect(result.halfSeason?.id).toBe(10.5);
       expect(result.inPlaceOf).toBeNull();
-      expect(result.matchesBand).toBeNull();
+      expect(result.matchesCounted).toBe(overviewMatches);
     });
 
     it('stays on the current half-season when the previous one is no better', () => {
@@ -338,11 +348,15 @@ describe('deriveCommunityMatches', () => {
 
     it('gives the empty state for a half-season that has not started or is not a number', () => {
       for (const asked of [11, Number.NaN]) {
-        const result = deriveCommunityMatches(source(previous), { now: NOW, halfSeason: asked });
+        const result = deriveCommunityMatches(source(previous), {
+          now: NOW,
+          halfSeason: asked,
+          counts: gameCounts({ 10: 50 }),
+        });
 
         expect(result.halfSeason).toBeNull();
         expect(result.status).toBe('not-enough-data');
-        expect(result.matchesBand).toBeNull();
+        expect(result.matchesCounted).toBeNull();
       }
     });
 
@@ -351,10 +365,15 @@ describe('deriveCommunityMatches', () => {
         source({
           modes: [modeRow(PLAY_MODE_IDS.quickMatch, 30), modeRow(PLAY_MODE_IDS.quickMatch, 990, { halfSeason: 10 })],
         }),
-        { now: NOW },
+        { now: NOW, counts: gameCounts({ 10.5: 30, 10: 990 }) },
       );
 
-      expect(result.matchesBand).toBe(20);
+      expect(result.matchesCounted).toBe(30);
+    });
+
+    it('counts a half-season with no matches held as zero, and has no figure without the counts', () => {
+      expect(deriveCommunityMatches(source(), { now: NOW, counts: gameCounts({ 10: 50 }) }).matchesCounted).toBe(0);
+      expect(deriveCommunityMatches(source(), { now: NOW, counts: null }).matchesCounted).toBeNull();
     });
   });
 
@@ -363,6 +382,8 @@ describe('deriveCommunityMatches', () => {
     const COUNTS = { qm: 437, comp: 211, practice: 113, mapDecided: 233, mapWins: 131, dayA: 307, dayB: 149 };
     const exactNumbers = new Set(Object.values(COUNTS).concat(437 + 211 + 113, 307 + 149));
 
+    // The game counts also hold matches in buckets the tab hides, so the one count it states is not their sum.
+    const MATCHES_COUNTED = 790;
     const busy = deriveCommunityMatches(
       source({
         modes: [
@@ -376,7 +397,7 @@ describe('deriveCommunityMatches', () => {
         ],
         days: [dayRow('2026-10-10', COUNTS.dayA), dayRow('2026-10-11', COUNTS.dayB)],
       }),
-      { now: NOW },
+      { now: NOW, counts: gameCounts({ 10.5: MATCHES_COUNTED }) },
     );
 
     function walk(value: unknown, visit: (key: string, value: unknown) => void, key = ''): void {
@@ -389,7 +410,7 @@ describe('deriveCommunityMatches', () => {
       }
     }
 
-    it('returns no number equal to a raw match count', () => {
+    it('returns no number equal to a bucket count', () => {
       const seen: number[] = [];
 
       walk(busy, (_key, value) => {
@@ -400,18 +421,19 @@ describe('deriveCommunityMatches', () => {
 
       expect(seen.length).toBeGreaterThan(0);
       expect(seen.filter((value) => exactNumbers.has(value))).toEqual([]);
+      expect(seen).toContain(MATCHES_COUNTED);
     });
 
-    it('has no field named for a count', () => {
+    it('has no field named for a bucket count', () => {
       const keys: string[] = [];
 
       walk(busy, (key) => keys.push(key));
 
-      expect(keys.filter((key) => /^(matches|wins|decided|decidedMatches|matchesCounted|appearances)$/i.test(key))).toEqual([]);
+      expect(keys.filter((key) => /^(matches|wins|decided|decidedMatches|appearances)$/i.test(key))).toEqual([]);
     });
 
-    it('rounds every figure: whole percentages, whole minutes, one volume band', () => {
-      expect(busy.matchesBand).toBe(500);
+    it('rounds every figure to whole percentages and whole minutes, and states the one matches-counted figure', () => {
+      expect(busy.matchesCounted).toBe(MATCHES_COUNTED);
       expect(busy.maps).toEqual([{ map: 'Tokyo 2099', winRate: 56 }]);
       expect(busy.mapsBelowMinimum).toEqual(['Klyntar']);
       expect(busy.modeMix?.map((share) => [share.share, share.averageLengthMinutes])).toEqual([
@@ -431,7 +453,7 @@ describe('deriveCommunityMatches', () => {
         'inPlaceOf',
         'maps',
         'mapsBelowMinimum',
-        'matchesBand',
+        'matchesCounted',
         'minimums',
         'modeMix',
         'perDay',
@@ -455,26 +477,5 @@ describe('deriveCommunityMatches', () => {
 
       expect(numbers.every(Number.isFinite)).toBeTrue();
     });
-  });
-});
-
-describe('matchVolumeBand', () => {
-  it('is the largest band reached, and null below the smallest', () => {
-    expect(matchVolumeBand(0)).toBeNull();
-    expect(matchVolumeBand(MATCH_VOLUME_BANDS[0] - 1)).toBeNull();
-    expect(matchVolumeBand(20)).toBe(20);
-    expect(matchVolumeBand(99)).toBe(50);
-    expect(matchVolumeBand(100)).toBe(100);
-    expect(matchVolumeBand(10_000)).toBe(5000);
-  });
-});
-
-describe('playModeName', () => {
-  it('names the modes the game reports and says nothing for one it does not', () => {
-    expect(playModeName(0)).toBe('Quick Match');
-    expect(playModeName(1)).toBe('Competitive');
-    expect(playModeName(2)).toBe('Arcade');
-    expect(playModeName(3)).toBe('Practice');
-    expect(playModeName(42)).toBe('Other');
   });
 });

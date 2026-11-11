@@ -102,7 +102,7 @@ export class TierListPageComponent {
       return '';
     }
 
-    return `Tier list updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`;
+    return `Tier list updated ${view.scopeLabel}: ${view.decidedMatchesLabel}`;
   });
 
   constructor() {

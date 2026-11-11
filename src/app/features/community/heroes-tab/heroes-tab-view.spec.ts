@@ -37,7 +37,7 @@ describe('buildHeroesTabView', () => {
       ['Mantis', '33.3%'],
     ]);
     expect(view.mostPicked[0].sample).toBe('30 games');
-    expect(view.footnote).toContain('From 149 matches of Quick Match and Competitive');
+    expect(view.footnote).toContain('From 149 matches with a result in Quick Match and Competitive');
     expect(view.halfSeasonLabel).toBe('Season 10.5');
     expect(view.notice).toBeNull();
   });
@@ -77,7 +77,7 @@ describe('buildHeroesTabView', () => {
 
     expect(view).toEqual({
       kind: 'not-enough-data',
-      summary: "12 matches recorded by RivalsPulse players so far. A hero's numbers appear at 10 appearances.",
+      summary: "12 matches with a result recorded by RivalsPulse players so far. A hero's numbers appear at 10 appearances.",
     });
   });
 

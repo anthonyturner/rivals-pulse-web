@@ -16,7 +16,7 @@ const MATCHES_NOT_ENOUGH_DATA = {
   halfSeasons: [],
   halfSeason: null,
   inPlaceOf: null,
-  matchesBand: null,
+  matchesCounted: null,
   maps: [],
   mapsBelowMinimum: [],
   modeMix: null,
@@ -281,7 +281,7 @@ describe('CommunityPageComponent', () => {
     const request = http.expectOne('/api/community/matches');
     expect(host().querySelector('app-community-totals-preview .figure')).toBeNull();
 
-    request.flush({ ...MATCHES_NOT_ENOUGH_DATA, status: 'ready', matchesBand: 250, halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null }, averageLengthMinutes: 12 });
+    request.flush({ ...MATCHES_NOT_ENOUGH_DATA, status: 'ready', matchesCounted: 484, halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null }, averageLengthMinutes: 12 });
     await harness.fixture.whenStable();
     harness.detectChanges();
 
@@ -290,7 +290,7 @@ describe('CommunityPageComponent', () => {
       figure.querySelector('dd')?.textContent,
     ]);
     expect(figures).toEqual([
-      ['Matches counted', '250+'],
+      ['Matches counted · Season 10', '484'],
       ['Average match', '12 min'],
       ['Season', 'Season 10'],
     ]);
@@ -303,7 +303,7 @@ describe('CommunityPageComponent', () => {
     http.expectOne('/api/community/matches').flush({
       ...MATCHES_NOT_ENOUGH_DATA,
       status: 'ready',
-      matchesBand: 250,
+      matchesCounted: 484,
       halfSeason: { id: 10, label: 'Season 10', startsAt: null, endsAt: null },
       inPlaceOf: { id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null },
       averageLengthMinutes: 12,

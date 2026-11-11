@@ -1,4 +1,5 @@
 import type { GameCounts } from '../../../../contracts/game-counts.model';
+import { matchesCountedLabel } from '../../../shared/utilities/stat-labels';
 
 /** One of the headline figures. */
 export interface StatTileView {
@@ -43,20 +44,29 @@ export function buildGameStatsView(counts: GameCounts | null | undefined): GameS
     return { status: 'empty' };
   }
 
+  const [newest, ...earlier] = counts.halfSeasons;
   const since = counts.since === null ? null : days.format(Date.parse(counts.since));
 
   return {
     status: 'ready',
     meta: 'Counted from RivalsPulse overlay uploads',
     tiles: [
-      { label: 'Matches seen', value: numbers.format(counts.matches) },
+      { label: matchesCountedLabel(counts.matches, 'all seasons'), value: numbers.format(counts.matches) },
+      // The same figure the home page and the community page state for that half-season.
+      ...(newest === undefined || earlier.length === 0
+        ? []
+        : [{ label: matchesCountedLabel(newest.matches, seasonLabel(newest.halfSeason)), value: numbers.format(newest.matches) }]),
       { label: 'Players seen', value: numbers.format(counts.players) },
       ...(since === null ? [] : [{ label: 'Earliest match', value: since }]),
     ],
     rows: counts.halfSeasons.map((season) => ({
-      label: `Season ${season.halfSeason}`,
+      label: seasonLabel(season.halfSeason),
       matches: numbers.format(season.matches),
       players: numbers.format(season.players),
     })),
   };
+}
+
+function seasonLabel(halfSeason: number): string {
+  return `Season ${halfSeason}`;
 }

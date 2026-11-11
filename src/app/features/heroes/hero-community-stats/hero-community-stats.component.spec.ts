@@ -64,7 +64,7 @@ describe('HeroCommunityStatsComponent', () => {
     expect(text).toContain('RivalsPulse players');
     expect(terms).toEqual(['Win rate', 'Pick rate', 'Ban rate', 'KDA', 'Final hits per match']);
     expect(values).toEqual(['54.2%', '16.0%', 'Not collected', '3.46', '9.0']);
-    expect(text).toContain('From 24 appearances in 150 matches recorded by RivalsPulse players');
+    expect(text).toContain('From 24 appearances in 150 matches with a result recorded by RivalsPulse players');
     expect(text).toContain('Half-season: Season 10.5');
     expect(text).not.toContain('Not enough data yet');
   });

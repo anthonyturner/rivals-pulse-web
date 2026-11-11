@@ -149,7 +149,7 @@ export class WinRatesPageComponent {
     }
 
     return this.choiceMade() && view !== null
-      ? `Hero stats updated ${view.scopeLabel}: ${view.matchesCountedLabel} counted`
+      ? `Hero stats updated ${view.scopeLabel}: ${view.decidedMatchesLabel}`
       : '';
   });
 

@@ -103,7 +103,7 @@
       @case ('partial') {
         <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
-            {{ v.matchesCountedLabel }} counted {{ v.scopeLabel }} so far, but no hero has reached
+            {{ v.decidedMatchesLabel }} counted {{ v.scopeLabel }} so far, but no hero has reached
             {{ v.placementLabel }}. A hero's win rate appears once it has.
           </p>
         </app-state-panel>
@@ -184,7 +184,7 @@
         RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match
         and Competitive are counted together unless you pick a single mode. A game is one hero on
         the scoreboard of one match, so a hero on both teams of one match is counted twice. Pick rate is
-        hero appearances divided by matches counted and can exceed 100%. Matches
+        hero appearances divided by the matches with a result and can exceed 100%. Matches
         without a win or a loss, and matches where the game did not say which mode they were, are
         left out.
       </p>
