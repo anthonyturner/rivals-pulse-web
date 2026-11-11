@@ -18,13 +18,13 @@ describe('matchesCountedIn', () => {
   });
 
   it('adds up, across half-seasons, to the total Game Stats states', () => {
-    const sum = COUNTS.halfSeasons.reduce((total, season) => total + matchesCountedIn(COUNTS, season.halfSeason), 0);
+    const sum = COUNTS.halfSeasons.reduce((total, season) => total + (matchesCountedIn(COUNTS, season.halfSeason) ?? 0), 0);
 
     expect(sum).toBe(COUNTS.matches);
   });
 
-  it('is zero for a half-season with no matches held', () => {
-    expect(matchesCountedIn(COUNTS, 11)).toBe(0);
-    expect(matchesCountedIn({ ...COUNTS, halfSeasons: [] }, 10.5)).toBe(0);
+  it('is null, not zero, for a half-season the counts do not hold', () => {
+    expect(matchesCountedIn(COUNTS, 11)).toBeNull();
+    expect(matchesCountedIn({ ...COUNTS, halfSeasons: [] }, 10.5)).toBeNull();
   });
 });

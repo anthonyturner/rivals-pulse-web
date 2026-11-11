@@ -24,9 +24,9 @@ import type { HeroSwitchIns } from '../../../contracts/hero-switch-ins.model';
 import type { CommunityHeroScores } from '../../../contracts/hero-scores.model';
 import type { HeroStats } from '../../../contracts/hero-stats.model';
 import { CommunityKillsService } from '../insights/community-kills.service';
-import { HeroMatchupsService } from '../insights/hero-matchups.service';
+import { CurrentHeroMatchupsService } from '../insights/current-hero-matchups.service';
 import { HeroSwitchInsService } from '../insights/hero-switch-ins.service';
-import { HeroStatsService } from '../insights/hero-stats.service';
+import { CurrentHeroStatsService } from '../insights/current-hero-stats.service';
 import { HeroScoresService } from './hero-scores.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroContentComponent } from './hero-content/hero-content.component';
@@ -101,9 +101,9 @@ interface FandomOverviewSection {
 })
 export class HeroesPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroStatsService = inject(HeroStatsService);
+  private readonly currentHeroStats = inject(CurrentHeroStatsService);
   private readonly heroScoresService = inject(HeroScoresService);
-  private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly currentHeroMatchups = inject(CurrentHeroMatchupsService);
   private readonly heroSwitchInsService = inject(HeroSwitchInsService);
   private readonly communityKillsService = inject(CommunityKillsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -543,7 +543,7 @@ export class HeroesPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.heroStatsService
+    this.currentHeroStats
       .getHeroStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((stats) => this.heroStats.set(stats));
@@ -553,7 +553,7 @@ export class HeroesPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((scores) => this.heroScores.set(scores));
 
-    this.heroMatchupsService
+    this.currentHeroMatchups
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.heroMatchups.set(matchups));

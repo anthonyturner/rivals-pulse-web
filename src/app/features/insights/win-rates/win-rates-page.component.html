@@ -95,7 +95,7 @@
       @case ('empty') {
         <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
-            No matches are counted {{ v.scopeLabel }} yet. Win rates appear here as RivalsPulse
+            No matches with a result {{ v.scopeLabel }} yet. Win rates appear here as RivalsPulse
             players record matches, once a hero has {{ v.placementLabel }}.
           </p>
         </app-state-panel>
@@ -103,7 +103,7 @@
       @case ('partial') {
         <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
           <p>
-            {{ v.decidedMatchesLabel }} counted {{ v.scopeLabel }} so far, but no hero has reached
+            {{ v.decidedMatchesLabel }} {{ v.scopeLabel }} so far, but no hero has reached
             {{ v.placementLabel }}. A hero's win rate appears once it has.
           </p>
         </app-state-panel>

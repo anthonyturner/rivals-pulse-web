@@ -52,7 +52,7 @@ export function buildGameStatsView(counts: GameCounts | null | undefined): GameS
     meta: 'Counted from RivalsPulse overlay uploads',
     tiles: [
       { label: matchesCountedLabel(counts.matches, 'all seasons'), value: numbers.format(counts.matches) },
-      // The same figure the home page and the community page state for that half-season.
+      // The newest half-season's figure, which the home and Community pages state too while it is the half-season they show.
       ...(newest === undefined || earlier.length === 0
         ? []
         : [{ label: matchesCountedLabel(newest.matches, seasonLabel(newest.halfSeason)), value: numbers.format(newest.matches) }]),

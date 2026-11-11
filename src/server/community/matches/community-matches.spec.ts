@@ -371,8 +371,8 @@ describe('deriveCommunityMatches', () => {
       expect(result.matchesCounted).toBe(30);
     });
 
-    it('counts a half-season with no matches held as zero, and has no figure without the counts', () => {
-      expect(deriveCommunityMatches(source(), { now: NOW, counts: gameCounts({ 10: 50 }) }).matchesCounted).toBe(0);
+    it('has no figure for a half-season the counts do not hold, or without the counts', () => {
+      expect(deriveCommunityMatches(source(), { now: NOW, counts: gameCounts({ 10: 50 }) }).matchesCounted).toBeNull();
       expect(deriveCommunityMatches(source(), { now: NOW, counts: null }).matchesCounted).toBeNull();
     });
   });
@@ -477,5 +477,15 @@ describe('deriveCommunityMatches', () => {
 
       expect(numbers.every(Number.isFinite)).toBeTrue();
     });
+  });
+});
+
+describe('playModeName', () => {
+  it('names the modes the game reports and says nothing for one it does not', () => {
+    expect(playModeName(0)).toBe('Quick Match');
+    expect(playModeName(1)).toBe('Competitive');
+    expect(playModeName(2)).toBe('Arcade');
+    expect(playModeName(3)).toBe('Practice');
+    expect(playModeName(42)).toBe('Other');
   });
 });

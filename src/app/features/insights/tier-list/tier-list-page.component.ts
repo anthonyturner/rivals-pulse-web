@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { BehaviorSubject, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
 
 import type { HeroStats, HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { contentState, reportContentState } from '../../../core/seo/thin-content';
@@ -15,6 +15,7 @@ import { HubBentoComponent } from '../../hub/hub-bento/hub-bento.component';
 import { seasonOptions, type SeasonOption } from '../half-season-view';
 import { heroIdentities } from '../hero-identity';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
+import { CurrentHeroStatsService } from '../current-hero-stats.service';
 import { HeroStatsService } from '../hero-stats.service';
 import { TierRowsComponent } from '../tier-rows/tier-rows.component';
 import { TIER_LIST_LINKS, TIER_LIST_TILES } from './tier-list-tiles.data';
@@ -46,6 +47,7 @@ export class TierListPageComponent {
   protected readonly links = TIER_LIST_LINKS;
   protected readonly tiles = TIER_LIST_TILES;
 
+  private readonly currentHeroStats = inject(CurrentHeroStatsService);
   private readonly heroStats = inject(HeroStatsService);
   private readonly chosenSeason = signal<number | undefined>(undefined);
   private readonly chosenMode = signal<HeroStatsModeId>(DEFAULT_MODE_ID);
@@ -60,7 +62,7 @@ export class TierListPageComponent {
   private readonly stats = toSignal(
     this.requested.pipe(
       switchMap(({ halfSeason, mode }) =>
-        this.heroStats.getHeroStats(halfSeason, mode).pipe(
+        this.statsFor(halfSeason, mode).pipe(
           tap((stats) => {
             this.rememberPickers(stats);
             this.pending.set(false);
@@ -115,6 +117,13 @@ export class TierListPageComponent {
 
   chooseMode(value: string): void {
     this.request(this.chosenSeason(), value as HeroStatsModeId);
+  }
+
+  /** The default cut comes from the shared current stats; a half-season or mode the reader picked is asked for itself. */
+  private statsFor(halfSeason: number | undefined, mode: HeroStatsModeId): Observable<HeroStats | null> {
+    return halfSeason === undefined && mode === DEFAULT_MODE_ID
+      ? this.currentHeroStats.getHeroStats()
+      : this.heroStats.getHeroStats(halfSeason, mode);
   }
 
   private request(halfSeason: number | undefined, mode: HeroStatsModeId): void {
