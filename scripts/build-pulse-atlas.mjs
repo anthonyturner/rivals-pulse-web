@@ -386,14 +386,13 @@ function trimTeamLineups(data) {
   };
 }
 
-// One hero with both buckets and one without, so the sample shows both.
+// Three heroes with both buckets and three without, so the sample shows both.
 function trimHeroSpecialists(data) {
+  const heroesWith = (ready) => data.heroes.filter((hero) => (hero.status === 'ready') === ready).slice(0, 3);
+
   return {
     ...data,
-    heroes: [
-      data.heroes.find((hero) => hero.status === 'ready'),
-      data.heroes.find((hero) => hero.status !== 'ready'),
-    ].filter((hero) => hero !== undefined),
+    heroes: [...heroesWith(true), ...heroesWith(false)].sort((a, b) => a.heroId - b.heroId),
   };
 }
 
