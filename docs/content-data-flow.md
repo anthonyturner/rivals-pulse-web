@@ -244,7 +244,7 @@ Already database-backed:
 - Heroes page
 - Glossary page
 - Home page official updates, latest tuning, and events/rewards
-- Tier list and the Game News band's season dates, from Rivals Pulse players' matches; and the home hero's matches-counted figure, from the matches the app has seen (`read_game_counts()`, through `/api/community/matches`)
+- The Stats Heroes tab (tier list and win rates) and the Game News band's season dates, from Rivals Pulse players' matches; and the home hero's matches-counted figure, from the matches the app has seen (`read_game_counts()`, through `/api/community/matches`)
 
 ```mermaid
 flowchart LR
@@ -255,7 +255,7 @@ flowchart LR
   Aggregates --> StatsApi["/api/hero-stats"]
   HomeApi --> HomePage["Home Page"]
   StatsApi --> HomePage
-  StatsApi --> TierPage["Tier list page"]
+  StatsApi --> StatsHeroes["Stats Heroes tab"]
 ```
 
 The home page renders only content returned by `/api/home/content` and `/api/hero-stats`; none of
@@ -275,7 +275,7 @@ it, as a plain input, to the Game News band:
   for the glance come from the hero stats, in the browser only (the end is the next half-season's
   start, otherwise "ongoing"). The spotlight's "Watch update video" button emits `watchVideo`; the
   page, which owns the video, opens its player.
-- `CurrentHeroStatsService` (`features/insights`) fetches `/api/hero-stats` once and shares it; a failed read is not kept, so the next ask fetches again. The home page reads it in the browser only, for the news band's dates; the heroes page, the Stats Heroes tab and the Tier list and Win rates pages (default cut only) share the same read. `CurrentHeroMatchupsService` does the same for `/api/hero-matchups`, read by the heroes page, the Stats Matchups tab, the Counters tool and the Dive planner. A half-season or mode the reader picks is read through `HeroStatsService` directly. The matches-counted figure under the hero buttons comes from `CommunityMatchesService` (`/api/community/matches`, shared with the Stats overview), which carries the half-season's matches from `read_game_counts()`, the same number the Stats overview lists for that half-season. The hero's downloads and rating come from
+- `CurrentHeroStatsService` (`features/insights`) fetches `/api/hero-stats` once and shares it; a failed read is not kept, so the next ask fetches again. The home page reads it in the browser only, for the news band's dates; the heroes page and the Stats Heroes tab (default cut only) share the same read. `CurrentHeroMatchupsService` does the same for `/api/hero-matchups`, read by the heroes page, the Stats Matchups tab, the Counters tool and the Dive planner. A half-season or mode the reader picks is read through `HeroStatsService` directly. The matches-counted figure under the hero buttons comes from `CommunityMatchesService` (`/api/community/matches`, shared with the Stats overview), which carries the half-season's matches from `read_game_counts()`, the same number the Stats overview lists for that half-season. The hero's downloads and rating come from
   `OVERWOLF_LISTING_STATS` and read "Coming soon" until the Overwolf listing has them.
 
 That would make the home page use the same database-backed flow as the rest of the site.

@@ -99,6 +99,10 @@ export class StatsHeroesComponent {
       ),
     ),
   );
+  /** The half-season the plain address shows: the current one, or undefined while it stands in the previous one. */
+  private readonly plainSeasonId = toSignal(
+    this.currentHeroStats.getHeroStats().pipe(map((stats) => (stats?.inPlaceOf === null ? stats.halfSeason?.id : undefined))),
+  );
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
   private readonly identities = computed(() => heroIdentities(this.roster() ?? []));
 
@@ -165,8 +169,15 @@ export class StatsHeroesComponent {
     );
   }
 
+  /**
+   * The plain address shows the current half-season, so choosing that one drops `season` and reuses the
+   * shared current numbers. Early in a half-season the plain address stands in the previous one
+   * instead, so the newest keeps its `season` and stays reachable.
+   */
   protected chooseSeason(value: string): void {
-    this.choose(heroStatsQuery({ season: Number(value) }));
+    const season = Number(value);
+
+    this.choose(heroStatsQuery({ season: season === this.plainSeasonId() ? undefined : season }));
   }
 
   protected chooseMode(value: string): void {

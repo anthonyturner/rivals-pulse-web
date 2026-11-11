@@ -1,5 +1,5 @@
 import { statsRoutes } from './stats.routes';
-import { STATS_TAB_DATA_KEY, STATS_TABS, statsTabLink, statsTabTitle } from './stats-tabs';
+import { STATS_TAB_DATA_KEY, STATS_TABS, statsTabLink, statsTabTitle, type StatsTab } from './stats-tabs';
 
 describe('the Stats tabs', () => {
   it('are the seven the hub lists, Overview first', () => {
@@ -34,6 +34,13 @@ describe('the Stats tabs', () => {
     expect(new Set(descriptions).size).toBe(STATS_TABS.length);
     expect(titles[0]).toBe('Marvel Rivals community stats | RivalsPulse');
     expect(descriptions.every((description) => description.length > 40 && description.length <= 200)).toBeTrue();
+  });
+
+  it('keep "tier list" in the Heroes title, since the old tier list address now redirects there', () => {
+    const heroes = STATS_TABS.find((tab) => tab.id === 'heroes') as StatsTab;
+
+    expect(statsTabTitle(heroes)).toBe('Marvel Rivals hero stats and tier list | RivalsPulse');
+    expect(heroes.description).toContain('tier list');
   });
 
   it('are the only tabs with no content of their own: the Maps stand-in', () => {

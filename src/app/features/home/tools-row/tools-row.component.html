@@ -5,7 +5,7 @@
   lede="Every tool is free in your browser, no install needed. The overlay brings the same answers into the match."
 >
   <ul class="tools">
-    @for (tool of tools; track tool.path) {
+    @for (tool of tools; track tool.title) {
       <li>
         <a class="tool" [routerLink]="tool.path" [queryParams]="tool.queryParams">
           <div class="tool__head">

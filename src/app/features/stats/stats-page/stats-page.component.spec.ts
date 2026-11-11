@@ -181,7 +181,7 @@ describe('The Stats hub', () => {
       await open('/stats/heroes?view=tiers');
       await answerHeroes(READY_STATS);
 
-      expect(heading()).toBe('Marvel Rivals hero stats');
+      expect(heading()).toBe('Marvel Rivals hero stats and tier list');
       expect(current()).toEqual(['Heroes']);
       expect(page().querySelector('app-stats-heroes app-hero-tiers .tier-row')).not.toBeNull();
       expect(page().querySelector('app-hero-table')).toBeNull();
