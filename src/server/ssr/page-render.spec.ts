@@ -1,4 +1,5 @@
-import { PAGE_CACHE_CONTROL, SHELL_CACHE_CONTROL, renderWithinBudget } from './page-render.ts';
+import { DEFAULT_CACHE_CONTROL, NO_STORE_CACHE_CONTROL } from '../http/index.ts';
+import { renderWithinBudget } from './page-render.ts';
 
 const SHELL = '<app-root></app-root>';
 const readShell = () => Promise.resolve(SHELL);
@@ -12,14 +13,14 @@ describe('renderWithinBudget', () => {
     const response = await renderWithinBudget(Promise.resolve(new Response('<h1>Glossary</h1>')), readShell);
 
     expect(await response?.text()).toBe('<h1>Glossary</h1>');
-    expect(response?.headers.get('cache-control')).toBe(PAGE_CACHE_CONTROL);
+    expect(response?.headers.get('cache-control')).toBe(DEFAULT_CACHE_CONTROL);
   });
 
   it('keeps the status of a not-found page and lets the CDN keep it', async () => {
     const response = await renderWithinBudget(Promise.resolve(new Response('missing', { status: 404 })), readShell);
 
     expect(response?.status).toBe(404);
-    expect(response?.headers.get('cache-control')).toBe(PAGE_CACHE_CONTROL);
+    expect(response?.headers.get('cache-control')).toBe(DEFAULT_CACHE_CONTROL);
   });
 
   it('leaves a redirect and a cache header the page chose alone', async () => {
@@ -39,13 +40,13 @@ describe('renderWithinBudget', () => {
 
     expect(response?.status).toBe(200);
     expect(await response?.text()).toBe(SHELL);
-    expect(response?.headers.get('cache-control')).toBe(SHELL_CACHE_CONTROL);
+    expect(response?.headers.get('cache-control')).toBe(NO_STORE_CACHE_CONTROL);
   });
 
   it('serves the browser shell when the render throws', async () => {
     const response = await renderWithinBudget(Promise.reject(new Error('boom')), readShell);
 
     expect(await response?.text()).toBe(SHELL);
-    expect(response?.headers.get('cache-control')).toBe(SHELL_CACHE_CONTROL);
+    expect(response?.headers.get('cache-control')).toBe(NO_STORE_CACHE_CONTROL);
   });
 });

@@ -1,15 +1,11 @@
+import { DEFAULT_CACHE_CONTROL, NO_STORE_CACHE_CONTROL } from '../http/index.ts';
+
 /**
  * How long a visitor or crawler waits on a server render before getting the browser shell
  * instead. A data page whose API never answers would otherwise hold the request until the
  * platform kills it; the shell still lets a browser draw the page itself.
  */
 export const RENDER_BUDGET_MS = 8_000;
-
-/** What the CDN may keep of a server-rendered page: the same HTML for every visitor of a deploy. */
-export const PAGE_CACHE_CONTROL = 's-maxage=300, stale-while-revalidate=3600';
-
-/** The shell stands in for a page that failed to render, so no cache may keep it. */
-export const SHELL_CACHE_CONTROL = 'no-store';
 
 /**
  * Settles a server render into a response: the rendered page when it finishes within the budget,
@@ -51,7 +47,7 @@ function withCacheControl(response: Response): Response {
   }
 
   const headers = new Headers(response.headers);
-  headers.set('cache-control', PAGE_CACHE_CONTROL);
+  headers.set('cache-control', DEFAULT_CACHE_CONTROL);
 
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
@@ -59,6 +55,6 @@ function withCacheControl(response: Response): Response {
 function shellResponse(html: string): Response {
   return new Response(html, {
     status: 200,
-    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': SHELL_CACHE_CONTROL },
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': NO_STORE_CACHE_CONTROL },
   });
 }

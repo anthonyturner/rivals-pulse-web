@@ -16,10 +16,13 @@ const buildRoot = join(repoRoot, 'dist', 'rivals-pulse-coach');
 export const SHELL_FILES = new Set(['index.html', 'index.csr.html']);
 
 export async function stageVercelStatic(browserFolder, staticFolder) {
-  await rm(staticFolder, { recursive: true, force: true });
-  await cp(browserFolder, staticFolder, {
+  const from = resolve(browserFolder);
+  const to = resolve(staticFolder);
+
+  await rm(to, { recursive: true, force: true });
+  await cp(from, to, {
     recursive: true,
-    filter: (source) => !(dirname(source) === resolve(browserFolder) && SHELL_FILES.has(basename(source))),
+    filter: (source) => !(dirname(resolve(source)) === from && SHELL_FILES.has(basename(source))),
   });
 }
 

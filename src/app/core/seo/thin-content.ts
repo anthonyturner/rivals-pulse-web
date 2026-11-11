@@ -18,23 +18,16 @@ export type ContentState = 'loading' | 'thin' | 'ready';
 @Injectable({ providedIn: 'root' })
 export class ThinContent {
   private readonly reporters = signal<readonly Signal<boolean>[]>([]);
-  private readonly requestFailed = signal(false);
 
   /**
    * True when the page reports content and all of it is thin. A page with several data sections, such
-   * as a community tab, is thin only when every section is. A page that reports nothing is not thin,
-   * unless a request failed while the server rendered it: it then shows an error state, not content.
+   * as a community tab, is thin only when every section is; a page that reports nothing is never thin.
    */
   readonly thin = computed(() => {
     const all = this.reporters();
 
-    return all.length > 0 ? all.every((isThin) => isThin()) : this.requestFailed();
+    return all.length > 0 && all.every((isThin) => isThin());
   });
-
-  /** Records that a request failed during the server render, so a page that reports nothing counts as thin. */
-  reportFailedRequest(): void {
-    this.requestFailed.set(true);
-  }
 
   /** Registers a page's verdict until `destroyRef` is destroyed. Call `reportContentState` instead. */
   report(state: () => ContentState, destroyRef: DestroyRef): void {

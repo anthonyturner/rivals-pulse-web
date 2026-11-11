@@ -31,19 +31,6 @@ describe('ThinContent', () => {
     expect(thin.thin()).toBeFalse();
   });
 
-  it('is thin on a page that reports nothing once a request failed while it rendered', () => {
-    thin.reportFailedRequest();
-
-    expect(thin.thin()).toBeTrue();
-  });
-
-  it('leaves a page that reports it is ready indexable even when a request failed', () => {
-    open('ready');
-    thin.reportFailedRequest();
-
-    expect(thin.thin()).toBeFalse();
-  });
-
   it('is thin while the page has no answer yet, and when it is below its minimum', () => {
     const page = open('loading');
 

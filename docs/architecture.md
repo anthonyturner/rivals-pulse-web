@@ -23,8 +23,12 @@ the empty browser shell: `/sign-in`, `/account`, `/profile` and `/admin` (the
 visitor's own session) and the Pulse Records lists (no player name in server HTML).
 
 - **Hosts.** The render answers only the hosts in `security.allowedHosts` in
-  `angular.json` (the site, `www`, `*.vercel.app`, `localhost`). Any other host
-  gets the browser shell, so a new domain must be added there.
+  `angular.json` (the site, `www`, `*.vercel.app`, `localhost`). A request for any
+  other host gets a 400, so a new domain left off that list is a full outage: add
+  it there before pointing the domain here. The render takes its host from the
+  `Host` header; `src/server.ts` removes every `x-forwarded-*` header except
+  `x-forwarded-for` and `x-forwarded-proto` first (`src/server/ssr/proxy-headers.ts`),
+  because Angular answers the empty shell to one it was not told to trust.
 - **Time budget.** `renderWithinBudget` (`src/server/ssr/`) gives a render eight
   seconds. A data page whose API never answers, or a render that throws, is
   answered with the browser shell (`index.csr.html`) instead of hanging, and that

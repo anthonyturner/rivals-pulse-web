@@ -172,6 +172,8 @@ app.all('/api/admin/*splat', (req, res, next) => {
 /**
  * Serve static files from /browser, except the browser shell: it is the fallback the render reads
  * from disk, not a page, and as a file it would answer `/index.csr.html` with a year of caching.
+ * Only that plain address is held back; an encoded spelling of it still reaches the file, which
+ * is public in the browser build anyway.
  */
 const staticFiles = express.static(browserDistFolder, {
   maxAge: '1y',
