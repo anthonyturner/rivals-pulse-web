@@ -170,11 +170,14 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('one player can supply nearly all of it');
   });
 
-  it('says how specialist and flex win rates are made public: pooled, with a minimum and no per-player figure', () => {
+  it('says how specialist and flex win rates are made public: pooled, with a minimum, and the group a player is in never stored', () => {
     const text = (section('public-numbers').textContent ?? '').replace(/\s+/g, ' ');
 
     expect(text).toContain('Specialist and flex win rates');
-    expect(text).toContain('keeps nothing per player');
+    expect(text).toContain('each time it builds the numbers');
+    expect(text).toContain('never stores which group a player is in');
+    expect(text).toContain('Players who are neither are left out');
+    expect(text).not.toContain('keeps nothing per player');
     expect(text).toContain('at least 5 players, 2 uploading players and 50 matches');
     expect(text).toContain('A line with no player id is left out');
   });
