@@ -189,7 +189,7 @@ describe('TierListPageComponent', () => {
       ', pick rate 10.0% pick · , 20 games',
     ]);
     expect(text(page, '.meta')).toEqual([
-      'Started Oct 9, 2026 · 146 matches counted · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
+      'Started Oct 9, 2026 · 146 matches with a result · Heroes need 10 appearances to be placed · Each tile: win rate, then pick rate and games.',
     ]);
   });
 
@@ -232,7 +232,7 @@ describe('TierListPageComponent', () => {
 
     expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive for Season 10.5']);
     expect(text(page, '.state-count')[0]).toBe(
-      '3 matches counted in Quick Match and Competitive for Season 10.5 so far.',
+      '3 matches with a result in Quick Match and Competitive for Season 10.5 so far.',
     );
     expect(text(page, 'app-state-panel p')[1]).toContain('built from matches that RivalsPulse players record');
     expect(page.querySelector('.tier-row')).toBeNull();
@@ -243,7 +243,7 @@ describe('TierListPageComponent', () => {
     const { page } = await open(empty);
 
     expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive']);
-    expect(text(page, '.state-count')[0]).toBe('No matches counted in Quick Match and Competitive so far.');
+    expect(text(page, '.state-count')[0]).toBe('No matches with a result in Quick Match and Competitive so far.');
     expect(page.querySelector('.tier-row')).toBeNull();
     expect(page.querySelector('.building')).toBeNull();
     expect(text(page, 'h1')).toEqual(['Marvel Rivals tier list']);
@@ -286,7 +286,7 @@ describe('TierListPageComponent', () => {
     harness.detectChanges();
 
     expect(text(page, '[aria-live]')).toEqual([
-      'Tier list updated in Quick Match and Competitive for Season 10: 146 matches counted',
+      'Tier list updated in Quick Match and Competitive for Season 10: 146 matches with a result',
     ]);
     expect(select.value).toBe('10');
   });
@@ -364,8 +364,8 @@ describe('TierListPageComponent', () => {
       http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
       harness.detectChanges();
 
-      expect(text(page, '.meta')[0]).toContain('28 matches counted');
-      expect(text(page, '[aria-live]')).toEqual(['Tier list updated in Competitive for Season 10.5: 28 matches counted']);
+      expect(text(page, '.meta')[0]).toContain('28 matches with a result');
+      expect(text(page, '[aria-live]')).toEqual(['Tier list updated in Competitive for Season 10.5: 28 matches with a result']);
       expect(modeSelect(page).value).toBe('competitive');
     });
 
@@ -398,7 +398,7 @@ describe('TierListPageComponent', () => {
       http.expectNone('/api/hero-stats');
       expect(page.querySelector('[aria-busy="true"]')).toBeNull();
       expect(modeSelect(page).value).toBe('all');
-      expect(text(page, '.meta')[0]).toContain('146 matches counted');
+      expect(text(page, '.meta')[0]).toContain('146 matches with a result');
     });
 
     it('names an empty mode and its half-season, and keeps the picker so the mode can be left', async () => {
@@ -417,7 +417,7 @@ describe('TierListPageComponent', () => {
       harness.detectChanges();
 
       expect(text(page, 'app-state-panel h2')).toEqual(['Not enough data yet in Competitive for Season 10.5']);
-      expect(text(page, '.state-count')[0]).toBe('No matches counted in Competitive for Season 10.5 so far.');
+      expect(text(page, '.state-count')[0]).toBe('No matches with a result in Competitive for Season 10.5 so far.');
       expect(Array.from(modeSelect(page).options).map((option) => option.value)).toEqual([
         'all',
         'quick-match',

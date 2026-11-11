@@ -13,7 +13,7 @@ const notEnoughData: CommunityMatches = {
   halfSeasons: [season],
   halfSeason: season,
   inPlaceOf: null,
-  matchesBand: null,
+  matchesCounted: null,
   maps: [],
   mapsBelowMinimum: [],
   modeMix: null,
@@ -23,7 +23,7 @@ const notEnoughData: CommunityMatches = {
 const ready: CommunityMatches = {
   ...notEnoughData,
   status: 'ready',
-  matchesBand: 20,
+  matchesCounted: 20,
   maps: [{ map: 'Tokyo 2099', winRate: 50 }],
   mapsBelowMinimum: ['Klyntar'],
   modeMix: [{ playModeId: 0, mode: 'Quick Match', share: 100, averageLengthMinutes: 10 }],
@@ -109,7 +109,7 @@ describe('isCommunityMatches', () => {
     expect(isCommunityMatches('matches')).toBeFalse();
     expect(isCommunityMatches({ ...ready, status: 'loading' })).toBeFalse();
     expect(isCommunityMatches({ ...ready, minimums: undefined })).toBeFalse();
-    expect(isCommunityMatches({ ...ready, matchesBand: Number.NaN })).toBeFalse();
+    expect(isCommunityMatches({ ...ready, matchesCounted: Number.NaN })).toBeFalse();
     expect(isCommunityMatches({ ...ready, maps: [null] })).toBeFalse();
     expect(isCommunityMatches({ ...ready, maps: [{ map: 'Tokyo 2099' }] })).toBeFalse();
     expect(isCommunityMatches({ ...ready, modeMix: 'none' })).toBeFalse();

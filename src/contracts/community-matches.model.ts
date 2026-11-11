@@ -58,10 +58,11 @@ export interface CommunityMatches {
   /** Set only when `halfSeason` is the previous half-season, shown while the current one is below the minimum. */
   inPlaceOf: HeroStatsHalfSeason | null;
   /**
-   * The matches behind the figures as a floor, such as 100 for "100+ matches" (see
-   * `MATCH_VOLUME_BANDS`), or null below the smallest band.
+   * Matches counted in `halfSeason`: the site's one "matches counted" figure, the same number
+   * Game Stats shows for that half-season. Null when no half-season is shown or the counts could
+   * not be read.
    */
-  matchesBand: number | null;
+  matchesCounted: number | null;
   maps: CommunityMapRecord[];
   /** Maps with a result but under the minimum: named, never counted. */
   mapsBelowMinimum: string[];

@@ -1,6 +1,7 @@
 import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.model';
 import {
   countLabel,
+  decidedMatchesLabel,
   finalHitsLabel,
   halfSeasonFallbackNotice,
   kdaLabel,
@@ -68,7 +69,7 @@ export function buildHeroCommunityStatsView(
       fallbackFor,
       notice:
         stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-      sample: `From ${countLabel(line.appearances, 'appearance', 'appearances')} in ${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.`,
+      sample: `From ${countLabel(line.appearances, 'appearance', 'appearances')} in ${decidedMatchesLabel(stats.matchesCounted)} recorded by RivalsPulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.`,
       figures: [
         { label: 'Win rate', value: percentLabel(line.winRate) },
         { label: 'Pick rate', value: percentLabel(line.pickRate) },

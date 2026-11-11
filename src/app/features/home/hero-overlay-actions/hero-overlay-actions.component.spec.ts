@@ -4,19 +4,22 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import type { HeroStats } from '../../../../contracts/hero-stats.model';
+import type { CommunityMatches } from '../../../../contracts/community-matches.model';
 import { HeroOverlayActionsComponent } from './hero-overlay-actions.component';
 
 const season = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
-const stats: HeroStats = {
+const stats: CommunityMatches = {
   status: 'ready',
-  minimumMatches: 10,
+  minimums: { overviewMatches: 10, mapMatches: 10, lengthMatches: 10 },
   halfSeasons: [season],
   halfSeason: season,
   inPlaceOf: null,
   matchesCounted: 1482,
-  tiers: [],
-  belowMinimum: [],
+  maps: [],
+  mapsBelowMinimum: [],
+  modeMix: null,
+  averageLengthMinutes: null,
+  perDay: null,
 };
 
 describe('HeroOverlayActionsComponent', () => {
@@ -40,7 +43,7 @@ describe('HeroOverlayActionsComponent', () => {
   const pair = (stat: Element): string => `${text(stat.querySelector('dt'))}: ${text(stat.querySelector('dd'))}`;
 
   async function answer(body: object): Promise<void> {
-    http.expectOne('/api/hero-stats').flush(body);
+    http.expectOne('/api/community/matches').flush(body);
     await fixture.whenStable();
     fixture.detectChanges();
   }

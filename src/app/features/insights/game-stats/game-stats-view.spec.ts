@@ -29,7 +29,8 @@ describe('buildGameStatsView', () => {
         status: 'ready',
         meta: 'Counted from RivalsPulse overlay uploads',
         tiles: [
-          { label: 'Matches seen', value: '1,234' },
+          { label: 'Matches counted · all seasons', value: '1,234' },
+          { label: 'Matches counted · Season 10.5', value: '900' },
           { label: 'Players seen', value: '56,789' },
           { label: 'Earliest match', value: 'Sep 20, 2026' },
         ],
@@ -49,6 +50,20 @@ describe('buildGameStatsView', () => {
   it('leaves out the earliest match when the answer has no start time', () => {
     const view = buildGameStatsView({ ...COUNTS, since: null });
 
-    expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual(['Matches seen', 'Players seen']);
+    expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual([
+      'Matches counted · all seasons',
+      'Matches counted · Season 10.5',
+      'Players seen',
+    ]);
+  });
+
+  it('states no separate half-season figure while one half-season is all there is', () => {
+    const view = buildGameStatsView({ ...COUNTS, matches: 900, halfSeasons: [COUNTS.halfSeasons[0]] });
+
+    expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual([
+      'Matches counted · all seasons',
+      'Players seen',
+      'Earliest match',
+    ]);
   });
 });

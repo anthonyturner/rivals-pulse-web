@@ -11,10 +11,10 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
-import type { HeroStats } from '../../../../contracts/hero-stats.model';
+import type { CommunityMatches } from '../../../../contracts/community-matches.model';
 import { GetAppButtonComponent } from '../../../shared/components/get-app-button/get-app-button.component';
 import { OVERWOLF_LISTING_STATS } from '../../../shared/overwolf-app';
-import { CurrentHeroStatsService } from '../../insights/current-hero-stats.service';
+import { CommunityMatchesService } from '../../community/matches-tab/community-matches.service';
 import { buildHeroStatRow } from './hero-stat-row-view';
 
 /** The hero's two buttons and the row of figures under them: downloads, rating and matches counted. */
@@ -26,19 +26,19 @@ import { buildHeroStatRow } from './hero-stat-row-view';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroOverlayActionsComponent {
-  /** `undefined` while the stats load, `null` when they could not be read. */
-  private readonly stats = signal<HeroStats | null | undefined>(undefined);
+  /** `undefined` while the figures load, `null` when they could not be read. */
+  private readonly matches = signal<CommunityMatches | null | undefined>(undefined);
 
-  readonly loading = computed(() => this.stats() === undefined);
-  readonly statRow = computed(() => buildHeroStatRow(OVERWOLF_LISTING_STATS, this.stats() ?? null));
+  readonly loading = computed(() => this.matches() === undefined);
+  readonly statRow = computed(() => buildHeroStatRow(OVERWOLF_LISTING_STATS, this.matches() ?? null));
 
   constructor() {
-    // The server render shows the listing figures and a reserved matches slot; the browser fetches the stats.
+    // The server render shows the listing figures and a reserved matches slot; the browser fetches the match figures.
     if (isPlatformBrowser(inject(PLATFORM_ID))) {
-      inject(CurrentHeroStatsService)
-        .getHeroStats()
+      inject(CommunityMatchesService)
+        .getMatches()
         .pipe(takeUntilDestroyed(inject(DestroyRef)))
-        .subscribe((stats) => this.stats.set(stats));
+        .subscribe((matches) => this.matches.set(matches));
     }
   }
 }

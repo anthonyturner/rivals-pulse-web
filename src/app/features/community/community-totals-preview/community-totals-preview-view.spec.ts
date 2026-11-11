@@ -8,7 +8,7 @@ function answer(overrides: Partial<CommunityMatches>): CommunityMatches {
     halfSeasons: [],
     halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: null, endsAt: null },
     inPlaceOf: null,
-    matchesBand: 250,
+    matchesCounted: 1482,
     maps: [],
     mapsBelowMinimum: [],
     modeMix: null,
@@ -19,9 +19,9 @@ function answer(overrides: Partial<CommunityMatches>): CommunityMatches {
 }
 
 describe('communityTotalsPreview', () => {
-  it('shows the matches band, the average length and the season from the answer', () => {
+  it('shows the matches counted, the average length and the season from the answer', () => {
     expect(communityTotalsPreview(answer({}))).toEqual([
-      { label: 'Matches counted', value: '250+' },
+      { label: 'Matches counted · Season 10.5', value: '1,482' },
       { label: 'Average match', value: '1 h 5 min' },
       { label: 'Season', value: 'Season 10.5' },
     ]);
@@ -38,20 +38,20 @@ describe('communityTotalsPreview', () => {
         }),
       ),
     ).toEqual([
-      { label: 'Matches counted', value: '250+' },
+      { label: 'Matches counted · Season 10', value: '1,482' },
       { label: 'Average match', value: '1 h 5 min' },
       { label: 'Previous half-season', value: 'Season 10' },
     ]);
   });
 
   it('leaves out a figure the answer does not carry', () => {
-    expect(communityTotalsPreview(answer({ matchesBand: null, averageLengthMinutes: null }))).toEqual([
+    expect(communityTotalsPreview(answer({ matchesCounted: null, averageLengthMinutes: null }))).toEqual([
       { label: 'Season', value: 'Season 10.5' },
     ]);
   });
 
   it('shows nothing while the answer is missing, failed or has not enough data', () => {
     expect(communityTotalsPreview(null)).toEqual([]);
-    expect(communityTotalsPreview(answer({ status: 'not-enough-data', matchesBand: null }))).toEqual([]);
+    expect(communityTotalsPreview(answer({ status: 'not-enough-data', matchesCounted: null }))).toEqual([]);
   });
 });

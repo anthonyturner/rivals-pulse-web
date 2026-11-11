@@ -40,7 +40,7 @@ describe('buildHeroCommunityStatsView', () => {
   it('says "1 match" for a single match counted', () => {
     const view = buildHeroCommunityStatsView(stats({ matchesCounted: 1 }), 'storm', 'Storm');
 
-    expect(view.kind === 'ready' && view.sample).toContain('in 1 match recorded');
+    expect(view.kind === 'ready' && view.sample).toContain('in 1 match with a result recorded');
   });
 
   it('formats every figure of a hero with enough matches', () => {
@@ -52,7 +52,7 @@ describe('buildHeroCommunityStatsView', () => {
       fallbackFor: null,
       notice: null,
       sample:
-        'From 24 appearances in 150 matches recorded by RivalsPulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.',
+        'From 24 appearances in 150 matches with a result recorded by RivalsPulse players. Pick rate is a share of those matches, so a hero on both teams of one match counts twice.',
       figures: [
         { label: 'Win rate', value: '54.2%' },
         { label: 'Pick rate', value: '16.0%' },

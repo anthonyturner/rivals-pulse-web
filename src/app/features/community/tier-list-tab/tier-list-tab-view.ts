@@ -1,5 +1,5 @@
 import type { HeroStats } from '../../../../contracts/hero-stats.model';
-import { countLabel, halfSeasonFallbackNotice, placementRequirementLabel } from '../../../shared/utilities/stat-labels';
+import { decidedMatchesLabel, halfSeasonFallbackNotice, placementRequirementLabel } from '../../../shared/utilities/stat-labels';
 import type { HeroIdentities } from '../../insights/hero-identity';
 import { TIER_NAMES, tierRowsOf, type TierRowView } from '../../insights/tier-list/tier-list-view';
 
@@ -42,7 +42,7 @@ export function buildTierListTabView(
   if (stats.status !== 'ready' || tiers.length === 0) {
     const counted =
       stats.matchesCounted > 0
-        ? `${countLabel(stats.matchesCounted, 'match', 'matches')} recorded by RivalsPulse players so far.`
+        ? `${decidedMatchesLabel(stats.matchesCounted)} recorded by RivalsPulse players so far.`
         : 'No match recorded by RivalsPulse players is counted yet.';
 
     return {
@@ -58,7 +58,7 @@ export function buildTierListTabView(
     halfSeasonLabel,
     notice:
       stats.inPlaceOf === null ? null : halfSeasonFallbackNotice(stats.inPlaceOf.label, halfSeasonLabel),
-    footnote: `From ${countLabel(stats.matchesCounted, 'match', 'matches')} of Quick Match and Competitive recorded by RivalsPulse players. A hero's tier comes from its win rate pulled toward the average of its role, by about as much as 60 more matches would, so a short run cannot place it high. Heroes need enough appearances and players to be placed.`,
+    footnote: `From ${decidedMatchesLabel(stats.matchesCounted)} in Quick Match and Competitive, recorded by RivalsPulse players. A hero's tier comes from its win rate pulled toward the average of its role, by about as much as 60 more matches would, so a short run cannot place it high. Heroes need enough appearances and players to be placed.`,
     tiers,
   };
 }
