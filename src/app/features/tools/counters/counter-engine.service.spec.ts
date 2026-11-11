@@ -25,7 +25,7 @@ describe('CounterEngineService', () => {
     expect(engine.filterHeroes(heroes, 'All', 'hulk').map((entry) => entry.id)).toEqual(['hulk']);
   });
 
-  it('lists the heroes with a winning record against a hero, and the heroes it has one against', () => {
+  it('lists the heroes that counter a hero, and the heroes it counters', () => {
     const matchups = matchupsOf([
       matchup('peni-parker', 'angela', 10, 12),
       matchup('mantis', 'angela', 7, 12),

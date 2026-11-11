@@ -1,6 +1,8 @@
 import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
 import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import {
+  counterRuleNote,
+  noCounterMessage,
   recordCards,
   type RecordCard,
   type RosterHero,
@@ -26,10 +28,16 @@ export type HeroCommunityCountersView =
       fallbackFor: string | null;
       /** The shared fallback sentence, set when this is the previous half-season. */
       notice: string | null;
-      /** Heroes that win more than they lose against this hero. */
+      /** Heroes that do better against this hero than they usually do, by the community counter rule. */
       winningAgainst: HeadToHeadCard[];
-      /** Heroes this hero wins more than it loses against. */
+      /** Why the first list is empty: how many heroes were checked. */
+      noneAgainst: string;
+      /** Heroes this hero does better against than it usually does. */
       winningFor: HeadToHeadCard[];
+      /** Why the second list is empty. */
+      noneFor: string;
+      /** The rule behind both lists, in words. */
+      ruleNote: string;
     };
 
 /**
@@ -74,7 +82,10 @@ export function buildHeroCommunityCountersView(
     fallbackFor,
     notice: matchups.inPlaceOf === null ? null : halfSeasonFallbackNotice(matchups.inPlaceOf.label, halfSeasonLabel),
     winningAgainst: headToHeadCards(recordCards(winningRecordsAgainst(matchups, heroId), 'hero', roster), heroName),
+    noneAgainst: noCounterMessage(matchups, heroId, heroName, 'against'),
     winningFor: headToHeadCards(recordCards(winningRecordsOf(matchups, heroId), 'enemy', roster), heroName),
+    noneFor: noCounterMessage(matchups, heroId, heroName, 'for'),
+    ruleNote: counterRuleNote(matchups.minimumMatches),
   };
 }
 

@@ -1,3 +1,4 @@
+import { COUNTER_MIN_EDGE_POINTS } from '../../../contracts/hero-matchups.model.ts';
 import type { HeroPairsBand, HeroPairsCounter } from '../../../contracts/hero-pairs.model.ts';
 import { estimateWinRatePriors } from '../stats/win-rate-prior.ts';
 
@@ -9,7 +10,7 @@ import { estimateWinRatePriors } from '../stats/win-rate-prior.ts';
  */
 
 /** How far above a hero's own record (0.03 is 3 percentage points) a pair must be before it counts as a counter. */
-export const MIN_COUNTER_EDGE = 0.03;
+export const MIN_COUNTER_EDGE = COUNTER_MIN_EDGE_POINTS / 100;
 
 /** Whether an edge reaches `MIN_COUNTER_EDGE`, with a hair of tolerance so exactly 3 points counts despite floating-point rounding. */
 export function meetsMinimumEdge(edge: number): boolean {

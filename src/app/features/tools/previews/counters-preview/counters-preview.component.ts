@@ -5,7 +5,7 @@ import { previewMatchups } from '../current-hero-matchups-data';
 import { PreviewPortraitComponent } from '../../../hub/preview-portrait/preview-portrait.component';
 import { counterPreview } from '../preview-views';
 
-/** One enemy hero and the heroes with a winning record against it. Draws nothing until the matchups name one. */
+/** One enemy hero and the heroes that do better than usual against it. Draws nothing until the matchups name one. */
 @Component({
   selector: 'app-counters-preview',
   imports: [PreviewPortraitComponent],

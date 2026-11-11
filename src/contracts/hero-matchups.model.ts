@@ -58,3 +58,10 @@ export interface HeroMatchups {
   inPlaceOf: HeroStatsHalfSeason | null;
   matchups: HeroMatchup[];
 }
+
+/**
+ * The edge, in percentage points over a hero's own shrunk win rate, at which a pair counts as a
+ * counter. The server applies it (`isCounter`) and the pages quote it in their wording, so both
+ * read this one number.
+ */
+export const COUNTER_MIN_EDGE_POINTS = 3;

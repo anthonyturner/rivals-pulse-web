@@ -21,7 +21,7 @@ describe('buildCountersTabView', () => {
     expect(buildCountersTabView(null, identities).kind).toBe('unavailable');
   });
 
-  it('lists the winning records with the clearest edge first and never a losing or even one', () => {
+  it('lists the counters with the clearest edge first and never a pair that is not one', () => {
     const view = buildCountersTabView(READY, identities);
 
     if (view.kind !== 'ready') {
@@ -35,6 +35,7 @@ describe('buildCountersTabView', () => {
       winner: { hero: 'hulk', name: 'Hulk', imageUrl: '/images/heroes/hulk.png' },
       loser: { hero: 'thor', name: 'Thor', imageUrl: '/images/heroes/thor.png' },
       winRate: '75.0%',
+      edge: '+13.6 pts vs usual',
       sample: '12 matches',
       description: 'Hulk won 9 of 12 against Thor (75.0%) in 12 matches.',
     });
@@ -66,7 +67,7 @@ describe('buildCountersTabView', () => {
     expect(buildCountersTabView(matchupsOf([]), identities)).toEqual({
       kind: 'not-enough-data',
       summary:
-        'No hero has a winning record against another yet. A matchup appears once two heroes have faced each other in 10 recorded matches.',
+        'No hero does at least 3 points better against another hero than it usually does yet. A matchup can count once two heroes have faced each other in 10 recorded matches.',
     });
   });
 

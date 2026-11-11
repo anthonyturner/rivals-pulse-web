@@ -81,7 +81,7 @@
                       <button type="button" class="pick" (click)="pivotTo(card.hero.id)">
                         <app-hero-tile selectable [name]="card.hero.name" [imageUrl]="card.hero.imageUrl">
                           <span tileFigure class="figure"><span class="visually-hidden">, win rate </span>{{ card.winRate }}</span>
-                          <span class="detail">{{ card.sample }}</span>
+                          <span class="detail">{{ card.edge }} · {{ card.sample }}</span>
                         </app-hero-tile>
                       </button>
                     </li>
@@ -93,9 +93,8 @@
             </section>
           }
           <p class="note">
-            Each card is a record from matches RivalsPulse players recorded: how often that hero won when the two
-            faced each other. A short run is pulled toward even, and a pairing appears only once it has
-            {{ minimumMatches() }} recorded matches.
+            {{ ruleNote() }} Each card shows how often that hero won when the two faced each other, and how far that
+            sits above the hero's usual win rate, from matches RivalsPulse players recorded.
           </p>
         }
       } @else if (heroesLoaded()) {

@@ -1,4 +1,4 @@
-import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups.model';
+import { COUNTER_MIN_EDGE_POINTS, type HeroMatchup, type HeroMatchups } from '../../../contracts/hero-matchups.model';
 import { countLabel, percentLabel } from '../../shared/utilities/stat-labels';
 
 /**
@@ -46,6 +46,41 @@ export function matchupBetween(matchups: HeroMatchups, heroId: string, enemyId: 
   return matchups.matchups.find((matchup) => matchup.hero === heroId && matchup.enemy === enemyId);
 }
 
+/** "+3.3 pts vs usual": how far a record sits above (or below) the hero's own usual win rate, the figure that decides a counter. */
+export function recordEdgeLabel(matchup: HeroMatchup): string {
+  const points = Math.round(matchup.edge * 10) / 10;
+
+  return points === 0 ? 'Even with usual' : `${points > 0 ? '+' : '−'}${Math.abs(points).toFixed(1)} pts vs usual`;
+}
+
+/**
+ * The rule every counter list follows, in words, for the footnote under it. The Rivals Pulse app
+ * lists counters by the same rule.
+ */
+export function counterRuleNote(minimumMatches: number): string {
+  return `A hero is listed when its win rate against the other, adjusted for small samples, is at least ${COUNTER_MIN_EDGE_POINTS} points above its own usual win rate, over at least ${minimumMatches} recorded matches. The Rivals Pulse app uses the same rule.`;
+}
+
+/**
+ * The empty state of a counter list: it names how many heroes were checked, so "none" reads as a
+ * finding and not as missing data. `heroId` is the hero the list is about; `side` is whether the
+ * list holds the heroes that do better against it or the heroes it does better against.
+ */
+export function noCounterMessage(matchups: HeroMatchups, heroId: string, heroName: string, side: 'against' | 'for'): string {
+  const checked = matchups.matchups.filter((matchup) => (side === 'against' ? matchup.enemy : matchup.hero) === heroId).length;
+  const recorded = `${matchups.minimumMatches} or more recorded matches`;
+
+  if (checked === 0) {
+    return side === 'against' ? `No hero has ${recorded} against ${heroName} yet.` : `${heroName} has no ${recorded} against another hero yet.`;
+  }
+
+  const heroes = checked === 1 ? '1 hero' : `${checked} heroes`;
+
+  return side === 'against'
+    ? `No hero does at least ${COUNTER_MIN_EDGE_POINTS} points better against ${heroName} than it usually does, across the ${heroes} with ${recorded} against ${heroName}.`
+    : `${heroName} does not do at least ${COUNTER_MIN_EDGE_POINTS} points better than usual against any of the ${heroes} it has ${recorded} against.`;
+}
+
 /** "75.0%" for a record, the figure a card shows. */
 export function recordWinRateLabel(matchup: HeroMatchup): string {
   return percentLabel(matchup.winRate);
@@ -74,6 +109,8 @@ export interface RecordCard<H extends RosterHero> {
   /** Matches behind the record: what cards are ordered by. */
   matches: number;
   winRate: string;
+  /** How far the record sits above the hero's usual win rate, such as "+3.3 pts vs usual". */
+  edge: string;
   sample: string;
   /** The record in words, for the card's tooltip. */
   description: string;
@@ -104,6 +141,7 @@ export function recordCards<H extends RosterHero>(
             hero: portrait,
             matches: matchup.matches,
             winRate: recordWinRateLabel(matchup),
+            edge: recordEdgeLabel(matchup),
             sample: recordSampleLabel(matchup),
             description: recordSentence(matchup, winner.name, loser.name),
           },

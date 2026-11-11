@@ -2,7 +2,10 @@ import { matchup, matchupsOf } from './hero-matchup.fixtures';
 import {
   matchupBetween,
   matchupCountOf,
+  counterRuleNote,
+  noCounterMessage,
   recordCards,
+  recordEdgeLabel,
   recordSampleLabel,
   recordSentence,
   recordWinRateLabel,
@@ -49,12 +52,12 @@ describe('hero matchup records', () => {
     expect(strongestRecords(marked, 1).map((record) => record.hero)).toEqual(['storm']);
   });
 
-  it('lists who has a winning record against a hero', () => {
+  it('lists who counters a hero', () => {
     expect(winningRecordsAgainst(matchups, 'thor').map((record) => record.hero)).toEqual(['hulk', 'storm']);
     expect(winningRecordsAgainst(matchups, 'storm')).toEqual([]);
   });
 
-  it('lists who a hero has a winning record against', () => {
+  it('lists whom a hero counters', () => {
     expect(winningRecordsOf(matchups, 'hulk').map((record) => record.enemy)).toEqual(['thor']);
     expect(winningRecordsOf(matchups, 'thor')).toEqual([]);
   });
@@ -124,5 +127,40 @@ describe('hero matchup records', () => {
     ]);
     expect(strongestRecords(tied, 1).length).toBe(1);
     expect(strongestRecords(tied, 0)).toEqual([]);
+  });
+});
+
+describe('counter wording', () => {
+  it('words the edge in points against the hero\'s usual win rate', () => {
+    expect(recordEdgeLabel(matchup('hulk', 'thor', 9, 12, { edge: 3.34 }))).toBe('+3.3 pts vs usual');
+    expect(recordEdgeLabel(matchup('hulk', 'thor', 9, 12, { edge: -1.26 }))).toBe('−1.3 pts vs usual');
+    expect(recordEdgeLabel(matchup('hulk', 'thor', 9, 12, { edge: 0.02 }))).toBe('Even with usual');
+  });
+
+  it('states the rule the server applies, once, with the minimum the answer names', () => {
+    expect(counterRuleNote(10)).toBe(
+      'A hero is listed when its win rate against the other, adjusted for small samples, is at least 3 points above its own usual win rate, over at least 10 recorded matches. The Rivals Pulse app uses the same rule.',
+    );
+  });
+
+  describe('the empty state of a list', () => {
+    const matchups = matchupsOf([matchup('hulk', 'thor', 3, 12), matchup('storm', 'thor', 4, 12), matchup('thor', 'hulk', 3, 12)]);
+
+    it('names how many heroes were checked against the hero', () => {
+      expect(noCounterMessage(matchups, 'thor', 'Thor', 'against')).toBe(
+        'No hero does at least 3 points better against Thor than it usually does, across the 2 heroes with 10 or more recorded matches against Thor.',
+      );
+    });
+
+    it('names how many heroes were checked for the hero', () => {
+      expect(noCounterMessage(matchups, 'thor', 'Thor', 'for')).toBe(
+        'Thor does not do at least 3 points better than usual against any of the 1 hero it has 10 or more recorded matches against.',
+      );
+    });
+
+    it('says plainly when nothing was checked', () => {
+      expect(noCounterMessage(matchups, 'loki', 'Loki', 'against')).toBe('No hero has 10 or more recorded matches against Loki yet.');
+      expect(noCounterMessage(matchups, 'loki', 'Loki', 'for')).toBe('Loki has no 10 or more recorded matches against another hero yet.');
+    });
   });
 });

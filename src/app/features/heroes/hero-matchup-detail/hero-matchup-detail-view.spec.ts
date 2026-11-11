@@ -60,12 +60,12 @@ describe('buildHeadToHeadView', () => {
     const [hulk, thor] = view!.sides;
     expect(hulk.hero.name).toBe('Hulk');
     expect(hulk.record).toEqual({ winRate: '75.0%', wins: 9, appearances: 12 });
-    expect(hulk.edge).toEqual({ points: '+24.0 points', usual: '51.0%' });
+    expect(hulk.edge).toEqual({ points: '+13.6 points', usual: '50.0%' });
     expect(hulk.killsBand).toBe('25+ seen kills');
     expect(hulk.overall).toEqual({ kda: '2.35', finalHits: '4.3' });
 
     expect(thor.record).toEqual({ winRate: '25.0%', wins: 3, appearances: 12 });
-    expect(thor.edge).toEqual({ points: '−25.0 points', usual: '50.0%' });
+    expect(thor.edge).toEqual({ points: '−13.6 points', usual: '50.0%' });
     expect(thor.killsBand).toBeNull();
     expect(thor.overall).toEqual({ kda: 'Not recorded', finalHits: 'Not recorded' });
   });
@@ -123,10 +123,16 @@ describe('buildHeadToHeadView', () => {
     });
   });
 
-  it('says "Even" when the matchup rate rounds to the usual one', () => {
-    const view = buildHeadToHeadView(bothSides, statsOf([placed('hulk', 75.04, 1, 1)]), null, 'hulk', 'thor', roster);
+  it('shows the edge the server sent, so it agrees with the counter lists, whatever the plain rates say', () => {
+    const view = buildHeadToHeadView(matchupsOf([matchup('hulk', 'thor', 9, 12, { edge: 3.3 })]), stats, null, 'hulk', 'thor', roster);
 
-    expect(view?.sides[0].edge).toEqual({ points: 'Even', usual: '75.0%' });
+    expect(view?.sides[0].edge).toEqual({ points: '+3.3 points', usual: '60.3%' });
+  });
+
+  it('says "Even" when the edge rounds to nothing', () => {
+    const view = buildHeadToHeadView(matchupsOf([matchup('hulk', 'thor', 9, 12, { edge: 0.04 })]), null, null, 'hulk', 'thor', roster);
+
+    expect(view?.sides[0].edge?.points).toBe('Even');
   });
 
   it('leaves a side without a record when its mirror is below the minimum', () => {
@@ -137,10 +143,10 @@ describe('buildHeadToHeadView', () => {
     expect(view?.sides[1].record?.winRate).toBe('25.0%');
   });
 
-  it('leaves out figures from another half-season than the matchups', () => {
+  it('leaves out figures from another half-season than the matchups, but keeps the edge, which comes with the matchup', () => {
     const view = buildHeadToHeadView(bothSides, statsOf([placed('hulk', 51, 2, 4)], 10), killsOf([], 10), 'hulk', 'thor', roster);
 
-    expect(view?.sides[0].edge).toBeNull();
+    expect(view?.sides[0].edge?.points).toBe('+13.6 points');
     expect(view?.sides[0].overall).toBeNull();
     expect(view?.showKillFeed).toBeFalse();
   });
@@ -151,8 +157,8 @@ describe('buildHeadToHeadView', () => {
     expect(view?.showKillFeed).toBeFalse();
   });
 
-  it('leaves out the edge when a rate is not a number', () => {
-    const view = buildHeadToHeadView(bothSides, statsOf([placed('hulk', Number.NaN, 1, 1)]), null, 'hulk', 'thor', roster);
+  it('leaves out the edge when it is not a number', () => {
+    const view = buildHeadToHeadView(matchupsOf([matchup('hulk', 'thor', 9, 12, { edge: Number.NaN })]), stats, null, 'hulk', 'thor', roster);
 
     expect(view?.sides[0].edge).toBeNull();
   });

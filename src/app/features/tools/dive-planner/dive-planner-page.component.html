@@ -1,7 +1,7 @@
 <div class="planner page-container page-container--wide">
   <app-page-header
     title="Dive Response Planner"
-    description="Choose up to {{ maxDiveThreats }} enemy dive heroes to see who has a winning record against several of them."
+    description="Choose up to {{ maxDiveThreats }} enemy dive heroes to see which heroes do better than usual against several of them."
   />
   @if (halfSeasonLine(); as line) {
     <p class="source">{{ line }}</p>
@@ -43,8 +43,8 @@
     <section aria-labelledby="answers-title">
       <h2 id="answers-title">Choose overlap, then assign jobs</h2>
       <p class="lede">
-        The best swap is usually the hero who beats more than one of the dive. Results are heroes that win more than
-        they lose against those threats in recorded matches. Choose one to see its matchups on the Counters page.
+        The best swap is usually the hero who does better than usual against more than one of the dive.
+        {{ ruleNote() }} Choose one to see its matchups on the Counters page.
       </p>
       @if (notice(); as current) {
         <app-state-panel [kind]="current.kind" [heading]="current.heading" [headingLevel]="3" [announce]="false">
@@ -55,8 +55,8 @@
           <app-state-panel>Select at least one enemy threat.</app-state-panel>
         }
       } @else if (answerRows().length === 0) {
-        <app-state-panel heading="No winning record yet" [headingLevel]="3">
-          No hero has a winning record against these threats in enough recorded matches yet.
+        <app-state-panel heading="No hero stands out yet" [headingLevel]="3">
+          {{ noAnswerMessage() }}
         </app-state-panel>
       } @else {
         <ul class="tiles">

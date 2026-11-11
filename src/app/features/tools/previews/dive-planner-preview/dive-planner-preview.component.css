@@ -34,7 +34,7 @@
   list-style: none;
 }
 
-/* Each portrait is outlined in its side's colour: the enemy red, and the green of a winning record. */
+/* Each portrait is outlined in its side's colour: the enemy red, and the green of a counter. */
 .heroes li {
   padding: 2px;
   border: 2px solid var(--danger);

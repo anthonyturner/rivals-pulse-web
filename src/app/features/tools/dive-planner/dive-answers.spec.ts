@@ -1,5 +1,5 @@
 import { heroOf, matchup, matchupsOf } from '../../insights/hero-matchup.fixtures';
-import { answersTo } from './dive-answers';
+import { answersTo, noAnswerMessage } from './dive-answers';
 
 const angela = heroOf('angela', 'Angela', 'Vanguard');
 const blackCat = heroOf('black-cat', 'Black Cat', 'Duelist');
@@ -16,7 +16,7 @@ describe('answersTo', () => {
     matchup('hulk', 'angela', 3, 12),
   ]);
 
-  it('puts the hero with a winning record against the most threats first', () => {
+  it('puts the hero that counters the most threats first', () => {
     const answers = answersTo([angela, blackCat], heroes, matchups);
 
     expect(answers.map((answer) => [answer.hero.name, answer.coveredThreats.map((threat) => threat.name)])).toEqual([
@@ -45,5 +45,24 @@ describe('answersTo', () => {
 
     expect(answersTo([angela], heroes, tied).map((answer) => answer.hero.name)).toEqual(['Black Cat', 'Hulk', 'Mantis']);
     expect(answersTo([angela], heroes, tied, 2).map((answer) => answer.hero.name)).toEqual(['Black Cat', 'Hulk']);
+  });
+});
+
+describe('noAnswerMessage', () => {
+  const matchups = matchupsOf([
+    matchup('peni-parker', 'angela', 3, 12),
+    matchup('mantis', 'angela', 4, 12),
+    matchup('mantis', 'black-cat', 4, 12),
+    matchup('angela', 'hulk', 3, 12),
+  ]);
+
+  it('names how many heroes have the minimum of matches against the threats, never counting a threat itself', () => {
+    expect(noAnswerMessage([angela, blackCat], matchups)).toBe(
+      'No hero does at least 3 points better than it usually does against these threats, across the 2 heroes with 10 or more recorded matches against them.',
+    );
+  });
+
+  it('says plainly when no hero has the matches', () => {
+    expect(noAnswerMessage([hulk], matchupsOf([]))).toBe('No hero has 10 or more recorded matches against these threats yet.');
   });
 });

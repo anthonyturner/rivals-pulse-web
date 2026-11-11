@@ -54,15 +54,16 @@ describe('CountersTabComponent', () => {
     await answer(READY);
   });
 
-  it('lists the strongest winning records, strongest first, and links to the counters tool', async () => {
+  it('lists the strongest counters, strongest first, and links to the counters tool', async () => {
     await answer(READY);
 
     const rows = Array.from(matchupsPanel().querySelectorAll('li')).map((row) => row.textContent?.replace(/\s+/g, ' ').trim());
 
     expect(rows.length).toBe(2);
-    expect(rows[0]).toContain('Storm wins against Thor');
+    expect(rows[0]).toContain('Storm does better than usual against Thor');
     expect(rows[0]).toContain('91.7%');
-    expect(rows[1]).toContain('Hulk wins against Thor');
+    expect(rows[0]).toContain('+22.7 pts vs usual');
+    expect(rows[1]).toContain('Hulk does better than usual against Thor');
     expect(rows[1]).toContain('12 matches');
     expect(text()).not.toMatch(/NaN|undefined|null/);
     expect(Array.from(matchupsPanel().querySelectorAll('a')).map((anchor) => anchor.getAttribute('href'))).toContain('/counters');
