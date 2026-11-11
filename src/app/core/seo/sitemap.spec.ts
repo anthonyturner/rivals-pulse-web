@@ -45,6 +45,10 @@ describe('sitemap', () => {
     expect(SITEMAP_STATIC_PATHS.filter((path) => unreleased.includes(path))).toEqual([]);
   });
 
+  it('lists the desktop app privacy policy', () => {
+    expect(SITEMAP_STATIC_PATHS).toContain('/privacy/app');
+  });
+
   it('lists no account, admin or sign-in page', () => {
     const privatePaths = ['/admin', '/account', '/profile', '/sign-in'];
 

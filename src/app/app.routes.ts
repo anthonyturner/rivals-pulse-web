@@ -9,6 +9,7 @@ import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility'
 import { ROUTE_DESCRIPTION_KEY, ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
 import { HOME_TITLE, SITE_NAME } from './core/seo/site-meta';
 import { FAIR_PLAY_DESCRIPTION } from './features/fair-play/fair-play-meta';
+import { APP_PRIVACY_POLICY_DESCRIPTION } from './features/privacy/app-privacy-policy/app-privacy-policy-meta';
 import { heroesRoutes } from './features/heroes/heroes.routes';
 import { PULSE_RECORDS_PAGES } from './features/records/pulse-records.data';
 import { heroGuideRouteTitle, strategistGuideRouteTitle } from './features/learning/guides/guide-titles';
@@ -320,6 +321,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/privacy/privacy-page.component').then(
         (module) => module.PrivacyPageComponent,
+      ),
+  },
+  {
+    path: 'privacy/app',
+    title: 'App privacy policy | RivalsPulse',
+    data: { [ROUTE_DESCRIPTION_KEY]: APP_PRIVACY_POLICY_DESCRIPTION },
+    loadComponent: () =>
+      import('./features/privacy/app-privacy-policy/app-privacy-policy-page.component').then(
+        (module) => module.AppPrivacyPolicyPageComponent,
       ),
   },
   {

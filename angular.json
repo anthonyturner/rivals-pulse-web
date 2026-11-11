@@ -15,6 +15,9 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "loader": {
+              ".md": "text"
+            },
             "assets": [
               {
                 "glob": "**/*",
@@ -91,6 +94,9 @@
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "tsconfig.spec.json",
+            "loader": {
+              ".md": "text"
+            },
             "assets": [
               {
                 "glob": "**/*",

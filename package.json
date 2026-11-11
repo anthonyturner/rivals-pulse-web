@@ -25,6 +25,8 @@
     "sync:glossary:missing": "node scripts/sync-glossary.mjs --missing",
     "sync:glossary:terms": "node scripts/sync-glossary.mjs --terms",
     "sync:heroes": "node scripts/sync-heroes.mjs",
+    "sync:app-privacy-policy": "node scripts/sync-app-privacy-policy.ts",
+    "check:app-privacy-policy": "node scripts/sync-app-privacy-policy.ts --check",
     "sync:hero-videos": "node scripts/sync-hero-videos.mjs",
     "sync:hero-archetypes": "node --experimental-strip-types scripts/sync-hero-archetypes.mjs",
     "sync:official-heroes": "node scripts/sync-official-heroes.mjs",

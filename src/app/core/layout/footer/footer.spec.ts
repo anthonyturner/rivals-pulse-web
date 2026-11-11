@@ -107,6 +107,14 @@ describe('Footer', () => {
     expect(link?.textContent?.trim()).toBe('Fair play and privacy');
   });
 
+  it('links to the desktop app privacy policy from the RivalsPulse column', () => {
+    const column = page().querySelector('#footer-rivalspulse')?.closest('.site-footer__column');
+    const link = column?.querySelector('a[href="/privacy/app"]') as HTMLAnchorElement | null;
+
+    expect(link).withContext('the RivalsPulse column has an app privacy policy link').toBeTruthy();
+    expect(link?.textContent?.trim()).toBe('App privacy policy');
+  });
+
   it('keeps saying the site is an independent fan project', () => {
     const text = (page().textContent ?? '').replace(/\s+/g, ' ');
 
