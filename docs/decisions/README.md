@@ -53,3 +53,4 @@ ADR when the project decides differently.
 | [0005](0005-gate-site-administration-behind-an-admin-table.md) | Gate site administration behind an admin table and a database check | Accepted |
 | [0006](0006-publish-opted-in-player-names-on-pulse-records.md) | Publish opted-in player names on Pulse Records | Accepted |
 | [0007](0007-squash-merge-pull-requests.md) | Squash-merge pull requests | Accepted |
+| [0008](0008-give-each-stat-one-read-and-one-home.md) | Give each community stat one read function and one home | Accepted |
