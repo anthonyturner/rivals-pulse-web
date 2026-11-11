@@ -77,7 +77,7 @@ const DELETE_FAILED = 'The deletion did not go through, as far as we can tell. T
 /**
  * The visitor's sign-in state, read from the server. The session itself lives in an HttpOnly cookie
  * that scripts cannot see, so the only way to know is to ask `/api/auth/session`. It is read in the
- * browser only: production pages are rendered there, and a server render has no visitor to ask about.
+ * browser only: a server render has no visitor to ask about, so it never knows who is signed in.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {

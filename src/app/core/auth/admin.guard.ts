@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
  * are even downloaded. This only decides what a visitor sees: the admin API and the database refuse
  * every non-admin themselves (ADR-0005), so a visitor who skips this guard gets an empty shell
  * whose every request is turned away. The check runs in the browser, like `signedInGuard`:
- * production pages are rendered there, and a server render has no visitor to ask about.
+ * a server render has no visitor to ask about, so it lets the route through.
  */
 export const adminGuard: CanMatchFn = async () => {
   if (!isPlatformBrowser(inject(PLATFORM_ID))) {
