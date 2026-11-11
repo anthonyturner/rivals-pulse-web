@@ -1,0 +1,9 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+}

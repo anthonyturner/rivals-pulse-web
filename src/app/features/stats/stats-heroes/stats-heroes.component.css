@@ -1,0 +1,10 @@
+:host {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.intro {
+  margin: 0;
+  color: var(--text-soft);
+}

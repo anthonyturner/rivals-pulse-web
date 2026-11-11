@@ -14,16 +14,11 @@ export const NAVIGATION_CATEGORIES: NavigationCategory[] = [
   {
     label: 'Resources',
     path: '/resources',
-    description: 'Videos, guides, stats and a glossary for quick reference.',
+    description: 'Videos, strategist guides, community plays and a glossary for quick reference.',
     items: [
       { label: 'Media Tutorials', path: '/media-tutorials', description: 'Browse coaching videos by topic.', enabled: true },
       { label: 'Strategist Guides', path: '/strategist-guides', description: 'Study transcript-built support lessons and practice drills.', enabled: true },
       { label: 'User Highlights', path: '/user-highlights', description: 'Review community plays one decision at a time.', enabled: true },
-      { label: 'Game Stats', path: '/game-stats', description: 'Review the numbers behind the roster.', enabled: true },
-      { label: 'Tier List', path: '/tier-list', description: 'Community hero tiers from RivalsPulse players, by half-season.', enabled: true },
-      { label: 'Hero stats', path: '/win-rates', description: 'Compare hero win and pick rates from RivalsPulse matches.', enabled: true },
-      { label: 'Team Comps', path: '/team-comps', description: 'Compare the best duos in each role, triple supports and line-ups.', enabled: true },
-      { label: 'Pulse Records', path: '/records', description: 'See the best single matches players have recorded.', enabled: true },
       { label: 'Glossary', path: '/glossary', description: 'Translate common hero-shooter terms quickly.', enabled: true },
     ],
   },

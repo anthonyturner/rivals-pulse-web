@@ -1,37 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import type { TileChip } from '../../hub/hub-tile.types';
-import { HubTileComponent } from '../../hub/hub-tile/hub-tile.component';
-import { KindChipComponent } from '../../hub/kind-chip/kind-chip.component';
-import { contentState, reportContentState } from '../../../core/seo/thin-content';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
-import { buildGameStatsView } from './game-stats-view';
-import { GameStatsService } from './game-stats.service';
+import { GameStatsComponent } from './game-stats.component';
 
 @Component({
   selector: 'app-game-stats-page',
-  imports: [HubTileComponent, KindChipComponent, PageHeaderComponent, StatePanelComponent],
+  imports: [GameStatsComponent, PageHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-stats-page.component.html',
-  styleUrls: ['../insight-page.css', './game-stats-page.component.css'],
+  styleUrl: '../insight-page.css',
 })
-export class GameStatsPageComponent {
-  // undefined while the request runs, null once it has failed.
-  private readonly counts = toSignal(inject(GameStatsService).getGameCounts());
-
-  readonly view = computed(() => buildGameStatsView(this.counts()));
-  /** The line under the title, once there are counts to describe. */
-  readonly meta = computed(() => {
-    const view = this.view();
-
-    return view.status === 'ready' ? view.meta : null;
-  });
-  readonly leadImage = '/images/site/banners/game-stats-banner.webp';
-  readonly leadChip: TileChip = { kind: 'secondary', label: 'From the app' };
-
-  constructor() {
-    reportContentState(() => contentState(this.view().status === 'loading', this.view().status === 'ready'));
-  }
-}
+export class GameStatsPageComponent {}

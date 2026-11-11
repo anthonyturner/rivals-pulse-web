@@ -1,0 +1,273 @@
+<p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+@if (showSeasonPicker() || showModePicker() || meta()) {
+  <div class="toolbar">
+    @if (showModePicker()) {
+      <app-filter-select
+        label="Mode"
+        [options]="modeChoices()"
+        [value]="selectedMode()"
+        (valueChange)="chooseMode($event)"
+      />
+    }
+    @if (showSeasonPicker()) {
+      <app-filter-select
+        label="Season"
+        [options]="seasonChoices()"
+        [value]="selectedSeason()"
+        (valueChange)="chooseSeason($event)"
+      />
+    }
+    @if (meta()) {
+      <p class="meta">{{ meta() }}</p>
+    }
+  </div>
+}
+
+@if (failed()) {
+  <app-state-panel kind="error" heading="Team comps could not be loaded">
+    <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+  </app-state-panel>
+} @else if (loading()) {
+  <app-state-panel kind="loading" heading="Loading team comps" [announce]="false">
+    <p>Fetching the latest counted matches.</p>
+  </app-state-panel>
+} @else if (view(); as v) {
+  @if (v.modeCaveat; as caveat) {
+    <app-notice>{{ caveat }}</app-notice>
+  }
+
+  @if (v.fallbackNotice; as notice) {
+    <app-notice>{{ notice }}</app-notice>
+  }
+
+  <section class="comps-section" aria-labelledby="pairs-title">
+    <div class="section-heading">
+      <h2 id="pairs-title">Top duos by role</h2>
+      <p>
+        Two heroes of the same role on one team, highest win rate first. Deadpool is listed under the
+        role of the form he played.
+      </p>
+    </div>
+
+    @for (section of v.rolePairs; track section.role) {
+      <div class="card">
+        <h3 [id]="section.id">{{ section.heading }}</h3>
+        @if (section.rows.length > 0) {
+          <table [attr.aria-labelledby]="section.id">
+            <thead>
+              <tr>
+                <th scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
+                <th scope="col">Pair</th>
+                <th scope="col" class="col-matches">Matches together</th>
+                <th scope="col" class="col-rate">Win rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of section.rows; track row.first.hero + row.second.hero) {
+                <tr>
+                  <td class="col-rank">{{ row.rank }}</td>
+                  <th scope="row">
+                    <span class="pair">
+                      <a class="hero-link" [routerLink]="['/heroes', row.first.hero]">
+                        <img appHeroImageFallback [src]="row.first.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                        <span class="hero-name">{{ row.first.name }}</span>
+                      </a>
+                      <span class="plus" aria-hidden="true">+</span>
+                      <span class="visually-hidden">and</span>
+                      <a class="hero-link" [routerLink]="['/heroes', row.second.hero]">
+                        <img appHeroImageFallback [src]="row.second.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                        <span class="hero-name">{{ row.second.name }}</span>
+                      </a>
+                    </span>
+                  </th>
+                  <td class="col-matches">{{ row.matches }}</td>
+                  <td class="col-rate">{{ row.winRateLabel }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="empty">
+            Not enough data yet. A pair is listed once it has {{ v.minimumLabel }} together.
+          </p>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="comps-section" aria-labelledby="triple-title">
+    <div class="section-heading">
+      <h2 id="triple-title">Triple supports</h2>
+      <p>
+        Teams with three Strategists, and how each variant is doing. For how to play against them, see
+        the <a routerLink="/triple-support-counter">triple-support guide</a>.
+      </p>
+    </div>
+    @let triple = v.tripleSupport;
+    @switch (triple.state) {
+      @case ('unavailable') {
+        <app-state-panel kind="error" heading="Triple supports could not be loaded" [headingLevel]="3" [announce]="false">
+          <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+        </app-state-panel>
+      }
+      @case ('not-enough-data') {
+        @if (triple.notice; as notice) {
+          <app-notice>{{ notice }}</app-notice>
+        }
+        <app-state-panel heading="Not enough data yet" [headingLevel]="3">
+          <p>
+            No trio has reached {{ triple.minimumLabel }} {{ v.scopeLabel }}. Triple-support trios appear
+            here once RivalsPulse players have recorded enough of them.
+          </p>
+        </app-state-panel>
+      }
+      @case ('ready') {
+        @if (triple.notice; as notice) {
+          <app-notice>{{ notice }}</app-notice>
+        }
+        @for (variant of triple.variants; track variant.id) {
+          <div class="card">
+            <h3 [id]="variant.id">{{ variant.label }}</h3>
+            <p class="variant-summary">{{ variant.summary }}</p>
+            <table [attr.aria-labelledby]="variant.id">
+              <thead>
+                <tr>
+                  <th scope="col">Trio</th>
+                  <th scope="col" class="col-share">Pick share</th>
+                  <th scope="col" class="col-rate">Win rate</th>
+                  <th scope="col" class="col-matches">Matches</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of variant.rows; track row.heroes[0].hero + row.heroes[1].hero + row.heroes[2].hero) {
+                  <tr>
+                    <th scope="row">
+                      <ul class="trio">
+                        @for (hero of row.heroes; track hero.hero) {
+                          <li>
+                            <a class="hero-link" [routerLink]="['/heroes', hero.hero]">
+                              <img appHeroImageFallback [src]="hero.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                              <span class="hero-name">{{ hero.name }}</span>
+                            </a>
+                          </li>
+                        }
+                      </ul>
+                    </th>
+                    <td class="col-share">{{ row.shareLabel }}</td>
+                    <td class="col-rate">{{ row.winRateLabel }}</td>
+                    <td class="col-matches">{{ row.matches }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (variant.moreLabel; as more) {
+              <p class="empty">{{ more }}</p>
+            }
+          </div>
+        }
+        @if (triple.quadSupport; as quad) {
+          <div class="card">
+            <h3>Quad support</h3>
+            <p class="variant-summary">
+              {{ quad.label }} ran four or more Strategists. They are counted as that shape only: with
+              no single trio, they have no win rate here.
+            </p>
+          </div>
+        }
+        <p class="empty">
+          Pick share is the share of teams that ran exactly this trio, out of every team whose heroes
+          all have a known role. A trio is listed once it has {{ triple.minimumLabel }}.
+        </p>
+      }
+    }
+  </section>
+
+  <section class="comps-section" aria-labelledby="lineups-title">
+    <div class="section-heading">
+      <h2 id="lineups-title">Line-ups</h2>
+      <p>
+        How teams split between tanks (Vanguards), DPS (Duelists) and supports (Strategists), written
+        in that order: 2-2-2 is 2 tanks, 2 DPS and 2 supports. A line-up with three or more supports
+        is triple or quad support; the trios behind it are in
+        <a [routerLink]="[]" fragment="triple-title">Triple supports</a>.
+      </p>
+    </div>
+    @let lineups = v.lineups;
+    @switch (lineups.state) {
+      @case ('unavailable') {
+        <app-state-panel kind="error" heading="Line-ups could not be loaded" [headingLevel]="3" [announce]="false">
+          <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+        </app-state-panel>
+      }
+      @case ('not-enough-data') {
+        @if (lineups.notice; as notice) {
+          <app-notice>{{ notice }}</app-notice>
+        }
+        <app-state-panel heading="Not enough data yet" [headingLevel]="3">
+          <p>
+            No line-up has reached {{ lineups.minimumLabel }} {{ v.scopeLabel }}. Line-ups appear here
+            once RivalsPulse players have recorded enough teams of each.
+          </p>
+        </app-state-panel>
+      }
+      @case ('ready') {
+        @if (lineups.notice; as notice) {
+          <app-notice>{{ notice }}</app-notice>
+        }
+        <div class="card">
+          <table aria-labelledby="lineups-title">
+            <thead>
+              <tr>
+                <th scope="col">Line-up</th>
+                <th scope="col" class="col-share">Pick rate</th>
+                <th scope="col" class="col-rate">Win rate</th>
+                <th scope="col" class="col-matches">Teams</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of lineups.rows; track row.shape) {
+                <tr>
+                  <th scope="row">
+                    <span class="lineup">
+                      <span class="shape" aria-hidden="true">{{ row.shape }}</span>
+                      <span class="shape-caption" aria-hidden="true">{{ row.caption }}</span>
+                      <span class="visually-hidden">{{ row.spoken }}</span>
+                      @if (row.supportLabel; as label) {
+                        <span class="support-badge">{{ label }}</span>
+                      }
+                    </span>
+                  </th>
+                  @if (row.figures; as figures) {
+                    <td class="col-share">{{ figures.pickRateLabel }}</td>
+                    <td class="col-rate">{{ figures.winRateLabel }}</td>
+                    <td class="col-matches">{{ figures.teams }}</td>
+                  } @else {
+                    <td class="thin" colspan="3">Not enough data yet</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="empty">
+          Pick rate is the share of teams that ran this line-up. A line-up shows its figures once
+          {{ lineups.minimumLabel }} have run it.
+        </p>
+      }
+    }
+  </section>
+
+  <p class="method-note">
+    RivalsPulse has no rank breakdown, so every figure covers all ranks together. Competitive is
+    counted unless you pick another mode, and a half-season is counted on its own. Pairs are
+    ranked by win rate pulled toward 50%, so a short run cannot top a list; the rate shown is the
+    plain one. A pair is counted once for each team that fields it, so a pair on both teams of one
+    match counts twice. Matches without a win or a loss, and matches where the game did not say
+    which mode they were, are left out.
+    @if (v.lineupsNote; as note) {
+      {{ note }}
+    }
+    <a routerLink="/how-we-count">How we count</a>
+  </p>
+}

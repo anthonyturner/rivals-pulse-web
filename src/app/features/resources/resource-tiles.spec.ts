@@ -5,9 +5,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { NAVIGATION_CATEGORIES } from '../../core/navigation/navigation-category.data';
-import { heroOf } from '../insights/hero-matchup.fixtures';
-import { statsHero, statsOf } from '../insights/hero-stats.fixtures';
-import { synergiesOf, synergy } from '../insights/hero-synergies.fixtures';
 import type { GlossaryTerm } from '../reference/glossary/glossary.model';
 import { LOCAL_DATE } from '../../shared/utilities/local-date';
 import { HubBentoComponent } from '../hub/hub-bento/hub-bento.component';
@@ -16,13 +13,6 @@ import { RESOURCE_TILES } from './resource-tiles.data';
 const links = (NAVIGATION_CATEGORIES.find((category) => category.label === 'Resources')?.items ?? []).filter(
   (item) => item.enabled,
 );
-
-const ROSTER = [
-  heroOf('hulk', 'Hulk', 'Vanguard'),
-  heroOf('thor', 'Thor', 'Vanguard'),
-  heroOf('storm', 'Storm', 'Duelist'),
-  heroOf('mantis', 'Mantis', 'Strategist'),
-];
 
 const TERM: GlossaryTerm = {
   id: 'dive',
@@ -60,26 +50,15 @@ describe('The Resources hub', () => {
     element = fixture.nativeElement;
   }
 
-  async function answerWith(answers: { heroStats?: object; heroes?: object; glossary?: object; synergies?: object }): Promise<void> {
-    const reply = (url: string, body: object | string): void => {
-      const request = http.expectOne((candidate) => candidate.url === url);
+  async function answerGlossary(answer: object | 'error'): Promise<void> {
+    const request = http.expectOne((candidate) => candidate.url === '/api/glossary');
 
-      // The Team comps preview shows what the page it links to opens on.
-      if (url === '/api/hero-synergies') {
-        expect(request.request.params.get('mode')).toBe('competitive');
-      }
+    if (answer === 'error') {
+      request.flush('down', { status: 500, statusText: 'Server Error' });
+    } else {
+      request.flush(answer);
+    }
 
-      if (body === 'error') {
-        request.flush('down', { status: 500, statusText: 'Server Error' });
-      } else {
-        request.flush(body);
-      }
-    };
-
-    reply('/api/hero-stats', answers.heroStats ?? 'error');
-    reply('/api/heroes', answers.heroes ?? 'error');
-    reply('/api/glossary', answers.glossary ?? 'error');
-    reply('/api/hero-synergies', answers.synergies ?? 'error');
     await fixture.whenStable();
     fixture.detectChanges();
   }
@@ -97,24 +76,14 @@ describe('The Resources hub', () => {
   describe('before any data has arrived', () => {
     beforeEach(() => {
       render();
-      // The previews are asking; this group looks at the tiles alone.
+      // The preview is asking; this group looks at the tiles alone.
       http.match(() => true);
     });
 
     it('lays the released links out in the grid order, one tile each', () => {
       const names = Array.from(element.querySelectorAll('app-hub-tile h2')).map((heading) => flat(heading));
 
-      expect(names).toEqual([
-        'Media Tutorials',
-        'Tier List',
-        'Hero stats',
-        'Strategist Guides',
-        'User Highlights',
-        'Game Stats',
-        'Glossary',
-        'Team Comps',
-        'Pulse Records',
-      ]);
+      expect(names).toEqual(['Media Tutorials', 'User Highlights', 'Glossary', 'Strategist Guides']);
     });
 
     it('makes every tile one link named by its label', () => {
@@ -131,7 +100,7 @@ describe('The Resources hub', () => {
     it('sizes the tiles by kind, with Media Tutorials as the feature', () => {
       const sizes = Array.from(element.querySelectorAll('.cell')).map((cell) => cell.getAttribute('data-size'));
 
-      expect(sizes).toEqual(['feature', 'tall', 'half', 'half', 'third', 'third', 'note', 'wide', 'wide']);
+      expect(sizes).toEqual(['feature', 'third', 'note', 'wide']);
       expect(element.querySelectorAll('app-hub-tile.featured').length).toBe(1);
       expect(tile('Media Tutorials').classList).toContain('featured');
     });
@@ -154,10 +123,7 @@ describe('The Resources hub', () => {
 
       expect(chips('Media Tutorials')).toEqual(['Learn', 'accent']);
       expect(chips('Strategist Guides')).toEqual(['Learn', 'accent']);
-      expect(chips('Hero stats')).toEqual(['Stats', 'secondary']);
-      expect(chips('Game Stats')).toEqual(['Stats', 'secondary']);
       expect(chips('Glossary')).toEqual(['Reference', 'secondary']);
-      expect(chips('Tier List')).toEqual(['Community', 'tertiary']);
       expect(chips('User Highlights')).toEqual(['Community', 'tertiary']);
     });
 
@@ -166,54 +132,22 @@ describe('The Resources hub', () => {
       expect(tile('Strategist Guides').querySelectorAll('.heroes img').length).toBeGreaterThan(0);
     });
 
-    it('draws no figure in a preview that has no data yet', () => {
-      for (const label of ['Tier List', 'Hero stats', 'Game Stats', 'Glossary', 'Team Comps']) {
-        expect(flat(tile(label).querySelector('.preview'))).toBe('');
-      }
+    it('draws no word in the glossary preview that has no data yet', () => {
+      expect(flat(tile('Glossary').querySelector('.preview'))).toBe('');
     });
   });
 
-  it('fills the previews from the site data once it arrives', async () => {
+  it('fills the glossary preview from the site data once it arrives', async () => {
     render();
-    await answerWith({
-      heroStats: statsOf([
-        {
-          name: 'S',
-          heroes: [statsHero('hulk', 20, 16, 10, 'S'), statsHero('thor', 20, 14, 10, 'S')],
-        },
-        { name: 'A', heroes: [statsHero('storm', 20, 12, 10, 'A')] },
-      ]),
-      heroes: ROSTER,
-      glossary: [TERM],
-      synergies: synergiesOf([synergy('hulk', 'thor', 9, 12)]),
-    });
+    await answerGlossary([TERM]);
 
-    const tiers = Array.from(tile('Tier List').querySelectorAll('.row')).map((row) => flat(row.querySelector('.letter')));
-    expect(tiers).toEqual(['S', 'A']);
-    expect(tile('Tier List').querySelectorAll('.heroes img').length).toBe(3);
-
-    const text = (label: string, selector: string): string[] =>
-      Array.from(tile(label).querySelectorAll(selector)).map((node) => flat(node));
-
-    expect(text('Hero stats', '.name')).toEqual(['Hulk', 'Thor', 'Storm']);
-    expect(text('Hero stats', '.rate')).toEqual(['80.0%', '70.0%', '60.0%']);
-    expect(tile('Hero stats').querySelector<HTMLElement>('.fill')?.style.width).toBe('80%');
-
-    expect(text('Game Stats', '.count')).toEqual(['4']);
-    expect(text('Glossary', '.word')).toEqual(['Dive']);
-    expect(text('Glossary', '.definition')).toEqual([TERM.definition]);
-    expect(text('Team Comps', '.role')).toEqual(['Vanguard duo']);
-    expect(text('Team Comps', '.rate')).toEqual(['75.0%']);
+    expect(flat(tile('Glossary').querySelector('.word'))).toBe('Dive');
+    expect(flat(tile('Glossary').querySelector('.definition'))).toBe(TERM.definition);
   });
 
   it('keeps the preview images decorative and out of the accessibility tree', async () => {
     render();
-    await answerWith({
-      heroStats: statsOf([{ name: 'S', heroes: [statsHero('hulk', 20, 16, 10, 'S')] }]),
-      heroes: ROSTER,
-      glossary: [TERM],
-      synergies: synergiesOf([]),
-    });
+    await answerGlossary([TERM]);
 
     for (const image of Array.from(element.querySelectorAll('img'))) {
       expect(image.getAttribute('alt')).toBe('');
@@ -223,31 +157,25 @@ describe('The Resources hub', () => {
       expect(preview.getAttribute('aria-hidden')).toBe('true');
     }
 
-    expect(tile('Tier List').querySelectorAll('a').length).toBe(1);
+    expect(tile('Glossary').querySelectorAll('a').length).toBe(1);
   });
 
-  it('still shows every tile, with no figures, when the data cannot be loaded', async () => {
+  it('still shows every tile, with no word, when the data cannot be loaded', async () => {
     render();
-    await answerWith({});
+    await answerGlossary('error');
 
     expect(element.querySelectorAll('app-hub-tile').length).toBe(links.length);
-
-    for (const label of ['Tier List', 'Hero stats', 'Game Stats', 'Glossary', 'Team Comps']) {
-      expect(flat(tile(label).querySelector('.preview'))).toBe('');
-      expect(flat(tile(label).querySelector('.description'))).not.toBe('');
-      expect(tile(label).querySelector('.chip')).not.toBeNull();
-    }
-
+    expect(flat(tile('Glossary').querySelector('.preview'))).toBe('');
+    expect(flat(tile('Glossary').querySelector('.description'))).not.toBe('');
+    expect(tile('Glossary').querySelector('.chip')).not.toBeNull();
     expect(element.textContent).not.toMatch(/NaN|undefined|null/);
   });
 
-  it('shows no figure when the data is there but empty', async () => {
+  it('shows no word when the data is there but empty', async () => {
     render();
-    await answerWith({ heroStats: statsOf([]), heroes: [], glossary: [], synergies: synergiesOf([]) });
+    await answerGlossary([]);
 
-    for (const label of ['Tier List', 'Hero stats', 'Game Stats', 'Glossary', 'Team Comps']) {
-      expect(flat(tile(label).querySelector('.preview'))).toBe('');
-    }
+    expect(flat(tile('Glossary').querySelector('.preview'))).toBe('');
   });
 
   it('makes no request on the server, so the render never waits for a preview', () => {
@@ -284,5 +212,11 @@ describe('The Resources hub', () => {
     expect(flat(last.querySelector('h2'))).toBe('New thing');
     expect(last.getAttribute('data-size')).toBe('third');
     expect(last.querySelector('.chip')).toBeNull();
+  });
+});
+
+describe('The Resources hub links', () => {
+  it('are only learning pages: no stat page has a place in the hub', () => {
+    expect(links.map((link) => link.path)).toEqual(['/media-tutorials', '/strategist-guides', '/user-highlights', '/glossary']);
   });
 });

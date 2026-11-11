@@ -1,0 +1,20 @@
+<div class="stats-page page-container page-container--wide">
+  <app-page-header [title]="open().heading" [description]="open().description" />
+
+  <nav #bar class="stats-page__bar" aria-label="Stats sections">
+    @for (tab of tabs(); track tab.id) {
+      <a
+        #barLink
+        class="stats-page__tab"
+        [routerLink]="tab.link"
+        [attr.aria-current]="tab.current ? 'page' : null"
+      >
+        {{ tab.label }}
+      </a>
+    }
+  </nav>
+
+  <div class="stats-page__panel">
+    <router-outlet />
+  </div>
+</div>
