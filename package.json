@@ -65,6 +65,7 @@
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tursodatabase/serverless": "^1.2.3",
+    "@vercel/analytics": "^2.0.1",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -86,5 +87,11 @@
     "sharp": "^0.35.5",
     "supabase": "^2.122.0",
     "typescript": "~5.9.2"
+  },
+  "allowScripts": {
+    "lmdb": false,
+    "msgpackr-extract": false,
+    "@parcel/watcher": false,
+    "esbuild": true
   }
 }

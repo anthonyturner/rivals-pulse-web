@@ -44,6 +44,12 @@ Stack rules: [stack/typescript.md](stack/typescript.md) for TypeScript and npm,
 
 - Vercel (frontend, API functions, and cron-triggered sync jobs)
 
+## Analytics
+
+- Vercel Web Analytics (`@vercel/analytics`): cookieless, aggregate page views
+  and visitors. Loaded in the browser only and in production builds only; see
+  `src/app/core/analytics/`
+
 ## Source Control
 
 - GitHub
