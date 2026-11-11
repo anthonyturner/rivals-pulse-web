@@ -48,7 +48,7 @@ const ROLES: readonly RoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist'
 export class CountersPageComponent implements OnInit {
   private readonly counterEngine = inject(CounterEngineService);
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroMatchupsService = inject(CurrentHeroMatchupsService);
+  private readonly currentHeroMatchups = inject(CurrentHeroMatchupsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly resultHeading = viewChild<ElementRef<HTMLElement>>('resultHeading');
@@ -147,7 +147,7 @@ export class CountersPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.heroMatchupsService
+    this.currentHeroMatchups
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.matchups.set(matchups));

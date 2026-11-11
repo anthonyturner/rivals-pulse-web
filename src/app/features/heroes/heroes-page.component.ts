@@ -101,9 +101,9 @@ interface FandomOverviewSection {
 })
 export class HeroesPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroStatsService = inject(CurrentHeroStatsService);
+  private readonly currentHeroStats = inject(CurrentHeroStatsService);
   private readonly heroScoresService = inject(HeroScoresService);
-  private readonly heroMatchupsService = inject(CurrentHeroMatchupsService);
+  private readonly currentHeroMatchups = inject(CurrentHeroMatchupsService);
   private readonly heroSwitchInsService = inject(HeroSwitchInsService);
   private readonly communityKillsService = inject(CommunityKillsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -543,7 +543,7 @@ export class HeroesPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.heroStatsService
+    this.currentHeroStats
       .getHeroStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((stats) => this.heroStats.set(stats));
@@ -553,7 +553,7 @@ export class HeroesPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((scores) => this.heroScores.set(scores));
 
-    this.heroMatchupsService
+    this.currentHeroMatchups
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.heroMatchups.set(matchups));

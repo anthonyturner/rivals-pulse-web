@@ -398,7 +398,7 @@ describe('TierListPageComponent', () => {
       http.expectNone('/api/hero-stats');
       expect(page.querySelector('[aria-busy="true"]')).toBeNull();
       expect(modeSelect(page).value).toBe('all');
-      expect(text(page, '.meta')[0]).not.toContain('28 matches counted');
+      expect(text(page, '.meta')[0]).toContain('146 matches counted');
     });
 
     it('names an empty mode and its half-season, and keeps the picker so the mode can be left', async () => {

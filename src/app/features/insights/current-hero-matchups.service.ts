@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, shareReplay, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model';
+import { cachedNullableRequest } from '../../shared/utilities/cached-retry-request';
 import { HeroMatchupsService } from './hero-matchups.service';
 
 /**
@@ -12,21 +13,10 @@ import { HeroMatchupsService } from './hero-matchups.service';
 @Injectable({ providedIn: 'root' })
 export class CurrentHeroMatchupsService {
   private readonly heroMatchups = inject(HeroMatchupsService);
-  private matchups$ = this.fetch();
+  private readonly read = cachedNullableRequest(() => this.heroMatchups.getHeroMatchups());
 
   /** The matchups, or null when they could not be read. */
   getHeroMatchups(): Observable<HeroMatchups | null> {
-    return this.matchups$;
-  }
-
-  private fetch(): Observable<HeroMatchups | null> {
-    return this.heroMatchups.getHeroMatchups().pipe(
-      tap((matchups) => {
-        if (matchups === null) {
-          this.matchups$ = this.fetch();
-        }
-      }),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
+    return this.read();
   }
 }

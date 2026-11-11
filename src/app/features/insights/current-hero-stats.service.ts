@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, shareReplay, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import type { HeroStats } from '../../../contracts/hero-stats.model';
+import { cachedNullableRequest } from '../../shared/utilities/cached-retry-request';
 import { HeroStatsService } from './hero-stats.service';
 
 /**
@@ -13,21 +14,10 @@ import { HeroStatsService } from './hero-stats.service';
 @Injectable({ providedIn: 'root' })
 export class CurrentHeroStatsService {
   private readonly heroStats = inject(HeroStatsService);
-  private stats$ = this.fetch();
+  private readonly read = cachedNullableRequest(() => this.heroStats.getHeroStats());
 
   /** The current hero stats, or null when they could not be read. */
   getHeroStats(): Observable<HeroStats | null> {
-    return this.stats$;
-  }
-
-  private fetch(): Observable<HeroStats | null> {
-    return this.heroStats.getHeroStats().pipe(
-      tap((stats) => {
-        if (stats === null) {
-          this.stats$ = this.fetch();
-        }
-      }),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
+    return this.read();
   }
 }

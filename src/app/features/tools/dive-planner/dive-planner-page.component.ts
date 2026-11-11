@@ -37,7 +37,7 @@ const MAX_DIVE_THREATS = 4;
 })
 export class DivePlannerPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroMatchupsService = inject(CurrentHeroMatchupsService);
+  private readonly currentHeroMatchups = inject(CurrentHeroMatchupsService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** The roster: `undefined` until it has loaded. */
@@ -109,7 +109,7 @@ export class DivePlannerPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.heroMatchupsService
+    this.currentHeroMatchups
       .getHeroMatchups()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((matchups) => this.matchups.set(matchups));
