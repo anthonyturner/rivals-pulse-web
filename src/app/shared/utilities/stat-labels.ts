@@ -5,6 +5,11 @@ export function percentLabel(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+/** A whole percentage, such as `58%`. */
+export function wholePercentLabel(value: number): string {
+  return `${value}%`;
+}
+
 /** What a figure no recorded line carried reads as. */
 export const NOT_RECORDED = 'Not recorded';
 

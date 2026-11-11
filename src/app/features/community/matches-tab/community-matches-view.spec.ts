@@ -95,7 +95,7 @@ describe('buildCommunityMatchesView', () => {
     expect(view.maps.all).toEqual(view.maps.best);
     expect(view.maps.worst).toEqual([]);
     expect(view.maps.waitingNote).toBe('Klyntar, Hydra Base.');
-    expect(view.maps.allLabel).toBe('All 1 map');
+    expect(view.maps.allLabel).toBe('See the Maps tab');
     expect(view.maps.note).toBeNull();
   });
 

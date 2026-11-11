@@ -232,10 +232,16 @@ function mapRecords(
   // Ordered by what is shown, never by how many matches a map has.
   return {
     maps: shown
-      .map((tally): CommunityMapRecord => ({ map: tally.name, winRate: Math.round(priors.estimate(tally).rate * 100) }))
-      .sort((a, b) => b.winRate - a.winRate || a.map.localeCompare(b.map)),
+      .map((tally) => ({ map: tally.name, rate: priors.estimate(tally).rate }))
+      .sort((a, b) => b.rate - a.rate || a.map.localeCompare(b.map))
+      .map(({ map, rate }): CommunityMapRecord => ({ map, winRate: shownWinRate(rate) })),
     mapsBelowMinimum: [...waiting].filter((name) => !shownNames.has(name)).sort((a, b) => a.localeCompare(b)),
   };
+}
+
+/** A shrunk win rate (0 to 1) as a whole percentage; a pulled-in rate is never a certainty, so it never shows 0 or 100. */
+function shownWinRate(rate: number): number {
+  return Math.min(99, Math.max(1, Math.round(rate * 100)));
 }
 
 /** A map name with its capital letters and apostrophe style removed: the game and the site's list spell the same map in different letters. */

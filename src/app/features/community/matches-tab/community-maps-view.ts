@@ -1,5 +1,5 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
-import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
+import { halfSeasonFallbackNotice, wholePercentLabel } from '../../../shared/utilities/stat-labels';
 import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
 
 export interface CommunityMapRowView {
@@ -20,7 +20,7 @@ export interface CommunityMapsView {
   best: CommunityMapRowView[];
   /** The maps players lose on most, worst first; never a map that is in `best`. */
   worst: CommunityMapRowView[];
-  /** The link to the full list, such as `All 17 maps`; null while no map has a rate. */
+  /** The link to the full list, such as `All 17 maps` (`See the Maps tab` for a single map); null while no map has a rate. */
   allLabel: string | null;
   /** Why there is no map to show yet; null once there is one. */
   note: string | null;
@@ -48,7 +48,7 @@ export function buildMapsView(data: CommunityMatches): CommunityMapsView {
   const all = data.maps
     .map((record): CommunityMapRowView => ({
       map: record.map,
-      winRateLabel: `${record.winRate}%`,
+      winRateLabel: wholePercentLabel(record.winRate),
       barPercent: record.winRate,
     }))
     .sort((a, b) => b.barPercent - a.barPercent);
@@ -58,7 +58,7 @@ export function buildMapsView(data: CommunityMatches): CommunityMapsView {
     all,
     best,
     worst: all.slice(best.length).slice(-TEASER_MAPS).reverse(),
-    allLabel: all.length === 0 ? null : `All ${countLabel(all.length, 'map', 'maps')}`,
+    allLabel: all.length === 0 ? null : all.length === 1 ? 'See the Maps tab' : `All ${all.length} maps`,
     note:
       all.length === 0
         ? `Not enough data yet. A map needs ${data.minimums.mapMatches} matches in one game mode and ${data.minimums.mapMatches} with a result before its win rate shows.`

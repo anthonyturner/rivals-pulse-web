@@ -124,6 +124,17 @@ describe('getCommunityMatches', () => {
     expect(result.mapsBelowMinimum.filter((name) => name === 'Royal Palace').length).toBe(1);
   });
 
+  it('leaves out the maps that never reach a Quick Match or Competitive rate', async () => {
+    const { client } = fakeSupabaseClient(answers({ ...ANSWER, maps: [] }));
+
+    const result = await getCommunityMatches({ client, now: NOW });
+
+    expect(result.mapsBelowMinimum).not.toContain('Sanctum Sanctorum');
+    expect(result.mapsBelowMinimum).not.toContain('Grand Garden');
+    expect(result.mapsBelowMinimum).not.toContain('Ninomaru');
+    expect(result.mapsBelowMinimum).toContain('Museum of Contemplation');
+  });
+
   it('sends no bucket count, recorder count or player field, whatever the function answers with', async () => {
     const { client } = fakeSupabaseClient(
       answers({

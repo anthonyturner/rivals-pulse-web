@@ -244,6 +244,24 @@ describe('deriveCommunityMatches', () => {
         expect(maps.map((record) => record.map).slice(0, 2)).toEqual(['Yggsgard', 'Hydra Base']);
       });
 
+      it('orders maps whose shown rates round alike by their unrounded rates, not by name', () => {
+        const maps = deriveCommunityMatches(
+          source({
+            maps: [
+              ...LONG_RUN,
+              mapRow('Aaa Map', PLAY_MODE_IDS.quickMatch, 1000, 501),
+              mapRow('Zzz Map', PLAY_MODE_IDS.quickMatch, 1000, 504),
+            ],
+          }),
+          { now: NOW },
+        ).maps;
+        const aaa = maps.find((record) => record.map === 'Aaa Map');
+        const zzz = maps.find((record) => record.map === 'Zzz Map');
+
+        expect(aaa?.winRate).toBe(zzz?.winRate);
+        expect(maps.map((record) => record.map).indexOf('Zzz Map')).toBeLessThan(maps.map((record) => record.map).indexOf('Aaa Map'));
+      });
+
       it('pulls a short run less as the map plays more matches', () => {
         const few = rateOf('Hydra Base', [...LONG_RUN, mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, 12, 12)]) ?? NaN;
         const many = rateOf('Hydra Base', [...LONG_RUN, mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, 300, 300)]) ?? NaN;
@@ -259,7 +277,7 @@ describe('deriveCommunityMatches', () => {
         expect(withHidden).toBe(shown);
       });
 
-      it('keeps every rate between 1 and 99', () => {
+      it('never shows a certainty, however lopsided the record', () => {
         const rates = deriveCommunityMatches(
           source({ maps: [mapRow('Perfect', PLAY_MODE_IDS.quickMatch, 1000, 1000), mapRow('Hopeless', PLAY_MODE_IDS.quickMatch, 1000, 0)] }),
           { now: NOW },

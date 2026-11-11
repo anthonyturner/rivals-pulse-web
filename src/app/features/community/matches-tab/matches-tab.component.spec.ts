@@ -97,7 +97,7 @@ describe('MatchesTabComponent', () => {
     await answer(READY);
 
     const link = (fixture.nativeElement as HTMLElement).querySelector('a.stat-link') as HTMLAnchorElement;
-    expect(link.textContent?.trim()).toBe('All 1 map');
+    expect(link.textContent?.trim()).toBe('See the Maps tab');
     expect(link.getAttribute('href')).toBe('/stats/maps');
   });
 

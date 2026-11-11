@@ -167,8 +167,8 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('Map win rates on the Stats Maps tab and the Overview count each match once');
     expect(text).toContain('from the side of the player who recorded it');
     expect(text).toContain('the earliest upload is the one that counts');
-    expect(text).toContain('pulled toward the average of all maps while the map has few matches');
-    expect(text).toContain('a map appears once it has 10 matches with a result');
+    expect(text).toContain('pulled toward the average of the maps that show (50% while fewer than five show) while the map has few matches');
+    expect(text).toContain('a map appears once it has 10 matches in one game mode and 10 with a result');
     expect(text).toContain('named, never counted');
     expect(text).toContain('can describe how one player did on it');
   });

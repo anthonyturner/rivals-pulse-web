@@ -1,7 +1,7 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
 import { buildMapsView, type CommunityMapsView } from './community-maps-view';
 import { dayLabel } from '../../../shared/utilities/day-label';
-import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice, wholePercentLabel } from '../../../shared/utilities/stat-labels';
 import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
 
 export interface CommunityModeRowView {
@@ -81,7 +81,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     modeMix: {
       rows: (data.modeMix ?? []).map((share) => ({
         mode: share.mode,
-        shareLabel: percentLabel(share.share),
+        shareLabel: wholePercentLabel(share.share),
         lengthLabel: share.averageLengthMinutes === null ? null : minutesLabel(share.averageLengthMinutes),
         barPercent: share.share,
       })),
@@ -100,7 +100,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     perDay: {
       rows: (data.perDay ?? []).map((day) => ({
         day: dayLabel(day.day),
-        shareLabel: percentLabel(day.share),
+        shareLabel: wholePercentLabel(day.share),
         barPercent: (day.share / busiestDay) * 100,
       })),
       note:
@@ -130,11 +130,6 @@ export function recentMatchesPerDay(data: CommunityMatches): number | null {
   const share = fullDays.reduce((sum, day) => sum + day.share, 0) / fullDays.length;
 
   return (data.matchesCounted * share) / 100;
-}
-
-/** A whole percentage, such as `58%`. */
-function percentLabel(value: number): string {
-  return `${value}%`;
 }
 
 /** Whole minutes as `12 min` or `1 h 5 min`. */
