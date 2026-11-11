@@ -20,7 +20,7 @@ copies the browser build into `dist/rivals-pulse-coach/static` without
 function keeps reading the shell from the real build folder. A page the server must not
 render is declared `RenderMode.Client` in `src/app/app.routes.server.ts` and gets
 the empty browser shell: `/sign-in`, `/account`, `/profile` and `/admin` (the
-visitor's own session) and the Pulse Records lists (no player name in server HTML).
+visitor's own session) and the Pulse Records lists, `/stats/records` included (no player name in server HTML).
 
 - **Hosts.** The render answers only the hosts in `security.allowedHosts` in
   `angular.json` (the site, `www`, `*.vercel.app`, `localhost`). A request for any
@@ -45,6 +45,16 @@ visitor's own session) and the Pulse Records lists (no player name in server HTM
   Angular's `RESPONSE_INIT`), and a guide route whose id is unknown falls through
   to it (`knownIdGuard` in `core/navigation/`). That status reaches production
   now that the server render runs there.
+
+Stats hub: `/stats` is one page (`features/stats/stats-page`) with a child route per tab
+(`stats.routes.ts`, tabs listed in `stats-tabs.ts`: Overview, Heroes, Roles, Matchups, Maps,
+Team comps, Records). The tab bar is a nav of links with `aria-current`, not a script-driven
+tab list, so every tab is a page a crawler can follow; each tab sets its own title,
+description (route `data`) and canonical. A tab is a view with no page around it: Overview
+draws game stats and the community matches and insights tabs, Roles and Matchups are the
+community stats and counters tabs, Team comps is `TeamCompsComponent`, and Records is one
+page with a category filter held in `?category=`. Heroes and Maps are stand-ins that call
+`reportContentState('thin')`, so they carry no ad and are `noindex` until they have content.
 
 Hosting:
 - Vercel
