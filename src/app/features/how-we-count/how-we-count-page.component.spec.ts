@@ -93,6 +93,12 @@ describe('HowWeCountPageComponent', () => {
     expect(section('modes')).toContain('did not say which mode');
   });
 
+  it('says "Matches counted" is every match and the win-rate count is the smaller "with a result"', () => {
+    expect(section('modes')).toContain('"Matches counted" is every match once');
+    expect(section('modes')).toContain('"matches with a result"');
+    expect(section('appearances')).toContain('number of matches with a result');
+  });
+
   it('says Practice is not offered exactly while the site holds it back', () => {
     const says = section('modes').includes('Practice is not offered yet');
 

@@ -1,6 +1,6 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
 import { dayLabel } from '../../../shared/utilities/day-label';
-import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
 
 export interface CommunityMapRowView {
@@ -82,7 +82,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     kind: 'ready',
     halfSeasonLabel,
     notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
-    sample: `${data.matchesBand === null ? 'Matches' : `${data.matchesBand}+ matches`} in ${season}, each counted once however many players recorded it. While few players upload, these totals can come from one player.`,
+    sample: `${data.matchesCounted === null ? 'Matches' : countLabel(data.matchesCounted, 'match', 'matches')} in ${season}, each counted once however many players recorded it. While few players upload, these totals can come from one player.`,
     maps: {
       rows: data.maps.map((record) => ({
         map: record.map,

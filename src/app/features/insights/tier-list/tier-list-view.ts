@@ -2,7 +2,7 @@ import type { HeroStats, HeroStatsHero } from '../../../../contracts/hero-stats.
 import type { TierName } from '../../../../contracts/tier-list.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
 import {
-  countLabel,
+  decidedMatchesLabel,
   halfSeasonFallbackNotice,
   percentLabel,
   placementRequirementLabel,
@@ -45,7 +45,7 @@ export interface TierListView {
   minimumMatches: number;
   /** What a hero needs to be placed: "10 appearances and 2 players", or the appearances alone. */
   placementLabel: string;
-  matchesCountedLabel: string;
+  decidedMatchesLabel: string;
   /** "in Competitive for Season 10.5": names the mode and half-season that a count or an empty state is about. */
   scopeLabel: string;
   /** The tiers that have a hero, best first, when `ready`; none otherwise. */
@@ -76,7 +76,7 @@ export function buildTierListView(stats: HeroStats, identities: HeroIdentities):
         : halfSeasonFallbackNotice(stats.inPlaceOf.label, season?.label ?? null, nonDefaultModeLabel(stats)),
     minimumMatches: stats.minimumMatches,
     placementLabel: placementRequirementLabel(stats),
-    matchesCountedLabel: countLabel(stats.matchesCounted, 'match', 'matches'),
+    decidedMatchesLabel: decidedMatchesLabel(stats.matchesCounted),
     scopeLabel: scopeLabel(modeLabel, season?.label ?? null),
     tiers: rows,
     building,

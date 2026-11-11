@@ -119,7 +119,7 @@ describe('buildTierListView', () => {
 
     expect(view.state).toBe('building');
     expect(view.tiers).toEqual([]);
-    expect(view.matchesCountedLabel).toBe('146 matches');
+    expect(view.decidedMatchesLabel).toBe('146 matches with a result');
   });
 
   it('is empty, with no tier rows and no building list, when nothing is counted', () => {
@@ -132,7 +132,7 @@ describe('buildTierListView', () => {
     expect(view.season).toBeNull();
     expect(view.tiers).toEqual([]);
     expect(view.building).toEqual([]);
-    expect(view.matchesCountedLabel).toBe('0 matches');
+    expect(view.decidedMatchesLabel).toBe('0 matches with a result');
   });
 
   it('leaves out a line whose figures are not finite instead of printing NaN', () => {

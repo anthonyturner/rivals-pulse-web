@@ -1,4 +1,11 @@
-import { countLabel, halfSeasonFallbackNotice, percentLabel, placementRequirementLabel } from './stat-labels';
+import {
+  countLabel,
+  decidedMatchesLabel,
+  halfSeasonFallbackNotice,
+  matchesCountedLabel,
+  percentLabel,
+  placementRequirementLabel,
+} from './stat-labels';
 
 describe('stat labels', () => {
   it('rounds a percentage to one decimal place', () => {
@@ -9,6 +16,19 @@ describe('stat labels', () => {
     expect(countLabel(1, 'match', 'matches')).toBe('1 match');
     expect(countLabel(0, 'match', 'matches')).toBe('0 matches');
     expect(countLabel(4, 'match', 'matches')).toBe('4 matches');
+  });
+
+  it('always says what the matches counted figure covers', () => {
+    expect(matchesCountedLabel(484, 'Season 10.5')).toBe('Matches counted · Season 10.5');
+    expect(matchesCountedLabel(781, 'all seasons')).toBe('Matches counted · all seasons');
+    expect(matchesCountedLabel(1, 'Season 10.5')).toBe('Match counted · Season 10.5');
+  });
+
+  it('never calls the matches with a result "matches counted"', () => {
+    expect(decidedMatchesLabel(393)).toBe('393 matches with a result');
+    expect(decidedMatchesLabel(1)).toBe('1 match with a result');
+    expect(decidedMatchesLabel(0)).toBe('0 matches with a result');
+    expect(decidedMatchesLabel(393)).not.toMatch(/counted/i);
   });
 
   it('names both half-seasons in the fallback notice', () => {

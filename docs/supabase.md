@@ -892,12 +892,13 @@ row.
   and average in [`src/server/community/matches/community-matches.ts`](../src/server/community/matches/community-matches.ts); until the migration is
   applied the call fails with a "function not found" error, which the server turns into the empty
   state.
-- **No exact counts leave the server.** A hidden bucket could be recovered by subtracting the shown
-  ones from a total, so `GET /api/community/matches` returns only whole-percentage win rates and
-  shares, average lengths rounded to the minute, and one volume band (`matchesBand`, such as 100 for
-  "100+ matches"; the bands are `MATCH_VOLUME_BANDS`). Maps are ordered by win rate, never by volume,
+- **No bucket count leaves the server.** A hidden bucket could be recovered by subtracting the shown
+  ones from their total, so `GET /api/community/matches` returns only whole-percentage win rates and
+  shares and average lengths rounded to the minute for its buckets. The one exact count it carries is
+  `matchesCounted`, the half-season's matches from `read_game_counts()` (see "Website game stats"), which
+  `GET /api/game-stats` already lists in full. Maps are ordered by win rate, never by volume,
   and a map under its minimum is named without a count. `src/server/community/matches/community-matches.spec.ts` proves no
-  number equal to a raw count is returned.
+  number equal to a bucket count is returned.
 - `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
   `COMMUNITY_MATCHES_MINIMUMS`): 10 shown matches for the mode mix and matches per day,
   10 matches with a result for a map's win rate, 10 matches with a length for an average. While the

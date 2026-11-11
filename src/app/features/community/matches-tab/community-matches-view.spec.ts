@@ -14,7 +14,7 @@ function matches(parts: Partial<CommunityMatches> = {}): CommunityMatches {
     halfSeasons: [SEASON_10, SEASON_10_5],
     halfSeason: SEASON_10_5,
     inPlaceOf: null,
-    matchesBand: 20,
+    matchesCounted: 20,
     maps: [],
     mapsBelowMinimum: [],
     modeMix: null,
@@ -39,7 +39,7 @@ describe('buildCommunityMatchesView', () => {
   });
 
   it('is the designed empty state, with what it waits for and no count, when nothing is ready', () => {
-    const view = buildCommunityMatchesView(matches({ status: 'not-enough-data', matchesBand: null }));
+    const view = buildCommunityMatchesView(matches({ status: 'not-enough-data', matchesCounted: null }));
 
     expect(view.kind).toBe('not-enough-data');
     if (view.kind === 'not-enough-data') {
@@ -52,7 +52,7 @@ describe('buildCommunityMatchesView', () => {
 
   it('says so plainly before any half-season exists', () => {
     const view = buildCommunityMatchesView(
-      matches({ status: 'not-enough-data', halfSeason: null, halfSeasons: [], matchesBand: null }),
+      matches({ status: 'not-enough-data', halfSeason: null, halfSeasons: [], matchesCounted: null }),
     );
 
     expect(view.kind === 'not-enough-data' && view.summary).toBe(
@@ -71,15 +71,15 @@ describe('buildCommunityMatchesView', () => {
     );
   });
 
-  it('has no notice for the current half-season, and states the volume as a band', () => {
-    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesBand: 100 })));
+  it('has no notice for the current half-season, and states the matches counted', () => {
+    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesCounted: 484 })));
 
     expect(view.notice).toBeNull();
-    expect(view.sample).toBe('100+ matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
+    expect(view.sample).toBe('484 matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
   });
 
-  it('states no volume when the sample is below the smallest band', () => {
-    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesBand: null })));
+  it('states no volume when the matches counted are not known', () => {
+    const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesCounted: null })));
 
     expect(view.sample).toBe('Matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
   });

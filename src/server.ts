@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { handleAccountHttp } from './server/account';
@@ -30,11 +31,12 @@ import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
 import { syncHomeNews } from './server/content/home';
 import { getGameCounts } from './server/game-counts';
+import { TRUSTED_PROXY_HEADERS, dropUntrustedProxyHeaders, renderWithinBudget } from './server/ssr';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularNodeAppEngine({ trustProxyHeaders: TRUSTED_PROXY_HEADERS });
 
 app.get('/api/content/status', (_req, res) => {
   handleApiResponse(res, () => getContentStatusFromDatabase());
@@ -168,22 +170,26 @@ app.all('/api/admin/*splat', (req, res, next) => {
 });
 
 /**
- * Serve static files from /browser
+ * Serve static files from /browser, except the browser shell: it is the fallback the render reads
+ * from disk, not a page, and as a file it would answer `/index.csr.html` with a year of caching.
+ * Only that plain address is held back; an encoded spelling of it still reaches the file, which
+ * is public in the browser build anyway.
  */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
+const staticFiles = express.static(browserDistFolder, {
+  maxAge: '1y',
+  index: false,
+  redirect: false,
+});
+
+app.use((req, res, next) => (req.path === '/index.csr.html' ? next() : staticFiles(req, res, next)));
 
 /**
- * Handle all other requests by rendering the Angular application.
+ * Handle all other requests by rendering the Angular application, or serving the browser shell
+ * when the render takes too long.
  */
 app.use((req, res, next) => {
-  angularApp
-    .handle(req)
+  dropUntrustedProxyHeaders(req.headers);
+  renderWithinBudget(angularApp.handle(req), () => readFile(join(browserDistFolder, 'index.csr.html'), 'utf8'))
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
     )

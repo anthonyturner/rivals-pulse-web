@@ -39,7 +39,7 @@
           @if (v.season?.dateRange; as range) {
             {{ range }} &middot;
           }
-          {{ v.matchesCountedLabel }} counted &middot; Heroes need {{ v.placementLabel }}
+          {{ v.decidedMatchesLabel }} &middot; Heroes need {{ v.placementLabel }}
           to be placed &middot; Each tile: win rate, then pick rate and games.
         </p>
       }
@@ -69,11 +69,11 @@
       <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}">
         <p class="state-count">
           @if (v.state === 'building') {
-            {{ v.matchesCountedLabel }}
+            {{ v.decidedMatchesLabel }}
           } @else {
-            No matches
+            No matches with a result
           }
-          counted {{ v.scopeLabel }} so far.
+          {{ v.scopeLabel }} so far.
         </p>
         <p>
           The tier list is built from matches that RivalsPulse players record, so it fills in as

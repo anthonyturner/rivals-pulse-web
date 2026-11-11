@@ -28,10 +28,10 @@ const THIN_CONTENT = 'noindex';
  * Keeps the page title and the link-preview tags in step with the route, on the
  * server and in the browser. A route's `title` becomes the page title and the
  * preview title; a route without one falls back to the site name. The
- * canonical URL is the production origin plus the route's own path, so no page
- * claims another page as its canonical. The exception is a page that asks not to
- * be indexed: it has no canonical, and the strategy tells by a `robots` tag with
- * `noindex` on the page.
+ * canonical URL (and the `og:url` link-preview address) is the production origin
+ * plus the route's own path, so no page claims another page as its canonical. The
+ * exception is a page that asks not to be indexed: it has neither, and the
+ * strategy tells by a `robots` tag with `noindex` on the page.
  *
  * Two things ask for it, and this strategy owns the tag for both. A route that spreads
  * `ROUTE_NOINDEX` into its `data` (the admin area) gets `robots: noindex, nofollow`, and a parent
@@ -70,7 +70,6 @@ export class PageMetaTitleStrategy extends TitleStrategy {
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
-      { property: 'og:url', content: url },
       { property: 'og:image', content: image },
       { property: 'og:image:width', content: String(PREVIEW_IMAGE_WIDTH) },
       { property: 'og:image:height', content: String(PREVIEW_IMAGE_HEIGHT) },
@@ -95,7 +94,10 @@ export class PageMetaTitleStrategy extends TitleStrategy {
     }
 
     this.setRobots(page.routeNoindex ? NOINDEX_CONTENT : thin ? THIN_CONTENT : null);
-    this.setCanonical(this.meta.getTag('name="robots"')?.content.startsWith('noindex') ? null : page.url);
+
+    const address = this.meta.getTag('name="robots"')?.content.startsWith('noindex') ? null : page.url;
+    this.setCanonical(address);
+    this.setPreviewUrl(address);
   }
 
   private setRobots(content: string | null): void {
@@ -115,6 +117,15 @@ export class PageMetaTitleStrategy extends TitleStrategy {
   private setTags(tags: { name?: string; property?: string; content: string }[]): void {
     for (const tag of tags) {
       this.meta.updateTag(tag);
+    }
+  }
+
+  /** The link-preview address follows the canonical one: a page that is not indexed does not name itself. */
+  private setPreviewUrl(url: string | null): void {
+    if (url === null) {
+      this.meta.removeTag('property="og:url"');
+    } else {
+      this.meta.updateTag({ property: 'og:url', content: url });
     }
   }
 
