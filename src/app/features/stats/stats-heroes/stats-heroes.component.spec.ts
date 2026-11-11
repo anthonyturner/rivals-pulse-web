@@ -424,7 +424,7 @@ describe('StatsHeroesComponent', () => {
     }
 
     it('drops season from the address when the current half-season is chosen, and reuses the shared current numbers', async () => {
-      const page = await open('/stats/heroes?season=10', { ...full, halfSeason: previous }, {
+      const page = await open('/stats/heroes?season=10', full, {
         scoped: '/api/hero-stats?halfSeason=10',
       });
 
