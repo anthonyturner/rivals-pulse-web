@@ -1,0 +1,33 @@
+<table class="stat-table">
+  <caption class="visually-hidden">{{ caption() }}</caption>
+  <colgroup>
+    <col />
+    <col />
+  </colgroup>
+  <thead>
+    <tr>
+      <th scope="col">Map</th>
+      <th scope="col">Win rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    @if (group(); as name) {
+      <tr>
+        <th scope="colgroup" colspan="2">{{ name }}</th>
+      </tr>
+    }
+    @for (row of rows(); track row.map) {
+      <tr>
+        <th scope="row">{{ row.map }}</th>
+        <td>
+          <div class="stat-meter">
+            <span class="stat-meter__value">{{ row.winRateLabel }}</span>
+            <span class="stat-meter__bar" aria-hidden="true">
+              <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
+            </span>
+          </div>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

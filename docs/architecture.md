@@ -61,8 +61,8 @@ out when it is the default), so each can be linked and is drawn by the server; t
 links that keep the other choices. `StatsHeroesComponent` owns the choices and the request (the
 default cut is the shared `CurrentHeroStatsService`, any other is `HeroStatsService`), and hands the
 numbers to `HeroTableComponent` or `HeroTiersComponent`, which draw them. The tab is thin only when
-the number sections and the layout in view all are. Maps is a stand-in that calls `reportContentState('thin')`,
-so it carries no ad and is `noindex` until it has content.
+the number sections and the layout in view all are. Maps lists every map from the same `/api/community/matches` answer the Overview reads, and is thin
+(no ad, `noindex`) until one map has a win rate.
 
 Navigation and moved addresses: the top bar lists Heroes, Stats, Guides and Tools
 (`core/layout/nav/primary-nav.ts`). Stats is `/stats` and every page under it; Resources has no

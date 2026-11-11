@@ -6,10 +6,13 @@ import type { HeroStatsHalfSeason } from './hero-stats.model.ts';
  * tab gets whole-number percentages, minutes, and one coarse volume band instead.
  */
 
-/** One map's record in Competitive and Quick Match. */
+/** One map's record in Competitive and Quick Match, from the side of the player who recorded each match. */
 export interface CommunityMapRecord {
   map: string;
-  /** Wins as a whole percentage from 0 to 100 of the matches with a known result. */
+  /**
+   * Wins as a whole percentage of the matches with a known result, pulled toward the average of the
+   * maps shown while a map has few matches, so a short run of wins does not put a map on top.
+   */
   winRate: number;
 }
 
@@ -64,7 +67,7 @@ export interface CommunityMatches {
    */
   matchesCounted: number | null;
   maps: CommunityMapRecord[];
-  /** Maps with a result but under the minimum: named, never counted. */
+  /** Every known map with no win rate yet, whether it has too few matches or none: named, never counted. */
   mapsBelowMinimum: string[];
   modeMix: CommunityModeShare[] | null;
   averageLengthMinutes: number | null;

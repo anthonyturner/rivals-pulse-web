@@ -322,6 +322,13 @@ same goes for which heroes you played and when: the match keeps each player's
 heroes and the second of each pick with the team, and no name or player ID, and
 they are published only as totals across many matches.
 
+**Specialist and flex groups.** Our database also uses your scoreboard lines, by
+player ID, to work out whether you count as a specialist or a flex player on a
+hero, or neither, the same as it does for RivalsPulse users. It works this out
+each time it builds the numbers and never stores which group you are in. Only
+each group's win rate and a rough match band are published, once the group is
+big enough. Section 4 says how.
+
 **Your ultimate charge.** If you are on a RivalsPulse user's team, your live
 ultimate charge appears on their in-game widgets during the match, as it does in the
 game's own interface. It is never stored or shared. If you are on the other
@@ -390,6 +397,21 @@ Hero changes (which heroes each player picked, and when) are pooled into
 **counter-switch statistics**: how often a team wins after a player switched to a
 hero while a given enemy hero was on the field. They name no player and say
 nothing of who recorded the match.
+
+**Specialist and flex win rates.** For each hero, our database compares the win
+rate of players who mostly play it with the win rate of players who play many
+heroes. It sorts players into those groups by the player ID on their scoreboard
+lines. It works the groups out each time it builds the numbers and never stores
+which group a player is in. A **specialist** on a hero has at least half of their
+counted matches (Quick Match and Competitive wins and losses in the current
+half-season, or the previous one until the current one has enough data) on it,
+and at least 10 matches on it. A **flex** player's most-played hero is under a
+quarter of their matches, and they have played at least 5 heroes and at least 20
+matches. Players who are neither are left out. Only each group's win rate on a hero and a rough match band (50+, 100+,
+250+ or 500+ matches) are published, never an exact count. A hero is shown only
+once each group has at least 5 players, 2 players who uploaded matches and 50
+matches. A line with no player ID is left out. The published figures name no
+player and say nothing of who recorded the match.
 
 **Pulse Records on our website.** Pulse Records is a public page on the RivalsPulse
 website, which anyone can view. It lists the highest single-match figures from

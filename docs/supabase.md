@@ -956,8 +956,22 @@ row.
   shares and average lengths rounded to the minute for its buckets. The one exact count it carries is
   `matchesCounted`, the half-season's matches from `read_game_counts()` (see "Website game stats"), which
   `GET /api/game-stats` already lists in full. Maps are ordered by win rate, never by volume,
-  and a map under its minimum is named without a count. `src/server/community/matches/community-matches.spec.ts` proves no
+  and a map without a rate yet is named without a count. `src/server/community/matches/community-matches.spec.ts` proves no
   number equal to a bucket count is returned.
+- **A map's win rate** is worked out in `mapRecords` over Quick Match and Competitive blended, from
+  the recorder's side, one result per match (the earliest upload when both teams uploaded). It is
+  shrunk: `estimateWinRatePriors` ([`win-rate-prior.ts`](../src/server/heroes/stats/win-rate-prior.ts))
+  learns the pull from the maps that qualify, so a hidden map changes no figure, and a map with few
+  matches is pulled toward the average of the maps. The rate is a whole percentage, so a map shows in
+  `maps` only with `map` and `winRate`. `mapsBelowMinimum` names every known map with no rate: the
+  names come from `data/pulse-atlas/seed-maps.json` (`known-maps.ts`), compared without capital
+  letters or apostrophe style, so a map the database spells "Birnin t'challa" shows as "Birnin
+  T'Challa" and is never listed twice. A map the list lacks appears once it has a rate. The Maps
+  tab (`/stats/maps`) lists every map and the Overview shows the best and worst three from the same
+  answer; the tab is thin, with no ad and `noindex`, until one map has a rate. Because the database
+  hides a map in a mode under 10 matches, a map with 8 Quick Match and 4 Competitive matches is
+  absent from the answer even though 12 matches exist; a migration that gates the blended total
+  would name it (a possible follow-up).
 - `GET /api/community/matches[?halfSeason=<number>]` is the tab's data. Minimums (named in
   `COMMUNITY_MATCHES_MINIMUMS`): 10 shown matches for the mode mix and matches per day,
   10 matches with a result for a map's win rate, 10 matches with a length for an average. While the

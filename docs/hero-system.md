@@ -167,11 +167,14 @@ of `GET /api/community/matches` is the other count. A page never uses the word
   (`GET /api/community/stats`) and show on `/stats/roles`, at 50 decided lines
   per role and mode.
 
+- **Map win rates** come from `read_community_matches()` through `getCommunityMatches`
+  (`GET /api/community/matches`): Quick Match and Competitive blended, from the
+  recorder's side, shrunk toward the average of the maps, and listed on
+  `/stats/maps` (every map, the best and worst three, and the known maps still
+  waiting for a rate). The Overview shows the best and worst three and a link.
+
 ## Not built yet
 
-- **Maps** (`/stats/maps`) is a stand-in. Win rate by map is on the Overview
-  today, from `read_community_matches()`. A dedicated community maps view is
-  issue 773.
 - **Hero stats in Pulse Atlas** carry win rate, pick rate, KDA and final hits per
   hero. Per-pair KDA and final hits are not published yet (issue 680).
 

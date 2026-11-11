@@ -1,19 +1,26 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
-import { reportContentState } from '../../../core/seo/thin-content';
-import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
+import { buildCommunityMapsPageView } from '../../community/matches-tab/community-maps-view';
+import { CommunityMatchesService } from '../../community/matches-tab/community-matches.service';
+import { CommunitySummaryComponent } from '../../community/community-summary/community-summary.component';
+import { MapRatesTableComponent } from '../../community/map-rates-table/map-rates-table.component';
 
-/** A stand-in until the community's best and worst maps are counted: it says so, and reports that it has nothing to read. */
+/**
+ * The Maps tab: the maps players win and lose on most, and every map with a win rate, from the same
+ * answer the Overview's short list reads. It is thin, with no ad and kept out of search results, until
+ * one map has a rate.
+ */
 @Component({
   selector: 'app-stats-maps',
-  imports: [RouterLink, StatePanelComponent],
+  imports: [CommunitySummaryComponent, MapRatesTableComponent, RouterLink],
   templateUrl: './stats-maps.component.html',
-  styleUrl: './stats-maps.component.css',
+  styleUrls: ['../../../shared/styles/stat-panels.css', './stats-maps.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsMapsComponent {
-  constructor() {
-    reportContentState(() => 'thin');
-  }
+  private readonly matches = toSignal(inject(CommunityMatchesService).getMatches(), { initialValue: undefined });
+
+  protected readonly view = computed(() => buildCommunityMapsPageView(this.matches()));
 }

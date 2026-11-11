@@ -156,31 +156,23 @@ describe('StatsOverviewComponent', () => {
       '8,349',
       'Sep 20, 2026',
     ]);
-    expect(Array.from(element.querySelectorAll('app-community-matches-tab .stat-panel > .stat-table tbody th[scope="row"]')).map((row) => row.textContent?.trim()))
+    expect(Array.from(element.querySelectorAll('app-community-matches-tab .stat-table tbody th[scope="row"]')).map((row) => row.textContent?.trim()))
       .toEqual(['Yggdrasill path', "Birnin t'challa", 'Hall of Djalia', 'Spider-islands', 'Midtown', 'Lower Manhattan', 'Quick Match', 'Competitive']);
   });
 
-  it('keeps every map reachable: the ones between the best and worst three sit behind All N maps', async () => {
+  it('keeps every map one link away: a single All N maps link to the Maps tab, not a second list', async () => {
     const element = await open(1440);
-    const fold = element.querySelector('app-community-matches-tab .stat-fold') as HTMLDetailsElement;
+    const links = Array.from(element.querySelectorAll('app-community-matches-tab a.stat-link'));
 
-    expect(fold.open).toBeFalse();
-    expect(fold.querySelector('summary')?.textContent?.trim()).toBe('All 7 maps');
-    expect(Array.from(fold.querySelectorAll('tbody th')).map((row) => row.textContent?.trim())).toEqual([
-      'Yggdrasill path',
-      "Birnin t'challa",
-      'Hall of Djalia',
-      'Central park',
-      'Lower Manhattan',
-      'Midtown',
-      'Spider-islands',
-    ]);
+    expect(element.querySelector('app-community-matches-tab .stat-fold')).toBeNull();
+    expect(links.map((link) => link.textContent?.trim())).toEqual(['All 7 maps']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/stats/maps']);
   });
 
-  it('offers no All N maps when the best and worst three already show every map', async () => {
-    const element = await open(1440, { matches: { ...MATCHES, maps: MATCHES.maps.slice(0, 6) } });
+  it('names no map waiting for a rate: the Maps tab does that', async () => {
+    const element = await open(1440, { matches: { ...MATCHES, mapsBelowMinimum: ['Klyntar'] } });
 
-    expect(element.querySelector('.stat-fold')).toBeNull();
+    expect(element.textContent).not.toContain('Klyntar');
   });
 
   it('opens only the first insights panel, so the page stays short', async () => {

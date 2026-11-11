@@ -84,7 +84,7 @@ describe('buildCommunityMatchesView', () => {
     expect(view.sample).toBe('Matches in Season 10.5');
   });
 
-  it('splits a short list of maps between best and worst, and names the thin ones without a count', () => {
+  it('splits a short list of maps between best and worst, and names the waiting ones without a count', () => {
     const view = ready(
       buildCommunityMatchesView(
         matches({ maps: [{ map: 'Tokyo 2099', winRate: 58 }], mapsBelowMinimum: ['Klyntar', 'Hydra Base'] }),
@@ -94,7 +94,8 @@ describe('buildCommunityMatchesView', () => {
     expect(view.maps.best).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
     expect(view.maps.all).toEqual(view.maps.best);
     expect(view.maps.worst).toEqual([]);
-    expect(view.maps.pendingNote).toBe('Not enough data yet for: Klyntar, Hydra Base.');
+    expect(view.maps.waitingNote).toBe('Klyntar, Hydra Base.');
+    expect(view.maps.allLabel).toBe('See the Maps tab');
     expect(view.maps.note).toBeNull();
   });
 
@@ -103,7 +104,8 @@ describe('buildCommunityMatchesView', () => {
 
     expect(view.maps.best).toEqual([]);
     expect(view.maps.worst).toEqual([]);
-    expect(view.maps.pendingNote).toBeNull();
+    expect(view.maps.waitingNote).toBeNull();
+    expect(view.maps.allLabel).toBeNull();
     expect(view.maps.note).toBe(
       'Not enough data yet. A map needs 10 matches in one game mode and 10 with a result before its win rate shows.',
     );

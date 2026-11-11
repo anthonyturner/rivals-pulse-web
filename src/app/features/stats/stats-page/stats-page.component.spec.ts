@@ -221,14 +221,43 @@ describe('The Stats hub', () => {
   });
 
   describe('Maps', () => {
-    it('is a stand-in that says the stats are coming, and asks not to be indexed', async () => {
+    const READY_MAPS = {
+      status: 'ready',
+      minimums: { overviewMatches: 10, mapMatches: 10, lengthMatches: 10 },
+      halfSeasons: [],
+      halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null },
+      inPlaceOf: null,
+      matchesCounted: 12,
+      maps: [{ map: 'Midtown', winRate: 52 }],
+      mapsBelowMinimum: [],
+      modeMix: null,
+      averageLengthMinutes: null,
+      perDay: null,
+    };
+
+    async function answerMaps(body: unknown): Promise<void> {
       await open('/stats/maps');
+      http.expectOne('/api/community/matches').flush(body as object);
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+    }
+
+    it('asks not to be indexed, with no ad, while no map has a win rate', async () => {
+      await answerMaps({ ...READY_MAPS, maps: [] });
 
       expect(page().querySelector('app-stats-maps')).not.toBeNull();
-      expect(page().textContent).toContain('Map stats are coming soon');
       expect(TestBed.inject(ThinContent).thin()).toBeTrue();
       expect(meta('robots')).toBe('noindex');
       expect(canonical()).toBeNull();
+    });
+
+    it('is a page with content, indexable with its own canonical, once one map has a win rate', async () => {
+      await answerMaps(READY_MAPS);
+
+      expect(page().textContent).toContain('Midtown');
+      expect(TestBed.inject(ThinContent).thin()).toBeFalse();
+      expect(meta('robots')).toBeNull();
+      expect(canonical()).toBe(`${SITE_ORIGIN}/stats/maps`);
     });
   });
 

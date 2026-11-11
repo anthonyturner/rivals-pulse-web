@@ -139,6 +139,16 @@ describe('FairPlayPageComponent', () => {
     expect(collected).toContain('can still mostly reflect one player');
   });
 
+  it("discloses map win rates: the recorder's own side only, never an opponent, a name, a match or a date, and never advice", () => {
+    const collected = section('collected');
+
+    expect(collected).toContain('Map win rates, on this website');
+    expect(collected).toContain("from the recording player's side only");
+    expect(collected).toContain("never shows an opponent's result, a name, a match or a date");
+    expect(collected).toContain('too few matches is only named, never counted');
+    expect(collected).toContain('not live advice about the match you are in');
+  });
+
   it('says there is no opt-out yet, without a coming-soon section', () => {
     const optOut = section('opt-out');
 
