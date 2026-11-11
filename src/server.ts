@@ -31,12 +31,12 @@ import { getTripleSupportTrios } from './server/heroes/trios';
 import { getHeroStats, getRoleStats, halfSeasonFromQuery, heroStatsQueryFrom } from './server/heroes/stats';
 import { syncHomeNews } from './server/content/home';
 import { getGameCounts } from './server/game-counts';
-import { renderWithinBudget } from './server/ssr';
+import { TRUSTED_PROXY_HEADERS, dropUntrustedProxyHeaders, renderWithinBudget } from './server/ssr';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularNodeAppEngine({ trustProxyHeaders: TRUSTED_PROXY_HEADERS });
 
 app.get('/api/content/status', (_req, res) => {
   handleApiResponse(res, () => getContentStatusFromDatabase());
@@ -185,6 +185,7 @@ app.use(
  * when the render takes too long.
  */
 app.use((req, res, next) => {
+  dropUntrustedProxyHeaders(req.headers);
   renderWithinBudget(angularApp.handle(req), () => readFile(join(browserDistFolder, 'index.csr.html'), 'utf8'))
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
