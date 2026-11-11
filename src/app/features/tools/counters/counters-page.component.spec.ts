@@ -172,27 +172,29 @@ describe('CountersPageComponent', () => {
       matchup('angela', 'peni-parker', 2, 12),
     ]);
 
-    it('lists the heroes that beat the selected hero, with their win rate and sample', async () => {
+    it('lists the heroes that do better than usual against the selected hero, with their win rate, edge and sample', async () => {
       const root = await open(partial);
       const against = panels(root)[0].textContent ?? '';
       const beats = panels(root)[1].textContent ?? '';
 
       expect(text(root, '.result-head')).toContain('Angela');
       expect(text(root, '.result-head')).toContain('2 matchups');
-      expect(against).toContain('Heroes that beat Angela');
+      expect(against).toContain('Heroes that do better than usual against Angela');
       expect(against).toContain('Peni Parker');
       expect(against).toContain('83.3%');
+      expect(against).toContain('+18.2 pts vs usual');
       expect(against).toContain('12 matches');
-      expect(beats).toContain('Heroes Angela beats');
+      expect(beats).toContain('Heroes Angela does better than usual against');
       expect(beats).toContain('Mantis');
       expect(beats).not.toContain('Peni Parker');
       expect(text(root, '.result')).not.toContain('Not enough data yet');
     });
 
-    it('explains the records in one note under the lists', async () => {
+    it('states the counter rule in one note under the lists', async () => {
       const root = await open(partial);
 
-      expect(text(root, '.note')).toContain('only once it has 10 recorded matches');
+      expect(text(root, '.note')).toContain('at least 3 points above its own usual win rate, over at least 10 recorded matches');
+      expect(text(root, '.note')).toContain('The Rivals Pulse app uses the same rule.');
     });
 
     it('has a labelled, hero-name-only search and a Role filter', async () => {

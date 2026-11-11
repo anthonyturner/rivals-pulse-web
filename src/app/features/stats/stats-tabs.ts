@@ -53,7 +53,7 @@ export const STATS_TABS: readonly StatsTab[] = [
     path: 'matchups',
     heading: 'Marvel Rivals hero matchups',
     description:
-      'The hero matchups with the clearest winning records, and the kills players saw most often, from matches RivalsPulse players uploaded.',
+      'The hero matchups where a hero does clearly better than usual, and the kills players saw most often, from matches RivalsPulse players uploaded.',
     hasContent: true,
   },
   {

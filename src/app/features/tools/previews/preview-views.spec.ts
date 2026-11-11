@@ -14,7 +14,7 @@ const roster = [
 ];
 
 describe('counterPreview', () => {
-  it('picks the enemy with the strongest winning record against it, and breaks a tie by hero id', () => {
+  it('picks the enemy with the strongest counter against it, and breaks a tie by hero id', () => {
     const tied = matchupsOf([matchup('thor', 'storm', 9, 12), matchup('hulk', 'angela', 9, 12)]);
 
     expect(counterPreview(tied, roster)?.enemy.hero).toBe('angela');
@@ -48,14 +48,14 @@ describe('counterPreview', () => {
     expect(view?.enemy.hero).toBe('storm');
   });
 
-  it('is null when there is no winning record', () => {
+  it('is null when there is no counter', () => {
     expect(counterPreview(matchupsOf([]), roster)).toBeNull();
     expect(counterPreview(matchupsOf([matchup('hulk', 'angela', 3, 12)]), roster)).toBeNull();
   });
 });
 
 describe('divePreview', () => {
-  it('answers the opening divers the roster has with the heroes that beat the most of them', () => {
+  it('answers the opening divers the roster has with the heroes that counter the most of them', () => {
     const view = divePreview(
       matchupsOf([matchup('hulk', 'angela', 9, 12), matchup('hulk', 'black-cat', 9, 12), matchup('storm', 'angela', 8, 10)]),
       roster,
@@ -65,7 +65,7 @@ describe('divePreview', () => {
     expect(view?.answers.map((hero) => hero.hero)).toEqual(['hulk', 'storm']);
   });
 
-  it('is null when no hero has a winning record against a diver', () => {
+  it('is null when no hero counters a diver', () => {
     expect(divePreview(matchupsOf([matchup('hulk', 'thor', 9, 12)]), roster)).toBeNull();
   });
 });

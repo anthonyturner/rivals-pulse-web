@@ -1,7 +1,10 @@
 import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
 import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { heroCell, type HeroIdentities } from '../../insights/hero-identity';
+import { COUNTER_MIN_EDGE_POINTS } from '../../../../contracts/hero-matchups.model';
 import {
+  counterRuleNote,
+  recordEdgeLabel,
   recordSampleLabel,
   recordSentence,
   recordWinRateLabel,
@@ -22,6 +25,8 @@ export interface CounterRecordView {
   winner: RecordHero;
   loser: RecordHero;
   winRate: string;
+  /** How far the record sits above the hero's usual win rate, such as "+3.3 pts vs usual". */
+  edge: string;
   sample: string;
   /** The record in words, for the row's tooltip. */
   description: string;
@@ -42,7 +47,7 @@ export type CountersTabView =
     };
 
 /**
- * What the Counters tab shows: the winning records with the clearest edge, read from the same
+ * What the Counters tab shows: the counters with the clearest edge over the hero's usual win rate, read from the same
  * matchups as the hero pages and the counters tool. A record describes what happened in matches; it
  * does not say whom to pick or ban. `undefined` means the matchups have not answered yet and `null`
  * means they could not be read; neither is "not enough data", which is a real answer.
@@ -64,7 +69,7 @@ export function buildCountersTabView(
   if (strongest.length === 0) {
     return {
       kind: 'not-enough-data',
-      summary: `No hero has a winning record against another yet. A matchup appears once two heroes have faced each other in ${countLabel(matchups.minimumMatches, 'recorded match', 'recorded matches')}.`,
+      summary: `No hero does at least ${COUNTER_MIN_EDGE_POINTS} points better against another hero than it usually does yet. A matchup can count once two heroes have faced each other in ${countLabel(matchups.minimumMatches, 'recorded match', 'recorded matches')}.`,
     };
   }
 
@@ -75,8 +80,7 @@ export function buildCountersTabView(
     halfSeasonLabel,
     notice:
       matchups.inPlaceOf === null ? null : halfSeasonFallbackNotice(matchups.inPlaceOf.label, halfSeasonLabel),
-    footnote:
-      'These are records from matches RivalsPulse players recorded, ordered by how clear the edge is. They describe what happened; they do not say whom to pick or ban.',
+    footnote: `${counterRuleNote(matchups.minimumMatches)} These come from matches RivalsPulse players recorded, ordered by how clear the edge is. They describe what happened; they do not say whom to pick or ban.`,
     records: strongest.map((record) => {
       const winner = heroCell(record.hero, identities);
       const loser = heroCell(record.enemy, identities);
@@ -86,6 +90,7 @@ export function buildCountersTabView(
         winner: { hero: winner.hero, name: winner.name, imageUrl: winner.imageUrl },
         loser: { hero: loser.hero, name: loser.name, imageUrl: loser.imageUrl },
         winRate: recordWinRateLabel(record),
+        edge: recordEdgeLabel(record),
         sample: recordSampleLabel(record),
         description: recordSentence(record, winner.name, loser.name),
       };

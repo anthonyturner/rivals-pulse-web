@@ -65,6 +65,14 @@ describe('isHeroMatchups', () => {
     expect(isHeroMatchups(matchupsOf([older as HeroMatchup]))).toBeTrue();
   });
 
+  it('rejects a record cached from before the counter rule was sent, so a page never lists counters by a rule it does not know', () => {
+    const { isCounter: _isCounter, ...withoutRule } = matchup('hulk', 'thor', 9, 12);
+    const { edge: _edge, ...withoutEdge } = matchup('hulk', 'thor', 9, 12);
+
+    expect(isHeroMatchups(matchupsOf([withoutRule as HeroMatchup]))).toBeFalse();
+    expect(isHeroMatchups(matchupsOf([withoutEdge as HeroMatchup]))).toBeFalse();
+  });
+
   it('rejects anything a page could not print safely', () => {
     expect(isHeroMatchups(null)).toBeFalse();
     expect(isHeroMatchups('matchups')).toBeFalse();

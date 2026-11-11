@@ -30,7 +30,7 @@
 
     <div class="community-counters__groups">
       <section [attr.aria-labelledby]="'community-counters-against-' + heroId()">
-        <h4 [id]="'community-counters-against-' + heroId()">Heroes with a winning record against {{ heroName() }}</h4>
+        <h4 [id]="'community-counters-against-' + heroId()">Heroes that do better than usual against {{ heroName() }}</h4>
         <ul class="community-counters__cards">
           @for (card of current.winningAgainst; track card.hero.id) {
           <li>
@@ -45,17 +45,17 @@
               <img [src]="card.hero.imageUrl" alt="" />
               <span class="community-counters__name">{{ card.hero.name }}</span>
               <strong>{{ card.winRate }}</strong>
-              <small>{{ card.sample }}</small>
+              <small>{{ card.edge }} · {{ card.sample }}</small>
             </button>
           </li>
           } @empty {
-          <li class="community-counters__none">No hero has a winning record against {{ heroName() }} yet.</li>
+          <li class="community-counters__none">{{ current.noneAgainst }}</li>
           }
         </ul>
       </section>
 
       <section [attr.aria-labelledby]="'community-counters-for-' + heroId()">
-        <h4 [id]="'community-counters-for-' + heroId()">Heroes {{ heroName() }} has a winning record against</h4>
+        <h4 [id]="'community-counters-for-' + heroId()">Heroes {{ heroName() }} does better than usual against</h4>
         <ul class="community-counters__cards">
           @for (card of current.winningFor; track card.hero.id) {
           <li>
@@ -70,18 +70,18 @@
               <img [src]="card.hero.imageUrl" alt="" />
               <span class="community-counters__name">{{ card.hero.name }}</span>
               <strong>{{ card.winRate }}</strong>
-              <small>{{ card.sample }}</small>
+              <small>{{ card.edge }} · {{ card.sample }}</small>
             </button>
           </li>
           } @empty {
-          <li class="community-counters__none">{{ heroName() }} has no winning record against another hero yet.</li>
+          <li class="community-counters__none">{{ current.noneFor }}</li>
           }
         </ul>
       </section>
     </div>
     <p class="community-counters__sample">
-      Win rates come from matches recorded by RivalsPulse players, with a short run pulled toward even. They describe
-      how a hero fares against another hero. Select a hero for the head-to-head.
+      {{ current.ruleNote }} Win rates come from matches recorded by RivalsPulse players. They describe how a hero
+      fares against another hero. Select a hero for the head-to-head.
     </p>
     } @else {
     <div class="community-counters__empty">

@@ -23,6 +23,7 @@ import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero, HeroRole } from '../../heroes/hero.model';
 import { CurrentHeroMatchupsService } from '../../insights/current-hero-matchups.service';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
+import { counterRuleNote, noCounterMessage } from '../../insights/hero-matchup-records';
 import { matchupNotice } from '../../insights/matchup-notice';
 import { CounterEngineService } from './counter-engine.service';
 
@@ -66,7 +67,11 @@ export class CountersPageComponent implements OnInit {
   protected readonly searchTerm = signal('');
 
   protected readonly heroesLoaded = computed(() => this.heroes() !== undefined);
-  protected readonly minimumMatches = computed(() => this.matchups()?.minimumMatches);
+  protected readonly ruleNote = computed(() => {
+    const matchups = this.matchups();
+
+    return matchups ? counterRuleNote(matchups.minimumMatches) : '';
+  });
 
   /** The sentence that says the previous half-season stands in for the current one, or null when it does not. */
   protected readonly scopeNotice = computed(() => {
@@ -107,7 +112,7 @@ export class CountersPageComponent implements OnInit {
     return hero && { hero, detail: this.heroDetail(hero) };
   });
 
-  /** The two lists under the chosen hero: who has a winning record against it, and who it has one against. */
+  /** The two lists under the chosen hero: who does better than usual against it, and whom it does better than usual against. */
   protected readonly panels = computed(() => {
     const hero = this.selected()?.hero;
     const matchups = this.matchups();
@@ -120,15 +125,15 @@ export class CountersPageComponent implements OnInit {
     return [
       {
         key: 'against',
-        title: `Heroes that beat ${hero.name}`,
+        title: `Heroes that do better than usual against ${hero.name}`,
         cards: this.counterEngine.winningAgainst(hero, roster, matchups),
-        empty: `No hero has a winning record against ${hero.name} in enough recorded matches yet.`,
+        empty: noCounterMessage(matchups, hero.id, hero.name, 'against'),
       },
       {
         key: 'for',
-        title: `Heroes ${hero.name} beats`,
+        title: `Heroes ${hero.name} does better than usual against`,
         cards: this.counterEngine.winningFor(hero, roster, matchups),
-        empty: `${hero.name} has no winning record against another hero in enough recorded matches yet.`,
+        empty: noCounterMessage(matchups, hero.id, hero.name, 'for'),
       },
     ];
   });

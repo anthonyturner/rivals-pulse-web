@@ -10,7 +10,7 @@ import { CommunitySummaryComponent } from '../community-summary/community-summar
 import { buildCountersTabView } from './counters-tab-view';
 import { buildCountersKillFeedView } from './kill-feed-view';
 
-/** The winning records with the clearest edge, from RivalsPulse uploads, or the reason there are none yet. */
+/** The counters with the clearest edge, from RivalsPulse uploads, or the reason there are none yet. */
 @Component({
   selector: 'app-community-counters-tab',
   imports: [CommunitySummaryComponent],

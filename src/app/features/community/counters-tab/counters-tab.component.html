@@ -19,12 +19,12 @@
               <span class="hero">
                 <img [src]="record.winner.imageUrl" alt="" width="36" height="36" loading="lazy" (error)="onImageError($event)" />
                 <span class="name">{{ record.winner.name }}</span>
-              </span>&ngsp;<span class="verb">wins against</span>
+              </span>&ngsp;<span class="verb">does better than usual against</span>
             </div>&ngsp;<span class="hero">
               <img [src]="record.loser.imageUrl" alt="" width="36" height="36" loading="lazy" (error)="onImageError($event)" />
               <span class="name">{{ record.loser.name }}</span>
             </span>&ngsp;<span class="result">
-              <span class="figure">{{ record.winRate }}</span>&ngsp;<span class="sample">{{ record.sample }}</span>
+              <span class="figure">{{ record.winRate }}</span>&ngsp;<span class="sample">{{ record.edge }} · {{ record.sample }}</span>
             </span>
           </div>
         </li>

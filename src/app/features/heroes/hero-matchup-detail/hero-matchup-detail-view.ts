@@ -10,7 +10,10 @@ export interface HeadToHeadSide {
   hero: RosterHero;
   /** Its record against the other hero, or null when that record is below the minimum. */
   record: { winRate: string; wins: number; appearances: number } | null;
-  /** Its matchup win rate against its overall one; null when the two cannot be compared. */
+  /**
+   * The server's edge for the record: how far its matchup win rate sits above its usual one, both
+   * adjusted for small samples, as the counter rule judges it. Null when there is no record.
+   */
   edge: { points: string; usual: string } | null;
   /** How often it was seen killing the other hero; null when the pair is not in the payload. */
   killsBand: string | null;
@@ -72,7 +75,7 @@ export function buildHeadToHeadView(
         record === undefined
           ? null
           : { winRate: recordWinRateLabel(record), wins: record.wins, appearances: record.appearances },
-      edge: record === undefined || usual === undefined ? null : edgeOf(record.winRate, usual.winRate),
+      edge: record === undefined ? null : edgeOf(record.edge, record.shrunkWinRate - record.edge),
       killsBand: pair === undefined ? null : killsBandLabel(pair.killsBand),
       overall:
         usual === undefined
@@ -113,17 +116,17 @@ function placedHeroes(stats: HeroStats | null | undefined): Map<string, HeroStat
 }
 
 /** Points above or below the usual rate, rounded as shown so "+0.0" never appears beside "even". */
-function edgeOf(matchupRate: number, usualRate: number): HeadToHeadSide['edge'] {
-  if (!Number.isFinite(matchupRate) || !Number.isFinite(usualRate)) {
+function edgeOf(points: number, usualRate: number): HeadToHeadSide['edge'] {
+  if (!Number.isFinite(points) || !Number.isFinite(usualRate)) {
     return null;
   }
 
-  const points = Math.round((matchupRate - usualRate) * 10) / 10;
+  const rounded = Math.round(points * 10) / 10;
   const usual = percentLabel(usualRate);
 
-  if (points === 0) {
+  if (rounded === 0) {
     return { points: 'Even', usual };
   }
 
-  return { points: `${points > 0 ? '+' : '−'}${Math.abs(points).toFixed(1)} points`, usual };
+  return { points: `${rounded > 0 ? '+' : '−'}${Math.abs(rounded).toFixed(1)} points`, usual };
 }

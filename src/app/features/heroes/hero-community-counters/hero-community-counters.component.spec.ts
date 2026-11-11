@@ -47,7 +47,7 @@ describe('HeroCommunityCountersComponent', () => {
       name.textContent?.trim(),
     );
 
-  it('lists who has a winning record against the hero, and who the hero has one against, with the sample', async () => {
+  it('lists who does better than usual against the hero, and whom the hero does better than usual against, with the edge and sample', async () => {
     const root = await show('thor', 'Thor', readyMatchups);
     const text = root.textContent ?? '';
 
@@ -55,8 +55,11 @@ describe('HeroCommunityCountersComponent', () => {
     expect(text).toContain('Half-season: Season 10.5');
     expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
     expect(names(root, 1)).toEqual([]);
-    expect(text).toContain('Thor has no winning record against another hero yet.');
+    expect(text).toContain('Thor does not do at least 3 points better than usual against any of the 2 heroes it has 10 or more recorded matches against.');
     expect(text).toContain('91.7%');
+    expect(text).toContain('+22.7 pts vs usual');
+    expect(text).toContain('Heroes that do better than usual against Thor');
+    expect(text).toContain('at least 3 points above its own usual win rate');
     expect(text).toContain('12 matches');
     expect(text).not.toContain('Not enough data yet');
   });
@@ -68,12 +71,16 @@ describe('HeroCommunityCountersComponent', () => {
     expect(titles[1]).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
   });
 
-  it('says no hero has a winning record when the hero has matchups but none are winning', async () => {
+  it('names how many heroes were checked when the hero has matchups but none is a counter', async () => {
     const root = await show('thor', 'Thor', matchupsOf([matchup('thor', 'hulk', 3, 12), matchup('hulk', 'thor', 4, 12)]));
     const text = root.textContent ?? '';
 
-    expect(text).toContain('No hero has a winning record against Thor yet.');
-    expect(text).toContain('Thor has no winning record against another hero yet.');
+    expect(text).toContain(
+      'No hero does at least 3 points better against Thor than it usually does, across the 1 hero with 10 or more recorded matches against Thor.',
+    );
+    expect(text).toContain(
+      'Thor does not do at least 3 points better than usual against any of the 1 hero it has 10 or more recorded matches against.',
+    );
     expect(text).not.toContain('Not enough data yet');
   });
 

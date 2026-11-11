@@ -146,11 +146,11 @@ describe('DivePlannerPageComponent', () => {
   });
 
   describe('with some matchups', () => {
-    it('tells which heroes have a winning record against several of the chosen threats', async () => {
+    it('tells which heroes do better than usual against several of the chosen threats', async () => {
       const root = await open(partial);
 
       expect(names(root, answersStep)).toEqual(['Peni Parker', 'Mantis']);
-      expect(text(root, answersStep)).toContain('Has a winning record against Angela, Black Cat');
+      expect(text(root, answersStep)).toContain('Does better than usual against Angela, Black Cat');
       expect(text(root, answersStep)).toContain('2/3');
     });
 
@@ -166,7 +166,7 @@ describe('DivePlannerPageComponent', () => {
     it('announces the chosen count and the number of answers', async () => {
       const root = await open(partial);
 
-      expect(text(root, '[aria-live]')).toBe('3 of 4 chosen. 2 heroes with a winning record.');
+      expect(text(root, '[aria-live]')).toBe('3 of 4 chosen. 2 heroes that do better than usual.');
     });
 
     it('shows the empty line, not an error, when the threats chosen have no winning answer yet', async () => {
@@ -176,7 +176,7 @@ describe('DivePlannerPageComponent', () => {
       await click(root.querySelectorAll('.chip[aria-pressed="true"]')[0]);
 
       expect(names(root, answersStep)).toEqual([]);
-      expect(text(root, answersStep)).toContain('No winning record yet');
+      expect(text(root, answersStep)).toContain('No hero stands out yet');
       expect(text(root, answersStep)).not.toContain('Not enough data yet');
     });
 
