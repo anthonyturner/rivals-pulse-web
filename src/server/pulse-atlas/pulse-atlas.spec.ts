@@ -18,6 +18,8 @@ import {
   resolveHeroScores,
   assembleHeroScores,
   assembleTeamLineups,
+  assembleHeroSpecialists,
+  resolveHeroSpecialists,
   resolveTeamLineups,
   verifyPulseAtlas,
 } from './pulse-atlas';
@@ -197,6 +199,36 @@ function teamLineupsData(overrides: Record<string, unknown> = {}): Record<string
   };
 }
 
+const DEFINITION = {
+  specialistMinShare: 0.5,
+  specialistMinHeroMatches: 10,
+  flexMaxTopShare: 0.25,
+  flexMinHeroes: 5,
+  flexMinMatches: 20,
+};
+const READY_SPECIALIST_HERO = {
+  heroId: THOR_GAME_ID,
+  status: 'ready',
+  specialist: { winRate: 58.2, shrunkWinRate: 55.1, matchesBand: '50+' },
+  flex: { winRate: 49, shrunkWinRate: 50.3, matchesBand: '100+' },
+};
+const THIN_SPECIALIST_HERO = { heroId: 1011, status: 'not-enough-data' };
+
+function heroSpecialistsData(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    provenance: PROVENANCE,
+    status: 'ready',
+    mode: 'all',
+    definition: DEFINITION,
+    minimumMatches: 50,
+    minimumPlayers: 5,
+    currentSeasonId: 21,
+    season: { id: 21, label: 'Season 10.5' },
+    heroes: [THIN_SPECIALIST_HERO, READY_SPECIALIST_HERO],
+    ...overrides,
+  };
+}
+
 const notAboutCommunityStats = (warning: string): boolean => !warning.startsWith('community-stats:');
 
 function validInputs(): PulseAtlasInput[] {
@@ -215,6 +247,7 @@ function validInputs(): PulseAtlasInput[] {
     { dataset: 'community-stats', source: 'test', data: communityStatsData() },
     { dataset: 'hero-scores', source: 'test', data: heroScoresData() },
     { dataset: 'team-lineups', source: 'test', data: teamLineupsData() },
+    { dataset: 'hero-specialists', source: 'test', data: heroSpecialistsData() },
     { dataset: 'hero-game-ids', source: 'test', data: [thorEntry] },
   ];
 }
@@ -245,6 +278,7 @@ describe('buildPulseAtlas', () => {
       'pulse-atlas/v1/community-stats.json',
       'pulse-atlas/v1/hero-scores.json',
       'pulse-atlas/v1/team-lineups.json',
+      'pulse-atlas/v1/hero-specialists.json',
       'pulse-atlas/v1/tier-list/seasons/1.json',
       'pulse-atlas/v1/tier-list/seasons/2.json',
       'pulse-atlas/v1/manifest.json',
@@ -2624,6 +2658,244 @@ describe('the team-lineups dataset', () => {
     });
 
     expect(() => verifyPulseAtlas(rehashed, fakeSha256)).toThrowError(/team-lineups: the file does not carry provenance/);
+  });
+});
+
+describe('the hero-specialists dataset', () => {
+  const buildWith = (data: unknown): (() => PulseAtlasFile[]) => () =>
+    buildPulseAtlas(withData('hero-specialists', data), GENERATED_AT, fakeSha256);
+  const heroesWith = (...heroes: Record<string, unknown>[]): Record<string, unknown> =>
+    heroSpecialistsData({ heroes });
+  const PATH = 'pulse-atlas/v1/hero-specialists.json';
+
+  it('is published and listed in the manifest', () => {
+    const files = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+    const manifest = parseManifest(files[files.length - 1].content);
+    const file = files.find((candidate) => candidate.path === PATH);
+
+    expect(manifest.files.map((entry) => entry.dataset)).toContain('hero-specialists');
+    expect(JSON.parse(file?.content ?? '{}').data).toEqual(heroSpecialistsData());
+  });
+
+  it('may be left out of a run, and the feed is still valid', () => {
+    const inputs = validInputs().filter((input) => input.dataset !== 'hero-specialists');
+    const files = buildPulseAtlas(inputs, GENERATED_AT, fakeSha256);
+
+    expect(files.some((file) => file.path === PATH)).toBeFalse();
+    expect(() => verifyPulseAtlas(files, fakeSha256)).not.toThrow();
+  });
+
+  it('is valid with no ready hero at all, which is the launch state', () => {
+    expect(buildWith(heroSpecialistsData({ status: 'not-enough-data', heroes: [THIN_SPECIALIST_HERO] }))).not.toThrow();
+    expect(buildWith(heroSpecialistsData({ status: 'not-enough-data', heroes: [] }))).not.toThrow();
+  });
+
+  it('refuses a figure on a hero that is not ready, and a ready hero with no figure', () => {
+    expect(buildWith(heroesWith(READY_SPECIALIST_HERO, { ...THIN_SPECIALIST_HERO, specialist: READY_SPECIALIST_HERO['specialist'] }))).toThrowError(
+      /hero 1011 is not enough data, so it may carry no figure/,
+    );
+    expect(buildWith(heroesWith({ heroId: 1039, status: 'ready' }))).toThrowError(/hero 1039 specialist needs a specialist and a flex bucket when ready/);
+    expect(buildWith(heroesWith({ ...READY_SPECIALIST_HERO, flex: undefined }))).toThrowError(/hero 1039 flex needs a specialist and a flex bucket when ready/);
+  });
+
+  it('refuses an exact count, a rate off the scale and a band that is not a step', () => {
+    const bucket = { winRate: 58.2, shrunkWinRate: 55.1, matchesBand: '50+' };
+
+    expect(buildWith(heroesWith({ ...READY_SPECIALIST_HERO, specialist: { ...bucket, matches: 53 } }))).toThrowError(
+      /hero 1039 specialist has a key outside the allow-list: matches/,
+    );
+    expect(buildWith(heroesWith({ ...READY_SPECIALIST_HERO, specialist: { ...bucket, winRate: 101 } }))).toThrowError(
+      /winRate must be a percentage from 0 to 100/,
+    );
+    expect(buildWith(heroesWith({ ...READY_SPECIALIST_HERO, flex: { ...bucket, matchesBand: '53' } }))).toThrowError(
+      /matchesBand must be 50\+, 100\+, 250\+ or 500\+/,
+    );
+  });
+
+  it('refuses a status that disagrees with the heroes', () => {
+    expect(buildWith(heroSpecialistsData({ status: 'not-enough-data' }))).toThrowError(/status must be ready if and only if a hero is ready/);
+    expect(buildWith(heroSpecialistsData({ status: 'ready', heroes: [THIN_SPECIALIST_HERO] }))).toThrowError(
+      /status must be ready if and only if a hero is ready/,
+    );
+    expect(buildWith(heroSpecialistsData({ status: 'busy' }))).toThrowError(/status must be ready or not-enough-data/);
+  });
+
+  it('refuses a minimum below the site\'s own rule, so a lowered answer cannot publish a thin bucket', () => {
+    expect(buildWith(heroSpecialistsData({ minimumMatches: 10 }))).toThrowError(/minimumMatches must be a whole number of at least 50/);
+    expect(buildWith(heroSpecialistsData({ minimumPlayers: 2 }))).toThrowError(/minimumPlayers must be a whole number of at least 5/);
+    expect(buildWith(heroSpecialistsData({ minimumPlayers: '5' }))).toThrowError(/minimumPlayers must be a whole number of at least 5/);
+  });
+
+  it('refuses a key outside the allow-list, in the file, the definition, the season, a hero and a bucket', () => {
+    expect(buildWith(heroSpecialistsData({ note: 'x' }))).toThrowError(/the file has a key outside the allow-list: note/);
+    expect(buildWith(heroSpecialistsData({ definition: { ...DEFINITION, extra: 1 } }))).toThrowError(/definition has a key outside the allow-list: extra/);
+    expect(buildWith(heroSpecialistsData({ season: { id: 21, label: 'Season 10.5', startsAt: 'x' } }))).toThrowError(/season has a key outside the allow-list: startsAt/);
+    expect(buildWith(heroesWith({ ...READY_SPECIALIST_HERO, matches: 9 }))).toThrowError(/hero 1039 has a key outside the allow-list: matches/);
+  });
+
+  it('refuses a key that names a player, an uid or a count of people', () => {
+    expect(buildWith(heroSpecialistsData({ playerCount: 3 }))).toThrowError(/playerCount/);
+    expect(buildWith(heroSpecialistsData({ players: 3 }))).toThrowError(/players/);
+    expect(buildWith(heroesWith({ ...READY_SPECIALIST_HERO, uid: 'a' }))).toThrowError(/uid/);
+  });
+
+  it('refuses a value that looks like a credential', () => {
+    expect(buildWith(heroSpecialistsData({ season: { id: 21, label: 'sb_secret_abc' } }))).toThrowError(
+      /hero-specialists\.season\.label: value looks like a credential/,
+    );
+  });
+
+  it('refuses a hero listed twice, a hero id that is not a whole number and a mode other than the blend', () => {
+    expect(buildWith(heroesWith(READY_SPECIALIST_HERO, READY_SPECIALIST_HERO))).toThrowError(/hero 1039 is listed more than once/);
+    expect(buildWith(heroesWith({ ...THIN_SPECIALIST_HERO, heroId: 'thor' }))).toThrowError(/hero 0 needs a heroId that is a whole number above 0/);
+    expect(buildWith(heroSpecialistsData({ mode: 'competitive' }))).toThrowError(/mode must be "all"/);
+  });
+
+  it('needs the season, the definition and a current season id', () => {
+    expect(buildWith(heroSpecialistsData({ season: { id: 'x' } }))).toThrowError(/season needs an id and a label/);
+    expect(buildWith(heroSpecialistsData({ definition: { specialistMinShare: 0.5 } }))).toThrowError(/definition needs the five rule values/);
+    expect(buildWith(heroSpecialistsData({ currentSeasonId: 'x' }))).toThrowError(/currentSeasonId must be a whole number/);
+    expect(buildWith(heroSpecialistsData({ inPlaceOfSeasonId: 20 }))).toThrowError(/inPlaceOfSeasonId must be the currentSeasonId/);
+    expect(buildWith(heroSpecialistsData({ inPlaceOfSeasonId: 21 }))).not.toThrow();
+  });
+
+  it('refuses a file that is not the community\'s', () => {
+    expect(buildWith(heroSpecialistsData({ provenance: 'elsewhere' }))).toThrowError(/provenance must be/);
+  });
+});
+
+describe('assembleHeroSpecialists', () => {
+  const answer = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    status: 'ready',
+    definition: DEFINITION,
+    minimumMatches: 50,
+    minimumPlayers: 5,
+    halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null },
+    inPlaceOf: null,
+    heroes: [
+      { hero: 'thor', status: 'ready', specialist: READY_SPECIALIST_HERO['specialist'], flex: READY_SPECIALIST_HERO['flex'] },
+      { hero: 'hulk', status: 'not-enough-data' },
+    ],
+    ...overrides,
+  });
+  const gameIds = [thorEntry, { id: 'hulk', gameId: 1011 }];
+
+  it('folds the answer into the dataset: hero ids as game ids in order, the half-season as a season id', () => {
+    expect(assembleHeroSpecialists(answer(), gameIds)).toEqual(heroSpecialistsData());
+  });
+
+  it('names the current half-season being replaced when the previous one is shown', () => {
+    const data = assembleHeroSpecialists(
+      answer({ halfSeason: { id: 10, label: 'Season 10' }, inPlaceOf: { id: 10.5, label: 'Season 10.5' } }),
+      gameIds,
+    );
+
+    expect(data).toEqual(heroSpecialistsData({ currentSeasonId: 21, season: { id: 20, label: 'Season 10' }, inPlaceOfSeasonId: 21 }));
+  });
+
+  it('takes only the named fields, so nothing else in the answer reaches the file', () => {
+    const data = assembleHeroSpecialists(
+      answer({
+        note: 'x',
+        heroes: [
+          { hero: 'thor', status: 'ready', matches: 53, uid: 'a', specialist: { ...(READY_SPECIALIST_HERO['specialist'] as object), matches: 53 }, flex: READY_SPECIALIST_HERO['flex'] },
+        ],
+      }),
+      gameIds,
+    );
+
+    expect(data).toEqual(heroSpecialistsData({ heroes: [READY_SPECIALIST_HERO] }));
+  });
+
+  it('leaves a hero with no game id out, with a warning', () => {
+    const warnings: string[] = [];
+    const data = assembleHeroSpecialists(answer(), [thorEntry], (warning) => warnings.push(warning));
+
+    expect(data).toEqual(heroSpecialistsData({ heroes: [READY_SPECIALIST_HERO] }));
+    expect(warnings).toEqual(['hulk: no gameId in hero-game-ids.json, so the hero is left out of hero-specialists']);
+  });
+
+  it('refuses an answer that is not the shape, or that names no half-season', () => {
+    expect(() => assembleHeroSpecialists({ nope: true }, gameIds)).toThrowError(/not the hero-specialists shape/);
+    expect(() => assembleHeroSpecialists(answer({ definition: undefined }), gameIds)).toThrowError(/not the hero-specialists shape/);
+    expect(() => assembleHeroSpecialists(answer({ minimumPlayers: undefined }), gameIds)).toThrowError(/not the hero-specialists shape/);
+    expect(() => assembleHeroSpecialists(answer({ heroes: [{ status: 'ready' }] }), gameIds)).toThrowError(/a hero needs an id/);
+    expect(() => assembleHeroSpecialists(answer({ halfSeason: { id: 10.5 } }), gameIds)).toThrowError(/a half-season needs an id and a label/);
+    expect(() => assembleHeroSpecialists(answer({ halfSeason: null }), gameIds)).toThrowError(/no half-season yet/);
+  });
+});
+
+describe('resolveHeroSpecialists', () => {
+  const PATH = 'pulse-atlas/v1/hero-specialists.json';
+  const gameIds = [thorEntry, { id: 'hulk', gameId: 1011 }];
+
+  async function resolve(read: () => Promise<unknown>, published: PulseAtlasFile[] = []) {
+    const warnings: string[] = [];
+    const input = await resolveHeroSpecialists({
+      read,
+      published,
+      source: 'live',
+      heroGameIds: gameIds,
+      warn: (warning) => warnings.push(warning),
+    });
+
+    return { input, warnings };
+  }
+
+  const liveAnswer = (): Record<string, unknown> => ({
+    status: 'ready',
+    definition: DEFINITION,
+    minimumMatches: 50,
+    minimumPlayers: 5,
+    halfSeason: { id: 10.5, label: 'Season 10.5' },
+    inPlaceOf: null,
+    heroes: [
+      { hero: 'thor', status: 'ready', specialist: READY_SPECIALIST_HERO['specialist'], flex: READY_SPECIALIST_HERO['flex'] },
+      { hero: 'hulk', status: 'not-enough-data' },
+    ],
+  });
+
+  it('builds the dataset from the live answer, with no warning', async () => {
+    const { input, warnings } = await resolve(async () => liveAnswer());
+
+    expect(input).toEqual({ dataset: 'hero-specialists', source: 'live', data: heroSpecialistsData() });
+    expect(warnings).toEqual([]);
+  });
+
+  it('leaves the dataset out, with a warning, when the endpoint fails and none was ever published', async () => {
+    const { input, warnings } = await resolve(() => Promise.reject(new Error('HTTP 404')));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/hero-specialists could not be built.*HTTP 404.*left out of this publish/);
+  });
+
+  it('keeps the last published file when the endpoint fails', async () => {
+    const previous = buildPulseAtlas(validInputs(), GENERATED_AT, fakeSha256);
+    const { input, warnings } = await resolve(() => Promise.reject(new Error('HTTP 500')), previous);
+
+    expect(input).toEqual({ dataset: 'hero-specialists', source: 'test', data: heroSpecialistsData() });
+    expect(warnings[0]).toMatch(/last published file is kept/);
+    expect(previous.some((file) => file.path === PATH)).toBeTrue();
+  });
+
+  it('takes the fallback when the answer would publish a thin bucket, or an exact count', async () => {
+    const thin = await resolve(async () => ({ ...liveAnswer(), minimumMatches: 10 }));
+    const exact = await resolve(async () => ({
+      ...liveAnswer(),
+      heroes: [{ hero: 'thor', status: 'ready', specialist: { ...(READY_SPECIALIST_HERO['specialist'] as object), matchesBand: '53' }, flex: READY_SPECIALIST_HERO['flex'] }],
+    }));
+
+    expect(thin.input).toBeUndefined();
+    expect(thin.warnings[0]).toMatch(/minimumMatches must be a whole number of at least 50.*left out of this publish/);
+    expect(exact.input).toBeUndefined();
+    expect(exact.warnings[0]).toMatch(/matchesBand must be/);
+  });
+
+  it('is gated by the unsafe-content check before a build, so a fallback can be chosen', async () => {
+    const { input, warnings } = await resolve(async () => ({ ...liveAnswer(), halfSeason: { id: 10.5, label: 'sb_secret_abc' } }));
+
+    expect(input).toBeUndefined();
+    expect(warnings[0]).toMatch(/value looks like a credential/);
   });
 });
 

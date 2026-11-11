@@ -182,6 +182,15 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('one player can supply nearly all of it');
   });
 
+  it('says how specialist and flex win rates are made public: pooled, with a minimum and no per-player figure', () => {
+    const text = (section('public-numbers').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('Specialist and flex win rates');
+    expect(text).toContain('keeps nothing per player');
+    expect(text).toContain('at least 5 players, 2 uploading players and 50 matches');
+    expect(text).toContain('A line with no player id is left out');
+  });
+
   it('lists ability and ultimate use as planned, apart from the extended status', () => {
     expect(EXTENDED_UPLOAD_FIELDS.map((field) => field.label)).not.toContain('Ability and ultimate use');
     const planned = section('planned-fields').textContent ?? '';

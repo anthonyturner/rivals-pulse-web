@@ -117,6 +117,7 @@ repo's build. This is a move, not a redesign.
 | `20261109100000_backfill_tracked_match_recorders.sql` | `backfill_tracked_match_recorders()` (service role only, adds `tracked_match_recorders` rows only) and one call of it: ties matches uploaded before the recorder table to the single recorder of their player, so `read_own_tracked_matches` returns them (issue 697) |
 | `20261109140000_game_counts.sql` | `read_game_counts()` (service role only, read-only): the matches and different players in `participants`, in total and per half-season, for the Game Stats page (issue 381). Additive: no table is touched. Check with `supabase/checks/game_counts.sql` |
 | `20261109160000_drop_steam_game_stat_snapshots.sql` | Drops `game_stat_snapshots`, `game_stat_snapshot_games` and `record_game_stat_snapshot`, deletes the `sync_runs` rows for the `game-stats` key, and restates `data_job_cooldown()` and `admin_data_jobs_status()` without `game-stats` (issue 743) |
+| `20261111120000_hero_specialists.sql` | `read_hero_specialists()` (service role only, read-only) and eight rule helpers (`hero_specialist_min_share_percent()` and its siblings): per hero, the pooled record of the players who mostly play it against the players who play many heroes, worked out from `participants` on every call (issue 819). Additive: no table is touched and nothing is stored. Check with `supabase/checks/hero_specialists.sql`. **Awaiting approval: not yet pushed to production** |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -705,6 +706,54 @@ if one is gone or comes after a delete.
   before it deletes the timelines.
 - Until the overlay sends `hero_timelines` (issue 654), the table stays empty and the hero page shows
   its empty state. Half-seasons whose raw rows were purged before this migration cannot be filled.
+
+## Specialists and flex players
+
+Issue 819. `read_hero_specialists()` answers, per half-season and hero, the pooled record of two groups of
+players: those who mostly play the hero (specialists) and those who play many heroes (flex). It is
+`security definer`, `stable`, granted to the service role only, and stores nothing: the classification runs
+inside the one query over the raw `participants` rows on every call, so a `forget_player`, a late result or a
+purge shows up at once and no per-player row ever exists (ADR-0006, decision 3). Only pooled counts leave it.
+
+- **Who is a player.** An in-game uid (`btrim(uid)`), not a name: a line with no uid is left out, as are lines
+  with no result, no hero (id 0 is "no hero recorded") and a match whose mode is not Quick Match (0) or
+  Competitive (1). A match is its roster fingerprint plus its start time, and its mode is read once per match, as
+  in `fill_hero_aggregates`. A person's hero in a match is the hero they ended on, and Deadpool's role forms are
+  one hero (1057) through `hero_game_roles`, merged before counting. Everything is per half-season.
+- **The rule**, over a person's counted matches in the half-season (the numbers are the constants
+  `hero_specialist_min_share_percent()` 50, `hero_specialist_min_hero_matches()` 10, `hero_flex_max_top_share_percent()`
+  25, `hero_flex_min_heroes()` 5 and `hero_flex_min_matches()` 20, so raising one is a new migration):
+  - **specialist on H**: at least 50% of them on H, and at least 10 on H. A person can be a specialist on more
+    than one hero only by playing exactly half of their matches on each;
+  - **flex**: the most played hero under 25%, at least 5 heroes and at least 20 matches; the flex bucket of H
+    holds their matches on H;
+  - everyone else, the middle, is in neither bucket: someone with 40% on a hero is not a specialist and not flex.
+- **The gate.** A bucket of H is shown only with at least `hero_specialist_min_players()` (5) people,
+  `hero_specialist_min_recorders()` (2) recorders (the one whose upload stored each match) and
+  `hero_specialist_min_bucket_matches()` (50) matches, and a hero comes back only when both its buckets are shown.
+  Two people are too few, since either could subtract their own record from the total. A hero below the gate is
+  absent: no count of how close it is, and no count of people or recorders, ever leaves the database. The 5 people
+  already imply 50 specialist matches (each needs 10), so the match gate binds on the flex side.
+- **The answer** is one jsonb list, `[{ half_season, hero_id, specialist_matches, specialist_wins, flex_matches,
+  flex_wins }]`, for every half-season still held in `participants`, so PostgREST's row limit never cuts it short.
+  The website picks the current half-season and falls back to the previous one while no hero passes.
+- The website reads it through `GET /api/hero-specialists`
+  ([`src/server/heroes/specialists/hero-specialists-read.ts`](../src/server/heroes/specialists/hero-specialists-read.ts)),
+  which pulls each bucket toward the hero's own win rate from the hero stats of the same half-season, with the
+  strength `estimateWinRatePriors` finds across all heroes, and publishes the rates and a `matchesBand` (50+, 100+,
+  250+, 500+), never an exact count. It prints the rule and the gate (`SPECIALIST_MIN_SHARE_PERCENT` and its
+  siblings, `HERO_SPECIALISTS_MIN_PLAYERS`, `HERO_SPECIALISTS_MIN_RECORDERS`, `HERO_SPECIALISTS_MIN_MATCHES`), which
+  `supabase/functions/track-match-history/hero-specialists-migration.test.ts` compares with the migration. Pulse
+  Atlas publishes it as the optional `hero-specialists.json` ([pulse-atlas.md](pulse-atlas.md)).
+- **Volume at launch** (read-only count on 2026-11-11, before the migration): of 4,335 players with a counted match in
+  Season 10.5, 2 had 20 or more counted matches and 1 had 40 or more; no player was flex and one was a specialist
+  (on one hero). Expect "not enough data" for every hero until far more matches are recorded.
+- **Run the check** after `supabase db push`:
+  `npx supabase db query --linked -f supabase/checks/hero_specialists.sql` (fixtures in half-season 993, rolled back).
+  It proves the specialist and flex rule, the excluded middle, each gate (4 specialists, one recorder behind the
+  specialists, one behind the flex players, 45 flex matches), that people with no uid are left out, that matches with
+  no result or in Arcade are not counted, that Deadpool's role forms are one hero, the exact counts, the fields of the
+  answer and the grants.
 
 ## Backfilling participants from stored matches
 

@@ -2,8 +2,11 @@
 
 - **Status:** Accepted on 2026-11-11. A stat that moves, or a new one, amends
   the table under Decision 2 in the same pull request that moves it, and says
-  so here under Status. Amended on 2026-11-11 by issue 773: win rate by map
-  moved to the Maps tab, shrunk, with the Overview keeping a short list.
+  so here under Status. **Amended on 2026-11-11:** the specialist and flex win
+  rates (issue 819) are added to the table, with the data and Pulse Atlas half
+  first and the website tab after. Amended again on 2026-11-11 by issue 773: win
+  rate by map moved to the Maps tab, shrunk, with the Overview keeping a short
+  list.
 - **Date:** 2026-11-11
 - **Deciders:** Anthony (maintainer). The Stats hub design was approved on
   2026-11-11 on issue 779.
@@ -57,7 +60,8 @@ starts from the owner instead of adding a second copy.
 **1. One stat, one server read function, one SQL function.** Each stat below
 is read by one function in `src/server/` that calls one `public.read_*()`
 function. (The pairs, trios, line-up and switch-in readers also call
-`readHeroStatsSource` for the half-seasons and per-hero counts, so they all
+`readHeroStatsSource` for the half-seasons and per-hero counts, and the
+specialist reader calls `readHeroStatsSource` and `getHeroStats`, so they all
 show the half-season the hero stats show; that is a shared input, not a second
 read of their own figure.) An endpoint, a Pulse Atlas file or another stat that needs the same
 counts calls that reader. It does not read the table or the SQL function again
@@ -79,6 +83,7 @@ tab is under `/stats`.
 | Best duos | `getHeroSynergies` | `read_hero_pairs()` (the `with` pairs) | `GET /api/hero-synergies` | `community-stats.json` | Team comps (`/stats/team-comps`) |
 | Triple-support trios | `getTripleSupportTrios` | `read_triple_support_trios()` | `GET /api/triple-support-trios` | none | Team comps |
 | Line-up shapes | `getTeamLineups` | `read_team_lineup_shapes()` | `GET /api/team-lineups` | `team-lineups.json` | Team comps |
+| Specialists against flex players (pooled win rate per hero) | `getHeroSpecialists` | `read_hero_specialists()` (service role only; classifies players inside the query, stores nothing) | `GET /api/hero-specialists` | `hero-specialists.json` (optional) | none yet; the website display is a follow-up (hero page and the Heroes tab) |
 | Win rate by map (shrunk, from the recorder's side), best and worst, and the known maps still waiting for a rate | `getCommunityMatches` | `read_community_matches()` | `GET /api/community/matches` | none (`maps.json` is only map ids and names) | Maps (`/stats/maps`, every map); Overview (`/stats`, the best and worst three and a link) |
 | Mode mix, match length, matches per day | `getCommunityMatches` | `read_community_matches()` | `GET /api/community/matches` | none | Overview |
 | When players win (weekday, time of day, session position) | `getCommunityInsights` | `read_community_insights()` | `GET /api/community/insights` | none | Overview |
