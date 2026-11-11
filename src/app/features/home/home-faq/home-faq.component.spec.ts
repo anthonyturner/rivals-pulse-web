@@ -72,6 +72,7 @@ describe('HomeFaqComponent', () => {
 
       expect(answer).toContain('At launch it will upload');
       expect(answer).toContain('automatically');
+      expect(answer).toContain("unless you turn uploading off in the app's Settings, under Privacy");
       expect(answer).toMatch(/names and player ids/);
       expect(answer).toContain('only anonymous totals and never player ids');
       expect(answer).toContain("shows a player's name only if that player chose to show it");
@@ -82,6 +83,7 @@ describe('HomeFaqComponent', () => {
       const answer = text(item('app-needed').querySelector('.answer'));
 
       expect(answer).toContain('Once it launches, the app is what records matches');
+      expect(answer).toContain('every match it uploads counts toward them');
       expect(answer).not.toContain('every match you play');
     });
 
