@@ -10,9 +10,9 @@ import { of, Subject } from 'rxjs';
 import type { Hero } from './hero.model';
 import { SidebarContent } from '../../core/layout/sidebar/sidebar-content';
 import { CommunityKillsService } from '../insights/community-kills.service';
-import { HeroMatchupsService } from '../insights/hero-matchups.service';
+import { CurrentHeroMatchupsService } from '../insights/current-hero-matchups.service';
 import { HeroSwitchInsService } from '../insights/hero-switch-ins.service';
-import { HeroStatsService } from '../insights/hero-stats.service';
+import { CurrentHeroStatsService } from '../insights/current-hero-stats.service';
 import { HeroDataService } from './hero-data.service';
 import { HeroScoresService } from './hero-scores.service';
 import { heroesMatcher } from './heroes.routes';
@@ -151,9 +151,9 @@ describe('HeroesPageComponent videos in hero tabs', () => {
               of([{ heroId: 'luna', videoType: 'paz-gameplay', youtubeId: 'lunaPaz', title: 'Luna PAZ' }]),
           },
         },
-        { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
+        { provide: CurrentHeroStatsService, useValue: { getHeroStats: () => of(null) } },
         { provide: HeroScoresService, useValue: { getHeroScores: () => of(null) } },
-        { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: CurrentHeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
         { provide: HeroSwitchInsService, useValue: { getHeroSwitchIns: () => of(null) } },
         { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
       ],
@@ -247,9 +247,9 @@ describe('HeroesPageComponent when the hero service fails', () => {
             getHeroVideos: () => of([]),
           },
         },
-        { provide: HeroStatsService, useValue: { getHeroStats: () => of(null) } },
+        { provide: CurrentHeroStatsService, useValue: { getHeroStats: () => of(null) } },
         { provide: HeroScoresService, useValue: { getHeroScores: () => of(null) } },
-        { provide: HeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
+        { provide: CurrentHeroMatchupsService, useValue: { getHeroMatchups: () => of(null) } },
         { provide: HeroSwitchInsService, useValue: { getHeroSwitchIns: () => of(null) } },
         { provide: CommunityKillsService, useValue: { getKills: () => of(null) } },
       ],

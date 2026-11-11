@@ -10,7 +10,7 @@ import { StatePanelComponent } from '../../../shared/components/state-panel/stat
 import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero } from '../../heroes/hero.model';
-import { HeroMatchupsService } from '../../insights/hero-matchups.service';
+import { CurrentHeroMatchupsService } from '../../insights/current-hero-matchups.service';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 import { matchupNotice } from '../../insights/matchup-notice';
 import { answersTo, MultiThreatAnswer } from './dive-answers';
@@ -37,7 +37,7 @@ const MAX_DIVE_THREATS = 4;
 })
 export class DivePlannerPageComponent implements OnInit {
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly heroMatchupsService = inject(CurrentHeroMatchupsService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** The roster: `undefined` until it has loaded. */

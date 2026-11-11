@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 
 import { HeroDataService } from '../../heroes/hero-data.service';
-import { HeroStatsService } from '../../insights/hero-stats.service';
+import { CurrentHeroStatsService } from '../../insights/current-hero-stats.service';
 import { heroIdentities } from '../../insights/hero-identity';
 import { TierRowsComponent } from '../../insights/tier-rows/tier-rows.component';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
@@ -17,7 +17,7 @@ import { buildTierListTabView } from './tier-list-tab-view';
 })
 export class TierListTabComponent {
   // undefined while the request runs, null once it has failed.
-  private readonly stats = toSignal(inject(HeroStatsService).getHeroStats());
+  private readonly stats = toSignal(inject(CurrentHeroStatsService).getHeroStats());
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
 
   /** Names and portraits wait for the roster, so a hero is not drawn under a guessed name first. */

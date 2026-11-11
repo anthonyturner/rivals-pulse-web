@@ -21,7 +21,7 @@ import { HeroImageFallbackDirective } from '../../../shared/directives/hero-imag
 import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero, HeroRole } from '../../heroes/hero.model';
-import { HeroMatchupsService } from '../../insights/hero-matchups.service';
+import { CurrentHeroMatchupsService } from '../../insights/current-hero-matchups.service';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 import { matchupNotice } from '../../insights/matchup-notice';
 import { CounterEngineService } from './counter-engine.service';
@@ -48,7 +48,7 @@ const ROLES: readonly RoleFilter[] = ['All', 'Vanguard', 'Duelist', 'Strategist'
 export class CountersPageComponent implements OnInit {
   private readonly counterEngine = inject(CounterEngineService);
   private readonly heroDataService = inject(HeroDataService);
-  private readonly heroMatchupsService = inject(HeroMatchupsService);
+  private readonly heroMatchupsService = inject(CurrentHeroMatchupsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly resultHeading = viewChild<ElementRef<HTMLElement>>('resultHeading');

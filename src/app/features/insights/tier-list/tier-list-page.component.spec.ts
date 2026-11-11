@@ -385,15 +385,20 @@ describe('TierListPageComponent', () => {
         .flush({ ...withModes, halfSeason: previous, mode: 'quick-match' });
     });
 
-    it('goes back to the default request when the blend is chosen again', async () => {
+    it('shows the shared current stats, without asking again, when the blend is chosen again', async () => {
       const { harness, page } = await open(withModes);
 
       choose(modeSelect(page), 'competitive');
-      http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive' });
+      http.expectOne('/api/hero-stats?mode=competitive').flush({ ...withModes, mode: 'competitive', matchesCounted: 28 });
       harness.detectChanges();
 
       choose(modeSelect(page), 'all');
-      http.expectOne('/api/hero-stats').flush(withModes);
+      harness.detectChanges();
+
+      http.expectNone('/api/hero-stats');
+      expect(page.querySelector('[aria-busy="true"]')).toBeNull();
+      expect(modeSelect(page).value).toBe('all');
+      expect(text(page, '.meta')[0]).not.toContain('28 matches counted');
     });
 
     it('names an empty mode and its half-season, and keeps the picker so the mode can be left', async () => {
