@@ -170,15 +170,16 @@ app.all('/api/admin/*splat', (req, res, next) => {
 });
 
 /**
- * Serve static files from /browser
+ * Serve static files from /browser, except the browser shell: it is the fallback the render reads
+ * from disk, not a page, and as a file it would answer `/index.csr.html` with a year of caching.
  */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
+const staticFiles = express.static(browserDistFolder, {
+  maxAge: '1y',
+  index: false,
+  redirect: false,
+});
+
+app.use((req, res, next) => (req.path === '/index.csr.html' ? next() : staticFiles(req, res, next)));
 
 /**
  * Handle all other requests by rendering the Angular application, or serving the browser shell

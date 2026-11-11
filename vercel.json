@@ -1,8 +1,7 @@
 {
   "version": 2,
-  "framework": null,
   "buildCommand": "npm run vercel:build",
-  "outputDirectory": "dist/rivals-pulse-coach/browser",
+  "outputDirectory": "dist/rivals-pulse-coach/static",
   "redirects": [
     { "source": "/overlay-faq", "destination": "/faq", "permanent": true },
     { "source": "/overlay-faq/", "destination": "/faq", "permanent": true }
