@@ -5,7 +5,10 @@
  * script, which runs outside Angular, can load it.
  */
 
-/** Content pages with a fixed address. */
+/**
+ * Content pages with a fixed address. The Stats hub lists each tab that has content of its own; the
+ * Heroes and Maps tabs are stand-ins that ask not to be indexed, so they join when they have content.
+ */
 export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/',
   '/heroes',
@@ -23,6 +26,11 @@ export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/faq',
   '/fair-play',
   '/privacy',
+  '/stats',
+  '/stats/roles',
+  '/stats/matchups',
+  '/stats/team-comps',
+  '/stats/records',
 ];
 
 /** Routes with an id in the address; the build lists one page per id in the content data. */

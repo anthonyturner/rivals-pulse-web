@@ -14,10 +14,11 @@ export interface RecordsViewState {
 
 /**
  * Loads the boards and the roster for a Pulse Records page and reduces them to what it draws. Call it
- * from a field initialiser. A roster that cannot be loaded is not a failure: a hero is then drawn from
- * its id, so only the boards themselves can fail the page.
+ * from a field initialiser. `rowLimit` is a function for a page whose limit changes, such as one that
+ * shows a few rows of each board until the visitor picks one. A roster that cannot be loaded is not a
+ * failure: a hero is then drawn from its id, so only the boards themselves can fail the page.
  */
-export function injectRecordsView(rowLimit: number): RecordsViewState {
+export function injectRecordsView(rowLimit: number | (() => number)): RecordsViewState {
   // undefined while the request runs, null once it has failed.
   const records = toSignal(inject(PulseRecordsService).getPulseRecords());
   const roster = toSignal(inject(HeroDataService).getHeroRoster());
@@ -28,7 +29,9 @@ export function injectRecordsView(rowLimit: number): RecordsViewState {
     view: computed(() => {
       const answer = records();
 
-      return answer ? buildRecordsView(answer, heroIdentities(roster() ?? []), rowLimit) : null;
+      return answer
+        ? buildRecordsView(answer, heroIdentities(roster() ?? []), typeof rowLimit === 'function' ? rowLimit() : rowLimit)
+        : null;
     }),
   };
 }

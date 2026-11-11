@@ -1,0 +1,65 @@
+@if (view(); as v) {
+  @if (meta(); as text) {
+    <p class="meta">{{ text }}</p>
+  }
+
+  @if (v.status === 'loading') {
+    <app-state-panel kind="loading" heading="Loading game stats" [announce]="false">
+      <p>Fetching the latest counts.</p>
+    </app-state-panel>
+  } @else if (v.status === 'error') {
+    <app-state-panel kind="error" heading="Game stats could not be loaded">
+      <p>The counts are not available right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (v.status === 'empty') {
+    <app-state-panel heading="No matches counted yet">
+      <p>Counts appear here once matches recorded with the RivalsPulse app have been uploaded.</p>
+    </app-state-panel>
+  } @else {
+    <app-hub-tile
+      class="lead"
+      title="Seen by the RivalsPulse app"
+      description="Matches and players counted from overlay uploads."
+      [imageUrl]="leadImage"
+      [chip]="leadChip"
+    />
+    <dl class="stats">
+      @for (tile of v.tiles; track tile.label) {
+        <div class="stat">
+          <dt><app-kind-chip kind="secondary" [label]="tile.label" /></dt>
+          <dd><span class="stat__value">{{ tile.value }}</span></dd>
+        </div>
+      }
+    </dl>
+
+    <div class="card">
+      <h2>By half-season</h2>
+      <table aria-describedby="seasons-note">
+        <caption class="visually-hidden">Matches and players seen in each half-season</caption>
+        <thead>
+          <tr>
+            <th scope="col">Half-season</th>
+            <th scope="col">Matches counted</th>
+            <th scope="col">Players</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of v.rows; track row.label) {
+            <tr>
+              <th scope="row">{{ row.label }}</th>
+              <td>{{ row.matches }}</td>
+              <td>{{ row.players }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="note" id="seasons-note">
+        A match is counted once however many players recorded it, in every mode and whether or
+        not it ended with a win or a loss, so the rows add up to the total. Win rates and tiers use
+        only the matches with a result, so they count fewer. A player is counted once per
+        half-season, so the rows can add up to more players than the total. Only matches the app still holds are counted, which is up to about six months of
+        play.
+      </p>
+    </div>
+  }
+}

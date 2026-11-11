@@ -61,7 +61,7 @@ describe('NavigationCategoryPageComponent', () => {
   });
 
   it('draws every Resources item', () => {
-    expect(renderCategory('Resources').querySelectorAll('app-hub-tile').length).toBe(9);
+    expect(renderCategory('Resources').querySelectorAll('app-hub-tile').length).toBe(4);
   });
 
   it('draws Resources and Tools as bento grids, each with its own tiles', () => {

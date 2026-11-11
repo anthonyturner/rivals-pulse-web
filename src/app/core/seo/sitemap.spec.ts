@@ -1,4 +1,5 @@
 import { routes } from '../../app.routes';
+import { STATS_TABS, statsTabLink } from '../../features/stats/stats-tabs';
 import { NAVIGATION_CATEGORIES } from '../navigation/navigation-category.data';
 import {
   listSitemapPaths,
@@ -52,9 +53,17 @@ describe('sitemap', () => {
   });
 
   it('lists only addresses a route answers', () => {
-    const known = new Set(['', ...pageRoutePaths, 'heroes'].map((path) => `/${path}`.replace('//', '/')));
+    const known = new Set(
+      ['', ...pageRoutePaths, 'heroes'].map((path) => `/${path}`.replace('//', '/')).concat(STATS_TABS.map(statsTabLink)),
+    );
 
     expect(SITEMAP_STATIC_PATHS.filter((path) => !known.has(path))).toEqual([]);
+  });
+
+  it('lists each Stats tab that has content, and no stand-in that asks not to be indexed', () => {
+    const listedTabs = SITEMAP_STATIC_PATHS.filter((path) => path === '/stats' || path.startsWith('/stats/'));
+
+    expect(listedTabs).toEqual(STATS_TABS.filter((tab) => tab.hasContent).map(statsTabLink));
   });
 
   it('adds a page for each hero and guide in the content data', () => {

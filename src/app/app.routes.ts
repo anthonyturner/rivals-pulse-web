@@ -29,6 +29,10 @@ export const routes: Routes = [
       import('./features/community/community.routes').then((module) => module.communityRoutes),
   },
   {
+    path: 'stats',
+    loadChildren: () => import('./features/stats/stats.routes').then((module) => module.statsRoutes),
+  },
+  {
     path: 'learn',
     redirectTo: 'hero-guides',
     pathMatch: 'full',
