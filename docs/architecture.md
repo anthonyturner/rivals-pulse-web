@@ -13,7 +13,10 @@ non-API path that is not a static file to `api/ssr.mjs`, a Vercel function that
 hands the request to the Angular server render (`@angular/ssr`, `src/server.ts`;
 the same code serves local dev and `npm run serve:ssr:rivals-pulse-coach`).
 Vercel serves a real file (`ads.txt`, hashed bundles, images) before any
-rewrite, so static files never reach the function. A page the server must not
+rewrite, so static files never reach the function, and the browser output must
+hold no `index.html` or `/` would be served as that file: `vercel.json` sets
+`"framework": null` so Vercel's Angular preset does not make one out of
+`index.csr.html`. A page the server must not
 render is declared `RenderMode.Client` in `src/app/app.routes.server.ts` and gets
 the empty browser shell: `/sign-in`, `/account`, `/profile` and `/admin` (the
 visitor's own session) and the Pulse Records lists (no player name in server HTML).
@@ -29,9 +32,13 @@ visitor's own session) and the Pulse Records lists (no player name in server HTM
   its error state, and `uncachedOnFailedRequestInterceptor`
   (`core/seo/`) sets `no-store` on the response so that state is not kept.
 - **Data in the render.** A page's `/api/*` requests go to its own host, so each
-  one is a second function call (cached by the CDN like any API answer). On a
-  preview deployment behind Vercel's login, those calls are refused and the page
-  renders its empty or error state.
+  one is a second function call (cached by the CDN like any API answer). A
+  preview deployment behind Vercel's login would refuse those calls, so
+  `protectionBypassInterceptor` (`core/ssr/`) adds `x-vercel-protection-bypass`
+  with `VERCEL_AUTOMATION_BYPASS_SECRET` (set by Vercel once Protection Bypass
+  for Automation is on) to requests to the page's own host, and to no other.
+  A page whose request still fails draws its error state, is not cached, and, if
+  it reports no content state of its own, counts as thin (no ad, `noindex`).
 - **404.** The not-found page answers HTTP 404 from the server render
   (`respondNotFound()` in `core/seo/response-status.ts`, which sets the status on
   Angular's `RESPONSE_INIT`), and a guide route whose id is unknown falls through

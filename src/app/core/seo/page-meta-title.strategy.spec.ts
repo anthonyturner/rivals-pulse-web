@@ -154,12 +154,15 @@ describe('PageMetaTitleStrategy on a route flagged with ROUTE_NOINDEX', () => {
     );
   const canonical = (): string | null =>
     document.head.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
+  const previewUrl = (): string | null =>
+    document.head.querySelector('meta[property="og:url"]')?.getAttribute('content') ?? null;
 
   it('asks not to be indexed or followed, and claims no canonical address, on a child of the flagged route', async () => {
     await router.navigateByUrl('/admin/overview');
 
     expect(robots()).toEqual(['noindex, nofollow']);
     expect(canonical()).toBeNull();
+    expect(previewUrl()).toBeNull();
     expect(document.title).toBe('Overview');
   });
 
@@ -192,11 +195,13 @@ describe('PageMetaTitleStrategy on a route flagged with ROUTE_NOINDEX', () => {
 
     expect(robots()).toEqual(['noindex']);
     expect(canonical()).toBeNull();
+    expect(previewUrl()).toBeNull();
 
     await harness.navigateByUrl('/privacy');
 
     expect(robots()).toEqual([]);
     expect(canonical()).toBe(`${SITE_ORIGIN}/privacy`);
+    expect(previewUrl()).toBe(`${SITE_ORIGIN}/privacy`);
   });
 
   it('does not remove a robots tag another page added', async () => {

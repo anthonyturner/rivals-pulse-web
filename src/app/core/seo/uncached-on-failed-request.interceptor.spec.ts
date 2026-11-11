@@ -7,6 +7,7 @@ import {
   FAILED_RENDER_CACHE_CONTROL,
   uncachedOnFailedRequestInterceptor,
 } from './uncached-on-failed-request.interceptor';
+import { ThinContent } from './thin-content';
 
 describe('uncachedOnFailedRequestInterceptor', () => {
   function setup(response: ResponseInit | null) {
@@ -32,6 +33,15 @@ describe('uncachedOnFailedRequestInterceptor', () => {
     expect(new Headers(response.headers).get('cache-control')).toBe(FAILED_RENDER_CACHE_CONTROL);
   });
 
+  it('makes a page that reports nothing thin, so the error page is not indexed', () => {
+    const { http, backend } = setup({ headers: new Headers() });
+
+    http.get('/api/heroes').subscribe({ error: () => undefined });
+    backend.expectOne('/api/heroes').flush('down', { status: 500, statusText: 'Server Error' });
+
+    expect(TestBed.inject(ThinContent).thin()).toBeTrue();
+  });
+
   it('leaves the response alone when every request succeeds', () => {
     const response: ResponseInit = { headers: new Headers() };
     const { http, backend } = setup(response);
@@ -40,6 +50,7 @@ describe('uncachedOnFailedRequestInterceptor', () => {
     backend.expectOne('/api/heroes').flush([]);
 
     expect(new Headers(response.headers).has('cache-control')).toBeFalse();
+    expect(TestBed.inject(ThinContent).thin()).toBeFalse();
   });
 
   it('still reports the failure to the caller', () => {
@@ -58,5 +69,6 @@ describe('uncachedOnFailedRequestInterceptor', () => {
     http.get('/api/heroes').subscribe({ error: () => undefined });
 
     expect(() => backend.expectOne('/api/heroes').flush('down', { status: 500, statusText: 'Server Error' })).not.toThrow();
+    expect(TestBed.inject(ThinContent).thin()).toBeFalse();
   });
 });
