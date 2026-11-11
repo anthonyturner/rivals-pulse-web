@@ -1,7 +1,7 @@
 <div class="reading privacy page-container page-container--narrow">
   <app-page-header
     title="Privacy notes: where the community numbers come from"
-    description="RivalsPulse shows totals built from matches the RivalsPulse desktop app is designed to upload automatically once it launches. This page says what is uploaded, what the site publishes, and how long it is kept."
+    description="RivalsPulse shows totals built from matches the RivalsPulse desktop app is designed to upload once it launches, unless the player turns uploading off. This page says what is uploaded, what the site publishes, and how long it is kept."
   />
 
   <nav class="privacy-toc" aria-labelledby="privacy-toc-title">
@@ -78,10 +78,15 @@
   <section class="reading-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
     <h2 id="uploaded-today-title">What the app uploads at launch</h2>
     <p>
-      At launch, every match the desktop app records will be uploaded automatically: the app will
-      have no setting to turn it off, and the other players in the match will not be asked. The app
-      will upload the scoreboard line of every human player in it, on both teams, and a few facts
-      about the match. The scoreboard figures are what the game itself shows.
+      At launch, the desktop app will upload the matches it records by default, and the other
+      players in an uploaded match will not be asked. A player can turn uploading off in the
+      app's Settings, under Privacy, with the &quot;Upload my matches&quot; switch, which is on
+      until they turn it off. While it is off, nothing is uploaded and matches still save on that
+      player's own PC. A match finished while it is off is never uploaded later, even if the
+      switch is turned back on, and restoring a backup file can turn uploading off but never on.
+      Turning it off does not delete matches that were already uploaded. For each uploaded match
+      the app will upload the scoreboard line of every human player in it, on both teams, and a
+      few facts about the match. The scoreboard figures are what the game itself shows.
     </p>
     <ul>
       @for (field of todayFields; track field.label) {

@@ -77,7 +77,7 @@ describe('OverlayFaqPageComponent', () => {
 
     it('keeps a closed answer in the page text but out of the tab order', () => {
       expect(panel('data').hidden).toBeTrue();
-      expect(flat(panel('data'))).toContain('at launch it will record the matches you play and upload each one automatically');
+      expect(flat(panel('data'))).toContain('at launch it will record the matches you play and upload each one automatically, unless you turn uploading off');
     });
   });
 
@@ -174,6 +174,14 @@ describe('OverlayFaqPageComponent', () => {
 
       expect(answer).toContain('RivalsPulse is not released yet');
       expect(answer).toContain('An upload will hold the scoreboard line');
+    });
+
+    it("says uploading can be turned off in Settings, under Privacy, and that matches still save on the PC", () => {
+      const answer = flat(section('data'));
+
+      expect(answer).toContain("unless you turn uploading off in the app's Settings, under Privacy");
+      expect(answer).toContain('nothing is uploaded and matches still save on your PC');
+      expect(answer).not.toMatch(/no setting to turn/i);
     });
 
     it("points to this site's privacy notes and How we count", () => {

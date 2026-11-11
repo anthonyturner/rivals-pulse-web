@@ -36,14 +36,14 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     id: 'data',
     question: 'What does the app send?',
     answer:
-      "At launch it will upload each match you play automatically, including the in-game names and player ids on the scoreboard. Apart from the Pulse Records page, which shows a player's name only if that player chose to show it, this website publishes only anonymous totals and never player ids.",
+      "At launch it will upload each match you play automatically, including the in-game names and player ids on the scoreboard, unless you turn uploading off in the app's Settings, under Privacy. Apart from the Pulse Records page, which shows a player's name only if that player chose to show it, this website publishes only anonymous totals and never player ids.",
     more: { label: 'Read the privacy notes', path: '/privacy' },
   },
   {
     id: 'app-needed',
     question: 'Do I need the app to see the stats?',
     answer:
-      'No. The stats, tier list and tools on this site are free to browse without installing anything. Once it launches, the app is what records matches, and every match played with it counts toward them.',
+      'No. The stats, tier list and tools on this site are free to browse without installing anything. Once it launches, the app is what records matches, and every match it uploads counts toward them.',
     more: { label: 'See the community stats', path: '/community' },
   },
   {

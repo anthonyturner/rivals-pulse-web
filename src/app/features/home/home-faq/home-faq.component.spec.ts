@@ -72,6 +72,7 @@ describe('HomeFaqComponent', () => {
 
       expect(answer).toContain('At launch it will upload');
       expect(answer).toContain('automatically');
+      expect(answer).toContain("unless you turn uploading off in the app's Settings, under Privacy");
       expect(answer).toMatch(/names and player ids/);
       expect(answer).toContain('only anonymous totals and never player ids');
       expect(answer).toContain("shows a player's name only if that player chose to show it");

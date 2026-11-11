@@ -45,7 +45,7 @@ describe('FairPlayPageComponent', () => {
     expect(summary).toContain('The RivalsPulse app is not released yet');
     expect(summary).toContain('in development testing and is not on Overwolf');
     expect(summary).toContain('designed to work at launch');
-    expect(section('collected')).toContain('At launch, uploads will be automatic');
+    expect(section('collected')).toContain('At launch, uploads will be on by default');
     expect(flat(page)).not.toMatch(/\bis uploaded\b|\bare uploaded\b|uploaded today|uploads today/i);
   });
 
@@ -145,7 +145,8 @@ describe('FairPlayPageComponent', () => {
     expect(optOut).toContain('An opt-out does not exist yet');
     expect(section('summary')).toContain('There is no opt-out');
     expect(flat(page)).not.toMatch(/coming soon/i);
-    expect(section('collected')).toContain('will have no setting to turn them off');
+    expect(section('collected')).toContain("A player can turn them off in the app's Settings, under Privacy");
+    expect(flat(page)).not.toMatch(/no setting to turn/i);
   });
 
   it("calls NetEase's and Overwolf's rules policies, cites Overwolf's Game compliance section with a date, and never says laws", () => {
