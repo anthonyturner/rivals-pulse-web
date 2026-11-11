@@ -8,7 +8,7 @@ const SRC = fileURLToPath(new URL('../src', import.meta.url));
 
 /** Colours that are data or art rather than theme: the tier ramp, whose letters are the same in both themes, and the black letterbox behind a video. */
 const KEPT_LITERALS = new Map([
-  ['app/features/insights/tier-rows/tier-rows.component.css', 6],
+  ['app/features/stats/stats-heroes/hero-tiers/tier-rows/tier-rows.component.css', 6],
   ['app/features/community/user-highlights/user-highlights-page.component.css', 1],
 ]);
 
