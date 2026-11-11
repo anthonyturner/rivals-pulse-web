@@ -4,6 +4,17 @@
   min-width: 0;
 }
 
+.full-pages {
+  display: grid;
+  gap: 12px;
+}
+
+.full-pages__title {
+  margin: 0;
+  font-size: var(--type-h3);
+  font-weight: 850;
+}
+
 .intro {
   margin: 0;
   color: var(--text-soft);

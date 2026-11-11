@@ -39,7 +39,7 @@ describe('OverlaySectionComponent', () => {
       expect(text(element)).not.toMatch(/alt\+|ctrl|hotkey|pulsa/i);
     });
 
-    it('links only the card that carries on in the site, to My stats', () => {
+    it('links only the card that carries on in the site, to Profile', () => {
       const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('.feature a'));
 
       expect(links.map((link) => link.getAttribute('href'))).toEqual(['/profile']);

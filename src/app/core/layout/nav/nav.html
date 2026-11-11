@@ -19,7 +19,7 @@
       (click)="closeMenu()">{{ item.label }}</a>
   }
   @if (statsLink(); as path) {
-    <a class="nav-link" [routerLink]="path" [attr.aria-current]="current()[path] ?? null" (click)="closeMenu()">My stats</a>
+    <a class="nav-link" [routerLink]="path" [attr.aria-current]="current()[path] ?? null" (click)="closeMenu()">Profile</a>
   }
   @if (adminLink(); as path) {
     <a class="nav-link" [routerLink]="path" [attr.aria-current]="current()[path] ?? null" (click)="closeMenu()">Admin</a>

@@ -55,7 +55,7 @@ export const OVERLAY_FEATURES: readonly OverlayFeature[] = [
     title: 'Your matches on the site',
     description: 'Link the app to your account and the matches it records add up on your own stats page.',
     iconPath: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v5l3 2',
-    link: { label: 'See My stats', path: '/profile' },
+    link: { label: 'See your Profile', path: '/profile' },
   },
 ];
 

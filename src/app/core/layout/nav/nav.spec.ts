@@ -203,7 +203,7 @@ describe('Nav', () => {
       expect(current()).toEqual([]);
     });
 
-    it('marks My stats on the profile page', async () => {
+    it('marks Profile on the profile page', async () => {
       sessionState.set({
         status: 'signedIn',
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
@@ -214,7 +214,7 @@ describe('Nav', () => {
       fixture.detectChanges();
       await go('/profile');
 
-      expect(current()).toEqual(['page:My stats']);
+      expect(current()).toEqual(['page:Profile']);
     });
 
     it('marks the account link on the sign-in and account pages', async () => {
@@ -310,7 +310,7 @@ describe('Nav', () => {
     });
   });
 
-  it('offers My stats to a signed-in visitor only, between Tools and the account link', () => {
+  it('offers Profile to a signed-in visitor only, between Tools and the account link', () => {
     const labels = (): (string | undefined)[] =>
       Array.from(fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>).map(
         (anchor) => anchor.textContent?.trim(),
@@ -318,7 +318,7 @@ describe('Nav', () => {
     const statsLink = (): HTMLAnchorElement | undefined =>
       Array.from(
         fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
-      ).find((anchor) => anchor.textContent?.trim() === 'My stats');
+      ).find((anchor) => anchor.textContent?.trim() === 'Profile');
 
     expect(statsLink()).toBeUndefined();
 
@@ -332,7 +332,7 @@ describe('Nav', () => {
     fixture.detectChanges();
 
     expect(statsLink()?.getAttribute('href')).toBe('/profile');
-    expect(labels().slice(-3)).toEqual(['Tools', 'My stats', 'Account']);
+    expect(labels().slice(-3)).toEqual(['Tools', 'Profile', 'Account']);
 
     sessionState.set({ status: 'signedOut' });
     fixture.detectChanges();
@@ -355,11 +355,11 @@ describe('Nav', () => {
     };
     const ACCOUNT = { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' };
 
-    it('is shown to an administrator, between My stats and the account link', () => {
+    it('is shown to an administrator, between Profile and the account link', () => {
       show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: null });
 
       expect(adminLink()?.getAttribute('href')).toBe('/admin');
-      expect(labels().slice(-3)).toEqual(['My stats', 'Admin', 'Account']);
+      expect(labels().slice(-3)).toEqual(['Profile', 'Admin', 'Account']);
     });
 
     it('is not shown to a signed-in visitor who is not an administrator', () => {

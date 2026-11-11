@@ -53,8 +53,11 @@ tab list, so every tab is a page a crawler can follow; each tab sets its own tit
 description (route `data`) and canonical. A tab is a view with no page around it: Overview
 draws game stats and the community matches and insights tabs, Roles and Matchups are the
 community stats and counters tabs, Team comps is `TeamCompsComponent`, and Records is one
-page with a category filter held in `?category=`. Heroes and Maps are stand-ins that call
-`reportContentState('thin')`, so they carry no ad and are `noindex` until they have content.
+page with a category filter held in `?category=`. Heroes shows the community hero numbers (most
+picked, highest win rate, per-minute damage, healing and damage blocked) above links to the tier
+list and hero stats pages, until those become this tab; it reports no state of its own, so it is
+thin only when both number sections are. Maps is a stand-in that calls `reportContentState('thin')`,
+so it carries no ad and is `noindex` until it has content.
 
 Navigation and moved addresses: the top bar lists Heroes, Stats, Guides and Tools
 (`core/layout/nav/primary-nav.ts`). Stats is `/stats` and every page under it, plus `/tier-list`
@@ -196,7 +199,7 @@ The session lives on the server side of the boundary:
   `src/server/account/own-dashboard.ts` derives the figures (results, K/D/A, final hits, top heroes, per-minute figures,
   records, recent matches, and the activity tables from `own-activity.ts`) and only those reach the browser. A blank figure is `null`, never 0. There is no
   service key and no per-account copy of the data. The `/profile` page (`src/app/features/profile/`) asks it through `AuthService.loadDashboard()`, which validates the answer, and `buildProfileView` turns it into the
-  states the page draws (not linked, no matches, unavailable, ready). Its ready state includes the My matches and My insights tables (`own-activity/`). The Community Matches and Insights tabs
+  states the page draws (not linked, no matches, unavailable, ready). Its ready state includes the My matches and My insights tables (`own-activity/`). The Stats overview's Matches and Insights sections
   are separate: they read the anonymous `/api/community/matches` and `/api/community/insights` and never the dashboard.
 - The desktop app also has its own link calls, each an Edge Function that confirms the Overwolf session:
   `refresh-linked-player` (refresh the name and avatar), `link-status` (am I linked, and as whom) and

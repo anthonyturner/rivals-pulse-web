@@ -10,8 +10,8 @@
 /**
  * Content pages with a fixed address. A data page is listed only at its Stats hub address, and only
  * when the server renders it: it then reads as a full page, and one that has too little data asks
- * not to be indexed (thin content) so listing it does no harm. The Heroes and Maps tabs are stand-ins
- * with nothing to read yet, and Records is drawn in the browser, so none of the three is listed.
+ * not to be indexed (thin content) so listing it does no harm. The Maps tab is a stand-in with
+ * nothing to read yet, and Records is drawn in the browser, so neither is listed.
  */
 export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/',
@@ -31,6 +31,7 @@ export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/fair-play',
   '/privacy',
   '/stats',
+  '/stats/heroes',
   '/stats/roles',
   '/stats/matchups',
   '/stats/team-comps',

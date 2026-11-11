@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { reportContentState } from '../../../core/seo/thin-content';
+import { HeroesTabComponent } from '../../community/heroes-tab/heroes-tab.component';
 import { HubBentoComponent } from '../../hub/hub-bento/hub-bento.component';
 import type { HubLink, HubTileConfig } from '../../hub/hub-tile.types';
 import { HeroStatsPreviewComponent } from '../../resources/previews/hero-stats-preview/hero-stats-preview.component';
@@ -37,12 +37,14 @@ const TILES: readonly HubTileConfig[] = [
 ];
 
 /**
- * A stand-in until the tier list and the hero stats table become this tab. It points to the two pages
- * that hold those numbers today, and reports that it has nothing of its own to read.
+ * The hero numbers (most picked, highest win rate, and per-minute damage, healing and damage blocked),
+ * with links below to the two pages that hold the full tier list and hero stats table until they
+ * become this tab. The tab reports no content state of its own: each number section does, so the tab
+ * is thin only when every section is.
  */
 @Component({
   selector: 'app-stats-heroes',
-  imports: [HubBentoComponent],
+  imports: [HeroesTabComponent, HubBentoComponent],
   templateUrl: './stats-heroes.component.html',
   styleUrl: './stats-heroes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,8 +52,4 @@ const TILES: readonly HubTileConfig[] = [
 export class StatsHeroesComponent {
   protected readonly links = LINKS;
   protected readonly tiles = TILES;
-
-  constructor() {
-    reportContentState(() => 'thin');
-  }
 }
