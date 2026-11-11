@@ -361,6 +361,8 @@ describe('PrivacyPageComponent', () => {
     expect(summary).not.toContain('no analytics');
     expect(text).toContain('sets no cookies');
     expect(text).toContain('only aggregate figures');
+    expect(text).toContain('the page address, the page you came from, and your browser and device type');
+    expect(text).toContain('without keeping your IP address');
     expect(section('advertising').nextElementSibling).toBe(analytics);
   });
 

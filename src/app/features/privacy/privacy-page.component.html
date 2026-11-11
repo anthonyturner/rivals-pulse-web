@@ -22,15 +22,18 @@
         designed to work at launch.
       </li>
       <li>
-        You never need an account to read this website, which counts page views with
-        <strong>Vercel Web Analytics</strong>; see
-        <a routerLink="." fragment="analytics">Page view counts</a> below. You can
+        You never need an account to read this website. You can
         <strong>sign in with Discord</strong> if you want an account; see
         <a routerLink="." fragment="accounts">Accounts and signing in</a> below. Reading the site
         sets no cookies of its own; only starting to sign in does (a short-lived
         <code>rp_pkce</code> cookie, then the <code>rp_session</code> sign-in cookie), and while you
         sign in your browser talks to Discord and to Supabase, our database service, directly. Like
         any website, its host may keep short-lived technical request logs.
+      </li>
+      <li>
+        This website counts page views with <strong>Vercel Web Analytics</strong>, without cookies.
+        It keeps only aggregate counts; see
+        <a routerLink="." fragment="analytics">Page view counts</a> below.
       </li>
       <li>
         Every page loads <strong>Google AdSense</strong>, so your browser also talks to Google; see
@@ -435,9 +438,12 @@
     <h2 id="analytics-title">Page view counts</h2>
     <p>
       This website counts page views and visitors with Vercel Web Analytics, which Vercel, our
-      host, runs. It sets no cookies and does not follow you from one site to another. We see only
-      aggregate figures, such as how many people read each page and from which country, never data
-      about you. Nothing is counted while we develop the site. Vercel handles the data under
+      host, runs. It sets no cookies and does not follow you from one site to another. For each
+      page you open, your browser sends Vercel the page address, the page you came from, and your
+      browser and device type. Vercel works out your country and counts you once a day as a
+      visitor, without keeping your IP address. We see only aggregate figures, such as how many
+      people read each page and from which country, never data about you. Nothing is counted on
+      our own computers while we build the site. Vercel handles the data under
       <a href="https://vercel.com/docs/analytics/privacy-policy" rel="noopener" target="_blank"
         >its Web Analytics privacy documentation</a
       >.
