@@ -61,8 +61,9 @@ export const STATS_TABS: readonly StatsTab[] = [
     label: 'Maps',
     path: 'maps',
     heading: 'Marvel Rivals map stats',
-    description: 'Which maps players win and lose on most, from matches RivalsPulse players uploaded. Coming soon.',
-    hasContent: false,
+    description:
+      'The maps players win on most and lose on most, and every map’s win rate, from matches RivalsPulse players uploaded. Quick Match and Competitive together.',
+    hasContent: true,
   },
   {
     id: 'team-comps',

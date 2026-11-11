@@ -1,14 +1,8 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
+import { buildMapsView, type CommunityMapsView } from './community-maps-view';
 import { dayLabel } from '../../../shared/utilities/day-label';
 import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
-
-export interface CommunityMapRowView {
-  map: string;
-  winRateLabel: string;
-  /** The win rate, 0 to 100, as the width of its bar. */
-  barPercent: number;
-}
 
 export interface CommunityModeRowView {
   mode: string;
@@ -44,18 +38,7 @@ export interface CommunityMatchesReady {
   notice: string | null;
   /** How many matches the figures cover, in a few words; the rest of how they are counted is the page's to say. */
   sample: string;
-  maps: {
-    /** Every map with a rate, best first. */
-    all: CommunityMapRowView[];
-    /** The maps players win on most, best first. */
-    best: CommunityMapRowView[];
-    /** The maps players lose on most, worst first; never a map that is in `best`. */
-    worst: CommunityMapRowView[];
-    /** Why there is no map to show yet; null once there is one. */
-    note: string | null;
-    /** The maps with a result but under the minimum, as one sentence of names; null when every one is shown. */
-    pendingNote: string | null;
-  };
+  maps: CommunityMapsView;
   modeMix: CommunitySectionView<CommunityModeRowView>;
   averageLength: { label: string | null; note: string | null };
   perDay: CommunitySectionView<CommunityDayRowView>;
@@ -75,7 +58,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     return { kind: 'unavailable' };
   }
 
-  const { overviewMatches, mapMatches, lengthMatches } = data.minimums;
+  const { overviewMatches, lengthMatches } = data.minimums;
   const halfSeasonLabel = data.halfSeason?.label ?? null;
 
   if (data.status === 'not-enough-data') {
@@ -94,15 +77,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     halfSeasonLabel,
     notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
     sample: `${data.matchesCounted === null ? 'Matches' : countLabel(data.matchesCounted, 'match', 'matches')} in ${season}`,
-    maps: {
-      ...bestAndWorstMaps(data.maps),
-      pendingNote:
-        data.mapsBelowMinimum.length === 0 ? null : `Not enough data yet for: ${data.mapsBelowMinimum.join(', ')}.`,
-      note:
-        data.maps.length === 0
-          ? `Not enough data yet. A map needs ${mapMatches} matches in one game mode and ${mapMatches} with a result before its win rate shows.`
-          : null,
-    },
+    maps: buildMapsView(data),
     modeMix: {
       rows: (data.modeMix ?? []).map((share) => ({
         mode: share.mode,
@@ -136,19 +111,8 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
   };
 }
 
-const TEASER_MAPS = 3;
 /** The latest day is still filling up, so the pace is read from the full days before it. */
 const RECENT_DAYS = 3;
-
-/** The top and bottom of the maps by win rate. A map is in one list at most: a short list is split, the better half first. */
-function bestAndWorstMaps(maps: CommunityMatches['maps']): Pick<CommunityMatchesReady['maps'], 'all' | 'best' | 'worst'> {
-  const ranked = maps
-    .map((record) => ({ map: record.map, winRateLabel: percentLabel(record.winRate), barPercent: record.winRate }))
-    .sort((a, b) => b.barPercent - a.barPercent);
-  const best = ranked.slice(0, Math.min(TEASER_MAPS, Math.ceil(ranked.length / 2)));
-
-  return { all: ranked, best, worst: ranked.slice(best.length).slice(-TEASER_MAPS).reverse() };
-}
 
 /**
  * About how many matches players upload a day lately: the average share of the season's matches over

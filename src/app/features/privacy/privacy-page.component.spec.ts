@@ -161,6 +161,18 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('"Community matches" section of the Stats overview count it once');
   });
 
+  it("says a map win rate counts a match once from the recorder's side, is pulled toward the average and can rest on one player", () => {
+    const text = (section('public-numbers').textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(text).toContain('Map win rates on the Stats Maps tab and the Overview count each match once');
+    expect(text).toContain('from the side of the player who recorded it');
+    expect(text).toContain('the earliest upload is the one that counts');
+    expect(text).toContain('pulled toward the average of all maps while the map has few matches');
+    expect(text).toContain('a map appears once it has 10 matches with a result');
+    expect(text).toContain('named, never counted');
+    expect(text).toContain('can describe how one player did on it');
+  });
+
   it('says hero averages need 2 players but can mostly reflect one player', () => {
     const text = section('public-numbers').textContent ?? '';
     expect(text).not.toContain('are planned');

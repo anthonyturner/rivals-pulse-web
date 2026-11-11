@@ -1,6 +1,62 @@
-<app-state-panel heading="Map stats are coming soon">
-  <p>
-    Which maps players win and lose on most will be listed here once enough matches are counted. The
-    <a routerLink="/stats">overview</a> already shows the best and worst three maps from the matches counted so far.
-  </p>
-</app-state-panel>
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Win rate by map"
+  subject="the community's map stats"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'loading' || current.kind === 'unavailable' ? null : current.halfSeasonLabel"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+>
+  @if (current.kind === 'ready') {
+    <div class="maps">
+      <div class="stat-intro">
+        <p class="stat-note">
+          Win rate on each map in Quick Match and Competitive, as a whole percentage.
+          <a routerLink="/how-we-count">How we count</a>
+        </p>
+        <details class="stat-how">
+          <summary>How these are counted</summary>
+          <p class="stat-note">
+            Each match is counted once, from the side of the player who recorded it, however many players recorded it.
+            While few players upload, these figures can come from one player.
+          </p>
+          <p class="stat-note">
+            A map with few matches is pulled toward the average of all maps, so a short run of wins does not put it
+            first. The more matches a map has, the less it is pulled.
+          </p>
+          <p class="stat-note">
+            A map is ranked once it has enough matches with a result. The ones still waiting are named below, never
+            counted.
+          </p>
+        </details>
+      </div>
+
+      <div class="stat-grid">
+        <section class="stat-panel" aria-labelledby="maps-best-title">
+          <h3 id="maps-best-title" class="stat-panel__title">Best maps</h3>
+          <app-map-rates-table caption="The maps players win on most, as a whole percentage" [rows]="current.maps.best" />
+        </section>
+
+        @if (current.maps.worst.length > 0) {
+          <section class="stat-panel" aria-labelledby="maps-worst-title">
+            <h3 id="maps-worst-title" class="stat-panel__title">Worst maps</h3>
+            <app-map-rates-table caption="The maps players lose on most, as a whole percentage" [rows]="current.maps.worst" />
+          </section>
+        }
+      </div>
+
+      <section class="stat-panel" aria-labelledby="maps-all-title">
+        <h3 id="maps-all-title" class="stat-panel__title">Every map, best first</h3>
+        <app-map-rates-table caption="Win rate on every map with enough matches, best first" [rows]="current.maps.all" />
+      </section>
+
+      @if (current.maps.waitingNote; as names) {
+        <section class="stat-panel" aria-labelledby="maps-waiting-title">
+          <h3 id="maps-waiting-title" class="stat-panel__title">Not enough matches yet</h3>
+          <p class="stat-note">{{ names }}</p>
+        </section>
+      }
+    </div>
+  }
+</app-community-summary>

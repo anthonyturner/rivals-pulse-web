@@ -79,13 +79,13 @@ describe('MatchesTabComponent', () => {
     expect(headings()).toEqual(['Community matches']);
   });
 
-  it('shows the four sections with the figures, and what the thin maps still need', async () => {
+  it('shows the four sections with the figures', async () => {
     await answer(READY);
 
     expect(headings()).toEqual(['Community matches', 'Win rate by map', 'Game modes played', 'Matches per day']);
     expect(text()).toContain('Tokyo 2099');
     expect(text()).toContain('50%');
-    expect(text()).toContain('Not enough data yet for: Klyntar.');
+    expect(text()).not.toContain('Klyntar');
     expect(text()).toContain('20 matches in Season 10.5');
     expect(text()).toContain('Quick Match');
     expect(text()).toContain('10 min');
@@ -97,7 +97,7 @@ describe('MatchesTabComponent', () => {
     await answer(READY);
 
     const link = (fixture.nativeElement as HTMLElement).querySelector('a.stat-link') as HTMLAnchorElement;
-    expect(link.textContent).toContain('All maps');
+    expect(link.textContent?.trim()).toBe('All 1 map');
     expect(link.getAttribute('href')).toBe('/stats/maps');
   });
 

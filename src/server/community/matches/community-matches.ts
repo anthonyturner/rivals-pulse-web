@@ -15,6 +15,7 @@ import {
   type HalfSeasonStart,
 } from '../../heroes/stats/hero-stats.ts';
 import { matchesCountedIn } from '../../game-counts/matches-counted.ts';
+import { estimateWinRatePriors } from '../../heroes/stats/win-rate-prior.ts';
 
 /**
  * Every figure on the Community Matches tab is derived here and nowhere else, from the counts in
@@ -81,6 +82,12 @@ interface DeriveCommunityMatchesOptions {
    * make it disagree with Game Stats.
    */
   counts?: GameCounts | null;
+  /**
+   * Maps the site knows by name. A known map with no shown figure is listed in `mapsBelowMinimum`
+   * even when the database sent nothing for it, and a map the game spells in other letters (the
+   * database holds "Birnin t'challa") is shown under the known spelling.
+   */
+  knownMaps?: readonly string[];
 }
 
 /** A mode the game reports under an id this site does not know yet is shown as "Other". */
@@ -107,11 +114,12 @@ export function deriveCommunityMatches(
     options.now,
   );
   const { started, describe } = timeline;
+  const knownMaps = options.knownMaps ?? [];
 
   // Built field by field, so a field added to a snapshot can never reach the public response
   // without being named here.
   const toResult = (shown: number | undefined, inPlaceOf: number | undefined): CommunityMatches => {
-    const snapshot = shown === undefined ? emptySnapshot() : snapshotOf(source, shown);
+    const snapshot = shown === undefined ? emptySnapshot() : snapshotOf(source, shown, knownMaps);
 
     return {
       status: hasFigures(snapshot) ? 'ready' : 'not-enough-data',
@@ -133,9 +141,12 @@ export function deriveCommunityMatches(
   return toResult(shown, inPlaceOf);
 }
 
-function snapshotOf(source: CommunityMatchesSource, halfSeason: number): Snapshot {
+function snapshotOf(source: CommunityMatchesSource, halfSeason: number, knownMaps: readonly string[]): Snapshot {
   const modes = source.modes.filter((row) => row.halfSeason === halfSeason);
-  const { maps, mapsBelowMinimum } = mapRecords(source.maps.filter((row) => row.halfSeason === halfSeason));
+  const { maps, mapsBelowMinimum } = mapRecords(
+    source.maps.filter((row) => row.halfSeason === halfSeason),
+    knownMaps,
+  );
 
   return {
     maps,
@@ -190,36 +201,46 @@ function modeMix(modes: readonly CommunityModeRow[]): CommunityModeShare[] | nul
     );
 }
 
-/** Win rate per map over the blended modes, split at the sample a rate needs. */
-function mapRecords(rows: readonly CommunityMapRow[]): {
-  maps: CommunityMapRecord[];
-  mapsBelowMinimum: string[];
-} {
-  const tallies = new Map<string, { matches: number; wins: number }>();
+/**
+ * Win rate per map over the blended modes, from the recorder's side, one result per match. A map
+ * needs `mapMatches` decided matches before it shows, and its rate is then pulled toward the maps'
+ * average as if some more matches had been played at that average, so a short run of wins does not
+ * put a map on top. The pull is estimated from the maps that show, so a figure never depends on a
+ * map that does not. `mapsBelowMinimum` names every known map with no figure, never a count.
+ */
+function mapRecords(
+  rows: readonly CommunityMapRow[],
+  knownMaps: readonly string[],
+): { maps: CommunityMapRecord[]; mapsBelowMinimum: string[] } {
+  const knownByKey = new Map(knownMaps.map((name) => [mapNameKey(name), name]));
+  const tallies = new Map<string, { name: string; matches: number; wins: number }>();
 
   for (const row of rows.filter((candidate) => BLENDED_PLAY_MODE_IDS.includes(candidate.playModeId))) {
-    const tally = tallies.get(row.mapName) ?? { matches: 0, wins: 0 };
+    const key = mapNameKey(row.mapName);
+    const tally = tallies.get(key) ?? { name: knownByKey.get(key) ?? row.mapName.trim(), matches: 0, wins: 0 };
     tally.matches += row.decidedMatches;
     tally.wins += row.wins;
-    tallies.set(row.mapName, tally);
+    tallies.set(key, tally);
   }
 
-  const decided = [...tallies]
-    .filter(([, tally]) => tally.matches > 0)
-    .map(([map, tally]) => ({ map, ...tally }));
-  const enough = ({ matches }: { matches: number }): boolean => matches >= COMMUNITY_MATCHES_MINIMUMS.mapMatches;
+  const decided = [...tallies.values()].filter(({ matches }) => matches > 0);
+  const shown = decided.filter(({ matches }) => matches >= COMMUNITY_MATCHES_MINIMUMS.mapMatches);
+  const priors = estimateWinRatePriors(shown);
+  const shownNames = new Set(shown.map(({ name }) => name));
+  const waiting = new Set([...knownByKey.values(), ...decided.map(({ name }) => name)]);
 
   // Ordered by what is shown, never by how many matches a map has.
   return {
-    maps: decided
-      .filter(enough)
-      .map(({ map, matches, wins }): CommunityMapRecord => ({ map, winRate: Math.round((wins / matches) * 100) }))
+    maps: shown
+      .map((tally): CommunityMapRecord => ({ map: tally.name, winRate: Math.round(priors.estimate(tally).rate * 100) }))
       .sort((a, b) => b.winRate - a.winRate || a.map.localeCompare(b.map)),
-    mapsBelowMinimum: decided
-      .filter((tally) => !enough(tally))
-      .map(({ map }) => map)
-      .sort((a, b) => a.localeCompare(b)),
+    mapsBelowMinimum: [...waiting].filter((name) => !shownNames.has(name)).sort((a, b) => a.localeCompare(b)),
   };
+}
+
+/** A map name with its capital letters and apostrophe style removed: the game and the site's list spell the same map in different letters. */
+function mapNameKey(name: string): string {
+  return name.trim().toLowerCase().replace(/[‘’]/g, "'");
 }
 
 /** A share of a total as a whole percentage, never shown as 0 for something that happened. */
