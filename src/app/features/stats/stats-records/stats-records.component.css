@@ -9,6 +9,19 @@
   margin-bottom: 12px;
 }
 
+.intro {
+  max-width: 62ch;
+  margin: 0 0 4px;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.intro a {
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .meta {
   margin: 4px 0 0;
   color: var(--text-soft);

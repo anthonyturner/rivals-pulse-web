@@ -1,4 +1,4 @@
-import { Component, provideZonelessChangeDetection, signal } from '@angular/core';
+import { Component, input, provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { type ContentState, contentState, reportContentState, ThinContent } from './thin-content';
@@ -6,6 +6,15 @@ import { type ContentState, contentState, reportContentState, ThinContent } from
 @Component({ template: '' })
 class ReportingPage {
   readonly state = signal<ContentState>('loading');
+
+  constructor() {
+    reportContentState(() => this.state());
+  }
+}
+
+@Component({ template: '' })
+class InputReportingPage {
+  readonly state = input.required<ContentState>();
 
   constructor() {
     reportContentState(() => this.state());
@@ -85,6 +94,32 @@ describe('ThinContent', () => {
     open('thin').destroy();
 
     expect(thin.thin()).toBeFalse();
+  });
+
+  it('reads a page whose required input is not bound yet as loading, instead of throwing', () => {
+    const page = TestBed.createComponent(InputReportingPage);
+
+    expect(() => thin.thin()).not.toThrow();
+    expect(thin.thin()).toBeTrue();
+
+    page.componentRef.setInput('state', 'ready');
+
+    expect(thin.thin()).toBeFalse();
+  });
+
+  it('still raises any other error a reporter throws', () => {
+    @Component({ template: '' })
+    class BrokenPage {
+      constructor() {
+        reportContentState(() => {
+          throw new Error('broken');
+        });
+      }
+    }
+
+    TestBed.createComponent(BrokenPage);
+
+    expect(() => thin.thin()).toThrowError('broken');
   });
 });
 

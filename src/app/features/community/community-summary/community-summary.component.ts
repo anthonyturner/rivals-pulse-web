@@ -32,11 +32,7 @@ export const MY_STATS_LINK: CommunitySummaryLink = { label: 'See your own matche
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CommunitySummaryComponent {
-  /**
-   * Not required, because a tab that is a route of its own is created before its first change
-   * detection sets this, and the thin-content report below can be read in between.
-   */
-  readonly kind = input<'loading' | 'unavailable' | 'not-enough-data' | 'ready'>('loading');
+  readonly kind = input.required<'loading' | 'unavailable' | 'not-enough-data' | 'ready'>();
   readonly heading = input.required<string>();
   /** What the tab shows, as a lower-case noun phrase, for the loading and failure headings. */
   readonly subject = input.required<string>();

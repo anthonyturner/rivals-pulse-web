@@ -108,6 +108,20 @@ describe('The Stats hub', () => {
     });
   });
 
+  describe('moving between pages that report thin content', () => {
+    it('raises no error going from the Overview into Records, out to Roles, and on to the old Records page', async () => {
+      const errors = spyOn(console, 'error');
+
+      await open('/stats');
+      await open('/stats/records');
+      await open('/stats/roles');
+      await open('/records');
+
+      expect(errors).not.toHaveBeenCalled();
+      expect(heading()).toBe('Pulse Records');
+    });
+  });
+
   describe('each tab', () => {
     for (const tab of STATS_TABS) {
       it(`${tab.label} has its own heading, title, description and address`, async () => {

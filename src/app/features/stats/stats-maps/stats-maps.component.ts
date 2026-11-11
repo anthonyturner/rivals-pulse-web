@@ -8,25 +8,8 @@ import { StatePanelComponent } from '../../../shared/components/state-panel/stat
 @Component({
   selector: 'app-stats-maps',
   imports: [RouterLink, StatePanelComponent],
-  template: `
-    <app-state-panel heading="Map stats are coming soon">
-      <p>
-        Which maps players win and lose on most will be listed here once enough matches are counted. The
-        <a routerLink="/stats">overview</a> already shows the win rate on each map from the matches counted so far.
-      </p>
-    </app-state-panel>
-  `,
-  styles: `
-    :host {
-      display: block;
-      min-width: 0;
-    }
-
-    a {
-      color: var(--link);
-      text-decoration: underline;
-    }
-  `,
+  templateUrl: './stats-maps.component.html',
+  styleUrl: './stats-maps.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsMapsComponent {

@@ -123,6 +123,11 @@ describe('The Stats hub Records tab', () => {
       expect(element().querySelector('app-records-coverage')).not.toBeNull();
     });
 
+    it('explains how a list is made, and links to how we count', () => {
+      expect(text(element().querySelector('.intro'))).toContain('one line per uploading player');
+      expect(element().querySelector('.intro a')?.getAttribute('href')).toBe('/how-we-count');
+    });
+
     it('is not thin content once a board has enough rows', () => {
       expect(TestBed.inject(ThinContent).thin()).toBeFalse();
     });

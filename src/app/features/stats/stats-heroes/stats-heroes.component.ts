@@ -43,22 +43,8 @@ const TILES: readonly HubTileConfig[] = [
 @Component({
   selector: 'app-stats-heroes',
   imports: [HubBentoComponent],
-  template: `
-    <p class="intro">The hero tier list and the hero stats table are still on their own pages, and move here soon.</p>
-    <app-hub-bento [links]="links" [config]="tiles" />
-  `,
-  styles: `
-    :host {
-      display: grid;
-      gap: 16px;
-      min-width: 0;
-    }
-
-    .intro {
-      margin: 0;
-      color: var(--text-soft);
-    }
-  `,
+  templateUrl: './stats-heroes.component.html',
+  styleUrl: './stats-heroes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsHeroesComponent {

@@ -34,13 +34,38 @@ export class ThinContent {
     // A page reloading for a new filter keeps its last verdict, so the ad does not leave and come
     // back: a slot that is rebuilt on the same page asks the ad network for a second ad.
     const isThin = linkedSignal<ContentState, boolean>({
-      source: state,
+      source: stateOnceBound(state),
       computation: (next, previous) => (next === 'loading' ? (previous?.value ?? true) : next === 'thin'),
     });
 
     this.reporters.update((all) => [...all, isThin]);
     destroyRef.onDestroy(() => this.reporters.update((all) => all.filter((entry) => entry !== isThin)));
   }
+}
+
+/**
+ * A component is created, and its reporter read, before its first change detection binds its inputs:
+ * the router creates a routed page and then updates the title before anything is rendered. A reporter
+ * that reads a required input in that window throws NG0950, which only means the page has not been
+ * given its answer yet, so it is `loading`. The input signal notifies the reporter once it is bound.
+ */
+function stateOnceBound(state: () => ContentState): () => ContentState {
+  return () => {
+    try {
+      return state();
+    } catch (error) {
+      if (isRequiredInputUnset(error)) {
+        return 'loading';
+      }
+
+      throw error;
+    }
+  };
+}
+
+/** Angular's NG0950 `RuntimeError`; its numeric code is the only public trace of it. */
+function isRequiredInputUnset(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === -950;
 }
 
 /**
