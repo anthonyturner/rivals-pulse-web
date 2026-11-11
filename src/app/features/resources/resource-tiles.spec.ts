@@ -73,10 +73,6 @@ describe('The Resources hub', () => {
 
   afterEach(() => http.verify());
 
-  it('lists only learning pages: no stat page has a place in it', () => {
-    expect(links.map((link) => link.path)).toEqual(['/media-tutorials', '/strategist-guides', '/user-highlights', '/glossary']);
-  });
-
   describe('before any data has arrived', () => {
     beforeEach(() => {
       render();
@@ -216,5 +212,11 @@ describe('The Resources hub', () => {
     expect(flat(last.querySelector('h2'))).toBe('New thing');
     expect(last.getAttribute('data-size')).toBe('third');
     expect(last.querySelector('.chip')).toBeNull();
+  });
+});
+
+describe('The Resources hub links', () => {
+  it('are only learning pages: no stat page has a place in the hub', () => {
+    expect(links.map((link) => link.path)).toEqual(['/media-tutorials', '/strategist-guides', '/user-highlights', '/glossary']);
   });
 });
