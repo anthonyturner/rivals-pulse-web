@@ -23,6 +23,7 @@ export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/faq',
   '/fair-play',
   '/privacy',
+  '/privacy/app',
 ];
 
 /** Routes with an id in the address; the build lists one page per id in the content data. */
