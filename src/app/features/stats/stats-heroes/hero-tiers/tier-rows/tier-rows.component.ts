@@ -1,9 +1,9 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { HeroRoleChipComponent } from '../hero-role-chip/hero-role-chip.component';
-import { HeroTileComponent } from '../hero-tile/hero-tile.component';
-import type { TierRowView } from '../tier-list/tier-list-view';
+import { HeroRoleChipComponent } from '../../../../insights/hero-role-chip/hero-role-chip.component';
+import { HeroTileComponent } from '../../../../insights/hero-tile/hero-tile.component';
+import type { TierRowView } from '../tier-list-view';
 
 /** Tier rows as the tier list draws them: a coloured letter strip, then a grid of hero tiles. */
 @Component({

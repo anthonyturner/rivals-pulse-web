@@ -54,7 +54,7 @@ describe('HeroGuidesPageComponent', () => {
     expect(hrefsByGroup[1]).toEqual(
       HERO_GUIDES.filter((guide) => guide.category === 'hero').map((guide) => `/hero-guides/${guide.heroId}`),
     );
-    expect(hrefsByGroup[3]).toContain('/win-rates');
+    expect(hrefsByGroup[3]).toContain('/stats/heroes');
     expect(new Set(hrefsByGroup.flat()).size).toBe(27);
   });
 

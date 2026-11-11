@@ -24,8 +24,8 @@ describe('activeNav', () => {
     expect(PRIMARY_NAV_ITEMS.map((item) => item.path)).toEqual(['/heroes', '/stats', '/hero-guides', '/tools']);
   });
 
-  it('puts every page under Stats, whichever tab it is and the live tier list and hero stats pages too', () => {
-    for (const path of ['/stats/heroes', '/stats/records', '/tier-list', '/win-rates', '/win-rates/10.5']) {
+  it('puts every page under Stats, whichever tab it is and whichever layout the Heroes tab shows', () => {
+    for (const path of ['/stats/heroes', '/stats/heroes?view=tiers', '/stats/records']) {
       expect(activeNav(path)).withContext(path).toEqual({ path: '/stats', exact: false });
     }
 

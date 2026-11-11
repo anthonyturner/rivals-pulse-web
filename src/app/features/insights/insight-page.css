@@ -1,4 +1,4 @@
-/* The frame the game-stats and win-rates pages share: a one-line title and lede, an optional toolbar, cards, and the notes under the numbers. */
+/* The frame the game-stats and team-comps pages share: a one-line title and lede, an optional toolbar, cards, and the notes under the numbers. */
 :host {
   display: block;
   min-width: 0;

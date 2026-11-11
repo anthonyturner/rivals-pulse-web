@@ -185,7 +185,7 @@ describe('Nav', () => {
       await go('/stats/records?category=kills');
       expect(current()).toEqual(['true:Stats']);
 
-      await go('/tier-list');
+      await go('/stats/heroes?view=tiers');
       expect(current()).toEqual(['true:Stats']);
 
       await go('/glossary#a');

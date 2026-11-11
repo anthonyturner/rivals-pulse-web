@@ -57,6 +57,13 @@ describe('The old stat addresses on the server', () => {
     expect(routeTree.match('/community/not-a-tab/extra')?.redirectTo).toBe('/stats');
   });
 
+  it('sends a half-season after /win-rates to the Heroes tab, never a 404', async () => {
+    const { routeTree } = await buildServerRouteTree();
+
+    expect(routeTree.match('/win-rates/10.5')?.redirectTo).toBe('/stats/heroes');
+    expect(routeTree.match('/win-rates/9/extra')?.redirectTo).toBe('/stats/heroes');
+  });
+
   it('still answers an unknown Pulse Records list with the not-found page', async () => {
     const { routeTree } = await buildServerRouteTree();
 

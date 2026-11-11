@@ -16,14 +16,6 @@ export const PRIMARY_NAV_ITEMS: readonly PrimaryNavItem[] = [
 ];
 
 /**
- * Pages that belong to an item although their address does not start with the item's. The tier list
- * and the hero stats table are Stats pages until they become the hub's Heroes tab.
- */
-const PAGES_UNDER: Readonly<Record<string, readonly string[]>> = {
-  '/stats': ['/tier-list', '/win-rates'],
-};
-
-/**
  * The bar has no item for Resources, so its hub and the learning pages in it sit under Guides. A
  * category with no entry here is its own item, as Tools is.
  */
@@ -65,12 +57,6 @@ export function activeNav(url: string): ActiveNav | null {
 
   if (direct) {
     return { path: direct, exact: path === direct };
-  }
-
-  const grouped = Object.entries(PAGES_UNDER).find(([, pages]) => pages.some((page) => isAtOrBelow(path, page)));
-
-  if (grouped) {
-    return { path: grouped[0], exact: false };
   }
 
   const category = NAVIGATION_CATEGORIES.find(

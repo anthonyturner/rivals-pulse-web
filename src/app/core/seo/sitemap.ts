@@ -47,9 +47,8 @@ export const SITEMAP_ID_ROUTES = {
 
 /**
  * Routes left out on purpose, with the reason. A path ending in `/` stands for every route under it.
- * A data page is out while a Stats hub tab is about to take it over, and that tab is listed once it
- * has content. The Records tab is out because it is drawn in the browser, where its player names
- * stay out of the server's HTML.
+ * The Records tab is out because it is drawn in the browser, where its player names stay out of the
+ * server's HTML.
  */
 export const SITEMAP_EXCLUDED_ROUTES: Readonly<Record<string, string>> = {
   resources: 'hub of links to other pages',
@@ -58,9 +57,6 @@ export const SITEMAP_EXCLUDED_ROUTES: Readonly<Record<string, string>> = {
   'media-tutorials': 'a list of embedded videos with little text of its own',
   'learning-paths': 'not released yet (released-page guard)',
   'watch-next': 'not released yet (released-page guard)',
-  'tier-list': 'data page; moves to the Stats hub Heroes tab',
-  'win-rates': 'data page; moves to the Stats hub Heroes tab',
-  'win-rates/:season': 'data page; moves to the Stats hub Heroes tab',
   counters: 'interactive tool with no text of its own',
   'dive-planner': 'interactive tool with no text of its own',
   'team-builder': 'interactive tool with no text of its own',

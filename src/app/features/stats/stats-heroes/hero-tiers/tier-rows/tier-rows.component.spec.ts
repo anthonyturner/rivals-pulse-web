@@ -2,7 +2,7 @@ import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import type { TierHeroView, TierRowView } from '../tier-list/tier-list-view';
+import type { TierHeroView, TierRowView } from '../tier-list-view';
 import { TierRowsComponent } from './tier-rows.component';
 
 function hero(id: string, name: string): TierHeroView {

@@ -38,9 +38,6 @@
     @if (link(); as full) {
       <p class="links">
         <a class="link" [routerLink]="full.path">{{ full.label }}</a>
-        @if (secondLink(); as second) {
-          <a class="link" [routerLink]="second.path">{{ second.label }}</a>
-        }
       </p>
     }
   }

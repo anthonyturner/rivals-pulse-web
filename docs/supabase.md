@@ -776,7 +776,7 @@ and served by `GET /api/hero-stats`. The rules, which are the overlay's personal
   `decidedMatches` for each mode in the half-season shown); `matchesCounted` is the selected mode's
   `decidedMatches`. `mode` combines with `halfSeason`, and the fall-back to the previous half-season
   below is decided for the selected mode alone. Pulse Atlas and the home page never pass a mode.
-  The site's tier list, win rates page and Community Stats tab build their mode pickers from the list,
+  The site's Stats Heroes tab (its tier list and win rates table) and Roles tab build their mode pickers from the list,
   offering only modes with a decided match and never Practice while `SHOW_PRACTICE_MODE` in
   [`play-modes.ts`](../src/app/shared/utilities/play-modes.ts) is off (the overlay uploads Practice
   bots as players: rivals_pulse#1166). A request for the blend carries no `mode`.

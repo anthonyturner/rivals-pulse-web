@@ -9,7 +9,7 @@ import {
 import { heroCell, type HeroIdentities } from '../../insights/hero-identity';
 import type { CommunityHeroRow } from '../community-hero-list/community-hero-list.component';
 
-/** Heroes listed under each heading: a summary, not the full table on the win-rates page. */
+/** Heroes listed under each heading: a summary, not the full table below it on the tab. */
 export const HEROES_TAB_LEADERS = 5;
 
 export type HeroesTabView =
@@ -29,7 +29,7 @@ export type HeroesTabView =
 
 /**
  * What the Heroes tab shows: the leaders among the heroes that have reached the minimum, with the
- * same figures and the same order as the win-rates page. `undefined` means the stats have not
+ * same figures and the same order as the table below it. `undefined` means the stats have not
  * answered yet and `null` means they could not be read; neither is "not enough data", which is a
  * real answer.
  */

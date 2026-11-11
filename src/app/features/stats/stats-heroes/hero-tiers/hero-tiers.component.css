@@ -1,0 +1,44 @@
+:host {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+h3,
+p {
+  margin: 0;
+}
+
+/* The failure and empty panels share the tiles' 12px corners. */
+app-state-panel {
+  --state-panel-radius: 12px;
+}
+
+.state-count {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.building {
+  min-width: 0;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+
+.section-heading {
+  display: grid;
+  gap: 4px;
+  padding: 16px 16px 8px;
+}
+
+.section-heading h3 {
+  font-size: var(--type-h3);
+}
+
+.section-heading p {
+  color: var(--text-muted);
+  font-size: var(--type-small);
+}

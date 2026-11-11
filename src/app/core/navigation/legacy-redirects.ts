@@ -18,7 +18,7 @@ export interface LegacyRedirect {
 const COMMUNITY_REDIRECTS: readonly LegacyRedirect[] = [
   { from: '/community', to: '/stats' },
   { from: '/community/heroes', to: '/stats/heroes' },
-  { from: '/community/tier-list', to: '/stats/heroes' },
+  { from: '/community/tier-list', to: '/stats/heroes?view=tiers' },
   { from: '/community/matches', to: '/stats' },
   { from: '/community/insights', to: '/stats' },
   { from: '/community/counters', to: '/stats/matchups' },
@@ -37,8 +37,20 @@ const RECORDS_REDIRECTS: readonly LegacyRedirect[] = [
   ...RECORDS_SLUGS.map((slug) => ({ from: `/records/${slug}`, to: `/stats/records?category=${slug}` })),
 ];
 
+/**
+ * The tier list and the hero stats table were pages of their own; they are now the Tiers and Table
+ * views of the Heroes tab. The win-rates page showed only the latest half-season, so a half-season
+ * segment after `/win-rates` has nothing to carry over and goes to the tab's current numbers.
+ */
+const HERO_STATS_REDIRECTS: readonly LegacyRedirect[] = [
+  { from: '/tier-list', to: '/stats/heroes?view=tiers' },
+  { from: '/win-rates', to: '/stats/heroes' },
+  { from: '/season-9-win-rates', to: '/stats/heroes' },
+];
+
 export const LEGACY_REDIRECTS: readonly LegacyRedirect[] = [
   ...COMMUNITY_REDIRECTS,
+  ...HERO_STATS_REDIRECTS,
   { from: '/game-stats', to: '/stats' },
   { from: '/team-comps', to: '/stats/team-comps' },
   ...RECORDS_REDIRECTS,
@@ -46,6 +58,10 @@ export const LEGACY_REDIRECTS: readonly LegacyRedirect[] = [
 
 /**
  * Any other address under these prefixes goes to the one page. The old community router sent an
- * unknown tab to the default tab, so it never answered a 404.
+ * unknown tab to the default tab, so it never answered a 404, and `/win-rates/:season` took any
+ * segment.
  */
-export const LEGACY_REDIRECT_PREFIXES: readonly LegacyRedirect[] = [{ from: '/community', to: '/stats' }];
+export const LEGACY_REDIRECT_PREFIXES: readonly LegacyRedirect[] = [
+  { from: '/community', to: '/stats' },
+  { from: '/win-rates', to: '/stats/heroes' },
+];

@@ -1,15 +1,15 @@
-import type { HeroStats } from '../../../../contracts/hero-stats.model';
-import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
+import type { HeroStats } from '../../../../../contracts/hero-stats.model';
+import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../../shared/utilities/play-modes';
 import {
   countLabel,
   decidedMatchesLabel,
   halfSeasonFallbackNotice,
   percentLabel,
   placementRequirementLabel,
-} from '../../../shared/utilities/stat-labels';
-import { seasonView, type SeasonView } from '../half-season-view';
-import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
-import { heroProgressRows, minimumsOf, type HeroProgressRow } from '../hero-progress-list/hero-progress';
+} from '../../../../shared/utilities/stat-labels';
+import { seasonView, type SeasonView } from '../../../insights/half-season-view';
+import { heroCell, type HeroCellView, type HeroIdentities } from '../../../insights/hero-identity';
+import { heroProgressRows, minimumsOf, type HeroProgressRow } from '../../../insights/hero-progress-list/hero-progress';
 
 export interface WinRateRowView extends HeroCellView {
   rank: number;
@@ -31,9 +31,8 @@ export interface WinRateRowView extends HeroCellView {
  * - `full`: at least one hero has reached the minimum.
  * - `partial`: matches are counted, but no hero has reached the minimum yet.
  * - `empty`: nothing is counted for the half-season shown.
- * - `unavailable-season`: the address names a half-season the site holds no numbers for.
  */
-export type WinRatesState = 'full' | 'partial' | 'empty' | 'unavailable-season';
+export type WinRatesState = 'full' | 'partial' | 'empty';
 
 export type HeroStatsSort = 'win-desc' | 'win-asc' | 'pick-desc' | 'pick-asc';
 
@@ -66,8 +65,6 @@ export interface WinRatesView {
   state: WinRatesState;
   /** The half-season the numbers come from; null before any half-season exists. */
   season: SeasonView | null;
-  /** Set when the address names a half-season that is not the one shown. */
-  requestedLabel: string | null;
   /** The mode the numbers count, such as "Competitive" or "Quick Match and Competitive". */
   modeLabel: string;
   /** Set for a mode whose numbers do not mean what Quick Match and Competitive do. */
@@ -89,27 +86,14 @@ export interface WinRatesView {
 }
 
 /**
- * Turns the hero stats into what the win-rate page draws. Every label is built here, so a template
+ * Turns the hero stats into what the hero stats table draws. Every label is built here, so a template
  * never formats a number and a missing figure can never reach the screen as NaN.
- *
- * `requestedSeason` is the address's season segment. This page shows only the half-season the API
- * serves by default, so any other season gets the `unavailable-season` state, never an error; a
- * segment that is not a half-season number (such as `week-2`) is ignored and the served
- * half-season is shown.
  */
-export function buildWinRatesView(
-  stats: HeroStats,
-  requestedSeason: string | null,
-  identities: HeroIdentities,
-): WinRatesView {
+export function buildWinRatesView(stats: HeroStats, identities: HeroIdentities): WinRatesView {
   const season = stats.halfSeason === null ? null : seasonView(stats.halfSeason);
-  const requested = parseSeason(requestedSeason);
-  const shown = stats.halfSeason?.id;
-  const servedIds = [stats.halfSeason?.id, stats.inPlaceOf?.id];
   const modeLabel = modeLabelOf(stats);
   const base = {
     season,
-    requestedLabel: null,
     modeLabel,
     modeCaveat: modeCaveat(stats.mode),
     fallbackNotice: null,
@@ -123,12 +107,8 @@ export function buildWinRatesView(
     building: [],
   };
 
-  if (shown === undefined) {
+  if (stats.halfSeason === null) {
     return { ...base, state: 'empty' };
-  }
-
-  if (requested !== null && !servedIds.includes(requested)) {
-    return { ...base, state: 'unavailable-season', requestedLabel: `Season ${requested}` };
   }
 
   const ranked = stats.tiers
@@ -182,9 +162,4 @@ function rankedRow(
     winsGamesLabel: `${hero.wins} / ${hero.appearances}`,
     winsGamesSpoken: `${wins} in ${games}`,
   };
-}
-
-/** A half-season id is a positive whole or half number such as 10 or 10.5; anything else is ignored. */
-function parseSeason(value: string | null): number | null {
-  return value !== null && /^(?:[1-9]\d*(?:\.5)?|0\.5)$/.test(value) ? Number(value) : null;
 }

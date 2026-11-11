@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from '../../../app.routes';
 import { NAVIGATION_CATEGORIES } from '../../../core/navigation/navigation-category.data';
 import { declaresRoute } from '../../../testing/declared-routes';
+import { STATS_TABS, statsTabLink } from '../../stats/stats-tabs';
 import { HOME_TOOLS, ToolsRowComponent } from './tools-row.component';
 
 describe('ToolsRowComponent', () => {
@@ -45,8 +46,8 @@ describe('ToolsRowComponent', () => {
 
   it('links each card with routerLink to its page', () => {
     expect(cards().map((card) => card.getAttribute('href'))).toEqual([
-      '/win-rates',
-      '/tier-list',
+      '/stats/heroes',
+      '/stats/heroes?view=tiers',
       '/counters',
       '/team-builder',
       '/heroes',
@@ -61,8 +62,13 @@ describe('ToolsRowComponent', () => {
   });
 
   it('points only at routes the app declares', () => {
+    // The Stats tabs are child routes loaded with the hub, which `declaresRoute` does not open.
+    const statsTabs = new Set(STATS_TABS.map(statsTabLink));
+
     for (const tool of HOME_TOOLS) {
-      expect(declaresRoute(routes, tool.path)).withContext(`${tool.path} is a declared route`).toBeTrue();
+      expect(statsTabs.has(tool.path) || declaresRoute(routes, tool.path))
+        .withContext(`${tool.path} is a declared route`)
+        .toBeTrue();
     }
   });
 

@@ -54,24 +54,28 @@ description (route `data`) and canonical. A tab is a view with no page around it
 draws game stats and the community matches and insights tabs, Roles and Matchups are the
 community stats and counters tabs, Team comps is `TeamCompsComponent`, and Records is one
 page with a category filter held in `?category=`. Heroes shows the community hero numbers (most
-picked, highest win rate, per-minute damage, healing and damage blocked) above links to the tier
-list and hero stats pages, until those become this tab; it reports no state of its own, so it is
-thin only when both number sections are. Maps is a stand-in that calls `reportContentState('thin')`,
+picked, highest win rate, per-minute damage, healing and damage blocked) above every hero's record,
+as a Table (the win-rates table, with search, role filter and sort) or as Tiers (the tier list). The
+layout, half-season and mode are in the address (`?view=tiers&season=10&mode=competitive`, each left
+out when it is the default), so each can be linked and is drawn by the server; the toggle is two plain
+links that keep the other choices. `StatsHeroesComponent` owns the choices and the request (the
+default cut is the shared `CurrentHeroStatsService`, any other is `HeroStatsService`), and hands the
+numbers to `HeroTableComponent` or `HeroTiersComponent`, which draw them. The tab is thin only when
+the number sections and the layout in view all are. Maps is a stand-in that calls `reportContentState('thin')`,
 so it carries no ad and is `noindex` until it has content.
 
 Navigation and moved addresses: the top bar lists Heroes, Stats, Guides and Tools
-(`core/layout/nav/primary-nav.ts`). Stats is `/stats` and every page under it, plus `/tier-list`
-and `/win-rates` while they live as pages of their own; Resources has no item of its own, so its
-hub and the pages in it sit under Guides, and `/resources` is linked from the Guides page and the
+(`core/layout/nav/primary-nav.ts`). Stats is `/stats` and every page under it; Resources has no
+item of its own, so its hub and the pages in it sit under Guides, and `/resources` is linked from the Guides page and the
 footer. The old stat addresses (`/community` and its tabs, `/game-stats`, `/team-comps`,
-`/records` and its lists) are redirected to their hub tab. `core/navigation/legacy-redirects.ts` is
+`/records` and its lists, `/tier-list` to the Heroes tab's Tiers layout, `/win-rates` and anything
+under it, and `/season-9-win-rates` to the Heroes tab) are redirected to their hub tab. `core/navigation/legacy-redirects.ts` is
 the one list; `legacy-redirect.routes.ts` turns it into router redirects (so the dev server and
 in-app navigation behave, and the server answers a temporary one), and `vercel.json` holds the
 same list as `permanent: true` redirects, which Vercel answers with a 308 before the app runs and
 is what crawlers see. `scripts/legacy-redirects.test.ts` fails when the two lists differ. A moved
 address stays out of the sitemap and gets no `RenderMode` rule. Internal links point straight at
-the new address, so none goes through a redirect; when `/tier-list` and `/win-rates` move into the
-Heroes tab, add them to the list and re-point their links.
+the new address, so none goes through a redirect.
 
 Hosting:
 - Vercel

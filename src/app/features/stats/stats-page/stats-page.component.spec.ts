@@ -165,15 +165,33 @@ describe('The Stats hub', () => {
       harness.detectChanges();
     }
 
-    it('shows the hero numbers, then links to the tier list and the hero stats pages', async () => {
+    it('shows the hero numbers, then every hero as a table with a switch to the tier list', async () => {
       await open('/stats/heroes');
       await answerHeroes(READY_STATS);
-      const hrefs = Array.from(page().querySelectorAll('app-hub-tile a')).map((link) => link.getAttribute('href'));
+      const toggle = Array.from(page().querySelectorAll('.view-toggle a')).map((link) => link.getAttribute('href'));
 
       expect(page().querySelector('app-stats-heroes app-community-heroes-tab')).not.toBeNull();
       expect(page().textContent).toContain('Most picked');
       expect(page().textContent).toContain('Highest win rate');
-      expect(hrefs).toEqual(['/tier-list', '/win-rates']);
+      expect(page().querySelector('app-stats-heroes app-hero-table table')).not.toBeNull();
+      expect(toggle).toEqual(['/stats/heroes', '/stats/heroes?view=tiers']);
+    });
+
+    it('shows the tier list at ?view=tiers, under the same heading and tab bar', async () => {
+      await open('/stats/heroes?view=tiers');
+      await answerHeroes(READY_STATS);
+
+      expect(heading()).toBe('Marvel Rivals hero stats');
+      expect(current()).toEqual(['Heroes']);
+      expect(page().querySelector('app-stats-heroes app-hero-tiers .tier-row')).not.toBeNull();
+      expect(page().querySelector('app-hero-table')).toBeNull();
+    });
+
+    it('names the table address as its canonical one for either layout', async () => {
+      await open('/stats/heroes?view=tiers');
+      await answerHeroes(READY_STATS);
+
+      expect(canonical()).toBe(`${SITE_ORIGIN}/stats/heroes`);
     });
 
     it('is a page with content once a number section has data: an ad, indexable, with its own canonical', async () => {

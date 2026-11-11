@@ -7,7 +7,7 @@
   <ul class="tools">
     @for (tool of tools; track tool.path) {
       <li>
-        <a class="tool" [routerLink]="tool.path">
+        <a class="tool" [routerLink]="tool.path" [queryParams]="tool.queryParams">
           <div class="tool__head">
             <span class="tool__icon" aria-hidden="true">
               <svg
