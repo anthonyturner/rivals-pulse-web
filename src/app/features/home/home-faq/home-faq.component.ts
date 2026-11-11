@@ -44,7 +44,7 @@ export const HOME_FAQ: readonly HomeFaqItem[] = [
     question: 'Do I need the app to see the stats?',
     answer:
       'No. The stats, tier list and tools on this site are free to browse without installing anything. Once it launches, the app is what records matches, and every match it uploads counts toward them.',
-    more: { label: 'See the community stats', path: '/community' },
+    more: { label: 'See the community stats', path: '/stats' },
   },
   {
     id: 'counting',

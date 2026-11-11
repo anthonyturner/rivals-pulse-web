@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { routes } from '../../../app.routes';
+import { STATS_TABS, statsTabLink } from '../../../features/stats/stats-tabs';
 import { DISCORD_INVITE_URL } from '../../../shared/discord-invite';
 import { declaresRoute } from '../../../testing/declared-routes';
 import { GoogleConsentService } from '../../consent/google-consent.service';
@@ -65,8 +66,11 @@ describe('Footer', () => {
         .map((item) => item.path),
     );
 
+    // The Stats tabs are child routes loaded with the hub, which `declaresRoute` does not open.
+    const statsTabs = new Set(STATS_TABS.map(statsTabLink));
+
     FOOTER_COLUMNS.flatMap((column) => column.links).forEach(({ path }) => {
-      expect(declaresRoute(routes, path)).withContext(`${path} is a declared route`).toBeTrue();
+      expect(statsTabs.has(path) || declaresRoute(routes, path)).withContext(`${path} is a declared route`).toBeTrue();
       expect(disabled.has(path)).withContext(`${path} is released`).toBeFalse();
     });
   });

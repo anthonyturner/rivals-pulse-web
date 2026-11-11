@@ -1,5 +1,8 @@
+import type { Route } from '@angular/router';
+
 import { routes } from '../../app.routes';
 import { STATS_TABS, statsTabLink } from '../../features/stats/stats-tabs';
+import { LEGACY_REDIRECTS } from '../navigation/legacy-redirects';
 import { NAVIGATION_CATEGORIES } from '../navigation/navigation-category.data';
 import {
   listSitemapPaths,
@@ -9,11 +12,12 @@ import {
   SITEMAP_STATIC_PATHS,
 } from './sitemap';
 
+const onlyRedirects = (route: Route): boolean =>
+  route.redirectTo !== undefined || ((route.children?.length ?? 0) > 0 && route.children?.every(onlyRedirects) === true);
+
 /** The address of every route that answers a page: no redirects, and no catch-all. */
 const pageRoutePaths = routes.flatMap((route) =>
-  route.path === undefined || route.path === '**' || route.redirectTo !== undefined
-    ? []
-    : [route.path],
+  route.path === undefined || route.path === '**' || onlyRedirects(route) ? [] : [route.path],
 );
 
 function isExcluded(path: string): boolean {
@@ -36,6 +40,20 @@ describe('sitemap', () => {
     const undecided = pageRoutePaths.filter((path) => !isListed(path) && !isExcluded(path));
 
     expect(undecided).toEqual([]);
+  });
+
+  it('lists no address that only redirects to the Stats hub', () => {
+    const listed = new Set(SITEMAP_STATIC_PATHS);
+
+    expect(LEGACY_REDIRECTS.map(({ from }) => from).filter((from) => listed.has(from))).toEqual([]);
+  });
+
+  it('leaves out only routes that exist, so a page that moved takes its exclusion with it', () => {
+    const stale = Object.keys(SITEMAP_EXCLUDED_ROUTES).filter(
+      (excluded) => !pageRoutePaths.some((path) => path === excluded || (excluded.endsWith('/') && path.startsWith(excluded))),
+    );
+
+    expect(stale).toEqual([]);
   });
 
   it('lists no page the released-page guard hides', () => {

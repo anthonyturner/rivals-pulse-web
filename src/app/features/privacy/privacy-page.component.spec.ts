@@ -101,7 +101,7 @@ describe('PrivacyPageComponent', () => {
       expect(records()).not.toContain('not open yet');
       expect(records()).not.toContain('published until it opens');
       expect(section('summary').textContent).not.toContain('not open yet');
-      expect(section('pulse-records').querySelector('a[href="/records"]')).toBeTruthy();
+      expect(section('pulse-records').querySelector('a[href="/stats/records"]')).toBeTruthy();
     });
 
     it('says a name needs a linked account and a switch that is off until it is turned on', () => {
@@ -155,10 +155,10 @@ describe('PrivacyPageComponent', () => {
     const text = (section('public-numbers').textContent ?? '').replace(/\s+/g, ' ');
 
     expect(text).not.toContain('cannot weigh twice');
-    expect(text).toContain('The Community Insights tab');
+    expect(text).toContain('The "When the community plays and wins" section of the Stats overview');
     expect(text).toContain('counts it once for each player who uploaded it');
     expect(text).toContain('One match can therefore weigh twice there');
-    expect(text).toContain('Community Matches tab count it once');
+    expect(text).toContain('"Community matches" section of the Stats overview count it once');
   });
 
   it('says hero averages need 2 players but can mostly reflect one player', () => {

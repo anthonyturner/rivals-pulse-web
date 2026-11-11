@@ -55,11 +55,11 @@ describe('HeroOverlayActionsComponent', () => {
     expect(button.nextElementSibling).toBe(element.querySelector('a.cta-ghost'));
   });
 
-  it('sends "See hero stats" to /community', () => {
+  it('sends "See hero stats" to the hero stats page', () => {
     const link = element.querySelector('a.cta-ghost') as HTMLAnchorElement;
 
     expect(text(link)).toBe('See hero stats');
-    expect(link.getAttribute('href')).toBe('/community');
+    expect(link.getAttribute('href')).toBe('/win-rates');
   });
 
   it('shows downloads and rating as "Coming soon" and reserves the matches slot while loading', () => {

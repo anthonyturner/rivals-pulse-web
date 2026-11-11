@@ -20,7 +20,7 @@ export const COMMUNITY_EMPTY_RULE =
 export const MY_STATS_LINK: CommunitySummaryLink = { label: 'See your own matches and insights in My stats', path: '/profile' };
 
 /**
- * The frame every Community tab shares: the tab's heading and season, then either the loading,
+ * The frame every community figure section on the Stats hub shares: the tab's heading and season, then either the loading,
  * failure or "not enough data yet" panel, or, once the numbers are ready, the fallback notice, the
  * tab's own content, a footnote and the links to the full pages.
  */

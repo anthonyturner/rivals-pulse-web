@@ -228,7 +228,7 @@ The glossary, the hero videos and the cached outside sources moved from Turso in
 
 ## Website game stats
 
-The Game Stats page (`/game-stats`) counts the matches and players the RivalsPulse app has seen in overlay uploads, and
+The Stats overview (`/stats`, formerly the Game Stats page) counts the matches and players the RivalsPulse app has seen in overlay uploads, and
 nothing from outside the app (issue 381). Steam, SteamDB, Wikipedia and NetEase figures are gone.
 
 - `GET /api/game-stats` calls `public.read_game_counts()` through
@@ -1311,7 +1311,7 @@ value, name }] }] }` for `kills`, `assists`, `final_hits`, `damage`, `healing` a
 never a uid, recorder, line id or match time. The website reads it through `GET /api/records`
 (`src/server/records/`, `api/records.ts`, one Express route), which sends `public, max-age=0, s-maxage=60` and no
 stale window, so a name is gone within two minutes of its owner switching naming off
-(`scripts/pulse-records-route.test.ts`). The Pulse Records pages (`/records` and `/records/:category`) read it through that route and show a board only from 2 rows. The read keeps one row per uploader per board (`per_uploader`), so 2 rows are 2 distinct uploaders; changing that step changes what the gate means.
+(`scripts/pulse-records-route.test.ts`). The Pulse Records tab of the Stats hub (`/stats/records`, with `?category=`) reads it through that route and show a board only from 2 rows. The read keeps one row per uploader per board (`per_uploader`), so 2 rows are 2 distinct uploaders; changing that step changes what the gate means.
 
 A line counts only if it passes every guard, all in the `lines` step:
 

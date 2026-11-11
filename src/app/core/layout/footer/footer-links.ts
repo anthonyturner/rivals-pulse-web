@@ -17,12 +17,11 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     heading: 'Stats & tools',
     links: [
       { label: 'Heroes', path: '/heroes' },
-      { label: 'Community stats', path: '/community' },
+      { label: 'Stats', path: '/stats' },
       { label: 'Tier list', path: '/tier-list' },
       { label: 'Hero stats', path: '/win-rates' },
-      { label: 'Team comps', path: '/team-comps' },
-      { label: 'Pulse Records', path: '/records' },
-      { label: 'Game stats', path: '/game-stats' },
+      { label: 'Team comps', path: '/stats/team-comps' },
+      { label: 'Pulse Records', path: '/stats/records' },
       { label: 'Counters', path: '/counters' },
       { label: 'Dive planner', path: '/dive-planner' },
       { label: 'Team builder', path: '/team-builder' },
@@ -33,6 +32,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     heading: 'Learn',
     links: [
       { label: 'Hero guides', path: '/hero-guides' },
+      { label: 'Resources', path: '/resources' },
       { label: 'Strategist guides', path: '/strategist-guides' },
       { label: 'Media tutorials', path: '/media-tutorials' },
       { label: 'User highlights', path: '/user-highlights' },

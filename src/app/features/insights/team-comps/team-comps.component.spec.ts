@@ -14,7 +14,7 @@ import { synergiesOf, synergy } from '../hero-synergies.fixtures';
 import { lineupShape, lineupsOf, thinShape } from '../team-lineups.fixtures';
 import { trio, triosOf } from '../triple-support-trios.fixtures';
 import { ThinContent } from '../../../core/seo/thin-content';
-import { TeamCompsPageComponent } from './team-comps-page.component';
+import { TeamCompsComponent } from './team-comps.component';
 
 const ROSTER = [
   heroOf('hulk', 'Hulk', 'Vanguard'),
@@ -26,7 +26,7 @@ const ROSTER = [
   heroOf('luna-snow', 'Luna Snow', 'Strategist'),
 ];
 
-describe('TeamCompsPageComponent', () => {
+describe('TeamCompsComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
@@ -35,7 +35,7 @@ describe('TeamCompsPageComponent', () => {
         provideZonelessChangeDetection(),
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([{ path: 'team-comps', component: TeamCompsPageComponent }]),
+        provideRouter([{ path: 'team-comps', component: TeamCompsComponent }]),
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -132,7 +132,6 @@ describe('TeamCompsPageComponent', () => {
       synergiesOf([synergy('hulk', 'thor', 9, 12), synergy('hela', 'storm', 6, 20), synergy('hulk', 'storm', 12, 12)]),
     );
 
-    expect(element.querySelector('h1')?.textContent).toBe('Marvel Rivals team comps');
     expect(text(element, '.card h3')).toEqual(['Vanguard duos', 'Duelist duos', 'Strategist duos']);
 
     const tables = element.querySelectorAll('table');

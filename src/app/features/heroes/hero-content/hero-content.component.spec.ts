@@ -159,10 +159,10 @@ describe('HeroContentComponent breadcrumb', () => {
   }
 
   it('leads with a link back to the page the reader came from', () => {
-    const element = render({ url: '/community/heroes?season=9', label: 'Community' });
+    const element = render({ url: '/stats/heroes?season=9', label: 'Stats' });
 
     expect(links(element)).toEqual([
-      { href: '/community/heroes?season=9', text: '← Community' },
+      { href: '/stats/heroes?season=9', text: '← Stats' },
       { href: '/heroes', text: 'All heroes' },
     ]);
   });

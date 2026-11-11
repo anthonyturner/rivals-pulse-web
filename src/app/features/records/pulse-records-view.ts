@@ -9,7 +9,7 @@ import { PULSE_RECORDS_PAGES, type PulseRecordsPage } from './pulse-records.data
  */
 export const PULSE_RECORDS_MIN_ROWS = 2;
 
-/** The rows `/records` shows for each board. */
+/** The rows the Records tab shows for each board until one is chosen. */
 export const PULSE_RECORDS_PREVIEW_ROWS = 5;
 
 export interface RecordRowView {

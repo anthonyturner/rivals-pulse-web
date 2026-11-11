@@ -101,6 +101,13 @@ describe('HeroGuidesPageComponent', () => {
     expect(chipKinds(sections()[4])).toEqual(['accent']);
   });
 
+  it('points to Resources from under the heading, since the top bar has no Resources link', () => {
+    const link = element.querySelector('app-page-header a');
+
+    expect(link?.getAttribute('href')).toBe('/resources');
+    expect(link?.textContent?.trim()).toBe('Resources');
+  });
+
   it('leaves the main landmark to the shell and has an h1', () => {
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelector('h1')).not.toBeNull();

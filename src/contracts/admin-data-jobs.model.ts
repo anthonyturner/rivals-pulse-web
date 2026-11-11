@@ -62,10 +62,8 @@ export const DATA_JOBS = [
         path: '/heroes',
         section: 'A hero in matches recorded by RivalsPulse players, and A hero against other heroes',
       },
-      { name: 'Community, Heroes tab', path: '/community/heroes', section: 'Hero pick and win rates' },
-      { name: 'Community, Tier list tab', path: '/community/tier-list', section: 'Community tier list' },
-      { name: 'Community, Stats tab', path: '/community/stats', section: 'Community role benchmarks' },
-      { name: 'Community, Counters tab', path: '/community/counters', section: 'Counter matchups' },
+      { name: 'Stats, Roles tab', path: '/stats/roles', section: 'Community role benchmarks' },
+      { name: 'Stats, Matchups tab', path: '/stats/matchups', section: 'Counter matchups' },
     ],
     atlasFiles: ['hero-stats.json', 'tier-list.json', 'community-stats.json'],
     caveat:
@@ -89,18 +87,13 @@ export const DATA_JOBS = [
       '1 to 10 build scores.',
     pages: [
       {
-        name: 'Community, Heroes tab',
-        path: '/community/heroes',
-        section: 'Community hero damage, healing and damage blocked',
-      },
-      {
-        name: 'Community, Stats tab',
-        path: '/community/stats',
+        name: 'Stats, Roles tab',
+        path: '/stats/roles',
         section: 'Damage, healing and damage blocked per minute',
       },
       {
-        name: 'Community, Counters tab',
-        path: '/community/counters',
+        name: 'Stats, Matchups tab',
+        path: '/stats/matchups',
         section: 'Community kill feed: most seen kills',
       },
       {
@@ -122,7 +115,7 @@ export const DATA_JOBS = [
       'data yet" or "Collecting data", so a run can leave every page as it was.',
     example:
       'Once a role has 50 lines that pass the rule, its figure replaces "Not enough data" in its row under "Damage, healing and damage ' +
-      'blocked per minute" on the Community Stats tab. Until then a run changes nothing you can see.',
+      'blocked per minute" on the Stats Roles tab. Until then a run changes nothing you can see.',
   },
   {
     key: 'recompute-community-match-aggregates',
@@ -133,8 +126,8 @@ export const DATA_JOBS = [
     updates: 'The counts of community matches by map, game mode and day.',
     pages: [
       {
-        name: 'Community, Matches tab',
-        path: '/community/matches',
+        name: 'Stats, Overview tab',
+        path: '/stats',
         section: 'Win rate by map, Game modes played, Average match length and Matches per day',
       },
     ],
@@ -142,11 +135,11 @@ export const DATA_JOBS = [
     caveat:
       'The counts are kept per half-season. A map, game mode or day shows once 10 matches are behind it, from any number of ' +
       'players; a map is judged within one game mode. The win rate of a map also needs 10 matches with a result, and the mode ' +
-      'mix and matches per day need 10 matches between the shown ones. Until something passes, the tab says "Totals appear ' +
+      'mix and matches per day need 10 matches between the shown ones. Until something passes, the section says "Totals appear ' +
       'once enough matches have been uploaded", so a run can leave it as it was. Your own matches are on My stats, which this ' +
       'job does not feed.',
     example:
-      'When a map, game mode or day first passes the rule, it appears on the Community Matches tab, under "Win rate by map", ' +
+      'When a map, game mode or day first passes the rule, it appears on the Stats Overview tab, under "Win rate by map", ' +
       '"Game modes played" or "Matches per day" (each also needs its own minimum, above). Until something passes, a run ' +
       'changes nothing you can see.',
   },
@@ -159,8 +152,8 @@ export const DATA_JOBS = [
     updates: 'The counts of when people play: by day of the week, time of day and place in a play session (all UTC).',
     pages: [
       {
-        name: 'Community, Insights tab',
-        path: '/community/insights',
+        name: 'Stats, Overview tab',
+        path: '/stats',
         section: 'Day of the week, Time of day and Place in a play session',
       },
     ],
@@ -169,10 +162,10 @@ export const DATA_JOBS = [
       'The counts are kept per half-season. A row shows once 10 matches are behind it in one half-season, from any number of ' +
       'players; a match two players both played counts once for each of them. Each group (day of the week, time of day, place ' +
       'in a play session) shows only when 3 of its rows pass, and a group can pass before the others. Until something passes, ' +
-      'the tab says "Totals appear once enough matches have been uploaded", so a run can leave it as it was. Your own times ' +
+      'the section says "Totals appear once enough matches have been uploaded", so a run can leave it as it was. Your own times ' +
       'are on My stats, which this job does not feed.',
     example:
-      'When a group first has 3 rows that pass, it appears on the Community Insights tab under "Day of the week", "Time of day" ' +
+      'When a group first has 3 rows that pass, it appears on the Stats Overview tab under "Day of the week", "Time of day" ' +
       'or "Place in a play session", with the share and win rate of each row. While no group passes, a run changes nothing you can see.',
   },
   {
@@ -182,14 +175,14 @@ export const DATA_JOBS = [
     kind: 'rebuild',
     summary: 'Rebuilds the counts of heroes against and with each other.',
     updates: 'How often two heroes met on opposite teams and how often they played on the same team, with the wins behind each.',
-    pages: [{ name: 'Team comps', path: '/team-comps', section: 'Top duos by role' }],
+    pages: [{ name: 'Stats, Team comps tab', path: '/stats/team-comps', section: 'Top duos by role' }],
     atlasFiles: ['community-stats.json'],
     caveat:
-      'The Team comps page shows the pairs that played together within about 5 minutes of each hourly rebuild, because the site ' +
+      'The Stats Team comps tab shows the pairs that played together within about 5 minutes of each hourly rebuild, because the site ' +
       'caches the answer. The public Pulse Atlas file changes only at its next publish (scheduled every six hours, though GitHub ' +
       'can start it late). A pair is counted after 10 matches with a result.',
     example:
-      'After a run, the "Matches together" and win rate of a pair under "Top duos by role" on Team comps change within about ' +
+      'After a run, the "Matches together" and win rate of a pair under "Top duos by role" on the Team comps tab change within about ' +
       '5 minutes if new matches with a result featured a pair that already has 10. community-stats.json changes at the next publish.',
   },
   {

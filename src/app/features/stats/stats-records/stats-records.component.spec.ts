@@ -131,6 +131,17 @@ describe('The Stats hub Records tab', () => {
     it('is not thin content once a board has enough rows', () => {
       expect(TestBed.inject(ThinContent).thin()).toBeFalse();
     });
+
+    it('draws a hero, a player or "Anonymous", and the figure on each row, with no time or match link', () => {
+      const rows = element().querySelectorAll('tbody tr');
+      const cells = (row: Element): string[] => Array.from(row.children).map((cell) => text(cell));
+
+      expect(cells(rows[0])).toEqual(['1', 'Hulk', 'Anonymous', '60']);
+      expect(cells(rows[1])).toEqual(['2', 'Storm', 'Player 1', '59']);
+      expect(rows[0].querySelector('img')).not.toBeNull();
+      expect(element().querySelector('time')).toBeNull();
+      expect(element().querySelector('a[href*="match"]')).toBeNull();
+    });
   });
 
   describe('with a category chosen', () => {
@@ -201,6 +212,28 @@ describe('The Stats hub Records tab', () => {
   });
 
   describe('when there is nothing to show', () => {
+    it('holds back a board with fewer than two rows and keeps the others', async () => {
+      await open('/stats/records', recordsOf({ kills: recordRows(7), assists: recordRows(1) }));
+
+      const boards = Array.from(element().querySelectorAll('section.board'));
+
+      expect(boards.length).toBe(6);
+      expect(boards[0].querySelectorAll('tbody tr').length).toBe(5);
+      expect(text(boards[1].querySelector('h2'))).toBe('Assists');
+      expect(text(boards[1].querySelector('.thin'))).toBe('Not enough data yet.');
+      expect(element().querySelectorAll('table').length).toBe(1);
+    });
+
+    it('says it is loading, without announcing it, while the records are on their way', async () => {
+      await harness.navigateByUrl('/stats/records', StatsRecordsComponent);
+      harness.detectChanges();
+
+      expect(text(element().querySelector('[aria-busy="true"]'))).toContain('Loading Pulse Records');
+      expect(element().querySelector('[role="status"]')).toBeNull();
+      http.expectOne('/api/heroes');
+      http.expectOne('/api/records');
+    });
+
     it('says so, and is thin content, when no board has enough rows', async () => {
       await open('/stats/records', recordsOf({ kills: recordRows(1) }));
 

@@ -6,7 +6,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { GameCounts } from '../../../../contracts/game-counts.model';
-import { GameStatsPageComponent } from './game-stats-page.component';
+import { GameStatsComponent } from './game-stats.component';
 import { isGameCounts } from './game-stats.service';
 
 const live: GameCounts = {
@@ -19,7 +19,7 @@ const live: GameCounts = {
   ],
 };
 
-describe('GameStatsPageComponent', () => {
+describe('GameStatsComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('GameStatsPageComponent', () => {
         provideZonelessChangeDetection(),
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([{ path: 'game-stats', component: GameStatsPageComponent }]),
+        provideRouter([{ path: 'game-stats', component: GameStatsComponent }]),
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -121,10 +121,10 @@ describe('GameStatsPageComponent', () => {
     expect(element.textContent).not.toMatch(/steam|netease|wikipedia|milestone/i);
   });
 
-  it('is a page inside the shell: one h1, no main landmark, no live region', async () => {
+  it('sits inside the Stats hub page: no h1 of its own, no main landmark, no live region', async () => {
     const element = await open(live);
 
-    expect(element.querySelectorAll('h1').length).toBe(1);
+    expect(element.querySelector('h1')).toBeNull();
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelector('[aria-live], [role="status"]')).toBeNull();
   });

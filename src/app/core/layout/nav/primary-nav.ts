@@ -10,11 +10,26 @@ export const HOME_NAV_ITEM: PrimaryNavItem = { label: 'Home', path: '/' };
 
 export const PRIMARY_NAV_ITEMS: readonly PrimaryNavItem[] = [
   { label: 'Heroes', path: '/heroes' },
+  { label: 'Stats', path: '/stats' },
   { label: 'Guides', path: '/hero-guides' },
   { label: 'Tools', path: '/tools' },
-  { label: 'Resources', path: '/resources' },
-  { label: 'Community', path: '/community' },
 ];
+
+/**
+ * Pages that belong to an item although their address does not start with the item's. The tier list
+ * and the hero stats table are Stats pages until they become the hub's Heroes tab.
+ */
+const PAGES_UNDER: Readonly<Record<string, readonly string[]>> = {
+  '/stats': ['/tier-list', '/win-rates'],
+};
+
+/**
+ * The bar has no item for Resources, so its hub and the learning pages in it sit under Guides. A
+ * category with no entry here is its own item, as Tools is.
+ */
+const ITEM_OF_CATEGORY: Readonly<Record<string, string>> = {
+  '/resources': '/hero-guides',
+};
 
 /** The signed-in visitor's own stats page, linked beside the account item. */
 export const PROFILE_PATH = '/profile';
@@ -34,8 +49,8 @@ export interface ActiveNav {
 }
 
 /**
- * The nav item a URL belongs to, or null. A page under Tools or Resources belongs to that item,
- * taken from the category's own page list so the two cannot drift apart.
+ * The nav item a URL belongs to, or null. A page under Tools or Resources belongs to an item, taken
+ * from the category's own page list so the two cannot drift apart.
  */
 export function activeNav(url: string): ActiveNav | null {
   const path = url.split(/[?#]/)[0] || '/';
@@ -52,9 +67,15 @@ export function activeNav(url: string): ActiveNav | null {
     return { path: direct, exact: path === direct };
   }
 
-  const category = NAVIGATION_CATEGORIES.find((candidate) =>
-    candidate.items.some((item) => isAtOrBelow(path, item.path)),
+  const grouped = Object.entries(PAGES_UNDER).find(([, pages]) => pages.some((page) => isAtOrBelow(path, page)));
+
+  if (grouped) {
+    return { path: grouped[0], exact: false };
+  }
+
+  const category = NAVIGATION_CATEGORIES.find(
+    (candidate) => isAtOrBelow(path, candidate.path) || candidate.items.some((item) => isAtOrBelow(path, item.path)),
   );
 
-  return category ? { path: category.path, exact: false } : null;
+  return category ? { path: ITEM_OF_CATEGORY[category.path] ?? category.path, exact: false } : null;
 }

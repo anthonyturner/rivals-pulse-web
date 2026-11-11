@@ -1,7 +1,9 @@
 /**
  * Which pages the sitemap lists. `scripts/write-sitemap.ts` turns this into `sitemap.xml` at build
  * time, and `sitemap.spec.ts` fails when a route in `app.routes.ts` is in neither list below, so a
- * new page is always a decision rather than an omission. Keep this file free of imports so that
+ * new page is always a decision rather than an omission. A route that only redirects (the old stat
+ * addresses in `legacy-redirects.ts`) is in neither list: it is never listed, so a crawler is not
+ * sent to an address that answers with a redirect. Keep this file free of imports so that
  * script, which runs outside Angular, can load it.
  */
 
@@ -44,24 +46,20 @@ export const SITEMAP_ID_ROUTES = {
 
 /**
  * Routes left out on purpose, with the reason. A path ending in `/` stands for every route under it.
- * A data page is out when the server cannot show its numbers (Records, drawn in the browser) or when
- * a Stats hub tab takes it over, so it is listed there once that tab has content.
+ * A data page is out while a Stats hub tab is about to take it over, and that tab is listed once it
+ * has content. The Records tab is out because it is drawn in the browser, where its player names
+ * stay out of the server's HTML.
  */
 export const SITEMAP_EXCLUDED_ROUTES: Readonly<Record<string, string>> = {
   resources: 'hub of links to other pages',
   tools: 'hub of links to other pages',
-  community: 'data tabs; replaced by the Stats hub',
   'user-highlights': 'player-submitted clips, not written content',
   'media-tutorials': 'a list of embedded videos with little text of its own',
   'learning-paths': 'not released yet (released-page guard)',
   'watch-next': 'not released yet (released-page guard)',
-  'game-stats': 'data page; replaced by a Stats hub tab',
   'tier-list': 'data page; moves to the Stats hub Heroes tab',
   'win-rates': 'data page; moves to the Stats hub Heroes tab',
   'win-rates/:season': 'data page; moves to the Stats hub Heroes tab',
-  'team-comps': 'data page; replaced by a Stats hub tab',
-  records: 'data page drawn in the browser; the Stats hub Records tab is too',
-  'records/': 'data page drawn in the browser',
   counters: 'interactive tool with no text of its own',
   'dive-planner': 'interactive tool with no text of its own',
   'team-builder': 'interactive tool with no text of its own',
