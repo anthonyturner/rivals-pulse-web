@@ -1,5 +1,6 @@
 import { COMMUNITY_BUCKET_MIN_PLAYERS } from '../community/community-minimums.ts';
 import { TEAM_LINEUP_MIN_TEAMS } from '../heroes/lineups/team-lineups.ts';
+import { HERO_SPECIALISTS_MIN_MATCHES, HERO_SPECIALISTS_MIN_PLAYERS } from '../heroes/specialists/hero-specialists.ts';
 import { findStrategistTagProblems } from './strategist-tags.ts';
 
 const PULSE_ATLAS_SCHEMA_VERSION = 1;
@@ -15,6 +16,7 @@ export const PULSE_ATLAS_DATASETS = [
   'community-stats',
   'hero-scores',
   'team-lineups',
+  'hero-specialists',
 ] as const;
 
 /**
@@ -22,7 +24,7 @@ export const PULSE_ATLAS_DATASETS = [
  * These depend on an endpoint and a database function that are deployed separately, so the publish
  * must not be held up by them (see `resolveOptionalDataset`).
  */
-export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats', 'hero-scores', 'team-lineups'];
+export const PULSE_ATLAS_OPTIONAL_DATASETS: readonly PulseAtlasDataset[] = ['community-stats', 'hero-scores', 'team-lineups', 'hero-specialists'];
 
 /**
  * Read to build `heroes.json` (each hero's numeric `gameId`) but not published as a file of its own,
@@ -832,6 +834,8 @@ function describeShapeProblem(
       return readHeroScores(data).problems.join('; ') || undefined;
     case 'team-lineups':
       return readTeamLineups(data).join('; ') || undefined;
+    case 'hero-specialists':
+      return readHeroSpecialists(data).join('; ') || undefined;
   }
 }
 
@@ -1729,7 +1733,7 @@ function withPublishableHeroStats(inputs: readonly PulseAtlasInput[]): { inputs:
 
 // Read-back check of the written file: it keeps the marker the overlay needs.
 /** The datasets built from the community's own matches, whose written file must carry the provenance marker. */
-const COMMUNITY_DATASETS: readonly PulseAtlasDataset[] = ['hero-stats', 'community-stats', 'hero-scores', 'team-lineups'];
+const COMMUNITY_DATASETS: readonly PulseAtlasDataset[] = ['hero-stats', 'community-stats', 'hero-scores', 'team-lineups', 'hero-specialists'];
 
 // Read-back check of a written community file: it keeps the marker the overlay needs. A dataset the
 // run left out has no file and nothing to check.
@@ -2698,6 +2702,253 @@ function readTeamLineups(data: unknown): string[] {
 /** The gate a team-lineups input must pass, checked before the build so a fallback can be chosen. */
 function describeTeamLineupsInputProblem(data: unknown): string | undefined {
   const problems = [...readTeamLineups(data), ...findUnsafeContent(data, 'team-lineups')];
+
+  return problems.length > 0 ? problems.join('; ') : undefined;
+}
+
+const HERO_SPECIALISTS_KEYS: readonly string[] = [
+  'provenance',
+  'status',
+  'mode',
+  'definition',
+  'minimumMatches',
+  'minimumPlayers',
+  'currentSeasonId',
+  'season',
+  'inPlaceOfSeasonId',
+  'heroes',
+];
+const HERO_SPECIALISTS_DEFINITION_KEYS: readonly string[] = [
+  'specialistMinShare',
+  'specialistMinHeroMatches',
+  'flexMaxTopShare',
+  'flexMinHeroes',
+  'flexMinMatches',
+];
+const HERO_SPECIALISTS_HERO_KEYS: readonly string[] = ['heroId', 'status', 'specialist', 'flex'];
+const HERO_SPECIALISTS_BUCKET_KEYS: readonly string[] = ['winRate', 'shrunkWinRate', 'matchesBand'];
+const HERO_SPECIALISTS_STATUSES: readonly unknown[] = ['ready', 'not-enough-data'];
+const HERO_SPECIALISTS_BANDS: readonly unknown[] = ['50+', '100+', '250+', '500+'];
+/** The blend the numbers count: Quick Match and Competitive, as in `hero-stats.json`. */
+const HERO_SPECIALISTS_MODE = 'all';
+
+/** The hero-specialists input for a run; see `resolveOptionalDataset`. */
+export function resolveHeroSpecialists(
+  options: ResolveCommunityStatsOptions & { heroGameIds: unknown },
+): Promise<PulseAtlasInput | undefined> {
+  return resolveOptionalDataset(
+    'hero-specialists',
+    (answer) => assembleHeroSpecialists(answer, options.heroGameIds, options.warn),
+    describeHeroSpecialistsInputProblem,
+    options,
+  );
+}
+
+/**
+ * Folds the `/api/hero-specialists` answer into the `hero-specialists` dataset the gate checks. Only
+ * the named fields are taken, so nothing else in the answer can reach the file; hero slugs become the
+ * game's numeric ids (a hero without an entry is left out, with a warning), heroes are ordered by id and
+ * the half-season becomes a season id, as in the tier list. Throws when the answer is not that shape,
+ * or names no half-season yet, so the caller can fall back to the last published file.
+ */
+export function assembleHeroSpecialists(
+  answer: unknown,
+  heroGameIds: unknown,
+  warn: (warning: string) => void = () => undefined,
+): unknown {
+  const problem = (detail: string): Error =>
+    new Error(`/api/hero-specialists is not the hero-specialists shape (${detail}). Has the web app been deployed with it?`);
+  const halfSeasonOf = (value: unknown): { id: number; label: string } | null => communityHalfSeasonOf(value, problem);
+
+  if (
+    !isRecord(answer) ||
+    !isNonEmptyString(answer['status']) ||
+    !isRecord(answer['definition']) ||
+    !isFiniteNumber(answer['minimumMatches']) ||
+    !isFiniteNumber(answer['minimumPlayers']) ||
+    !Array.isArray(answer['heroes'])
+  ) {
+    throw problem('no status, definition, minimums and heroes');
+  }
+
+  const shown = halfSeasonOf(answer['halfSeason']);
+  const inPlaceOf = halfSeasonOf(answer['inPlaceOf']);
+  const current = inPlaceOf ?? shown;
+
+  if (!current || !shown) {
+    throw new Error('The hero-specialists API has no half-season yet, so there is nothing to publish.');
+  }
+
+  const bucketOf = (value: unknown): Record<string, unknown> | undefined =>
+    isRecord(value)
+      ? { winRate: value['winRate'], shrunkWinRate: value['shrunkWinRate'], matchesBand: value['matchesBand'] }
+      : undefined;
+  const { gameIdOf, unmapped } = heroGameIdLookup(heroGameIds);
+  const heroes = answer['heroes'].flatMap((row: unknown) => {
+    if (!isRecord(row) || !isNonEmptyString(row['hero'])) {
+      throw problem('a hero needs an id');
+    }
+
+    const heroId = gameIdOf(row['hero']);
+
+    return heroId === undefined
+      ? []
+      : [
+          {
+            heroId,
+            status: row['status'],
+            ...(row['status'] === 'ready' ? { specialist: bucketOf(row['specialist']), flex: bucketOf(row['flex']) } : {}),
+          },
+        ];
+  });
+
+  unmapped.forEach((hero) => warn(`${hero}: no gameId in hero-game-ids.json, so the hero is left out of hero-specialists`));
+
+  const definition = answer['definition'];
+
+  return {
+    provenance: COMMUNITY_PROVENANCE,
+    status: answer['status'],
+    mode: HERO_SPECIALISTS_MODE,
+    definition: Object.fromEntries(HERO_SPECIALISTS_DEFINITION_KEYS.map((key) => [key, definition[key]])),
+    minimumMatches: answer['minimumMatches'],
+    minimumPlayers: answer['minimumPlayers'],
+    currentSeasonId: seasonIdOf(current.id),
+    season: { id: seasonIdOf(shown.id), label: shown.label },
+    ...(inPlaceOf === null ? {} : { inPlaceOfSeasonId: seasonIdOf(inPlaceOf.id) }),
+    heroes: heroes.sort((a, b) => a.heroId - b.heroId),
+  };
+}
+
+// One bucket's faults. A rate is a percentage and the band is one of the steps, never a count.
+function findHeroSpecialistsBucketProblems(bucket: unknown, where: string, checkKeys: CheckKeys): string[] {
+  if (!isRecord(bucket)) {
+    return [`${where} needs a specialist and a flex bucket when ready`];
+  }
+
+  checkKeys(bucket, HERO_SPECIALISTS_BUCKET_KEYS, where);
+
+  const found: string[] = [];
+
+  for (const key of ['winRate', 'shrunkWinRate']) {
+    const rate = bucket[key];
+
+    if (!isFiniteNumber(rate) || rate < 0 || rate > 100) {
+      found.push(`${where} ${key} must be a percentage from 0 to 100`);
+    }
+  }
+
+  if (!HERO_SPECIALISTS_BANDS.includes(bucket['matchesBand'])) {
+    found.push(`${where} matchesBand must be 50+, 100+, 250+ or 500+`);
+  }
+
+  return found;
+}
+
+/**
+ * Checks the hero-specialists dataset and returns every fault, so one run names them all. It refuses a
+ * file that is not the community's, a key outside the allow-list (so nothing can reach a hero by
+ * accident), a figure on a hero that is not ready, a ready hero with no figure, a minimum below the
+ * site's own rule, and a status that disagrees with the heroes. No hero at all is valid: that is the
+ * launch state.
+ */
+function readHeroSpecialists(data: unknown): string[] {
+  if (isRecord(data) && data['provenance'] !== COMMUNITY_PROVENANCE) {
+    return [`provenance must be "${COMMUNITY_PROVENANCE}"`];
+  }
+
+  if (!isRecord(data) || !Array.isArray(data['heroes'])) {
+    return ['expected an object with a heroes list'];
+  }
+
+  const problems: string[] = [];
+  const checkKeys = keyChecker(problems);
+  const season = data['season'];
+  const definition = data['definition'];
+  const heroes: unknown[] = data['heroes'];
+
+  checkKeys(data, HERO_SPECIALISTS_KEYS, 'the file');
+
+  if (!HERO_SPECIALISTS_STATUSES.includes(data['status'])) {
+    problems.push('status must be ready or not-enough-data');
+  }
+
+  if (data['mode'] !== HERO_SPECIALISTS_MODE) {
+    problems.push(`mode must be "${HERO_SPECIALISTS_MODE}", the Quick Match and Competitive blend`);
+  }
+
+  // The floors are the site's own rule, so an answer that reports a lowered minimum cannot publish a thin bucket.
+  if (!isInteger(data['minimumMatches']) || data['minimumMatches'] < HERO_SPECIALISTS_MIN_MATCHES) {
+    problems.push(`minimumMatches must be a whole number of at least ${HERO_SPECIALISTS_MIN_MATCHES}`);
+  }
+
+  if (!isInteger(data['minimumPlayers']) || data['minimumPlayers'] < HERO_SPECIALISTS_MIN_PLAYERS) {
+    problems.push(`minimumPlayers must be a whole number of at least ${HERO_SPECIALISTS_MIN_PLAYERS}`);
+  }
+
+  if (!isRecord(definition) || !HERO_SPECIALISTS_DEFINITION_KEYS.every((key) => isFiniteNumber(definition[key]) && definition[key] > 0)) {
+    problems.push('definition needs the five rule values as numbers above 0');
+  } else {
+    checkKeys(definition, HERO_SPECIALISTS_DEFINITION_KEYS, 'definition');
+  }
+
+  if (!isInteger(data['currentSeasonId'])) {
+    problems.push('currentSeasonId must be a whole number');
+  }
+
+  if (data['inPlaceOfSeasonId'] !== undefined && data['inPlaceOfSeasonId'] !== data['currentSeasonId']) {
+    problems.push('inPlaceOfSeasonId must be the currentSeasonId when present');
+  }
+
+  if (!isRecord(season) || !isInteger(season['id']) || !isNonEmptyString(season['label'])) {
+    problems.push('season needs an id and a label');
+  } else {
+    checkKeys(season, COMMUNITY_STATS_SEASON_KEYS, 'season');
+  }
+
+  const listed = new Set<unknown>();
+
+  heroes.forEach((row, index) => {
+    if (!isRecord(row) || !isPositiveInteger(row['heroId'])) {
+      problems.push(`hero ${index} needs a heroId that is a whole number above 0`);
+      return;
+    }
+
+    const where = `hero ${row['heroId']}`;
+
+    checkKeys(row, HERO_SPECIALISTS_HERO_KEYS, where);
+
+    if (listed.has(row['heroId'])) {
+      problems.push(`${where} is listed more than once`);
+    }
+    listed.add(row['heroId']);
+
+    if (row['status'] === 'ready') {
+      problems.push(
+        ...findHeroSpecialistsBucketProblems(row['specialist'], `${where} specialist`, checkKeys),
+        ...findHeroSpecialistsBucketProblems(row['flex'], `${where} flex`, checkKeys),
+      );
+    } else if (row['status'] === 'not-enough-data') {
+      if (row['specialist'] !== undefined || row['flex'] !== undefined) {
+        problems.push(`${where} is not enough data, so it may carry no figure`);
+      }
+    } else {
+      problems.push(`${where} has an unknown status`);
+    }
+  });
+
+  const anyReady = heroes.some((row) => isRecord(row) && row['status'] === 'ready');
+
+  if (HERO_SPECIALISTS_STATUSES.includes(data['status']) && (data['status'] === 'ready') !== anyReady) {
+    problems.push('status must be ready if and only if a hero is ready');
+  }
+
+  return problems;
+}
+
+/** The gate a hero-specialists input must pass, checked before the build so a fallback can be chosen. */
+function describeHeroSpecialistsInputProblem(data: unknown): string | undefined {
+  const problems = [...readHeroSpecialists(data), ...findUnsafeContent(data, 'hero-specialists')];
 
   return problems.length > 0 ? problems.join('; ') : undefined;
 }

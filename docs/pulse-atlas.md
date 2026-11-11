@@ -20,6 +20,7 @@ and a field a file does not carry means "no progress to show": fall back to plai
 | `community-stats.json` | `minimumMatches`, `minimumPlayers` | none: a pair below the minimum is left out, not listed |
 | `hero-scores.json` | `minimums`, and `qualifiedHeroes` for how many heroes pass | `matches` (in steps of 5) and `contributors` on a stat that is `collecting` |
 | `team-lineups.json` | `minimumTeams`, `minimumPlayers` | `teams` on a shape with status `not-enough-data` |
+| `hero-specialists.json` | `minimumMatches`, `minimumPlayers` | none: a hero below the minimum is `not-enough-data` with no figure and no count |
 
 **Players are a gate on hero stats and the tier list.** The database counts the
 different players who recorded the matches a hero appeared in. `hero-stats.json` and the
@@ -58,6 +59,7 @@ measures one player's own games must follow the same rounding.
 | `community-stats.json` | The community's counter and partner counts: how often each hero beat or lost to each enemy hero, and to each ally hero it played with, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `hero-scores.json` | Each hero's 1 to 10 Damage, Sustain, Ultimate and Utility scores with the figures behind them, or how far along a hero below the rule is, in the half-season shown. Shape below. Optional: absent until the first successful run that can build it. |
 | `team-lineups.json` | The community's team line-up shapes (how many Vanguards, Duelists and Strategists a team ran, such as 1-2-3) with the teams and wins behind each, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
+| `hero-specialists.json` | How the players who mostly play a hero (specialists) fare against the players who play many heroes (flex), pooled per hero in the half-season shown: win rate, a shrunk win rate and a matches band for each bucket. Rates only, no counts. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
 
 `community-stats.json` is the one source of counter data for every reader. The overlay reads it from
@@ -584,6 +586,79 @@ is **one file** for the half-season shown, listed in the manifest:
   The source is `/api/team-lineups`, and the envelope's `source` is
   `rivals-pulse-web:hero-stats-api`.
 
+### The `hero-specialists` data
+
+How the players who mostly play a hero (specialists) fare against the players who play many heroes (flex),
+pooled per hero, for readers that want a "Specialists vs flex" row without the website. A player is an in-game
+uid that the database sorts into a bucket while it counts; the file holds no uid, no name and no count of
+people. Like the tier list it is the **community** data: built from the matches Rivals Pulse players upload, by
+the derivation behind `GET /api/hero-specialists`
+([src/server/heroes/specialists/hero-specialists.ts](../src/server/heroes/specialists/hero-specialists.ts)), and
+from nothing else. It is **one file** for the half-season shown, listed in the manifest:
+
+```json
+{
+  "provenance": "rivals-pulse-community",
+  "status": "ready",
+  "mode": "all",
+  "definition": { "specialistMinShare": 0.5, "specialistMinHeroMatches": 10, "flexMaxTopShare": 0.25, "flexMinHeroes": 5, "flexMinMatches": 20 },
+  "minimumMatches": 50,
+  "minimumPlayers": 5,
+  "currentSeasonId": 21,
+  "season": { "id": 21, "label": "Season 10.5" },
+  "heroes": [
+    {
+      "heroId": 1011, "status": "ready",
+      "specialist": { "winRate": 54.8, "shrunkWinRate": 52.9, "matchesBand": "100+" },
+      "flex": { "winRate": 49.7, "shrunkWinRate": 50.1, "matchesBand": "250+" }
+    },
+    { "heroId": 1016, "status": "not-enough-data" }
+  ]
+}
+```
+
+- **`provenance` is `"rivals-pulse-community"`, at the top level of `data`**, as in the tier list. The generator
+  refuses to build a file without it and the read-back check fails if the written file lacks it.
+- **Rates, not counts.** `winRate` is a percentage to one decimal. `shrunkWinRate` is the same rate pulled toward
+  the hero's own win rate in the same half-season (the `hero-stats.json` figure), as if a prior of pretend matches
+  had been played, with the strength the heroes' own records give
+  ([src/server/heroes/stats/win-rate-prior.ts](../src/server/heroes/stats/win-rate-prior.ts)), so a short bucket
+  does not read as the whole truth. `matchesBand` says how many matches a bucket rests on, in steps: `50+`, `100+`,
+  `250+` or `500+`. No exact count is published: an exact count, beside a rate, could give away who is in a bucket.
+- **The rule** is in `definition`, as fractions of a person's counted matches in the half-season: a specialist on
+  a hero played at least `specialistMinShare` (half) of them on it, and at least `specialistMinHeroMatches` (10)
+  matches on it; a flex player's most played hero is under `flexMaxTopShare` (a quarter) of them, they played at
+  least `flexMinHeroes` (5) heroes and have at least `flexMinMatches` (20). Everyone in between is in neither
+  bucket. Counted matches are Quick Match and Competitive matches with a win or a loss, so `mode` is `all`, the
+  blend of `hero-stats.json`.
+- **A hero is `ready` only when both buckets pass**: each at `minimumMatches` (50) matches, from at least
+  `minimumPlayers` (5) different players and 2 different recorders, applied in the database. Two people are too few,
+  since either could subtract their own record. A ready hero carries a `specialist` and a `flex` bucket; any other
+  hero is `not-enough-data` and carries no figure and **no progress count**, because a count of how close a bucket
+  is would let a reader work out who is in it. The file lists every hero with a counted match in the half-season,
+  ordered by `heroId`; a hero with none has no entry. `minimumPlayers` is the second key with the word "player"
+  that the generator lets through (as a whole number), and the recorder minimum stays in the database.
+- **Top-level `status`** is `ready` when at least one hero is, and `not-enough-data` otherwise, which is a designed
+  state, not an error: expect it at launch, when few players have 20 matches in a half-season.
+- **The season** works as in `community-stats`, including `inPlaceOfSeasonId`, which is present only when the
+  current half-season has no ready hero yet and `season` is the previous half-season's figures.
+- **Hero ids** are the game's numeric ids, as in the tier list; join them to `heroes.json`. Deadpool's three role
+  forms are merged under his base id, 1057, before the players are counted. A hero with no `gameId` in
+  `hero-game-ids.json` is left out of the file, with a warning on the workflow run.
+- **Only these keys are published.** The generator allows exactly the keys above (`readHeroSpecialists` in
+  [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and refuses a file, season,
+  hero or bucket with any other, a key naming something private, a figure on a hero that is not ready, a ready hero
+  without both buckets, a rate off the scale, a `matchesBand` that is not one of the four steps, a `minimumMatches`
+  below 50 or a `minimumPlayers` below 5 (the site's own rule, held apart from what the API reports), and a status
+  that disagrees with the heroes. It holds no player-level data: no names, uids, teams, matches or per-match rows.
+- **It never holds up the feed**, by the same rule as `community-stats`: a failure keeps the last published file, or
+  leaves the file out if there is none. The source is `/api/hero-specialists`, and the envelope's `source` is
+  `rivals-pulse-web:hero-stats-api`.
+- **No shipped overlay reads it yet.** The overlay reads the manifest entries it asks for by name and skips the
+  rest. Nothing here may reach the game (overlay ADR-0021).
+- **The sample** ([docs/pulse-atlas/samples/v1/hero-specialists.json](pulse-atlas/samples/v1/hero-specialists.json))
+  is illustrative: three ready heroes and three that are not, so a reader can see both. Its figures are not live.
+
 ### The hero `gameId`
 
 `heroes.json` carries the game's numeric hero id on each hero, so a consumer
@@ -733,7 +808,7 @@ The manifest's own `generatedAt` is the latest `generatedAt` among the files.
 Trimmed samples, produced by the real builder, are in
 [docs/pulse-atlas/samples/v1/](pulse-atlas/samples/v1/): two heroes (with their `gameId`), a
 tier list trimmed to 2 seasons (the current one and the one before)
-with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, team line-ups with one shape that has enough data and one that has not (and its team count so far), three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
+with 2 heroes per tier, as an index plus its two season files under `tier-list/seasons/`, hero stats for the same two seasons with one hero that has enough data and one that has not, community stats with 2 heroes, 2 counters and 2 synergies, hero scores with one hero, team line-ups with one shape that has enough data and one that has not (and its team count so far), hero specialists with three ready heroes and three that are not, three glossary terms, the full maps list, the hero-styles and strategist-tags entries of those two heroes, and a manifest
 whose hashes match those sample files. Their `source` is
 `SAMPLE: trimmed, not live data`, so they cannot be mistaken for the live feed,
 and they are not published: the Pages artifact holds only the generated
@@ -766,10 +841,11 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    then once per half-season (`?halfSeason=<number>`), the current one
    included. That needs no secret. The tier list and the hero stats are
    assembled from those same answers and the hero ids in `hero-game-ids.json`
-   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. Three
+   by `assembleCommunityTierList` and `assembleCommunityHeroStats`. Four
    more reads are each made once: `/api/hero-pairs` for `community-stats`,
-   `/api/community/hero-scores` for `hero-scores` and `/api/team-lineups` for
-   `team-lineups`; see below for what happens when they fail.
+   `/api/community/hero-scores` for `hero-scores`, `/api/team-lineups` for
+   `team-lineups` and `/api/hero-specialists` for `hero-specialists`; see below for what
+   happens when they fail.
 2. Reads the maps, hero-styles, strategist-tags and hero-game-ids source files from the repository.
 3. Fetches the currently published files from the Pages site, the tier-list
    season files included (`PULSE_ATLAS_PUBLISHED_BASE` overrides the base URL).
@@ -791,7 +867,7 @@ demand (`workflow_dispatch`). It runs `npm run build:pulse-atlas`, which:
    [src/server/pulse-atlas/pulse-atlas-page.ts](../src/server/pulse-atlas/pulse-atlas-page.ts). It is not part of
    the feed: the manifest does not list it, and clients never need it.
 
-`community-stats`, `hero-scores` and `team-lineups` are the exceptions to the rule below:
+`community-stats`, `hero-scores`, `team-lineups` and `hero-specialists` are the exceptions to the rule below:
 `resolveOptionalDataset` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts) turns any failure to fetch or
 assemble one into the last published file (kept byte for byte) or, if none was
 ever published, into leaving it out of the run, each with a warning. None of them ever
@@ -823,6 +899,11 @@ scheduled run, within six hours, publishes the file.
 `team-lineups` needs the `read_team_lineup_shapes` migration and the web app with
 `/api/team-lineups`, both already live; it follows the same rule if a run ever
 comes first.
+
+`hero-specialists` needs the `read_hero_specialists` migration (`supabase db push`, which waits for the
+maintainer's yes, see [supabase.md](supabase.md#specialists-and-flex-players)) and the web app with
+`/api/hero-specialists`. Until both are live every run warns that it was left out; the first run after both
+publishes it, with every hero `not-enough-data` until enough matches are recorded.
 
 To run it by hand: `npm run build:pulse-atlas -- --out <folder>` (Node 24,
 which strips TypeScript types itself).
