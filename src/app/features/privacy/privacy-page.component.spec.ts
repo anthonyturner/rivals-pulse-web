@@ -197,7 +197,7 @@ describe('PrivacyPageComponent', () => {
     expect(summary).toContain('The RivalsPulse desktop app is not released yet');
     expect(summary).toContain('not on Overwolf');
     expect(section('uploaded-today-title').textContent).toBe('What the app uploads at launch');
-    expect(uploads).toContain('At launch, every match the desktop app records will be uploaded automatically');
+    expect(uploads).toContain('At launch, the desktop app will upload the matches it records by default');
     expect(uploads).toContain('none of them released');
     expect(page.textContent).not.toContain('versions released so far');
     expect(page.textContent).not.toContain('Older versions of the app');
@@ -243,11 +243,19 @@ describe('PrivacyPageComponent', () => {
     expect(uploads).toContain('the public key will no longer read match histories');
   });
 
-  it('says uploads are automatic rather than chosen', () => {
-    const text = page.textContent ?? '';
+  it('says uploads are on by default and can be turned off in Settings, under Privacy', () => {
+    const uploads = (section('uploaded-today').textContent ?? '').replace(/\s+/g, ' ');
 
-    expect(text).toContain('uploaded automatically');
-    expect(text).not.toContain('choose to upload');
+    expect(uploads).toContain("A player can turn uploading off in the app's Settings, under Privacy");
+    expect(uploads).toContain('"Upload my matches" switch, which is on until they turn it off');
+    expect(uploads).toContain("While it is off, nothing will be uploaded and matches will still save on that player's own PC");
+    expect(uploads).toContain('A match finished while it is off will never be uploaded later');
+    expect(uploads).toContain('restoring a backup file can turn uploading off but never on');
+    expect(uploads).toContain(
+      'A match that was already waiting to upload when the switch was turned off will be sent once it is turned back on',
+    );
+    expect(uploads).toContain('Turning it off will not delete matches that were already uploaded');
+    expect(page.textContent).not.toMatch(/no setting to turn/i);
   });
 
   it('describes Discord sign-in, what is stored, the sign-in cookie and deletion', () => {
