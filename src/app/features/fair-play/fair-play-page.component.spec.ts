@@ -147,6 +147,7 @@ describe('FairPlayPageComponent', () => {
     expect(flat(page)).not.toMatch(/coming soon/i);
     expect(section('collected')).toContain("A player can turn them off in the app's Settings, under Privacy");
     expect(flat(page)).not.toMatch(/no setting to turn/i);
+    expect(flat(page)).toContain('Every match the app uploads will keep the scoreboard line of each human player');
   });
 
   it("calls NetEase's and Overwolf's rules policies, cites Overwolf's Game compliance section with a date, and never says laws", () => {

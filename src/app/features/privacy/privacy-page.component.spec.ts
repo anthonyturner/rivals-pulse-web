@@ -248,9 +248,13 @@ describe('PrivacyPageComponent', () => {
 
     expect(uploads).toContain("A player can turn uploading off in the app's Settings, under Privacy");
     expect(uploads).toContain('"Upload my matches" switch, which is on until they turn it off');
-    expect(uploads).toContain("While it is off, nothing is uploaded and matches still save on that player's own PC");
-    expect(uploads).toContain('A match finished while it is off is never uploaded later');
+    expect(uploads).toContain("While it is off, nothing will be uploaded and matches will still save on that player's own PC");
+    expect(uploads).toContain('A match finished while it is off will never be uploaded later');
     expect(uploads).toContain('restoring a backup file can turn uploading off but never on');
+    expect(uploads).toContain(
+      'A match that was already waiting to upload when the switch was turned off will be sent once it is turned back on',
+    );
+    expect(uploads).toContain('Turning it off will not delete matches that were already uploaded');
     expect(page.textContent).not.toMatch(/no setting to turn/i);
   });
 

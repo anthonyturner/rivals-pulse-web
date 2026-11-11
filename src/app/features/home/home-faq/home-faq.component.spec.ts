@@ -83,6 +83,7 @@ describe('HomeFaqComponent', () => {
       const answer = text(item('app-needed').querySelector('.answer'));
 
       expect(answer).toContain('Once it launches, the app is what records matches');
+      expect(answer).toContain('every match it uploads counts toward them');
       expect(answer).not.toContain('every match you play');
     });
 
