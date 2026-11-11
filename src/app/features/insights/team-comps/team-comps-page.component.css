@@ -1,4 +1,0 @@
-/* Tall enough that the footer starts below the fold, so it does not jump when the numbers replace the loading panel. */
-.team-comps-page {
-  min-height: 100vh;
-}
