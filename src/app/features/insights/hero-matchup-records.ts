@@ -58,7 +58,7 @@ export function recordEdgeLabel(matchup: HeroMatchup): string {
  * lists counters by the same rule.
  */
 export function counterRuleNote(minimumMatches: number): string {
-  return `A hero is listed when its win rate against the other, adjusted for small samples, is at least ${COUNTER_MIN_EDGE_POINTS} points above its own usual win rate, over at least ${minimumMatches} recorded matches. The Rivals Pulse app uses the same rule.`;
+  return `A hero is listed when its win rate against the other, adjusted for small samples, is at least ${COUNTER_MIN_EDGE_POINTS} points above its own usual win rate, over at least ${minimumMatches} recorded matches. The usual win rate is adjusted the same way, while a card shows the plain win rate, so 76.7% against a plain 64% can show fewer than 12.7 points above usual. The Rivals Pulse app uses the same rule.`;
 }
 
 /**
