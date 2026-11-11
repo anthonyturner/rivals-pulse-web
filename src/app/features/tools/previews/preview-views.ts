@@ -52,9 +52,9 @@ export function counterPreview(matchups: HeroMatchups, roster: readonly Hero[]):
 }
 
 /**
- * The planner's opening enemy divers and the heroes it answers them with: the ones with a winning
- * record against the most of them, from the same `answersTo` the page uses. Null when no hero has
- * one against any of them.
+ * The planner's opening enemy divers and the heroes it answers them with: the ones that do better than
+ * usual against the most of them, from the same `answersTo` the page uses. Null when no hero does
+ * against any of them.
  */
 export function divePreview(matchups: HeroMatchups, roster: readonly Hero[]): DivePreview | null {
   const byId = new Map(roster.map((hero) => [hero.id, hero]));

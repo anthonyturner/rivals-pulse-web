@@ -45,7 +45,7 @@ describe('profile route', () => {
   });
 
   it('has its own title', () => {
-    expect(profile?.title).toBe('Your stats | RivalsPulse');
+    expect(profile?.title).toBe('Your profile | RivalsPulse');
   });
 });
 
