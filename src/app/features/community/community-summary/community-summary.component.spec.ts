@@ -82,6 +82,6 @@ describe('CommunitySummaryComponent', () => {
 
     expect(host().querySelector('app-notice')?.textContent).toContain('Previous half-season. Season 10 stands in.');
     expect(host().querySelector('.footnote')?.textContent).toBe('From 194 matches.');
-    expect(Array.from(host().querySelectorAll('.links a')).map((a) => a.getAttribute('href'))).toEqual(['/a']);
+    expect(Array.from(host().querySelectorAll('.pill-links a')).map((a) => a.getAttribute('href'))).toEqual(['/a']);
   });
 });

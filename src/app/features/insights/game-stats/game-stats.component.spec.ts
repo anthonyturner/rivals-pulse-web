@@ -78,9 +78,9 @@ describe('GameStatsComponent', () => {
     expect(element.querySelector('app-hub-tile, img')).toBeNull();
     expect(element.querySelector('.strip app-heartbeat-line[aria-hidden="true"]')).not.toBeNull();
     expect(text(element, '.strip__tile dt')).toEqual([
-      'Matches counted · all seasons',
-      'Matches counted · Season 10.5',
-      'Players seen',
+      'Matches · all seasons',
+      'Matches · Season 10.5',
+      'Players',
       'Earliest match',
     ]);
     expect(text(element, '.strip__tile dd')).toEqual(['733', '436', '7,674', 'Sep 20, 2026']);
@@ -113,7 +113,7 @@ describe('GameStatsComponent', () => {
   it('names where the numbers come from and shows nothing from outside the app', async () => {
     const element = await open(live);
 
-    expect(text(element, '.meta')).toEqual(['Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.']);
+    expect(text(element, '.stat-how .stat-note')[0]).toBe('Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.');
     expect(element.querySelector('a')).toBeNull();
     expect(element.textContent).not.toMatch(/steam|netease|wikipedia|milestone/i);
   });
@@ -130,7 +130,7 @@ describe('GameStatsComponent', () => {
     const element = await open('failure');
 
     expect(text(element, 'app-state-panel h2')).toEqual(['Game stats could not be loaded']);
-    expect(element.querySelector('table, .strip, .meta')).toBeNull();
+    expect(element.querySelector('table, .strip, .stat-how')).toBeNull();
   });
 
   const NOT_COUNTS: [string, unknown][] = [

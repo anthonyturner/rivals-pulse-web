@@ -25,7 +25,7 @@ export const COMMUNITY_EMPTY_RULE =
   selector: 'app-community-summary',
   imports: [KindChipComponent, NoticeComponent, RouterLink, StatePanelComponent],
   templateUrl: './community-summary.component.html',
-  styleUrl: './community-summary.component.css',
+  styleUrls: ['../../../shared/styles/pill-link.css', './community-summary.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CommunitySummaryComponent {

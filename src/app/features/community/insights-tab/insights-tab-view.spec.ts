@@ -71,10 +71,10 @@ describe('buildInsightsTabView', () => {
     if (view.kind !== 'ready') {
       throw new Error('expected a ready view');
     }
-    expect(view.notes.join(' ')).toContain('UTC');
-    expect(view.notes.join(' ')).toContain('30 minutes');
-    expect(view.notes.join(' ')).toContain('10 matches');
-    expect(view.notes.join(' ')).toContain('one player');
+    expect(view.note).toContain('UTC');
+    expect(view.note).toContain('30 minutes');
+    expect(view.note).toContain('10 matches');
+    expect(view.note).toContain('one player');
   });
 
   it('leaves the session sentence out when the gap is not known', () => {
@@ -83,7 +83,7 @@ describe('buildInsightsTabView', () => {
     if (view.kind !== 'ready') {
       throw new Error('expected a ready view');
     }
-    expect(view.notes.join(' ')).not.toContain('session ends');
+    expect(view.note).not.toContain('session ends');
   });
 });
 
@@ -94,6 +94,6 @@ describe('buildInsightsTabView gates', () => {
     if (view.kind !== 'ready') {
       throw new Error('expected a ready view');
     }
-    expect(view.notes.join(' ')).not.toContain('players are behind');
+    expect(view.note).not.toContain('players are behind');
   });
 });

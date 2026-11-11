@@ -180,3 +180,80 @@
 .stat-meter__value {
   min-width: 4ch;
 }
+
+/* A disclosure under a section or panel: its summary is a link-styled line, its body the notes that explain the figures. */
+.stat-how > summary,
+.stat-fold > summary {
+  min-height: 24px;
+  color: var(--link);
+  cursor: pointer;
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.stat-how > summary:focus-visible,
+.stat-fold > summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.stat-how[open] > summary,
+.stat-fold[open] > summary {
+  margin-bottom: 8px;
+}
+
+.stat-how > .stat-note + .stat-note {
+  margin-top: 4px;
+}
+
+/* A panel that folds: its heading is the summary, so a closed one is a single line and the rest of the row is not held open by it. */
+details.stat-panel {
+  display: block;
+  align-self: start;
+}
+
+.stat-panel__summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.stat-panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.stat-panel__summary::after {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: solid var(--text);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-3px) rotate(45deg);
+  content: '';
+}
+
+details[open] > .stat-panel__summary::after {
+  transform: translateY(3px) rotate(-135deg);
+}
+
+.stat-panel__summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+details.stat-panel > .stat-panel__body {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* A section's opening line and its "how these are counted" disclosure. */
+.stat-intro {
+  display: grid;
+  gap: 8px;
+}

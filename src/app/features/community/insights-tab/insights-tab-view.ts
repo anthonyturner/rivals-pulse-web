@@ -20,7 +20,7 @@ export type InsightsTabView =
   | { kind: 'loading' }
   | { kind: 'unavailable' }
   | { kind: 'not-enough-data' }
-  | { kind: 'ready'; notes: string[]; dimensions: InsightsDimensionView[] };
+  | { kind: 'ready'; /** How the figures are counted, as sentences. */ note: string; dimensions: InsightsDimensionView[] };
 
 /**
  * `undefined` is still loading; `null` is a request that failed or an answer that could not be read,
@@ -39,17 +39,17 @@ export function buildInsightsTabView(insights: CommunityInsights | null | undefi
     return { kind: 'not-enough-data' };
   }
 
-  const notes = [
+  const note = [
     `All days and times are ${insights.timeZone}.`,
     ...(insights.sessionGapMinutes === null
       ? []
       : [`A play session ends after ${insights.sessionGapMinutes} minutes without a match.`]),
     ...gateNotes(insights),
-  ];
+  ].join(' ');
 
   return {
     kind: 'ready',
-    notes,
+    note,
     dimensions: insights.dimensions.map((dimension) => {
       const largest = Math.max(0, ...dimension.buckets.map((bucket) => bucket.share ?? 0));
 

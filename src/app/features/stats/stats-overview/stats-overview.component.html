@@ -2,8 +2,8 @@
 <app-community-matches-tab />
 <app-community-insights-tab />
 
-<p class="links">
+<p class="pill-links">
   @for (link of links; track link.path) {
-    <a class="links__link" [routerLink]="link.path">{{ link.label }}</a>
+    <a class="pill-link" [routerLink]="link.path">{{ link.label }}</a>
   }
 </p>

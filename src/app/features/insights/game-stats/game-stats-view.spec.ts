@@ -29,9 +29,9 @@ describe('buildGameStatsView', () => {
         status: 'ready',
         meta: 'Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.',
         tiles: [
-          { label: 'Matches counted · all seasons', value: '1,234' },
-          { label: 'Matches counted · Season 10.5', value: '900' },
-          { label: 'Players seen', value: '56,789' },
+          { label: 'Matches · all seasons', value: '1,234' },
+          { label: 'Matches · Season 10.5', value: '900' },
+          { label: 'Players', value: '56,789' },
           { label: 'Earliest match', value: 'Sep 20, 2026' },
         ],
       }),
@@ -51,9 +51,9 @@ describe('buildGameStatsView', () => {
     const view = buildGameStatsView({ ...COUNTS, since: null });
 
     expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual([
-      'Matches counted · all seasons',
-      'Matches counted · Season 10.5',
-      'Players seen',
+      'Matches · all seasons',
+      'Matches · Season 10.5',
+      'Players',
     ]);
   });
 
@@ -61,8 +61,8 @@ describe('buildGameStatsView', () => {
     const view = buildGameStatsView({ ...COUNTS, matches: 900, halfSeasons: [COUNTS.halfSeasons[0]] });
 
     expect(view.status === 'ready' && view.tiles.map((tile) => tile.label)).toEqual([
-      'Matches counted · all seasons',
-      'Players seen',
+      'Matches · all seasons',
+      'Players',
       'Earliest match',
     ]);
   });

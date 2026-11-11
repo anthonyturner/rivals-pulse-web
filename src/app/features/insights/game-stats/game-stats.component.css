@@ -61,25 +61,3 @@ app-state-panel {
 .seasons {
   max-width: 40rem;
 }
-
-.strip__how summary {
-  color: var(--link);
-  cursor: pointer;
-  font-size: var(--type-small);
-  font-weight: 700;
-  text-decoration: underline;
-}
-
-.strip__how summary:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
-}
-
-.strip__how .stat-note {
-  margin-top: 8px;
-}
-
-.meta {
-  color: var(--text-soft);
-  font-size: var(--type-caption);
-}

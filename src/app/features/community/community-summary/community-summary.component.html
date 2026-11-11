@@ -20,7 +20,7 @@
     <app-state-panel>
       <p>{{ summary() }}</p>
       @if (link(); as full) {
-        <a class="link" [routerLink]="full.path" [queryParams]="full.queryParams">{{ full.label }}</a>
+        <a class="pill-link" [routerLink]="full.path" [queryParams]="full.queryParams">{{ full.label }}</a>
       }
     </app-state-panel>
   }
@@ -36,8 +36,8 @@
     }
 
     @if (link(); as full) {
-      <p class="links">
-        <a class="link" [routerLink]="full.path">{{ full.label }}</a>
+      <p class="pill-links">
+        <a class="pill-link" [routerLink]="full.path">{{ full.label }}</a>
       </p>
     }
   }

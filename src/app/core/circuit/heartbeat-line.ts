@@ -137,7 +137,7 @@ export class HeartbeatLine implements StageSurface {
 
     ctx.clearRect(0, 0, this.width, this.height);
     const beatPx = (SPEED_PX_PER_S * 60) / this.rate;
-    const baseline = this.height * 0.55;
+    const baseline = this.height * 0.72;
     const amplitude = this.height * 0.38;
 
     ctx.beginPath();

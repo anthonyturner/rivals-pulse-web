@@ -1,5 +1,5 @@
 import type { CommunityMatches, CommunityModeShare } from '../../../../contracts/community-matches.model';
-import { buildCommunityMatchesView, minutesLabel, type CommunityMatchesView } from './community-matches-view';
+import { buildCommunityMatchesView, minutesLabel, recentMatchesPerDay, type CommunityMatchesView } from './community-matches-view';
 
 const SEASON_10_5 = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
 const SEASON_10 = { id: 10, label: 'Season 10', startsAt: '2026-09-11T09:00:00Z', endsAt: '2026-10-09T09:00:00Z' };
@@ -75,13 +75,13 @@ describe('buildCommunityMatchesView', () => {
     const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesCounted: 484 })));
 
     expect(view.notice).toBeNull();
-    expect(view.sample).toBe('484 matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
+    expect(view.sample).toBe('484 matches in Season 10.5');
   });
 
   it('states no volume when the matches counted are not known', () => {
     const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY, matchesCounted: null })));
 
-    expect(view.sample).toBe('Matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
+    expect(view.sample).toBe('Matches in Season 10.5');
   });
 
   it('splits a short list of maps between best and worst, and names the thin ones without a count', () => {
@@ -92,6 +92,7 @@ describe('buildCommunityMatchesView', () => {
     );
 
     expect(view.maps.best).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
+    expect(view.maps.all).toEqual(view.maps.best);
     expect(view.maps.worst).toEqual([]);
     expect(view.maps.pendingNote).toBe('Not enough data yet for: Klyntar, Hydra Base.');
     expect(view.maps.note).toBeNull();
@@ -123,6 +124,7 @@ describe('buildCommunityMatchesView', () => {
 
     expect(view.maps.best.map((row) => row.map)).toEqual(['A', 'B', 'C']);
     expect(view.maps.worst.map((row) => row.map)).toEqual(['G', 'F', 'E']);
+    expect(view.maps.all.map((row) => row.map)).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
   });
 
   it('never lists a map in both the best and the worst', () => {
@@ -173,17 +175,12 @@ describe('buildCommunityMatchesView', () => {
 
   it('reads the recent pace from the full days before the latest, which is still filling', () => {
     const perDay = [10, 20, 20, 20, 2].map((share, index) => ({ day: '2026-10-2' + index, share }));
-    const view = ready(buildCommunityMatchesView(matches({ matchesCounted: 500, perDay })));
-
-    expect(view.recentMatchesPerDay).toBeCloseTo(500 * (20 / 100), 5);
+    expect(recentMatchesPerDay(matches({ matchesCounted: 500, perDay }))).toBeCloseTo(500 * (20 / 100), 5);
   });
 
   it('has no recent pace without a listed day or a count of matches', () => {
-    expect(ready(buildCommunityMatchesView(matches({ perDay: null }))).recentMatchesPerDay).toBeNull();
-    expect(
-      ready(buildCommunityMatchesView(matches({ matchesCounted: null, perDay: [{ day: '2026-10-29', share: 50 }] })))
-        .recentMatchesPerDay,
-    ).toBeNull();
+    expect(recentMatchesPerDay(matches({ perDay: null }))).toBeNull();
+    expect(recentMatchesPerDay(matches({ matchesCounted: null, perDay: [{ day: '2026-10-29', share: 50 }] }))).toBeNull();
   });
 
   it('shows the average length and the days as shares, with bars scaled to the busiest day', () => {

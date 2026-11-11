@@ -7,51 +7,59 @@
   [summary]="summary"
 >
   @if (current.kind === 'ready') {
-    <p class="stat-note">{{ current.notes.join(' ') }}</p>
+    <details class="stat-how">
+      <summary>How these are counted</summary>
+      <p class="stat-note">{{ current.note }}</p>
+    </details>
 
     <div class="stat-grid stat-grid--thirds">
       @for (dimension of current.dimensions; track dimension.id) {
-        <section class="stat-panel" [attr.aria-labelledby]="'insights-' + dimension.id">
-          <h3 [id]="'insights-' + dimension.id" class="stat-panel__title">{{ dimension.title }}</h3>
-          @if (dimension.rows.length > 0) {
-            <table class="stat-table">
-              <colgroup>
-                <col />
-                <col />
-                <col />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th scope="col">When</th>
-                  <th scope="col">Share</th>
-                  <th scope="col">Win rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of dimension.rows; track row.label) {
+        <details class="stat-panel" [attr.open]="$first ? '' : null">
+          <summary class="stat-panel__summary">
+            <h3 class="stat-panel__title">{{ dimension.title }}</h3>
+          </summary>
+          <div class="stat-panel__body">
+            @if (dimension.rows.length > 0) {
+              <table class="stat-table">
+                <caption class="visually-hidden">{{ dimension.title }}: share of matches and win rate</caption>
+                <colgroup>
+                  <col />
+                  <col />
+                  <col />
+                </colgroup>
+                <thead>
                   <tr>
-                    <th scope="row">{{ row.label }}</th>
-                    @if (row.ready) {
-                      <td>
-                        <div class="stat-meter">
-                          <span class="stat-meter__value">{{ row.share }}</span>
-                          <span class="stat-meter__bar" aria-hidden="true">
-                            <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
-                          </span>
-                        </div>
-                      </td>
-                      <td>{{ row.winRate }}</td>
-                    } @else {
-                      <td colspan="2">Not enough data yet</td>
-                    }
+                    <th scope="col">When</th>
+                    <th scope="col">Share</th>
+                    <th scope="col">Win rate</th>
                   </tr>
-                }
-              </tbody>
-            </table>
-          } @else {
-            <p class="stat-note">Not enough data yet.</p>
-          }
-        </section>
+                </thead>
+                <tbody>
+                  @for (row of dimension.rows; track row.label) {
+                    <tr>
+                      <th scope="row">{{ row.label }}</th>
+                      @if (row.ready) {
+                        <td>
+                          <div class="stat-meter">
+                            <span class="stat-meter__value">{{ row.share }}</span>
+                            <span class="stat-meter__bar" aria-hidden="true">
+                              <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
+                            </span>
+                          </div>
+                        </td>
+                        <td>{{ row.winRate }}</td>
+                      } @else {
+                        <td colspan="2">Not enough data yet</td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <p class="stat-note">Not enough data yet.</p>
+            }
+          </div>
+        </details>
       } @empty {
         <p class="stat-note">Not enough data yet.</p>
       }

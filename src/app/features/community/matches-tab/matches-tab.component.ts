@@ -21,7 +21,7 @@ export class MatchesTabComponent {
     initialValue: undefined,
   });
 
-  /** The Maps tab, where every map is listed. */
+  /** The Maps tab, a placeholder until it lists every map; the map panel lists them itself meanwhile. */
   protected readonly mapsLink = '/stats/maps';
   protected readonly view = computed(() => buildCommunityMatchesView(this.matches()));
   protected readonly emptyPreview = computed(() => {

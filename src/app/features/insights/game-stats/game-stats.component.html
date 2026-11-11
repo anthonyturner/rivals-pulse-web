@@ -54,8 +54,9 @@
           }
         </tbody>
       </table>
-      <details class="strip__how">
+      <details class="stat-how">
         <summary>How these are counted</summary>
+        <p class="stat-note">{{ v.meta }}</p>
         <p class="stat-note" id="seasons-note">
           A match is counted once however many players recorded it, in every mode and whether or not it ended with a win
           or a loss, so the rows add up to the total. Win rates and tiers use only the matches with a result, so they
@@ -63,7 +64,6 @@
           Only matches the app still holds are counted, which is up to about six months of play.
         </p>
       </details>
-      <p class="meta">{{ v.meta }}</p>
     </section>
   }
 }

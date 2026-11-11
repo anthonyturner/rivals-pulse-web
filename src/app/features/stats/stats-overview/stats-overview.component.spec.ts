@@ -156,8 +156,38 @@ describe('StatsOverviewComponent', () => {
       '8,349',
       'Sep 20, 2026',
     ]);
-    expect(Array.from(element.querySelectorAll('app-community-matches-tab .stat-table tbody th[scope="row"]')).map((row) => row.textContent?.trim()))
+    expect(Array.from(element.querySelectorAll('app-community-matches-tab .stat-panel > .stat-table tbody th[scope="row"]')).map((row) => row.textContent?.trim()))
       .toEqual(['Yggdrasill path', "Birnin t'challa", 'Hall of Djalia', 'Spider-islands', 'Midtown', 'Lower Manhattan', 'Quick Match', 'Competitive']);
+  });
+
+  it('keeps every map reachable: the ones between the best and worst three sit behind All N maps', async () => {
+    const element = await open(1440);
+    const fold = element.querySelector('app-community-matches-tab .stat-fold') as HTMLDetailsElement;
+
+    expect(fold.open).toBeFalse();
+    expect(fold.querySelector('summary')?.textContent?.trim()).toBe('All 7 maps');
+    expect(Array.from(fold.querySelectorAll('tbody th')).map((row) => row.textContent?.trim())).toEqual([
+      'Yggdrasill path',
+      "Birnin t'challa",
+      'Hall of Djalia',
+      'Central park',
+      'Lower Manhattan',
+      'Midtown',
+      'Spider-islands',
+    ]);
+  });
+
+  it('offers no All N maps when the best and worst three already show every map', async () => {
+    const element = await open(1440, { matches: { ...MATCHES, maps: MATCHES.maps.slice(0, 6) } });
+
+    expect(element.querySelector('.stat-fold')).toBeNull();
+  });
+
+  it('opens only the first insights panel, so the page stays short', async () => {
+    const element = await open(1440);
+    const panels = Array.from(element.querySelectorAll('app-community-insights-tab details.stat-panel')) as HTMLDetailsElement[];
+
+    expect(panels.map((panel) => panel.open)).toEqual([true, false]);
   });
 
   it('links the map teaser to the Maps tab and offers the pages about these numbers', async () => {
@@ -166,7 +196,7 @@ describe('StatsOverviewComponent', () => {
       Array.from(element.querySelectorAll(selector)).map((link) => link.getAttribute('href'));
 
     expect(hrefs('a.stat-link')).toEqual(['/stats/maps']);
-    expect(hrefs('.links a')).toEqual(['/how-we-count', '/privacy', '/profile']);
+    expect(hrefs('.pill-links a')).toEqual(['/how-we-count', '/privacy', '/profile']);
   });
 
   it('draws one heartbeat line behind the figures, beating at the pace of the recent uploads', async () => {

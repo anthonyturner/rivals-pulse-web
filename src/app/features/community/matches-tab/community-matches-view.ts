@@ -42,8 +42,11 @@ export interface CommunityMatchesReady {
   halfSeasonLabel: string | null;
   /** The shared fallback sentence, set when the previous half-season stands in for the current one. */
   notice: string | null;
+  /** How many matches the figures cover, in a few words; the rest of how they are counted is the page's to say. */
   sample: string;
   maps: {
+    /** Every map with a rate, best first. */
+    all: CommunityMapRowView[];
     /** The maps players win on most, best first. */
     best: CommunityMapRowView[];
     /** The maps players lose on most, worst first; never a map that is in `best`. */
@@ -56,8 +59,6 @@ export interface CommunityMatchesReady {
   modeMix: CommunitySectionView<CommunityModeRowView>;
   averageLength: { label: string | null; note: string | null };
   perDay: CommunitySectionView<CommunityDayRowView>;
-  /** The matches a day lately, for the pace of the overview's heartbeat; null when no day is listed. */
-  recentMatchesPerDay: number | null;
 }
 
 /**
@@ -92,7 +93,7 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     kind: 'ready',
     halfSeasonLabel,
     notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
-    sample: `${data.matchesCounted === null ? 'Matches' : countLabel(data.matchesCounted, 'match', 'matches')} in ${season}, each counted once however many players recorded it. While few players upload, these totals can come from one player.`,
+    sample: `${data.matchesCounted === null ? 'Matches' : countLabel(data.matchesCounted, 'match', 'matches')} in ${season}`,
     maps: {
       ...bestAndWorstMaps(data.maps),
       pendingNote:
@@ -132,7 +133,6 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
           ? `Not enough data yet. A day is listed once it has ${overviewMatches} matches.`
           : null,
     },
-    recentMatchesPerDay: recentMatchesPerDay(data),
   };
 }
 
@@ -141,18 +141,18 @@ const TEASER_MAPS = 3;
 const RECENT_DAYS = 3;
 
 /** The top and bottom of the maps by win rate. A map is in one list at most: a short list is split, the better half first. */
-function bestAndWorstMaps(maps: CommunityMatches['maps']): Pick<CommunityMatchesReady['maps'], 'best' | 'worst'> {
+function bestAndWorstMaps(maps: CommunityMatches['maps']): Pick<CommunityMatchesReady['maps'], 'all' | 'best' | 'worst'> {
   const ranked = maps
     .map((record) => ({ map: record.map, winRateLabel: percentLabel(record.winRate), barPercent: record.winRate }))
     .sort((a, b) => b.barPercent - a.barPercent);
   const best = ranked.slice(0, Math.min(TEASER_MAPS, Math.ceil(ranked.length / 2)));
 
-  return { best, worst: ranked.slice(best.length).slice(-TEASER_MAPS).reverse() };
+  return { all: ranked, best, worst: ranked.slice(best.length).slice(-TEASER_MAPS).reverse() };
 }
 
 /**
- * About how many matches players upload a day lately: the busiest recent days' average share of the
- * season's matches. Only the shares and the matches counted are read, so it is a rough pace, which is
+ * About how many matches players upload a day lately: the average share of the season's matches over
+ * the last few full days. Only the shares and the matches counted are read, so it is a rough pace, which is
  * all a heartbeat needs. Null when the answer lists no day or counts no matches.
  */
 export function recentMatchesPerDay(data: CommunityMatches): number | null {
