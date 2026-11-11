@@ -38,6 +38,7 @@ export class PrivacyPageComponent {
     { id: 'retention', label: 'How long it is kept' },
     { id: 'accounts', label: 'Accounts and signing in' },
     { id: 'advertising', label: 'Advertising' },
+    { id: 'analytics', label: 'Page view counts' },
     { id: 'videos', label: 'YouTube videos' },
     { id: 'more', label: 'More' },
   ];

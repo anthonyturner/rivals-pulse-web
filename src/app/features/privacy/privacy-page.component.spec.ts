@@ -352,6 +352,18 @@ describe('PrivacyPageComponent', () => {
     expect(text).not.toContain('No ads are shown yet');
   });
 
+  it('discloses Vercel Web Analytics in the summary and its own section after the advertising one', () => {
+    const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
+    const analytics = section('analytics');
+    const text = (analytics.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(summary).toContain('Vercel Web Analytics');
+    expect(summary).not.toContain('no analytics');
+    expect(text).toContain('sets no cookies');
+    expect(text).toContain('only aggregate figures');
+    expect(section('advertising').nextElementSibling).toBe(analytics);
+  });
+
   it('says hero pages fetch video pictures from YouTube (Google) and a player loads only on play', () => {
     const summary = (section('summary').textContent ?? '').replace(/\s+/g, ' ');
     const videos = section('videos');

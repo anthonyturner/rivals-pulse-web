@@ -3,6 +3,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideRouter, TitleStrategy, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideWebAnalytics } from './core/analytics/web-analytics';
 import { provideAdSense } from './shared/components/ad-slot/adsense/adsense.provider';
 import { provideReturnTrail } from './core/navigation/return-trail';
 import { PageMetaTitleStrategy } from './core/seo/page-meta-title.strategy';
@@ -23,5 +24,6 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
     provideAdSense(),
+    provideWebAnalytics(),
   ]
 };
