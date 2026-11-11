@@ -54,7 +54,7 @@ describe('HeroesTabComponent', () => {
     await answer(READY);
   });
 
-  it('lists the most-picked and highest-winning heroes, each linking to the Heroes page, and links to the full pages', async () => {
+  it('lists the most-picked and highest-winning heroes, each linking to the Heroes page', async () => {
     await answer(READY);
 
     const lists = Array.from(host().querySelectorAll('ol')).slice(0, 2);
@@ -71,7 +71,6 @@ describe('HeroesTabComponent', () => {
     const hrefs = Array.from(host().querySelectorAll('a')).map((anchor) => anchor.getAttribute('href'));
     expect(hrefs).toContain('/heroes/storm');
     expect(hrefs).toContain('/heroes');
-    expect(hrefs).toContain('/win-rates');
   });
 
   it('shows the designed empty state, with the minimum named and a link to the full page, when nothing clears the minimum', async () => {

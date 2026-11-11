@@ -1,6 +1,8 @@
 export interface FooterLink {
   readonly label: string;
   readonly path: string;
+  /** Query parameters of the address, for a link that opens a page in a particular state. */
+  readonly queryParams?: Readonly<Record<string, string>>;
 }
 
 export interface FooterColumn {
@@ -18,8 +20,8 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     links: [
       { label: 'Heroes', path: '/heroes' },
       { label: 'Stats', path: '/stats' },
-      { label: 'Tier list', path: '/tier-list' },
-      { label: 'Hero stats', path: '/win-rates' },
+      { label: 'Tier list', path: '/stats/heroes', queryParams: { view: 'tiers' } },
+      { label: 'Hero stats', path: '/stats/heroes' },
       { label: 'Team comps', path: '/stats/team-comps' },
       { label: 'Pulse Records', path: '/stats/records' },
       { label: 'Counters', path: '/counters' },

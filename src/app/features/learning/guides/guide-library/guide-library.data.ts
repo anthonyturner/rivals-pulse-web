@@ -116,7 +116,7 @@ const GROUPS: LibraryGroup[] = [
     cards: [
       pageCard(
         'Hero stats',
-        '/win-rates',
+        '/stats/heroes',
         'peni-parker',
         'Compare hero win and pick rates in matches RivalsPulse players recorded.',
         'RivalsPulse matches',

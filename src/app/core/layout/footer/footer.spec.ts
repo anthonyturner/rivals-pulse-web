@@ -75,6 +75,16 @@ describe('Footer', () => {
     });
   });
 
+  it('opens the hero stats and the tier list on the two layouts of the Stats Heroes tab', () => {
+    const hrefOf = (label: string): string | null =>
+      Array.from(page().querySelectorAll('nav[aria-label="Footer"] a'))
+        .find((link) => link.textContent?.trim() === label)
+        ?.getAttribute('href') ?? null;
+
+    expect(hrefOf('Hero stats')).toBe('/stats/heroes');
+    expect(hrefOf('Tier list')).toBe('/stats/heroes?view=tiers');
+  });
+
   it('links to the Discord in a new tab', () => {
     const link = page().querySelector<HTMLAnchorElement>('a.site-footer__discord');
 

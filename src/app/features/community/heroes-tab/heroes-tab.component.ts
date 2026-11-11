@@ -40,5 +40,4 @@ export class HeroesTabComponent {
   protected readonly figuresFootnote =
     'Per minute played, to the nearest whole number, from Quick Match and Competitive. These are the figures of the players who upload their matches with RivalsPulse: each app only knows its own player, so they describe those players, not everyone in a lobby. Only heroes with enough lines are listed.';
   protected readonly link = { label: 'Browse the hero encyclopedia', path: '/heroes' };
-  protected readonly secondLink = { label: 'See every hero win rate', path: '/win-rates' };
 }

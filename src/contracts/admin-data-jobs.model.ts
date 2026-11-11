@@ -53,8 +53,7 @@ export const DATA_JOBS = [
       "The counts behind each hero's win rate, pick rate, KDA and final hits, behind the tier list and the role averages, " +
       "and behind each hero's record against every other hero.",
     pages: [
-      { name: 'Win rates', path: '/win-rates', section: 'Heroes, highest win rate first' },
-      { name: 'Tier list', path: '/tier-list', section: 'Marvel Rivals tier list (the tiers)' },
+      { name: 'Hero stats', path: '/stats/heroes', section: 'Every hero, as a table or a tier list' },
       { name: 'Counters', path: '/counters', section: 'Heroes that beat a hero, and Heroes a hero beats' },
       { name: 'Dive planner', path: '/dive-planner', section: 'Choose overlap, then assign jobs' },
       {
