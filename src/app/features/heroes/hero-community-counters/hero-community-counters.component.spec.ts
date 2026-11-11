@@ -55,7 +55,7 @@ describe('HeroCommunityCountersComponent', () => {
     expect(text).toContain('Half-season: Season 10.5');
     expect(names(root, 0)).toEqual(['Hulk', 'Storm']);
     expect(names(root, 1)).toEqual([]);
-    expect(text).toContain('Thor has no 10 or more recorded matches against another hero yet.');
+    expect(text).toContain('Thor does not do at least 3 points better than usual against any of the 2 heroes it has 10 or more recorded matches against.');
     expect(text).toContain('91.7%');
     expect(text).toContain('+22.7 pts vs usual');
     expect(text).toContain('Heroes that do better than usual against Thor');

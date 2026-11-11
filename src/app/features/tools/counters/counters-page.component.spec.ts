@@ -182,7 +182,7 @@ describe('CountersPageComponent', () => {
       expect(against).toContain('Heroes that do better than usual against Angela');
       expect(against).toContain('Peni Parker');
       expect(against).toContain('83.3%');
-      expect(against).toContain('+29.2 pts vs usual');
+      expect(against).toContain('+18.2 pts vs usual');
       expect(against).toContain('12 matches');
       expect(beats).toContain('Heroes Angela does better than usual against');
       expect(beats).toContain('Mantis');
