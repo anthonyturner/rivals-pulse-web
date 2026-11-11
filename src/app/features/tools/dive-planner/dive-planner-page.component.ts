@@ -11,9 +11,10 @@ import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { Hero } from '../../heroes/hero.model';
 import { CurrentHeroMatchupsService } from '../../insights/current-hero-matchups.service';
+import { counterRuleNote } from '../../insights/hero-matchup-records';
 import { HeroTileComponent } from '../../insights/hero-tile/hero-tile.component';
 import { matchupNotice } from '../../insights/matchup-notice';
-import { answersTo, MultiThreatAnswer } from './dive-answers';
+import { answersTo, MultiThreatAnswer, noAnswerMessage } from './dive-answers';
 import { DEFAULT_DIVE_THREAT_IDS, DIVE_THREATS } from './dive-threats';
 import { JubileeCaseStudyComponent } from './jubilee-case-study/jubilee-case-study.component';
 
@@ -93,6 +94,18 @@ export class DivePlannerPageComponent implements OnInit {
     }));
   });
 
+  protected readonly ruleNote = computed(() => {
+    const matchups = this.matchups();
+
+    return matchups ? counterRuleNote(matchups.minimumMatches) : '';
+  });
+
+  protected readonly noAnswerMessage = computed(() => {
+    const matchups = this.matchups();
+
+    return matchups ? noAnswerMessage(this.selectedThreats().map((chip) => chip.hero), matchups) : '';
+  });
+
   /** The page's one live region: the count of chosen threats and answers, or why there are no answers. */
   protected readonly announcement = computed(() => {
     const notice = this.notice();
@@ -105,7 +118,7 @@ export class DivePlannerPageComponent implements OnInit {
       return this.chosenLabel();
     }
 
-    return `${this.chosenLabel()}. ${countLabel(this.answerRows().length, 'hero', 'heroes')} with a winning record.`;
+    return `${this.chosenLabel()}. ${countLabel(this.answerRows().length, 'hero', 'heroes')} that do better than usual.`;
   });
 
   ngOnInit(): void {
@@ -132,5 +145,5 @@ export class DivePlannerPageComponent implements OnInit {
 }
 
 function coverageLabel(answer: MultiThreatAnswer): string {
-  return `Has a winning record against ${answer.coveredThreats.map((threat) => threat.name).join(', ')}`;
+  return `Does better than usual against ${answer.coveredThreats.map((threat) => threat.name).join(', ')}`;
 }

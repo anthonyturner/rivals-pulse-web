@@ -13,8 +13,8 @@ import {
 type RoleFilter = HeroRole | 'All';
 
 /**
- * Every counter read on the Hero Counters page comes from recorded matchups: who has a winning record
- * against a hero, and who that hero has one against. Nothing here is hand-authored or ranks a hero
+ * Every counter read on the Hero Counters page comes from recorded matchups: who does better than
+ * usual against a hero, and whom that hero does better than usual against. Nothing here is hand-authored or ranks a hero
  * to ban.
  */
 @Injectable({ providedIn: 'root' })
@@ -30,12 +30,12 @@ export class CounterEngineService {
     });
   }
 
-  /** Heroes with a winning record against `target`, best record first. */
+  /** Heroes that do better than usual against `target`, by the community counter rule. */
   winningAgainst(target: Hero, heroes: Hero[], matchups: HeroMatchups): RecordCard<Hero>[] {
     return recordCards(winningRecordsAgainst(matchups, target.id), 'hero', heroes);
   }
 
-  /** Heroes `target` has a winning record against, best record first. */
+  /** Heroes `target` does better than usual against, by the community counter rule. */
   winningFor(target: Hero, heroes: Hero[], matchups: HeroMatchups): RecordCard<Hero>[] {
     return recordCards(winningRecordsOf(matchups, target.id), 'enemy', heroes);
   }

@@ -1,4 +1,6 @@
 import type { HeroMatchups } from '../../../contracts/hero-matchups.model.ts';
+import { counterEdges } from '../pairs/hero-pair-edges';
+import { getHeroPairs } from '../pairs/hero-pairs-read';
 import { fetchHeroMatchupRows, getHeroMatchups, parseHeroMatchupRows } from './hero-matchups-read';
 
 const ENV = { SUPABASE_URL: 'https://example.supabase.co/', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test-only' };
@@ -21,24 +23,67 @@ function matchupAnswer(): Record<string, unknown>[] {
   return [line(1011, 1022, 12, 9), line(1022, 1011, 12, 3), line(0, 1011, 14, 7)];
 }
 
+/** Hulk (1011) and Captain America (1022) have 100 lines each, so a pair is judged against a usual 50%. */
 const statsAnswer = {
   half_seasons: [{ half_season: 10.5, starts_at: '2026-10-09T09:00:00Z' }],
-  totals: [],
-  heroes: [],
+  totals: [{ half_season: 10.5, play_mode_id: 1, decided_matches: 200 }],
+  heroes: [1011, 1022].map((heroId) => ({
+    half_season: 10.5,
+    play_mode_id: 1,
+    hero_id: heroId,
+    decided_lines: 100,
+    wins: 50,
+    kills_sum: 0,
+    kills_n: 0,
+    deaths_sum: 0,
+    deaths_n: 0,
+    assists_sum: 0,
+    assists_n: 0,
+    final_hits_sum: 0,
+    final_hits_n: 0,
+  })),
 };
 
-/** Answers each Postgres function by name, as the Supabase REST layer would. */
+/** What `read_hero_pairs()` answers: the counts every matchup is listed from. */
+function pairAnswer(): Record<string, unknown>[] {
+  const line = (heroId: number, enemyId: number, matches: number, wins: number) => ({
+    half_season: 10.5,
+    rank_bucket: -1,
+    kind: 'vs',
+    hero_id: heroId,
+    other_hero_id: enemyId,
+    decided_matches: matches,
+    decided_lines: matches,
+    wins,
+    uid: 'secret-uid',
+    name: 'a player',
+    fingerprint: 'abc',
+  });
+
+  return [line(1011, 1022, 12, 9), line(1022, 1011, 12, 3), line(0, 1011, 14, 7)];
+}
+
+/** Answers each Postgres function by name, as the Supabase REST layer would, serving a set in pages from `offset`. */
 function answering(functions: Record<string, { body: unknown; status?: number }>, seen: { url: string; init?: RequestInit }[] = []): typeof fetch {
   return async (input, init) => {
-    const url = String(input);
-    seen.push({ url, init });
-    const answer = functions[url.split('/rpc/')[1]];
+    const url = new URL(String(input));
+    seen.push({ url: String(input), init });
+    const answer = functions[url.pathname.split('/rpc/')[1]];
+    const body = answer?.body ?? {};
 
-    return new Response(JSON.stringify(answer?.body ?? {}), { status: answer?.status ?? 200 });
+    if (!Array.isArray(body)) {
+      return new Response(JSON.stringify(body), { status: answer?.status ?? 200 });
+    }
+
+    const offset = Number(url.searchParams.get('offset') ?? 0);
+    const limit = Number(url.searchParams.get('limit') ?? body.length);
+
+    return new Response(JSON.stringify(body.slice(offset, offset + limit)), { status: answer?.status ?? 200 });
   };
 }
 
-const bothFunctions = {
+const allFunctions = {
+  read_hero_pairs: { body: pairAnswer() },
   read_hero_matchups: { body: matchupAnswer() },
   read_hero_stats: { body: statsAnswer },
 };
@@ -70,6 +115,8 @@ const ALLOWED_KEYS = new Set([
   'wins',
   'winRate',
   'shrunkWinRate',
+  'edge',
+  'isCounter',
   'kda',
   'finalHitsAverage',
 ]);
@@ -78,22 +125,52 @@ describe('getHeroMatchups', () => {
   const options = { env: ENV, now: NOW };
 
   it('returns only allow-listed keys, whatever else the database function sends', async () => {
-    const matchups = await getHeroMatchups({ ...options, fetch: answering(bothFunctions) });
+    const matchups = await getHeroMatchups({ ...options, fetch: answering(allFunctions) });
 
     expect([...new Set(keysOf(matchups))].filter((key) => !ALLOWED_KEYS.has(key))).toEqual([]);
     expect(JSON.stringify(matchups)).not.toMatch(/secret|uid|fingerprint|a player/);
   });
 
   it('publishes nothing that orders heroes to ban or scores them for banning', async () => {
-    const matchups = await getHeroMatchups({ ...options, fetch: answering(bothFunctions) });
+    const matchups = await getHeroMatchups({ ...options, fetch: answering(allFunctions) });
 
     expect(JSON.stringify(matchups)).not.toMatch(/ban|rank|score|tier/i);
+  });
+
+  it('lists the pair counts of /api/hero-pairs, judged by the counter rule', async () => {
+    spyOn(console, 'warn');
+
+    const { matchups } = await getHeroMatchups({ ...options, fetch: answering(allFunctions) });
+    const pairs = await getHeroPairs({ ...options, fetch: answering(allFunctions) });
+    const edges = counterEdges(pairs.bands[0], pairs.minimumMatches);
+
+    expect(matchups.map((matchup) => [matchup.hero, matchup.enemy, matchup.matches, matchup.wins])).toEqual([
+      ['captain-america', 'hulk', 12, 3],
+      ['hulk', 'captain-america', 12, 9],
+    ]);
+    expect(matchups.map((matchup) => matchup.edge)).toEqual([edges[1].edge * 100, edges[0].edge * 100]);
+    expect(matchups.map((matchup) => matchup.isCounter)).toEqual([false, true]);
+  });
+
+  it('takes its counts from the pair counts even when hero_matchups holds others', async () => {
+    spyOn(console, 'warn');
+    const stale = matchupAnswer().map((line) => ({ ...line, decided_matches: 99, decided_lines: 99, wins: 1 }));
+
+    const { matchups } = await getHeroMatchups({
+      ...options,
+      fetch: answering({ ...allFunctions, read_hero_matchups: { body: stale } }),
+    });
+
+    expect(matchups.map((matchup) => [matchup.matches, matchup.wins])).toEqual([
+      [12, 3],
+      [12, 9],
+    ]);
   });
 
   it('derives the matchups and leaves out the unmapped hero id 0 with a warning, never an error', async () => {
     const warn = spyOn(console, 'warn');
 
-    const matchups: HeroMatchups = await getHeroMatchups({ ...options, fetch: answering(bothFunctions) });
+    const matchups: HeroMatchups = await getHeroMatchups({ ...options, fetch: answering(allFunctions) });
 
     expect(matchups.status).toBe('ready');
     expect(matchups.halfSeason?.id).toBe(10.5);
@@ -101,10 +178,10 @@ describe('getHeroMatchups', () => {
     expect(warn).toHaveBeenCalledWith(jasmine.stringMatching(/ids with no hero mapping: 0$/));
   });
 
-  it('answers the empty state when the database has no matchup', async () => {
+  it('answers the empty state when the database has no pair', async () => {
     const matchups = await getHeroMatchups({
       ...options,
-      fetch: answering({ read_hero_matchups: { body: [] }, read_hero_stats: { body: statsAnswer } }),
+      fetch: answering({ ...allFunctions, read_hero_pairs: { body: [] } }),
     });
 
     expect(matchups.status).toBe('not-enough-data');
@@ -113,8 +190,11 @@ describe('getHeroMatchups', () => {
 
   it('fails the request when the database refuses, without echoing the key', async () => {
     await expectAsync(
-      getHeroMatchups({ ...options, fetch: answering({ ...bothFunctions, read_hero_matchups: { body: {}, status: 401 } }) }),
+      getHeroMatchups({ ...options, fetch: answering({ ...allFunctions, read_hero_matchups: { body: {}, status: 401 } }) }),
     ).toBeRejectedWithError('read_hero_matchups answered 401');
+    await expectAsync(
+      getHeroMatchups({ ...options, fetch: answering({ ...allFunctions, read_hero_pairs: { body: {}, status: 401 } }) }),
+    ).toBeRejectedWithError('read_hero_pairs answered 401');
   });
 });
 
@@ -123,20 +203,31 @@ describe('getHeroMatchups while a read function is not in the database', () => {
 
   beforeEach(() => spyOn(console, 'warn'));
 
-  it('is the empty state, not an error, when read_hero_matchups is missing', async () => {
+  it('is the empty state, not an error, when read_hero_pairs is missing', async () => {
     const matchups = await getHeroMatchups({
       ...options,
-      fetch: answering({ ...bothFunctions, read_hero_matchups: { body: { code: 'PGRST202' }, status: 404 } }),
+      fetch: answering({ ...allFunctions, read_hero_pairs: { body: { code: 'PGRST202' }, status: 404 } }),
     });
 
     expect(matchups.status).toBe('not-enough-data');
     expect(matchups.matchups).toEqual([]);
+    expect(console.warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_pairs is not in the database/));
+  });
+
+  it('lists the matchups without their figures when read_hero_matchups is missing', async () => {
+    const { matchups } = await getHeroMatchups({
+      ...options,
+      fetch: answering({ ...allFunctions, read_hero_matchups: { body: { code: 'PGRST202' }, status: 404 } }),
+    });
+
+    expect(matchups.length).toBe(2);
+    expect(matchups.every((matchup) => matchup.kda === null && matchup.finalHitsAverage === null)).toBeTrue();
     expect(console.warn).toHaveBeenCalledWith(jasmine.stringMatching(/read_hero_matchups is not in the database/));
   });
 
   it('still fails on a refused call', async () => {
     await expectAsync(
-      getHeroMatchups({ ...options, fetch: answering({ ...bothFunctions, read_hero_stats: { body: { code: '42501' }, status: 401 } }) }),
+      getHeroMatchups({ ...options, fetch: answering({ ...allFunctions, read_hero_stats: { body: { code: '42501' }, status: 401 } }) }),
     ).toBeRejectedWithError('read_hero_stats answered 401');
   });
 });
@@ -257,7 +348,7 @@ describe('getHeroMatchups with the encounter figures', () => {
     const body = [withFigures(hulk, 5, 4), withFigures(captain, 1, 2)];
     const { matchups } = await getHeroMatchups({
       ...options,
-      fetch: answering({ ...bothFunctions, read_hero_matchups: { body } }),
+      fetch: answering({ ...allFunctions, read_hero_matchups: { body } }),
     });
 
     expect(matchups.map((matchup) => [matchup.hero, matchup.kda, matchup.finalHitsAverage])).toEqual([
@@ -267,7 +358,7 @@ describe('getHeroMatchups with the encounter figures', () => {
   });
 
   it('returns null figures, and no NaN, for an answer that predates the figures', async () => {
-    const { matchups } = await getHeroMatchups({ ...options, fetch: answering(bothFunctions) });
+    const { matchups } = await getHeroMatchups({ ...options, fetch: answering(allFunctions) });
 
     expect(matchups.length).toBe(2);
     expect(matchups.every((matchup) => matchup.kda === null && matchup.finalHitsAverage === null)).toBeTrue();

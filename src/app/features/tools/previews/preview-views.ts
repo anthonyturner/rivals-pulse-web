@@ -28,7 +28,7 @@ export interface TeamSlotPreview {
 }
 
 /**
- * The enemy hero with the clearest winning record against it, and the heroes that hold one, in the
+ * The enemy hero with the clearest counter against it, and the heroes that counter it, in the
  * order the Counters page lists them (largest sample first). The clearest record is the one
  * `strongestRecords` puts first, which is deterministic, so the tile reads the same on every visit
  * until the matchups change. Null when no record names a hero the roster knows.

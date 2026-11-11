@@ -50,7 +50,8 @@ function isReadableMatchup(entry: unknown): boolean {
   return (
     typeof matchup['hero'] === 'string' &&
     typeof matchup['enemy'] === 'string' &&
-    ['matches', 'appearances', 'wins', 'winRate', 'shrunkWinRate'].every(
+    typeof matchup['isCounter'] === 'boolean' &&
+    ['matches', 'appearances', 'wins', 'winRate', 'shrunkWinRate', 'edge'].every(
       (key) => typeof matchup[key] === 'number' && Number.isFinite(matchup[key]),
     )
   );
