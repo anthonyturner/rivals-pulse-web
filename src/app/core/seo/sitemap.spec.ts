@@ -46,6 +46,10 @@ describe('sitemap', () => {
     expect(SITEMAP_STATIC_PATHS.filter((path) => unreleased.includes(path))).toEqual([]);
   });
 
+  it('lists the desktop app privacy policy', () => {
+    expect(SITEMAP_STATIC_PATHS).toContain('/privacy/app');
+  });
+
   it('lists no account, admin or sign-in page', () => {
     const privatePaths = ['/admin', '/account', '/profile', '/sign-in'];
 
@@ -60,10 +64,11 @@ describe('sitemap', () => {
     expect(SITEMAP_STATIC_PATHS.filter((path) => !known.has(path))).toEqual([]);
   });
 
-  it('lists each Stats tab that has content, and no stand-in that asks not to be indexed', () => {
+  it('lists each Stats tab the server renders with content, and no stand-in or browser-drawn tab', () => {
     const listedTabs = SITEMAP_STATIC_PATHS.filter((path) => path === '/stats' || path.startsWith('/stats/'));
+    const serverRendered = STATS_TABS.filter((tab) => tab.hasContent && tab.id !== 'records');
 
-    expect(listedTabs).toEqual(STATS_TABS.filter((tab) => tab.hasContent).map(statsTabLink));
+    expect(listedTabs).toEqual(serverRendered.map(statsTabLink));
   });
 
   it('adds a page for each hero and guide in the content data', () => {

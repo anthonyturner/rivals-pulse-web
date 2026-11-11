@@ -48,6 +48,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { label: 'Fair play and privacy', path: '/fair-play' },
       { label: 'How we count', path: '/how-we-count' },
       { label: 'Privacy notes', path: '/privacy' },
+      { label: 'App privacy policy', path: '/privacy/app' },
     ],
   },
 ];

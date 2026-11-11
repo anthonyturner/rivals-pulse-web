@@ -10,6 +10,7 @@ import { adminGuard } from './core/auth/admin.guard';
 import { signedInGuard } from './core/auth/signed-in.guard';
 import { ROUTE_DESCRIPTION_KEY, ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
 import { FAIR_PLAY_DESCRIPTION } from './features/fair-play/fair-play-meta';
+import { APP_PRIVACY_POLICY_DESCRIPTION } from './features/privacy/app-privacy-policy/app-privacy-policy-meta';
 import { WinRatesPageComponent } from './features/insights/win-rates/win-rates-page.component';
 import { OverlayFaqPageComponent } from './features/overlay-faq/overlay-faq-page.component';
 
@@ -173,6 +174,13 @@ describe('route titles', () => {
     const privacy = routes.find((route) => route.path === 'privacy');
 
     expect(privacy?.title).toBe('Privacy notes | RivalsPulse');
+  });
+
+  it('gives the app privacy policy a tab title in the site name and its own meta description', () => {
+    const appPolicy = routes.find((route) => route.path === 'privacy/app');
+
+    expect(appPolicy?.title).toBe('App privacy policy | RivalsPulse');
+    expect(appPolicy?.data?.[ROUTE_DESCRIPTION_KEY]).toBe(APP_PRIVACY_POLICY_DESCRIPTION);
   });
 
   it('gives the Fair play and privacy page a tab title in the site name and its own meta description', () => {

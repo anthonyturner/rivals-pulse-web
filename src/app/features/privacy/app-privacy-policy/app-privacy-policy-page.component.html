@@ -1,0 +1,91 @@
+<div class="reading policy page-container page-container--narrow">
+  <app-page-header [title]="policy.title">
+    <p lede>
+      Last updated: <time [attr.datetime]="policy.lastUpdated.iso">{{ policy.lastUpdated.text }}</time>
+    </p>
+  </app-page-header>
+
+  <app-notice>
+    <strong>The RivalsPulse desktop app is not released yet.</strong> This is the policy it is built
+    to follow once it launches. For what this website collects, see the
+    <a routerLink="/privacy">privacy notes</a>.
+  </app-notice>
+
+  <ng-template #inline let-segments>
+    @for (segment of segments; track $index) {
+      @if (segment.href) {
+        <a [href]="segment.href" rel="noopener noreferrer">{{ segment.text }}</a>
+      } @else if (segment.strong) {
+        <strong>{{ segment.text }}</strong>
+      } @else if (segment.emphasis) {
+        <em>{{ segment.text }}</em>
+      } @else {
+        <ng-container>{{ segment.text }}</ng-container>
+      }
+    }
+  </ng-template>
+
+  <ng-template #blocks let-list let-titleId="titleId">
+    @for (block of list; track $index) {
+      @switch (block.kind) {
+        @case ('paragraph') {
+          <p><ng-container *ngTemplateOutlet="inline; context: { $implicit: block.inline }" /></p>
+        }
+        @case ('subheading') {
+          <h3 [id]="block.id">{{ block.text }}</h3>
+        }
+        @case ('list') {
+          <ul>
+            @for (item of block.items; track $index) {
+              <li><ng-container *ngTemplateOutlet="inline; context: { $implicit: item }" /></li>
+            }
+          </ul>
+        }
+        @case ('table') {
+          <div class="policy-table" role="region" tabindex="0" [attr.aria-labelledby]="titleId">
+            <table>
+              <thead>
+                <tr>
+                  @for (cell of block.header; track $index) {
+                    <th scope="col"><ng-container *ngTemplateOutlet="inline; context: { $implicit: cell }" /></th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of block.rows; track $index) {
+                  <tr>
+                    @for (cell of row; track $index) {
+                      <td><ng-container *ngTemplateOutlet="inline; context: { $implicit: cell }" /></td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    }
+  </ng-template>
+
+  <nav class="policy-toc" aria-labelledby="policy-toc-title">
+    <p id="policy-toc-title">On this page</p>
+    <ul>
+      @for (section of policy.sections; track section.id) {
+        <li><a routerLink="." [fragment]="section.id">{{ section.heading }}</a></li>
+      }
+    </ul>
+  </nav>
+
+  <section class="reading-section" aria-label="Introduction">
+    <ng-container *ngTemplateOutlet="blocks; context: { $implicit: policy.intro, titleId: null }" />
+  </section>
+
+  @for (section of policy.sections; track section.id) {
+    <section class="reading-section" [id]="section.id" [attr.aria-labelledby]="section.id + '-title'">
+      <h2 [id]="section.id + '-title'">{{ section.heading }}</h2>
+      <ng-container
+        *ngTemplateOutlet="blocks; context: { $implicit: section.blocks, titleId: section.id + '-title' }"
+      />
+    </section>
+  }
+</div>

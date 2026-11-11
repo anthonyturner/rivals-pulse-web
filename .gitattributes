@@ -5,3 +5,6 @@ docs/pulse-atlas/samples/** text eol=lf
 
 # A migration holds multi-line string literals, so CRLF would change the data it writes.
 supabase/migrations/*.sql text eol=lf
+
+# Hashed in app-privacy-policy.source.json, so line endings must never be rewritten.
+src/app/features/privacy/app-privacy-policy/app-privacy-policy.md text eol=lf
