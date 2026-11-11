@@ -64,6 +64,7 @@
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tursodatabase/serverless": "^1.2.3",
+    "@vercel/analytics": "^2.0.1",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
