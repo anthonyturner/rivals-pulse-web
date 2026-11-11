@@ -67,8 +67,8 @@ flowchart LR
    logged (id 0 is "no hero recorded").
 5. **Serve.** One Vercel function under `api/` per endpoint, and the same route
    in [`src/server.ts`](../src/server.ts) for local development and SSR.
-6. **Show.** Angular services under `src/app/features/insights/` and
-   `src/app/features/community/` fetch the endpoint, and the `/stats` tabs draw
+6. **Show.** Angular services under `src/app/features/insights/`, `community/`, `heroes/`
+   and `records/` fetch the endpoint, and the `/stats` tabs draw
    it ([`stats-tabs.ts`](../src/app/features/stats/stats-tabs.ts),
    [`stats.routes.ts`](../src/app/features/stats/stats.routes.ts)).
    `scripts/build-pulse-atlas.mjs` reads the same endpoints to publish the
@@ -108,8 +108,8 @@ Source of truth: `read_hero_stats()` and
 - **Half-seasons.** The newest half-season that has started is shown. While no
   hero in it is placed, the previous half-season is shown and `inPlaceOf` names
   the current one. `?halfSeason=` asks for exactly one, with no fall-back.
-- **Ban rate is not collected.** No aggregate holds bans, and the hero page says
-  "Not collected".
+- **Ban rate is not collected.** No aggregate holds bans. `/stats/heroes` shows
+  "Ban data: Not collected" and the hero page says "Not collected".
 
 ## The two counts
 
@@ -159,10 +159,11 @@ of `GET /api/community/matches` is the other count. A page never uses the word
 - **Damage, healing and damage blocked per minute** come from
   `read_community_hero_figures()` through `getCommunityFigures`
   (`GET /api/community/figures`), pooled as sum times 60 over seconds, never an
-  average of rates, and shown at the top of `/stats/heroes`. A figure is
+  average of rates, and shown at the top of `/stats/heroes` by hero and on `/stats/roles` by role. A figure is
   published once `hero_figure_qualifies` passes in the database (10 matches
   and 2 players), and describes the players who upload, not the lobby.
-- **Role averages** pool the same per-hero counts by role in `getRoleStats`
+- **Role averages** pool the per-hero `read_hero_stats()` counts (win rate,
+  kills, deaths, assists, KDA and final hits) by role in `getRoleStats`
   (`GET /api/community/stats`) and show on `/stats/roles`, at 50 decided lines
   per role and mode.
 

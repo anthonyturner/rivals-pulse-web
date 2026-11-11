@@ -8,8 +8,10 @@
   2026-11-11 on issue 779.
 - **Related:** issue 779 (this record). The Stats hub: issues and pull
   requests 793 (the hub), 794 (nav and redirects) and 800 and 804 (tier list
-  and win rates merged into the Heroes tab). Issue 783 (one "matches counted"
-  figure). Issue 798 (one counter source). Issue 773 (community maps, not
+  and win rates merged into the Heroes tab). Pull request 783, issue 774 (one
+  "matches counted" figure). Pull request 798, issues 511 and 801 (one counter
+  source). Pull requests 194 (issue 172) and 509 (issue 449), which set the
+  match volume band. Issue 773 (community maps, not
   built yet). Overlay repo `anthonyturner/rivals_pulse`: issue 1643 (no enemy
   ultimate status). Builds on [ADR-0006](0006-publish-opted-in-player-names-on-pulse-records.md)
   for Pulse Records.
@@ -39,11 +41,11 @@ starts from the owner instead of adding a second copy.
   function under `api/` (and an Express route in `src/server.ts`) that serves
   it, and a screen in `src/app/features/` that draws it. Some are also
   published as Pulse Atlas files for the overlay ([../pulse-atlas.md](../pulse-atlas.md)).
-- Two things went wrong because nothing named the owner of a figure. Issue 783:
-  one label, "matches counted", sat on three counts (393, 484 and "250+"),
+- Two things went wrong because nothing named the owner of a figure. Pull request 783
+  (issue 774): one label, "matches counted", sat on three counts (393, 484 and "250+"),
   because the hero stats count matches with a win or a loss in two modes, Game
   stats counts every match, and the Community answer rounded the second down
-  to a band. Issue 798: the website's counter lists read a second aggregate and
+  to a band. Pull request 798 (issues 511 and 801): the website's counter lists read a second aggregate and
   applied their own rule, while the overlay read the published pair counts, so
   a hero was a counter in one place and not the other.
 - The Stats hub (`/stats`, [`stats-tabs.ts`](../../src/app/features/stats/stats-tabs.ts))
@@ -54,7 +56,10 @@ starts from the owner instead of adding a second copy.
 
 **1. One stat, one server read function, one SQL function.** Each stat below
 is read by one function in `src/server/` that calls one `public.read_*()`
-function. An endpoint, a Pulse Atlas file or another stat that needs the same
+function. (The pairs, trios, line-up and switch-in readers also call
+`readHeroStatsSource` for the half-seasons and per-hero counts, so they all
+show the half-season the hero stats show; that is a shared input, not a second
+read of their own figure.) An endpoint, a Pulse Atlas file or another stat that needs the same
 counts calls that reader. It does not read the table or the SQL function again
 and does not re-derive the rate. A derived view (`getHeroMatchups`,
 `getRoleStats`, `getHeroSynergies`) calls the owner and says so.
@@ -66,9 +71,9 @@ tab is under `/stats`.
 | --- | --- | --- | --- | --- | --- |
 | Hero win rate, pick rate, appearances, KDA, final hits, shrunk win rate | `getHeroStats` | `read_hero_stats()` | `GET /api/hero-stats` | `hero-stats.json`, and win and pick rate in `tier-list.json` | Heroes (`/stats/heroes`, table view) |
 | Hero tiers (S to F, from the shrunk win rate) | `getHeroStats` | `read_hero_stats()` | `GET /api/hero-stats` | `tier-list.json` | Heroes (`/stats/heroes?view=tiers`) |
-| Hero ban rate | none: not collected | none | none | none | none; hero pages say "Not collected" |
-| Damage, healing and damage blocked per minute | `getCommunityFigures` | `read_community_hero_figures()` | `GET /api/community/figures` | none | Heroes (the lead section) |
-| Role averages | `getRoleStats` | `read_hero_stats()` (the role of each hero comes from `hero_content`) | `GET /api/community/stats` | none | Roles (`/stats/roles`) |
+| Hero ban rate | none: not collected | none | none | none | Heroes (`/stats/heroes` shows "Ban data: Not collected"); hero pages say the same |
+| Damage, healing and damage blocked per minute | `getCommunityFigures` | `read_community_hero_figures()` | `GET /api/community/figures` | none | Heroes (the lead section, by hero) and Roles (by role) |
+| Role averages (win rate, kills, deaths, assists, KDA, final hits) | `getRoleStats` | `read_hero_stats()` (the role of each hero comes from `hero_content`) | `GET /api/community/stats` | none | Roles (`/stats/roles`) |
 | Hero against hero, and counters (the 3-point edge rule) | `getHeroPairs`; `getHeroMatchups` is its named view | `read_hero_pairs()`; `read_hero_matchups()` only for the KDA and final hits a pair shows | `GET /api/hero-pairs`; `GET /api/hero-matchups` | `community-stats.json` | Matchups (`/stats/matchups`) |
 | Kill feed (seen kills per hero pair) | `getCommunityKills` | `read_community_kill_feed()` | `GET /api/community/kills` | none | Matchups (below the counters) |
 | Best duos | `getHeroSynergies` | `read_hero_pairs()` (the `with` pairs) | `GET /api/hero-synergies` | `community-stats.json` | Team comps (`/stats/team-comps`) |
@@ -101,9 +106,11 @@ and keep their two names.**
 - **Matches counted** is `read_game_counts()`'s `matches` for a half-season:
   each match once however many players recorded it, in every mode, with or
   without a win or a loss. The label is `matchesCountedLabel`, which always
-  says what it covers ("Matches counted · Season 10.5"). Every page that states
-  this figure reads it through `matchesCountedIn`, so two figures with this
-  label never cover different things.
+  says what it covers ("Matches counted · Season 10.5"). A page that states it
+  reads `read_game_counts()` through `getGameCounts`, picking a half-season with
+  `matchesCountedIn` where an answer carries one, and always labels it with
+  `matchesCountedLabel`, so two figures with this label never cover different
+  things.
 - **Matches with a result** is the Quick Match and Competitive matches that
   ended in a win or a loss (`hero_aggregate_totals.decided_matches`, or the
   one mode's when a mode is selected). It is the pick rate's denominator. The
@@ -118,10 +125,10 @@ and keep their two names.**
   definition, not the name. These names are published (Atlas `v1`) or cached
   at the CDN, so they are not renamed here; a rename is an Atlas `v2` question.
 
-**4. The volume-band rule for match totals is retired.** Issue 194 (the
-Community Matches tab) returned the half-season's total as a rounded-down band
+**4. The volume-band rule for match totals is retired.** Pull request 194
+(issue 172, the Community Matches tab) returned the half-season's total as a rounded-down band
 (`MATCH_VOLUME_BANDS`, "250+") so that no exact count left the server, and
-issue 509 kept that. Issue 783 replaced `matchesBand` and `MATCH_VOLUME_BANDS`
+pull request 509 (issue 449) kept that. Pull request 783 (issue 774) replaced `matchesBand` and `MATCH_VOLUME_BANDS`
 with the exact `matchesCounted`, because `GET /api/game-stats` already lists
 that count in full, so the band hid nothing and made one figure read three
 ways. What stays:
@@ -169,14 +176,14 @@ Tracker" among future engines; it is built to this decision or not built.
   names an opted-in player), in when they freeze, and in which are published,
   so one function would carry every gate and fail all of them together.
 - **Keep the volume band for match totals.** It kept every count on the site
-  inexact. Rejected by issue 783: the exact total was already public on Game
+  inexact. Rejected in pull request 783: the exact total was already public on Game
   stats, so the band protected nothing and caused the mismatch.
 - **Rename `HeroStats.matchesCounted` to `decidedMatches` now.** It is the
   clearer name and `hero-stats.json` already uses it. Rejected for now: the
   field is in a published `v1` file the overlay reads and in answers the CDN
   caches, so a rename is a contract change. Labelling the two counts in the
   pages, and recording the trap here, costs nothing and breaks nothing.
-- **Let each surface judge counters its own way.** Issue 798 found the website
+- **Let each surface judge counters its own way.** Pull request 798 found the website
   listing 430 counter rows where the shared rule gives 241. Rejected: a hero
   must be a counter on both or neither.
 - **Track enemy ultimates, as the original principles note imagined.**
@@ -203,8 +210,9 @@ Tracker" among future engines; it is built to this decision or not built.
     repositories every time.
 - **What now has to be true.**
   - Every stat on the Stats hub appears in the table with one server read.
-  - A page that states "matches counted" reads `matchesCountedIn`; a page that
-    states the pick rate's denominator uses `decidedMatchesLabel`.
+  - A page that states "matches counted" uses `matchesCountedLabel` over
+    `read_game_counts()`; a page that states the pick rate's denominator uses
+    `decidedMatchesLabel`.
   - No count of a map, mode or day is added to the Community Matches or
     Insights answers.
   - Nothing reads or shows an enemy ultimate or cooldown.
@@ -216,9 +224,9 @@ Tracker" among future engines; it is built to this decision or not built.
 A reviewer checks, for a change that touches a community figure:
 
 - The change edits the reader named in the table, not a copy of its query or
-  its rate, and a new stat adds a row. `grep -rn "read_" src/server --exclude=*.spec.ts`
-  should show each `read_*` name called from one reader (`hero-switch-ins-read.ts` also
-  calls `read_hero_matchups` on purpose, for the comparison it draws).
+  its rate, and a new stat adds a row. `grep -rnoE "'read_[a-z_]+'" src/server --include=*.ts --exclude=*.spec.ts`
+  prints one constant per reader. `hero-switch-ins-read.ts` also reuses
+  `fetchHeroMatchupRows` on purpose, for the comparison it draws.
 - A new "matches" label is `matchesCountedLabel` or `decidedMatchesLabel`, never
   a hand-written "matches counted". A new field that holds either count names
   which one in its doc comment.
