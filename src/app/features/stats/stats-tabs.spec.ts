@@ -36,8 +36,8 @@ describe('the Stats tabs', () => {
     expect(descriptions.every((description) => description.length > 40 && description.length <= 200)).toBeTrue();
   });
 
-  it('are the only tabs with no content of their own: the Heroes and Maps stand-ins', () => {
-    expect(STATS_TABS.filter((tab) => !tab.hasContent).map((tab) => tab.id)).toEqual(['heroes', 'maps']);
+  it('are the only tabs with no content of their own: the Maps stand-in', () => {
+    expect(STATS_TABS.filter((tab) => !tab.hasContent).map((tab) => tab.id)).toEqual(['maps']);
   });
 
   describe('as routes', () => {

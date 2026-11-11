@@ -19,14 +19,39 @@ describe('activeNav', () => {
     expect(activeNav('/heroesque')).toBeNull();
   });
 
-  it('puts every page of a category under that category, from the category data itself', () => {
-    for (const category of NAVIGATION_CATEGORIES) {
-      expect(PRIMARY_NAV_ITEMS.map((item) => item.path)).toContain(category.path);
+  it('lists Heroes, Stats, Guides and Tools, in that order', () => {
+    expect(PRIMARY_NAV_ITEMS.map((item) => item.label)).toEqual(['Heroes', 'Stats', 'Guides', 'Tools']);
+    expect(PRIMARY_NAV_ITEMS.map((item) => item.path)).toEqual(['/heroes', '/stats', '/hero-guides', '/tools']);
+  });
 
-      for (const item of category.items) {
-        expect(activeNav(item.path)).withContext(item.path).toEqual({ path: category.path, exact: false });
+  it('puts every page under Stats, whichever tab it is and the live tier list and hero stats pages too', () => {
+    for (const path of ['/stats/heroes', '/stats/records', '/tier-list', '/win-rates', '/win-rates/10.5']) {
+      expect(activeNav(path)).withContext(path).toEqual({ path: '/stats', exact: false });
+    }
+
+    expect(activeNav('/stats')).toEqual({ path: '/stats', exact: true });
+    expect(activeNav('/stats/records?category=kills')).toEqual({ path: '/stats', exact: false });
+  });
+
+  it('puts every page of a category under the nav item that holds it, from the category data itself', () => {
+    const navPaths = PRIMARY_NAV_ITEMS.map((item) => item.path);
+
+    for (const category of NAVIGATION_CATEGORIES) {
+      for (const page of [category.path, ...category.items.map((item) => item.path)]) {
+        const active = activeNav(page);
+
+        expect(active?.path).withContext(page).toBeDefined();
+        expect(navPaths).withContext(page).toContain(active?.path as string);
       }
     }
+  });
+
+  it('keeps Tools pages under Tools and files the Resources hub and its pages under Guides', () => {
+    expect(activeNav('/tools')).toEqual({ path: '/tools', exact: true });
+    expect(activeNav('/counters')).toEqual({ path: '/tools', exact: false });
+    expect(activeNav('/resources')).toEqual({ path: '/hero-guides', exact: false });
+    expect(activeNav('/glossary')).toEqual({ path: '/hero-guides', exact: false });
+    expect(activeNav('/strategist-guides')).toEqual({ path: '/hero-guides', exact: false });
   });
 
   it('matches the account, sign-in and profile pages to themselves', () => {

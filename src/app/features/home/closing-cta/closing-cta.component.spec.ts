@@ -28,7 +28,7 @@ describe('ClosingCtaComponent', () => {
   it('links the stats and How we count', () => {
     const hrefs = Array.from(element.querySelectorAll('.links a:not([target])')).map((link) => link.getAttribute('href'));
 
-    expect(hrefs).toEqual(['/community', '/how-we-count']);
+    expect(hrefs).toEqual(['/stats', '/how-we-count']);
   });
 
   it('has no email field, since nothing stores a notify-me address yet', () => {

@@ -11,6 +11,9 @@ import { PageMetaTitleStrategy } from '../../../core/seo/page-meta-title.strateg
 import { SITE_ORIGIN } from '../../../core/seo/site-meta';
 import { ThinContent } from '../../../core/seo/thin-content';
 import { NotFoundComponent } from '../../../shared/components/not-found/not-found.component';
+import { emptyFigures, figuresOf, heroFigures } from '../../insights/community-extended.fixtures';
+import { heroOf } from '../../insights/hero-matchup.fixtures';
+import { statsHero, statsOf } from '../../insights/hero-stats.fixtures';
 import { recordRows, recordsOf } from '../../records/pulse-records.fixtures';
 import { STATS_TABS, statsTabLink, statsTabTitle } from '../stats-tabs';
 
@@ -149,20 +152,53 @@ describe('The Stats hub', () => {
   });
 
   describe('Heroes', () => {
-    it('is a stand-in that links to the tier list and the hero stats pages', async () => {
+    const READY_STATS = statsOf([
+      { name: 'S', heroes: [statsHero('storm', 20, 14, 13.4, 'S')] },
+      { name: 'B', heroes: [statsHero('hela', 30, 15, 20.1)] },
+    ]);
+
+    async function answerHeroes(stats: unknown, figures: unknown = figuresOf({}, [heroFigures('hela', { damage: 1050 })])): Promise<void> {
+      http.expectOne('/api/community/figures').flush(figures as object);
+      http.expectOne('/api/heroes').flush([heroOf('storm', 'Storm', 'Duelist'), heroOf('hela', 'Hela', 'Duelist')]);
+      http.expectOne('/api/hero-stats').flush(stats as object);
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+    }
+
+    it('shows the hero numbers, then links to the tier list and the hero stats pages', async () => {
       await open('/stats/heroes');
+      await answerHeroes(READY_STATS);
       const hrefs = Array.from(page().querySelectorAll('app-hub-tile a')).map((link) => link.getAttribute('href'));
 
-      expect(page().querySelector('app-stats-heroes')).not.toBeNull();
+      expect(page().querySelector('app-stats-heroes app-community-heroes-tab')).not.toBeNull();
+      expect(page().textContent).toContain('Most picked');
+      expect(page().textContent).toContain('Highest win rate');
       expect(hrefs).toEqual(['/tier-list', '/win-rates']);
     });
 
-    it('reports it has nothing to read, so it carries no ad and asks not to be indexed', async () => {
+    it('is a page with content once a number section has data: an ad, indexable, with its own canonical', async () => {
       await open('/stats/heroes');
+      await answerHeroes(READY_STATS);
+
+      expect(TestBed.inject(ThinContent).thin()).toBeFalse();
+      expect(meta('robots')).toBeNull();
+      expect(canonical()).toBe(`${SITE_ORIGIN}/stats/heroes`);
+    });
+
+    it('is thin, with no ad and noindex, when neither number section has data', async () => {
+      await open('/stats/heroes');
+      await answerHeroes(statsOf([], { matchesCounted: 12 }), emptyFigures());
 
       expect(TestBed.inject(ThinContent).thin()).toBeTrue();
       expect(meta('robots')).toBe('noindex');
       expect(canonical()).toBeNull();
+    });
+
+    it('is not thin while only one of the two sections has data', async () => {
+      await open('/stats/heroes');
+      await answerHeroes(statsOf([], { matchesCounted: 12 }));
+
+      expect(TestBed.inject(ThinContent).thin()).toBeFalse();
     });
   });
 

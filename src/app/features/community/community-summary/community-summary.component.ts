@@ -17,10 +17,10 @@ export const COMMUNITY_EMPTY_RULE =
   'Totals appear once enough matches have been uploaded.';
 
 /** The account's own matches and insights, which are not community totals. */
-export const MY_STATS_LINK: CommunitySummaryLink = { label: 'See your own matches and insights in My stats', path: '/profile' };
+export const MY_STATS_LINK: CommunitySummaryLink = { label: 'See your own matches and insights in your Profile', path: '/profile' };
 
 /**
- * The frame every Community tab shares: the tab's heading and season, then either the loading,
+ * The frame every community figure section on the Stats hub shares: the tab's heading and season, then either the loading,
  * failure or "not enough data yet" panel, or, once the numbers are ready, the fallback notice, the
  * tab's own content, a footnote and the links to the full pages.
  */

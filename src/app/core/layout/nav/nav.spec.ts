@@ -43,12 +43,16 @@ describe('Nav', () => {
     expect(component).toBeTruthy();
   });
 
-  it('offers a top-level Community link to the hub', () => {
-    const link = Array.from(
+  it('offers a top-level Stats link to the hub, and no Community or Resources link', () => {
+    const links = Array.from(
       fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
-    ).find((anchor) => anchor.textContent?.trim() === 'Community');
+    );
+    const hrefOf = (label: string): string | null | undefined =>
+      links.find((anchor) => anchor.textContent?.trim() === label)?.getAttribute('href');
 
-    expect(link?.getAttribute('href')).toBe('/community');
+    expect(hrefOf('Stats')).toBe('/stats');
+    expect(hrefOf('Community')).toBeUndefined();
+    expect(hrefOf('Resources')).toBeUndefined();
   });
 
   it('puts the theme toggle inside the navigation, so the narrow menu holds it too', () => {
@@ -80,7 +84,7 @@ describe('Nav', () => {
     it('lists Home first and the account link last', () => {
       const labels = Array.from(panel().querySelectorAll('a, .nav-pending')).map((link) => link.textContent?.trim());
 
-      expect(labels).toEqual(['Home', 'Heroes', 'Guides', 'Tools', 'Resources', 'Community', 'Sign in']);
+      expect(labels).toEqual(['Home', 'Heroes', 'Stats', 'Guides', 'Tools', 'Sign in']);
     });
 
     it('closes on Escape and puts focus back on the button', async () => {
@@ -171,15 +175,21 @@ describe('Nav', () => {
       expect(current()).toEqual(['page:Heroes']);
     });
 
-    it('marks a page under Heroes, Tools or Resources as part of the link it belongs to, not as the page', async () => {
+    it('marks a page under Heroes, Stats, Guides or Tools as part of the link it belongs to, not as the page', async () => {
       await go('/heroes/spider-man');
       expect(current()).toEqual(['true:Heroes']);
 
       await go('/counters?hero=1');
       expect(current()).toEqual(['true:Tools']);
 
+      await go('/stats/records?category=kills');
+      expect(current()).toEqual(['true:Stats']);
+
+      await go('/tier-list');
+      expect(current()).toEqual(['true:Stats']);
+
       await go('/glossary#a');
-      expect(current()).toEqual(['true:Resources']);
+      expect(current()).toEqual(['true:Guides']);
 
       await go('/tools');
       expect(current()).toEqual(['page:Tools']);
@@ -193,7 +203,7 @@ describe('Nav', () => {
       expect(current()).toEqual([]);
     });
 
-    it('marks My stats on the profile page', async () => {
+    it('marks Profile on the profile page', async () => {
       sessionState.set({
         status: 'signedIn',
         account: { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' },
@@ -204,7 +214,7 @@ describe('Nav', () => {
       fixture.detectChanges();
       await go('/profile');
 
-      expect(current()).toEqual(['page:My stats']);
+      expect(current()).toEqual(['page:Profile']);
     });
 
     it('marks the account link on the sign-in and account pages', async () => {
@@ -300,7 +310,7 @@ describe('Nav', () => {
     });
   });
 
-  it('offers My stats to a signed-in visitor only, between Community and the account link', () => {
+  it('offers Profile to a signed-in visitor only, between Tools and the account link', () => {
     const labels = (): (string | undefined)[] =>
       Array.from(fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>).map(
         (anchor) => anchor.textContent?.trim(),
@@ -308,7 +318,7 @@ describe('Nav', () => {
     const statsLink = (): HTMLAnchorElement | undefined =>
       Array.from(
         fixture.nativeElement.querySelectorAll('#primary-navigation a.nav-link') as NodeListOf<HTMLAnchorElement>,
-      ).find((anchor) => anchor.textContent?.trim() === 'My stats');
+      ).find((anchor) => anchor.textContent?.trim() === 'Profile');
 
     expect(statsLink()).toBeUndefined();
 
@@ -322,7 +332,7 @@ describe('Nav', () => {
     fixture.detectChanges();
 
     expect(statsLink()?.getAttribute('href')).toBe('/profile');
-    expect(labels().slice(-3)).toEqual(['Community', 'My stats', 'Account']);
+    expect(labels().slice(-3)).toEqual(['Tools', 'Profile', 'Account']);
 
     sessionState.set({ status: 'signedOut' });
     fixture.detectChanges();
@@ -345,11 +355,11 @@ describe('Nav', () => {
     };
     const ACCOUNT = { email: null, provider: 'discord', createdAt: '2026-11-01T00:00:00Z' };
 
-    it('is shown to an administrator, between My stats and the account link', () => {
+    it('is shown to an administrator, between Profile and the account link', () => {
       show({ status: 'signedIn', account: ACCOUNT, player: null, isAdmin: true, mediaDefaults: null });
 
       expect(adminLink()?.getAttribute('href')).toBe('/admin');
-      expect(labels().slice(-3)).toEqual(['My stats', 'Admin', 'Account']);
+      expect(labels().slice(-3)).toEqual(['Profile', 'Admin', 'Account']);
     });
 
     it('is not shown to a signed-in visitor who is not an administrator', () => {

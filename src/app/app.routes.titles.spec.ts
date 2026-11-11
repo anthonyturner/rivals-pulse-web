@@ -52,12 +52,13 @@ describe('page titles across the route config', () => {
     expect(untitled).toEqual([]);
   });
 
-  it('covers the generated category and Pulse Records routes', async () => {
+  it('covers the generated category routes and the Stats hub tabs', async () => {
     const addresses = (await routedPages(routes, '', undefined)).map((page) => page.address);
 
     expect(addresses).toContain('/resources');
     expect(addresses).toContain('/tools');
-    expect(addresses.some((address) => address.startsWith('/records/'))).toBeTrue();
+    expect(addresses.map((address) => address.replace('//', '/'))).toContain('/stats/records');
+    expect(addresses.some((address) => address.startsWith('/records'))).toBeFalse();
   });
 
   it('ends each fixed title in the site name, like the other pages', async () => {

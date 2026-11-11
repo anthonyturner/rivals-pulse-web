@@ -245,14 +245,14 @@ describe('DataJobsPageComponent', () => {
     const links = Array.from(card('Hero stats').querySelectorAll<HTMLAnchorElement>('.jobs__pages a'));
 
     expect(links.map((link) => link.getAttribute('href'))).toContain('/win-rates');
-    expect(links.map((link) => link.getAttribute('href'))).toContain('/community/counters');
+    expect(links.map((link) => link.getAttribute('href'))).toContain('/stats/matchups');
     expect(links.every((link) => link.target === '_blank' && link.rel === 'noopener')).toBeTrue();
     expect(links[0].textContent).toContain('(opens in a new tab)');
 
     for (const [label, path] of [
-      ['Community matches', '/community/matches'],
-      ['Play time', '/community/insights'],
-      ['Hero pairs', '/team-comps'],
+      ['Community matches', '/stats'],
+      ['Play time', '/stats'],
+      ['Hero pairs', '/stats/team-comps'],
     ]) {
       const hrefs = Array.from(card(label).querySelectorAll<HTMLAnchorElement>('.jobs__pages a')).map((link) =>
         link.getAttribute('href'),

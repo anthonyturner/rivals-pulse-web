@@ -8,12 +8,9 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { App } from '../../app';
 import { config } from '../../app.config.server';
 import { serverRenderSandbox } from '../../testing/server-render';
-import { COMMUNITY_TABS, DEFAULT_COMMUNITY_TAB_ID } from './community-tabs';
+import { LEGACY_REDIRECTS } from './legacy-redirects';
 
-/**
- * Builds the route tree the server render matches every request against, from the real
- * routes. The server answers a matched route's `redirectTo` with a 302 before rendering anything.
- */
+/** Builds the route tree the server render matches every request against, from the real routes. */
 async function buildServerRouteTree() {
   const indexHtml = '<html><body><app-root></app-root></body></html>';
   const { routeTree, errors } = await extractRoutesAndCreateRouteTree({
@@ -34,7 +31,7 @@ async function buildServerRouteTree() {
   return { routeTree, errors };
 }
 
-describe('Community routes on the server', () => {
+describe('The old stat addresses on the server', () => {
   const sandbox = serverRenderSandbox();
 
   beforeEach(() => sandbox.enter());
@@ -46,20 +43,23 @@ describe('Community routes on the server', () => {
     expect(errors).toEqual([]);
   });
 
-  for (const tab of COMMUNITY_TABS) {
-    it(`renders /community/${tab.id} instead of redirecting`, async () => {
+  for (const { from, to } of LEGACY_REDIRECTS) {
+    it(`redirects ${from} to ${to} instead of rendering it`, async () => {
       const { routeTree } = await buildServerRouteTree();
 
-      const match = routeTree.match(`/community/${tab.id}`);
-
-      expect(match).toBeDefined();
-      expect(match?.redirectTo).toBeUndefined();
+      expect(routeTree.match(from)?.redirectTo).toBe(to);
     });
   }
 
-  it('still sends a longer, unknown address under /community to the default tab', async () => {
+  it('sends any other address under /community to the Stats overview, never a 404', async () => {
     const { routeTree } = await buildServerRouteTree();
 
-    expect(routeTree.match('/community/not-a-tab/extra')?.redirectTo).toBe(`/community/${DEFAULT_COMMUNITY_TAB_ID}`);
+    expect(routeTree.match('/community/not-a-tab/extra')?.redirectTo).toBe('/stats');
+  });
+
+  it('still answers an unknown Pulse Records list with the not-found page', async () => {
+    const { routeTree } = await buildServerRouteTree();
+
+    expect(routeTree.match('/records/speed')?.redirectTo).toBeUndefined();
   });
 });

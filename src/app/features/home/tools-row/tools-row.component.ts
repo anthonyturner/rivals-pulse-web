@@ -27,7 +27,7 @@ export const HOME_TOOLS: readonly HomeTool[] = [
   {
     title: 'Hero stats',
     promise: 'Win rate, pick rate and tier for every hero, counted from matches RivalsPulse players record.',
-    path: '/community',
+    path: '/win-rates',
     action: 'See hero stats',
     inOverlay: 'The matches the app records are what these numbers count.',
     iconPath: 'M4 20V10M10 20V4M16 20v-7M22 20H2',

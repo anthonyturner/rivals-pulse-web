@@ -18,7 +18,7 @@ describe('ReturnTrail', () => {
         provideRouter([
           { path: '', title: 'RivalsPulse | Feel the pulse of every match', component: BlankPage },
           { path: 'profile', title: 'Your stats | RivalsPulse', component: BlankPage },
-          { path: 'community/:tab', title: 'Community | RivalsPulse', component: BlankPage },
+          { path: 'stats/:tab', title: 'Stats | RivalsPulse', component: BlankPage },
           { path: 'counters', component: BlankPage },
           { path: 'heroes', title: 'Heroes | RivalsPulse', component: BlankPage },
           { path: 'heroes/:heroId', title: 'Mantis | RivalsPulse', component: BlankPage },
@@ -46,9 +46,9 @@ describe('ReturnTrail', () => {
   });
 
   it('keeps the query string of the page the reader came from', async () => {
-    await visit('/community/heroes?season=9', '/heroes/mantis');
+    await visit('/stats/heroes?season=9', '/heroes/mantis');
 
-    expect(router.serializeUrl(trail.originOutside('/heroes')!.url)).toBe('/community/heroes?season=9');
+    expect(router.serializeUrl(trail.originOutside('/heroes')!.url)).toBe('/stats/heroes?season=9');
   });
 
   it('keeps the same origin while the reader moves between heroes', async () => {
@@ -64,9 +64,9 @@ describe('ReturnTrail', () => {
   });
 
   it('follows the latest page the reader left the area for', async () => {
-    await visit('/profile', '/heroes/mantis', '/community/heroes', '/heroes/storm');
+    await visit('/profile', '/heroes/mantis', '/stats/heroes', '/heroes/storm');
 
-    expect(trail.originOutside('/heroes')?.label).toBe('Community');
+    expect(trail.originOutside('/heroes')?.label).toBe('Stats');
   });
 
   it('has no origin when the reader opened the hero from the Heroes page', async () => {

@@ -27,7 +27,7 @@ interface TeamCompsRequest {
   mode: HeroStatsModeId;
 }
 
-/** The team comps numbers with no page around them: `/team-comps` and the Stats team comps tab both draw them. */
+/** The team comps numbers with no page around them: the Stats team comps tab draws them. */
 @Component({
   selector: 'app-team-comps',
   imports: [

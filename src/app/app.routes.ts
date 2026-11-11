@@ -2,16 +2,16 @@ import { Routes } from '@angular/router';
 
 import { adminGuard } from './core/auth/admin.guard';
 import { signedInGuard } from './core/auth/signed-in.guard';
+import { legacyRedirectRoutes } from './core/navigation/legacy-redirect.routes';
 import { NAVIGATION_CATEGORIES } from './core/navigation/navigation-category.data';
 import { knownIdGuard } from './core/navigation/known-id.guard';
 import { releasedPageGuard } from './core/navigation/released-page.guard';
 import { ROUTE_WITHOUT_SIDEBAR } from './core/layout/sidebar/sidebar-visibility';
 import { ROUTE_DESCRIPTION_KEY, ROUTE_NOINDEX } from './core/seo/page-meta-title.strategy';
-import { HOME_TITLE, SITE_NAME } from './core/seo/site-meta';
+import { HOME_TITLE } from './core/seo/site-meta';
 import { FAIR_PLAY_DESCRIPTION } from './features/fair-play/fair-play-meta';
 import { APP_PRIVACY_POLICY_DESCRIPTION } from './features/privacy/app-privacy-policy/app-privacy-policy-meta';
 import { heroesRoutes } from './features/heroes/heroes.routes';
-import { PULSE_RECORDS_PAGES } from './features/records/pulse-records.data';
 import { heroGuideRouteTitle, strategistGuideRouteTitle } from './features/learning/guides/guide-titles';
 
 export const routes: Routes = [
@@ -24,15 +24,10 @@ export const routes: Routes = [
   },
   ...heroesRoutes,
   {
-    path: 'community',
-    title: 'Community | RivalsPulse',
-    loadChildren: () =>
-      import('./features/community/community.routes').then((module) => module.communityRoutes),
-  },
-  {
     path: 'stats',
     loadChildren: () => import('./features/stats/stats.routes').then((module) => module.statsRoutes),
   },
+  ...legacyRedirectRoutes,
   {
     path: 'learn',
     redirectTo: 'hero-guides',
@@ -193,14 +188,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'game-stats',
-    title: 'Game stats | RivalsPulse',
-    loadComponent: () =>
-      import('./features/insights/game-stats/game-stats-page.component').then(
-        (module) => module.GameStatsPageComponent,
-      ),
-  },
-  {
     path: 'tier-list',
     title: 'Tier list | RivalsPulse',
     loadComponent: () =>
@@ -229,33 +216,6 @@ export const routes: Routes = [
         (module) => module.WinRatesPageComponent,
       ),
   },
-  {
-    path: 'team-comps',
-    title: 'Team Comps | RivalsPulse',
-    loadComponent: () =>
-      import('./features/insights/team-comps/team-comps-page.component').then(
-        (module) => module.TeamCompsPageComponent,
-      ),
-  },
-  {
-    path: 'records',
-    title: 'Pulse Records | RivalsPulse',
-    loadComponent: () =>
-      import('./features/records/records-page/records-page.component').then(
-        (module) => module.RecordsPageComponent,
-      ),
-  },
-  // One route per list rather than `records/:category`: the server routes name each list, so an
-  // unknown one reaches the server-rendered not-found route and its 404 status.
-  ...PULSE_RECORDS_PAGES.map((page) => ({
-    path: `records/${page.slug}`,
-    title: `Pulse Records: ${page.title} | ${SITE_NAME}`,
-    data: { recordsPage: page },
-    loadComponent: () =>
-      import('./features/records/records-category-page/records-category-page.component').then(
-        (module) => module.RecordsCategoryPageComponent,
-      ),
-  })),
   {
     path: 'watch-next',
     title: 'Watch next quiz | RivalsPulse',

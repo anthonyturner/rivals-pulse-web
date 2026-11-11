@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { LEGACY_REDIRECTS } from '../src/app/core/navigation/legacy-redirects.ts';
 import { SITE_ORIGIN } from '../src/app/core/seo/site-meta.ts';
 import { loadHeroIds, writeSitemap } from './write-sitemap.ts';
 
@@ -81,6 +82,16 @@ describe('sitemap.xml', () => {
     for (const path of hidden) {
       assert.ok(!xml.includes(`${SITE_ORIGIN}/${path}`), path);
     }
+  });
+
+  it('lists no address that redirects to the Stats hub, and does list the hub', async () => {
+    const xml = await builtSitemap();
+    const locations = new Set([...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((match) => match[1] ?? ''));
+
+    for (const { from } of LEGACY_REDIRECTS) {
+      assert.ok(!locations.has(`${SITE_ORIGIN}${from}`), from);
+    }
+    assert.ok(locations.has(`${SITE_ORIGIN}/stats`));
   });
 });
 

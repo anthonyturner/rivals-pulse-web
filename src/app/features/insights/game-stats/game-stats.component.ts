@@ -9,7 +9,7 @@ import { StatePanelComponent } from '../../../shared/components/state-panel/stat
 import { buildGameStatsView } from './game-stats-view';
 import { GameStatsService } from './game-stats.service';
 
-/** The matches and players RivalsPulse has counted, with no page around it: `/game-stats` and the Stats overview both draw it. */
+/** The matches and players RivalsPulse has counted, with no page around it: the Stats overview draws it. */
 @Component({
   selector: 'app-game-stats',
   imports: [HubTileComponent, KindChipComponent, StatePanelComponent],

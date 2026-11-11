@@ -1,15 +1,17 @@
 /**
  * Which pages the sitemap lists. `scripts/write-sitemap.ts` turns this into `sitemap.xml` at build
  * time, and `sitemap.spec.ts` fails when a route in `app.routes.ts` is in neither list below, so a
- * new page is always a decision rather than an omission. Keep this file free of imports so that
+ * new page is always a decision rather than an omission. A route that only redirects (the old stat
+ * addresses in `legacy-redirects.ts`) is in neither list: it is never listed, so a crawler is not
+ * sent to an address that answers with a redirect. Keep this file free of imports so that
  * script, which runs outside Angular, can load it.
  */
 
 /**
  * Content pages with a fixed address. A data page is listed only at its Stats hub address, and only
  * when the server renders it: it then reads as a full page, and one that has too little data asks
- * not to be indexed (thin content) so listing it does no harm. The Heroes and Maps tabs are stand-ins
- * with nothing to read yet, and Records is drawn in the browser, so none of the three is listed.
+ * not to be indexed (thin content) so listing it does no harm. The Maps tab is a stand-in with
+ * nothing to read yet, and Records is drawn in the browser, so neither is listed.
  */
 export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/',
@@ -29,6 +31,7 @@ export const SITEMAP_STATIC_PATHS: readonly string[] = [
   '/fair-play',
   '/privacy',
   '/stats',
+  '/stats/heroes',
   '/stats/roles',
   '/stats/matchups',
   '/stats/team-comps',
@@ -44,24 +47,20 @@ export const SITEMAP_ID_ROUTES = {
 
 /**
  * Routes left out on purpose, with the reason. A path ending in `/` stands for every route under it.
- * A data page is out when the server cannot show its numbers (Records, drawn in the browser) or when
- * a Stats hub tab takes it over, so it is listed there once that tab has content.
+ * A data page is out while a Stats hub tab is about to take it over, and that tab is listed once it
+ * has content. The Records tab is out because it is drawn in the browser, where its player names
+ * stay out of the server's HTML.
  */
 export const SITEMAP_EXCLUDED_ROUTES: Readonly<Record<string, string>> = {
   resources: 'hub of links to other pages',
   tools: 'hub of links to other pages',
-  community: 'data tabs; replaced by the Stats hub',
   'user-highlights': 'player-submitted clips, not written content',
   'media-tutorials': 'a list of embedded videos with little text of its own',
   'learning-paths': 'not released yet (released-page guard)',
   'watch-next': 'not released yet (released-page guard)',
-  'game-stats': 'data page; replaced by a Stats hub tab',
   'tier-list': 'data page; moves to the Stats hub Heroes tab',
   'win-rates': 'data page; moves to the Stats hub Heroes tab',
   'win-rates/:season': 'data page; moves to the Stats hub Heroes tab',
-  'team-comps': 'data page; replaced by a Stats hub tab',
-  records: 'data page drawn in the browser; the Stats hub Records tab is too',
-  'records/': 'data page drawn in the browser',
   counters: 'interactive tool with no text of its own',
   'dive-planner': 'interactive tool with no text of its own',
   'team-builder': 'interactive tool with no text of its own',

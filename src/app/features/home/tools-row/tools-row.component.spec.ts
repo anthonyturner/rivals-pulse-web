@@ -45,7 +45,7 @@ describe('ToolsRowComponent', () => {
 
   it('links each card with routerLink to its page', () => {
     expect(cards().map((card) => card.getAttribute('href'))).toEqual([
-      '/community',
+      '/win-rates',
       '/tier-list',
       '/counters',
       '/team-builder',

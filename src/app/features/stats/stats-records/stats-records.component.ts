@@ -11,7 +11,7 @@ import { PULSE_RECORDS_MIN_ROWS, PULSE_RECORDS_PREVIEW_ROWS } from '../../record
 import { RecordTableComponent } from '../../records/record-table/record-table.component';
 import { RecordsBodyComponent, RecordsContentDirective } from '../../records/records-body/records-body.component';
 
-/** The query parameter that holds the chosen list, by the slug of its `/records/<list>` address. */
+/** The query parameter that holds the chosen list, by its slug. */
 export const RECORDS_CATEGORY_PARAM = 'category';
 
 const ALL_RECORDS = '';

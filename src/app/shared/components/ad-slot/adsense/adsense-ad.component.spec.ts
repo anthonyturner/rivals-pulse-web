@@ -34,7 +34,7 @@ describe('AdSenseAdComponent', () => {
         provideRouter([
           { path: 'heroes', component: PageComponent },
           { path: 'tier-list', component: PageComponent },
-          { path: 'community', component: PageComponent },
+          { path: 'stats', component: PageComponent },
         ]),
         { provide: ADSENSE_CONFIG, useValue: config },
         { provide: GoogleConsentService, useValue: { status: consent } },
@@ -127,7 +127,7 @@ describe('AdSenseAdComponent', () => {
     const fixture = await render();
     const seen = [units(fixture)[0]];
 
-    for (const [index, url] of ['/heroes', '/tier-list', '/community'].entries()) {
+    for (const [index, url] of ['/heroes', '/tier-list', '/stats'].entries()) {
       await navigate(fixture, url);
 
       expect(units(fixture).length).withContext(url).toBe(1);

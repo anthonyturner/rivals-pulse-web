@@ -112,6 +112,6 @@ describe('HowWeCountPageComponent', () => {
   it('links to the privacy notes and the community stats', () => {
     const hrefs = Array.from(page.querySelectorAll('a')).map((link) => link.getAttribute('href'));
 
-    expect(hrefs).toEqual(['/privacy', '/community']);
+    expect(hrefs).toEqual(['/privacy', '/stats']);
   });
 });
