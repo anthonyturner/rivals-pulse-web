@@ -356,7 +356,7 @@ games played and heroes only.
 
 Your own damage, healing, accuracy and damage blocked are shown as yours to
 **you only**: in the app and, if you link a website account, your damage, healing
-and damage blocked on your My stats page. Your damage dealt, healing, damage
+and damage blocked on your Profile page. Your damage dealt, healing, damage
 blocked, time on each hero and ability and ultimate use counts are also stored in
 our database with your scoreboard line, but other users never see them as yours:
 only pooled, as below. The one exception is Pulse Records (below), and only if you
