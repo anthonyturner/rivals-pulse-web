@@ -16,6 +16,7 @@ import {
   parseManifest,
   resolveCommunityStats,
   resolveHeroScores,
+  resolveHeroSpecialists,
   resolveTeamLineups,
   tierListSeasonPath,
   verifyPulseAtlas,
@@ -130,6 +131,20 @@ const teamLineups = await resolveTeamLineups({
 
 if (teamLineups) {
   live.push(teamLineups);
+}
+
+// The same promise once more: the API and the database function behind it ship apart from this
+// repository, so a run can come first and must not hold up the rest.
+const heroSpecialists = await resolveHeroSpecialists({
+  read: () => fetchJson(`${apiBase}/hero-specialists`),
+  published,
+  source: HERO_STATS_SOURCE_LABEL,
+  warn,
+  heroGameIds,
+});
+
+if (heroSpecialists) {
+  live.push(heroSpecialists);
 }
 
 const now = new Date().toISOString();
@@ -294,6 +309,8 @@ function toSample(input, sampleHeroIds) {
         return { ...data, heroes: data.heroes.slice(0, 2) };
       case 'team-lineups':
         return trimTeamLineups(data);
+      case 'hero-specialists':
+        return trimHeroSpecialists(data);
       case 'tier-list': {
         // The current season and the one before it, so the sample shows the index
         // entry with ranks next to one without.
@@ -366,6 +383,17 @@ function trimTeamLineups(data) {
       data.shapes.find((shape) => shape.status === 'ready'),
       data.shapes.find((shape) => shape.status !== 'ready'),
     ].filter((shape) => shape !== undefined),
+  };
+}
+
+// One hero with both buckets and one without, so the sample shows both.
+function trimHeroSpecialists(data) {
+  return {
+    ...data,
+    heroes: [
+      data.heroes.find((hero) => hero.status === 'ready'),
+      data.heroes.find((hero) => hero.status !== 'ready'),
+    ].filter((hero) => hero !== undefined),
   };
 }
 
