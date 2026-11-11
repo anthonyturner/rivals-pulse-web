@@ -82,7 +82,7 @@ describe('MatchesTabComponent', () => {
   it('shows the four sections with the figures, and what the thin maps still need', async () => {
     await answer(READY);
 
-    expect(headings()).toEqual(['Community matches', 'Win rate by map', 'Game modes played', 'Average match length', 'Matches per day']);
+    expect(headings()).toEqual(['Community matches', 'Win rate by map', 'Game modes played', 'Matches per day']);
     expect(text()).toContain('Tokyo 2099');
     expect(text()).toContain('50%');
     expect(text()).toContain('Not enough data yet for: Klyntar.');
@@ -91,6 +91,14 @@ describe('MatchesTabComponent', () => {
     expect(text()).toContain('10 min');
     expect(text()).toContain('Thu 29 Oct');
     expect(text()).not.toMatch(/NaN|undefined|null/);
+  });
+
+  it('links the map teaser to the Maps tab, which lists every map', async () => {
+    await answer(READY);
+
+    const link = (fixture.nativeElement as HTMLElement).querySelector('a.stat-link') as HTMLAnchorElement;
+    expect(link.textContent).toContain('All maps');
+    expect(link.getAttribute('href')).toBe('/stats/maps');
   });
 
   it('labels a previous half-season that stands in for the current one', async () => {

@@ -1,109 +1,32 @@
-:host {
-  display: block;
-  min-width: 0;
-}
-
-.caption {
-  max-width: 62ch;
-  color: var(--text-soft);
-  font-size: var(--type-small);
-  overflow-wrap: anywhere;
-}
-
-.panels {
-  display: grid;
-  gap: 12px;
-  align-items: start;
-}
-
-.panel {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--tertiary) 12%, var(--bg-panel)), var(--bg-panel) 60%);
-}
-
-.panel-title {
-  font-size: var(--type-h3);
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.table-wrap {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 6px 8px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-thead th {
-  background: var(--surface);
-  color: var(--text-soft);
-  font-size: var(--type-caption);
-  font-weight: 800;
-}
-
-tbody th,
-tbody td {
-  border-top: 1px solid var(--border);
-  font-size: var(--type-small);
-}
-
-tbody th {
-  font-weight: 700;
-}
-
-.rate {
+/* One bar a day, tallest bar the busiest day; the days' names sit at the two ends of the axis. */
+.days {
   display: grid;
   gap: 4px;
-  min-width: 96px;
 }
 
-.bar {
-  display: block;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--surface-2);
+.days__bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 96px;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border-strong);
+  list-style: none;
 }
 
-.bar-fill {
-  display: block;
-  height: 100%;
+.days__bar {
+  flex: 1 1 0;
+  min-width: 2px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
   background: var(--accent-strong);
 }
 
-.figure-row {
+.days__axis {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  align-items: baseline;
-}
-
-.figure {
-  font-size: var(--type-title);
-  font-weight: 850;
-}
-
-@media (min-width: 1024px) {
-  .panels {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .panel {
-    padding: 16px;
-  }
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
 }

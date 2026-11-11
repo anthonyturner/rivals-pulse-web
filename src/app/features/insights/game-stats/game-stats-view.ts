@@ -1,5 +1,4 @@
 import type { GameCounts } from '../../../../contracts/game-counts.model';
-import { matchesCountedLabel } from '../../../shared/utilities/stat-labels';
 
 /** One of the headline figures. */
 export interface StatTileView {
@@ -49,14 +48,14 @@ export function buildGameStatsView(counts: GameCounts | null | undefined): GameS
 
   return {
     status: 'ready',
-    meta: 'Counted from RivalsPulse overlay uploads',
+    meta: 'Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.',
     tiles: [
-      { label: matchesCountedLabel(counts.matches, 'all seasons'), value: numbers.format(counts.matches) },
+      { label: 'Matches · all seasons', value: numbers.format(counts.matches) },
       // The newest half-season's figure, which the home page and the Stats overview state too while it is the half-season they show.
       ...(newest === undefined || earlier.length === 0
         ? []
-        : [{ label: matchesCountedLabel(newest.matches, seasonLabel(newest.halfSeason)), value: numbers.format(newest.matches) }]),
-      { label: 'Players seen', value: numbers.format(counts.players) },
+        : [{ label: `Matches · ${seasonLabel(newest.halfSeason)}`, value: numbers.format(newest.matches) }]),
+      { label: 'Players', value: numbers.format(counts.players) },
       ...(since === null ? [] : [{ label: 'Earliest match', value: since }]),
     ],
     rows: counts.halfSeasons.map((season) => ({
