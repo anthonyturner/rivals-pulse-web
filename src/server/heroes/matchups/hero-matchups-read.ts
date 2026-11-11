@@ -6,7 +6,7 @@ import {
   type HeroMatchupFigures,
   type HeroMatchupRow,
 } from './hero-matchups.ts';
-import { readHeroStatsSource } from '../stats/index.ts';
+import { getHeroPairs } from '../pairs/index.ts';
 import { answerReader, callSupabaseFunction, orWhenNotDeployed, type SupabaseReadEnv } from '../../supabase/index.ts';
 
 interface HeroMatchupsReadOptions {
@@ -80,21 +80,20 @@ function figuresOf(row: Record<string, unknown>): HeroMatchupFigures | null {
 }
 
 /**
- * The site's hero-against-hero records. A game hero id with no mapping is left out and logged (hero
- * id 0 is "no hero recorded" and always lands here); it never fails the request. The half-season
- * start dates come from the same `read_hero_stats()` answer the hero stats use, so both read the
- * same current half-season. A read function that is not in the database yet is the empty state.
+ * The site's hero-against-hero records: the pair counts of `getHeroPairs` (the answer behind
+ * `/api/hero-pairs` and the Pulse Atlas `community-stats`), named by hero and judged by the counter
+ * rule the overlay uses, with each pair's KDA and final hits added from `hero_matchups`. A game hero
+ * id with no mapping is left out and logged (hero id 0 is "no hero recorded"); it never fails the
+ * request. A read function that is not in the database yet is the empty state, and a database that
+ * has the pair counts but not the figures answers without them.
  */
 export async function getHeroMatchups(options: HeroMatchupsReadOptions = {}): Promise<HeroMatchups> {
   const env = options.env ?? process.env;
-  const [rows, source] = await Promise.all([
+  const [pairs, figureRows] = await Promise.all([
+    getHeroPairs(options),
     orWhenNotDeployed(fetchHeroMatchupRows(env, options.fetch), READ_FUNCTION, []),
-    readHeroStatsSource(env, options.fetch),
   ]);
-  const { matchups, excludedGameIds } = deriveHeroMatchups(rows, source.halfSeasons, {
-    now: (options.now ?? (() => new Date()))(),
-    heroSlugByGameId,
-  });
+  const { matchups, excludedGameIds } = deriveHeroMatchups(pairs, figureRows, { heroSlugByGameId });
 
   if (excludedGameIds.length > 0) {
     console.warn(`Hero matchups left out game hero ids with no hero mapping: ${excludedGameIds.join(', ')}`);

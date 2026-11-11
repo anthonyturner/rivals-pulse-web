@@ -6,16 +6,19 @@ import type { Hero, HeroRole } from '../heroes/hero.model';
 export const season = (id: number): HeroStatsHalfSeason => ({ id, label: `Season ${id}`, startsAt: null, endsAt: null });
 
 /**
- * `hero` won `wins` of `appearances` lines against `enemy`; the shrunk rate is worked out as the server does.
- * The scoreboard figures are not recorded unless `figures` gives them.
+ * `hero` won `wins` of `appearances` lines against `enemy`, a hero whose usual shrunk rate is 50%; the
+ * shrunk rate is worked out as the server does, and the pair is a counter when it is above even.
+ * The scoreboard figures are not recorded unless `figures` gives them, and `extra` overrides any field.
  */
 export function matchup(
   hero: string,
   enemy: string,
   wins: number,
   appearances: number,
-  figures: Partial<Pick<HeroMatchup, 'kda' | 'finalHitsAverage'>> = {},
+  extra: Partial<Pick<HeroMatchup, 'kda' | 'finalHitsAverage' | 'edge' | 'isCounter'>> = {},
 ): HeroMatchup {
+  const shrunkWinRate = ((wins + 5) / (appearances + 10)) * 100;
+
   return {
     hero,
     enemy,
@@ -23,10 +26,12 @@ export function matchup(
     appearances,
     wins,
     winRate: (wins / appearances) * 100,
-    shrunkWinRate: ((wins + 5) / (appearances + 10)) * 100,
+    shrunkWinRate,
+    edge: shrunkWinRate - 50,
+    isCounter: shrunkWinRate > 50,
     kda: null,
     finalHitsAverage: null,
-    ...figures,
+    ...extra,
   };
 }
 

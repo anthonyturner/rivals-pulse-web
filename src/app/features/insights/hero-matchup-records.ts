@@ -2,39 +2,33 @@ import type { HeroMatchup, HeroMatchups } from '../../../contracts/hero-matchups
 import { countLabel, percentLabel } from '../../shared/utilities/stat-labels';
 
 /**
- * The reads both counter surfaces share. They describe a record: who has a winning one against a
- * hero, and who that hero has one against. Nothing here scores a hero or says whom to ban.
+ * The reads every counter surface shares. They describe a record: who counters a hero, and whom that
+ * hero counters. Whether a pair counts is the server's one community rule, sent as `isCounter`, so
+ * these lists hold the same pairs as the overlay's community counters. Nothing here scores a hero or
+ * says whom to ban.
  */
 
-/** A shrunk win rate above this is a winning record; it is an even one at 50. */
-export const WINNING_RECORD_CUT_OFF = 50;
-
-/** Whether `hero` wins more than it loses against `enemy`, once a short run is pulled toward even. */
-export function hasWinningRecord(matchup: HeroMatchup): boolean {
-  return matchup.shrunkWinRate > WINNING_RECORD_CUT_OFF;
-}
-
-/** The matchups of a hero that has a winning record against `enemyId`. */
+/** The matchups of a hero that counters `enemyId`. */
 export function winningRecordsAgainst(matchups: HeroMatchups, enemyId: string): HeroMatchup[] {
-  return matchups.matchups.filter((matchup) => matchup.enemy === enemyId && hasWinningRecord(matchup));
+  return matchups.matchups.filter((matchup) => matchup.enemy === enemyId && matchup.isCounter);
 }
 
-/** `heroId`'s own matchups where it has a winning record. */
+/** `heroId`'s own matchups where it counters the enemy. */
 export function winningRecordsOf(matchups: HeroMatchups, heroId: string): HeroMatchup[] {
-  return matchups.matchups.filter((matchup) => matchup.hero === heroId && hasWinningRecord(matchup));
+  return matchups.matchups.filter((matchup) => matchup.hero === heroId && matchup.isCounter);
 }
 
 /**
- * The `limit` winning records with the clearest edge: highest shrunk win rate first, then the larger
- * sample, then hero ids so the order never changes between reads. A short run cannot lead the list,
- * because the shrunk rate pulls it toward even.
+ * The `limit` counters with the clearest edge: largest edge over the hero's own record first, then
+ * the larger sample, then hero ids so the order never changes between reads. A short run cannot lead
+ * the list, because the edge is measured on shrunk rates.
  */
 export function strongestRecords(matchups: HeroMatchups, limit: number): HeroMatchup[] {
   return matchups.matchups
-    .filter(hasWinningRecord)
+    .filter((matchup) => matchup.isCounter)
     .sort(
       (a, b) =>
-        b.shrunkWinRate - a.shrunkWinRate ||
+        b.edge - a.edge ||
         b.matches - a.matches ||
         a.hero.localeCompare(b.hero) ||
         a.enemy.localeCompare(b.enemy),

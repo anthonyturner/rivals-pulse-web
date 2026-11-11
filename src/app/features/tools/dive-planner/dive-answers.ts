@@ -1,6 +1,5 @@
 import type { HeroMatchups } from '../../../../contracts/hero-matchups.model';
 import type { Hero } from '../../heroes/hero.model';
-import { hasWinningRecord } from '../../insights/hero-matchup-records';
 
 /** A hero with a winning record against at least one of the chosen enemy heroes. */
 export interface MultiThreatAnswer {
@@ -23,7 +22,7 @@ export function answersTo(threats: Hero[], heroes: Hero[], matchups: HeroMatchup
       hero: candidate,
       coveredThreats: threats.filter((threat) =>
         matchups.matchups.some(
-          (matchup) => matchup.hero === candidate.id && matchup.enemy === threat.id && hasWinningRecord(matchup),
+          (matchup) => matchup.hero === candidate.id && matchup.enemy === threat.id && matchup.isCounter,
         ),
       ),
     }))

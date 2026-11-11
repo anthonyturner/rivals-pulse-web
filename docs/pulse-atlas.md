@@ -60,6 +60,14 @@ measures one player's own games must follow the same rounding.
 | `team-lineups.json` | The community's team line-up shapes (how many Vanguards, Duelists and Strategists a team ran, such as 1-2-3) with the teams and wins behind each, in the half-season shown. Counts only. Shape below. Optional: absent until the first successful run that can build it. |
 | `manifest.json` | Every file above with its hash. |
 
+`community-stats.json` is the one source of counter data for every reader. The overlay reads it from
+here; the website reads the same counts, from the same database function, through `GET /api/hero-pairs`
+(`GET /api/hero-matchups` is its named view for pages), and applies the same rule to them: a hero counters
+an enemy when its win rate against that enemy, shrunk by a prior estimated from the band's heroes, is at least 3
+points above its own shrunk win rate. The rule is in [src/server/heroes/pairs/hero-pair-edges.ts](../src/server/heroes/pairs/hero-pair-edges.ts)
+and in the overlay's `community-stats.dataset.ts`; change them together. The file publishes counts only, so
+the overlay computes the shrunk rates and the edge itself.
+
 The per-matchup KDA and final hits that `GET /api/hero-matchups` carries (the hero's figures while
 facing one enemy hero) are not published here yet: `community-stats.json` holds win and loss counts only. Its
 `counters` are directional hero-against-enemy records, so that is where they would go, and the work is tracked in [#680](https://github.com/anthonyturner/rivals-pulse-web/issues/680).

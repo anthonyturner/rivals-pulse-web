@@ -749,7 +749,9 @@ limit never applies), made only of counts and `half_seasons` start dates:
   the decided lines, one line per enemy hero faced, summed over the modes. They are null for a
   half-season the purge froze before they existed, and `rebuild_hero_aggregates` cannot refill a
   frozen one. The server reads a missing or null figure as "not counted", never as 0. The website reads it through `GET /api/hero-matchups`
-  ([`src/server/heroes/matchups/hero-matchups-read.ts`](../src/server/heroes/matchups/hero-matchups-read.ts)), always for Competitive and Quick Match.
+  ([`src/server/heroes/matchups/hero-matchups-read.ts`](../src/server/heroes/matchups/hero-matchups-read.ts)), always for Competitive and Quick Match,
+  but only for these figures: which pairs are listed, their counts and whether one is a counter come from `read_hero_pairs`, the one source of counter data
+  (see "Hero counters" in [content-data-flow.md](content-data-flow.md)). `GET /api/hero-switch-ins` still reads the whole function, as described above.
 
 Every rate, tier and KDA is derived in one pure module, [`src/server/heroes/stats/hero-stats.ts`](../src/server/heroes/stats/hero-stats.ts),
 and served by `GET /api/hero-stats`. The rules, which are the overlay's personal tier list:

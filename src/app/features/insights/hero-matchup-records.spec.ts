@@ -1,7 +1,5 @@
 import { matchup, matchupsOf } from './hero-matchup.fixtures';
 import {
-  WINNING_RECORD_CUT_OFF,
-  hasWinningRecord,
   matchupBetween,
   matchupCountOf,
   recordCards,
@@ -28,11 +26,27 @@ describe('hero matchup records', () => {
     matchup('hulk', 'storm', 6, 12),
   ]);
 
-  it('calls a record winning only when the shrunk win rate is above even', () => {
-    expect(WINNING_RECORD_CUT_OFF).toBe(50);
-    expect(hasWinningRecord(matchup('hulk', 'thor', 9, 12))).toBeTrue();
-    expect(hasWinningRecord(matchup('hulk', 'thor', 5, 10))).toBeFalse();
-    expect(hasWinningRecord(matchup('hulk', 'thor', 3, 12))).toBeFalse();
+  it('lists only the pairs the server marked as counters, whatever the win rate says', () => {
+    const marked = matchupsOf([
+      matchup('hulk', 'thor', 9, 12, { isCounter: false }),
+      matchup('storm', 'thor', 5, 12, { isCounter: true, edge: 4 }),
+      matchup('mantis', 'thor', 6, 12, { isCounter: true, edge: 8 }),
+    ]);
+
+    expect(winningRecordsAgainst(marked, 'thor').map((record) => record.hero)).toEqual(['storm', 'mantis']);
+    expect(winningRecordsOf(marked, 'hulk')).toEqual([]);
+  });
+
+  it('puts the largest edge first among the strongest counters, then the larger sample, then the names', () => {
+    const marked = matchupsOf([
+      matchup('hulk', 'thor', 11, 12, { isCounter: true, edge: 4 }),
+      matchup('storm', 'thor', 9, 12, { isCounter: true, edge: 9 }),
+      matchup('mantis', 'thor', 14, 20, { isCounter: true, edge: 4 }),
+      matchup('thor', 'hulk', 12, 12, { isCounter: false, edge: 1 }),
+    ]);
+
+    expect(strongestRecords(marked, 10).map((record) => record.hero)).toEqual(['storm', 'mantis', 'hulk']);
+    expect(strongestRecords(marked, 1).map((record) => record.hero)).toEqual(['storm']);
   });
 
   it('lists who has a winning record against a hero', () => {
@@ -87,7 +101,7 @@ describe('hero matchup records', () => {
     expect(text).not.toMatch(/NaN|Infinity/);
   });
 
-  it('lists the strongest winning records first, by shrunk win rate, and never a losing one', () => {
+  it('lists the strongest counters first, by edge, and never a pair that is not one', () => {
     const strongest = strongestRecords(matchups, 10);
 
     expect(strongest.map((record) => `${record.hero}>${record.enemy}`)).toEqual([

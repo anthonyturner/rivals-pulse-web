@@ -280,6 +280,38 @@ it, as a plain input, to the Game News band:
 
 That would make the home page use the same database-backed flow as the rest of the site.
 
+## Hero counters: one source
+
+Who counters whom has one primary source: the pair counts the database keeps in `hero_pair_aggregates`
+and `hero_aggregates`, read by `public.read_hero_pairs()`. Every reader takes those counts and applies
+the same rule to them, so a hero is a counter on the website exactly when it is one in the overlay.
+
+```mermaid
+flowchart LR
+  Matches["Matches Rivals Pulse players record"] --> Pairs["Supabase hero_pair_aggregates + hero_aggregates"]
+  Pairs --> Read["read_hero_pairs()"]
+  Read --> PairsApi["/api/hero-pairs (getHeroPairs)"]
+  PairsApi --> Atlas["Pulse Atlas community-stats.json"]
+  Atlas --> Overlay["Overlay community counters"]
+  PairsApi --> Matchups["/api/hero-matchups (named view)"]
+  Matchups --> Site["Website: Stats Matchups, hero pages, Counters, Dive planner"]
+```
+
+- **The rule** is one: a pair needs 10 decided matches, and it is a counter when its win rate, shrunk by a
+  prior estimated from the band's heroes, is at least 3 percentage points above the hero's own shrunk win
+  rate. The website's copy is [`hero-pair-edges.ts`](../src/server/heroes/pairs/hero-pair-edges.ts), which
+  `/api/hero-matchups` calls once and sends as `isCounter` so no page repeats the threshold; the overlay's is
+  `community-stats.dataset.ts`. They are changed together.
+- **Pulse Atlas publishes counts only**, so the overlay computes the shrunk rates and edges from the file.
+  The website's server computes them from the same counts read live, so the two can differ only by the time
+  between the last Atlas publish and now.
+- **`/api/hero-matchups` is a view, not a second source.** Its pairs, counts, minimum and half-season are
+  the pair counts'. It still reads `read_hero_matchups` for one thing: each pair's KDA and final hits while
+  facing the enemy, which the pair counts do not carry (issue 680 tracks publishing them). `/api/hero-switch-ins`
+  also still reads `read_hero_matchups` to set a switch-in beside the hero's overall record against that enemy.
+- **Personal counters stay personal.** What a player's own matches say lives in the overlay and is never
+  blended into these lists.
+
 ## Mental Model
 
 Think of it like this:
