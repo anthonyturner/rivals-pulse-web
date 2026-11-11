@@ -43,8 +43,8 @@ describe('the Stats tabs', () => {
     expect(heroes.description).toContain('tier list');
   });
 
-  it('are the only tabs with no content of their own: the Maps stand-in', () => {
-    expect(STATS_TABS.filter((tab) => !tab.hasContent).map((tab) => tab.id)).toEqual(['maps']);
+  it('all have content of their own now that the Maps tab lists the maps', () => {
+    expect(STATS_TABS.filter((tab) => !tab.hasContent).map((tab) => tab.id)).toEqual([]);
   });
 
   describe('as routes', () => {

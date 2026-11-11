@@ -4,7 +4,9 @@
   the table under Decision 2 in the same pull request that moves it, and says
   so here under Status. **Amended on 2026-11-11:** the specialist and flex win
   rates (issue 819) are added to the table, with the data and Pulse Atlas half
-  first and the website tab after.
+  first and the website tab after. Amended again on 2026-11-11 by issue 773: win
+  rate by map moved to the Maps tab, shrunk, with the Overview keeping a short
+  list.
 - **Date:** 2026-11-11
 - **Deciders:** Anthony (maintainer). The Stats hub design was approved on
   2026-11-11 on issue 779.
@@ -13,8 +15,7 @@
   and win rates merged into the Heroes tab). Pull request 783, issue 774 (one
   "matches counted" figure). Pull request 798, issues 511 and 801 (one counter
   source). Pull requests 194 (issue 172) and 509 (issue 449), which set the
-  match volume band. Issue 773 (community maps, not
-  built yet). Overlay repo `anthonyturner/rivals_pulse`: issue 1643 (no enemy
+  match volume band. Issue 773 (community maps). Overlay repo `anthonyturner/rivals_pulse`: issue 1643 (no enemy
   ultimate status). Builds on [ADR-0006](0006-publish-opted-in-player-names-on-pulse-records.md)
   for Pulse Records.
 
@@ -83,8 +84,8 @@ tab is under `/stats`.
 | Triple-support trios | `getTripleSupportTrios` | `read_triple_support_trios()` | `GET /api/triple-support-trios` | none | Team comps |
 | Line-up shapes | `getTeamLineups` | `read_team_lineup_shapes()` | `GET /api/team-lineups` | `team-lineups.json` | Team comps |
 | Specialists against flex players (pooled win rate per hero) | `getHeroSpecialists` | `read_hero_specialists()` (service role only; classifies players inside the query, stores nothing) | `GET /api/hero-specialists` | `hero-specialists.json` (optional) | none yet; the website display is a follow-up (hero page and the Heroes tab) |
-| Win rate by map, mode mix, match length, matches per day | `getCommunityMatches` | `read_community_matches()` | `GET /api/community/matches` | none (`maps.json` is only map ids and names) | Overview (`/stats`) |
-| Community maps (best and worst, ranked) | not built: issue 773 | to be named by issue 773 | to be named by issue 773 | none | Maps (`/stats/maps`, a stand-in until then) |
+| Win rate by map (shrunk, from the recorder's side), best and worst, and the known maps still waiting for a rate | `getCommunityMatches` | `read_community_matches()` | `GET /api/community/matches` | none (`maps.json` is only map ids and names) | Maps (`/stats/maps`, every map); Overview (`/stats`, the best and worst three and a link) |
+| Mode mix, match length, matches per day | `getCommunityMatches` | `read_community_matches()` | `GET /api/community/matches` | none | Overview |
 | When players win (weekday, time of day, session position) | `getCommunityInsights` | `read_community_insights()` | `GET /api/community/insights` | none | Overview |
 | Records (best single matches) | `getPulseRecords` | `read_pulse_records()` | `GET /api/records` | none | Records (`/stats/records`) |
 | Matches counted, and players counted | `getGameCounts` (`matchesCountedIn` picks a half-season) | `read_game_counts()` | `GET /api/game-stats`; also `matchesCounted` in `GET /api/community/matches` | none | Overview |
@@ -220,8 +221,8 @@ Tracker" among future engines; it is built to this decision or not built.
   - No count of a map, mode or day is added to the Community Matches or
     Insights answers.
   - Nothing reads or shows an enemy ultimate or cooldown.
-  - When issue 773 lands, it adds its read function, endpoint and tab to the
-    table and to Decision 2's Maps row.
+  - The Maps tab and the Overview's short list read one answer, and the
+    ranking lives in `buildMapsView`, so a map is never ranked two ways.
 
 ## Compliance
 

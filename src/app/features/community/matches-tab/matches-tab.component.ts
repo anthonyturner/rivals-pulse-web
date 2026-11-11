@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
+import { MapRatesTableComponent } from '../map-rates-table/map-rates-table.component';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { CommunityMatchesService } from './community-matches.service';
 import { buildCommunityMatchesView } from './community-matches-view';
@@ -11,7 +12,7 @@ const WHAT_THE_TAB_SHOWS = 'Win rate by map, mode mix, average length and matche
 /** The community's match totals: anonymous, counted once per match, never anyone's own matches. */
 @Component({
   selector: 'app-community-matches-tab',
-  imports: [CommunitySummaryComponent, RouterLink],
+  imports: [CommunitySummaryComponent, MapRatesTableComponent, RouterLink],
   templateUrl: './matches-tab.component.html',
   styleUrls: ['../../../shared/styles/stat-panels.css', './matches-tab.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +22,7 @@ export class MatchesTabComponent {
     initialValue: undefined,
   });
 
-  /** The Maps tab, a placeholder until it lists every map; the map panel lists them itself meanwhile. */
+  /** The Maps tab, which lists every map this panel shows the top and bottom of. */
   protected readonly mapsLink = '/stats/maps';
   protected readonly view = computed(() => buildCommunityMatchesView(this.matches()));
   protected readonly emptyPreview = computed(() => {

@@ -82,7 +82,7 @@ describe('sitemap', () => {
     expect(SITEMAP_STATIC_PATHS.filter((path) => !known.has(path))).toEqual([]);
   });
 
-  it('lists each Stats tab the server renders with content, and no stand-in or browser-drawn tab', () => {
+  it('lists each Stats tab the server renders with content, and no browser-drawn tab', () => {
     const listedTabs = SITEMAP_STATIC_PATHS.filter((path) => path === '/stats' || path.startsWith('/stats/'));
     const serverRendered = STATS_TABS.filter((tab) => tab.hasContent && tab.id !== 'records');
 

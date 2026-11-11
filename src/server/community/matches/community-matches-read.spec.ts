@@ -114,6 +114,27 @@ describe('getCommunityMatches', () => {
     expect(result.maps).toEqual([{ map: 'Tokyo 2099', winRate: 50 }]);
   });
 
+  it('names the maps the site knows that have no rate yet, from its own map list', async () => {
+    const { client } = fakeSupabaseClient(answers({ ...ANSWER, maps: [] }));
+
+    const result = await getCommunityMatches({ client, now: NOW });
+
+    expect(result.maps).toEqual([]);
+    expect(result.mapsBelowMinimum).toEqual(jasmine.arrayContaining(['Midtown', 'Royal Palace', "Birnin T'Challa"]));
+    expect(result.mapsBelowMinimum.filter((name) => name === 'Royal Palace').length).toBe(1);
+  });
+
+  it('leaves out the maps that never reach a Quick Match or Competitive rate', async () => {
+    const { client } = fakeSupabaseClient(answers({ ...ANSWER, maps: [] }));
+
+    const result = await getCommunityMatches({ client, now: NOW });
+
+    expect(result.mapsBelowMinimum).not.toContain('Sanctum Sanctorum');
+    expect(result.mapsBelowMinimum).not.toContain('Grand Garden');
+    expect(result.mapsBelowMinimum).not.toContain('Ninomaru');
+    expect(result.mapsBelowMinimum).toContain('Museum of Contemplation');
+  });
+
   it('sends no bucket count, recorder count or player field, whatever the function answers with', async () => {
     const { client } = fakeSupabaseClient(
       answers({

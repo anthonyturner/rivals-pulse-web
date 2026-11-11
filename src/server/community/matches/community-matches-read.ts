@@ -7,6 +7,7 @@ import {
 import type { CommunityMatches } from '../../../contracts/community-matches.model.ts';
 import type { GameCounts } from '../../../contracts/game-counts.model.ts';
 import { getGameCounts } from '../../game-counts/game-counts-read.ts';
+import { KNOWN_MAP_NAMES } from './known-maps.ts';
 import { answerReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
 
 interface CommunityMatchesReadOptions {
@@ -76,6 +77,7 @@ export async function getCommunityMatches(options: CommunityMatchesReadOptions =
     now: (options.now ?? (() => new Date()))(),
     halfSeason: options.halfSeason,
     counts,
+    knownMaps: KNOWN_MAP_NAMES,
   });
 }
 

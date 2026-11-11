@@ -206,8 +206,137 @@ describe('deriveCommunityMatches', () => {
         { now: NOW },
       );
 
-      // 7 wins in 12 is 58.3%, shown as a whole percentage.
-      expect(result.maps).toEqual([{ map: 'Tokyo 2099', winRate: 58 }]);
+      // 7 wins in 12 is 58.3%; with one map to learn an average from, the rate is pulled toward 50%.
+      expect(result.maps).toEqual([{ map: 'Tokyo 2099', winRate: 51 }]);
+    });
+
+    describe('shrinkage', () => {
+      const LONG_RUN = [
+        mapRow('Central Park', PLAY_MODE_IDS.quickMatch, 100, 52),
+        mapRow('Midtown', PLAY_MODE_IDS.quickMatch, 100, 48),
+        mapRow('Krakoa', PLAY_MODE_IDS.quickMatch, 100, 50),
+        mapRow('Arakko', PLAY_MODE_IDS.quickMatch, 100, 46),
+        mapRow('Royal Palace', PLAY_MODE_IDS.quickMatch, 100, 54),
+      ];
+      const rateOf = (map: string, rows: CommunityMapRow[]): number | undefined =>
+        deriveCommunityMatches(source({ maps: rows }), { now: NOW }).maps.find((record) => record.map === map)?.winRate;
+
+      it('pulls a perfect short run well below 100% and toward the average of the maps', () => {
+        const rate = rateOf('Hydra Base', [...LONG_RUN, mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, mapMatches, mapMatches)]);
+        const average = rateOf('Krakoa', LONG_RUN) ?? NaN;
+
+        expect(rate).toBeLessThan(75);
+        expect(rate).toBeGreaterThan(average);
+      });
+
+      it('ranks a long 80% record above a short 90% one', () => {
+        const maps = deriveCommunityMatches(
+          source({
+            maps: [
+              ...LONG_RUN,
+              mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, mapMatches, mapMatches - 1),
+              mapRow('Yggsgard', PLAY_MODE_IDS.quickMatch, 500, 400),
+            ],
+          }),
+          { now: NOW },
+        ).maps;
+
+        expect(maps.map((record) => record.map).slice(0, 2)).toEqual(['Yggsgard', 'Hydra Base']);
+      });
+
+      it('orders maps whose shown rates round alike by their unrounded rates, not by name', () => {
+        const maps = deriveCommunityMatches(
+          source({
+            maps: [
+              ...LONG_RUN,
+              mapRow('Aaa Map', PLAY_MODE_IDS.quickMatch, 1000, 501),
+              mapRow('Zzz Map', PLAY_MODE_IDS.quickMatch, 1000, 504),
+            ],
+          }),
+          { now: NOW },
+        ).maps;
+        const aaa = maps.find((record) => record.map === 'Aaa Map');
+        const zzz = maps.find((record) => record.map === 'Zzz Map');
+
+        expect(aaa?.winRate).toBe(zzz?.winRate);
+        expect(maps.map((record) => record.map).indexOf('Zzz Map')).toBeLessThan(maps.map((record) => record.map).indexOf('Aaa Map'));
+      });
+
+      it('pulls a short run less as the map plays more matches', () => {
+        const few = rateOf('Hydra Base', [...LONG_RUN, mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, 12, 12)]) ?? NaN;
+        const many = rateOf('Hydra Base', [...LONG_RUN, mapRow('Hydra Base', PLAY_MODE_IDS.quickMatch, 300, 300)]) ?? NaN;
+
+        expect(few).toBeLessThan(many);
+        expect(many).toBeLessThan(100);
+      });
+
+      it('learns the pull from the maps that show, so a hidden map changes no figure', () => {
+        const shown = rateOf('Central Park', LONG_RUN);
+        const withHidden = rateOf('Central Park', [...LONG_RUN, mapRow('Klyntar', PLAY_MODE_IDS.quickMatch, mapMatches - 1, 0)]);
+
+        expect(withHidden).toBe(shown);
+      });
+
+      it('never shows a certainty, however lopsided the record', () => {
+        const rates = deriveCommunityMatches(
+          source({ maps: [mapRow('Perfect', PLAY_MODE_IDS.quickMatch, 1000, 1000), mapRow('Hopeless', PLAY_MODE_IDS.quickMatch, 1000, 0)] }),
+          { now: NOW },
+        ).maps.map((record) => record.winRate);
+
+        expect(rates.every((rate) => rate >= 1 && rate <= 99)).toBeTrue();
+      });
+    });
+
+    describe('the maps still waiting for a rate', () => {
+      const KNOWN = ['Arakko', 'Birnin T’Challa', 'Klyntar', 'Midtown'];
+
+      it('names every known map that has no rate, including one the database sent nothing for', () => {
+        const result = deriveCommunityMatches(
+          source({ maps: [mapRow('Midtown', PLAY_MODE_IDS.quickMatch, mapMatches, 5)] }),
+          { now: NOW, knownMaps: KNOWN },
+        );
+
+        expect(result.maps.map((record) => record.map)).toEqual(['Midtown']);
+        expect(result.mapsBelowMinimum).toEqual(['Arakko', 'Birnin T’Challa', 'Klyntar']);
+      });
+
+      it('names every known map while none has a rate, and says the tab is thin without a rate to show', () => {
+        const result = deriveCommunityMatches(source({ modes: [modeRow(PLAY_MODE_IDS.quickMatch, 12)] }), {
+          now: NOW,
+          knownMaps: KNOWN,
+        });
+
+        expect(result.maps).toEqual([]);
+        expect(result.mapsBelowMinimum).toEqual(KNOWN);
+      });
+
+      it('shows a map under the known spelling when the game spells it in other letters, and names it once', () => {
+        const result = deriveCommunityMatches(
+          source({
+            maps: [
+              mapRow("Birnin t'challa", PLAY_MODE_IDS.quickMatch, 6, 3),
+              mapRow('BIRNIN T’CHALLA', PLAY_MODE_IDS.competitive, 6, 3),
+            ],
+          }),
+          { now: NOW, knownMaps: KNOWN },
+        );
+
+        expect(result.maps.map((record) => record.map)).toEqual(['Birnin T’Challa']);
+        expect(result.mapsBelowMinimum).toEqual(['Arakko', 'Klyntar', 'Midtown']);
+      });
+
+      it('names a map the site does not know yet under the spelling the game sent, once it has a result', () => {
+        const result = deriveCommunityMatches(
+          source({ maps: [mapRow('Thebes', PLAY_MODE_IDS.quickMatch, mapMatches - 1, 4)] }),
+          { now: NOW, knownMaps: KNOWN },
+        );
+
+        expect(result.mapsBelowMinimum).toContain('Thebes');
+      });
+
+      it('names no map at all when none is known and none has a result', () => {
+        expect(deriveCommunityMatches(source(), { now: NOW }).mapsBelowMinimum).toEqual([]);
+      });
     });
 
     it('names a map under the minimum without a rate or a count, and never one with no result', () => {
@@ -434,7 +563,7 @@ describe('deriveCommunityMatches', () => {
 
     it('rounds every figure to whole percentages and whole minutes, and states the one matches-counted figure', () => {
       expect(busy.matchesCounted).toBe(MATCHES_COUNTED);
-      expect(busy.maps).toEqual([{ map: 'Tokyo 2099', winRate: 56 }]);
+      expect(busy.maps).toEqual([{ map: 'Tokyo 2099', winRate: 55 }]);
       expect(busy.mapsBelowMinimum).toEqual(['Klyntar']);
       expect(busy.modeMix?.map((share) => [share.share, share.averageLengthMinutes])).toEqual([
         [57, 10],

@@ -18,7 +18,7 @@
           from one player.
         </p>
         <p class="stat-note">
-          Win rate by map: Competitive and Quick Match together, from the side of the player who recorded each match.
+          Win rate by map: Competitive and Quick Match together, from the side of the player who recorded each match. A map with few matches is pulled toward the average of the maps that show (50% while fewer than five show), so a short run of wins does not put it first.
         </p>
         <p class="stat-note">
           Average length: over the matches that reported how long they lasted.
@@ -34,98 +34,25 @@
       <section class="stat-panel" aria-labelledby="matches-maps-title">
         <h3 id="matches-maps-title" class="stat-panel__title">Win rate by map</h3>
         @if (current.maps.best.length > 0) {
-          <table class="stat-table">
-            <caption class="visually-hidden">Win rate on the best and worst maps, as a whole percentage</caption>
-            <colgroup>
-              <col />
-              <col />
-            </colgroup>
-            <thead>
-              <tr>
-                <th scope="col">Map</th>
-                <th scope="col">Win rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="colgroup" colspan="2">Best</th>
-              </tr>
-              @for (row of current.maps.best; track row.map) {
-                <tr>
-                  <th scope="row">{{ row.map }}</th>
-                  <td>
-                    <div class="stat-meter">
-                      <span class="stat-meter__value">{{ row.winRateLabel }}</span>
-                      <span class="stat-meter__bar" aria-hidden="true">
-                        <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-            @if (current.maps.worst.length > 0) {
-              <tbody>
-                <tr>
-                  <th scope="colgroup" colspan="2">Worst</th>
-                </tr>
-                @for (row of current.maps.worst; track row.map) {
-                  <tr>
-                    <th scope="row">{{ row.map }}</th>
-                    <td>
-                      <div class="stat-meter">
-                        <span class="stat-meter__value">{{ row.winRateLabel }}</span>
-                        <span class="stat-meter__bar" aria-hidden="true">
-                          <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            }
-          </table>
+          <app-map-rates-table
+            caption="Win rate on the best maps, as a whole percentage"
+            group="Best"
+            [rows]="current.maps.best"
+          />
         }
-        @if (current.maps.all.length > current.maps.best.length + current.maps.worst.length) {
-          <details class="stat-fold">
-            <summary>All {{ current.maps.all.length }} maps</summary>
-            <table class="stat-table">
-              <caption class="visually-hidden">Win rate on every map, as a whole percentage, best first</caption>
-              <colgroup>
-                <col />
-                <col />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th scope="col">Map</th>
-                  <th scope="col">Win rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of current.maps.all; track row.map) {
-                  <tr>
-                    <th scope="row">{{ row.map }}</th>
-                    <td>
-                      <div class="stat-meter">
-                        <span class="stat-meter__value">{{ row.winRateLabel }}</span>
-                        <span class="stat-meter__bar" aria-hidden="true">
-                          <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </details>
+        @if (current.maps.worst.length > 0) {
+          <app-map-rates-table
+            caption="Win rate on the worst maps, as a whole percentage"
+            group="Worst"
+            [rows]="current.maps.worst"
+          />
         }
         @if (current.maps.note) {
           <p class="stat-note">{{ current.maps.note }}</p>
         }
-        @if (current.maps.pendingNote) {
-          <p class="stat-note">{{ current.maps.pendingNote }}</p>
+        @if (current.maps.allLabel) {
+          <a class="stat-link" [routerLink]="mapsLink">{{ current.maps.allLabel }}</a>
         }
-        <a class="stat-link" [routerLink]="mapsLink">All maps</a>
       </section>
 
       <section class="stat-panel" aria-labelledby="matches-modes-title">
