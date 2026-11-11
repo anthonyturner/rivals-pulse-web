@@ -2,17 +2,12 @@
 -- grants as `read_hero_specialists()` in 20261111120000_hero_specialists.sql (issue 819): only the way it is
 -- worked out changes. Additive only: no table is touched, nothing is stored, and the eight rule helpers stay.
 --
--- Why it took 36 seconds on 9,536 lines. The first version set up its steps as separate named queries that
--- were joined back together on a person and a hero. Postgres had no way to count the rows of a query built on
--- `distinct on` over a join, guessed one row, and so planned a nested loop: for each of the 7,525 counted lines
--- it re-read all 6,872 person-and-hero groups (and re-built the per-person totals every time), about 100
--- million comparisons. The data was never the problem (18,962 buffers).
---
--- This version has no join that depends on such a guess. It reads `participants` once; a match's mode and
--- recorder come from a window over the match, as `fill_hero_aggregates` reads them; each person's totals come
--- from a window over their hero rows; and the recorders behind a group are carried as a list on the person's
--- hero row instead of being looked up again through a join. The only joins left are the small role lookup and
--- the final pairing of a hero's two buckets.
+-- The rule for this reader: no join between its steps may depend on a guessed row count. Postgres cannot size a
+-- `distinct on` over a join, and a nested loop planned on that guess re-reads a whole step for every line. So it
+-- reads `participants` once; a match's mode and recorder come from a window over the match, as
+-- `fill_hero_aggregates` reads them; each person's totals come from a window over their hero rows; and the
+-- recorders behind a group are carried as a list on the person's hero row. The only joins left are the small
+-- role lookup and the final pairing of a hero's two buckets.
 --
 -- The rules are untouched, so the definition on the website and the fixture check
 -- (supabase/checks/hero_specialists.sql) still hold.

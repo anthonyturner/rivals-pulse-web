@@ -73,7 +73,7 @@ describe('the hero specialists migration', () => {
   });
 
   it('leaves lines with no uid, no result, no hero and modes other than Quick Match and Competitive out', () => {
-    assert.match(reader, /where btrim\(p\.uid\) <> ''\s+and p\.is_win is not null\s+and p\.hero_id > 0\s+and p.play_mode_id in \(0, 1\)/);
+    assert.match(reader, /where btrim\(p\.uid\) <> ''\s+and p\.is_win is not null\s+and p\.hero_id > 0\s+and p\.play_mode_id in \(0, 1\)/);
   });
 
   it('merges a hero the game splits by role through hero_game_roles', () => {
