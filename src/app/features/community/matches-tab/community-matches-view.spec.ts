@@ -84,14 +84,15 @@ describe('buildCommunityMatchesView', () => {
     expect(view.sample).toBe('Matches in Season 10.5, each counted once however many players recorded it. While few players upload, these totals can come from one player.');
   });
 
-  it('shows each map with its whole-percentage rate and a bar, and names the thin ones without a count', () => {
+  it('splits a short list of maps between best and worst, and names the thin ones without a count', () => {
     const view = ready(
       buildCommunityMatchesView(
         matches({ maps: [{ map: 'Tokyo 2099', winRate: 58 }], mapsBelowMinimum: ['Klyntar', 'Hydra Base'] }),
       ),
     );
 
-    expect(view.maps.rows).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
+    expect(view.maps.best).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
+    expect(view.maps.worst).toEqual([]);
     expect(view.maps.pendingNote).toBe('Not enough data yet for: Klyntar, Hydra Base.');
     expect(view.maps.note).toBeNull();
   });
@@ -99,11 +100,36 @@ describe('buildCommunityMatchesView', () => {
   it('shows the not-enough-data note for maps when none has a rate yet', () => {
     const view = ready(buildCommunityMatchesView(matches({ modeMix: QUICK_MATCH_ONLY })));
 
-    expect(view.maps.rows).toEqual([]);
+    expect(view.maps.best).toEqual([]);
+    expect(view.maps.worst).toEqual([]);
     expect(view.maps.pendingNote).toBeNull();
     expect(view.maps.note).toBe(
       'Not enough data yet. A map needs 10 matches in one game mode and 10 with a result before its win rate shows.',
     );
+  });
+
+  const MAPS = [
+    { map: 'A', winRate: 70 },
+    { map: 'B', winRate: 65 },
+    { map: 'C', winRate: 60 },
+    { map: 'D', winRate: 55 },
+    { map: 'E', winRate: 50 },
+    { map: 'F', winRate: 45 },
+    { map: 'G', winRate: 40 },
+  ];
+
+  it('picks the best three and the worst three maps, worst first, whatever order the answer lists them in', () => {
+    const view = ready(buildCommunityMatchesView(matches({ maps: [...MAPS].reverse() })));
+
+    expect(view.maps.best.map((row) => row.map)).toEqual(['A', 'B', 'C']);
+    expect(view.maps.worst.map((row) => row.map)).toEqual(['G', 'F', 'E']);
+  });
+
+  it('never lists a map in both the best and the worst', () => {
+    const view = ready(buildCommunityMatchesView(matches({ maps: MAPS.slice(0, 5) })));
+
+    expect(view.maps.best.map((row) => row.map)).toEqual(['A', 'B', 'C']);
+    expect(view.maps.worst.map((row) => row.map)).toEqual(['E', 'D']);
   });
 
   it('shows the mode mix with shares and per-mode lengths in minutes', () => {
@@ -136,6 +162,28 @@ describe('buildCommunityMatchesView', () => {
     );
     expect(view.perDay.rows).toEqual([]);
     expect(view.perDay.note).toBe('Not enough data yet. A day is listed once it has 10 matches.');
+  });
+
+  it('gives a note when the answer lists a mode mix or days but they are empty', () => {
+    const view = ready(buildCommunityMatchesView(matches({ modeMix: [], perDay: [] })));
+
+    expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 10 matches.');
+    expect(view.perDay.note).toBe('Not enough data yet. A day is listed once it has 10 matches.');
+  });
+
+  it('reads the recent pace from the full days before the latest, which is still filling', () => {
+    const perDay = [10, 20, 20, 20, 2].map((share, index) => ({ day: '2026-10-2' + index, share }));
+    const view = ready(buildCommunityMatchesView(matches({ matchesCounted: 500, perDay })));
+
+    expect(view.recentMatchesPerDay).toBeCloseTo(500 * (20 / 100), 5);
+  });
+
+  it('has no recent pace without a listed day or a count of matches', () => {
+    expect(ready(buildCommunityMatchesView(matches({ perDay: null }))).recentMatchesPerDay).toBeNull();
+    expect(
+      ready(buildCommunityMatchesView(matches({ matchesCounted: null, perDay: [{ day: '2026-10-29', share: 50 }] })))
+        .recentMatchesPerDay,
+    ).toBeNull();
   });
 
   it('shows the average length and the days as shares, with bars scaled to the busiest day', () => {

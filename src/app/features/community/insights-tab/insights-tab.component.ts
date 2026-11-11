@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { COMMUNITY_EMPTY_RULE, CommunitySummaryComponent, MY_STATS_LINK } from '../community-summary/community-summary.component';
+import { COMMUNITY_EMPTY_RULE, CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { CommunityInsightsService } from './community-insights.service';
 import { buildInsightsTabView } from './insights-tab-view';
 
@@ -10,7 +10,7 @@ import { buildInsightsTabView } from './insights-tab-view';
   selector: 'app-community-insights-tab',
   imports: [CommunitySummaryComponent],
   templateUrl: './insights-tab.component.html',
-  styleUrl: './insights-tab.component.css',
+  styleUrls: ['../../../shared/styles/stat-panels.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InsightsTabComponent {
@@ -18,6 +18,5 @@ export class InsightsTabComponent {
   private readonly insights = toSignal(inject(CommunityInsightsService).getInsights());
 
   protected readonly summary = `Win rate by day of the week, time of day and place in a play session. ${COMMUNITY_EMPTY_RULE}`;
-  protected readonly link = MY_STATS_LINK;
   protected readonly view = computed(() => buildInsightsTabView(this.insights()));
 }

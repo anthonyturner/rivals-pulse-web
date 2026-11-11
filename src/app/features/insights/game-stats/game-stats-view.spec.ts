@@ -27,7 +27,7 @@ describe('buildGameStatsView', () => {
     expect(view).toEqual(
       jasmine.objectContaining({
         status: 'ready',
-        meta: 'Counted from RivalsPulse overlay uploads',
+        meta: 'Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.',
         tiles: [
           { label: 'Matches counted · all seasons', value: '1,234' },
           { label: 'Matches counted · Season 10.5', value: '900' },

@@ -3,3 +3,41 @@
   gap: 24px;
   min-width: 0;
 }
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+/* A pill with an arrow, so it reads as somewhere to go and not as a line of body text. */
+.links__link {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.links__link::after {
+  content: '\2192';
+  content: '\2192' / '';
+  text-decoration: none;
+}
+
+.links__link:hover {
+  border-color: var(--accent-line);
+  background: var(--bg-panel-soft);
+}
+
+.links__link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}

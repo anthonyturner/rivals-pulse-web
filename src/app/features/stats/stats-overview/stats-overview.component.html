@@ -1,3 +1,9 @@
-<app-game-stats />
+<app-game-stats [beatRate]="beatRate()" />
 <app-community-matches-tab />
 <app-community-insights-tab />
+
+<p class="links">
+  @for (link of links; track link.path) {
+    <a class="links__link" [routerLink]="link.path">{{ link.label }}</a>
+  }
+</p>

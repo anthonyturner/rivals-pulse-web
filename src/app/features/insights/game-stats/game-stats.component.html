@@ -1,8 +1,4 @@
 @if (view(); as v) {
-  @if (meta(); as text) {
-    <p class="meta">{{ text }}</p>
-  }
-
   @if (v.status === 'loading') {
     <app-state-panel kind="loading" heading="Loading game stats" [announce]="false">
       <p>Fetching the latest counts.</p>
@@ -16,26 +12,27 @@
       <p>Counts appear here once matches recorded with the RivalsPulse app have been uploaded.</p>
     </app-state-panel>
   } @else {
-    <app-hub-tile
-      class="lead"
-      title="Seen by the RivalsPulse app"
-      description="Matches and players counted from overlay uploads."
-      [imageUrl]="leadImage"
-      [chip]="leadChip"
-    />
-    <dl class="stats">
-      @for (tile of v.tiles; track tile.label) {
-        <div class="stat">
-          <dt><app-kind-chip kind="secondary" [label]="tile.label" /></dt>
-          <dd><span class="stat__value">{{ tile.value }}</span></dd>
-        </div>
-      }
-    </dl>
+    <section class="strip" aria-label="Matches and players counted">
+      <div class="strip__figures">
+        <app-heartbeat-line [rate]="beatRate()" />
+        <dl class="strip__tiles">
+          @for (tile of v.tiles; track tile.label) {
+            <div class="strip__tile">
+              <dt>{{ tile.label }}</dt>
+              <dd>{{ tile.value }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
 
-    <div class="card">
-      <h2>By half-season</h2>
-      <table aria-describedby="seasons-note">
+      <h2 id="seasons-title" class="strip__title">By half-season</h2>
+      <table class="stat-table seasons" aria-labelledby="seasons-title" aria-describedby="seasons-note">
         <caption class="visually-hidden">Matches and players seen in each half-season</caption>
+        <colgroup>
+          <col />
+          <col />
+          <col />
+        </colgroup>
         <thead>
           <tr>
             <th scope="col">Half-season</th>
@@ -50,16 +47,23 @@
               <td>{{ row.matches }}</td>
               <td>{{ row.players }}</td>
             </tr>
+          } @empty {
+            <tr>
+              <td colspan="3">No half-season has matches yet.</td>
+            </tr>
           }
         </tbody>
       </table>
-      <p class="note" id="seasons-note">
-        A match is counted once however many players recorded it, in every mode and whether or
-        not it ended with a win or a loss, so the rows add up to the total. Win rates and tiers use
-        only the matches with a result, so they count fewer. A player is counted once per
-        half-season, so the rows can add up to more players than the total. Only matches the app still holds are counted, which is up to about six months of
-        play.
-      </p>
-    </div>
+      <details class="strip__how">
+        <summary>How these are counted</summary>
+        <p class="stat-note" id="seasons-note">
+          A match is counted once however many players recorded it, in every mode and whether or not it ended with a win
+          or a loss, so the rows add up to the total. Win rates and tiers use only the matches with a result, so they
+          count fewer. A player is counted once per half-season, so the rows can add up to more players than the total.
+          Only matches the app still holds are counted, which is up to about six months of play.
+        </p>
+      </details>
+      <p class="meta">{{ v.meta }}</p>
+    </section>
   }
 }

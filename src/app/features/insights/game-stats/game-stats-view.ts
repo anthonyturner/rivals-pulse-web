@@ -49,7 +49,7 @@ export function buildGameStatsView(counts: GameCounts | null | undefined): GameS
 
   return {
     status: 'ready',
-    meta: 'Counted from RivalsPulse overlay uploads',
+    meta: 'Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.',
     tiles: [
       { label: matchesCountedLabel(counts.matches, 'all seasons'), value: numbers.format(counts.matches) },
       // The newest half-season's figure, which the home page and the Stats overview state too while it is the half-season they show.
