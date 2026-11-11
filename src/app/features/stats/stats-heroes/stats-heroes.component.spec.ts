@@ -452,7 +452,7 @@ describe('StatsHeroesComponent', () => {
 
       await choose(page, 'Season', '10.5');
 
-      expect(TestBed.inject(Router).url).toBe('/stats/heroes?season=10.5&mode=competitive');
+      expect(TestBed.inject(Router).url).toBe('/stats/heroes?mode=competitive&season=10.5');
       http.expectOne('/api/hero-stats?halfSeason=10.5&mode=competitive').flush({ ...withModes, halfSeason: current });
       await settle();
 
