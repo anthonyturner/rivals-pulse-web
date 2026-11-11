@@ -63,17 +63,17 @@ describe('parsePolicyMarkdown', () => {
     );
 
     expect(policy.sections.map((section) => [section.id, section.heading])).toEqual([
-      ['1-first', '1. First'],
-      ['2-second', '2. Second'],
+      ['section-1-first', '1. First'],
+      ['section-2-second', '2. Second'],
     ]);
     expect(policy.sections[0].blocks.map((block) => block.kind)).toEqual(['paragraph', 'subheading', 'paragraph']);
-    expect(policy.sections[0].blocks[1]).toEqual({ kind: 'subheading', id: '1-1-inner', text: '1.1 Inner' });
+    expect(policy.sections[0].blocks[1]).toEqual({ kind: 'subheading', id: 'section-1-1-inner', text: '1.1 Inner' });
   });
 
   it('gives repeated headings different ids so fragment links stay unique', () => {
     const policy = parsePolicyMarkdown(wrap('## Same\n\nA.\n\n## Same\n\nB.'));
 
-    expect(policy.sections.map((section) => section.id)).toEqual(['same', 'same-2']);
+    expect(policy.sections.map((section) => section.id)).toEqual(['section-same', 'section-same-2']);
   });
 
   it('joins wrapped paragraph and list lines, and starts a new list item at each dash', () => {

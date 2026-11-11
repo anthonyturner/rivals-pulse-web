@@ -173,7 +173,8 @@ export function parsePolicyMarkdown(markdown: string): PolicyDocument {
   const lines = markdown.split(/\r?\n/);
   const usedIds = new Set<string>();
   const uniqueId = (text: string): string => {
-    const base = slugOf(text);
+    // The prefix keeps an id that starts with a digit usable in a CSS selector.
+    const base = `section-${slugOf(text)}`;
     let id = base;
 
     for (let copy = 2; usedIds.has(id); copy += 1) {
