@@ -72,17 +72,16 @@ describe('CommunitySummaryComponent', () => {
     expect(thin.thin()).toBeFalse();
   });
 
-  it('shows the notice, footnote and both links when ready', () => {
+  it('shows the notice, footnote and link when ready', () => {
     render({
       kind: 'ready',
       notice: 'Season 10 stands in.',
       footnote: 'From 194 matches.',
       link: { label: 'First', path: '/a' },
-      secondLink: { label: 'Second', path: '/b' },
     });
 
     expect(host().querySelector('app-notice')?.textContent).toContain('Previous half-season. Season 10 stands in.');
     expect(host().querySelector('.footnote')?.textContent).toBe('From 194 matches.');
-    expect(Array.from(host().querySelectorAll('.links a')).map((a) => a.getAttribute('href'))).toEqual(['/a', '/b']);
+    expect(Array.from(host().querySelectorAll('.links a')).map((a) => a.getAttribute('href'))).toEqual(['/a']);
   });
 });

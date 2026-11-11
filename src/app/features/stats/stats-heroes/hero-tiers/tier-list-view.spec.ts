@@ -4,8 +4,8 @@ import type {
   HeroStatsHero,
   HeroStatsMode,
   HeroStatsModeId,
-} from '../../../../contracts/hero-stats.model';
-import type { HeroIdentities } from '../hero-identity';
+} from '../../../../../contracts/hero-stats.model';
+import type { HeroIdentities } from '../../../insights/hero-identity';
 import { buildTierListView } from './tier-list-view';
 
 const season = (id: number, startsAt: string | null, endsAt: string | null): HeroStatsHalfSeason => ({
@@ -112,6 +112,16 @@ describe('buildTierListView', () => {
     const stats = { ...statsOf(), minimumPlayers: 2, belowMinimum: [{ hero: 'luna-snow', appearances: 12, players: 1 }] };
 
     expect(buildTierListView(stats, identities).building.map((row) => row.progressLabel)).toEqual(['1 of 2 players']);
+  });
+
+  it('lists the facts the toolbar shows, in order, once a tier is drawn, and none before', () => {
+    expect(buildTierListView(statsOf(), identities).metaParts).toEqual([
+      'Started Oct 9, 2026',
+      '146 matches with a result',
+      'Heroes need 10 appearances to be placed',
+      'Each tile: win rate, then pick rate and games.',
+    ]);
+    expect(buildTierListView(statsOf(nothingPlaced), identities).metaParts).toEqual([]);
   });
 
   it('draws no tier rows when matches are counted but no hero has enough data', () => {

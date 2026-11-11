@@ -21,8 +21,8 @@
         <div class="site-footer__column">
           <h2 class="site-footer__heading" [id]="column.id">{{ column.heading }}</h2>
           <ul [attr.aria-labelledby]="column.id">
-            @for (link of column.links; track link.path) {
-              <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+            @for (link of column.links; track link.label) {
+              <li><a [routerLink]="link.path" [queryParams]="link.queryParams">{{ link.label }}</a></li>
             }
           </ul>
         </div>

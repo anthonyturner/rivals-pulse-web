@@ -1,0 +1,31 @@
+@let v = view();
+
+@if (v.state === 'ready') {
+  <app-tier-rows [tiers]="v.tiers" [linkHeroes]="true" [headingLevel]="3" artLed raised showRoles />
+} @else {
+  <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}" [headingLevel]="3">
+    <p class="state-count">
+      @if (v.state === 'building') {
+        {{ v.decidedMatchesLabel }}
+      } @else {
+        No matches with a result
+      }
+      {{ v.scopeLabel }} so far.
+    </p>
+    <p>
+      The tier list is built from matches that RivalsPulse players record, so it fills in as
+      they play. A hero is placed once it has {{ v.placementLabel }}.
+    </p>
+  </app-state-panel>
+}
+
+@if (v.building.length > 0) {
+  <section class="building" aria-labelledby="tiers-building-title">
+    <div class="section-heading">
+      <h3 id="tiers-building-title">Progress toward a tier</h3>
+      <p>Heroes need {{ v.placementLabel }} before they are placed in a tier.</p>
+    </div>
+
+    <app-hero-progress-list [rows]="v.building" />
+  </section>
+}

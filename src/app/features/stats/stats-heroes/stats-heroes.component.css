@@ -4,18 +4,138 @@
   min-width: 0;
 }
 
-.full-pages {
-  display: grid;
-  gap: 12px;
+.all-heroes {
+  min-width: 0;
 }
 
-.full-pages__title {
+.all-heroes__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.all-heroes__text {
+  display: grid;
+  gap: 4px;
+  max-width: 62ch;
+}
+
+.all-heroes__title {
   margin: 0;
   font-size: var(--type-h3);
-  font-weight: 850;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.intro {
+.all-heroes__lede {
   margin: 0;
   color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.all-heroes__lede a {
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* A two-way switch drawn as two links, so each layout is an address a crawler can follow. */
+.view-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.view-toggle__option {
+  display: flex;
+  align-items: center;
+  min-width: 80px;
+  min-height: 38px;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.view-toggle__option:hover {
+  background: var(--bg-panel-soft);
+  color: var(--text);
+}
+
+.view-toggle__option[aria-current='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.view-toggle__option:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The pickers' labels are --text-muted, 4.2:1 on the page background; --text-soft is 8.3:1. */
+.toolbar {
+  --text-muted: var(--text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: end;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+
+.toolbar app-filter-select {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.meta {
+  flex: 1 1 320px;
+  max-width: 560px;
+  margin: 0 0 0 auto;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  text-align: right;
+}
+
+app-state-panel,
+app-notice,
+app-hero-table,
+app-hero-tiers {
+  margin-top: 12px;
+}
+
+/* The loading and failure panels share the tiles' 12px corners. */
+app-state-panel {
+  --state-panel-radius: 12px;
+}
+
+.method-note {
+  margin: 16px 0 0;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+@media (max-width: 1023px) {
+  .meta {
+    flex-basis: 100%;
+    max-width: none;
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .toolbar app-filter-select {
+    flex: 1 1 0;
+  }
 }

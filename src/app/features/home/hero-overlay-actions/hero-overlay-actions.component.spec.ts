@@ -59,7 +59,7 @@ describe('HeroOverlayActionsComponent', () => {
     const link = element.querySelector('a.cta-ghost') as HTMLAnchorElement;
 
     expect(text(link)).toBe('See hero stats');
-    expect(link.getAttribute('href')).toBe('/win-rates');
+    expect(link.getAttribute('href')).toBe('/stats/heroes');
   });
 
   it('shows downloads and rating as "Coming soon" and reserves the matches slot while loading', () => {

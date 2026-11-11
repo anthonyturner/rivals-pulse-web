@@ -8,6 +8,8 @@ export interface HomeTool {
   /** One line on what the tool answers for the visitor. */
   promise: string;
   path: string;
+  /** Query parameters of the address, for a card that opens a page in a particular state. */
+  queryParams?: Readonly<Record<string, string>>;
   /** The link's words, naming where it goes. */
   action: string;
   /** What the app does with the same answer in game; left out where there is no honest counterpart. */
@@ -27,7 +29,7 @@ export const HOME_TOOLS: readonly HomeTool[] = [
   {
     title: 'Hero stats',
     promise: 'Win rate, pick rate and tier for every hero, counted from matches RivalsPulse players record.',
-    path: '/win-rates',
+    path: '/stats/heroes',
     action: 'See hero stats',
     inOverlay: 'The matches the app records are what these numbers count.',
     iconPath: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
@@ -35,7 +37,8 @@ export const HOME_TOOLS: readonly HomeTool[] = [
   {
     title: 'Tier list',
     promise: 'Every hero ranked from S to D, so you know who is strong right now.',
-    path: '/tier-list',
+    path: '/stats/heroes',
+    queryParams: { view: 'tiers' },
     action: 'See the tier list',
     inOverlay: 'Open the tier list over the game.',
     iconPath: 'M4 6h16M4 12h11M4 18h6',

@@ -188,35 +188,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'tier-list',
-    title: 'Tier list | RivalsPulse',
-    loadComponent: () =>
-      import('./features/insights/tier-list/tier-list-page.component').then(
-        (module) => module.TierListPageComponent,
-      ),
-  },
-  {
-    path: 'season-9-win-rates',
-    redirectTo: 'win-rates',
-    pathMatch: 'full',
-  },
-  {
-    path: 'win-rates',
-    title: 'Hero stats | RivalsPulse',
-    loadComponent: () =>
-      import('./features/insights/win-rates/win-rates-page.component').then(
-        (module) => module.WinRatesPageComponent,
-      ),
-  },
-  {
-    path: 'win-rates/:season',
-    title: 'Hero stats | RivalsPulse',
-    loadComponent: () =>
-      import('./features/insights/win-rates/win-rates-page.component').then(
-        (module) => module.WinRatesPageComponent,
-      ),
-  },
-  {
     path: 'watch-next',
     title: 'Watch next quiz | RivalsPulse',
     canMatch: [releasedPageGuard],
