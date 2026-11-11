@@ -24,6 +24,24 @@ export function countLabel(count: number, singular: string, plural: string): str
 }
 
 /**
+ * The label of the site's one "matches counted" figure, always saying what it covers, such as
+ * `Matches counted · Season 10.5` or `Matches counted · all seasons`. Every page states that figure
+ * through this, so two figures with this label never cover different things.
+ */
+export function matchesCountedLabel(count: number, scope: string): string {
+  return `${count === 1 ? 'Match' : 'Matches'} counted · ${scope}`;
+}
+
+/**
+ * The count the win rates, tiers and pick rates are worked out from, such as `146 matches with a
+ * result`. It is a different count from "matches counted", which includes matches that ended with
+ * no win or loss recorded, so it never uses that label.
+ */
+export function decidedMatchesLabel(count: number): string {
+  return `${countLabel(count, 'match', 'matches')} with a result`;
+}
+
+/**
  * The sentence that says a previous half-season's numbers stand in for the current one's. Give
  * `modeLabel` when one mode is counted on its own, so the sentence says which mode ran short.
  */

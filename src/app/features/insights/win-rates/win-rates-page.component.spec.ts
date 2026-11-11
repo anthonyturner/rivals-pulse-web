@@ -218,7 +218,7 @@ describe('WinRatesPageComponent', () => {
     const meta = squash(text(element, '.meta')[0]);
 
     expect(meta).toContain('Season 10.5');
-    expect(meta).toContain('149 matches counted');
+    expect(meta).toContain('149 matches with a result');
     expect(meta).toContain('the line marks 50%');
     expect(text(element, 'tbody .hero-name')).toEqual(['Storm', 'Hela']);
     expect(text(element, 'tbody .rate strong')).toEqual(['66.7%', '45.0%']);
@@ -306,7 +306,7 @@ describe('WinRatesPageComponent', () => {
       'Not enough data yet in Quick Match and Competitive for Season 10.5',
     ]);
     expect(squash(text(element, 'app-state-panel p')[0])).toContain(
-      '3 matches counted in Quick Match and Competitive for Season 10.5 so far',
+      '3 matches with a result in Quick Match and Competitive for Season 10.5 so far',
     );
     expect(element.querySelector('table')).toBeNull();
     expect(text(element, '.building-count')).toEqual(['4 of 10', '2 of 10']);
@@ -336,7 +336,7 @@ describe('WinRatesPageComponent', () => {
 
     expect(text(element, 'app-state-panel h2')).toEqual(['Not enough data yet in Quick Match and Competitive']);
     expect(squash(text(element, 'app-state-panel p')[0])).toContain(
-      'No matches are counted in Quick Match and Competitive yet',
+      'No matches with a result in Quick Match and Competitive yet',
     );
     expect(element.querySelector('table')).toBeNull();
     expect(element.querySelector('.building')).toBeNull();
@@ -440,10 +440,10 @@ describe('WinRatesPageComponent', () => {
       harness.detectChanges();
 
       expect(liveRegion(element)).toBe(
-        'Hero stats updated in Competitive for Season 10.5: 28 matches counted',
+        'Hero stats updated in Competitive for Season 10.5: 28 matches with a result',
       );
       expect(element.querySelectorAll('[aria-live]').length).toBe(1);
-      expect(squash(text(element, '.meta')[0])).toContain('28 matches counted');
+      expect(squash(text(element, '.meta')[0])).toContain('28 matches with a result');
       expect(modeSelect(element).value).toBe('competitive');
     });
 
@@ -460,7 +460,7 @@ describe('WinRatesPageComponent', () => {
       http.expectNone('/api/hero-stats');
       expect(element.querySelector('[aria-busy="true"]')).toBeNull();
       expect(modeSelect(element).value).toBe('all');
-      expect(squash(text(element, '.meta')[0])).toContain('149 matches counted');
+      expect(squash(text(element, '.meta')[0])).toContain('149 matches with a result');
     });
 
     it('names an empty mode and its half-season, and keeps the picker so the mode can be left', async () => {

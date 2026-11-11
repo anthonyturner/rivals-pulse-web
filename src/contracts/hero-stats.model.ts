@@ -93,7 +93,11 @@ export interface HeroStats {
   mode?: HeroStatsModeId | null;
   /** Every mode a client can ask for, in display order, counted in the half-season shown. Absent when `mode` is. */
   modes?: HeroStatsMode[];
-  /** Matches with a win or a loss in the selected mode: the pick rate's denominator. */
+  /**
+   * Matches with a win or a loss in the selected mode: the pick rate's denominator. This is not the
+   * site's "matches counted" (see `GameCountsHalfSeason.matches`), which includes matches with no
+   * result and every mode; the pages call this one "matches with a result".
+   */
   matchesCounted: number;
   tiers: HeroStatsTier[];
   belowMinimum: HeroStatsBelowMinimum[];

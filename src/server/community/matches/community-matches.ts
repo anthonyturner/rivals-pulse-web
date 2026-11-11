@@ -5,6 +5,7 @@ import type {
   CommunityMatchesMinimums,
   CommunityModeShare,
 } from '../../../contracts/community-matches.model.ts';
+import type { GameCounts } from '../../../contracts/game-counts.model.ts';
 import { PLAY_MODE_NAMES } from '../../../contracts/play-modes.ts';
 import {
   BLENDED_PLAY_MODE_IDS,
@@ -13,6 +14,7 @@ import {
   halfSeasonTimeline,
   type HalfSeasonStart,
 } from '../../heroes/stats/hero-stats.ts';
+import { matchesCountedIn } from '../../game-counts/matches-counted.ts';
 
 /**
  * Every figure on the Community Matches tab is derived here and nowhere else, from the counts in
@@ -73,6 +75,12 @@ interface DeriveCommunityMatchesOptions {
    * not started, or that nothing knows, gives the empty state.
    */
   halfSeason?: number;
+  /**
+   * The game counts the "matches counted" figure comes from; the figure is null without them. It is
+   * not summed from the shown buckets here, so a map, mode or day hidden for being thin cannot
+   * make it disagree with Game Stats.
+   */
+  counts?: GameCounts | null;
 }
 
 /** A mode the game reports under an id this site does not know yet is shown as "Other". */
@@ -80,20 +88,8 @@ export function playModeName(playModeId: number): string {
   return PLAY_MODE_NAMES.get(playModeId) ?? 'Other';
 }
 
-/**
- * The volume bands, as the floor a "100+ matches" label states. An exact total next to shown buckets
- * would let a reader subtract the hidden ones, so only the band leaves this module.
- */
-export const MATCH_VOLUME_BANDS: readonly number[] = [20, 50, 100, 250, 500, 1000, 2500, 5000];
-
-/** The largest band the count reaches, or null below the smallest. */
-export function matchVolumeBand(matches: number): number | null {
-  return [...MATCH_VOLUME_BANDS].reverse().find((band) => matches >= band) ?? null;
-}
-
-/** What one half-season works out to. `matchesCounted` is internal: only its band is published. */
+/** What one half-season works out to. */
 interface Snapshot {
-  matchesCounted: number;
   maps: CommunityMapRecord[];
   mapsBelowMinimum: string[];
   modeMix: CommunityModeShare[] | null;
@@ -123,7 +119,7 @@ export function deriveCommunityMatches(
       halfSeasons: started.map(describe),
       halfSeason: shown === undefined ? null : describe(shown),
       inPlaceOf: inPlaceOf === undefined ? null : describe(inPlaceOf),
-      matchesBand: matchVolumeBand(snapshot.matchesCounted),
+      matchesCounted: shown === undefined || !options.counts ? null : matchesCountedIn(options.counts, shown),
       maps: snapshot.maps,
       mapsBelowMinimum: snapshot.mapsBelowMinimum,
       modeMix: snapshot.modeMix,
@@ -142,7 +138,6 @@ function snapshotOf(source: CommunityMatchesSource, halfSeason: number): Snapsho
   const { maps, mapsBelowMinimum } = mapRecords(source.maps.filter((row) => row.halfSeason === halfSeason));
 
   return {
-    matchesCounted: sum(modes.map((row) => row.matches)),
     maps,
     mapsBelowMinimum,
     modeMix: modeMix(modes.filter((row) => row.playModeId !== PLAY_MODE_IDS.unknown)),
@@ -249,7 +244,7 @@ function hasFigures(snapshot: Snapshot): boolean {
 }
 
 function emptySnapshot(): Snapshot {
-  return { matchesCounted: 0, maps: [], mapsBelowMinimum: [], modeMix: null, averageLengthMinutes: null, perDay: null };
+  return { maps: [], mapsBelowMinimum: [], modeMix: null, averageLengthMinutes: null, perDay: null };
 }
 
 function sum(values: readonly number[]): number {

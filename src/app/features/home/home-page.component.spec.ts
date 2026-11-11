@@ -38,6 +38,21 @@ describe('HomePageComponent', () => {
         belowMinimum: [],
       }),
     );
+    http.match('/api/community/matches').forEach((request) =>
+      request.flush({
+        status: 'not-enough-data',
+        minimums: { overviewMatches: 10, mapMatches: 10, lengthMatches: 10 },
+        halfSeasons: [],
+        halfSeason: null,
+        inPlaceOf: null,
+        matchesCounted: null,
+        maps: [],
+        mapsBelowMinimum: [],
+        modeMix: null,
+        averageLengthMinutes: null,
+        perDay: null,
+      }),
+    );
     http.match('/api/glossary').forEach((request) => request.flush([]));
     await settle();
   }

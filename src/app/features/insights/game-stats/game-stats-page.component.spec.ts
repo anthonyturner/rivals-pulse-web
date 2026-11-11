@@ -80,8 +80,13 @@ describe('GameStatsPageComponent', () => {
     expect(lead.querySelector('a')).toBeNull();
     expect(lead.querySelector('img')?.getAttribute('alt')).toBe('');
     expect(lead.querySelector('img')?.getAttribute('src')).toBe('/images/site/banners/game-stats-banner.webp');
-    expect(text(element, '.stats dt')).toEqual(['Matches seen', 'Players seen', 'Earliest match']);
-    expect(text(element, '.stats .stat__value')).toEqual(['733', '7,674', 'Sep 20, 2026']);
+    expect(text(element, '.stats dt')).toEqual([
+      'Matches counted · all seasons',
+      'Matches counted · Season 10.5',
+      'Players seen',
+      'Earliest match',
+    ]);
+    expect(text(element, '.stats .stat__value')).toEqual(['733', '436', '7,674', 'Sep 20, 2026']);
   });
 
   it('draws one table of half-seasons with a caption, a note and a scope on every header', async () => {
@@ -93,8 +98,11 @@ describe('GameStatsPageComponent', () => {
     expect(element.querySelector(`#${table.getAttribute('aria-describedby')}`)?.textContent).toContain(
       'A player is counted once per half-season',
     );
+    expect(element.querySelector(`#${table.getAttribute('aria-describedby')}`)?.textContent).toContain(
+      'A match is counted once however many players recorded it',
+    );
     expect(Array.from(table.querySelectorAll('th')).every((header) => header.getAttribute('scope') !== null)).toBeTrue();
-    expect(text(table, 'thead th')).toEqual(['Half-season', 'Matches', 'Players']);
+    expect(text(table, 'thead th')).toEqual(['Half-season', 'Matches counted', 'Players']);
     expect(
       Array.from(table.querySelectorAll('tbody tr')).map((row) =>
         Array.from(row.children).map((cell) => cell.textContent?.trim()),

@@ -53,7 +53,6 @@ export const DATA_JOBS = [
       "The counts behind each hero's win rate, pick rate, KDA and final hits, behind the tier list and the role averages, " +
       "and behind each hero's record against every other hero.",
     pages: [
-      { name: 'Home', path: '/', section: 'The "Matches counted" figure under the buttons at the top' },
       { name: 'Win rates', path: '/win-rates', section: 'Heroes, highest win rate first' },
       { name: 'Tier list', path: '/tier-list', section: 'Marvel Rivals tier list (the tiers)' },
       { name: 'Counters', path: '/counters', section: 'Heroes that beat a hero, and Heroes a hero beats' },
@@ -74,8 +73,9 @@ export const DATA_JOBS = [
       'average after 50 appearances. Until the current half-season has a hero with 10 appearances and 2 players, the pages show the ' +
       'previous half-season. Quick Match and Competitive are counted together unless a page lets you pick a mode.',
     example:
-      'The "Matches counted" figure at the top of the home page goes up if new Quick Match or Competitive matches with a ' +
-      'result have come in, unless the page is still showing the previous half-season.',
+      'The "matches with a result" count at the top of the Win rates and Tier list pages goes up if new Quick Match or Competitive ' +
+      'matches with a result have come in, unless the page is still showing the previous half-season. The "Matches counted" ' +
+      'figure on the home page and Game stats is not fed by this job: it is read live from the uploads.',
   },
   {
     key: 'recompute-extended-aggregates',

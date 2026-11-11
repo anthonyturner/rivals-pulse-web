@@ -5,6 +5,8 @@ import {
   type CommunityMatchesSource,
 } from './community-matches.ts';
 import type { CommunityMatches } from '../../../contracts/community-matches.model.ts';
+import type { GameCounts } from '../../../contracts/game-counts.model.ts';
+import { getGameCounts } from '../../game-counts/game-counts-read.ts';
 import { answerReader, callReadFunction, getSupabaseClient } from '../../supabase/index.ts';
 
 interface CommunityMatchesReadOptions {
@@ -67,12 +69,28 @@ export function parseCommunityMatchesSource(body: unknown): CommunityMatchesSour
 
 /** The community's match figures, or the empty state while the aggregates are not there yet. */
 export async function getCommunityMatches(options: CommunityMatchesReadOptions = {}): Promise<CommunityMatches> {
-  const source = await fetchCommunityMatchesSource(options.client ?? getSupabaseClient());
+  const client = options.client ?? getSupabaseClient();
+  const [source, counts] = await Promise.all([fetchCommunityMatchesSource(client), readGameCounts(client)]);
 
   return deriveCommunityMatches(source ?? NOTHING_COUNTED, {
     now: (options.now ?? (() => new Date()))(),
     halfSeason: options.halfSeason,
+    counts,
   });
+}
+
+/**
+ * The counts behind the "matches counted" figure, or null when they cannot be read. The tab's other
+ * figures do not depend on them, so a failed read costs it the one figure, not the whole tab.
+ */
+async function readGameCounts(client: SupabaseClient): Promise<GameCounts | null> {
+  try {
+    return await getGameCounts(client);
+  } catch (error) {
+    console.error('Failed to read the game counts for the matches-counted figure', error);
+
+    return null;
+  }
 }
 
 function dayOf(value: string): string {
