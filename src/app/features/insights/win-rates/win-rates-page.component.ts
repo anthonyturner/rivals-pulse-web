@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { BehaviorSubject, map, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, map, Observable, switchMap, tap } from 'rxjs';
 
-import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
+import type { HeroStats, HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { contentState, reportContentState } from '../../../core/seo/thin-content';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
@@ -13,6 +13,7 @@ import { HeroImageFallbackDirective } from '../../../shared/directives/hero-imag
 import { DEFAULT_MODE_ID, heroStatsModeOptions, type ModeOption } from '../../../shared/utilities/play-modes';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { HeroProgressListComponent } from '../hero-progress-list/hero-progress-list.component';
+import { CurrentHeroStatsService } from '../current-hero-stats.service';
 import { HeroStatsService } from '../hero-stats.service';
 import { heroIdentities } from '../hero-identity';
 import { buildWinRatesView, selectHeroStatsRows, type HeroStatsSort } from './win-rates-view';
@@ -39,6 +40,7 @@ export class WinRatesPageComponent {
     this.route.paramMap.pipe(map((params) => params.get('season'))),
     { initialValue: this.route.snapshot.paramMap.get('season') },
   );
+  private readonly currentHeroStats = inject(CurrentHeroStatsService);
   private readonly heroStats = inject(HeroStatsService);
   private readonly chosenMode = signal<HeroStatsModeId>(DEFAULT_MODE_ID);
   /** True from choosing another mode until its numbers arrive, so the last mode's are not shown under the new label. */
@@ -51,7 +53,7 @@ export class WinRatesPageComponent {
   private readonly stats = toSignal(
     this.requested.pipe(
       switchMap((mode) =>
-        this.heroStats.getHeroStats(undefined, mode).pipe(
+        this.statsFor(mode).pipe(
           tap((stats) => {
             if (stats !== null) {
               this.modes.set(heroStatsModeOptions(stats, this.chosenMode()));
@@ -155,6 +157,13 @@ export class WinRatesPageComponent {
 
   constructor() {
     reportContentState(() => contentState(this.loading(), this.view()?.state === 'full'));
+  }
+
+  /** The default mode comes from the shared current stats; a mode the reader picked is asked for itself. */
+  private statsFor(mode: HeroStatsModeId): Observable<HeroStats | null> {
+    return mode === DEFAULT_MODE_ID
+      ? this.currentHeroStats.getHeroStats()
+      : this.heroStats.getHeroStats(undefined, mode);
   }
 
   chooseMode(value: string): void {

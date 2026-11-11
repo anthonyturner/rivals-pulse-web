@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { CommunityKillsService } from '../../insights/community-kills.service';
 import { KILL_FEED_CAVEAT } from '../../insights/hero-kill-feed';
-import { HeroMatchupsService } from '../../insights/hero-matchups.service';
+import { CurrentHeroMatchupsService } from '../../insights/current-hero-matchups.service';
 import { heroIdentities } from '../../insights/hero-identity';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { buildCountersTabView } from './counters-tab-view';
@@ -20,7 +20,7 @@ import { buildCountersKillFeedView } from './kill-feed-view';
 })
 export class CountersTabComponent {
   // undefined while the request runs, null once it has failed.
-  private readonly matchups = toSignal(inject(HeroMatchupsService).getHeroMatchups());
+  private readonly matchups = toSignal(inject(CurrentHeroMatchupsService).getHeroMatchups());
   private readonly kills = toSignal(inject(CommunityKillsService).getKills());
   private readonly roster = toSignal(inject(HeroDataService).getHeroes());
 
