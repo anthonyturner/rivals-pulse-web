@@ -197,4 +197,14 @@ export const MEDIA_TUTORIALS: readonly MediaTutorial[] = [
     sourceUrl: 'https://youtu.be/3leIrDmkHbs?si=oiLno2-O5oqqg9tT',
     tags: ['Tilt', 'Mental', 'Reset'],
   },
+  {
+    id: 'doctor-strange-rank-one',
+    category: 'Heroes',
+    title: 'How To Play Like The Rank One Doctor Strange In Marvel Rivals',
+    description: 'Infinitea reviews Doctor Strange gameplay with an educational breakdown of the hero and general Vanguard tips.',
+    youtubeId: 'SWomAJspcoM',
+    guideUrl: '/hero-guides/doctor-strange',
+    sourceUrl: 'https://www.youtube.com/watch?v=SWomAJspcoM&t=189s',
+    tags: ['Doctor Strange', 'Vanguard', 'VOD Review', 'Infinitea'],
+  },
 ];
