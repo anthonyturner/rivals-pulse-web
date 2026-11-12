@@ -1,138 +1,83 @@
-export interface HeroGuideSection {
-  title: string;
-  points: string[];
-}
-
-export interface HeroUltimateGuide {
-  name: string;
-  plan: string;
-  goodAgainst: string[];
-  avoidInto: string[];
-}
-
-export interface GuideArticleSource {
-  label: string;
-  url: string;
-  note: string;
-}
-
-export interface HeroGuide {
-  heroId: string;
-  heroName: string;
-  category: 'hero' | 'fundamentals';
-  role: 'Vanguard' | 'Duelist' | 'Strategist' | 'Fundamentals';
-  image: string;
-  sourceLabel: string;
-  sourceUrl?: string;
-  /** Written articles behind a guide that has no single video source. */
-  articleSources?: GuideArticleSource[];
-  summary: string;
-  poolJob: string;
-  pickWhen: string;
-  sections: HeroGuideSection[];
-  ultimates: HeroUltimateGuide[];
-}
+import type { HeroGuide } from './hero-guide.types.ts';
+export type { GuideArticleSource, HeroGuide, HeroGuideExample, HeroGuideSection, HeroUltimateGuide } from './hero-guide.types.ts';
 
 export const HERO_GUIDES: HeroGuide[] = [
   {
-    heroId: 'doctor-strange',
-    heroName: 'Doctor Strange',
-    category: 'hero',
-    role: 'Vanguard',
-    image: '/images/heroes/doctor-strange.png',
-    sourceLabel: 'Infinitea - How To Play Like The Rank One Doctor Strange In Marvel Rivals',
-    sourceUrl: 'https://www.youtube.com/watch?v=SWomAJspcoM&t=189s',
-    summary:
-      "A practical Doctor Strange playbook from Infinitea's gameplay review: take space without draining your supports, share frontline duties, protect the backline, and turn ultimate and portal timing into objective progress.",
-    poolJob:
-      'Hold useful ground with cover and shield, keep your supports able to heal you, and create openings that your team can follow.',
-    pickWhen:
-      'Use this guide to improve your Doctor Strange decisions when you overextend, struggle to balance peeling with contesting, or want a clearer plan for ultimates and portals.',
+    heroId: "doctor-strange",
+    heroName: "Doctor Strange",
+    category: "hero",
+    role: "Vanguard",
+    image: "/images/heroes/doctor-strange.png",
+    sourceLabel: "Infinitea - How To Play Like The Rank One Doctor Strange In Marvel Rivals",
+    sourceUrl: "https://www.youtube.com/watch?v=SWomAJspcoM&t=189s",
+    summary: "Doctor Strange creates room for his team by making the enemy work for every step. This lesson follows Infinitea's gameplay review to connect positioning, frontline handoffs and backline protection with the objective decisions they serve.",
+    poolJob: "Hold ground your teammates can use while keeping cover, healing sightlines and defensive resources available for the next exchange.",
+    pickWhen: "Read this when you survive on the frontline but struggle to judge when to advance, protect a teammate or give ground. The goal is a repeatable decision process, not copying every aggressive play in the review.",
     sections: [
       {
-        title: 'Keep friendly sightlines and limit enemy angles (0:20)',
-        points: [
-          'Keep a clear healing line from your Strategists while exposing yourself to as few enemy angles as possible.',
-          'When shielding teammates, stand where your shield protects them. When taking a separate angle, avoid lining everyone up so missed shots into you still hit the backline.',
-          'Use terrain as your first protection. The payload can provide cover when nearby walls do not, but check which direction it actually protects.',
-          'Taking unnecessary damage consumes healing your supports could spend on teammates, damage, or aggressive utility.',
-        ],
+        title: "Position where help can reach you",
+        paragraphs: [
+          "Start with the relationship between three positions: yours, your supports' and the enemy's. Your Strategists need a clear line to heal you, while the enemy should have as few clean angles into you as possible. In the discussion beginning at 0:20, Infinitea treats those sightlines as the foundation of tank positioning. A spot that blocks friendly healing while exposing you to several enemies asks your team to solve a problem you created.",
+          "Cover reduces that demand before a shield or a heal is spent. Use a wall when you can; when you cannot, check whether the payload protects the direction that matters. Stand in front of teammates when your shield is meant to cover them. If you take a separate angle instead, avoid lining everyone up behind you so a missed shot into the tank still finds the backline.",
+          "The consequence reaches beyond your own health bar. As the review explains on attack at 12:15, constant unnecessary damage keeps your supports busy healing you. That leaves less attention for a threatened teammate, less damage into the enemy and fewer opportunities to use utility aggressively. Taking space efficiently means asking for only the healing needed to hold it."
+        ]
       },
       {
-        title: 'Give ground while you still have room (1:09)',
-        points: [
-          'After an ally falls, reassess the player advantage before continuing to push. Retreating can preserve the team for the next fight.',
-          'Giving space can make attackers choose between chasing your team and keeping players on the payload. Notice what they actually commit.',
-          'Space is a resource, not an unlimited escape. Once the objective is about to be lost, someone may have to contest even in a difficult fight.',
-          'After a lost fight, leave together if escape is realistic. Avoid a late, isolated death that delays the next regroup.',
-        ],
+        title: "Give ground before you run out of choices",
+        paragraphs: [
+          "A first allied death changes the fight even when your own health looks comfortable. At 1:09, Strange backs away instead of treating his current position as something he must defend at any cost. The retreat preserves room for the team to recover and makes the attackers choose between chasing and keeping players on the payload. Watch what they actually commit rather than assuming every retreat gives away the same amount of progress.",
+          "Space has a limit. If there is still room to recover together, spending some of it is often better than losing another player. Once leaving would immediately surrender the objective, a difficult contest may be necessary. After a lost fight, make the escape decision promptly: leave with teammates when survival is realistic, and avoid a late isolated death that postpones the next full regroup."
+        ]
       },
       {
-        title: 'Trade frontline duties around cooldowns (3:06)',
-        points: [
-          "Watch your other tank's defensive cooldowns as well as your own. A teammate who has spent protection needs a chance to recover.",
-          'In the review, Strange steps forward after recovering health and shield while Magneto has used his defensive tools.',
-          'Take your turn at the front when you have resources, then use cover and let your teammate take pressure while you recover.',
-          'Check side routes and challenge exposed enemies without turning a short pressure play into an unsupported chase.',
-        ],
+        title: "Hand off the frontline, then take a short angle",
+        paragraphs: [
+          "Think of the frontline as a responsibility you can share rather than a place one tank owns for the whole fight. Around 3:06, Magneto has spent protection while Strange has recovered health and some shield. Strange can step in front and absorb attention while Magneto backs away. The useful information is not simply that your own abilities are ready; it is that your teammate has a reason to stop taking pressure.",
+          "That same resource check determines whether an angle is available. In the sequence discussed at 9:28, Strange has damage prepared, defensive tools available and Magneto holding the point. A brief move toward the backline can create value without leaving the objective unattended. Check the side routes, make the enemy respect them and return before a short pressure play becomes an unsupported chase.",
+          "The attack-side flank discussed at 12:59 is a warning about that limit. Infinitea knows his supports are across the fight and accepts responsibility if the attempt fails. Its success does not make that position a default. Close-range pressure from The Thing or Thor also changes what Strange can safely contest. Reassess the route, range and exit instead of assuming the same duel will remain favorable."
+        ]
       },
       {
-        title: 'Protect the backline without abandoning the objective (2:29, 5:20)',
-        points: [
-          'Peeling means turning back to protect teammates under attack. When a diver reaches your supports, check whether you can help and still meet the objective deadline.',
-          'If you are the only tank contesting, leaving may immediately surrender the objective. The review treats this as a difficult trade, not permission to ignore supports.',
-          'Shield follow-up fire so a diver cannot easily combine damage with the rest of their team. Protection can matter even when you cannot stop the dive itself.',
-          'Keep checking behind you during friendly support ultimates. In the review, protecting a teammate from Winter Soldier denies his follow-up instead of simply pushing forward.',
-        ],
+        title: "Turn back without surrendering the objective",
+        paragraphs: [
+          "Peeling means turning to protect a teammate under attack. When Venom reaches your backline, the immediate question is whether you can help and still meet the objective deadline. The review's situations at 2:29 and 5:20 show why this is a trade rather than an automatic instruction to push or retreat. If you are the only tank keeping the point contested, leaving may lose it before you can return.",
+          "Being unable to chase the diver does not make protection impossible. In the sequence at 7:31, blocking the enemy team's follow-up fire limits the damage that can arrive alongside Venom. A shield can also protect teammates from a hook instead of merely saving its owner. Check the angles into the backline as well as the enemy directly in front of you.",
+          "Keep making that check during friendly support ultimates. They create room to act, but they do not remove every threat behind you. Around 10:55, Strange protects a teammate from Winter Soldier and denies the follow-up. The lesson is to spend the temporary safety on the problem that matters now, even when that means turning away from an aggressive plan."
+        ]
       },
       {
-        title: 'Plan your ultimate around the enemy response (3:58, 7:52)',
-        points: [
-          'Before committing Eye of Agamotto, identify which enemy support can still answer it and whether your team can follow up.',
-          'Use a corner to prepare your approach rather than announcing the play from an exposed position.',
-          'Forcing a defensive support ultimate can already be useful. If there is room to retreat, do not automatically spend another ultimate to keep fighting through it.',
-          'Call your plan and ask about enemy defensive abilities. An ally drawing out an answer can make your next attempt safer.',
-          "The review shows damage after Strange's ultimate helping build the next one. Treat that as a reason to seek safe follow-up, not a fixed charge guarantee.",
-        ],
+        title: "Plan the response to your ultimate",
+        paragraphs: [
+          "Eye of Agamotto is a plan for the next exchange, not just a button to press when charged. In the discussions at 3:58 and 7:52, Infinitea looks at which support still has a defensive ultimate and what would happen after Strange commits. Prepare the approach from cover, identify the answer you want to force and give your team a chance to follow the same play.",
+          "Forcing that defensive answer can already be useful. If the team can give ground, stepping away may preserve the advantage for the next attempt. Spending another ultimate to continue through the enemy response is a separate decision, especially when the objective no longer leaves room to retreat. Tell teammates what you intend and ask what defensive abilities they have already drawn out; an opening is easier to use when everyone knows it exists.",
+          "The review also shows damage after Strange's ultimate helping build the next one. That makes safe follow-up valuable, but it is not a promise of a fixed amount of charge or permission to chase into a lost fight. Keep the same cover, healing and resource checks after the ultimate that made the approach possible before it."
+        ]
       },
       {
-        title: 'Take short angles with an exit plan (9:28, 12:59)',
-        points: [
-          'Look for a brief route to pressure the backline when you have damage prepared, defensive resources ready, and another tank holding the objective.',
-          'Keep the trip short enough to return before your team needs you. An angle is useful only while the rest of the fight remains playable.',
-          'Infinitea explicitly calls the attack-side flank away from his supports risky and accepts responsibility if it fails. Do not copy it as a default position.',
-          'Close-range pressure from heroes such as The Thing or Thor changes the risk. Reassess your route and range rather than assuming Strange can win every duel.',
-        ],
+        title: "Regroup before the next contest",
+        paragraphs: [
+          "A stagger is a series of isolated deaths that stops a team from fighting together. The checkpoint discussions at 6:53 and 16:45 show how easily it begins: one player has just respawned, another walks forward and the rest arrive too late to support either. Call for the team to wait before the next entry instead of discovering the problem after another death.",
+          "When the enemy supports die late, the same timing works in your favor. Use the temporary advantage together rather than turning it into several separate chases. Strange's portal can help a regrouped team reach a real contest, but it cannot recover a fight that is already over. Judge the remaining time and who is alive before committing the setup."
+        ]
       },
       {
-        title: 'Break the stagger cycle after checkpoints (6:53, 16:45)',
-        points: [
-          'A stagger is a series of isolated deaths that prevents the team from fighting together. Checkpoints are a common trap because teammates return at different times.',
-          'Call for everyone to wait and regroup before the next entry, especially when someone has only just respawned.',
-          'When the enemy supports die late, use the temporary advantage together. Do not turn it into six separate chases.',
-          'Consider whether a regrouped portal entry can give the team a real contest; a portal after the fight is already over creates little value.',
-        ],
-      },
-      {
-        title: 'Use portals to deny an objective entrance (18:12)',
-        points: [
-          'After your team gains an advantage, look beyond damage: stopping enemies from reaching the objective may finish the capture.',
-          'In the final example, Strange places a portal at a doorway so approaching enemies are redirected away from the point and arrive separately.',
-          'Tell teammates before setting up. You need protection while placing the portal and enough team pressure to hold the ground it creates.',
-          'This is a map- and timing-dependent play. Check the approach, destination, alternate routes, and remaining contest time before committing.',
-        ],
-      },
-      {
-        title: 'Review decisions, not just the result',
-        points: [
-          "These notes paraphrase Infinitea's supplied video transcript. The times mark discussion points in the full video; the source player opens at the shared 3:09 starting point.",
-          'The review includes risky attempts and mistakes. A successful flank is not proof it was safe, and a failed fight does not settle whether the initial decision was sound.',
-          'After a death, ask whether your supports could see you, whether you had cover and defensive resources, and whether someone else could contest.',
-          'Before each ultimate or portal, name the response you expect and the objective value you want. Practice one of these decisions at a time.',
-        ],
-      },
+        title: "Use a portal to change who can contest",
+        paragraphs: [
+          "Once your team has an advantage, the next useful action may be to deny an entrance rather than deal more damage. The final sequence beginning at 18:12 turns that idea into an objective play: Strange presses forward far enough to set a portal at the defenders' approach. The portal changes where they arrive, making it harder for them to reach the point together.",
+          "This depends on the doorway, destination, alternate routes and remaining contest time. Announce the plan so teammates can protect the setup and maintain the pressure that makes it possible. A portal placed without that ground or protection is a different play, even if the doorway looks similar. The example below explains the decision shown in the review rather than prescribing a portal location for every map."
+        ]
+      }
     ],
-    ultimates: [],
+    workedExample: {
+      title: "The doorway portal converts an advantage into capture",
+      paragraphs: [
+        "At 18:12, Infinitea is looking for a way to stop the defenders reaching the objective after his team gains kills. He calls the portal plan, pushes the defenders back from the point and places it across their doorway. That order matters: the team first creates the room that lets Strange set up safely.",
+        "The review then checks the play from the defenders' perspective. Approaching players are redirected away from the point or arrive separately, so the remaining defenders cannot restore a coordinated contest. The payoff is objective progress, not a larger damage total. This does not prove the same doorway trick will work elsewhere; without team protection, a suitable exit or a tight contest deadline, the value may disappear."
+      ],
+      sourceUrl: "https://www.youtube.com/watch?v=SWomAJspcoM&t=1092s"
+    },
+    practiceFocus: "For your next match, focus on one question before stepping forward: can my supports see me, and who will hold the objective if I leave? Say the answer before taking a new angle. After the match, review one death or failed contest and check whether the answer changed while you kept moving. Keep this as a decision habit; do not judge it only by whether a risky play happened to succeed.",
+    ultimates: []
   },
   {
     heroId: 'coach-mills-ultimate-beginners-guide',
@@ -151,7 +96,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'A hero shooter is more than aim',
-        points: [
+        paragraphs: [
           'Every hero has a distinct primary fire, set of abilities, and rhythm. Give yourself permission to experiment before deciding what fits.',
           'Matches are won through ability timing, teamwork, positioning, and cooldown management as much as raw aim.',
           'A cooldown is valuable when it creates a meaningful swing: damage that wins an opening, healing that saves a teammate, protection that denies an enemy play, or utility that changes the fight.',
@@ -162,7 +107,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Understand the three role jobs',
-        points: [
+        paragraphs: [
           'Strategists support the team with healing, utility, damage, and high-impact decisions. Healing matters, but they are not limited to being healbots.',
           'Vanguards survive pressure, contest valuable ground, and let teammates take safer angles. Their job is to create space the team can actually use.',
           'Duelists convert openings into pressure and eliminations. They can threaten isolated targets, backlines, and enemies caught out of position.',
@@ -172,7 +117,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Learn heroes, synergies, and matchups',
-        points: [
+        paragraphs: [
           'Some hero combinations create team-up benefits, but a hero does not need a synergy to be useful.',
           'Matchups are about tools: which abilities let one hero pressure, escape, deny, or punish another hero.',
           'You do not need to master the entire roster immediately. Playing unfamiliar heroes briefly still teaches you what their cooldowns look like from the other side.',
@@ -182,7 +127,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Choose a main without trapping yourself',
-        points: [
+        paragraphs: [
           'Try heroes that look interesting, even if they do not immediately seem like your style. You learn fit by playing, not by guessing from a roster screen.',
           'Build comfort on roughly three or four heroes with different answers to common situations rather than spreading practice across the whole roster.',
           'Keep enough flexibility to handle bans, difficult matchups, and team needs, especially as you move into more competitive games.',
@@ -192,7 +137,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Play modes through their important moments',
-        points: [
+        paragraphs: [
           'In Convoy, checkpoint progress changes future spawns and is worth committing resources to. Force defenders away from the objective, then convert the win into movement.',
           'In Domination, the objective matters, but winning the full team fight creates the safest capture time. Do not trade a winnable fight for a few isolated seconds on point.',
           'Health packs, alternative routes, high ground, and destructible cover all change which positions are safe and which escapes are available.',
@@ -202,7 +147,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Win fights before chasing progress',
-        points: [
+        paragraphs: [
           'A team fight is the committed clash where both teams spend abilities and ultimates. Winning it usually creates more objective progress than trickling onto the objective alone.',
           'Stay close enough to support teammates and help focus the same problem. Six separate duels rarely beat coordinated pressure.',
           'If a fight is clearly lost, disengage and regroup. Feeding staggered eliminations gives the enemy more time and resources.',
@@ -212,7 +157,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Improve one repeatable habit at a time',
-        points: [
+        paragraphs: [
           'Use early matches to learn, not to judge yourself. Pick one simple focus such as saving an escape cooldown, finding health packs, or grouping before every fight.',
           'Quick Play is a useful place to test heroes and limits. Competitive play asks for more awareness, flexibility, and resource discipline.',
           'Review a frustrating death with one question: what information, position, cooldown, or timing decision would have made it safer?',
@@ -240,7 +185,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Tank is a fundamentals role',
-        points: [
+        paragraphs: [
           'Vanguard is not only about being durable. The role asks for strong game awareness, map understanding, cooldown discipline, and timing.',
           'A tank player often sees the most information because they are near the front of the fight and can read what is happening in front of and behind them.',
           'Your rank-up path on tank is mostly fundamentals: knowing when to hold, when to give space, when to peel, when to support your team turn, and when to disengage.',
@@ -250,7 +195,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Understand turns',
-        points: [
+        paragraphs: [
           'The guide frames Marvel Rivals fights as a turn-based rhythm: one team spends pressure, the other team answers, then space changes hands.',
           'Dive pressure usually goes first. If an enemy Venom dives your backline, your team has to spend attention and healing on that dive before you can safely walk forward.',
           'If you push alone while your own backline is being attacked, you may get no follow-up, burn all your resources, and die wondering why nobody came with you.',
@@ -261,7 +206,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Main tank job: own main space',
-        points: [
+        paragraphs: [
           'A main tank is responsible for the objective lane, the main choke points, and the path your team needs to cross.',
           'After winning a fight, do not default to sitting on cart. Take forward space, set a line, and make the enemy fight earlier.',
           'Think of map space like properties on a board. You want to hold as many useful properties as you safely can.',
@@ -272,7 +217,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Cover, corners, and right-hand peeks',
-        points: [
+        paragraphs: [
           'You cannot hold space while taking infinite damage. Good tanking is about making enemies work for every point of health they take from you.',
           'Use corners and right-hand peeks to deal damage while exposing as little of yourself as possible.',
           'Do not farm support ultimates by eating free damage if that damage forces you out of space or gets you killed.',
@@ -283,7 +228,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Marking angles depends on your tank',
-        points: [
+        paragraphs: [
           'Whether you should chase an enemy DPS angle depends on your hero range, mobility, and job in the composition.',
           'Magneto can often sit point and shoot because his range lets him influence angles without abandoning main.',
           'Emma Frost can poke some angles with beam, but she should not spend too much time walking away from point if that lets the enemy tank push into her backline.',
@@ -293,7 +238,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Off tank job: clear side space',
-        points: [
+        paragraphs: [
           'Main tanks usually hold the objective and main route. Off tanks can hold and clear the side spaces, high grounds, and off-angles.',
           'Mobile off tanks can bully enemy Duelists who are routing toward your backline, forcing them to spend cooldowns or leave before they get value.',
           'Clearing an off-angle can create a free turn for your team because the enemy angle has to retreat and receive healing.',
@@ -304,7 +249,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Solo tanking: play like a 600 HP support',
-        points: [
+        paragraphs: [
           'Solo tanking is more limited than playing with two tanks. You usually cannot leave point or main space to take creative angles.',
           'The guide identifies Magneto, Emma Frost, and Doctor Strange as comfortable solo tank options because they can hold point, protect space, and support teammates reliably.',
           'The three main solo tank jobs are simple and non-negotiable.',
@@ -318,7 +263,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Support your Duelists on their turn',
-        points: [
+        paragraphs: [
           'When solo tanking with three Duelists, the game puts more playmaking weight on the Duelists and asks you to support their timing.',
           'If your Iron Fist, Spider-Man, Phoenix, or another Duelist commits to a real angle, help by shooting their target, bubbling them if possible, or walking forward enough to make their play safer.',
           'Do not try to create a solo flank play as the only tank if it exposes your supports and abandons point control.',
@@ -328,7 +273,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Ultimate timing for tanks',
-        points: [
+        paragraphs: [
           'The guide warns against using tank ultimates as risky fight openers, especially when solo tanking.',
           'Use tank ultimates during a turn, after the fight has started and enemy resources are already committed.',
           'A Doctor Strange ultimate can be stronger as peel when enemies dive your backline than as a predictable opener before anyone has spent cooldowns.',
@@ -339,7 +284,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Tank checklist',
-        points: [
+        paragraphs: [
           'Ask whose turn it is before spending major cooldowns.',
           'Walk forward when your team has pressure or the enemy is recovering.',
           'Give space when the enemy is spending resources and your team needs to live.',
@@ -369,7 +314,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'General philosophy: do not sit main',
-        points: [
+        paragraphs: [
           'The guide opens with a clear warning: Captain America does not get full value by sitting in main and punching tanks the entire game.',
           'His value comes from pressure and displacement. You either help set up a dive by surrounding the enemy team or intercept a flanker before they reaches your supports.',
           'If your team has divers like Psylocke, Daredevil, Iron Fist, or Black Panther, look to aid their backline pressure instead of playing a slow frontline trade.',
@@ -379,7 +324,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Sentinel Strike: punch into shield pressure',
-        points: [
+        paragraphs: [
           'Sentinel Strike starts with melee punches that deal 40 damage per punch and build charges under the reticle.',
           'After four charges, or after punching a target twice, Captain America gains mini shield throws that deal 45 damage per hit.',
           'The mini shield throws do not ricochet like Vibranium Energy Saw, but they automatically target enemies near the crosshair.',
@@ -390,7 +335,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Leading Dash and Super-Soldier Slam',
-        points: [
+        paragraphs: [
           'Leading Dash gives Captain America a 33% sprint speed boost with no cooldown and no energy meter.',
           'You can sprint between mini shield throws to stay on targets, but if you spam sprint and throws too quickly, you can cancel the shield throw and lose damage.',
           'The guide recommends listening for the shield impact sound before throwing again so the rhythm stays clean.',
@@ -402,7 +347,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Living Legend: shield for stuns and clutch blocks',
-        points: [
+        paragraphs: [
           'Living Legend raises Cap shield and deflects projectiles in random directions, unlike Daredevil-style aiming deflects.',
           'Melee hits and beams do not deflect back, though some beam damage can still be blocked.',
           'The shield has 350 health and recovers 50 health per second while put away.',
@@ -414,7 +359,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Liberty Rush: finish or escape, not both',
-        points: [
+        paragraphs: [
           'Liberty Rush sends Captain America forward in a 12-meter charge that deals 30 damage.',
           'It can be used every 10 seconds regardless of whether Living Legend is up, down, or broken.',
           'During the dash, Cap is crowd-control immune, which lets him dodge tools such as Luna snowball, Doctor Strange ultimate, and even Jeff ultimate timing.',
@@ -425,7 +370,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Vibranium Energy Saw and the core combo',
-        points: [
+        paragraphs: [
           'Vibranium Energy Saw is the larger shield throw. It deals 70 damage on first hit, then can ricochet up to three times with reduced damage each bounce.',
           'Throwing it at the ground near a target can still ricochet into them, which makes aiming at the legs more consistent than trying to land perfect direct hits every time.',
           'Do not throw it too early from stealth or staging, because it alerts enemies and gives supports time to heal the damage.',
@@ -437,7 +382,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Freedom Charge: mini support ultimate',
-        points: [
+        paragraphs: [
           'Freedom Charge gives Captain America and nearby allies bonus health plus a 30% movement speed boost.',
           'On cast, Cap gains 150 bonus health and nearby allies gain 100 bonus health. After that, Cap radiates more bonus health over time while the ultimate is active.',
           'Try to pop it near teammates when possible so they receive the immediate bonus health and can use the trail/aura during the fight.',
@@ -450,7 +395,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Counters and annoying matchups',
-        points: [
+        paragraphs: [
           'The guide argues Emma Frost is not necessarily a hard counter if you are skilled on Captain America because Liberty Rush can dodge key CC and Cap mobility makes him hard to pin down.',
           'Peni Parker and The Thing are called out as more annoying Vanguard matchups.',
           'One practical ranked weakness is that some teammates only understand simple front-to-back brawls, so picking Cap instead of Magneto, Emma, or Strange can confuse your team plan.',
@@ -463,7 +408,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Synergies: surround and collapse',
-        points: [
+        paragraphs: [
           'Cap has a team-up with Winter Soldier that lets Bucky reposition to him, but the guide treats it as useful rather than the main reason to pick Cap.',
           'Venom is highlighted as the best tank partner because Cap and Venom can take different angles and collapse on the same target, instantly forcing support cooldowns.',
           'Angela can be added to create even more pressure: multiple huge health bars converging from different angles can overwhelm ranked teams.',
@@ -474,7 +419,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'VOD lesson: force cooldowns before kills',
-        points: [
+        paragraphs: [
           'The Paulie VOD review reinforces that the whole Cap idea is not always killing immediately. It is pressuring enemies, forcing resources, and then taking the harder engage after cooldowns are gone.',
           'In one fight, Cap stages away from main, waits for the friendly Psylocke flank to be ready, then slams into supports once the enemy backline is vulnerable.',
           'After a pick or forced resource, he leaves instead of feeding, then re-enters when the next opening appears.',
@@ -485,7 +430,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Soft engage discipline',
-        points: [
+        paragraphs: [
           'A soft engage is a pressure touch designed to force cooldowns, not a full all-in.',
           'The VOD shows Cap jumping supports, forcing Mantis sleep or Luna snowball, then using Liberty Rush or shield discipline to leave before the punish lands.',
           'Many Cap players reach supports and assume the job is to keep holding primary fire. The guide says the better habit is to read the defensive cooldown and leave if the hard engage is not ready.',
@@ -563,7 +508,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Playstyle: leapfrog the frontline',
-        points: [
+        paragraphs: [
           'The guide describes Jubilee as a constant game of leapfrog: place a healing orb ahead of your Vanguards, let them step into it, charge and detonate it, then place the next orb farther forward.',
           'Each new Blooming Ball marks the next piece of space your team can safely occupy. Your healing layout should encourage forward movement instead of trailing behind the fight.',
           'Jubilee is not a passive healbot. She needs continuous involvement and clean ability sequencing to avoid low-output gaps.',
@@ -573,7 +518,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Blooming Ball: feed the orb correctly',
-        points: [
+        paragraphs: [
           'Blooming Ball starts as a smaller healing and damage field, then grows in radius and healing output as it affects targets or receives Jubilee fire.',
           'Your goal is to fully charge each useful orb. A full orb covers more space, provides stronger sustain, creates a larger detonation, and refreshes its remaining lifetime.',
           'The fastest charge method is placing the orb on an injured ally and shooting that ally. The ally receives direct healing and orb healing while the same shots rapidly feed the orb.',
@@ -584,7 +529,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Dazzling Detonation and Sparkle Marks',
-        points: [
+        paragraphs: [
           'Detonate the largest practical orb so the explosion reaches more allies and enemies.',
           'Allies receive burst healing, healing over time, and movement speed. Enemies take damage, become blinded, and receive Vulnerability.',
           'A well-timed blind can disrupt an enemy ultimate that depends on vision or aim. Keep the option in mind instead of detonating only for healing numbers.',
@@ -596,7 +541,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Core rotation: keep the loop spinning',
-        points: [
+        paragraphs: [
           'Open the fight by placing Blooming Ball just ahead of the frontline so it tracks a Vanguard instead of drifting back to Jubilee.',
           'Activate Sparking Sprint and use enhanced Energy Plasmoids on an injured ally inside the orb, or on the orb itself, until it is fully charged.',
           'Cancel Sparking Sprint once the charge is complete so its resource begins recovering.',
@@ -608,7 +553,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Energy Plasmoids: play for the enhanced state',
-        points: [
+        paragraphs: [
           'Normal Energy Plasmoids provide modest healing and damage. Jubilee output rises when Sparking Sprint or a consumed Sparkle Mark activates the enhanced version.',
           'Enhanced fire shoots much faster, consumes no ammo, and raises both healing and damage output, so the entire ability loop should maximize its uptime.',
           'Use the enhanced stream to burst-heal a marked ally, charge the next orb, help burn the enemy frontline, or punish an exposed flyer.',
@@ -618,7 +563,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Sparking Sprint: start, conserve, escape',
-        points: [
+        paragraphs: [
           'Sparking Sprint provides movement speed, enhanced fire, and a boosted jump, making it both the starter for Jubilee rotation and her escape tool.',
           'The ability uses a resource meter. Cancel it as soon as the charge or reposition is complete instead of draining the entire meter.',
           'The boosted jump can quickly return Jubilee to her team, leave dangerous ground effects, or escape an enemy ultimate.',
@@ -628,7 +573,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Positioning and team composition',
-        points: [
+        paragraphs: [
           'In a committed brawl, play near the Vanguards and inside your own Blooming Balls rather than defaulting to a distant backline position.',
           'Sharing the orb gives Jubilee self-sustain while her enhanced fire and detonations pressure enemies around the same frontline.',
           'A sturdy anchor such as The Thing, Magneto, Emma Frost, or Devil Dinosaur gives the orbs a reliable center and makes the leapfrog plan easy to read.',
@@ -639,7 +584,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Team-Ups and common mistakes',
-        points: [
+        paragraphs: [
           'The guide strongly favors The Hood Team-Up because enhanced Energy Plasmoids become hitscan, can critically hit, and provide self-healing through damage.',
           'That passive benefit matches Jubilee goal of near-constant enhanced-fire uptime and helps her survive while contributing meaningful frontline damage.',
           'Blade Vampiric Kin can grant nearby allies Life Steal and becomes stronger with Blade, but the guide considers its cooldown-based value less consistent than The Hood passive.',
@@ -686,7 +631,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Actual role: control chaos',
-        points: [
+        paragraphs: [
           'Do not play Tankpool as a basic tank who sits main, hard-frontlines, soaks damage all game, and tries to stat-check everyone.',
           'His real value is pressure, disruption, pacing, and controlled aggression.',
           'Your job is to constantly force attention onto yourself while making the enemy team uncomfortable.',
@@ -703,7 +648,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Style points and upgrade discipline',
-        points: [
+        paragraphs: [
           'Style points are the foundation of Tankpool upgrades.',
           'Your upgrades are what let Tankpool become oppressive during fights.',
           'If you hard-engage before farming style points, you are fighting at half strength.',
@@ -723,7 +668,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Master the whole kit: pistols and swords',
-        points: [
+        paragraphs: [
           'Tankpool has pistols and swords, and each stance has its own cooldowns.',
           'Swap naturally between pistols and swords to get consistent value instead of playing only one stance.',
           'Use pistols at long range.',
@@ -739,7 +684,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Dash range and sword combo',
-        points: [
+        paragraphs: [
           'The dash radius shown in the guide is about 10 meters.',
           'The ideal sword combo is dash, jump, then slash.',
           'The jump matters because no-jump versions are slower and less fluid.',
@@ -753,7 +698,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Ban Hammer discipline',
-        points: [
+        paragraphs: [
           'Ban Hammer is the guide author’s favorite part of Tankpool’s kit, but many players misuse it because they do not understand the mechanics.',
           'Unupgraded Ban Hammer gives a large burst of survivability when dropped on a target.',
           'It gives instant bonus health and steady healing over time.',
@@ -771,7 +716,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Sword ultimate usage',
-        points: [
+        paragraphs: [
           'The guide says the sword ultimate is not used as often by the author.',
           'When you do swap to the katana ultimate, its biggest value is survival.',
           'It gives a movement boost and chunks of healing over time.',
@@ -781,7 +726,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Plushie Shield discipline',
-        points: [
+        paragraphs: [
           'The guide emphasizes this is Plushie Shield, not Doctor Strange shield.',
           'Base Plushie Shield has 300 health.',
           'Upgraded Plushie Shield reaches 400 health and gains a little more radius.',
@@ -798,7 +743,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Passive: Healing Factor',
-        points: [
+        paragraphs: [
           'Healing Factor triggers when you take massive burst damage or get hit by a lethal one-shot ability.',
           'It gives a brief window of invincibility and rapid healing to keep you alive.',
           'It effectively acts like a second life.',
@@ -808,7 +753,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Tank discipline in full fights',
-        points: [
+        paragraphs: [
           'Tankpool discipline is about knowing your limits, playing your life, and putting your team in a position to win.',
           'The guide’s example focuses on surviving and stalling the objective against the odds.',
           'Even when the ending gets messy, surviving long enough can be the reason your team still has a chance to win.',
@@ -888,7 +833,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Neutral is before the big moment',
-        points: [
+        paragraphs: [
           'Neutral is everything that happens before and between the obvious fight-swinging moments.',
           'In a fighting game, the flashy parts are combos, powered-up states, and super moves. Neutral is the movement, spacing, jabs, baiting, and waiting that happens before those moments land.',
           'In Marvel Rivals, the flashy parts are big engages, eliminations, and ultimates. Neutral is the quieter phase where both teams are trying to earn the right to make one of those plays.',
@@ -898,7 +843,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'The fighting game comparison',
-        points: [
+        paragraphs: [
           'The transcript uses Tekken as the clean example because fighting games make neutral easier to see.',
           'Players may look like they are only stepping forward, backing away, poking, or waiting, but they are actually controlling space and baiting unsafe actions.',
           'The goal is to make the opponent press the wrong button, move into the wrong range, or spend a powerful option at the wrong time.',
@@ -908,7 +853,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Neutral in Marvel Rivals',
-        points: [
+        paragraphs: [
           'In Marvel Rivals, neutral is about cooldowns, space control, positioning, baiting, and waiting for the enemy team to push too hard or too little.',
           'Both teams are trying to control the playable area of the map without being punished.',
           'Both teams are tracking resources: their own cooldowns, enemy cooldowns, ultimates, defensive saves, mobility, and healing tools.',
@@ -918,7 +863,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Why ultimates make neutral feel muddy',
-        points: [
+        paragraphs: [
           'The transcript argues that Marvel Rivals does have neutral, but frequent ultimates can make neutral feel less important than it should.',
           'When ultimates happen constantly, matches can feel like both teams are mostly racing to build the next fight-winning button.',
           'Strategist ultimates can erase danger or create huge sustain windows, while Duelist ultimates can delete players quickly.',
@@ -928,7 +873,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'What you are looking for',
-        points: [
+        paragraphs: [
           'Look for enemy cooldowns spent too early. A movement tool, shield, stun, defensive save, or healing burst can become the signal that your team can press.',
           'Look for enemies who push too far. Overextension is one of the clearest neutral mistakes because it gives your team a target before the enemy is ready to trade back.',
           'Look for enemies who push too little. If the enemy refuses to contest space, your team can move forward, take angles, and start the next fight from a stronger position.',
@@ -938,7 +883,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'How each role plays neutral',
-        points: [
+        paragraphs: [
           'Vanguards play neutral by testing space, threatening forward movement, protecting key lanes, and watching for the enemy to spend tools that make a push safer.',
           'Duelists play neutral by pressuring angles, poking, threatening backlines, and making the enemy respect their position before committing to a kill.',
           'Strategists play neutral by keeping the team stable, preserving major saves, holding safe sightlines, and using utility to deny the enemy opening.',
@@ -948,7 +893,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Neutral checklist',
-        points: [
+        paragraphs: [
           'Ask whether either team has a clear advantage yet. If not, you are probably in neutral.',
           'Ask what space your team is trying to control and what space the enemy is trying to protect.',
           'Ask which cooldowns matter most before the fight can safely begin.',
@@ -976,7 +921,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'The overlooked skill: play your life',
-        points: [
+        paragraphs: [
           'One of the biggest mistakes players make at every rank is not knowing how to play their life.',
           'Many players think value only comes from kills.',
           'They see someone low, force the chase, secure the elimination, and immediately die for it.',
@@ -987,7 +932,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'What a trade actually costs',
-        points: [
+        paragraphs: [
           'If you are dictating the pace of the lobby, trading your life for a support or DPS can be a net loss for your team.',
           'The moment you die, your active pressure disappears.',
           'Your angle disappears.',
@@ -1001,7 +946,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Pressure without the kill',
-        points: [
+        paragraphs: [
           'The guide uses Black Cat as the example: when flanking, the goal is not always to kill someone.',
           'Sometimes the goal is simply to make the enemy support look at you instead of healing their tank.',
           'Sometimes the goal is to force defensive cooldowns.',
@@ -1015,7 +960,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Alive pressure changes enemy behavior',
-        points: [
+        paragraphs: [
           'If you are holding an angle, the enemy has to respect it.',
           'If you are threatening a flank, the enemy has to respect it.',
           'If you are alive, the enemy has to account for you.',
@@ -1029,7 +974,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Let low-health targets go',
-        points: [
+        paragraphs: [
           'One of the hardest things to learn is letting opportunities go.',
           'Let the 10 HP target escape when chasing them would ruin your position or cost your life.',
           'Let the fight breathe instead of forcing the heroic play.',
@@ -1041,7 +986,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Most deaths are commitment problems',
-        points: [
+        paragraphs: [
           'Most deaths do not happen because players lack mechanics.',
           'They happen because players convince themselves they need one more shot.',
           'Or one more dash.',
@@ -1053,7 +998,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Staying alive collects information',
-        points: [
+        paragraphs: [
           'Every second you are alive, you collect information.',
           'You see rotations.',
           'You see cooldowns.',
@@ -1069,7 +1014,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Survival is active, not passive',
-        points: [
+        paragraphs: [
           'Surviving does not mean hiding.',
           'It does not mean refusing to take risks.',
           'It means understanding the difference between a good opportunity and a bad commitment.',
@@ -1081,7 +1026,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Measure pressure, not only kills',
-        points: [
+        paragraphs: [
           'The main takeaway is to stop measuring value only by the kills you secure.',
           'Start measuring value by the pressure you maintain.',
           'Some of the most impactful players in a lobby are not the ones forcing the most fights.',
@@ -1109,7 +1054,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Early deaths are usually pacing errors',
-        points: [
+        paragraphs: [
           'The guide opens with a common Marvel Rivals problem: spawn doors open, players walk out, and someone dies within the first 10 seconds before the fight even really starts.',
           'Those deaths usually are not caused by a coordinated ultimate or a five-player collapse.',
           'They often happen because someone walked somewhere they had no business being and then explained it as looking, poking, or getting hit by a lucky shot.',
@@ -1122,7 +1067,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Do not treat setup like the fight',
-        points: [
+        paragraphs: [
           'The biggest mistake in the guide is treating the setup phase like the actual fight.',
           'Players leave spawn, walk straight down main, shoot the first visible target, and hope something happens.',
           'That is not pressure. That is exposure.',
@@ -1137,7 +1082,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Split every fight into setup and execution',
-        points: [
+        paragraphs: [
           'The guide recommends separating every fight into two parts: setup and execution.',
           'During setup, your goal is not to farm damage.',
           'Your setup goals are to get ready, find your angle, identify targets, see where teammates are positioned, and understand what resources both teams have available.',
@@ -1152,7 +1097,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Cover is your default position',
-        points: [
+        paragraphs: [
           'The first practical fix is to get comfortable using cover.',
           'Cover should not be something you run to only after you are already losing the trade.',
           'Cover should be your default starting position.',
@@ -1167,7 +1112,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Ask who can actually die',
-        points: [
+        paragraphs: [
           'The guide says to stop asking, "Who can I shoot?" and start asking, "Who can I actually kill?"',
           'Those are completely different questions.',
           'Seeing a target does not mean the target is vulnerable.',
@@ -1184,7 +1129,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Let the frontline open the fight',
-        points: [
+        paragraphs: [
           'The guide specifically calls out Duelist impatience: it is hard to wait, but squishy characters especially need that patience.',
           'You do not need to be the first person seen every fight.',
           'Let your Vanguard take space first.',
@@ -1199,7 +1144,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Execution starts after the window appears',
-        points: [
+        paragraphs: [
           'The execution phase is where you finally commit your damage, dive, off-angle, or brawl timing.',
           'You execute after your team has space, enemies have spent resources, or a vulnerable target is actually killable.',
           'Your job is to convert the opening instead of trying to create every opening by yourself from a bad position.',
@@ -1212,7 +1157,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Quick discipline checklist',
-        points: [
+        paragraphs: [
           'Before peeking, ask whether the fight is still in setup or has actually reached execution.',
           'Start from cover and keep a retreat route available.',
           'Enter the real fight with full health whenever possible.',
@@ -1260,7 +1205,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Tempo: who sets the pace',
-        points: [
+        paragraphs: [
           'Tempo belongs to whichever team is choosing when things happen. The other team is left answering.',
           'This idea comes from an XTREME PS article about Overwatch, not Marvel Rivals. Both games build team fights around cooldowns and ultimates, so we carried over the general ideas and left its hero examples behind.',
           'That article describes two styles: a fast team closes the gap and forces the fight, and a slow team holds good ground and waits to punish errors.',
@@ -1269,7 +1214,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Fight when you have a reason',
-        points: [
+        paragraphs: [
           'Before you commit, name the advantage you are committing on.',
           'The Overwatch article from XTREME PS lists three good reasons: your team already got a pick, you have more ultimates ready, or the enemy is coming back from spawn a few at a time.',
           'It singles out going in too early as the big timing mistake, and says that without one of those reasons you are fighting on the enemy’s terms.',
@@ -1277,7 +1222,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'The three stages of a fight',
-        points: [
+        paragraphs: [
           'XTREME PS splits an Overwatch team fight into poke, engagement and cleanup. The same split works for a Marvel Rivals fight.',
           'Poke: both teams trade from range and neither side is all in. Big cooldowns spent now buy very little.',
           'Engagement: a team sees its chance and everyone moves on it at once. Whichever side handles this stage better usually comes out with the pace.',
@@ -1287,7 +1232,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Keep the pace after a good moment',
-        points: [
+        paragraphs: [
           'Enemies who die at different times come back at different times, so a won fight can roll into the next one with your team ahead on numbers.',
           'XTREME PS calls this staggering in its Overwatch article. The part that carries over is simple: be ready for the first enemy back, and do not follow them into their spawn.',
           'The pace can also turn mid-fight. The Overwatch examples are a support going down or a tank using up its kit. In Marvel Rivals terms, think of a Strategist or a Vanguard. Moments like these are worth acting on quickly.',
@@ -1295,7 +1240,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Treat ultimates as a budget',
-        points: [
+        paragraphs: [
           'MetaBot’s comparison is money: ultimates are something a team saves and spends, and in its view good spending is what wins objectives.',
           'Its test is what you get back. A good one hits several enemies at once, at a moment they cannot get away. A weak one goes on a lone target who survives, or on a kill your team would have got anyway.',
           'Before using one, MetaBot suggests saying what it should achieve. Without a good answer, it says to wait.',
@@ -1304,7 +1249,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'What to do with the ultimate count',
-        points: [
+        paragraphs: [
           'Compare what each team has ready before the fight, then let that choose your plan.',
           'XTREME PS offers this simple guide in its Overwatch article. Ahead on ultimates: go in. Even: get a pick first. Behind: stall. All spent: reset.',
           'Treat it as a starting point, not a rule. MetaBot, writing about Marvel Rivals, points out that you never see the enemy’s exact charge, so your count is an estimate.',
@@ -1312,7 +1257,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'When to spend an ultimate',
-        points: [
+        paragraphs: [
           'On whether to hold, MetaBot’s answer is usually yes: waiting tends to beat using an ultimate as soon as it is ready.',
           'Its time to commit is when the enemy has spent a key ultimate, so yours meets less resistance.',
           'MetaBot adds that one ultimate can set up another, but without coordination both can be lost, so agree the order first.',
@@ -1321,7 +1266,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Read the enemy’s ultimates',
-        points: [
+        paragraphs: [
           'You cannot see enemy charge, so MetaBot suggests estimating it from what you can see and hear.',
           'Its cues: voice lines tell you an ultimate was just used, the time since then tells you how close the next may be, and heavy healing or damage suggests charge is building quickly.',
           'Its advice is to assume the dangerous ultimate is available until you know otherwise.',
@@ -1331,7 +1276,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Practise it in one match',
-        points: [
+        paragraphs: [
           'Pick one habit per match rather than trying all of this at once.',
           'MetaBot suggests tracking every enemy ultimate for a whole match, then looking back at losses for spending errors, such as a whole ultimate used on one easy kill.',
           'XTREME PS, writing about Overwatch, suggests watching your own footage to learn the moments when a fight turns, so you can spot them live.',
@@ -1339,7 +1284,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'What the RivalsPulse overlay can show',
-        points: [
+        paragraphs: [
           'The RivalsPulse overlay, coming soon to the Overwolf store, has a live tempo chip on its in-game top bar in Quick Match and Ranked.',
           'The chip shows Quiet, Rising, Fast or Reset, based on deaths on both teams over the last 20 seconds.',
           'It does not use cooldowns or ultimate charge. Reading enemy ultimates stays your job.',
@@ -1366,7 +1311,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Season 8.5 punishes macro mistakes',
-        points: [
+        paragraphs: [
           'The guide argues that many players are looking at Season 8.5 the wrong way by focusing only on whether heroes like Cyclops or Black Cat are broken, S-tier, or weak.',
           'The bigger story is that discipline matters again.',
           'Positioning, timing, resource management, and understanding when to engage all matter more in this patch.',
@@ -1379,7 +1324,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Cyclops punishes bad habits',
-        points: [
+        paragraphs: [
           'The guide says the most important thing about Cyclops is not simply his damage. It is what he punishes.',
           'Cyclops punishes players who stand in places they should not stand.',
           'He punishes wide peeks, open sightline rotations, and staying visible longer than necessary.',
@@ -1392,7 +1337,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Position relative to danger',
-        points: [
+        paragraphs: [
           'Positioning is not only where you are standing.',
           'Positioning is where you are standing relative to danger.',
           'Ask whether you can break line of sight from your current position.',
@@ -1405,7 +1350,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Adjust to the enemy composition',
-        points: [
+        paragraphs: [
           'The guide warns that players often move the exact same way no matter what they are playing against.',
           'When Cyclops appears on the enemy team, your movement around the map should change.',
           'Ask where Cyclops is positioned and what angle he controls.',
@@ -1420,7 +1365,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Poke comps win with pressure',
-        points: [
+        paragraphs: [
           'The biggest Season 8.5 story in the guide is how much poke is showing up.',
           'Phoenix, Hela, Cyclops, and certain support compositions make the game feel more pressure-oriented.',
           'A lot of players misunderstand poke because they think its value is only damage.',
@@ -1434,7 +1379,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Poke is happy winning slowly',
-        points: [
+        paragraphs: [
           'Poke compositions do not need to win fights quickly.',
           'They are comfortable winning slowly by applying pressure until someone cracks.',
           'Dive compositions usually want a specific moment: an isolated target, a missing cooldown, or a clean jump target.',
@@ -1447,7 +1392,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Do not fight poke on its terms',
-        points: [
+        paragraphs: [
           'The first bad habit to break is fighting a poke composition on its own terms.',
           'Do not walk straight down main, take unnecessary damage, burn resources, force a bad fight, and then wonder why the enemy team feels impossible to beat.',
           'Respect sightlines first.',
@@ -1460,7 +1405,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Health is a resource',
-        points: [
+        paragraphs: [
           'The guide emphasizes that health is a resource.',
           'The fight starts long before the first eliminations happen.',
           'If you enter every fight at half health because you could not stop peeking, you are making the game much harder than necessary.',
@@ -1473,7 +1418,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Stop forcing every window',
-        points: [
+        paragraphs: [
           'The final lesson is to stop forcing.',
           'Not every target is your target.',
           'Not every window is your window.',
@@ -1505,7 +1450,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Presence creates value',
-        points: [
+        paragraphs: [
           'The short guide argues that value does not only come from kills.',
           'Your presence alone can create pressure.',
           'If you hold an angle, the enemy has to respect it.',
@@ -1517,7 +1462,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Survive, reset, and re-enter',
-        points: [
+        paragraphs: [
           'Good players will spend resources to survive instead of dying for a fragile play.',
           'They disengage when the fight turns bad.',
           'They reset instead of continuing a losing trade.',
@@ -1529,7 +1474,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Quick pressure checklist',
-        points: [
+        paragraphs: [
           'Before committing, ask whether your presence is already forcing respect.',
           'Do not trade your life if simply staying alive keeps an angle closed.',
           'Use disengage tools before the enemy turns your pressure into a death.',
@@ -1557,7 +1502,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Damage is not the whole job',
-        points: [
+        paragraphs: [
           'The guide argues that Duelists are not valuable only because they deal damage.',
           'A Duelist should apply pressure past the tank and disrupt the flow of the fight.',
           'High damage numbers can still lose games if they do not control space, force attention, or create picks.',
@@ -1568,7 +1513,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Why damage stats lie',
-        points: [
+        paragraphs: [
           'Shooting the tank all game can create impressive damage stats while changing very little about the fight.',
           'Predictable damage into a healed tank is often easy for the enemy to absorb.',
           'There is a time to shoot tanks, but if nobody is moving and the fight is stuck on main, you usually need to disrupt somewhere else.',
@@ -1579,7 +1524,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Off-angles create the pressure',
-        points: [
+        paragraphs: [
           'The easiest Duelist pressure often comes from side angles, high ground, or the enemy backline.',
           'Instead of stacking with your whole team, attack from a different direction so the enemy has two problems at once.',
           'If they ignore you, you may get free kills.',
@@ -1590,7 +1535,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Pressure needs life discipline',
-        points: [
+        paragraphs: [
           'When taking disruptive angles, you must still play your life.',
           'Know where health packs are before you enter.',
           'Have an escape plan every time you pressure an angle.',
@@ -1602,7 +1547,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Main pressure still counts',
-        points: [
+        paragraphs: [
           'The lesson is not that every Duelist must flank every fight.',
           'Some Duelists can play main well and create pressure with their team.',
           'Even from main, the job is not mindless tank farming.',
@@ -1630,7 +1575,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Most Duelist deaths are overstays',
-        points: [
+        paragraphs: [
           'The guide says many Duelist deaths are not about mechanics. They happen because players do not know when to leave.',
           'Players keep fighting because they assume someone will die, then they become the player who dies.',
           'A fight can start well and still flip against you.',
@@ -1641,7 +1586,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Signs it is time to leave',
-        points: [
+        paragraphs: [
           'Leave if the kill is not guaranteed and you are risking your life to finish it.',
           'Leave when too much attention is on you and multiple enemies are shooting you at once.',
           'Leave when unexpected threats appear, including cooldowns, abilities, ultimates, or a defender getting the jump on you.',
@@ -1652,7 +1597,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Disengage does not mean run forever',
-        points: [
+        paragraphs: [
           'Disengaging means resetting the fight, not abandoning all pressure.',
           'Health packs let Duelists recover without forcing supports to shift focus.',
           'Every Duelist who flanks or takes off-angles should learn health pack locations.',
@@ -1663,7 +1608,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Reset and re-enter',
-        points: [
+        paragraphs: [
           'A good disengage gives you a better entry into the same fight.',
           'Back up, stabilize, and return once the timing improves.',
           'Surviving keeps pressure on the map and gives you another chance to create value.',
@@ -1691,7 +1636,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Priority changes mid-fight',
-        points: [
+        paragraphs: [
           'The guide says your target priority is often not wrong. It is outdated because the fight changed.',
           'High-elo Duelists are not locked onto one target all fight.',
           'They adapt in real time as the fight changes.',
@@ -1702,7 +1647,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Shoot the problem, not just the visible target',
-        points: [
+        paragraphs: [
           'A major mistake is shooting what is directly in front of you instead of what is causing the problem.',
           'If a tank is forward but cannot keep themselves alive without supports, the supports may become the priority.',
           'If a flanker is living in your backline, that flanker may become the priority.',
@@ -1712,7 +1657,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Do not force priority through bad timing',
-        points: [
+        paragraphs: [
           'Knowing the priority does not mean you can force it immediately.',
           'If someone peels you or contests your angle, reset and come back when the opportunity appears.',
           'You can keep a priority in mind while temporarily fighting a different target.',
@@ -1723,7 +1668,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Peel can be the priority',
-        points: [
+        paragraphs: [
           'Sometimes the biggest problem is not in the enemy backline. It is on your supports.',
           'If an enemy dives your Strategists, peeling them can become the correct priority.',
           'The guide frames target priority as solving the problem in front of your team.',
@@ -1733,7 +1678,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Three questions for every fight',
-        points: [
+        paragraphs: [
           'Ask: what is the biggest problem right now?',
           'Ask: can I actually reach that problem safely?',
           'Ask: if I cannot reach it, what target gives me the most value instead?',
@@ -1761,7 +1706,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Why off-angles work',
-        points: [
+        paragraphs: [
           'Off-angles make the enemy fight your team in front while also reacting to you from the side, high ground, or backline.',
           'If nobody contests you, you may get free kills.',
           'If they do contest you, you still pull attention away from the main fight.',
@@ -1770,7 +1715,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Play your life on the angle',
-        points: [
+        paragraphs: [
           'Taking an off-angle does not mean feeding.',
           'Know the nearest health pack before committing.',
           'Have an escape plan every time you enter.',
@@ -1797,7 +1742,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Predictable damage is easy to heal',
-        points: [
+        paragraphs: [
           'Standing behind your tank all game makes your damage predictable.',
           'Predictable damage is easier for supports to heal through.',
           'DPS pressure is not only about raw numbers. It is about making enemy decisions harder.',
@@ -1806,7 +1751,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Take the value and reset',
-        points: [
+        paragraphs: [
           'The guide warns that greed kills more DPS players than the enemy team does.',
           'Take the angle, force the cooldowns, and reset.',
           'If kills appear during that pressure, take them, but do not give yourself up for extra damage.',
@@ -1833,7 +1778,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Leave when the fight flips',
-        points: [
+        paragraphs: [
           'If the fight stops being favorable, the Duelist job is to reset.',
           'A low enemy is not always worth chasing if you can die too.',
           'Getting one kill does not mean you should overstay.',
@@ -1842,7 +1787,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Health packs are your third support',
-        points: [
+        paragraphs: [
           'Health packs let you reset without draining your Strategists.',
           'Learn health pack routes on maps where you flank or off-angle.',
           'Disengaging can mean backing up briefly, recovering, and re-entering from a stronger position.',
@@ -1869,7 +1814,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Priority is not fixed',
-        points: [
+        paragraphs: [
           'If shooting the tank is not moving the fight, change your angle and find the target that matters.',
           'A support may become the priority if they are keeping the frontline alive.',
           'A backline DPS may become the priority if they are controlling your team.',
@@ -1878,7 +1823,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Solve the fight in front of you',
-        points: [
+        paragraphs: [
           'The guide summarizes target priority as solving the problem in front of you.',
           'Do not chase a theoretical perfect target if the fight gives you a better immediate option.',
           'Recognize the shift mid-fight and act before the opportunity disappears.',
