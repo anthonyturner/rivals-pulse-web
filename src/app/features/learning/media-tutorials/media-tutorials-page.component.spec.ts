@@ -48,7 +48,7 @@ describe('MediaTutorialsPageComponent', () => {
 
   it('shows every tutorial once, with its title, topic and link, and says how many', () => {
     expect(cards().length).toBe(MEDIA_TUTORIALS.length);
-    expect(status()).toBe('18 tutorials');
+    expect(status()).toBe('19 tutorials');
 
     for (const tutorial of MEDIA_TUTORIALS) {
       const card = cards().find((candidate) => candidate.textContent?.includes(tutorial.title));
@@ -141,14 +141,14 @@ describe('MediaTutorialsPageComponent', () => {
     expect(element.querySelector('app-tutorial-card.featured h2')?.textContent).toContain(heroes[1].title);
   });
 
-  it('filters by category and by tag, counting "n of 18 tutorials"', async () => {
+  it('filters by category and by tag, counting "n of 19 tutorials"', async () => {
     await pickCategory('Roles');
-    expect(status()).toBe('4 of 18 tutorials');
+    expect(status()).toBe('4 of 19 tutorials');
     expect(cards().length).toBe(4);
 
     await pickCategory('All');
     await search('cooldowns');
-    expect(status()).toBe('1 of 18 tutorials');
+    expect(status()).toBe('1 of 19 tutorials');
     expect(cards().length).toBe(1);
     expect(element.querySelectorAll('app-tutorial-card.featured').length).toBe(1);
   });
@@ -156,7 +156,7 @@ describe('MediaTutorialsPageComponent', () => {
   it('shows one silent empty panel and a single live status when nothing matches', async () => {
     await search('zzzz');
 
-    expect(status()).toBe('0 of 18 tutorials');
+    expect(status()).toBe('0 of 19 tutorials');
     expect(cards().length).toBe(0);
     expect(element.querySelector('app-state-panel')?.textContent).toContain('No tutorials match');
     expect(element.querySelectorAll('[role="status"], [aria-live]').length).toBe(1);
