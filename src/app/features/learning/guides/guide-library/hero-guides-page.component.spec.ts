@@ -1,146 +1,255 @@
 import { provideZonelessChangeDetection } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 
+import { routes } from '../../../../app.routes';
 import { HERO_GUIDES } from '../hero-guides/hero-guide-data';
-import { GUIDE_SECTIONS, guideTileSizes } from './guide-library.data';
+import { STRATEGIST_GUIDES } from '../strategist-guides/strategist-guides.data';
+import { GUIDE_CATEGORIES } from './guide-library.data';
 import { HeroGuidesPageComponent } from './hero-guides-page.component';
 
 describe('HeroGuidesPageComponent', () => {
+  let fixture: ComponentFixture<HeroGuidesPageComponent>;
   let element: HTMLElement;
 
-  const links = () => Array.from(element.querySelectorAll('app-hub-tile a'));
-  const sections = () => Array.from(element.querySelectorAll('section'));
+  const links = () => Array.from(element.querySelectorAll<HTMLAnchorElement>('app-guide-card a'));
+  const paths = () => links().map((link) => link.getAttribute('href'));
+  const cards = () => Array.from(element.querySelectorAll<HTMLElement>('app-guide-card'));
+  const headings = () => Array.from(element.querySelectorAll('.group h2'), (heading) => heading.textContent?.trim());
+  const status = () => element.querySelector('[role="status"]')?.textContent?.trim();
+  const input = () => element.querySelector<HTMLInputElement>('input[type="search"]');
+  const clear = () => element.querySelector<HTMLButtonElement>('button.clear');
+  const select = (label: string) => Array.from(element.querySelectorAll<HTMLSelectElement>('select'))
+    .find((control) => control.closest('label')?.textContent?.trim().startsWith(label));
+
+  async function settle(): Promise<void> {
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  async function search(value: string): Promise<void> {
+    const control = input();
+    if (!control) throw new Error('Search input missing');
+    control.value = value;
+    control.dispatchEvent(new Event('input'));
+    await settle();
+  }
+
+  async function choose(label: string, value: string): Promise<void> {
+    const control = select(label);
+    if (!control) throw new Error(`${label} select missing`);
+    control.value = value;
+    control.dispatchEvent(new Event('change'));
+    await settle();
+  }
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
-    const fixture = TestBed.createComponent(HeroGuidesPageComponent);
+    fixture = TestBed.createComponent(HeroGuidesPageComponent);
     fixture.detectChanges();
     element = fixture.nativeElement;
   });
 
-  it('is titled Guides, with the groups as headings under it', () => {
+  it('lists every actual guide once at its existing address, including individual strategist lessons', () => {
+    const expected = [
+      ...HERO_GUIDES.map((guide) => `/hero-guides/${guide.heroId}`),
+      ...STRATEGIST_GUIDES.map((guide) => `/strategist-guides/${guide.id}`),
+      '/hero-guides/first-time',
+      '/beginner-interactive-guide',
+      '/techniques',
+      '/power-positions',
+      '/strategic-cover',
+      '/build-theory',
+      '/triple-support-counter',
+    ];
+
+    expect(paths().slice().sort()).toEqual(expected.sort());
+    expect(new Set(paths()).size).toBe(expected.length);
+    expect(status()).toBe(`${expected.length} guides`);
+    expect(paths()).not.toContain('/stats/heroes');
+    expect(paths()).not.toContain('/strategist-guides');
+    expect(element.querySelector('iframe')).toBeNull();
+  });
+
+  it('categorizes every guide, sorts titles within each category, and uses a clear heading hierarchy', () => {
+    expect(element.querySelectorAll('h1').length).toBe(1);
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Guides');
-    expect(Array.from(element.querySelectorAll('h2'), (heading) => heading.textContent?.trim())).toEqual([
-      'Start here',
-      'Hero guides',
-      'Fundamentals',
-      'Habits and team play',
-      'Strategist lessons',
-    ]);
-  });
+    expect(headings()).toEqual([...GUIDE_CATEGORIES]);
+    expect(element.querySelectorAll('app-guide-card h3').length).toBe(cards().length);
+    expect(element.querySelector('app-guide-card h2')).toBeNull();
 
-  it('titles each guide with an h3 under its group heading', () => {
-    expect(element.querySelectorAll('app-hub-tile h2').length).toBe(0);
-    expect(element.querySelectorAll('app-hub-tile h3').length).toBe(28);
-  });
-
-  it('gives every guide link its own name', () => {
-    const names = links().map((link) => link.textContent?.trim());
-
-    expect(names.length).toBe(28);
-    expect(new Set(names).size).toBe(names.length);
-  });
-
-  it('lists every guide once, each under its group, going to its own address', () => {
-    const hrefsByGroup = sections().map((section) =>
-      Array.from(section.querySelectorAll('app-hub-tile a'), (link) => link.getAttribute('href')),
-    );
-
-    expect(hrefsByGroup.map((hrefs) => hrefs.length)).toEqual([3, 4, 14, 6, 1]);
-    expect(hrefsByGroup[0]).toContain('/hero-guides/coach-mills-ultimate-beginners-guide');
-    expect(hrefsByGroup[0]).toContain('/hero-guides/first-time');
-    expect(hrefsByGroup[0]).toContain('/beginner-interactive-guide');
-    expect(hrefsByGroup[1]).toEqual(
-      HERO_GUIDES.filter((guide) => guide.category === 'hero').map((guide) => `/hero-guides/${guide.heroId}`),
-    );
-    expect(hrefsByGroup[3]).toContain('/stats/heroes');
-    expect(new Set(hrefsByGroup.flat()).size).toBe(28);
-  });
-
-  it('lists the tempo and ultimate economy guide under its own address', () => {
-    expect(links().map((link) => link.getAttribute('href'))).toContain('/hero-guides/tempo-and-ultimate-economy');
-  });
-
-  it('links the strategist lessons', () => {
-    expect(links().map((link) => link.getAttribute('href'))).toContain('/strategist-guides');
-  });
-
-  it('leads each group with its first guide as key art, and shows the rest with thumbnails', () => {
-    for (const section of sections()) {
-      const tiles = Array.from(section.querySelectorAll('app-hub-tile'));
-
-      expect(tiles[0].querySelectorAll('.art__image').length).toBe(1);
-      expect(tiles[0].querySelector('img.thumbnail')).toBeNull();
-      for (const tile of tiles.slice(1)) {
-        expect(tile.querySelector('.art__image')).toBeNull();
-        expect(tile.querySelectorAll('img.thumbnail').length).toBe(1);
+    for (const section of Array.from(element.querySelectorAll('.group'))) {
+      const category = section.querySelector('h2')?.textContent?.trim() ?? '';
+      const titles = Array.from(section.querySelectorAll('app-guide-card h3'), (title) => title.textContent?.trim() ?? '');
+      expect(titles).toEqual(titles.slice().sort((a, b) => a.localeCompare(b)));
+      for (const caption of Array.from(section.querySelectorAll('.caption'))) {
+        expect(caption.textContent?.trim().startsWith(`${category} ·`)).toBeTrue();
       }
     }
   });
 
-  it('loads the first group lead art at once and defers every later group lead', () => {
-    const loading = sections().map((section) => section.querySelector('.art__image')?.getAttribute('loading') ?? null);
-
-    expect(loading).toEqual([null, 'lazy', 'lazy', 'lazy', 'lazy']);
+  it('visibly labels each native control and leaves initial focus alone', () => {
+    expect(input()?.closest('label')?.querySelector('span')?.textContent).toBe('Search guides');
+    expect(input()?.closest('label')?.querySelector('.visually-hidden')).toBeNull();
+    expect(select('Category')).toBeDefined();
+    expect(select('Hero')).toBeDefined();
+    expect(clear()?.disabled).toBeTrue();
+    expect(document.activeElement).not.toBe(input());
   });
 
-  it('tints a hero playbook chip by its role and a fundamentals chip with the accent', () => {
-    const chipKinds = (section: Element) => Array.from(section.querySelectorAll('.chip'), (chip) => chip.getAttribute('data-kind'));
-    const roles = new Map(HERO_GUIDES.map((guide) => [guide.heroName, guide.role]));
-    const heroTiles = Array.from(sections()[1].querySelectorAll('app-hub-tile'));
+  it('finds Doctor Strange with case and extra whitespace differences', async () => {
+    await search('  DOCTOR    STRANGE  ');
 
-    expect(heroTiles.length).toBeGreaterThan(0);
-    for (const tile of heroTiles) {
-      const role = roles.get(tile.querySelector('a')?.textContent?.trim() ?? '');
-      const expected = { Vanguard: 'secondary', Duelist: 'tertiary', Strategist: 'accent', Fundamentals: 'accent' }[role ?? 'Fundamentals'];
-
-      expect(tile.querySelector('.chip')?.getAttribute('data-kind')).toBe(expected);
-    }
-    expect(new Set(chipKinds(sections()[2]))).toEqual(new Set(['accent']));
-    expect(chipKinds(sections()[4])).toEqual(['accent']);
+    expect(paths()).toEqual(['/hero-guides/doctor-strange']);
+    expect(status()).toBe('1 of 36 guides');
+    expect(headings()).toEqual(['Hero guides']);
+    expect(cards()[0].textContent).toContain('Vanguard');
   });
 
-  it('points to Resources from under the heading, since the top bar has no Resources link', () => {
-    const link = element.querySelector('app-page-header a');
+  it('matches multiword topics without requiring them to be a contiguous phrase', async () => {
+    await choose('Category', 'Positioning');
+    await search('ground   high');
 
-    expect(link?.getAttribute('href')).toBe('/resources');
-    expect(link?.textContent?.trim()).toBe('Resources');
+    expect(paths()).toEqual(['/power-positions']);
+    expect(status()).toBe('1 of 36 guides');
   });
 
-  it('leaves the main landmark to the shell and has an h1', () => {
+  it('searches explicit strategist hero focus and punctuation variants', async () => {
+    await search('cloak and dagger');
+
+    expect(paths()).toEqual(['/strategist-guides/heal-vs-damage']);
+    expect(cards()[0].textContent).toContain('Cloak & Dagger');
+  });
+
+  it('offers only heroes with explicit guide focus, sorted by name', () => {
+    const options = Array.from(select('Hero')?.options ?? [], (option) => option.textContent);
+
+    expect(options).toEqual([
+      'All heroes', 'Captain America', 'Cloak & Dagger', 'Deadpool', 'Doctor Strange', 'Jubilee', 'Luna Snow', 'Rocket Raccoon',
+    ]);
+    expect(options).not.toContain('All Strategists');
+    expect(options).not.toContain('Hawkeye');
+    expect(options).not.toContain('Magneto');
+  });
+
+  it('does not mistake decorative artwork for a hero guide', async () => {
+    await choose('Hero', 'Doctor Strange');
+
+    expect(paths()).toEqual(['/hero-guides/doctor-strange']);
+    expect(paths()).not.toContain('/build-theory');
+    await choose('Hero', 'Captain America');
+    expect(paths()).toEqual(['/hero-guides/captain-america']);
+    expect(paths()).not.toContain('/hero-guides/first-time');
+  });
+
+  it('combines category, hero and topic filters without changing the available choices', async () => {
+    const allHeroOptions = select('Hero')?.options.length;
+    await choose('Category', 'Strategist lessons');
+    await choose('Hero', 'Rocket Raccoon');
+    await search('dealing damage');
+
+    expect(paths()).toEqual(['/strategist-guides/rocket-guide-part-2-damage']);
+    expect(status()).toBe('1 of 36 guides');
+    expect(headings()).toEqual(['Strategist lessons']);
+    expect(select('Hero')?.options.length).toBe(allHeroOptions);
+
+    await choose('Category', 'Hero guides');
+    expect(paths()).toEqual([]);
+    expect(status()).toBe('0 of 36 guides');
+  });
+
+  it('counts filtered categories without duplicating live announcements', async () => {
+    await choose('Category', 'Strategist lessons');
+
+    expect(paths().length).toBe(STRATEGIST_GUIDES.length);
+    expect(status()).toBe('10 of 36 guides');
+    expect(element.querySelectorAll('[role="status"], [aria-live]').length).toBe(1);
+    expect(select('Category')?.options.length).toBe(GUIDE_CATEGORIES.length + 1);
+  });
+
+  it('offers one useful empty state and resets all filters while returning focus to search', async () => {
+    await choose('Category', 'Positioning');
+    await choose('Hero', 'Doctor Strange');
+    await search('no such guide');
+
+    expect(paths().length).toBe(0);
+    expect(status()).toBe('0 of 36 guides');
+    expect(element.querySelector('app-state-panel h2')?.textContent).toBe('No guides match');
+    expect(element.querySelector('app-state-panel')?.textContent).toContain('clear the filters above');
+    expect(element.querySelectorAll('[role="status"], [aria-live]').length).toBe(1);
+    expect(clear()?.disabled).toBeFalse();
+
+    clear()?.click();
+    await settle();
+
+    expect(status()).toBe('36 guides');
+    expect(paths().length).toBe(36);
+    expect(input()?.value).toBe('');
+    expect(select('Category')?.value).toBe('');
+    expect(select('Hero')?.value).toBe('');
+    expect(clear()?.disabled).toBeTrue();
+    expect(document.activeElement).toBe(input());
+  });
+
+  it('keeps related hubs and statistics accessible without including them in guide results', async () => {
+    await search('no such guide');
+    const related = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav.related a'));
+
+    expect(related.map((link) => link.getAttribute('href'))).toEqual(['/strategist-guides', '/resources', '/stats/heroes']);
+    expect(related.every((link) => Boolean(link.textContent?.trim()))).toBeTrue();
+    expect(paths().length).toBe(0);
     expect(element.querySelector('main')).toBeNull();
-    expect(element.querySelector('h1')).not.toBeNull();
+  });
+
+  it('keeps controls and cards inside narrow and sidebar-sized page columns in both themes', () => {
+    const savedTheme = document.documentElement.getAttribute('data-theme');
+    document.body.appendChild(element);
+
+    try {
+      for (const theme of ['light', 'dark']) {
+        document.documentElement.setAttribute('data-theme', theme);
+        for (const viewport of [320, 390, 1280, 1366]) {
+          const column = viewport >= 1280 ? viewport - 332 : viewport;
+          element.style.width = `${column}px`;
+          const host = element.getBoundingClientRect();
+          expect(element.scrollWidth).withContext(`${theme}, ${viewport}px viewport`).toBeLessThanOrEqual(column);
+          for (const child of Array.from(element.querySelectorAll<HTMLElement>('.filters, input, select, .cards, app-guide-card'))) {
+            const rect = child.getBoundingClientRect();
+            expect(rect.left).withContext(`${theme}, ${viewport}px, ${child.tagName}`).toBeGreaterThanOrEqual(host.left - 1);
+            expect(rect.right).withContext(`${theme}, ${viewport}px, ${child.tagName}`).toBeLessThanOrEqual(host.right + 1);
+            expect(child.scrollWidth).withContext(`${theme}, ${viewport}px, ${child.tagName}`).toBeLessThanOrEqual(child.clientWidth + 1);
+          }
+        }
+      }
+    } finally {
+      if (savedTheme === null) document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', savedTheme);
+      element.remove();
+    }
   });
 });
 
-describe('guideTileSizes', () => {
-  const columns = { feature: 4, tall: 2, half: 3, third: 2, note: 2, wide: 6 } as const;
+describe('guide directory navigation', () => {
+  it('opens the Doctor Strange guide from a search result using the existing route', async () => {
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter(routes)] });
+    const harness = await RouterTestingHarness.create('/hero-guides');
+    const search = harness.routeNativeElement?.querySelector<HTMLInputElement>('input[type="search"]');
+    if (!search) throw new Error('Guide directory search missing');
+    search.value = 'Doctor Strange';
+    search.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    const result = harness.routeNativeElement?.querySelector<HTMLAnchorElement>('app-guide-card a');
+    expect(result?.getAttribute('href')).toBe('/hero-guides/doctor-strange');
 
-  it('gives a single guide the whole row and no guides nothing', () => {
-    expect(guideTileSizes(0)).toEqual([]);
-    expect(guideTileSizes(1)).toEqual(['wide']);
-  });
+    result?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
 
-  it('puts a tall tile beside the lead when there are two guides', () => {
-    expect(guideTileSizes(2)).toEqual(['feature', 'tall']);
-  });
-
-  it('leads with a feature tile and fills every row of the six-column grid, whatever the count', () => {
-    for (let count = 3; count <= 30; count++) {
-      const sizes = guideTileSizes(count);
-      const [lead, besideA, besideB, ...rest] = sizes;
-      const restColumns = rest.reduce((total, size) => total + columns[size], 0);
-
-      expect(sizes.length).toBe(count);
-      expect([lead, besideA, besideB]).toEqual(['feature', 'third', 'third']);
-      expect(restColumns % 6).toBe(0);
-    }
-  });
-
-  it('sizes each of the Guides hub groups to its guide count', () => {
-    for (const section of GUIDE_SECTIONS) {
-      expect(section.tiles.map((tile) => tile.size)).toEqual(guideTileSizes(section.links.length));
-    }
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent?.trim()).toBe('Doctor Strange');
+    expect(harness.routeNativeElement?.textContent).toContain('Infinitea');
+    expect(harness.routeNativeElement?.querySelector<HTMLAnchorElement>('.source a')?.href)
+      .toBe('https://www.youtube.com/watch?v=SWomAJspcoM&t=189s');
   });
 });

@@ -14,6 +14,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- Find every written guide and interactive course from Guides with hero-name and topic search, hero and category filters, and compact categorized results, including each individual Strategist lesson ([#834](https://github.com/anthonyturner/rivals-pulse-web/pull/834)).
+
 - Watch Infinitea's rank-one Doctor Strange review in Media and read its linked guide on positioning, frontline duties, backline protection, ultimate timing, regrouping and portal plays, with a source link to the shared 3:09 starting point ([#831](https://github.com/anthonyturner/rivals-pulse-web/pull/831)).
 
 - The site can now work out how players who mostly play a hero (specialists, at least half of their matches on it and 10 or more on it) fare against players who play many heroes (flex, no hero over a quarter of their matches, at least 5 heroes and 20 matches), pooled per hero from the matches the app uploaded. It is served at `/api/hero-specialists` and published as a new optional Pulse Atlas file, `hero-specialists.json`, as win rates and a rough match band, never an exact count, and a hero shows only once each group has at least 5 players, 2 uploading players and 50 matches, so expect "not enough data" for every hero at first (at the last count only 2 players had 20 matches in Season 10.5). Players are told apart by their in-game player id, players with no id are left out, nobody is named, and the privacy page says so. The hero page does not show it yet; that follows. It needs `supabase db push` for the new read, which waits for the maintainer's approval ([#823](https://github.com/anthonyturner/rivals-pulse-web/pull/823)).
