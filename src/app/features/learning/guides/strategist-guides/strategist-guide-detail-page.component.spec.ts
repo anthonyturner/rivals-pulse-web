@@ -4,6 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { BehaviorSubject } from 'rxjs';
 
 import { StrategistGuideDetailPageComponent } from './strategist-guide-detail-page.component';
+import { STRATEGIST_ARTICLES } from './strategist-guide-article.data';
 import { STRATEGIST_GUIDES } from './strategist-guides.data';
 
 describe('StrategistGuideDetailPageComponent', () => {
@@ -82,6 +83,22 @@ describe('StrategistGuideDetailPageComponent', () => {
 
   it('lists related guides with the shared guide card', () => {
     expect(element.querySelectorAll('app-guide-card').length).toBeGreaterThan(0);
+  });
+
+  it('supplies a distinct editorial opening and hypothetical example for every lesson', async () => {
+    expect(Object.keys(STRATEGIST_ARTICLES).sort()).toEqual(STRATEGIST_GUIDES.map(item => item.id).sort());
+    for (const item of STRATEGIST_GUIDES) {
+      params.next(convertToParamMap({ guideId: item.id }));
+      await fixture.whenStable(); fixture.detectChanges();
+      expect(element.querySelector('#worked-example')?.textContent).withContext(item.id).toContain('Hypothetical example');
+      expect(element.querySelector('.opening')?.textContent).toBe(STRATEGIST_ARTICLES[item.id].introduction);
+      expect(element.querySelector('.field-guide__body .guide-tile')).toBeNull();
+      for (const rule of item.decisionRules) expect(element.querySelector('table')?.textContent).toContain(rule.action);
+      for (const drill of item.drills) expect(element.querySelector('#practice')?.textContent).toContain(drill.success);
+      for (const link of Array.from(element.querySelectorAll<HTMLAnchorElement>('app-guide-chapters a'))) {
+        expect(element.querySelector(`[id="${new URL(link.href).hash.slice(1)}"]`)).not.toBeNull();
+      }
+    }
   });
 
   it('leaves the main landmark to the shell and has an h1', () => {

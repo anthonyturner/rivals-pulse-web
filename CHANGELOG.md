@@ -78,6 +78,8 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- All ten Strategist lessons now read as coached articles with distinct practice scenarios, while preserving every decision rule, source moment, drill and replay question ([#844](https://github.com/anthonyturner/rivals-pulse-web/pull/844)).
+
 - Doctor Strange now reads as a connected field guide, with chapter navigation, a sourced portal example and a focused practice plan; the shared reading layout prepares the remaining guides for editorial conversion ([#843](https://github.com/anthonyturner/rivals-pulse-web/pull/843)).
 
 - The app privacy policy at `/privacy/app` now carries the overlay team's two new paragraphs on specialist and flex players: that the database works out who counts as a specialist or a flex player on a hero from scoreboard lines, by player ID, each time it builds the numbers and never stores the group, and that only each group's win rate and a rough match band are published once the group is big enough. It is the only change from the previous copy, and the three `[TO BE CONFIRMED]` placeholders are still unfilled in the overlay ([#828](https://github.com/anthonyturner/rivals-pulse-web/pull/828)).
