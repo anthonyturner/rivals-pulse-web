@@ -313,133 +313,96 @@ export const HERO_GUIDES: HeroGuide[] = [
       'Pick Captain America when your team can surround the enemy with dive pressure, when you need a Vanguard who can harass poke/backline heroes, or when your supports need a mobile tank who can peel without becoming stationary.',
     sections: [
       {
-        title: 'General philosophy: do not sit main',
+        title: "General philosophy: do not sit main",
         paragraphs: [
-          'The guide opens with a clear warning: Captain America does not get full value by sitting in main and punching tanks the entire game.',
-          'His value comes from pressure and displacement. You either help set up a dive by surrounding the enemy team or intercept a flanker before they reaches your supports.',
-          'If your team has divers like Psylocke, Daredevil, Iron Fist, or Black Panther, look to aid their backline pressure instead of playing a slow frontline trade.',
-          'If your supports are struggling, flip the job: stop enemy flankers before they get a clean engage.',
-          'Cap is at his best when he stages intelligently, draws a circle around the enemy team, forces resources, and then decides whether the next touch is a kill attempt or a reset.',
-        ],
+          "Captain America makes a fight easier by changing where the enemy has to look. The source guide warns against spending the whole match in main, punching the opposing tank: that leaves his mobility and displacement doing very little. Stage around the enemy instead, force attention away from the frontline and decide whether the opening calls for a kill attempt or another reset.",
+          "Choose that job from the team fight rather than from a fixed route. Psylocke, Daredevil, Iron Fist and Black Panther can use help surrounding the backline; if your own supports are struggling, the more useful route may intercept an enemy flanker before the engage lands. Intelligent staging lets Cap move between those responsibilities without becoming a stationary frontline tank."
+        ]
       },
       {
-        title: 'Sentinel Strike: punch into shield pressure',
+        title: "Sentinel Strike: punch into shield pressure",
         paragraphs: [
-          'Sentinel Strike starts with melee punches that deal 40 damage per punch and build charges under the reticle.',
-          'After four charges, or after punching a target twice, Captain America gains mini shield throws that deal 45 damage per hit.',
-          'The mini shield throws do not ricochet like Vibranium Energy Saw, but they automatically target enemies near the crosshair.',
-          'The guide notes a practical aiming quirk: aiming slightly to the right of a target gives more generous homing than aiming to the left.',
-          'The mini shields only travel about 25 meters, so they are not a long-range poke plan. They are a chase and pressure tool once you are already close.',
-          'You can build Sentinel Strike charges off Groot walls, Loki clones, and Moon Knight ankhs, but not off inanimate shields such as Emma Frost shield.',
-        ],
+          "Sentinel Strike turns a close approach into sustained shield pressure. In the source version of the kit, melee punches deal 40 damage and build the charges shown beneath the reticle. Four charges, or punching a target twice, unlock mini shield throws dealing 45 damage per hit. Those throws automatically seek enemies near the crosshair rather than ricocheting like Vibranium Energy Saw.",
+          "Their reach is about 25 meters, so treat them as a chase tool after closing distance, not as a long-range poke plan. The guide also notes that aiming a little to the target's right gives more generous homing than aiming to its left. When preparing the sequence, Groot walls, Loki clones and Moon Knight ankhs can build Sentinel Strike charges; inanimate shields such as Emma Frost's cannot."
+        ]
       },
       {
-        title: 'Leading Dash and Super-Soldier Slam',
+        title: "Leading Dash and Super-Soldier Slam",
         paragraphs: [
-          'Leading Dash gives Captain America a 33% sprint speed boost with no cooldown and no energy meter.',
-          'You can sprint between mini shield throws to stay on targets, but if you spam sprint and throws too quickly, you can cancel the shield throw and lose damage.',
-          'The guide recommends listening for the shield impact sound before throwing again so the rhythm stays clean.',
-          'Sprint can be hold or toggle based on comfort. The guide cares more about doing the Captain America idea correctly than tiny sprint min-maxing.',
-          'Jumping while sprinting unlocks Super-Soldier Slam, a ground slam that deals 30 damage and launches enemies upward.',
-          'If you are already close, punch twice, slam, then follow with mini shield throws. If a friendly diver engages first, slam with them to help burst a support.',
-          'Super-Soldier Slam can also be an escape tool, but it has a 12-second cooldown, so do not spend it casually if you will need it to leave.',
-        ],
+          "Leading Dash provides the movement that keeps this close-range plan working. The source guide describes a 33% sprint speed bonus without a cooldown or energy meter. Sprinting between mini shield throws helps Cap stay with a retreating target, but rushing the inputs can cancel a throw and lose its damage. Listen for the shield impact before throwing again. Hold or toggle sprint is a comfort choice; getting the pressure-and-reset idea right matters more than small sprint optimizations.",
+          "Jumping while sprinting opens Super-Soldier Slam, which deals 30 damage in the source and launches enemies upward. When already close, two punches into a slam set up the mini shield follow-up. When another diver commits first, timing the slam with that entry can help burst a support instead of starting an isolated fight.",
+          "The same slam can provide a way out. Its stated 12-second cooldown makes the decision important: using it for a small amount of extra pressure may remove the escape you need a moment later. Plan the exit while you are choosing how to enter."
+        ]
       },
       {
-        title: 'Living Legend: shield for stuns and clutch blocks',
+        title: "Living Legend: shield for stuns and clutch blocks",
         paragraphs: [
-          'Living Legend raises Cap shield and deflects projectiles in random directions, unlike Daredevil-style aiming deflects.',
-          'Melee hits and beams do not deflect back, though some beam damage can still be blocked.',
-          'The shield has 350 health and recovers 50 health per second while put away.',
-          'You cannot spam the shield freely: after lowering it there is a short lockout, and if it breaks completely you wait longer before using it again.',
-          'The guide says the shield is mainly for dodging stuns and surviving sticky moments, such as Luna snowballs or Hela stuns.',
-          'It can also protect friendly supports from projectile pressure and certain ultimates, including Iron Man and Magneto situations.',
-          'Do not hold shield just because it is available. Better pathing, cover, health packs, and support healing can solve many poke situations without spending your key defensive tool.',
-        ],
+          "Living Legend is protection to spend on a specific danger. It deflects projectiles in random directions, unlike Daredevil-style aimed deflections; melee and beams do not reflect back, although some beam damage can still be blocked. The source gives the shield 350 health and a recovery rate of 50 health per second while put away. Lowering it creates a short lockout, and breaking it creates a longer wait, so repeatedly flashing or exhausting it has a cost.",
+          "Use that protection for the moment that would stop your route: a Luna snowball, a Hela stun or another dangerous interruption. It can also cover friendly supports from projectiles and certain ultimate situations, including Iron Man and Magneto. Ordinary poke does not always justify spending it. Better pathing, cover, health packs and support healing can preserve the shield for the stun or clutch block that matters."
+        ]
       },
       {
-        title: 'Liberty Rush: finish or escape, not both',
+        title: "Liberty Rush: finish or escape, not both",
         paragraphs: [
-          'Liberty Rush sends Captain America forward in a 12-meter charge that deals 30 damage.',
-          'It can be used every 10 seconds regardless of whether Living Legend is up, down, or broken.',
-          'During the dash, Cap is crowd-control immune, which lets him dodge tools such as Luna snowball, Doctor Strange ultimate, and even Jeff ultimate timing.',
-          'The guide frames Liberty Rush as a tool to either finish a target quickly or get out of danger.',
-          'Because the dash stops when it hits a target, it is not like Psylocke dash. You usually cannot use the same Liberty Rush to both damage through someone and escape cleanly.',
-          'If the engage is only a soft engage to force resources, consider saving Liberty Rush so you can dodge CC and leave.',
-        ],
+          "Liberty Rush forces a choice between committing damage and preserving an exit. The source describes a 12-meter charge dealing 30 damage on a 10-second cooldown, usable whether Living Legend is raised, lowered or broken. During the dash, crowd-control immunity can dodge a Luna snowball, Doctor Strange ultimate or even Jeff ultimate timing.",
+          "Unlike Psylocke's dash, however, it stops when it hits a target. Do not plan to damage through someone and escape with the same cast. On a hard kill attempt, spend it to finish quickly; on a soft engage meant to draw resources, saving it lets you dodge crowd control and leave after the enemy responds."
+        ]
       },
       {
-        title: 'Vibranium Energy Saw and the core combo',
+        title: "Vibranium Energy Saw and the core combo",
         paragraphs: [
-          'Vibranium Energy Saw is the larger shield throw. It deals 70 damage on first hit, then can ricochet up to three times with reduced damage each bounce.',
-          'Throwing it at the ground near a target can still ricochet into them, which makes aiming at the legs more consistent than trying to land perfect direct hits every time.',
-          'Do not throw it too early from stealth or staging, because it alerts enemies and gives supports time to heal the damage.',
-          'Do not hold it forever either. If you never weave it in, you lose finishing power and pressure.',
-          'The guide combo is: sprint, jump, Vibranium Energy Saw, wait, left click, Liberty Rush, then left click.',
-          'Use this harder combo when you and another diver are trying to kill. For a soft engage, use shield throw and slam pressure, then save Liberty Rush to leave or dodge crowd control.',
-          'Cap abilities are simple alone but hectic together, so the guide recommends practicing the timings in the range until the rhythm feels natural.',
-        ],
+          "Vibranium Energy Saw supplies the larger shield hit that turns contact into real finishing pressure. It deals 70 damage on the first hit in the guide, then can ricochet up to three times with reduced damage on each bounce. A throw into the ground near a target can still bounce into them, making the legs a more forgiving aim point than insisting on a perfect direct hit.",
+          "Timing matters as much as aim. A throw launched too early from a hidden staging position announces the approach and gives supports time to heal the damage; never weaving it in gives away pressure and finishing power. The source combo is sprint, jump, Vibranium Energy Saw, wait, left click, Liberty Rush, then left click. Practice the rhythm in the range before asking a crowded fight to teach it to you.",
+          "Use that committed sequence when a friendly diver is ready to help secure the kill. A soft touch has a different purpose: apply shield-throw and slam pressure, read the response and retain Liberty Rush to leave or dodge crowd control. The abilities are straightforward individually, but combining all of them without an intended outcome makes the engage unnecessarily hectic."
+        ]
       },
       {
-        title: 'Freedom Charge: mini support ultimate',
+        title: "Freedom Charge: mini support ultimate",
         paragraphs: [
-          'Freedom Charge gives Captain America and nearby allies bonus health plus a 30% movement speed boost.',
-          'On cast, Cap gains 150 bonus health and nearby allies gain 100 bonus health. After that, Cap radiates more bonus health over time while the ultimate is active.',
-          'Try to pop it near teammates when possible so they receive the immediate bonus health and can use the trail/aura during the fight.',
-          'The guide describes three major uses: engaging, countering medium threats, and stalling.',
-          'As an engage, it lets Cap and his team move quickly into the enemy backline without spending a stronger support ultimate first.',
-          'As a counter, it can answer medium-level threats such as Star-Lord ultimate, Psylocke pressure, Black Panther pressure, or moments where your backline needs immediate durability.',
-          'As a stall tool, it makes Cap extremely hard to kill while he bumps enemies around and buys time on the objective.',
-          'Consider turning on ally health bars for Captain America because the ultimate can save teammates like a support tool, but tanks do not naturally get the same critical health prompts supports do.',
-        ],
+          "Freedom Charge can support an entire team's timing rather than only making Cap harder to kill. The source describes a 30% movement speed bonus, 150 bonus health for Cap on cast and 100 for nearby allies, followed by further bonus health radiating from Cap while it remains active. Start near teammates when possible so the immediate health and the trail or aura can help them through the exchange.",
+          "Its three jobs are engaging, answering medium threats and stalling. As an engage, the speed carries Cap and the team into the backline without spending a stronger support ultimate first. As a counter, the durability can answer Star-Lord ultimate, Psylocke or Black Panther pressure, or a backline that urgently needs protection. As a stall, it lets Cap survive and bump enemies around while buying objective time.",
+          "Those jobs require noticing allied danger. Consider enabling ally health bars: tanks do not naturally get the same critical-health prompts as supports, yet this ultimate can save teammates like a support tool. Match the cast to what the team needs, and keep the more specific limits in the ultimate plans below in mind."
+        ]
       },
       {
-        title: 'Counters and annoying matchups',
+        title: "Counters and annoying matchups",
         paragraphs: [
-          'The guide argues Emma Frost is not necessarily a hard counter if you are skilled on Captain America because Liberty Rush can dodge key CC and Cap mobility makes him hard to pin down.',
-          'Peni Parker and The Thing are called out as more annoying Vanguard matchups.',
-          'One practical ranked weakness is that some teammates only understand simple front-to-back brawls, so picking Cap instead of Magneto, Emma, or Strange can confuse your team plan.',
-          'Winter Soldier is annoying because he can dash into you and force you to leave without mobility.',
-          'Namor can be annoying because Cap cannot easily clear turrets alone, though Cap health pool helps him soak more than a squishy diver would.',
-          'Punisher is dangerous if he can aim because he can shred your shield quickly and make your staging feel fragile.',
-          'Duelists that mark or track you, such as Iron Fist and Daredevil, can make it much harder to take clean angles.',
-          'Ultron is mentioned as a major answer to Freedom Charge because his pressure can burn through the bonus health plan.',
-        ],
+          "Matchups change whether a clean route is available, not just which tank wins a direct trade. The guide argues that skilled use of Liberty Rush and Cap's mobility can avoid key Emma Frost crowd control, so it does not treat her as an automatic hard counter. It calls out Peni Parker and The Thing as more troublesome Vanguard opponents. There is also a coordination problem: teammates expecting a simple Magneto, Emma or Strange front-to-back brawl may not understand what a Cap pick is trying to create.",
+          "Several Duelists make staging harder. Winter Soldier can dash into Cap and force a retreat without mobility; Namor's turrets are difficult for Cap to clear alone, although his larger health pool absorbs more than a squishy diver's would. An accurate Punisher can shred Living Legend quickly. Iron Fist and Daredevil can mark or track the approach, removing the freedom to choose a clean angle.",
+          "Do not assume Freedom Charge solves those threats by itself. Ultron is singled out as an answer whose pressure can burn through the bonus-health plan. Adapt the route and the purpose of the ultimate rather than spending the same resources into every opposing composition."
+        ]
       },
       {
-        title: 'Synergies: surround and collapse',
+        title: "Synergies: surround and collapse",
         paragraphs: [
-          'Cap has a team-up with Winter Soldier that lets Bucky reposition to him, but the guide treats it as useful rather than the main reason to pick Cap.',
-          'Venom is highlighted as the best tank partner because Cap and Venom can take different angles and collapse on the same target, instantly forcing support cooldowns.',
-          'Angela can be added to create even more pressure: multiple huge health bars converging from different angles can overwhelm ranked teams.',
-          'Dive or pressure Duelists such as Psylocke, Black Panther, Iron Fist, and Star-Lord fit Cap game plan because they want to surround enemies and cook the backline.',
-          'Human Torch can pair well because Cap can punch enemies and force them to kite through Torch fire zones.',
-          'Luna Snow is called out as a strong support pairing, while Mantis can make Cap engages more lethal without needing to overcommit.',
-        ],
+          "Look for teammates who can use the attention Cap creates. The source highlights Venom as the strongest tank partner: taking different angles and collapsing onto the same target can force support cooldowns immediately. Adding Angela puts another large health bar into that converging pressure. The Winter Soldier Team-Up lets Bucky reposition to Cap and is useful, but the guide does not make it the central reason to choose him.",
+          "Psylocke, Black Panther, Iron Fist and Star-Lord fit the surrounding-backline plan. Human Torch adds a different consequence: Cap's punches can make enemies retreat through Torch's fire zones. On support, Luna Snow is a strong pairing, while Mantis can make an engage more lethal without requiring Cap to overcommit. The shared requirement is follow-up that can arrive when the enemy turns."
+        ]
       },
       {
-        title: 'VOD lesson: force cooldowns before kills',
+        title: "VOD lesson: force cooldowns before kills",
         paragraphs: [
-          'The Paulie VOD review reinforces that the whole Cap idea is not always killing immediately. It is pressuring enemies, forcing resources, and then taking the harder engage after cooldowns are gone.',
-          'In one fight, Cap stages away from main, waits for the friendly Psylocke flank to be ready, then slams into supports once the enemy backline is vulnerable.',
-          'After a pick or forced resource, he leaves instead of feeding, then re-enters when the next opening appears.',
-          'The guide praises using Cap to clear space for a flanking Jeff, letting Jeff create a strong damage/healing angle from behind the enemy team.',
-          'In chaotic triple-support fights, Cap should put out fires: pressure the threat that matters, force support ultimates, and use Freedom Charge so your own supports can ult second.',
-          'If you cannot peel a backline threat because it is already too committed or too far gone, look for an equal or better play on the enemy backline instead of wasting time.',
-        ],
+          "The Paulie VOD review shows why pressure and a finished kill are different outcomes. Cap stages away from main, waits for a friendly Psylocke flank and slams the supports once the backline becomes vulnerable. After a pick or a forced resource, he leaves rather than feeding and returns when another opening develops. The first touch creates conditions for the harder one.",
+          "The same review praises clearing room for a flanking Jeff, who can then establish a useful damage-and-healing angle behind the enemy. In chaotic triple-support fights, put out the fire that matters: threaten the right enemy, force support ultimates and use Freedom Charge so your supports can answer second. If a threat to your backline is already too committed or too far gone for you to peel, do not waste the whole window travelling to it; look for an equal or better play against the opposing backline."
+        ]
       },
       {
-        title: 'Soft engage discipline',
+        title: "Soft engage discipline",
         paragraphs: [
-          'A soft engage is a pressure touch designed to force cooldowns, not a full all-in.',
-          'The VOD shows Cap jumping supports, forcing Mantis sleep or Luna snowball, then using Liberty Rush or shield discipline to leave before the punish lands.',
-          'Many Cap players reach supports and assume the job is to keep holding primary fire. The guide says the better habit is to read the defensive cooldown and leave if the hard engage is not ready.',
-          'Once sleep, snowball, runes, portals, or other support tools are forced, the next engage is much easier and much more dangerous.',
-          'Soft pressure on supports can also starve healing from the enemy frontline, letting your team win point or kill the tank without Cap personally finishing the support.',
-          'Good Captain America play is composure: do not go too deep, do not die for the first touch, and let the pressure stack until the fight cracks.',
-        ],
-      },
+          "A soft engage is a limited pressure touch whose purpose is to force a cooldown. The VOD shows Cap reaching supports, drawing Mantis sleep or Luna snowball and using Liberty Rush or disciplined shielding to leave before the punish. Reaching the target does not automatically turn holding primary fire into the correct next action. Read what the defender spends and whether the real kill attempt is ready.",
+          "That first response changes the next fight. Sleep, snowball, runes, portals and other support tools that are no longer available make a return entry more dangerous. Even without personally killing the support, Cap can interrupt healing long enough for teammates to win the point or finish the tank. Keep the first touch shallow enough to survive, then let the accumulated pressure produce the opening."
+        ]
+      }
     ],
+    workedExample: {
+      title: "A soft touch prepares the Psylocke collapse",
+      paragraphs: [
+        "In the source's Paulie review, Cap stages away from main and waits until the friendly Psylocke flank is ready before slamming the supports. The teaching decision is the wait: entering alone would spend the same tools without the coordinated backline pressure the example is trying to create.",
+        "After a pick or a forced resource, Cap leaves and looks for the next entry rather than trying to turn the first contact into an endless duel. The useful result is either the opening for the collapse or fewer defensive answers for the next touch. If your own supports need peel instead, the same route is not automatically the right job."
+      ],
+      sourceUrl: "https://www.youtube.com/watch?v=HZrBVN4tuik"
+    },
+    practiceFocus: "For your next match, name one enemy defensive cooldown you want to force before each soft engage, and keep a way out for its response. Review one entry afterwards: did you leave once the resource was spent, or did you turn a successful pressure touch into an unsupported chase?",
     ultimates: [
       {
         name: 'Freedom Charge: Engage',
@@ -507,94 +470,73 @@ export const HERO_GUIDES: HeroGuide[] = [
       'Pick Jubilee with a durable, grouped frontline that can occupy her Blooming Balls. Be cautious when your team is built around flyers, flankers, and multiple dive heroes who spread beyond her area healing.',
     sections: [
       {
-        title: 'Playstyle: leapfrog the frontline',
+        title: "Playstyle: leapfrog the frontline",
         paragraphs: [
-          'The guide describes Jubilee as a constant game of leapfrog: place a healing orb ahead of your Vanguards, let them step into it, charge and detonate it, then place the next orb farther forward.',
-          'Each new Blooming Ball marks the next piece of space your team can safely occupy. Your healing layout should encourage forward movement instead of trailing behind the fight.',
-          'Jubilee is not a passive healbot. She needs continuous involvement and clean ability sequencing to avoid low-output gaps.',
-          'Think of her kit as a merry-go-round: build momentum with Sparking Sprint, ride that momentum through Sparkle Marks, then restart the cycle before it slows down.',
-          'Her best fights are grouped brawls where healing, damage, detonations, buffs, and enemy debuffs can all affect several heroes at once.',
-        ],
+          "Jubilee advances a grouped team by preparing its next healing position. The guide calls this leapfrog: place Blooming Ball ahead of the Vanguards, let them occupy it, charge and detonate it, then set the next orb farther forward. Each new field marks a piece of ground the team can use, so the healing layout leads the fight instead of trailing behind it.",
+          "That requires active sequencing rather than passive healing. Sparking Sprint starts the momentum; Sparkle Marks help carry it forward; the next orb must be ready before the cycle runs out. Grouped brawls reward the work because healing, damage, detonations, allied buffs and enemy debuffs can affect several heroes together. Gaps between those abilities are lost output, not harmless downtime."
+        ]
       },
       {
-        title: 'Blooming Ball: feed the orb correctly',
+        title: "Blooming Ball: feed the orb correctly",
         paragraphs: [
-          'Blooming Ball starts as a smaller healing and damage field, then grows in radius and healing output as it affects targets or receives Jubilee fire.',
-          'Your goal is to fully charge each useful orb. A full orb covers more space, provides stronger sustain, creates a larger detonation, and refreshes its remaining lifetime.',
-          'The fastest charge method is placing the orb on an injured ally and shooting that ally. The ally receives direct healing and orb healing while the same shots rapidly feed the orb.',
-          'If nobody inside needs healing, activate Sparking Sprint and shoot the orb with enhanced Energy Plasmoids. Shooting it with normal primary fire is the slowest option.',
-          'Do not abandon an orb after the frontline moves. Recall it from within range, even through a wall, to shorten the next cooldown and redeploy it where the fight is going.',
-          'Detonation requires line of sight to the orb, while recall does not. Position with that difference in mind before you lose the angle.',
-        ],
+          "Blooming Ball begins as a smaller healing-and-damage field. As it affects targets or receives Jubilee's fire, it grows in radius and healing output. Fully charging a useful orb therefore improves the area your team can occupy, its sustain and the size of the eventual detonation, while refreshing the orb's remaining lifetime.",
+          "Charge through an injured ally inside it whenever possible. Shooting that ally supplies direct healing and orb healing while feeding the field quickly. A healthy ally has no missing health for that route to use. If nobody inside needs healing, activate Sparking Sprint and charge the orb with enhanced Energy Plasmoids; normal primary fire into the orb is the slowest option.",
+          "Movement creates another choice. Recall an abandoned orb from within range, even through a wall, to shorten the next cooldown and redeploy ahead of the fight instead of letting it expire behind the team. Recall does not require line of sight, but detonation does. Preserve the detonation angle if you need its burst before relocating."
+        ]
       },
       {
-        title: 'Dazzling Detonation and Sparkle Marks',
+        title: "Dazzling Detonation and Sparkle Marks",
         paragraphs: [
-          'Detonate the largest practical orb so the explosion reaches more allies and enemies.',
-          'Allies receive burst healing, healing over time, and movement speed. Enemies take damage, become blinded, and receive Vulnerability.',
-          'A well-timed blind can disrupt an enemy ultimate that depends on vision or aim. Keep the option in mind instead of detonating only for healing numbers.',
-          'Every affected target receives a Sparkle Mark. Shoot a marked ally or enemy to consume the mark and activate enhanced Energy Plasmoids.',
-          'Consuming an allied mark grants bonus health and increases incoming healing, creating Jubilee strongest single-target stabilization window.',
-          'Consuming an enemy mark adds burst damage. Choose the mark that solves the current fight rather than automatically shooting the nearest target.',
-          'When several marks are available, consume one immediately and stagger the others before they expire to refresh enhanced fire instead of spending every mark at once.',
-        ],
+          "Detonate the largest practical orb when the resulting reach will matter. Allies receive burst healing, healing over time and movement speed, while enemies take damage, blindness and Vulnerability. The blind can disrupt an ultimate that depends on vision or aim, so the timing can solve a threat that a larger healing number alone would not.",
+          "The explosion also marks every affected target with a Sparkle Mark. Shooting a marked ally or enemy consumes that mark and activates enhanced Energy Plasmoids. An allied mark grants bonus health and increases incoming healing, creating Jubilee's strongest single-target stabilization window; an enemy mark adds burst damage. Choose the target that solves the present fight rather than spending the effect on whoever is closest.",
+          "Several available marks are a resource to pace. Consume one immediately to start enhanced fire, then use the others before they expire to refresh it. Spending every mark at once loses the extended output that makes the next orb and the next detonation easier to prepare."
+        ]
       },
       {
-        title: 'Core rotation: keep the loop spinning',
+        title: "Core rotation: keep the loop spinning",
         paragraphs: [
-          'Open the fight by placing Blooming Ball just ahead of the frontline so it tracks a Vanguard instead of drifting back to Jubilee.',
-          'Activate Sparking Sprint and use enhanced Energy Plasmoids on an injured ally inside the orb, or on the orb itself, until it is fully charged.',
-          'Cancel Sparking Sprint once the charge is complete so its resource begins recovering.',
-          'Detonate the charged orb, then immediately consume one of the new Sparkle Marks to reactivate enhanced fire.',
-          'Place the next orb ahead of the frontline and rapidly charge it with enhanced Energy Plasmoids.',
-          'Heal an ally, pressure an enemy, or consume another mark while waiting for Dazzling Detonation to return, then detonate the new orb and repeat.',
-          'The shorthand is: orb, sprint, charge, detonate, consume a mark, new orb, charge, repeat.',
-        ],
+          "Begin by placing Blooming Ball just ahead of the frontline so it tracks a Vanguard rather than drifting back toward Jubilee. Activate Sparking Sprint and use enhanced Energy Plasmoids on an injured ally inside the orb, or on the orb itself, until it is fully charged. End Sprint once that job is complete so its resource starts recovering.",
+          "Detonate the charged orb and consume one of the new Sparkle Marks to regain enhanced fire. Now place the next Blooming Ball ahead of the team and use that enhanced stream to charge it quickly. While Dazzling Detonation recovers, heal someone who needs it, pressure an enemy or consume another mark, then detonate the prepared orb and continue.",
+          "The sequence is orb, sprint, charge, detonate, mark, new orb, charge, repeat. Its purpose is continuity: the first detonation funds enhanced output, and that output prepares the next healing position. Treat it as a loop to maintain through the fight rather than an opener to execute once."
+        ]
       },
       {
-        title: 'Energy Plasmoids: play for the enhanced state',
+        title: "Energy Plasmoids: play for the enhanced state",
         paragraphs: [
-          'Normal Energy Plasmoids provide modest healing and damage. Jubilee output rises when Sparking Sprint or a consumed Sparkle Mark activates the enhanced version.',
-          'Enhanced fire shoots much faster, consumes no ammo, and raises both healing and damage output, so the entire ability loop should maximize its uptime.',
-          'Use the enhanced stream to burst-heal a marked ally, charge the next orb, help burn the enemy frontline, or punish an exposed flyer.',
-          'Do not reload during a window where enhanced fire is available. Hold the trigger and turn that temporary state into as much useful output as the fight allows.',
-          'During quiet but unsafe moments, shoot the active orb to keep it charged. If the fight is truly over, recall it and recover resources instead.',
-        ],
+          "Normal Energy Plasmoids offer modest healing and damage. Sparking Sprint or a consumed Sparkle Mark enables the faster enhanced stream, which consumes no ammo and raises both outputs. The rest of the kit should keep that state available, because its value connects immediate healing and damage with charging the next orb.",
+          "Use the stream where it matters now: stabilize a marked ally, fill the next Blooming Ball, help burn the enemy frontline or punish an exposed flyer. Do not reload while enhanced fire is available; keep firing and convert the temporary window into useful work. In a quiet but unsafe moment, maintaining the active orb can still be useful. Once the fight is truly over, recall it and recover resources instead."
+        ]
       },
       {
-        title: 'Sparking Sprint: start, conserve, escape',
+        title: "Sparking Sprint: start, conserve, escape",
         paragraphs: [
-          'Sparking Sprint provides movement speed, enhanced fire, and a boosted jump, making it both the starter for Jubilee rotation and her escape tool.',
-          'The ability uses a resource meter. Cancel it as soon as the charge or reposition is complete instead of draining the entire meter.',
-          'The boosted jump can quickly return Jubilee to her team, leave dangerous ground effects, or escape an enemy ultimate.',
-          'When Sparking Sprint ends, Jubilee creates a small explosion that knocks back nearby enemies and heals nearby allies, including herself.',
-          'Stay aware of the exit burst in close brawls, but do not remain in danger merely to force it. Survival keeps the full healing loop available.',
-        ],
+          "Sparking Sprint starts the rotation, but it is also Jubilee's escape. Movement speed, enhanced fire and the boosted jump let it solve a charge or positioning problem quickly. Because it uses a resource meter, cancel it when that task is finished instead of letting the full meter drain. Keeping some mobility available helps preserve the next healing cycle.",
+          "Use the boosted jump to return to teammates, leave dangerous ground effects or escape an ultimate. Ending Sprint creates a small explosion that knocks nearby enemies back and heals nearby allies, including Jubilee. Remember that exit burst in a close brawl, but do not stay in danger just to force it: surviving to run the full loop is worth more."
+        ]
       },
       {
-        title: 'Positioning and team composition',
+        title: "Positioning and team composition",
         paragraphs: [
-          'In a committed brawl, play near the Vanguards and inside your own Blooming Balls rather than defaulting to a distant backline position.',
-          'Sharing the orb gives Jubilee self-sustain while her enhanced fire and detonations pressure enemies around the same frontline.',
-          'A sturdy anchor such as The Thing, Magneto, Emma Frost, or Devil Dinosaur gives the orbs a reliable center and makes the leapfrog plan easy to read.',
-          'If both Vanguards dive away, attach the plan to the most reliable grounded ally who can function as a temporary frontline.',
-          'Jubilee loses efficiency when flyers, flankers, and dive tanks scatter in several directions because one area cannot sustain all of them.',
-          'Use enhanced primary fire to briefly help an ally outside the main orb, then return attention to the grouped frontline before its sustain collapses.',
-        ],
+          "During a committed brawl, Jubilee belongs near her Vanguards and inside her own Blooming Balls. Sharing the field sustains her while enhanced fire and detonations pressure the same frontline. The Thing, Magneto, Emma Frost and Devil Dinosaur are examples of sturdy anchors that give each orb a reliable center and make the leapfrog plan easy for teammates to follow.",
+          "If both tanks dive away, look for the most reliable grounded ally who can temporarily anchor the plan. Flyers, flankers and several dive heroes moving in different directions cannot all occupy one area, and following each of them splits your attention without solving that geometry. Briefly help an outlying ally with enhanced primary fire, then return to the grouped frontline before its sustain collapses."
+        ]
       },
       {
-        title: 'Team-Ups and common mistakes',
+        title: "Team-Ups and common mistakes",
         paragraphs: [
-          'The guide strongly favors The Hood Team-Up because enhanced Energy Plasmoids become hitscan, can critically hit, and provide self-healing through damage.',
-          'That passive benefit matches Jubilee goal of near-constant enhanced-fire uptime and helps her survive while contributing meaningful frontline damage.',
-          'Blade Vampiric Kin can grant nearby allies Life Steal and becomes stronger with Blade, but the guide considers its cooldown-based value less consistent than The Hood passive.',
-          'Do not shoot a healthy ally to charge an orb; no missing health means those shots cannot feed it through healing.',
-          'Do not let old orbs expire behind the team. Recall and redeploy them.',
-          'Do not consume every Sparkle Mark immediately. Stagger marks to extend enhanced fire.',
-          'Do not stand far behind a grouped brawl, but also do not follow a scattered composition into several disconnected fights.',
-        ],
-      },
+          "The source favors The Hood Team-Up because enhanced Energy Plasmoids become hitscan, can critically hit and heal Jubilee through damage. That passive benefit fits a plan built around sustained enhanced-fire uptime: contributing frontline damage also helps her remain in the fight. Blade's Vampiric Kin can grant nearby allies Life Steal and is stronger with Blade, but the guide considers its cooldown-based value less consistent than The Hood's passive.",
+          "Most rotation mistakes break that same continuity. Shots into a healthy ally do not charge the orb through healing; an old field left behind cannot support the advancing team; consuming all Sparkle Marks immediately wastes later refreshes. Stay close enough to contribute to the grouped brawl, recall and redeploy abandoned orbs, and resist turning a scattered composition into several disconnected fights."
+        ]
+      }
     ],
+    workedExample: {
+      title: "Practice scenario: move the healing zone with the brawl",
+      paragraphs: [
+        "This is a hypothetical practice situation using the guide's rotation, not an additional event from the source video. Your grounded Vanguard is advancing and has lost health. Place Blooming Ball just ahead of that ally, then use Sparking Sprint and enhanced fire through the injured ally to build the orb while supplying both direct and area healing.",
+        "Once charged, stop Sprint to begin recovering its resource, detonate while you still have line of sight and consume one Sparkle Mark. The enhanced stream can now prepare the next orb ahead of the frontline. If the team has moved behind a wall before you can detonate, remember the distinction: detonation needs sight, but an in-range recall can retrieve the abandoned field through the wall."
+      ]
+    },
+    practiceFocus: "For one match, watch the handoff between your first detonation and the next charged orb. Consume one mark to keep enhanced fire running and save later marks for refreshes. Review one low-output gap afterwards: did you run out of marks, drain Sprint unnecessarily or leave the next orb behind the moving fight?",
     ultimates: [
       {
         name: 'Firework Finale',
@@ -630,137 +572,80 @@ export const HERO_GUIDES: HeroGuide[] = [
       'Use Tankpool when your team benefits from chaos control: forcing cooldowns early, pressing supports, taking aggressive space, or stalling long enough to become impossible to ignore.',
     sections: [
       {
-        title: 'Actual role: control chaos',
+        title: "Actual role: control chaos",
         paragraphs: [
-          'Do not play Tankpool as a basic tank who sits main, hard-frontlines, soaks damage all game, and tries to stat-check everyone.',
-          'His real value is pressure, disruption, pacing, and controlled aggression.',
-          'Your job is to constantly force attention onto yourself while making the enemy team uncomfortable.',
-          'Sometimes that means taking aggressive space and forcing people backward.',
-          'Sometimes that means pressing supports so your DPS can move forward more easily.',
-          'Sometimes that means forcing enemy cooldowns before the real fight even starts.',
-          'Sometimes your value is simply surviving long enough that the enemy cannot ignore you.',
-          'Every resource enemies spend dealing with you makes the fight easier for the rest of your team.',
-          'Tankpool works best when he flows in and out of pressure instead of standing still.',
-          'Keep repositioning, rotating angles, swapping stances, creating pressure, backing up, and re-engaging once resources return.',
-          'Hard-forcing every engage without thinking will get you instantly deleted, especially after nerfs.',
-          'If you cycle pressure properly, force attention, and survive through chaos, Tankpool becomes extremely disruptive.',
-        ],
+          "Tankpool changes a fight by demanding attention without giving the enemy an easy kill. Fifth's guide does not treat him as a basic tank who stands in main, absorbs every shot and wins by comparing health bars. Pressure, disruption and pacing are the job: push enemies back from useful space, occupy supports so your Duelists can advance or force defensive cooldowns before the real commitment.",
+          "Sometimes the useful result is simply living long enough that opponents cannot ignore you. Every resource spent dealing with Tankpool is attention or protection unavailable elsewhere. Keep that pressure mobile by rotating angles, changing stances, backing out and returning when resources recover. Hard-forcing every entry without reading those limits can get him deleted, particularly after nerfs; controlled aggression is what makes the disruption repeatable."
+        ]
       },
       {
-        title: 'Style points and upgrade discipline',
+        title: "Style points and upgrade discipline",
         paragraphs: [
-          'Style points are the foundation of Tankpool upgrades.',
-          'Your upgrades are what let Tankpool become oppressive during fights.',
-          'If you hard-engage before farming style points, you are fighting at half strength.',
-          'Many Tankpool players feel useless because they force pressure before building momentum.',
-          'Build upgrades naturally before committing heavy pressure: poke people, pressure corners, force resources, and survive long enough to stack upgrades.',
-          'Once upgraded, Tankpool becomes much harder to shut down: sustain is stronger, pressure is harder to ignore, cooldowns matter more, and enemies must respect your space.',
-          'Fully upgraded Tankpool is a very different threat from zero-upgrade Tankpool.',
-          'Take pictures whenever you get a kill.',
-          'Close-range pictures give more style points; ranged pictures give fewer points, but both are useful.',
-          'Taking a picture also provides an invincibility frame, so there is no reason to skip it after a kill.',
-          'The guide recommends Ban Hammer first because it adds damage even when enemies are not missing.',
-          'The E upgrade gives more attack speed with guns or swords, makes allies take less damage, and taunts enemies.',
-          'The dash upgrade is valuable because it lets you dash twice instead of once.',
-          'Gun upgrades are excellent because they add more damage.',
-          'Upgrade priority can alternate depending on the enemy composition.',
-        ],
+          "Style points supply the upgrades that turn early pressure into a much harder threat to remove. Committing heavily before building them leaves Tankpool short of the sustain and output the plan relies on. Start by poking, pressuring corners and forcing resources while staying alive long enough to gain momentum. A fully upgraded Tankpool demands a different response from one who has not yet built any upgrades.",
+          "After a kill, take the picture. Close-range pictures provide more style points than distant ones, but ranged pictures are still useful; the action also supplies an invincibility frame. The source treats skipping that opportunity as giving up both progression and protection.",
+          "Fifth recommends Ban Hammer first because its upgraded damage applies even when enemies are not missing. Other choices still depend on the opposing composition. The E upgrade adds attack speed for guns and swords, reduces damage taken by allies and taunts enemies. The dash upgrade gives a second dash, while gun upgrades increase damage. Choose how to build the next pressure cycle rather than treating every upgrade as interchangeable."
+        ]
       },
       {
-        title: 'Master the whole kit: pistols and swords',
+        title: "Master the whole kit: pistols and swords",
         paragraphs: [
-          'Tankpool has pistols and swords, and each stance has its own cooldowns.',
-          'Swap naturally between pistols and swords to get consistent value instead of playing only one stance.',
-          'Use pistols at long range.',
-          'When enemies enter your close effective range, swap to swords to punish that gap.',
-          'Swords are strong for taking space and getting picks on targets who move too frequently to aim at cleanly.',
-          'Swords are especially useful for pressuring supports in the backline because a bouncing Tankpool is hard to hit.',
-          'Swords also make people back away, which is space control.',
-          'When supports retreat from your dash pressure, your team gains natural space and your duelists can get more value.',
-          'Mobility is not only for engaging. Every mobility tool should help you get in and get out.',
-          'If you feel stuck, are taking too much damage, or expect to die, use dash to disengage.',
-          'You can combine dash with other parts of the kit to escape bad situations.',
-        ],
+          "Pistols and swords have their own cooldowns, so remaining in only one stance leaves useful tools idle. Use pistols at long range, then change to swords when opponents enter the effective close range. Sword pressure is especially useful against targets moving too much for comfortable aim, and a bouncing Tankpool can make the backline's attempts to hit him difficult.",
+          "That close threat also moves people. When supports retreat from a dash or sword approach, your Duelists gain space to work even before a kill occurs. Mobility must cover both halves of that exchange: getting in is useful only if you can also leave. If you are stuck, taking too much damage or about to die, use the dash and the rest of the kit together to disengage instead of treating every movement tool as another attack."
+        ]
       },
       {
-        title: 'Dash range and sword combo',
+        title: "Dash range and sword combo",
         paragraphs: [
-          'The dash radius shown in the guide is about 10 meters.',
-          'The ideal sword combo is dash, jump, then slash.',
-          'The jump matters because no-jump versions are slower and less fluid.',
-          'Practice the combo slowly first: dash, jump, slash.',
-          'Then practice the faster version until it becomes natural.',
-          'Practice the combo without E and with E so you understand both unupgraded and attack-speed-increased timing.',
-          'Sword attacks can crit, so aim for the head during the combo when possible.',
-          'With the attack-speed increase, the sword sequence becomes much faster and can secure kills more reliably.',
-          'A frequent pattern is to use the gun ultimate on a support, then use swords to finish the kill more easily.',
-        ],
+          "The source shows a dash radius of about 10 meters and builds the sword sequence around dash, jump, slash. The jump makes the movement quicker and more fluid than the no-jump version. Practice that order slowly first, then increase the pace until the faster version is natural rather than an unreliable burst of inputs.",
+          "Repeat the practice without E and with E, because the attack-speed increase changes the timing and makes the sequence much faster. Sword attacks can critically hit, so aim for the head when the opening permits. A recurring pressure pattern is to place the gun ultimate on a support, then switch to swords to finish more easily; the stance change serves the target and the timing rather than existing as a combo for its own sake."
+        ]
       },
       {
-        title: 'Ban Hammer discipline',
+        title: "Ban Hammer discipline",
         paragraphs: [
-          'Ban Hammer is the guide author’s favorite part of Tankpool’s kit, but many players misuse it because they do not understand the mechanics.',
-          'Unupgraded Ban Hammer gives a large burst of survivability when dropped on a target.',
-          'It gives instant bonus health and steady healing over time.',
-          'It also taunts the target with an icon.',
-          'If the taunted target shoots and misses, they instantly take damage and Tankpool gains even more bonus health.',
-          'This punishes enemies for panicking.',
-          'When upgraded, Ban Hammer becomes much more lethal.',
-          'The upgraded version adds heavy damage over time on top of the base effects.',
-          'The target takes damage every second even if they do not shoot and do not miss.',
-          'If they start missing while upgraded Ban Hammer is active, the damage becomes even worse.',
-          'The guide heavily favors dropping upgraded Ban Hammer on Strategists because they are the enemy team’s lifeline.',
-          'When you lock upgraded Ban Hammer onto an enemy support, they are put in a lose-lose situation: they take constant damage, and if they try to heal teammates while missing, they take more.',
-          'This melts supports and disrupts their rhythm.',
-        ],
+          "Ban Hammer's value depends on understanding what happens before and after its upgrade. In its base form, dropping it on a target grants immediate bonus health and steady healing over time. It also marks the taunted target with an icon. When that target shoots and misses, it immediately takes damage and Tankpool gains further bonus health, punishing a panicked response while making him harder to remove.",
+          "The upgrade adds heavy damage over time to those base effects. Damage continues every second even if the target never shoots or misses; misses then make the punishment worse. That is why the source favors it as an early upgrade instead of relying entirely on the opponent to make a mistake.",
+          "Apply that threat to the enemy team's lifeline. An upgraded Ban Hammer on a Strategist creates constant pressure, while missed shots or healing attempts add further punishment and disrupt the support's rhythm. The specific ultimate matchups below matter: a target who can completely disengage, such as Jeff going underground and stopping healing, is a different opportunity from an exposed support still trying to sustain the team."
+        ]
       },
       {
-        title: 'Sword ultimate usage',
+        title: "Sword ultimate usage",
         paragraphs: [
-          'The guide says the sword ultimate is not used as often by the author.',
-          'When you do swap to the katana ultimate, its biggest value is survival.',
-          'It gives a movement boost and chunks of healing over time.',
-          'Treat it as a defensive tool to buy time, stall point, or stay alive under heavy focus fire.',
-          'The goal is to survive long enough for your team to swing momentum back.',
-        ],
+          "Fifth uses the sword ultimate less often, but gives it a clear purpose when it is chosen: survival. The katana ultimate supplies a movement boost and chunks of healing over time, buying room to stall the point or live through heavy focus fire.",
+          "Judge it by the time that survival creates for teammates to recover momentum. Staying alive can keep the objective contestable even when you are not the one producing a clean finish. If you can already disengage safely or the fight is lost without any realistic follow-up, preserving the ultimate may matter more than extending the scene."
+        ]
       },
       {
-        title: 'Plushie Shield discipline',
+        title: "Plushie Shield discipline",
         paragraphs: [
-          'The guide emphasizes this is Plushie Shield, not Doctor Strange shield.',
-          'Base Plushie Shield has 300 health.',
-          'Upgraded Plushie Shield reaches 400 health and gains a little more radius.',
-          'The tool is niche, but its utility is very strong when used correctly.',
-          'Save it to deny massive enemy ultimates.',
-          'Drop it to cut off an enemy support’s line of sight so they cannot heal their tank.',
-          'Use it to block damage for a split second so you can reset and get healed.',
-          'You can also use it to take space.',
-          'If Doctor Strange is outside the shield, or you are outside relative to him, it can block the interaction; if he walks inside, the situation changes.',
-          'Enemies and supports cannot heal through it, so you can trap a support and isolate a kill.',
-          'A Duelist can shred through the shield in about two seconds, so do not treat it as permanent cover.',
-          'Use it strategically: it can temporarily block damage, but it will fall.',
-        ],
+          "Plushie Shield is a short tactical window, not a replacement for Doctor Strange's shield. The source gives it 300 health at base and 400 after upgrading, with a small increase in radius. A Duelist can destroy it in roughly two seconds, so choosing the job before placing it is more useful than expecting permanent cover.",
+          "That job might be denying a large enemy ultimate, crossing a dangerous angle, cutting a support's healing line or briefly blocking damage so Tankpool can reset and receive healing. Healing cannot pass through it, which also creates opportunities to isolate a support inside or outside the shield. Relative position matters in the Doctor Strange interaction: it can block while the relevant players are separated by the shield, but the situation changes if Strange walks inside.",
+          "Use the denial deliberately, then move before it falls. The matchup notes distinguish useful targets such as Magneto ultimate from Phoenix ultimate, which cuts through. Dropping it without a particular line-of-sight or ultimate-denial purpose gives away a limited tool without creating the window the team needs."
+        ]
       },
       {
-        title: 'Passive: Healing Factor',
+        title: "Passive: Healing Factor",
         paragraphs: [
-          'Healing Factor triggers when you take massive burst damage or get hit by a lethal one-shot ability.',
-          'It gives a brief window of invincibility and rapid healing to keep you alive.',
-          'It effectively acts like a second life.',
-          'It has a strict 45-second cooldown.',
-          'You cannot fully control when it triggers, so play your life carefully and try not to pop it too early.',
-        ],
+          "Healing Factor can save Tankpool from massive burst or a lethal one-shot ability by granting brief invincibility and rapid healing. It functions like a second life, but the source assigns it a strict 45-second cooldown and notes that you cannot fully choose when it triggers.",
+          "Treat that automatic protection as a limit to manage rather than a reason to ignore danger. Avoid spending it early on pressure you could have escaped; living carefully preserves the safety margin for the exchange where leaving is no longer simple."
+        ]
       },
       {
-        title: 'Tank discipline in full fights',
+        title: "Tank discipline in full fights",
         paragraphs: [
-          'Tankpool discipline is about knowing your limits, playing your life, and putting your team in a position to win.',
-          'The guide’s example focuses on surviving and stalling the objective against the odds.',
-          'Even when the ending gets messy, surviving long enough can be the reason your team still has a chance to win.',
-          'Your job is not always to get the clean finish yourself. Sometimes your job is to keep the fight alive until your team can recover momentum.',
-        ],
-      },
+          "The full-fight lesson returns to limits rather than adding another damage sequence. Fifth's example is about surviving and stalling the objective against the odds. Even when the ending is messy, staying alive can be what gives the team one more chance to recover.",
+          "That does not require Tankpool to finish every target himself. Build the upgrades, choose the stance, spend protection for a specific window and get out when the pressure has done its work. Keeping the fight alive until teammates can swing it is a real outcome; repeatedly forcing the clean finish at the cost of your life removes it."
+        ]
+      }
     ],
+    workedExample: {
+      title: "Practice scenario: build pressure, spend a window, reset",
+      paragraphs: [
+        "This is a hypothetical practice sequence built from the guide's advice, not an extra event attributed to its video. Before the hard fight, use pistols and corner pressure to build style points rather than committing immediately at zero upgrades. After an available kill, take the picture for progression and the invincibility frame; then reassess whether the next entry is actually ready.",
+        "When an exposed support is a viable target, upgraded Ban Hammer can provide pressure that swords follow up at close range. Keep a route out and use a short Plushie Shield window to reset if incoming damage becomes too much. A retreating support and resources forced can still be useful space for your team; do not spend the remaining dash chasing when the next pressure cycle depends on surviving."
+      ]
+    },
+    practiceFocus: "For one match, check your upgrades and exit before each heavy commitment. After pressuring a support, deliberately look for the point where returning to cover would preserve the next cycle. Review one death afterwards and ask whether you forced attention successfully but stayed after your resources were spent.",
     ultimates: [
       {
         name: 'The Ban Hammer / Gun Ultimate',
