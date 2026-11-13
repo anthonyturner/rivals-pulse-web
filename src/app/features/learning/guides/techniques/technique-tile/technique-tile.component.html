@@ -1,5 +1,5 @@
-<article class="guide-tile">
-  <div class="guide-tile-head">
+<article class="technique-lesson">
+  <header class="technique-heading">
     <img appHeroImageFallback [src]="tile().image" alt="" width="40" height="40" loading="lazy" />
     <div>
       @if (tile().caption; as caption) {
@@ -7,7 +7,7 @@
       }
       <h3>{{ tile().title }}</h3>
     </div>
-  </div>
+  </header>
 
   <p class="guide-text">{{ tile().body }}</p>
 
