@@ -32,13 +32,13 @@ describe('HeroGuidesPageComponent', () => {
 
   it('titles each guide with an h3 under its group heading', () => {
     expect(element.querySelectorAll('app-hub-tile h2').length).toBe(0);
-    expect(element.querySelectorAll('app-hub-tile h3').length).toBe(28);
+    expect(element.querySelectorAll('app-hub-tile h3').length).toBe(29);
   });
 
   it('gives every guide link its own name', () => {
     const names = links().map((link) => link.textContent?.trim());
 
-    expect(names.length).toBe(28);
+    expect(names.length).toBe(29);
     expect(new Set(names).size).toBe(names.length);
   });
 
@@ -47,7 +47,7 @@ describe('HeroGuidesPageComponent', () => {
       Array.from(section.querySelectorAll('app-hub-tile a'), (link) => link.getAttribute('href')),
     );
 
-    expect(hrefsByGroup.map((hrefs) => hrefs.length)).toEqual([3, 4, 14, 6, 1]);
+    expect(hrefsByGroup.map((hrefs) => hrefs.length)).toEqual([3, 5, 14, 6, 1]);
     expect(hrefsByGroup[0]).toContain('/hero-guides/coach-mills-ultimate-beginners-guide');
     expect(hrefsByGroup[0]).toContain('/hero-guides/first-time');
     expect(hrefsByGroup[0]).toContain('/beginner-interactive-guide');
@@ -55,7 +55,7 @@ describe('HeroGuidesPageComponent', () => {
       HERO_GUIDES.filter((guide) => guide.category === 'hero').map((guide) => `/hero-guides/${guide.heroId}`),
     );
     expect(hrefsByGroup[3]).toContain('/stats/heroes');
-    expect(new Set(hrefsByGroup.flat()).size).toBe(28);
+    expect(new Set(hrefsByGroup.flat()).size).toBe(29);
   });
 
   it('lists the tempo and ultimate economy guide under its own address', () => {

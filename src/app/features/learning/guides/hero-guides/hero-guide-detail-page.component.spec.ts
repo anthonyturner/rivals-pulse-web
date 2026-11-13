@@ -116,6 +116,16 @@ describe('HeroGuideDetailPageComponent', () => {
     expect(element.querySelector('.article-sources')).toBeNull();
   });
 
+  it('opens the Nightcrawler launch guide with article attribution and no invented video', async () => {
+    await open('nightcrawler');
+
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Nightcrawler');
+    const sources = Array.from(element.querySelectorAll<HTMLAnchorElement>('.article-sources a'));
+    expect(sources.map((link) => link.hostname)).toEqual(['marvelrivals.gg', 'www.marvelrivals.com']);
+    expect(element.textContent).toContain('Early Season 11');
+    expect(element.querySelector('iframe')).toBeNull();
+  });
+
   it('leaves the main landmark to the shell and has an h1', () => {
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelector('h1')).not.toBeNull();

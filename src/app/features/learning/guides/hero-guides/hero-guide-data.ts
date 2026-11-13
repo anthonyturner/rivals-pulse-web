@@ -35,6 +35,59 @@ export interface HeroGuide {
 
 export const HERO_GUIDES: HeroGuide[] = [
   {
+    heroId: 'nightcrawler',
+    heroName: 'Nightcrawler',
+    category: 'hero',
+    role: 'Strategist',
+    image: '/images/heroes/nightcrawler.png',
+    sourceLabel: 'MarvelRivals.gg launch guide and official Nightcrawler kit',
+    articleSources: [
+      {
+        label: 'Madian Shodi — Nightcrawler guide, MarvelRivals.gg',
+        url: 'https://marvelrivals.gg/nightcrawler/',
+        note: 'Early Season 11 advice, read November 13, 2026. The article is still being updated; this guide leaves out its unverified teleport combo and matchup claims.',
+      },
+      {
+        label: 'Marvel Rivals — official Nightcrawler abilities',
+        url: 'https://www.marvelrivals.com/heroes/2mpwiwa9ct6hn/index.html',
+        note: 'Official ability descriptions checked November 13, 2026. Recheck the current kit after balance updates.',
+      },
+    ],
+    summary:
+      'An initial Season 11 playbook: keep healing available, plan a safe return before moving forward, and coordinate your ultimate with teammates. These are launch lessons, not a settled matchup ranking.',
+    poolJob:
+      'Support allies with healing and movement while keeping a route back to safety.',
+    pickWhen:
+      'Start here when learning Nightcrawler; practice the movement tools before attempting coordinated team teleports.',
+    sections: [
+      {
+        title: 'Start a move with somewhere safe to return',
+        points: [
+          'The MarvelRivals.gg guide recommends beginning Smoke Shift from cover or high ground rather than the middle of an exposed fight.',
+          'The official kit says Smoke Shift marks your starting point; its third activation returns you to that mark.',
+          'Check the return location before committing. A return marker does not make exposed ground safe.',
+        ],
+      },
+      {
+        title: 'Keep healing ahead of an unsupported chase',
+        points: [
+          'Madian Shodi warns that aggressive play must not replace your responsibility to heal teammates.',
+          'Forged Brimstone can heal allies and damage enemies. Swift Intervention moves you to an ally and provides healing.',
+          'Learn what each movement button does: Tandem Teleport requires an ally to accept an invitation before it brings them back to your original location.',
+        ],
+      },
+      {
+        title: 'Agree the follow-up before spending your ultimate',
+        points: [
+          'The article recommends coordinating Phasing Finale with teammates who have an ultimate ready, rather than pulling enemies together without follow-up.',
+          'The official description separates the allied teleport from a second cast that slashes enemies in the Smoke Domain and pulls them to you.',
+          'Explain the destination and follow-up before moving the team so allies can prepare their next action.',
+        ],
+      },
+    ],
+    ultimates: [],
+  },
+  {
     heroId: 'doctor-strange',
     heroName: 'Doctor Strange',
     category: 'hero',

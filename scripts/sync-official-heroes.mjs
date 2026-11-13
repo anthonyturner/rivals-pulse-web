@@ -9,6 +9,7 @@ import { getSupabaseClient } from './supabase-client.mjs';
 import {
   diffOfficialPayloads,
   scrapeOfficialHeroes,
+  selectOfficialHeroes,
   stableOfficialPayload,
 } from './official-heroes-source.mjs';
 
@@ -16,6 +17,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
 const heroImagesPath = join(projectRoot, 'public', 'images', 'heroes');
 const args = new Set(process.argv.slice(2));
+const heroArgIndex = process.argv.indexOf('--hero');
+const heroId = heroArgIndex === -1 ? undefined : process.argv[heroArgIndex + 1];
+if (heroArgIndex !== -1 && (!heroId || heroId.startsWith('--'))) {
+  throw new Error('--hero requires a canonical hero slug.');
+}
 const checkOnly = args.has('--check') || args.has('--check-only');
 const watch = args.has('--watch');
 const intervalDays = getNumberArg('--interval-days', 3);
@@ -44,11 +50,12 @@ async function runOnce() {
   try {
     const previous = await getExternalSourcePayload(db, 'official-heroes');
     const payload = await scrapeOfficialHeroes();
+    const selectedHeroes = selectOfficialHeroes(payload.heroes, heroId);
     const diff = diffOfficialPayloads(previous, payload);
     const statusMessage = `Official heroes: ${diff.added.length} added, ${diff.changed.length} changed, ${diff.removed.length} removed.`;
 
     if (!checkOnly) {
-      for (const officialHero of payload.heroes) {
+      for (const officialHero of selectedHeroes) {
         await saveOfficialHero(db, officialHero);
       }
     }
@@ -65,7 +72,7 @@ async function runOnce() {
     await finishSyncRun(db, runId, {
       status: 'success',
       message: checkOnly ? `Check only. ${statusMessage}` : statusMessage,
-      details: { checkOnly, ...diff },
+      details: { checkOnly, selectedHero: heroId ?? null, ...diff },
     });
 
     console.log(statusMessage);
