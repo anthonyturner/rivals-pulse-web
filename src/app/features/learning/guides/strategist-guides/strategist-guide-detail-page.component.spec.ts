@@ -76,8 +76,8 @@ describe('StrategistGuideDetailPageComponent', () => {
     }
   });
 
-  it('shows no numerals on the principles, and numbers the replay questions as steps', () => {
-    expect(element.querySelector('.guide-tile span')).toBeNull();
+  it('numbers the reading chapters and keeps replay questions as ordered steps', () => {
+    expect(Array.from(element.querySelectorAll('.field-guide__number'), item => item.textContent?.trim())).toEqual(['01', '02', '03', '04']);
     expect(element.querySelectorAll('ol.guide-steps > li').length).toBe(guide.reviewQuestions.length);
   });
 
