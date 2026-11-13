@@ -535,6 +535,10 @@ function decodeHtml(value = '') {
 function normalizeRole(value = '') {
   const normalized = cleanText(value).toUpperCase();
 
+  if (normalized === 'MULTI-ROLE') {
+    return 'Multi-Role';
+  }
+
   if (normalized.includes('VANGUARD')) {
     return 'Vanguard';
   }
@@ -547,7 +551,7 @@ function normalizeRole(value = '') {
     return 'Duelist';
   }
 
-  return 'Duelist';
+  return undefined;
 }
 
 function titleCaseName(value = '') {

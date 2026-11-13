@@ -47,6 +47,7 @@ test('current hero anchors resolve relative URLs and ignore unrelated links', ()
   assert.equal(cards[0].name, 'Nightcrawler');
   assert.equal(cards[0].url, card.url);
   assert.equal(cards[0].imageUrl, card.imageUrl);
+  assert.equal(cards[0].role, undefined);
 });
 
 test('legacy data-url hero cards remain supported', () => {
@@ -118,4 +119,7 @@ test('legacy table-based hero articles retain ability parsing', () => {
   assert.equal(hero.name, 'Luna Snow');
   assert.equal(hero.role, 'Strategist');
   assert.equal(hero.abilities[0].type, 'Normal Attack');
+  const [unknownRoleCard] = parseHeroCards('<a href="/heroes/luna/index.html" data-name="LUNA SNOW">Luna</a>');
+  assert.throws(() => parseOfficialHeroArticle(unknownRoleCard, html.replace('<p class="p3">STRATEGIST</p>', '')), /official hero/i);
+  assert.equal(parseOfficialHeroArticle(card, html.replace('STRATEGIST', 'Multi-Role')).role, 'Multi-Role');
 });
