@@ -249,7 +249,7 @@ describe('guide directory navigation', () => {
 
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent?.trim()).toBe('Doctor Strange');
     expect(harness.routeNativeElement?.textContent).toContain('Infinitea');
-    expect(harness.routeNativeElement?.querySelector<HTMLAnchorElement>('.source a')?.href)
+    expect(harness.routeNativeElement?.querySelector<HTMLAnchorElement>('a[href="https://www.youtube.com/watch?v=SWomAJspcoM&t=189s"]')?.href)
       .toBe('https://www.youtube.com/watch?v=SWomAJspcoM&t=189s');
   });
 });
