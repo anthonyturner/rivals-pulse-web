@@ -5,8 +5,7 @@ export interface GuideNote {
 
 export interface GuideSection {
   title: string;
-  summary: string;
-  points: string[];
+  paragraphs: string[];
 }
 
 export interface DiagramNode {
@@ -34,4 +33,6 @@ export interface PositioningGuide {
   drills: GuideNote[];
   /** `label` is the time in the source video ("1:36"), `detail` what is covered there. */
   timestamps: GuideNote[];
+  workedExample: { title: string; paragraphs: string[] };
+  practiceFocus: string;
 }

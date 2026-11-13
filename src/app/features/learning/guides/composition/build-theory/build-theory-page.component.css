@@ -1,0 +1,9 @@
+:host { display: block; min-width: 0; }
+.comparison { margin-top: 28px; }
+.comparison h3 { display: flex; align-items: center; gap: 12px; }
+.comparison img { flex-shrink: 0; border-radius: 5px; object-fit: cover; }
+.signals { margin: 20px 0 0; }
+.signals dt { margin-top: 18px; color: var(--text); font-weight: 800; }
+.signals dd { margin: 4px 0 0; }
+.decision-questions { padding-left: 24px; margin-top: 16px; }
+.decision-questions li + li { margin-top: 12px; }
