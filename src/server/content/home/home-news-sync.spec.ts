@@ -53,8 +53,8 @@ describe('syncHomeNews', () => {
   it('prefers the newest dated duplicate and leaves invalid or missing dates in stable order after dated news', async () => {
     const html = `<div class="newsCms">
       ${newsCard('Repeated announcement', '', 'undated-copy')}
-      ${newsCard('Undated first', '', 'undated-first')}
       ${newsCard('Invalid month', '2026/13/01', 'invalid-month')}
+      ${newsCard('Undated first', '', 'undated-first')}
       ${newsCard('Invalid calendar date', '2026/02/31', 'invalid')}
       ${newsCard('Repeated announcement', '2026/11/01', 'older-copy')}
       ${newsCard('Repeated announcement', '2026/11/12', 'newest-copy')}
@@ -68,9 +68,10 @@ describe('syncHomeNews', () => {
     expect(result.latestNews.map((item) => item.sourceUrl)).toEqual([
       'https://www.marvelrivals.com/newest-copy',
       'https://www.marvelrivals.com/same-day',
-      'https://www.marvelrivals.com/undated-first',
       'https://www.marvelrivals.com/invalid-month',
+      'https://www.marvelrivals.com/undated-first',
     ]);
+    expect(result.seasonUpdates[2].date).toBe('2026/13/01');
   });
 
   it('fails the run when the official site does not answer in time, and saves nothing', async () => {
