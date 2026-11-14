@@ -79,6 +79,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Read the seven long fundamentals guides as connected lessons, with worked examples and one-match practice focuses, while keeping their original sources and limitations ([#846](https://github.com/anthonyturner/rivals-pulse-web/pull/846)).
 - Eight short fundamentals guides now explain pressure, disengaging and target priority as connected lessons, with clearly labelled practice examples and one focus for the next match ([#845](https://github.com/anthonyturner/rivals-pulse-web/pull/845)).
 - All ten Strategist lessons now read as coached articles with distinct practice scenarios, while preserving every decision rule, source moment, drill and replay question ([#844](https://github.com/anthonyturner/rivals-pulse-web/pull/844)).
 - Doctor Strange now reads as a connected field guide, with chapter navigation, a sourced portal example and a focused practice plan; the shared reading layout prepares the remaining guides for editorial conversion ([#843](https://github.com/anthonyturner/rivals-pulse-web/pull/843)).
