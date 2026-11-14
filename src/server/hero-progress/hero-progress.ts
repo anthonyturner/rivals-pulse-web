@@ -6,7 +6,7 @@ import { matchXpBonuses, type MatchXpBonus } from './hero-xp-bonuses.ts';
  * Hero levels, tiers and stars worked out from a player's uploaded matches, with the desktop app's rules.
  *
  * The XP amounts, the level curve, `HERO_TIERS`, `heroTierForLevel` and `heroStarsForLevel` are the overlay's
- * `hero-progress.ts` (overlay `ebc239ba`), copied as they are apart from the doc comments, and `hero-xp-bonuses.ts`
+ * `hero-progress.ts` (overlay `70b5bfce`), copied as they are apart from the doc comments, and `hero-xp-bonuses.ts`
  * beside it is the overlay's file as it is (overlay `5038e469`). A change to a number, a tier or a bonus is made
  * in both repositories in step, and the boundary specs here and there must pass unchanged. Only `heroProgress` differs: it reads the website's upload rows where the overlay reads its local match records,
  * so its inputs are described under `UploadedMatch`.
