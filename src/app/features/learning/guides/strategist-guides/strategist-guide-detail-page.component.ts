@@ -3,6 +3,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { GuideChaptersComponent } from '../../../../shared/components/guide-chapters/guide-chapters.component';
+import type { GuideChapter } from '../../../../shared/components/guide-chapters/guide-chapters.types';
+import { STRATEGIST_ARTICLES } from './strategist-guide-article.data';
+
 import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
 import { NoticeComponent } from '../../../../shared/components/notice/notice.component';
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
@@ -16,13 +20,14 @@ const RELATED_GUIDE_LIMIT = 3;
   selector: 'app-strategist-guide-detail-page',
   imports: [
     EyebrowComponent,
+    GuideChaptersComponent,
     GuideCardComponent,
     HeroImageFallbackDirective,
     NoticeComponent,
     RouterLink,
   ],
   templateUrl: './strategist-guide-detail-page.component.html',
-  styleUrls: ['../../../../shared/styles/guide-article.css', './strategist-guide-detail-page.component.css'],
+  styleUrls: ['../../../../shared/styles/field-guide.css', './strategist-guide-detail-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StrategistGuideDetailPageComponent {
@@ -30,6 +35,24 @@ export class StrategistGuideDetailPageComponent {
   private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
   readonly guide = computed(() => findStrategistGuide(this.routeParams().get('guideId')));
+
+  readonly article = computed(() => {
+    const id = this.guide()?.id;
+    return id ? STRATEGIST_ARTICLES[id] ?? null : null;
+  });
+
+  readonly principles = computed(() => this.guide()?.principles.map((principle, index) => ({
+    ...principle, id: `principle-${index + 1}`, number: String(index + 1).padStart(2, '0'),
+  })) ?? []);
+
+  readonly chapters = computed<readonly GuideChapter[]>(() => [
+    ...this.principles().map(({ id, title }) => ({ id, title })),
+    { id: 'decisions', title: 'Read the situation' },
+    { id: 'worked-example', title: 'Worked example' },
+    { id: 'practice', title: 'Turn it into a habit' },
+    { id: 'moments', title: 'Source moments' },
+    { id: 'review', title: 'Review your next replay' },
+  ]);
 
   readonly embedUrl = computed(() => {
     const guide = this.guide();
