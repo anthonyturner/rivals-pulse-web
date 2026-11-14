@@ -135,6 +135,14 @@ reseed against the live project. Use `migration repair --status applied
 `supabase db diff --linked` needs Docker; where Docker is missing, compare with
 `migration list` and read-only `npx supabase db query --linked "<sql>"` checks.
 
+## Season 11 classification and repair
+
+Migration `20261113160000_season_11_match_classification.sql` registers the requester-confirmed gameplay boundary at `2026-11-13T11:00:00Z`. Date-normalizing triggers on the existing raw match tables also cover stale deployed clients. The service-role-only repair is bounded to a verified recorder, an audited end time and an expected match count; it rebuilds both affected seasons through the seven existing aggregate families.
+
+Prepare private backup, rollback preflight and apply SQL with `node scripts/prepare-season-11-repair.mjs <private-cohort.json> <private-output-folder>`. The cohort stays outside Git and includes exact tracked IDs, timestamps, one recorder digest and verified-link flags. The helper executes nothing. Run the read-only backup first and retain all raw and aggregate data it exports privately. Registering a new season can make older raw scoreboard data eligible for the existing retention policy; the repair never calls the purge.
+
+After independent review, run the rollback preflight through the linked SQL CLI and verify that no schema/data changes remain before executing the identical commit transaction. Check the returned cohort counts, unchanged non-season data, all targeted season labels, idempotence and both seasons' aggregates. Only then register this new migration version as applied using the supported CLI. A version applied from an unmerged branch blocks the Supabase integration until its migration file lands on `master`; never bypass a failing merge check to resolve that condition.
+
 ## Changing a database function's signature
 
 `record_match_participants` grew two trailing arguments (`p_play_mode_id`,
