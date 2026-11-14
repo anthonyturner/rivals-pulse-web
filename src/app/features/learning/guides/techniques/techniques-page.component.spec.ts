@@ -49,7 +49,7 @@ describe('TechniquesPageComponent', () => {
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelectorAll('h1').length).toBe(1);
     expect(crumbs?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('Techniques');
-    expect(element.querySelector('label.guide-search .visually-hidden')?.textContent?.trim()).toBe('Search technique guides');
+    expect(element.querySelector('label.guide-search > span')?.textContent?.trim()).toBe('Search technique guides');
   });
 
   it('offers five categories and no Heroes tab', () => {
@@ -65,7 +65,7 @@ describe('TechniquesPageComponent', () => {
 
     expect(count()).toBe('3 of 13 guides');
     expect(titles()).toEqual(['Carry on Vanguard', 'Carry on Duelist', 'Carry on Strategist']);
-    expect(element.querySelector('.library app-technique-tile .guide-tile-head .guide-caption')).toBeNull();
+    expect(element.querySelector('.library app-technique-tile .technique-heading .guide-caption')).toBeNull();
   });
 
   it('searches title, takeaway, practice and tags, ignoring case and surrounding spaces', async () => {
@@ -107,16 +107,16 @@ describe('TechniquesPageComponent', () => {
     expect(document.activeElement).toBe(input());
   });
 
-  it('keeps the sections below the tiles when the search finds nothing', async () => {
+  it('keeps the fight sequence, hero workshops and role coverage when the search finds nothing', async () => {
     await search('zzz');
 
-    expect(element.querySelectorAll('ol.guide-steps li').length).toBe(4);
-    expect(element.querySelectorAll('section.guide-section:nth-of-type(3) app-technique-tile').length).toBe(6);
-    expect(element.querySelectorAll('section.guide-section:last-of-type .guide-tile').length).toBe(3);
+    expect(element.querySelectorAll('#fight-flow ol li').length).toBe(4);
+    expect(element.querySelectorAll('#hero-workshops app-technique-tile').length).toBe(6);
+    expect(element.querySelectorAll('#role-coverage .role-coverage').length).toBe(3);
   });
 
   it('lists the heroes of each role as one comma-separated paragraph', () => {
-    const roles = element.querySelectorAll('section.guide-section:last-of-type .guide-tile');
+    const roles = element.querySelectorAll('#role-coverage .role-coverage');
 
     expect(roles[0].querySelector('h3')?.textContent?.trim()).toBe('Vanguard');
     expect(roles[0].querySelector('p')?.textContent).toContain('Captain America, Doctor Strange');
@@ -140,5 +140,36 @@ describe('TechniquesPageComponent', () => {
   it('shows no stat panel, diagram or uppercase-only chips', () => {
     expect(element.querySelector('[aria-hidden="true"]:not(span)')).toBeNull();
     expect(element.textContent).not.toContain('Source links');
+  });
+
+  it('uses unboxed reading lessons with a matching destination for every chapter', () => {
+    expect(element.querySelector('.guide-tile, .guide-grid')).toBeNull();
+    expect(element.querySelector('#choose-a-focus')?.textContent).toContain('one decision');
+    expect(element.querySelector('#fight-flow .workbook-example')?.textContent).toContain('Hypothetical practice');
+    expect(element.querySelector('#next-match')?.textContent).toContain('earliest decision');
+
+    for (const link of Array.from(element.querySelectorAll<HTMLAnchorElement>('app-guide-chapters a'))) {
+      const fragment = new URL(link.href).hash.slice(1);
+      expect(element.querySelector(`[id="${fragment}"]`)).withContext(fragment).not.toBeNull();
+    }
+  });
+
+  it('contains the filters and reading notes at narrow and desktop column widths in both themes', () => {
+    const previousTheme = document.documentElement.dataset['theme'];
+    element.style.display = 'block';
+
+    try {
+      for (const theme of ['light', 'dark']) {
+        document.documentElement.dataset['theme'] = theme;
+        for (const width of [320, 390, 884, 970]) {
+          element.style.width = `${width}px`;
+          const article = element.querySelector('article.field-guide') as HTMLElement;
+          expect(article.scrollWidth).withContext(`${theme}, ${width}px`).toBeLessThanOrEqual(article.clientWidth + 1);
+        }
+      }
+    } finally {
+      if (previousTheme === undefined) delete document.documentElement.dataset['theme'];
+      else document.documentElement.dataset['theme'] = previousTheme;
+    }
   });
 });

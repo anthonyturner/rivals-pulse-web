@@ -1,3 +1,31 @@
+.course {
+  display: grid;
+  gap: 28px;
+}
+
+.course-introduction,
+.lesson-explanation,
+.lesson-scenario,
+.practice-plan {
+  max-width: 68ch;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.course-introduction {
+  margin-bottom: 20px;
+}
+
+.lesson-explanation p + p {
+  margin-top: 14px;
+}
+
+.lesson-scenario {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
 .progress {
   display: grid;
   gap: 6px;
@@ -128,8 +156,8 @@ progress::-moz-progress-bar {
 
 .module-body {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
 }
 
 fieldset {
@@ -184,7 +212,7 @@ fieldset .guide-text {
   margin: 0;
 }
 
-.guide-tile > .guide-button {
+.practice-plan > .guide-button {
   margin-top: 12px;
 }
 
@@ -192,7 +220,7 @@ fieldset .guide-text {
   gap: 16px;
 }
 
-@media (min-width: 700px) {
+@container field-guide (min-width: 700px) {
   .roles,
   .module-steps {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -203,7 +231,7 @@ fieldset .guide-text {
   }
 }
 
-@media (max-width: 359px) {
+@container field-guide (max-width: 359px) {
   .roles,
   .module-steps {
     grid-template-columns: minmax(0, 1fr);

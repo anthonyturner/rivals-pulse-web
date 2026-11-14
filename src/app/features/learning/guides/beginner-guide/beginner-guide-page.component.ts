@@ -60,7 +60,7 @@ interface PracticeDrill {
   selector: 'app-beginner-guide-page',
   imports: [RouterLink],
   templateUrl: './beginner-guide-page.component.html',
-  styleUrls: ['../../../../shared/styles/guide-article.css', './beginner-guide-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', '../../../../shared/styles/field-guide.css', './beginner-guide-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BeginnerGuidePageComponent {
@@ -83,7 +83,7 @@ export class BeginnerGuidePageComponent {
       heroImage: '/images/heroes/captain-america.png',
       concept: {
         heading: 'Hero shooters are team jobs, not six solo duels.',
-        body: 'Vanguards claim space, Duelists create pressure and finish targets, and Strategists keep the team stable while adding utility.',
+        body: 'Start by asking what your role can make possible for teammates. Vanguards claim the space a team can use; Duelists apply pressure and finish vulnerable targets; Strategists keep the fight stable with healing and utility. Those jobs connect: an opening matters when the rest of the team can use it, so choose the contribution the current fight needs rather than treating every situation as a race for kills.',
         beginnerMistake: 'Picking a hero and only asking, "How do I get kills?"',
         coachTip: 'Ask what your role should make easier for the rest of the team this fight.',
       },
@@ -124,7 +124,7 @@ export class BeginnerGuidePageComponent {
       heroImage: '/images/heroes/star-lord.png',
       concept: {
         heading: 'Good timing means pressure overlaps.',
-        body: 'Most fights are won when multiple teammates threaten the enemy at the same time. Going early feeds; going late leaves teammates unsupported.',
+        body: 'A prepared angle becomes more useful when teammates threaten the enemy at the same time. If you spend your damage too early, the enemy can answer you before the main fight; if you arrive too late, teammates must fight without that pressure. Use the setup to read your team and the enemy resources, then commit when your contribution can overlap with theirs.',
         beginnerMistake: 'Using every cooldown the moment an enemy appears.',
         coachTip: 'Look for your team moving forward, an enemy cooldown being spent, or a target caught away from cover.',
       },
@@ -165,7 +165,7 @@ export class BeginnerGuidePageComponent {
       heroImage: '/images/heroes/doctor-strange.png',
       concept: {
         heading: 'Your position decides how many mistakes you are allowed.',
-        body: 'Cover breaks line of sight, high ground gives choices, and an exit lets you reset before the fight is lost.',
+        body: 'Choose a position for the decisions it leaves available. Nearby cover lets you break line of sight, high ground can give you more choices, and a planned exit lets you recover when the trade changes. That makes pressure repeatable: you can contribute, retreat and try again instead of relying on a perfect reaction from the middle of an open lane.',
         beginnerMistake: 'Standing in the open because the enemy is currently looking somewhere else.',
         coachTip: 'Before shooting, know the cover you will duck behind and the route you will use if the fight turns.',
       },
@@ -206,7 +206,7 @@ export class BeginnerGuidePageComponent {
       heroImage: '/images/heroes/mantis.png',
       concept: {
         heading: 'Objectives matter, but bad objective fights make the next fight worse.',
-        body: 'Touching at the right time can save a round. Touching alone after the fight is lost often feeds ultimate charge and delays your team.',
+        body: 'Read the objective deadline together with the players still able to fight. An urgent touch can save a round, but an isolated entry after a lost fight can give the enemy more ultimate charge and delay the next team contest. When there is still time to regroup, staying available for a full fight often gives the objective a better chance than a late solo death.',
         beginnerMistake: 'Running to point one by one because the objective icon is flashing.',
         coachTip: 'Count teammates first. If you cannot contest together, reset fast and take the next full fight.',
       },

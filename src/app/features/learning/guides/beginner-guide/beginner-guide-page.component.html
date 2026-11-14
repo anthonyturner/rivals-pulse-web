@@ -1,14 +1,17 @@
-<div class="guide-article page-container">
-  <header class="guide-header">
-    <h1>Learn how hero shooter fights actually work.</h1>
-    <p class="guide-lede">
-      Pick your role, walk through four match scenarios, and leave with a simple practice plan for
-      your next Marvel Rivals session.
-    </p>
-    <nav class="guide-nav more" aria-label="More ways to learn">
-      <a class="guide-link" routerLink="/hero-guides">View hero guides</a>
-      <a class="guide-link" routerLink="/media-tutorials">Find a video</a>
-    </nav>
+<article class="field-guide course page-container" aria-labelledby="beginner-course-title">
+  <header class="field-guide__header">
+    <div class="field-guide__heading">
+      <span class="field-guide__label">Getting started · interactive course</span>
+      <h1 id="beginner-course-title">Learn how hero shooter fights actually work.</h1>
+      <p class="field-guide__lede">
+        Pick your role, walk through four match scenarios, and leave with a simple practice plan for
+        your next Marvel Rivals session.
+      </p>
+      <nav class="guide-nav more" aria-label="More ways to learn">
+        <a class="guide-link" routerLink="/hero-guides">View hero guides</a>
+        <a class="guide-link" routerLink="/media-tutorials">Find a video</a>
+      </nav>
+    </div>
   </header>
 
   <div class="progress">
@@ -18,6 +21,12 @@
 
   <section class="guide-section" aria-labelledby="role-title">
     <h2 id="role-title">Step 1: choose the job you want to practice</h2>
+    <p class="course-introduction">
+      Choose a role to shape the practice plan at the end. The four situations still teach the same
+      shared decisions: know your job, time the entry, prepare your position and judge when the
+      objective needs a contest. Read the explanation, choose what you would do, then use the feedback
+      to compare the benefit with the risk.
+    </p>
     <div class="options roles" role="group" aria-labelledby="role-title">
       @for (role of roles; track role) {
         <button
@@ -65,14 +74,14 @@
     </header>
 
     <div class="module-body">
-      <div class="guide-tile">
+      <section class="lesson-explanation">
         <h3>{{ currentModule().concept.heading }}</h3>
         <p class="guide-text">{{ currentModule().concept.body }}</p>
         <p class="guide-text"><strong>Beginner trap:</strong> {{ currentModule().concept.beginnerMistake }}</p>
         <p class="guide-text"><strong>Coach tip:</strong> {{ currentModule().concept.coachTip }}</p>
-      </div>
+      </section>
 
-      <div class="guide-tile">
+      <section class="lesson-scenario" aria-label="Practise the decision">
         <fieldset>
           <legend>{{ currentModule().scenario.prompt }}</legend>
           <p class="guide-text">{{ currentModule().scenario.context }}</p>
@@ -107,7 +116,7 @@
           }
         </div>
         <p class="visually-hidden" role="status" aria-atomic="true">{{ announcement() }}</p>
-      </div>
+      </section>
     </div>
 
     <footer class="module-foot">
@@ -135,7 +144,7 @@
 
   <section class="guide-section" aria-labelledby="practice-title">
     <h2 id="practice-title">Your practice plan</h2>
-    <div class="guide-tile">
+    <div class="practice-plan">
       <h3>{{ selectedRole() }} practice: {{ recommendedPlan().title }}</h3>
       <p class="guide-text">
         <strong>{{ recommendedPlan().cue }}</strong>
@@ -161,4 +170,4 @@
       <button type="button" class="guide-button" (click)="resetGuide()">Reset guide</button>
     </div>
   </section>
-</div>
+</article>

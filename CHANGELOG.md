@@ -79,6 +79,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Read the first-time guide and technique workbook as continuous lessons, and practise the beginner course in a clearer reading layout without losing quizzes, feedback, progress or filters ([#849](https://github.com/anthonyturner/rivals-pulse-web/pull/849)).
 - Power positions, strategic cover, build theory and triple-support counterplay now read as connected field lessons, with chapter navigation, practical examples and focused practice while retaining diagrams, source moments and execution checklists ([#848](https://github.com/anthonyturner/rivals-pulse-web/pull/848)).
 - Read Captain America, Jubilee and Tankpool as connected Field guide lessons, with preserved ability and matchup advice, worked examples and a focused next-match practice plan ([#847](https://github.com/anthonyturner/rivals-pulse-web/pull/847)).
 - Read the seven long fundamentals guides as connected lessons, with worked examples and one-match practice focuses, while keeping their original sources and limitations ([#846](https://github.com/anthonyturner/rivals-pulse-web/pull/846)).

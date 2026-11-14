@@ -3,3 +3,46 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
+
+.guide-toolbar {
+  align-items: end;
+}
+
+.guide-search {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: none;
+  font-size: var(--type-small);
+  font-weight: 700;
+}
+
+app-filter-select {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.reading-list {
+  display: grid;
+  gap: 28px;
+  min-width: 0;
+}
+
+.reading-list > app-technique-tile + app-technique-tile {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.workbook-sequence {
+  margin: 16px 0 0;
+  padding-left: 24px;
+}
+
+.workbook-sequence li + li {
+  margin-top: 12px;
+}
+
+.workbook-example,
+.role-coverage {
+  margin-top: 24px;
+}
