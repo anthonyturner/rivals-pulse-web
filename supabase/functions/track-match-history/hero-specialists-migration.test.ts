@@ -4,11 +4,13 @@ import { describe, it } from 'node:test';
 import { createdFunctions, createdTables, escapeRegExp, read, withoutComments } from './migration-sql.ts';
 
 /**
- * There is no database in this repo's tests, so these read the specialist migration (issue 819) for the
- * rules that are easy to break and expensive to find in production: nothing is stored, only pooled counts
- * leave the reader, it is the service role's alone, and the website prints the same numbers it applies.
+ * There is no database in this repo's tests, so these read the specialist migrations (issues 819 and 826) for
+ * the rules that are easy to break and expensive to find in production: nothing is stored, only pooled counts
+ * leave the reader, it is the service role's alone, and the website prints the same numbers it applies. The
+ * rules are in the first migration; the reader in force is the one the second migration restates.
  */
 const MIGRATION = '20261111120000_hero_specialists.sql';
+const SPEED_MIGRATION = '20261111190000_hero_specialists_speed.sql';
 const READER = 'public.read_hero_specialists()';
 const RULES = [
   'hero_specialist_min_share_percent',
@@ -22,8 +24,9 @@ const RULES = [
 ];
 
 const sql = withoutComments(read(MIGRATION));
-const readerStart = sql.indexOf(`create or replace function ${READER}`);
-const reader = sql.slice(readerStart, sql.indexOf('$$;', sql.indexOf('as $$', readerStart)));
+const speedSql = withoutComments(read(SPEED_MIGRATION));
+const readerStart = speedSql.indexOf(`create or replace function ${READER}`);
+const reader = speedSql.slice(readerStart, speedSql.indexOf('$$;', speedSql.indexOf('as $$', readerStart)));
 const ruleValue = (name: string): string | undefined =>
   sql.match(new RegExp(`function public\\.${name}\\(\\) returns integer[\\s\\S]*?as \\$\\$ select (\\d+) \\$\\$`))?.[1];
 
@@ -34,11 +37,25 @@ describe('the hero specialists migration', () => {
     assert.deepEqual(createdFunctions(sql), [...RULES.map((name) => `public.${name}()`), READER]);
   });
 
+  it('restates only the reader, storing nothing (issue 826)', () => {
+    assert.deepEqual(createdTables(speedSql), []);
+    assert.doesNotMatch(speedSql, /create table|alter table|\binsert\b|\bupdate\b|\bdelete\b|\bdrop\b|cron\.schedule/i);
+    assert.deepEqual(createdFunctions(speedSql), [READER]);
+  });
+
+  it('keeps the reader fast: one read of participants, and no step joined back onto the lines', () => {
+    assert.equal(reader.match(/public\.participants/g)?.length, 1);
+    assert.doesNotMatch(reader, /materialized/);
+    assert.doesNotMatch(reader, /join (classified|people|person_hero|lines)\b/);
+  });
+
   it('is a stable security definer reader with an empty search path, for the service role alone', () => {
     assert.match(reader, /returns jsonb\s+language sql\s+stable\s+security definer\s+set search_path = ''/);
-    assert.match(sql, new RegExp(`revoke execute on function ${escapeRegExp(READER)} from public, anon, authenticated;`));
-    assert.match(sql, new RegExp(`grant execute on function ${escapeRegExp(READER)} to service_role;`));
-    assert.doesNotMatch(sql, /grant execute[^;]*\bto\b[^;]*\b(anon|authenticated|public)\b/);
+    for (const migration of [sql, speedSql]) {
+      assert.match(migration, new RegExp(`revoke execute on function ${escapeRegExp(READER)} from public, anon, authenticated;`));
+      assert.match(migration, new RegExp(`grant execute on function ${escapeRegExp(READER)} to service_role;`));
+      assert.doesNotMatch(migration, /grant execute[^;]*\bto\b[^;]*\b(anon|authenticated|public)\b/);
+    }
 
     for (const name of RULES) {
       assert.match(sql, new RegExp(`revoke execute on function public\\.${name}\\(\\) from public, anon, authenticated;`));
@@ -56,7 +73,7 @@ describe('the hero specialists migration', () => {
   });
 
   it('leaves lines with no uid, no result, no hero and modes other than Quick Match and Competitive out', () => {
-    assert.match(reader, /where btrim\(p\.uid\) <> ''\s+and p\.is_win is not null\s+and p\.hero_id > 0\s+and m\.play_mode_id in \(0, 1\)/);
+    assert.match(reader, /where btrim\(p\.uid\) <> ''\s+and p\.is_win is not null\s+and p\.hero_id > 0\s+and p\.play_mode_id in \(0, 1\)/);
   });
 
   it('merges a hero the game splits by role through hero_game_roles', () => {
@@ -65,7 +82,7 @@ describe('the hero specialists migration', () => {
   });
 
   it('shows a hero only when both buckets pass all three gates', () => {
-    assert.match(reader, /b\.people >= public\.hero_specialist_min_players\(\)\s+and b\.recorders >= public\.hero_specialist_min_recorders\(\)\s+and b\.matches >= public\.hero_specialist_min_bucket_matches\(\)/);
+    assert.match(reader, /b\.people >= public\.hero_specialist_min_players\(\)\s+and pr\.recorders >= public\.hero_specialist_min_recorders\(\)\s+and b\.matches >= public\.hero_specialist_min_bucket_matches\(\)/);
     assert.match(reader, /from shown s\s+join shown f on f\.half_season = s\.half_season and f\.hero_id = s\.hero_id and f\.bucket = 'flex'\s+where s\.bucket = 'specialist'/);
   });
 

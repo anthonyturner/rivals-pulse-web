@@ -20,6 +20,7 @@ const GATEWAY: AuthGateway = {
   readMediaDefaults: async () => ({ heroVideo: false, sound: false }),
   setMediaDefaults: async (_tokens, change) => ({ heroVideo: change.heroVideo ?? false, sound: change.sound ?? false }),
   readOwnDashboard: async () => ({ linked: false }),
+  readOwnHeroProgressMatches: async () => ({ linked: false }),
   isAdmin: async () => true,
   beginDataJob: async () => ({ status: 'started', runId: 1 }),
   runRebuildJob: async () => 1,
