@@ -119,6 +119,7 @@ repo's build. This is a move, not a redesign.
 | `20261109160000_drop_steam_game_stat_snapshots.sql` | Drops `game_stat_snapshots`, `game_stat_snapshot_games` and `record_game_stat_snapshot`, deletes the `sync_runs` rows for the `game-stats` key, and restates `data_job_cooldown()` and `admin_data_jobs_status()` without `game-stats` (issue 743) |
 | `20261111120000_hero_specialists.sql` | `read_hero_specialists()` (service role only, read-only) and eight rule helpers (`hero_specialist_min_share_percent()` and its siblings): per hero, the pooled record of the players who mostly play it against the players who play many heroes, worked out from `participants` on every call (issue 819). Additive: no table is touched and nothing is stored. Check with `supabase/checks/hero_specialists.sql`. |
 | `20261111190000_hero_specialists_speed.sql` | Restates `read_hero_specialists()` (same signature, grants and answer) so it reads in about 0.1 s instead of 36 s: one read of `participants` with window functions in place of joins the planner mis-sized (issue 826). Additive: only the reader is replaced, nothing is stored. |
+| `20261114100000_hero_progress_matches.sql` | `read_own_hero_progress_matches()` (signed-in accounts only, no parameters, read-only): every match the caller's own link can prove is its own, with end time, mode, half-season, result, the hero on the line and the time on each hero, for the hero levels (issue 863). Nothing is stored. Not pushed until Tony says yes |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -1171,6 +1172,26 @@ service key is involved.
   `npx supabase db query --linked -f supabase/checks/dashboard.sql`. Run it after `db push`. The migration is
   pushed by hand before the pull request merges, after the player-links migration it depends on; until then the
   route answers 503.
+
+### Reading a linked player's hero levels (issue 863)
+
+`read_own_hero_progress_matches()` (`20261114100000_hero_progress_matches.sql`) is the second door to a player's
+own history, beside `read_own_dashboard()`, and has the same posture: no parameters, definer with an empty
+`search_path`, granted to `authenticated` only, the link found through `auth.uid()`, and only the lines where
+`recorded_by = link.recorder_id AND uid = link.player_uid`. It differs in two ways. It has no row cap, because a
+level needs every match and a cut-off history would lower it. And it returns what the level rules read, not
+what a dashboard shows: for each match `matchKey` (the line's own id, never a roster fingerprint), `playedAt`,
+`halfSeason`, `playModeId`, `isWin`, `heroId` and `figures` (`heroId`, `seconds`, `damage`, `healing`, `blocked`).
+The answer is `{ "linked": false }` or `{ "linked": true, "matches": [...] }`, oldest first.
+
+- The website reads it through `readOwnHeroProgressMatches` on the auth gateway, which turns `playedAt` into
+  milliseconds and drops a match with no key or no readable time. `heroProgressTracks` in
+  `src/server/hero-progress/` works the levels out. See [ADR-0008](decisions/0008-give-each-stat-one-read-and-one-home.md), Decision 7.
+- **Depth.** `participants` is purged after at most six months, so an all-time level is every match still held,
+  not every match ever played. `tracked_matches` reaches further back but has no time on each hero (only the
+  hero's name at the end), which is why it is not the source.
+- The migration waits for an explicit yes before `npx supabase db push`; until it is applied the read answers
+  as unavailable. Nothing calls it from a page yet, so no route exists to answer 503.
 
 ### The app's own calls about its link (issues 320 and 343)
 
