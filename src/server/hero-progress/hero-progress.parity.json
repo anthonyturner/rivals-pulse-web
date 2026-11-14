@@ -1,0 +1,1910 @@
+{
+  "accounts": [
+    {
+      "name": "mixed-bag",
+      "about": "Swaps, role forms, an unknown hero, a base id, a Practice match, a match with no figures, no result, and both gap boundaries across three half-seasons.",
+      "matches": [
+        {
+          "matchKey": "m01",
+          "endedAt": 1753600000000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 9,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m02",
+          "endedAt": 1753603600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 9,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 240,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            },
+            {
+              "heroId": 1031,
+              "seconds": 360,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m03",
+          "endedAt": 1753605400000,
+          "isWin": true,
+          "playModeId": 3,
+          "halfSeason": 9,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m04",
+          "endedAt": 1753614400000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 9,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 5400,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m05",
+          "endedAt": 1753708000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": 1031,
+          "figures": []
+        },
+        {
+          "matchKey": "m06",
+          "endedAt": 1753709800000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 10571,
+              "seconds": 180,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            },
+            {
+              "heroId": 10572,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m07",
+          "endedAt": 1753711600000,
+          "isWin": null,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 10573,
+              "seconds": 59,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m08",
+          "endedAt": 1753718800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 9999,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            },
+            {
+              "heroId": 1039,
+              "seconds": 20,
+              "damage": 500,
+              "healing": null,
+              "blocked": null
+            },
+            {
+              "heroId": 1011,
+              "seconds": 29,
+              "damage": 0,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m09",
+          "endedAt": 1753720600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1057,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            },
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m10",
+          "endedAt": 1753816000000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 650,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "m11",
+          "endedAt": 1753819600000,
+          "isWin": true,
+          "playModeId": null,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "allTime": {
+          "deadpool:Duelist": {
+            "xp": 250,
+            "level": 1,
+            "tier": "Recruit",
+            "stars": 0
+          },
+          "deadpool:Strategist": {
+            "xp": 100,
+            "level": 1,
+            "tier": "Recruit",
+            "stars": 0
+          },
+          "deadpool:Vanguard": {
+            "xp": 180,
+            "level": 1,
+            "tier": "Recruit",
+            "stars": 0
+          },
+          "hulk": {
+            "xp": 1840,
+            "level": 4,
+            "tier": "Recruit",
+            "stars": 0
+          },
+          "luna-snow": {
+            "xp": 560,
+            "level": 2,
+            "tier": "Recruit",
+            "stars": 0
+          },
+          "thor": {
+            "xp": 200,
+            "level": 1,
+            "tier": "Recruit",
+            "stars": 0
+          }
+        },
+        "halfSeasons": {
+          "9": {
+            "hulk": {
+              "xp": 1090,
+              "level": 2,
+              "tier": "Recruit",
+              "stars": 0
+            },
+            "luna-snow": {
+              "xp": 160,
+              "level": 1,
+              "tier": "Recruit",
+              "stars": 0
+            }
+          },
+          "10": {
+            "deadpool:Duelist": {
+              "xp": 250,
+              "level": 1,
+              "tier": "Recruit",
+              "stars": 0
+            },
+            "deadpool:Strategist": {
+              "xp": 100,
+              "level": 1,
+              "tier": "Recruit",
+              "stars": 0
+            },
+            "deadpool:Vanguard": {
+              "xp": 180,
+              "level": 1,
+              "tier": "Recruit",
+              "stars": 0
+            },
+            "luna-snow": {
+              "xp": 300,
+              "level": 1,
+              "tier": "Recruit",
+              "stars": 0
+            },
+            "thor": {
+              "xp": 200,
+              "level": 1,
+              "tier": "Recruit",
+              "stars": 0
+            }
+          },
+          "10.5": {
+            "hulk": {
+              "xp": 900,
+              "level": 2,
+              "tier": "Recruit",
+              "stars": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "daily-session",
+      "about": "Ten days of one session a day (win, loss, win, an hour apart), all on Hulk: the overlay spec's lift from level 9 to level 10.",
+      "matches": [
+        {
+          "matchKey": "d0m0",
+          "endedAt": 1753600000000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d0m1",
+          "endedAt": 1753603600000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d0m2",
+          "endedAt": 1753607200000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d1m0",
+          "endedAt": 1753686400000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d1m1",
+          "endedAt": 1753690000000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d1m2",
+          "endedAt": 1753693600000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d2m0",
+          "endedAt": 1753772800000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d2m1",
+          "endedAt": 1753776400000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d2m2",
+          "endedAt": 1753780000000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d3m0",
+          "endedAt": 1753859200000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d3m1",
+          "endedAt": 1753862800000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d3m2",
+          "endedAt": 1753866400000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d4m0",
+          "endedAt": 1753945600000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d4m1",
+          "endedAt": 1753949200000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d4m2",
+          "endedAt": 1753952800000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d5m0",
+          "endedAt": 1754032000000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d5m1",
+          "endedAt": 1754035600000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d5m2",
+          "endedAt": 1754039200000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d6m0",
+          "endedAt": 1754118400000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d6m1",
+          "endedAt": 1754122000000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d6m2",
+          "endedAt": 1754125600000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d7m0",
+          "endedAt": 1754204800000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d7m1",
+          "endedAt": 1754208400000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d7m2",
+          "endedAt": 1754212000000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d8m0",
+          "endedAt": 1754291200000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d8m1",
+          "endedAt": 1754294800000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d8m2",
+          "endedAt": 1754298400000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d9m0",
+          "endedAt": 1754377600000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d9m1",
+          "endedAt": 1754381200000,
+          "isWin": false,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "d9m2",
+          "endedAt": 1754384800000,
+          "isWin": true,
+          "playModeId": 0,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 600,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "allTime": {
+          "hulk": {
+            "xp": 9400,
+            "level": 10,
+            "tier": "Veteran",
+            "stars": 0
+          }
+        },
+        "halfSeasons": {
+          "10": {
+            "hulk": {
+              "xp": 9400,
+              "level": 10,
+              "tier": "Veteran",
+              "stars": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "marathon",
+      "about": "Sixty thirty-minute Competitive matches three hours apart, all on Hulk, reaching the Elite tier.",
+      "matches": [
+        {
+          "matchKey": "k00",
+          "endedAt": 1753600000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k01",
+          "endedAt": 1753610800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k02",
+          "endedAt": 1753621600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k03",
+          "endedAt": 1753632400000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k04",
+          "endedAt": 1753643200000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k05",
+          "endedAt": 1753654000000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k06",
+          "endedAt": 1753664800000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k07",
+          "endedAt": 1753675600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k08",
+          "endedAt": 1753686400000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k09",
+          "endedAt": 1753697200000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k10",
+          "endedAt": 1753708000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k11",
+          "endedAt": 1753718800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k12",
+          "endedAt": 1753729600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k13",
+          "endedAt": 1753740400000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k14",
+          "endedAt": 1753751200000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k15",
+          "endedAt": 1753762000000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k16",
+          "endedAt": 1753772800000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k17",
+          "endedAt": 1753783600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k18",
+          "endedAt": 1753794400000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k19",
+          "endedAt": 1753805200000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k20",
+          "endedAt": 1753816000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k21",
+          "endedAt": 1753826800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k22",
+          "endedAt": 1753837600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k23",
+          "endedAt": 1753848400000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k24",
+          "endedAt": 1753859200000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k25",
+          "endedAt": 1753870000000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k26",
+          "endedAt": 1753880800000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k27",
+          "endedAt": 1753891600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k28",
+          "endedAt": 1753902400000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k29",
+          "endedAt": 1753913200000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k30",
+          "endedAt": 1753924000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k31",
+          "endedAt": 1753934800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k32",
+          "endedAt": 1753945600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k33",
+          "endedAt": 1753956400000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k34",
+          "endedAt": 1753967200000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k35",
+          "endedAt": 1753978000000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k36",
+          "endedAt": 1753988800000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k37",
+          "endedAt": 1753999600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k38",
+          "endedAt": 1754010400000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k39",
+          "endedAt": 1754021200000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k40",
+          "endedAt": 1754032000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k41",
+          "endedAt": 1754042800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k42",
+          "endedAt": 1754053600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k43",
+          "endedAt": 1754064400000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k44",
+          "endedAt": 1754075200000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k45",
+          "endedAt": 1754086000000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k46",
+          "endedAt": 1754096800000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k47",
+          "endedAt": 1754107600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k48",
+          "endedAt": 1754118400000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k49",
+          "endedAt": 1754129200000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k50",
+          "endedAt": 1754140000000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k51",
+          "endedAt": 1754150800000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k52",
+          "endedAt": 1754161600000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k53",
+          "endedAt": 1754172400000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k54",
+          "endedAt": 1754183200000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k55",
+          "endedAt": 1754194000000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k56",
+          "endedAt": 1754204800000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k57",
+          "endedAt": 1754215600000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k58",
+          "endedAt": 1754226400000,
+          "isWin": true,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        },
+        {
+          "matchKey": "k59",
+          "endedAt": 1754237200000,
+          "isWin": false,
+          "playModeId": 1,
+          "halfSeason": 10.5,
+          "heroId": null,
+          "figures": [
+            {
+              "heroId": 1011,
+              "seconds": 1800,
+              "damage": null,
+              "healing": null,
+              "blocked": null
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "allTime": {
+          "hulk": {
+            "xp": 32600,
+            "level": 22,
+            "tier": "Elite",
+            "stars": 0
+          }
+        },
+        "halfSeasons": {
+          "10": {
+            "hulk": {
+              "xp": 21650,
+              "level": 17,
+              "tier": "Veteran",
+              "stars": 0
+            }
+          },
+          "10.5": {
+            "hulk": {
+              "xp": 10850,
+              "level": 11,
+              "tier": "Veteran",
+              "stars": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

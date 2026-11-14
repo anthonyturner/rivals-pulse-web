@@ -26,9 +26,13 @@ declare
   shown integer;
   keys text;
 begin
-  if exists (select 1 from public.participants where half_season = 993) then
+  if exists (select 1 from public.participants where half_season = 993)
+     or exists (select 1 from public.half_seasons where half_season = 993) then
     raise exception 'test half-season already exists';
   end if;
+  -- The participants trigger sets half_season from played_at and public.half_seasons. This start sits before the
+  -- fixture's 2099 matches and after every real half-season, so the trigger leaves them in 993.
+  insert into public.half_seasons (half_season, starts_at) values (993, '2098-01-01T00:00:00Z');
   if (select count(*) from public.hero_game_roles where game_id in (10571, 10572, 10573) and base_game_id = 1057) <> 3 then
     raise exception 'this check needs the three Deadpool role forms in hero_game_roles';
   end if;
