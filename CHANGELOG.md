@@ -79,6 +79,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Eight short fundamentals guides now explain pressure, disengaging and target priority as connected lessons, with clearly labelled practice examples and one focus for the next match ([#845](https://github.com/anthonyturner/rivals-pulse-web/pull/845)).
 - All ten Strategist lessons now read as coached articles with distinct practice scenarios, while preserving every decision rule, source moment, drill and replay question ([#844](https://github.com/anthonyturner/rivals-pulse-web/pull/844)).
 - Doctor Strange now reads as a connected field guide, with chapter navigation, a sourced portal example and a focused practice plan; the shared reading layout prepares the remaining guides for editorial conversion ([#843](https://github.com/anthonyturner/rivals-pulse-web/pull/843)).
 - The fifth hero tier is now named Paragon instead of Champion, matching the desktop app, because Champion is Marvel Rivals' own prestige name. The tiers are Recruit, Regular, Veteran, Elite, Paragon and Legend, with the same levels and XP, and a hero at that tier reads "<Hero> Paragon". Nothing shows hero tiers yet, so this changes only the name the site works out ([#870](https://github.com/anthonyturner/rivals-pulse-web/pull/870)).
