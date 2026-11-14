@@ -13,7 +13,7 @@ export class PowerPositionsPageComponent {
   readonly guide: PositioningGuide = {
     title: 'Power Positions',
     lede:
-      'Notes from the masterclass: how to find, hold, and leave power positions.',
+      'A strong position gives you useful pressure and more than one next move. Learn how to find it, hold it with your team, and leave before the advantage disappears.',
     sourceLabel: 'Watch masterclass',
     sourceUrl: 'https://youtu.be/hnCgeDZCt0I?si=d7wxsqlCxCDMWcwU',
     diagram: {
@@ -56,52 +56,37 @@ export class PowerPositionsPageComponent {
     sections: [
       {
         title: 'Definition',
-        summary:
-          'A power position is a map location that gives your team multiple options: control lanes, scout enemy movement, and leave safely.',
-        points: [
-          'It is not just any high ground. A good power position creates consistent pressure on the objective or cart.',
-          'It lets you play aggressively with your position while still using cover, cooldowns, and information patiently.',
+        paragraphs: [
+          'A power position is useful because of the choices it gives your team. From the same area, you can threaten a lane, learn where enemies are moving, and still have a way to rotate or retreat. Height alone does not provide that value; the position needs to influence the objective or payload.',
+          'You can be aggressive about the ground you hold while remaining patient with your resources. Cover, cooldowns and information let you keep the threat available without committing your life to every opening.',
         ],
       },
       {
         title: 'Why It Wins Fights',
-        summary:
-          'Power positions create passive value before anyone commits: the enemy has to react to you.',
-        points: [
-          'Multiple angles make it harder for the enemy to shield, wall, or hold one doorway, and a second route keeps you from getting stuck in a choke.',
-          'You gather information earlier, so you can decide to pressure, rotate, drop, or reset.',
-          'You can force enemy actions first, then punish when their cooldowns are already spent.',
+        paragraphs: [
+          'A position can work before anyone makes a full commitment. An enemy who must respect more than one angle cannot solve every threat by shielding one lane or walling one doorway. Your second route also keeps the team from depending on a single choke.',
+          'Earlier information gives you time to choose between pressure, rotation, dropping and resetting. Let the enemy show how they intend to clear you. If they spend cooldowns first, that response may create the opening you were waiting for.',
         ],
       },
       {
         title: 'How to Find One',
-        summary:
-          'Look for directions, not fixed scripts: the best spot changes with team tempo, composition, cooldowns, and objective state.',
-        points: [
-          'Ask whether the spot controls more than one lane (main, side lane, bridge, doorway, stairs, high ground route) and pressures the objective without dropping onto it.',
-          'Adjust to your team: a smart position on the wrong side of the map is worse than a simple plan everyone follows.',
+        paragraphs: [
+          'Look for relationships between lanes rather than memorizing one spot as the answer to every fight. Main, a side route, a bridge, stairs or a doorway may connect in a way that lets you pressure the objective without dropping onto it. The right choice changes with team tempo, composition, cooldowns and objective state.',
+          'Check that your teammates can use the position too. A clever location on the wrong side of the map can achieve less than a simple route everyone understands. The five-question test below turns that team and map check into a repeatable decision.',
         ],
       },
       {
         title: 'How to Hold It',
-        summary:
-          'Holding a power position is not standing still.',
-        points: [
-          'Peek and scout corner to corner instead of skipping straight into the enemy face.',
-          'Keep support line of sight when possible, but do not give up strong space over imperfect healing.',
-          'Use shields, mobility, sustain tools, and escape cooldowns as space enablers: they buy time to hold pressure.',
-          'When the enemy commits resources to clear you, kite, survive, and let your team use the space they gave up.',
+        paragraphs: [
+          'Holding the area still involves movement. Scout and peek from corner to corner instead of jumping straight into the enemy. Keep friendly healing sightlines when possible, while judging whether imperfect healing really requires surrendering otherwise strong space.',
+          'Shields, movement, sustain and an escape cooldown can buy time for the position to keep working. When enemies commit resources to remove you, retreat through the space you prepared and survive. Their attempt to clear you may have left room for your teammates elsewhere; standing still until you die wastes that trade.',
         ],
       },
       {
         title: 'When to Leave',
-        summary:
-          'Use the advantage the position gives you, then move when the fight asks for it.',
-        points: [
-          'Drop only when dropping wins the fight, secures objective, or lets you punish spent cooldowns.',
-          'Rotate deeper when your team already won space and the original spot no longer applies pressure.',
-          'Give it up if the enemy overcommits and your escape route is the real value.',
-          'On control maps, fight for the power spot first, win the fight, then capture the point second.',
+        paragraphs: [
+          'Do not drop simply because an enemy is below you. Give up the height when it helps win the fight, secures the objective, or punishes resources the enemy has spent. Once your team has taken enough ground that the original position no longer threatens anything, move forward with that advantage.',
+          'Sometimes leaving is the value: an enemy overcommit is a reason to use the exit, not to defend the spot at any cost. On control maps, the lesson is to win useful space and the fight before turning that advantage into a capture, rather than walking onto the point without a playable position.',
         ],
       },
     ],
@@ -148,5 +133,13 @@ export class PowerPositionsPageComponent {
       { label: '41:00', detail: 'Support and team questions.' },
       { label: '1:03:30', detail: 'Finding power positions in-game.' },
     ],
+    workedExample: {
+      title: 'Hypothetical: hold the angle until the fight changes',
+      paragraphs: [
+        'Your team holds an area beside the main route with a view of the objective and another way out. An enemy spends cooldowns to force you away. Instead of immediately dropping into the contest, retreat through cover and let your teammates use the attention you drew.',
+        'If the response gives your team a clear opportunity to finish the fight, commit with them. If your original angle no longer reaches the fight, rotate. The example depends on the routes and support sightlines actually available; the diagram is a relationship sketch, not a map-specific route.',
+      ],
+    },
+    practiceFocus: 'Before the first fight, name a lane you can pressure and an exit you can use. In replay, check whether you stayed after the position stopped helping, or dropped before the enemy gave you a reason.',
   };
 }

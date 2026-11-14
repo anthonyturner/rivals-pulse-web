@@ -1,54 +1,62 @@
 import { provideZonelessChangeDetection } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { BuildTheoryPageComponent } from './build-theory-page.component';
 
 describe('BuildTheoryPageComponent', () => {
-  let fixture: ComponentFixture<BuildTheoryPageComponent>;
   let element: HTMLElement;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
-    fixture = TestBed.createComponent(BuildTheoryPageComponent);
+    const fixture = TestBed.createComponent(BuildTheoryPageComponent);
     fixture.detectChanges();
     element = fixture.nativeElement;
   });
 
-  it('leaves the main landmark to the shell and has one h1 and a breadcrumb back to the guides', () => {
-    const crumbs = element.querySelector('nav[aria-label="Breadcrumb"]');
-
+  it('leaves the main landmark to the shell and keeps its title and guide breadcrumb', () => {
     expect(element.querySelector('main')).toBeNull();
     expect(element.querySelectorAll('h1').length).toBe(1);
-    expect(crumbs?.querySelector('a')?.getAttribute('href')).toBe('/hero-guides');
-    expect(crumbs?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('Build theory');
+    expect(element.querySelector('nav[aria-label="Breadcrumb"] a')?.getAttribute('href')).toBe('/hero-guides');
+    expect(element.querySelector('[aria-current="page"]')?.textContent).toBe('Build theory');
+    expect(element.textContent).toContain('does not ask you to buy items mid-match');
   });
 
-  it('shows five build tiles with sentence-case names and decorative portraits', () => {
-    const names = Array.from(element.querySelectorAll('.guide-tile-head h3'), (h3) => h3.textContent?.trim());
-
+  it('compares the five existing plans in prose with decorative portraits instead of cards', () => {
+    const names = Array.from(element.querySelectorAll('.comparison h3'), heading => heading.textContent?.trim());
     expect(names).toEqual(['Utility build', 'Damage build', 'Sustain build', 'Mobility build', 'Ultimate build']);
-    for (const image of Array.from(element.querySelectorAll('.guide-tile-head img'))) {
-      expect(image.getAttribute('alt')).toBe('');
+    expect(element.querySelector('.guide-grid, .guide-tile, .guide-bullets')).toBeNull();
+    for (const section of Array.from(element.querySelectorAll('.comparison'))) {
+      expect(section.querySelector('img')?.getAttribute('alt')).toBe('');
+      expect(section.querySelectorAll('p').length).toBe(2);
     }
+    expect(element.textContent).toContain('reserve protection for a dive');
+    expect(element.textContent).toContain('not the ultimate button on its own');
   });
 
-  it('labels priority and example inline, not as a definition list', () => {
-    const first = element.querySelector('.guide-tile') as HTMLElement;
-
-    expect(element.querySelector('dl')).toBeNull();
-    expect(Array.from(first.querySelectorAll('strong'), (label) => label.textContent)).toEqual(['Priority:', 'Example:']);
+  it('retains the utility decision sequence and all four final questions', () => {
+    const signals = Array.from(element.querySelectorAll('.signals dt'), term => term.textContent?.trim());
+    expect(signals).toEqual(['Enemy win condition', 'Reserved answer', 'Timing trigger', 'Exit plan']);
+    const questions = Array.from(element.querySelectorAll('.decision-questions li'), item => item.textContent?.trim());
+    expect(questions).toEqual([
+      'What wins this fight if I use it at the right second?',
+      'What happens if I spend this cooldown early?',
+      'Can my team follow up when this utility lands?',
+      'Does this build solve our actual problem or just pad stats?',
+    ]);
   });
 
-  it('keeps the signals as headed tiles and the four questions as steps', () => {
-    const signalTiles = element.querySelectorAll('section.guide-section:nth-of-type(2) .guide-tile h3');
-
-    expect(signalTiles.length).toBe(4);
-    expect(element.querySelectorAll('ol.guide-steps li').length).toBe(4);
+  it('distinguishes a hypothetical example from a source event and provides a review focus', () => {
+    expect(element.querySelector('#worked-example h2')?.textContent).toContain('Hypothetical:');
+    expect(element.querySelector('#worked-example')?.textContent).toContain('reassess the plan');
+    expect(element.querySelector('#next-match')?.textContent).toContain('Review one fight');
+    expect(element.querySelector('iframe')).toBeNull();
   });
 
-  it('carries the illustration message in a callout instead of a figure', () => {
-    expect(element.querySelector('app-notice')?.textContent).toContain('Utility wins by changing choices.');
-    expect(element.querySelector('figure')).toBeNull();
+  it('provides a matching destination for every chapter link', () => {
+    for (const link of Array.from(element.querySelectorAll<HTMLAnchorElement>('app-guide-chapters a'))) {
+      const id = new URL(link.href).hash.slice(1);
+      expect(element.querySelector(`[id="${id}"]`)).withContext(id).not.toBeNull();
+    }
   });
 });

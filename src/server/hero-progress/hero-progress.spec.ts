@@ -80,7 +80,7 @@ describe('hero-progress', () => {
       [5, 'Regular', 0], [9, 'Regular', 0],
       [10, 'Veteran', 0], [19, 'Veteran', 0],
       [20, 'Elite', 0], [34, 'Elite', 0],
-      [35, 'Champion', 0], [49, 'Champion', 0],
+      [35, 'Paragon', 0], [49, 'Paragon', 0],
       [50, 'Legend', 0], [74, 'Legend', 0],
       [75, 'Legend', 1], [99, 'Legend', 1],
       [100, 'Legend', 2], [124, 'Legend', 2],
@@ -112,7 +112,7 @@ describe('hero-progress', () => {
     it('carries the tier on the progress, the one the level falls in', () => {
       expect(progressForXp(0).tier.name).toBe('Recruit');
       expect(progressForXp(26_600).tier.name).toBe('Elite');
-      expect(progressForXp(142_099).tier.name).toBe('Champion');
+      expect(progressForXp(142_099).tier.name).toBe('Paragon');
       expect(progressForXp(142_100).tier.name).toBe('Legend');
       expect(UNPLAYED_HERO_PROGRESS.tier.name).toBe('Recruit');
     });
