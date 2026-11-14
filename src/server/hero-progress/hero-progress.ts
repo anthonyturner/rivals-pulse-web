@@ -5,10 +5,10 @@ import { matchXpBonuses, type MatchXpBonus } from './hero-xp-bonuses.ts';
 /**
  * Hero levels, tiers and stars worked out from a player's uploaded matches, with the desktop app's rules.
  *
- * The block down to `UNPLAYED_HERO_PROGRESS` is the overlay's `hero-progress.ts` as it is (overlay `ebc239ba`), and
- * `hero-xp-bonuses.ts` beside it is the overlay's file as it is (overlay `5038e469`). A change to a number, a tier
- * or a bonus is made in both repositories in step, and the boundary specs here and there must pass unchanged.
- * Only `heroProgress` differs: it reads the website's upload rows where the overlay reads its local match records,
+ * The XP amounts, the level curve, `HERO_TIERS`, `heroTierForLevel` and `heroStarsForLevel` are the overlay's
+ * `hero-progress.ts` (overlay `ebc239ba`), copied as they are apart from the doc comments, and `hero-xp-bonuses.ts`
+ * beside it is the overlay's file as it is (overlay `5038e469`). A change to a number, a tier or a bonus is made
+ * in both repositories in step, and the boundary specs here and there must pass unchanged. Only `heroProgress` differs: it reads the website's upload rows where the overlay reads its local match records,
  * so its inputs are described under `UploadedMatch`.
  *
  * Nothing is stored and no level is ever read from a client: the same matches always give the same levels.
@@ -150,9 +150,10 @@ interface MatchCredit {
 
 /**
  * The overlay's `heroAppearances` and `creditGroups`: every hero played in the match, once each with its stays added.
- * A figure counts at `HERO_APPEARANCE_MIN_SECONDS` or with any damage, healing or blocked (the website has no
- * per-hero kills to add). A match with no figures gives the whole match to the hero on the account's line, with
- * no time because `participants` holds no match length.
+ * A figure counts at `HERO_APPEARANCE_MIN_SECONDS` or with any damage, healing or blocked (the overlay also counts
+ * kills, deaths and assists, which the website has per match but not per hero). A match with no figures gives the
+ * whole match to the hero on the account's line at the end of the match (the overlay credits the longest-played
+ * hero), with no time because `participants` holds no match length.
  */
 function creditsFor(match: UploadedMatch, resolveKey: HeroKeyResolver): Map<HeroKey, MatchCredit> {
   const played: { heroId: number; seconds: number }[] = match.figures.length

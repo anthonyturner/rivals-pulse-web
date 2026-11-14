@@ -206,11 +206,15 @@ overlay gives for the same matches.
 - **From uploaded matches, so they can differ from a player's own tiers.** The
   board says "from uploaded matches". The honest differences are: only the
   matches `participants` still holds count (the half-season after a match's own
-  has ended, or six months), so an all-time level is every match still held; a
-  match another recorder uploaded first is not the account's; the website has
-  no per-hero kills, so a stay under 30 seconds counts only with damage, healing
-  or damage blocked; and a match with no per-hero time gives the hero on the line
-  its 100 XP and no time XP, because `participants` holds no match length.
+  has ended, or six months, about the last two half-seasons), so an all-time
+  level is every match still held, and a level can fall when a half-season is
+  purged; a match another recorder uploaded first is not the account's; the
+  overlay counts a stay under 30 seconds when the hero got any kills, deaths,
+  assists, damage, healing or damage blocked, but the website has no per-hero
+  kills, deaths or assists and can use only damage, healing and damage blocked;
+  and a match with no per-hero time gives its 100 XP and no time XP, to the hero
+  on the line at the end of the match, because `participants` holds no match
+  length and no hero timeline (the overlay credits the longest-played hero).
 - **Why not `tracked_matches`.** It reaches further back but holds only the
   hero's name at the end of the match and no time on each hero, so a hero swap
   would earn the wrong hero the minutes, and it carries no half-season for older
@@ -244,7 +248,10 @@ overlay gives for the same matches.
   read cheap. Rejected for now: the bonuses make every total depend on the run
   of matches before it, the overlay stores nothing, and a stored level would
   drift from the rules the day one of them changes. If the read proves heavy
-  for a player with thousands of matches, a cache comes before a table.
+  for a player with thousands of matches, a cache comes before a table. A small
+  per-player, per-half-season XP carry-over, frozen when the half-season is
+  purged, is the option that would keep all-time levels from falling; it waits
+  for Tony's decision.
 
 ## Consequences
 
