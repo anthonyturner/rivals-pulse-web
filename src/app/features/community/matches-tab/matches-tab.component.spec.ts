@@ -93,6 +93,24 @@ describe('MatchesTabComponent', () => {
     expect(text()).not.toMatch(/NaN|undefined|null/);
   });
 
+  it('keeps the one-player caveat visible, outside the closed disclosure', async () => {
+    await answer(READY);
+
+    const host = fixture.nativeElement as HTMLElement;
+    const caveat = Array.from(host.querySelectorAll('.stat-intro > p.stat-note')).map((note) => note.textContent?.trim());
+
+    expect(caveat).toContain('While few players upload, these totals can come from one player.');
+    expect(host.querySelector('details.stat-how')?.textContent).not.toContain('one player');
+  });
+
+  it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
+    await answer(READY);
+
+    const summary = (fixture.nativeElement as HTMLElement).querySelector('.stat-how > summary');
+
+    expect(summary?.textContent?.replace(/\s+/g, ' ').trim()).toBe('How these are counted for community matches');
+  });
+
   it('links the map teaser to the Maps tab, which lists every map', async () => {
     await answer(READY);
 

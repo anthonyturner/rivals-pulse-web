@@ -76,14 +76,23 @@ begin
   claims_b := json_build_object('sub', admin_b, 'role', 'authenticated')::text;
   claims_stranger := json_build_object('sub', stranger, 'role', 'authenticated')::text;
 
+  -- The match triggers set a match's half-season from its played_at and public.half_seasons, so each throwaway
+  -- half-season gets a start row in the far future (year 2000 plus its number) and its matches are played a
+  -- month after that start. Without the rows the matches would be filed under the real current half-season.
+  insert into public.half_seasons (half_season, starts_at)
+  select s, '2000-01-01T00:00:00Z'::timestamptz + make_interval(years => s::integer)
+  from unnest(array[open_season, frozen_season, play_open_season, play_frozen_season]) as s;
+
   -- One match in an unfinished half-season and one in a frozen one, and the half-season rows to match.
   insert into public.participants (fingerprint, half_season, played_at, uid, name, team, hero_id, kills, deaths, assists, is_win, recorded_by)
-  select 'jobs-check-' || s::text, s, now(), 'jobs-check-uid', 'Jobs check', 1, 1011, 1, 1, 1, true, 'jobs-check-recorder'
-  from unnest(array[open_season, frozen_season]) as s;
+  select 'jobs-check-' || s::text, s, h.starts_at + interval '1 month', 'jobs-check-uid', 'Jobs check', 1, 1011, 1, 1, 1, true, 'jobs-check-recorder'
+  from unnest(array[open_season, frozen_season]) as s
+  join public.half_seasons h on h.half_season = s;
 
   insert into public.match_hero_kills (fingerprint, half_season, played_at, killer_hero, victim_hero, kills)
-  select 'jobs-check-' || s::text, s, now(), 'jobs-check', 'jobs-check', 1
-  from unnest(array[open_season, frozen_season]) as s;
+  select 'jobs-check-' || s::text, s, h.starts_at + interval '1 month', 'jobs-check', 'jobs-check', 1
+  from unnest(array[open_season, frozen_season]) as s
+  join public.half_seasons h on h.half_season = s;
 
   for family in
     select * from (values
@@ -105,10 +114,11 @@ begin
   returning id into play_player;
 
   insert into public.tracked_matches (player_id, provider, match_uid, played_at, raw_payload, performance)
-  select play_player, 'jobs-check', 'jobs-check-' || s::text, now() - interval '1 day',
+  select play_player, 'jobs-check', 'jobs-check-' || s::text, h.starts_at + interval '1 month',
          jsonb_build_object('match_season', s, 'play_mode_id', 1),
          jsonb_build_object('is_win', true, 'player_uid', 'jobs-check-player')
-  from unnest(array[play_open_season, play_frozen_season]) as s;
+  from unnest(array[play_open_season, play_frozen_season]) as s
+  join public.half_seasons h on h.half_season = s;
 
   insert into public.play_time_aggregate_half_seasons (half_season, computed_at, frozen_at)
   values (play_open_season, old_computed, null), (play_frozen_season, old_computed, old_frozen);

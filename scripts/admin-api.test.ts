@@ -40,6 +40,7 @@ function gateway(isAdmin: () => Promise<boolean>, calls: string[] = []): AuthGat
     readMediaDefaults: unused,
     setMediaDefaults: unused,
     readOwnDashboard: unused,
+    readOwnHeroProgressMatches: unused,
     isAdmin: async () => {
       calls.push('isAdmin');
 
