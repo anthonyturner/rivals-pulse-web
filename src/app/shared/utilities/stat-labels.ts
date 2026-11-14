@@ -31,10 +31,13 @@ export function countLabel(count: number, singular: string, plural: string): str
 /**
  * The label of the site's one "matches counted" figure, always saying what it covers, such as
  * `Matches counted · Season 10.5` or `Matches counted · all seasons`. Every page states that figure
- * through this, so two figures with this label never cover different things.
+ * through this, so two figures with this label never cover different things. A tile too narrow for
+ * the full label asks for the `short` form, `Matches · Season 10.5`, which names the same figure.
  */
-export function matchesCountedLabel(count: number, scope: string): string {
-  return `${count === 1 ? 'Match' : 'Matches'} counted · ${scope}`;
+export function matchesCountedLabel(count: number, scope: string, form: 'full' | 'short' = 'full'): string {
+  const noun = count === 1 ? 'Match' : 'Matches';
+
+  return `${form === 'short' ? noun : `${noun} counted`} · ${scope}`;
 }
 
 /**
