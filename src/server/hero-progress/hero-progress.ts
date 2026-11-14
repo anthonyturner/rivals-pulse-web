@@ -41,7 +41,7 @@ export const HERO_TIERS: readonly HeroTier[] = [
   { key: 2, name: 'Regular', minLevel: 5 },
   { key: 3, name: 'Veteran', minLevel: 10 },
   { key: 4, name: 'Elite', minLevel: 20 },
-  { key: 5, name: 'Champion', minLevel: 35 },
+  { key: 5, name: 'Paragon', minLevel: 35 },
   { key: 6, name: 'Legend', minLevel: 50 },
 ];
 
