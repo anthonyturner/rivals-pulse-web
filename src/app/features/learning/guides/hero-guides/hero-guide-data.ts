@@ -35,6 +35,106 @@ export interface HeroGuide {
 
 export const HERO_GUIDES: HeroGuide[] = [
   {
+    heroId: 'doctor-strange',
+    heroName: 'Doctor Strange',
+    category: 'hero',
+    role: 'Vanguard',
+    image: '/images/heroes/doctor-strange.png',
+    sourceLabel: 'Infinitea - How To Play Like The Rank One Doctor Strange In Marvel Rivals',
+    sourceUrl: 'https://www.youtube.com/watch?v=SWomAJspcoM&t=189s',
+    summary:
+      "A practical Doctor Strange playbook from Infinitea's gameplay review: take space without draining your supports, share frontline duties, protect the backline, and turn ultimate and portal timing into objective progress.",
+    poolJob:
+      'Hold useful ground with cover and shield, keep your supports able to heal you, and create openings that your team can follow.',
+    pickWhen:
+      'Use this guide to improve your Doctor Strange decisions when you overextend, struggle to balance peeling with contesting, or want a clearer plan for ultimates and portals.',
+    sections: [
+      {
+        title: 'Keep friendly sightlines and limit enemy angles (0:20)',
+        points: [
+          'Keep a clear healing line from your Strategists while exposing yourself to as few enemy angles as possible.',
+          'When shielding teammates, stand where your shield protects them. When taking a separate angle, avoid lining everyone up so missed shots into you still hit the backline.',
+          'Use terrain as your first protection. The payload can provide cover when nearby walls do not, but check which direction it actually protects.',
+          'Taking unnecessary damage consumes healing your supports could spend on teammates, damage, or aggressive utility.',
+        ],
+      },
+      {
+        title: 'Give ground while you still have room (1:09)',
+        points: [
+          'After an ally falls, reassess the player advantage before continuing to push. Retreating can preserve the team for the next fight.',
+          'Giving space can make attackers choose between chasing your team and keeping players on the payload. Notice what they actually commit.',
+          'Space is a resource, not an unlimited escape. Once the objective is about to be lost, someone may have to contest even in a difficult fight.',
+          'After a lost fight, leave together if escape is realistic. Avoid a late, isolated death that delays the next regroup.',
+        ],
+      },
+      {
+        title: 'Trade frontline duties around cooldowns (3:06)',
+        points: [
+          "Watch your other tank's defensive cooldowns as well as your own. A teammate who has spent protection needs a chance to recover.",
+          'In the review, Strange steps forward after recovering health and shield while Magneto has used his defensive tools.',
+          'Take your turn at the front when you have resources, then use cover and let your teammate take pressure while you recover.',
+          'Check side routes and challenge exposed enemies without turning a short pressure play into an unsupported chase.',
+        ],
+      },
+      {
+        title: 'Protect the backline without abandoning the objective (2:29, 5:20)',
+        points: [
+          'Peeling means turning back to protect teammates under attack. When a diver reaches your supports, check whether you can help and still meet the objective deadline.',
+          'If you are the only tank contesting, leaving may immediately surrender the objective. The review treats this as a difficult trade, not permission to ignore supports.',
+          'Shield follow-up fire so a diver cannot easily combine damage with the rest of their team. Protection can matter even when you cannot stop the dive itself.',
+          'Keep checking behind you during friendly support ultimates. In the review, protecting a teammate from Winter Soldier denies his follow-up instead of simply pushing forward.',
+        ],
+      },
+      {
+        title: 'Plan your ultimate around the enemy response (3:58, 7:52)',
+        points: [
+          'Before committing Eye of Agamotto, identify which enemy support can still answer it and whether your team can follow up.',
+          'Use a corner to prepare your approach rather than announcing the play from an exposed position.',
+          'Forcing a defensive support ultimate can already be useful. If there is room to retreat, do not automatically spend another ultimate to keep fighting through it.',
+          'Call your plan and ask about enemy defensive abilities. An ally drawing out an answer can make your next attempt safer.',
+          "The review shows damage after Strange's ultimate helping build the next one. Treat that as a reason to seek safe follow-up, not a fixed charge guarantee.",
+        ],
+      },
+      {
+        title: 'Take short angles with an exit plan (9:28, 12:59)',
+        points: [
+          'Look for a brief route to pressure the backline when you have damage prepared, defensive resources ready, and another tank holding the objective.',
+          'Keep the trip short enough to return before your team needs you. An angle is useful only while the rest of the fight remains playable.',
+          'Infinitea explicitly calls the attack-side flank away from his supports risky and accepts responsibility if it fails. Do not copy it as a default position.',
+          'Close-range pressure from heroes such as The Thing or Thor changes the risk. Reassess your route and range rather than assuming Strange can win every duel.',
+        ],
+      },
+      {
+        title: 'Break the stagger cycle after checkpoints (6:53, 16:45)',
+        points: [
+          'A stagger is a series of isolated deaths that prevents the team from fighting together. Checkpoints are a common trap because teammates return at different times.',
+          'Call for everyone to wait and regroup before the next entry, especially when someone has only just respawned.',
+          'When the enemy supports die late, use the temporary advantage together. Do not turn it into six separate chases.',
+          'Consider whether a regrouped portal entry can give the team a real contest; a portal after the fight is already over creates little value.',
+        ],
+      },
+      {
+        title: 'Use portals to deny an objective entrance (18:12)',
+        points: [
+          'After your team gains an advantage, look beyond damage: stopping enemies from reaching the objective may finish the capture.',
+          'In the final example, Strange places a portal at a doorway so approaching enemies are redirected away from the point and arrive separately.',
+          'Tell teammates before setting up. You need protection while placing the portal and enough team pressure to hold the ground it creates.',
+          'This is a map- and timing-dependent play. Check the approach, destination, alternate routes, and remaining contest time before committing.',
+        ],
+      },
+      {
+        title: 'Review decisions, not just the result',
+        points: [
+          "These notes paraphrase Infinitea's supplied video transcript. The times mark discussion points in the full video; the source player opens at the shared 3:09 starting point.",
+          'The review includes risky attempts and mistakes. A successful flank is not proof it was safe, and a failed fight does not settle whether the initial decision was sound.',
+          'After a death, ask whether your supports could see you, whether you had cover and defensive resources, and whether someone else could contest.',
+          'Before each ultimate or portal, name the response you expect and the objective value you want. Practice one of these decisions at a time.',
+        ],
+      },
+    ],
+    ultimates: [],
+  },
+  {
     heroId: 'coach-mills-ultimate-beginners-guide',
     heroName: 'The Ultimate Beginner Guide',
     category: 'fundamentals',
