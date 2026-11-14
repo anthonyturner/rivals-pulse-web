@@ -698,6 +698,108 @@ describe('createSupabaseAuthGateway', () => {
     });
   });
 
+  describe('readOwnHeroProgressMatches', () => {
+    const tokens = { accessToken: 'access', refreshToken: 'refresh' };
+    const read = (answer: { status: number; body?: unknown }) => {
+      const { fetcher, calls } = fakeFetch(() => answer);
+
+      return { calls, result: createSupabaseAuthGateway(ENV, fetcher).readOwnHeroProgressMatches(tokens) };
+    };
+    const FULL_MATCH = {
+      matchKey: '4121',
+      playedAt: '2026-10-30T20:00:00+00:00',
+      halfSeason: 10.5,
+      playModeId: 1,
+      isWin: true,
+      heroId: 1011,
+      figures: [{ heroId: 1011, seconds: 600, damage: 9000, healing: null, blocked: 0 }],
+    };
+
+    it('calls the read function with no arguments and the user token, so the database picks the matches', async () => {
+      const { calls, result } = read({ status: 200, body: { linked: false } });
+
+      expect(await result).toEqual({ linked: false });
+      expect(calls[0].url).toBe('https://project.supabase.co/rest/v1/rpc/read_own_hero_progress_matches');
+      expect(calls[0].method).toBe('POST');
+      expect(calls[0].body).toEqual({});
+      expect(calls[0].headers['authorization']).toBe('Bearer access');
+      expect(calls[0].headers['apikey']).toBe('sb_publishable_test');
+    });
+
+    it('reads each match with its end time in milliseconds', async () => {
+      const { result } = read({ status: 200, body: { linked: true, matches: [FULL_MATCH] } });
+
+      expect(await result).toEqual({
+        linked: true,
+        matches: [
+          {
+            matchKey: '4121',
+            endedAt: Date.parse('2026-10-30T20:00:00+00:00'),
+            halfSeason: 10.5,
+            playModeId: 1,
+            isWin: true,
+            heroId: 1011,
+            figures: [{ heroId: 1011, seconds: 600, damage: 9000, healing: null, blocked: 0 }],
+          },
+        ],
+      });
+    });
+
+    it('keeps a blank as null and never as 0', async () => {
+      const { result } = read({
+        status: 200,
+        body: { linked: true, matches: [{ matchKey: '1', playedAt: '2026-10-30T20:00:00+00:00', isWin: 'yes', playModeId: '1', figures: 'none' }] },
+      });
+      const answer = await result;
+
+      expect(answer.linked && answer.matches[0]).toEqual({
+        matchKey: '1',
+        endedAt: Date.parse('2026-10-30T20:00:00+00:00'),
+        halfSeason: null,
+        playModeId: null,
+        isWin: null,
+        heroId: null,
+        figures: [],
+      });
+    });
+
+    it('drops a match with no key or a time that cannot be read, and a figure with no hero', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          matches: [
+            { ...FULL_MATCH, playedAt: 'yesterday' },
+            { ...FULL_MATCH, playedAt: undefined },
+            { ...FULL_MATCH, matchKey: '' },
+            { ...FULL_MATCH, matchKey: undefined },
+            null,
+            { ...FULL_MATCH, figures: [{ seconds: 60 }, ...FULL_MATCH.figures] },
+          ],
+        },
+      });
+      const answer = await result;
+
+      expect(answer.linked && answer.matches.length).toBe(1);
+      expect(answer.linked && answer.matches[0].figures).toEqual(FULL_MATCH.figures);
+    });
+
+    it('reports a missing function, a refusal or an answer of an unknown shape as unavailable', async () => {
+      for (const answer of [
+        { status: 404, body: { code: 'PGRST202' } },
+        { status: 401 },
+        { status: 403, body: { code: '42501' } },
+        { status: 500 },
+        { status: 200 },
+        { status: 200, body: { linked: 'maybe' } },
+        { status: 200, body: { linked: true } },
+        { status: 200, body: { linked: true, matches: 'none' } },
+      ]) {
+        await expectAsync(read(answer).result).toBeRejectedWithError(AuthUnavailableError);
+      }
+    });
+  });
+
   describe('signOut', () => {
     it('ends only this session and never throws', async () => {
       const { fetcher, calls } = fakeFetch(() => ({ status: 204 }));
