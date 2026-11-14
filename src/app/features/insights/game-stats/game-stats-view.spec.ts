@@ -47,6 +47,12 @@ describe('buildGameStatsView', () => {
     ]);
   });
 
+  it('says "Match" for a figure of exactly one', () => {
+    const view = buildGameStatsView({ ...COUNTS, matches: 1, halfSeasons: [{ halfSeason: 10.5, matches: 1, players: 1 }] });
+
+    expect(view.status === 'ready' && view.tiles[0].label).toBe('Match · all seasons');
+  });
+
   it('leaves out the earliest match when the answer has no start time', () => {
     const view = buildGameStatsView({ ...COUNTS, since: null });
 
