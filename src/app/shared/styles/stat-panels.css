@@ -1,0 +1,259 @@
+/*
+ * The frame every figure section on the Stats overview shares, so its panels, tables and bars line up:
+ * one grid, one panel, one table and one bar. A component that lists it in `styleUrls` makes its host
+ * the grid's container, so the columns follow the room the section has, not the window's width (the
+ * sidebar takes a share of it from 1280px up).
+ */
+:host {
+  display: block;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+@container (min-width: 600px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* An odd panel out spans the row, so no column is left half empty. */
+  .stat-grid--thirds > .stat-panel:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (min-width: 880px) {
+  .stat-grid--thirds {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .stat-grid--thirds > .stat-panel:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
+.stat-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--tertiary) 12%, var(--bg-panel)), var(--bg-panel) 60%);
+}
+
+.stat-panel__title {
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stat-panel__figure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  align-items: baseline;
+}
+
+.stat-panel__value {
+  font-size: var(--type-title);
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.stat-note {
+  max-width: 62ch;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  overflow-wrap: anywhere;
+}
+
+/* The link that ends a panel, set apart from the figures above it. */
+.stat-link {
+  justify-self: start;
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.stat-link::after {
+  content: '\2192';
+  content: '\2192' / '';
+  display: inline-block;
+  margin-inline-start: 6px;
+  text-decoration: none;
+}
+
+.stat-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--type-small);
+}
+
+.stat-table th,
+.stat-table td {
+  padding: 6px 6px;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.stat-table thead th {
+  background: var(--surface);
+  font-size: var(--type-caption);
+  font-weight: 800;
+}
+
+.stat-table tbody th,
+.stat-table tbody td {
+  border-top: 1px solid var(--border);
+}
+
+.stat-table tbody th {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* A group's name, between runs of rows in one table. */
+.stat-table tbody th[colspan] {
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 800;
+}
+
+/* The first column holds the label, the others hold figures; every table on the overview uses the same split. */
+.stat-table col:first-child {
+  width: 44%;
+}
+
+/* A figure with its bar beside it. */
+.stat-meter {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.stat-meter__bar {
+  flex: 1 1 24px;
+  min-width: 24px;
+  max-width: 56px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-2);
+  order: -1;
+}
+
+.stat-meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent-strong);
+}
+
+@container (min-width: 600px) {
+  .stat-panel {
+    padding: 16px;
+  }
+}
+
+.stat-meter__value {
+  min-width: 4ch;
+}
+
+/* A disclosure under a section or panel: its summary is a link-styled line, its body the notes that explain the figures. */
+.stat-how > summary,
+.stat-fold > summary {
+  min-height: 24px;
+  color: var(--link);
+  cursor: pointer;
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.stat-how > summary:focus-visible,
+.stat-fold > summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.stat-how[open] > summary,
+.stat-fold[open] > summary {
+  margin-bottom: 8px;
+}
+
+.stat-how > .stat-note + .stat-note {
+  margin-top: 4px;
+}
+
+/* A panel that folds: its heading is the summary, so a closed one is a single line and the rest of the row is not held open by it. */
+details.stat-panel {
+  display: block;
+  align-self: start;
+}
+
+.stat-panel__summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.stat-panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.stat-panel__summary::after {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: solid var(--text);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-3px) rotate(45deg);
+  content: '';
+}
+
+details[open] > .stat-panel__summary::after {
+  transform: translateY(3px) rotate(-135deg);
+}
+
+.stat-panel__summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+details.stat-panel > .stat-panel__body {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* A section's opening line and its "how these are counted" disclosure. */
+.stat-intro {
+  display: grid;
+  gap: 8px;
+}

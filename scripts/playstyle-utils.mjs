@@ -5,6 +5,10 @@ export function isGenericPlaystyle(value = '') {
 }
 
 export function buildHeroPlaystyle(hero) {
+  if (hero.id === 'jubilee') {
+    return 'Leapfrog fully charged Blooming Balls ahead of a grouped frontline, detonate them for burst sustain and utility, then stagger Sparkle Marks to keep enhanced Energy Plasmoids active. Play inside the brawl when safe, and conserve Sparking Sprint for charging the next orb or escaping pressure.';
+  }
+
   const role = hero.role;
   const abilities = hero.abilities ?? [];
   const primary = abilities.find((ability) => ability.type === 'Normal Attack')?.name

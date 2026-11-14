@@ -1,0 +1,87 @@
+<div class="field-guide page-container">
+  <header class="field-guide__header">
+    <div class="field-guide__heading">
+      <p class="field-guide__back"><a routerLink="/hero-guides">Back to Guides</a></p>
+      <app-eyebrow>Composition</app-eyebrow>
+      <h1>How to break triple support</h1>
+      <p class="field-guide__lede">Three healers make scattered pressure easy to recover from. Choose a coordinated target, compress the damage window or interrupt the formation that lets their protection overlap.</p>
+      <p class="field-guide__source-credit">
+        Primary source:
+        <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.publisher }}, {{ source.author }} · {{ source.published }}<span class="visually-hidden"> (opens in a new tab)</span></a>
+      </p>
+      <p class="field-guide__caveat">This lesson adapts the source article's composition examples. Hero balance changes between patches, so confirm current ability behavior in game.</p>
+    </div>
+  </header>
+
+  <div class="field-guide__layout">
+    <aside class="field-guide__rail"><app-guide-chapters [chapters]="chapters" /></aside>
+    <article class="field-guide__body">
+      <section class="field-guide__chapter" id="read-the-comp">
+        <h2>Understand what the formation needs.</h2>
+        <p>Triple support wants time. Overlapping healing and defensive cooldowns let it recover from damage spread across several targets, while your team spends resources and the objective clock keeps moving. Large healing numbers describe that recovery; they do not prove the composition cannot be broken.</p>
+        <p>The trade is less offensive tempo and a frontline that must cover several jobs. Before the defensive ultimates are ready, or when walls and corners interrupt the formation's sightlines, the same sustain is harder to apply. Read those conditions before choosing how to attack rather than treating every three-support lineup as an identical problem.</p>
+        <h3>What the source's support core contributes</h3>
+        <dl class="hero-options core">
+          @for (hero of supportCore; track hero.name) {
+            <dt><img [src]="hero.image" alt="" width="40" height="40" loading="lazy" />{{ hero.name }}</dt><dd>{{ hero.job }}</dd>
+          }
+        </dl>
+      </section>
+
+      @for (plan of plans; track plan.id) {
+        <section class="field-guide__chapter counter-plan" [id]="plan.id">
+          <span class="field-guide__number" aria-hidden="true">0{{ $index + 1 }}</span>
+          <h2>{{ plan.title }}</h2>
+          <p>{{ plan.summary }}</p><p>{{ plan.context }}</p>
+          <h3>Execution sequence</h3>
+          <ol class="plan-steps">
+            @for (step of plan.steps; track step) { <li>{{ step }}</li> }
+          </ol>
+          <details class="plan-heroes">
+            <summary>Hero options for this plan</summary>
+            <dl class="hero-options">
+              @for (hero of plan.heroes; track hero.name) {
+                <dt><img [src]="hero.image" alt="" width="40" height="40" loading="lazy" />{{ hero.name }}</dt><dd>{{ hero.job }}</dd>
+              }
+            </dl>
+          </details>
+        </section>
+      }
+
+      <section class="field-guide__chapter" id="fight-checks">
+        <h2>Run the same four checks.</h2>
+        <p>Whichever plan you choose, connect preparation to the next team action. A target call, a burst window and a safe reset are parts of the same engagement.</p>
+        <ol class="fight-checks">
+          @for (item of fightChecklist; track item.label) {
+            <li><strong>{{ item.label }}.</strong> {{ item.detail }}</li>
+          }
+        </ol>
+      </section>
+
+      <section class="field-guide__chapter" id="traps">
+        <h2>Avoid giving the sustain loop more time.</h2>
+        <p>Use these as replay checks. Each mistake gives the defensive formation another chance to recover without making it solve a coordinated threat.</p>
+        <ul class="traps">
+          @for (trap of traps; track trap) { <li>{{ trap }}</li> }
+        </ul>
+      </section>
+
+      <section class="field-guide__example" id="worked-example">
+        <span class="field-guide__label">Worked example</span><h2>Hypothetical: the first defensive ultimate is forced.</h2>
+        <p>Your team stages two angles and commits to the same reachable support. The enemy spends a defensive ultimate to stabilize. Continuing to add every offensive ultimate would repeat the resource trap the plan was meant to avoid.</p>
+        <p>If the objective and escape routes allow it, leave the defended exchange together and prepare the next window. Keep enough damage and control to threaten as protection ends. If a contest deadline removes that option, make that constraint part of the call rather than assuming a reset is always free.</p>
+      </section>
+
+      <section class="field-guide__practice" id="next-match">
+        <h2>Try this next match</h2><p>Agree on one target and one response to the first defensive ultimate before engaging. Review whether teammates arrived together and whether the next move used the resource you forced, instead of donating staggered deaths.</p>
+      </section>
+
+      <section class="field-guide__source" id="sources">
+        <h2>Source and limitations</h2>
+        <p>Adapted from <cite>{{ source.title }}</cite> by {{ source.author }} at {{ source.publisher }}, published {{ source.published }}. The original examples are the source's advice, not current matchup measurements or a guarantee that a hero choice wins the fight.</p>
+        <p><a [href]="source.url" target="_blank" rel="noopener noreferrer">Read the original article<span class="visually-hidden"> (opens in a new tab)</span></a>.</p>
+      </section>
+      <p class="field-guide__back"><a routerLink="/hero-guides">Back to Guides</a></p>
+    </article>
+  </div>
+</div>

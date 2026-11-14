@@ -1,0 +1,24 @@
+@if (term(); as word) {
+  @if (!dismissed()) {
+    <section class="word-of-day" aria-labelledby="word-of-day-title">
+      <div class="word-of-day__heading">
+        <div>
+          <p class="word-of-day__eyebrow">Word of the day</p>
+          <h2 id="word-of-day-title">{{ word.term }}</h2>
+        </div>
+        <button
+          class="word-of-day__close"
+          type="button"
+          aria-label="Close word of the day"
+          (click)="dismiss()"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="word-of-day__definition">{{ word.definition }}</div>
+      <a class="word-of-day__link" routerLink="/glossary" [fragment]="word.id">
+        Read more in glossary
+      </a>
+    </section>
+  }
+}

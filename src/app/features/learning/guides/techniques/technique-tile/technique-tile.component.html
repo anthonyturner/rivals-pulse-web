@@ -1,0 +1,37 @@
+<article class="technique-lesson">
+  <header class="technique-heading">
+    <img appHeroImageFallback [src]="tile().image" alt="" width="40" height="40" loading="lazy" />
+    <div>
+      @if (tile().caption; as caption) {
+        <p class="guide-caption">{{ caption }}</p>
+      }
+      <h3>{{ tile().title }}</h3>
+    </div>
+  </header>
+
+  <p class="guide-text">{{ tile().body }}</p>
+
+  @if (tile().practice; as practice) {
+    <p class="guide-text practice"><strong>Practice focus:</strong> {{ practice }}</p>
+  }
+
+  @if (tile().tags; as tags) {
+    <p class="guide-caption tags">{{ tags }}</p>
+  }
+
+  <ul class="links">
+    @for (link of links(); track link.url) {
+      <li>
+        @if (link.internal) {
+          <a class="guide-link" [routerLink]="link.url">
+            {{ link.label }}<span class="visually-hidden">{{ link.hiddenText }}</span>
+          </a>
+        } @else {
+          <a class="guide-link" [href]="link.url" target="_blank" rel="noopener">
+            {{ link.label }}<span class="visually-hidden">{{ link.hiddenText }}</span>
+          </a>
+        }
+      </li>
+    }
+  </ul>
+</article>

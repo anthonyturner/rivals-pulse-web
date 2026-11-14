@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.maps {
+  display: grid;
+  gap: 12px;
+}
+
+a {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+/* A single panel in the row, because only one map has a rate, spans it instead of leaving half the row empty. */
+.stat-grid > .stat-panel:only-child {
+  grid-column: 1 / -1;
+}

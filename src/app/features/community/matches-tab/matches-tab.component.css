@@ -1,0 +1,32 @@
+/* One bar a day, tallest bar the busiest day; the days' names sit at the two ends of the axis. */
+.days {
+  display: grid;
+  gap: 4px;
+}
+
+.days__bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 96px;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border-strong);
+  list-style: none;
+}
+
+.days__bar {
+  flex: 1 1 0;
+  min-width: 2px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent-strong);
+}
+
+.days__axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}

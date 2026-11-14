@@ -1,0 +1,27 @@
+<div class="account page-container page-container--narrow">
+  <app-page-header
+    title="Sign in"
+    description="Use your Discord account. We keep only what an account needs."
+  />
+
+  <section class="panel">
+    <div class="message" role="status">
+      @if (message(); as current) {
+        @if (current.kind === 'notice') {
+          <app-notice>{{ current.text }}</app-notice>
+        } @else {
+          <app-state-panel [kind]="current.kind === 'error' ? 'error' : 'empty'" [announce]="false">{{ current.text }}</app-state-panel>
+        }
+      }
+    </div>
+
+    @if (!leaving()) {
+      <a class="guide-button guide-button--primary" [href]="discordHref">Sign in with Discord</a>
+      <p class="note">
+        We store your Discord id, username, email (if Discord shares one) and the date you joined.
+        No marketing email.
+        <a class="guide-link" routerLink="/privacy" fragment="accounts">What the account stores</a>
+      </p>
+    }
+  </section>
+</div>

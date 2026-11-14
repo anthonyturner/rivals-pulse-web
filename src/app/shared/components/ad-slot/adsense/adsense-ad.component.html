@@ -1,0 +1,5 @@
+@for (unit of units(); track unit.page) {
+  <ins appAdsenseUnit [publisherId]="config.publisherId" [adSlotId]="unit.adSlotId" [size]="size()"></ins>
+} @empty {
+  <app-house-ad [slotId]="slotId()" [size]="size()" />
+}

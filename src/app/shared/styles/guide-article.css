@@ -1,0 +1,287 @@
+/* A page, or a child component of a page, lists this in styleUrls: component styles are scoped, so each component that renders guide markup needs its own copy. */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.guide-article {
+  display: grid;
+  gap: 32px;
+  padding-block: 16px 32px;
+}
+
+.guide-article > * {
+  min-width: 0;
+}
+
+.guide-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 24px;
+}
+
+.guide-header > * {
+  grid-column: 1;
+}
+
+.guide-header > .guide-portrait {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.guide-header h1 {
+  font-size: var(--type-page-title);
+  font-weight: 850;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.guide-nav {
+  display: flex;
+  gap: 8px;
+  font-size: var(--type-small);
+}
+
+.guide-text,
+.guide-lede {
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.guide-lede {
+  max-width: 68ch;
+}
+
+.guide-text + :is(ul, ol) {
+  margin-top: 8px;
+}
+
+.guide-caption {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.guide-link {
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.guide-link:focus-visible,
+.guide-button:focus-visible,
+.guide-search input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.guide-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: var(--type-small);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.guide-button--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.guide-button:disabled {
+  border-style: dashed;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
+.guide-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 12px;
+}
+
+.guide-search {
+  flex: 1 1 280px;
+  max-width: 420px;
+}
+
+.guide-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+/* Firefox dims a placeholder to 54% unless told otherwise, which fails contrast in the light theme. */
+input::placeholder {
+  color: var(--text-soft);
+  opacity: 1;
+}
+
+.guide-count {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.guide-section > h2,
+.guide-section > header h2 {
+  margin-bottom: 12px;
+  font-size: var(--type-h2);
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-grid > li {
+  display: grid;
+}
+
+/*
+ * At most two columns, so an odd last tile can take the whole row. On the plain grid the same rule
+ * would strand a tile on a three-column row.
+ */
+.guide-grid--pairs {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.guide-grid--pairs > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.guide-tile {
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.guide-grid > .guide-tile {
+  align-content: start;
+}
+
+.guide-tile > :is(h2, h3),
+.guide-tile-head h3 {
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.guide-tile > :is(h2, h3) {
+  margin-bottom: 8px;
+}
+
+.guide-tile > .guide-text + .guide-text {
+  margin-top: 6px;
+}
+
+.guide-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.guide-tile-head > div {
+  min-width: 0;
+}
+
+.guide-tile-head > img {
+  flex: none;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  border-radius: 6px;
+  background: var(--surface-2);
+  object-fit: cover;
+  object-position: top center;
+}
+
+.guide-bullets {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.55;
+}
+
+.guide-bullets > li:first-child {
+  font-weight: 700;
+}
+
+.guide-bullets li + li {
+  margin-top: 6px;
+}
+
+.guide-bullets li::marker {
+  color: var(--accent-strong);
+}
+
+.guide-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.guide-steps li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  line-height: 1.55;
+  counter-increment: step;
+}
+
+/* The numeral is a readout, so it keeps its own size. */
+.guide-steps li::before,
+.guide-marker {
+  display: grid;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: var(--type-small);
+  font-weight: 800;
+}
+
+.guide-steps li::before {
+  background: var(--accent);
+  color: var(--accent-ink);
+  content: counter(step);
+}
+
+@media (max-width: 560px) {
+  .guide-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guide-portrait {
+    display: none;
+  }
+}

@@ -1,0 +1,68 @@
+:host {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.player,
+.play {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.play {
+  padding: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* The ring sits inside the box, which clips anything outside it. */
+.play:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+/* YouTube's still is 4:3 with black bars above and below a 16:9 video; cover crops them off. */
+.play__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A scrim from the bottom, so the marker reads over any still. */
+.play::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, color-mix(in srgb, var(--ink) 60%, transparent) 0%, transparent 60%);
+  content: '';
+}
+
+.play__marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 2px solid var(--ink-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: var(--ink-accent);
+  transform: translate(-50%, -50%);
+}
+
+.play:hover .play__marker,
+.play:focus-visible .play__marker {
+  background: var(--ink-accent);
+  color: var(--on-ink-accent);
+}

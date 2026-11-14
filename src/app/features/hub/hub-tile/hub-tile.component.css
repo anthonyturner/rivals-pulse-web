@@ -1,0 +1,314 @@
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  isolation: isolate;
+}
+
+:host(:not(.static):hover) {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host {
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  :host(:not(.static):hover) {
+    transform: translateY(-3px);
+  }
+}
+
+.chip {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.link {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+/* The link covers the whole tile, so the focus ring does too. */
+.link::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  content: '';
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.link:focus-visible::after {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.description {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.4;
+}
+
+.preview {
+  margin-top: auto;
+}
+
+/* The lead tile: key art behind a dark scrim. It stays dark in both themes, so it reads with the ink tokens. */
+:host(.featured) {
+  min-height: 220px;
+  background: var(--ink);
+}
+
+/* The hover rule above is as specific as this one, so the dark edge is restated for it. */
+:host(.featured),
+:host(.featured:hover) {
+  border-color: var(--ink-line);
+}
+
+/* Chip and play marker stay at the top; the title and description settle at the bottom, on the scrim. */
+:host(.featured) .title {
+  margin-top: auto;
+}
+
+:host(.featured) .preview {
+  /* A preview reads the site's text tokens, which are dark in the light theme and would sit unreadable on the art, so they are remapped to the ink tokens here. */
+  --text: var(--on-ink);
+  --text-muted: var(--on-ink-muted);
+
+  margin-top: 0;
+}
+
+:host(.featured) .title,
+:host(.featured) .link,
+:host(.featured) .description {
+  color: var(--on-ink);
+}
+
+:host(.featured) .link:hover {
+  color: var(--ink-accent);
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.art::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ink) 92%, transparent) 0%,
+    color-mix(in srgb, var(--ink) 55%, transparent) 50%,
+    transparent 100%
+  );
+  content: '';
+}
+
+/* A banner is zoomed in and pinned to the lower left, so a logo at its centre is mostly out of frame. */
+.art__image {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 170%;
+  max-width: none;
+  height: auto;
+}
+
+/* Cover art fills the tile, trimmed at the sides or bottom and anchored to the top, leaning left, where the composition keeps its faces. */
+:host(.cover) .art__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 30% 0;
+}
+
+/* A portrait keeps its aspect ratio at the tile's height, against the right edge, and fades into the tile on the left so the text stays readable. */
+:host(.portrait) .art__image {
+  right: 0;
+  left: auto;
+  width: auto;
+  height: 100%;
+}
+
+:host(.portrait) .art::after {
+  background:
+    linear-gradient(to right, var(--ink) 0%, color-mix(in srgb, var(--ink) 80%, transparent) 40%, transparent 75%),
+    linear-gradient(to top, color-mix(in srgb, var(--ink) 92%, transparent) 0%, transparent 60%);
+}
+
+.marker {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 2px solid var(--ink-accent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: var(--ink-accent);
+}
+
+@media (max-width: 560px) {
+  .art__image {
+    width: 260%;
+  }
+
+  :host(.portrait) .art__image {
+    width: auto;
+  }
+
+  /* The text spans the tile's width on a phone, so the portrait sits under a heavier scrim. */
+  :host(.portrait) .art::after {
+    background: linear-gradient(
+      to top,
+      var(--ink) 0%,
+      color-mix(in srgb, var(--ink) 85%, transparent) 55%,
+      color-mix(in srgb, var(--ink) 20%, transparent) 100%
+    );
+  }
+}
+
+/* A small square picture on the left and the text beside it. A tablet and a phone keep it, since it only takes 56px. */
+:host(.thumbed) {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-auto-rows: min-content;
+  align-content: start;
+  column-gap: 12px;
+}
+
+.thumbnail {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+:host(.thumbed) .chip,
+:host(.thumbed) .title,
+:host(.thumbed) .description {
+  grid-column: 2;
+}
+
+:host(.thumbed) .chip {
+  justify-self: start;
+  margin-bottom: 6px;
+}
+
+:host(.thumbed) .description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+:host(.thumbed) .preview {
+  grid-column: 1 / -1;
+}
+
+/* A soft wash in the top-right corner, so a tile can lean toward a side without changing its fill. */
+:host([data-tint='danger']) {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--danger) 16%, transparent), transparent 55%),
+    var(--bg-panel);
+}
+
+/* The tint's own rule restates the fill, so a lead tile with key art keeps its dark base while the art loads. */
+:host(.featured[data-tint='danger']) {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--danger) 16%, transparent), transparent 55%),
+    var(--ink);
+}
+
+/*
+ * A full-width strip: the text on the left, centred in the strip's height, and the preview beside
+ * it. The text sits in the three middle rows; the flexible rows above and below take up whatever
+ * height the preview adds, so the text stays together.
+ */
+:host(.split) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 1fr auto auto auto 1fr;
+  column-gap: 24px;
+}
+
+:host(.split) .chip {
+  grid-row: 2;
+  justify-self: start;
+}
+
+:host(.split) .title {
+  grid-row: 3;
+}
+
+:host(.split) .description {
+  grid-row: 4;
+}
+
+:host(.split) .chip,
+:host(.split) .title,
+:host(.split) .description {
+  grid-column: 1;
+}
+
+:host(.split) .preview {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  :host(.split) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  :host(.split) .chip,
+  :host(.split) .title,
+  :host(.split) .description,
+  :host(.split) .preview {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  :host(.split) .preview {
+    margin-top: 12px;
+  }
+}

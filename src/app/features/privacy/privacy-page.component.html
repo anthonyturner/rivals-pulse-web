@@ -1,0 +1,522 @@
+<div class="reading privacy page-container page-container--narrow">
+  <app-page-header
+    title="Privacy notes: where the community numbers come from"
+    description="RivalsPulse shows totals built from matches the RivalsPulse desktop app is designed to upload once it launches, unless the player turns uploading off. This page says what is uploaded, what the site publishes, and how long it is kept."
+  />
+
+  <nav class="privacy-toc" aria-labelledby="privacy-toc-title">
+    <p id="privacy-toc-title">On this page</p>
+    <ul>
+      @for (entry of contents; track entry.id) {
+        <li><a routerLink="." [fragment]="entry.id">{{ entry.label }}</a></li>
+      }
+    </ul>
+  </nav>
+
+  <section class="reading-section" id="summary" aria-labelledby="summary-title">
+    <h2 id="summary-title">The short version</h2>
+    <ul>
+      <li>
+        <strong>The RivalsPulse desktop app is not released yet.</strong> It is in development testing
+        and is not on Overwolf. Where this page says what the app uploads, it describes how the app is
+        designed to work at launch.
+      </li>
+      <li>
+        You never need an account to read this website. You can
+        <strong>sign in with Discord</strong> if you want an account; see
+        <a routerLink="." fragment="accounts">Accounts and signing in</a> below. Reading the site
+        sets no cookies of its own; only starting to sign in does (a short-lived
+        <code>rp_pkce</code> cookie, then the <code>rp_session</code> sign-in cookie), and while you
+        sign in your browser talks to Discord and to Supabase, our database service, directly. Like
+        any website, its host may keep short-lived technical request logs.
+      </li>
+      <li>
+        This website counts page views with <strong>Vercel Web Analytics</strong>, without cookies.
+        It keeps only aggregate counts; see
+        <a routerLink="." fragment="analytics">Page view counts</a> below.
+      </li>
+      <li>
+        Every page loads <strong>Google AdSense</strong>, so your browser also talks to Google; see
+        <a routerLink="." fragment="advertising">Advertising</a> below.
+      </li>
+      <li>
+        Hero pages fetch video pictures from <strong>YouTube</strong> (Google), and their players
+        load only when you press play. Players on hero guide, strategist guide and video tutorial
+        pages load without a press. See <a routerLink="." fragment="videos">YouTube videos</a>
+        below.
+      </li>
+      <li>
+        Apart from Pulse Records (next point), the community pages show <strong>anonymous
+        totals</strong>: no names, no player ids and no individual matches. A total for a map, a day or
+        a time shows once 10 matches are behind it. Once the app launches and while few players upload, such a total can come
+        from one player's matches, so it can show when that player played and how they did on a map. A
+        signed-in player's own matches and insights are on the <a routerLink="/profile">Profile</a>
+        page, which only that account can see.
+      </li>
+      <li>
+        <strong>Pulse Records</strong> is the exception: a public page of the highest single-match
+        figures@if (recordsBeingAdded) {, not open yet}. A player's name is shown on it only if that
+        player linked an account and switched on &quot;Show me in Pulse Records&quot;, and some entries come from players who never agreed to anything and show as
+        &quot;Anonymous&quot;. See <a routerLink="." fragment="pulse-records">Pulse Records</a>
+        below.
+      </li>
+      <li>
+        The totals come from matches uploaded by the RivalsPulse desktop app, a separate
+        product that runs inside the Overwolf client.
+      </li>
+      <li>
+        <a routerLink="/fair-play">Fair play and privacy</a> says in plain words what the app does
+        and does not show about other players, and what it stores about them.
+      </li>
+      <li>
+        The desktop app's own privacy policy is the full account of what the app collects and how
+        to ask for deletion. This page describes the upload and the site, and does not replace it.
+      </li>
+    </ul>
+  </section>
+
+  <section class="reading-section" id="uploaded-today" aria-labelledby="uploaded-today-title">
+    <h2 id="uploaded-today-title">What the app uploads at launch</h2>
+    <p>
+      At launch, the desktop app will upload the matches it records by default, and the other
+      players in an uploaded match will not be asked. A player can turn uploading off in the
+      app's Settings, under Privacy, with the &quot;Upload my matches&quot; switch, which is on
+      until they turn it off. While it is off, nothing will be uploaded and matches will still
+      save on that player's own PC. A match finished while it is off will never be uploaded
+      later, even if the switch is turned back on, and restoring a backup file can turn uploading
+      off but never on. A match that was already waiting to upload when the switch was turned off
+      will be sent once it is turned back on. Turning it off will not delete matches that were
+      already uploaded. For each uploaded match
+      the app will upload the scoreboard line of every human player in it, on both teams, and a
+      few facts about the match. The scoreboard figures are what the game itself shows.
+    </p>
+    <ul>
+      @for (field of todayFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
+    <p>
+      The upload also carries a short-lived Overwolf sign-in token, which our server checks with
+      Overwolf and does not store. We keep a one-way code made from the uploading player's
+      Overwolf username, never the username itself, to limit how many matches one player can
+      send. The same code is stored on every scoreboard line that player records and, once the
+      app sends hero changes, with every hero change that player uploads.
+    </p>
+    <p>
+      For the uploading player we also keep a record of their own match history: the match facts
+      and their own whole scoreboard line (player id, hero, team, kills, deaths, assists, final
+      hits and result), under the name they play with. The same one-way code described above is
+      also kept next to each match in that history, so that the history can be shown to the
+      player once they link a website account. That history, and the code kept with it, has no
+      time limit; it is capped per player (currently the most recent 5,000 matches).
+    </p>
+    <p>
+      The desktop app builds made so far, none of them released, read match histories with the
+      public key built into the app, so anyone who takes that key out of the app can read every uploaded match history
+      and the names stored with it. We are moving those reads behind the player's own Overwolf
+      sign-in, which our server checks: the app will then read only the matches that player
+      uploaded, plus the kills, deaths and assists of a player it looks up. Once the builds
+      in use have moved, the public key will no longer read match histories.
+    </p>
+    <p>
+      Names and player ids are stored so that players can be looked up inside the desktop app.
+      This website never publishes a player id. It publishes an in-game name only on
+      <a routerLink="." fragment="pulse-records">Pulse Records</a>, and only for a player who
+      linked an account and switched their name on.
+    </p>
+  </section>
+
+  <section class="reading-section" id="extended-fields" aria-labelledby="extended-fields-title">
+    <h2 id="extended-fields-title">{{ extendedHeading }}</h2>
+    @if (extendedBeingAdded) {
+      <p>
+        These fields are <strong>being added</strong> to the desktop app's upload and to the
+        server that receives it. They are not uploaded yet. This page will say so when they are.
+      </p>
+    } @else {
+      <p>
+        At launch the app uploads these fields in addition to the ones above. Builds made before
+        launch may not send them.
+      </p>
+    }
+    <ul>
+      @for (field of extendedFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
+    <p>
+      Damage, healing, damage blocked and time per hero describe only the player who uploaded the
+      match, the one person the app has those figures for. The app does not upload them for other
+      players. The kill feed is reduced to hero against hero counts before it is sent, so it holds
+      no player names or ids at all. These figures are used for community benchmarks, such as
+      damage per minute, and for hero-against-hero counter numbers.
+    </p>
+    <p>Further fields are <strong>planned for launch</strong>. They are not uploaded yet:</p>
+    <ul id="planned-fields">
+      @for (field of plannedFields; track field.label) {
+        <li>
+          <strong>{{ field.label }}.</strong> {{ field.detail }}
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="reading-section" id="public-numbers" aria-labelledby="public-numbers-title">
+    <h2 id="public-numbers-title">What this website publishes</h2>
+    <ul>
+      <li>
+        Apart from Pulse Records, only <strong>anonymous aggregates</strong>: counts and sums over
+        matches, such as how often a hero is picked or wins, or the average match length of a game
+        mode.
+      </li>
+      <li>
+        <strong>Never</strong> player ids, match times, links to a match or the stored rows behind
+        the totals. In-game names appear only on
+        <a routerLink="." fragment="pulse-records">Pulse Records</a>, and only for a player who
+        switched their name on.
+      </li>
+      <li>
+        A figure is shown only once it rests on a <strong>minimum number of matches</strong>.
+        Below that the page says there is not enough data yet instead of showing a number. Pulse
+        Records is the exception: one match is enough for an entry there.
+      </li>
+      <li>
+        On the community Matches and Insights tabs that minimum is 10 matches, from any number of
+        players. Once the app launches and while few players upload, a map, game mode, day or time can rest on one player's
+        matches, with no name or id attached.
+      </li>
+      <li>
+        How a match that two players both uploaded is counted depends on the page:
+        <ul>
+          <li>
+            Hero win rates, pick rates, tiers and counters, the role averages, the kill feed and the
+            "Community matches" section of the Stats overview count it <strong>once</strong>.
+          </li>
+          <li>
+            The damage, healing and damage blocked per minute count each uploading player's own
+            figures, so it counts once for each of them.
+          </li>
+          <li>
+            The "When the community plays and wins" section of the Stats overview (day of the week, time of day, place in a play session) counts
+            it once for each player who uploaded it, because it uses that player's own result. One
+            match can therefore weigh twice there, and can count as a win for one player and a
+            loss for another.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <strong>Map win rates</strong> on the Stats Maps tab and the Overview count each match once,
+        from the side of the player who recorded it; when players on both teams uploaded a match, the
+        earliest upload is the one that counts, so a match is never both a win and a loss for a map. A map's
+        rate is a whole percentage pulled toward the average of the maps that show (50% while fewer than
+        five show) while the map has few matches, and a map appears once it has 10 matches in one game
+        mode and 10 with a result. A map that is still short is named, never
+        counted. While few players upload, a map's rate can describe how one player did on it, with no
+        name or id attached.
+      </li>
+      <li>
+        <strong>Hero averages</strong> and the scores worked out from them are built from each
+        uploading player's own figures. A hero's figure is shown once 2 different players have
+        contributed, but one player can supply nearly all of it, so once the app launches and while few players upload it can
+        mostly reflect that player's games, with no name or id attached.
+      </li>
+      <li>
+        <strong>Specialist and flex win rates.</strong> For each hero the site can compare the
+        win rate of players who mostly play it with the win rate of players who play many heroes.
+        The database works out which group a player is in, by the player id on their scoreboard
+        lines, each time it builds the numbers, and never stores which group a player is in.
+        Players who are neither are left out. Only each group's win rate on a hero and a rough
+        match count (50+, 100+, 250+ or 500+) are published, for a hero once each group has at
+        least 5 players, 2 uploading players and 50 matches. A line with no player id is left out.
+      </li>
+    </ul>
+  </section>
+
+  <section class="reading-section" id="pulse-records" aria-labelledby="pulse-records-title">
+    <h2 id="pulse-records-title">Pulse Records</h2>
+    @if (recordsBeingAdded) {
+      <p>
+        <strong>Pulse Records is not open yet.</strong> Nothing described in this section is
+        published until it opens. This page says now what it will publish, so you can decide
+        beforehand.
+      </p>
+    }
+    <p>
+      <a routerLink="/stats/records">Pulse Records</a> is a public page of the highest single-match figures from matches the desktop
+      app uploaded: kills, assists, final hits, damage, healing and damage blocked. Only Quick Match
+      and Competitive matches count. Each entry shows a hero, a figure and either a name or the word
+      &quot;Anonymous&quot;. It shows no player id, no match, map or date, and not who uploaded the
+      match. Each list says which date its matches start from.
+    </p>
+    <ul>
+      <li>
+        <strong>When your name is shown.</strong> Only if you signed in, linked your account to the
+        desktop app, and switched on &quot;Show me in Pulse Records&quot; on your
+        <a routerLink="/account">account page</a>. It is off until you switch it on, and you can
+        switch it off at any time. Your name is shown only on entries from matches your own app
+        uploaded. The name is the in-game name stored with your link, which the desktop app
+        reported when you linked; we cannot check that it is yours.
+      </li>
+      <li>
+        <strong>Anonymous entries are published lines from players who did not agree.</strong> The
+        kills, assists and final hits lists also include scoreboard lines of players who have no
+        linked account, including players who never installed the app. Such an entry shows the hero
+        and the figure as &quot;Anonymous&quot;, with no name or id, but it is still a published
+        line from a match that player took part in, and someone who played in it may recognise it.
+        A player whose account is linked is never shown as &quot;Anonymous&quot;: if they have not
+        switched their name on, their entries are left off the lists. Lines of yours that another
+        player's app uploaded are left off too, not shown as &quot;Anonymous&quot;.
+      </li>
+      <li>
+        <strong>Damage, healing and damage blocked.</strong> The app uploads these figures only for
+        the player who uploaded the match, so these lists show only players who switched their name
+        on, with their own figures.
+      </li>
+      <li>
+        <strong>Taking an entry off.</strong> Switching your name off removes your name and your
+        entries within a few minutes. Unlinking or deleting your account removes your name, but a
+        kills, assists or final hits line of yours can then show as &quot;Anonymous&quot; until it is
+        deleted on the schedule below. The &quot;forget me&quot; choice on the account page, or a
+        deletion request made through the desktop app's privacy policy, deletes the lines
+        themselves and takes the entries off.
+      </li>
+      <li>
+        <strong>Not proof.</strong> Entries come from what the desktop app reports, and a modified
+        app can report false figures or a name that is not its player's. A record on this page is
+        not a guarantee that the match happened as shown.
+      </li>
+    </ul>
+  </section>
+
+  <section class="reading-section" id="retention" aria-labelledby="retention-title">
+    <h2 id="retention-title">How long it is kept</h2>
+    <ul>
+      <li>
+        Scoreboard lines of all players, with names and ids, are deleted once the half-season after the one the
+        match was played in has ended, and in any case no later than six months after the match.
+        The extra figures above, and the hero changes once the app sends them (with the one-way
+        recorder code stored next to each one), are kept for the same time and deleted with them.
+        A Pulse Records entry is read from these lines, so it disappears when its line is deleted.
+      </li>
+      <li>
+        The uploading player's own match history (their name, whole scoreboard line and the match
+        facts), and the one-way recorder code kept next to each of its matches, is
+        <strong>not</strong> deleted on that schedule. It has no time limit and is
+        removed only when a player passes the cap of 5,000 matches and the oldest are pushed out.
+      </li>
+      <li>
+        Before a half-season's lines are deleted, its totals are saved as anonymous counts that
+        hold no name, id or match. Those counts are what the community pages keep showing.
+      </li>
+      <li>
+        A player who does not use the app can ask for their scoreboard lines to be deleted and
+        for their id not to be stored again. How to ask is in the desktop app's privacy policy.
+        That deletion covers the scoreboard lines, and with them any Pulse Records entry made from
+        them, but not the uploading players' own match history above.
+      </li>
+    </ul>
+  </section>
+
+  <section class="reading-section" id="accounts" aria-labelledby="accounts-title">
+    <h2 id="accounts-title">Accounts and signing in</h2>
+    <p>
+      Signing in is optional and works with Discord only. The community pages need no account. Only your
+      own stats, on the Profile page, do.
+    </p>
+    <ul>
+      <li>
+        <strong>What is stored.</strong> When you sign in, Supabase, the database service this
+        website runs on, creates an account for you. It keeps your Discord user id, your Discord
+        username, the email address on your Discord account if Discord shares one, the time you
+        signed in, and the date the account was created. Discord also sends a few profile details
+        with these, such as an avatar link; Supabase keeps them, and this website does not show
+        or use them. We add one row of our own: your account id and the date it was created.
+      </li>
+      <li>
+        <strong>Your IP address.</strong> While you sign in, your browser talks to Supabase
+        directly, not through this website. Supabase Auth records your IP address in its audit log
+        when you sign in, and Supabase's request logs also see your IP address and browser details.
+        We do not read or use them, and we have not set how long Supabase keeps them.
+      </li>
+      <li>
+        <strong>What it is used for.</strong> Signing you in and showing you your own account
+        page (how you signed in, your email address and when you joined) and your own stats on
+        the Profile page, which includes your My matches and My insights. If you switch it on, it
+        also shows your in-game name on Pulse Records. We send no email, and there is no
+        marketing.
+      </li>
+      <li>
+        <strong>Video and sound settings (optional).</strong> On your account page you can choose
+        whether hero pages open on the gameplay video and whether the video and the home page banner
+        start with sound. We keep those two choices with your account, so they follow you to any
+        browser you sign in on, and show them to you only. Both are off until you switch them on.
+        Signed out, the switches on those pages are remembered in your own browser instead.
+        Deleting the account deletes them.
+      </li>
+      <li>
+        <strong>Linking the desktop app (optional).</strong> Until you do it, an account is not
+        connected to your in-game name or to any match the desktop app uploaded. To link, you ask
+        the desktop app for a one-time code and type it on your account page. The app sends us,
+        with the code request, your in-game name and id and the address of your Overwolf account
+        avatar, and we keep them with a code made from your Overwolf username that cannot be turned
+        back into it (the same code that limits how many matches one player can upload). Once you
+        are linked, the app sends your name and avatar address again from time to time, and the
+        new ones replace the ones we stored; the id never changes. The
+        link holds those, the date you linked and your account id; the site shows you your name and
+        avatar in the page header and on your account page, to you only. The link is not used in the
+        anonymous community totals. It picks which matches you see as your own and, only if you
+        switch it on, which entries on Pulse Records carry your name. Your avatar is never shown
+        there. The desktop app can also ask us whether you are linked, and
+        we answer with your in-game name and the date you linked, never your email or account id.
+        A code is kept only as a scrambled value, works once, expires
+        after ten minutes (a code nobody used is deleted within minutes of that), and a list of
+        recent code requests, name and avatar updates, link checks, unlinks and wrong guesses is kept
+        for about an hour at most to limit abuse;
+        deleting your account deletes your wrong guesses at once. You can unlink at any time on
+        your account page, which deletes the link, or in the desktop app, which deletes the link
+        and any code you asked for and have not used; deleting the account deletes the link too.
+        The desktop app's uploaded matches are not removed by any of these.
+      </li>
+      <li>
+        <strong>The sign-in cookie.</strong> Signing in sets one cookie, <code>rp_session</code>.
+        It keeps you signed in until you sign out, or until 30 days pass without a visit: each
+        visit that renews your sign-in also renews the 30 days. It is hidden from page scripts and
+        sent only to this site's own <code>/api</code> address. While you are in
+        the middle of signing in, a second cookie, <code>rp_pkce</code>, lasts at most ten
+        minutes and is removed when the sign-in finishes. Neither is used for tracking.
+      </li>
+      <li>
+        <strong>Who else sees it.</strong> Discord handles the sign-in and applies its own
+        privacy policy to it, and Supabase stores the account. Your account details are not shown to
+        other visitors and are not used in the community numbers. The one thing you can choose to
+        make public is your in-game name, on Pulse Records.
+      </li>
+    </ul>
+    <p>
+      <strong>Deleting your account.</strong> Sign in, open your
+      <a routerLink="/account">account page</a>, choose what to remove, type the confirmation
+      phrase and press the delete button. Deleting needs a sign-in from the last ten minutes, so
+      you may be asked to sign in again first. Removing the account deletes your sign-in details
+      from our database service and our own row for you at once, and signs you out. Signing in
+      with Discord again afterwards starts a new, empty account. It does not erase everything:
+      Supabase keeps sign-in and request log entries for its own retention period, which we have
+      not set, and those can include your account id, email address and IP address. Backups can
+      also hold the account until they age out. Deleting the account here does not remove this
+      site from your Discord settings; to do that, open Authorized Apps in your Discord settings
+      and remove it there. A second choice, "Remove account and forget me", will also ask us to
+      forget the matches the desktop app uploaded about you; it cannot be undone, and anonymous
+      totals already published keep their counts. It is switched off until you link the desktop
+      app to your account. Removing the account also takes your name off Pulse Records within a few
+      minutes, but see Pulse Records above: a line of yours can stay there as &quot;Anonymous&quot;
+      until it is deleted.
+    </p>
+  </section>
+
+  <section class="reading-section" id="advertising" aria-labelledby="advertising-title">
+    <h2 id="advertising-title">Advertising</h2>
+    <p>
+      This website uses Google AdSense, so every page loads Google's AdSense script. When it loads,
+      your browser sends Google your IP address, browser details and the page you are on, and
+      Google may set or read its own cookies or similar browser storage. Google handles that data
+      under its own policy,
+      <a
+        href="https://policies.google.com/technologies/partner-sites"
+        rel="noopener"
+        target="_blank"
+        >how Google uses information from sites that use its services</a
+      >. We see only aggregate reports, such as ad views, clicks and earnings by page, country or
+      device, never data about you.
+    </p>
+    @if (adsLive) {
+      <p>
+        <strong>Where ads appear.</strong> Google ads appear in one box in the sidebar, on every
+        page except the home page. Where Google's consent message applies, the box shows a Google
+        ad only if you agreed. If you did not agree, or have not answered yet, it shows a
+        RivalsPulse advert instead and the page asks Google for no ad.
+      </p>
+    } @else {
+      <p>
+        <strong>Where ads appear.</strong> No ads are shown yet. When they are, they will appear in
+        one box in the sidebar, on every page except the home page, and only where Google's
+        consent message (below) allows it.
+      </p>
+    }
+    <p>
+      <strong>Your choice.</strong> If you are in the European Economic Area, the United Kingdom
+      or Switzerland, Google shows a consent message on your first visit with three choices:
+      Consent, Do not consent, and Manage options, where you pick which uses of your data you
+      agree to, including whether ads are personalised. Google keeps your answer in your browser.
+      Elsewhere Google shows no message, and its own policy decides what ads you see.
+    </p>
+    <p>
+      <strong>Changing your choice.</strong> Use the
+      <strong>Privacy and cookie settings</strong> button at the bottom of any page to see the
+      message again and change your answer. The button appears only where the message applies to
+      you.
+    </p>
+  </section>
+
+  <section class="reading-section" id="analytics" aria-labelledby="analytics-title">
+    <h2 id="analytics-title">Page view counts</h2>
+    <p>
+      This website counts page views and visitors with Vercel Web Analytics, which Vercel, our
+      host, runs. It sets no cookies and does not follow you from one site to another. For each
+      page you open, your browser sends Vercel the page address, the page you came from, and your
+      browser and device type. Vercel works out your country and counts you once a day as a
+      visitor, without keeping your IP address. We see only aggregate figures, such as how many
+      people read each page and from which country, never data about you. Nothing is counted on
+      our own computers while we build the site. Vercel handles the data under
+      <a href="https://vercel.com/docs/analytics/privacy-policy" rel="noopener" target="_blank"
+        >its Web Analytics privacy documentation</a
+      >.
+    </p>
+  </section>
+
+  <section class="reading-section" id="videos" aria-labelledby="videos-title">
+    <h2 id="videos-title">YouTube videos</h2>
+    <p>
+      Hero pages show their videos as a picture with a play button. Your browser fetches those
+      pictures from YouTube's image host, which Google runs, when the page shows them, so Google
+      receives your IP address and browser details then, before you press anything.
+    </p>
+    <p>
+      A hero page's video player loads from YouTube only when you press play on that video. Pressing
+      it starts the video, and from then on YouTube handles the data under Google's own policy,
+      <a href="https://policies.google.com/privacy" rel="noopener" target="_blank"
+        >Google's privacy policy</a
+      >. We see nothing about what you watch.
+    </p>
+    <p>
+      Hero guide, strategist guide and video tutorial pages still show YouTube players that load
+      without a press, when the page opens or as you scroll near the player, so on those pages
+      your browser contacts YouTube without a press.
+    </p>
+    <p>
+      A YouTube player may set or read YouTube's own cookies or similar browser storage. Google's
+      consent message covers the ad box only: these pictures and players do not wait for your
+      answer to it.
+    </p>
+  </section>
+
+  <section class="reading-section" id="more" aria-labelledby="more-title">
+    <h2 id="more-title">More</h2>
+    <p>
+      The desktop app's privacy policy also covers the ads shown inside the app, the optional voice
+      assistant and Premium, which this website does not have. This page describes the upload and the site as the
+      server handles them today; if you find a difference between this page and the app's
+      policy, this page is the more current account of the server.
+    </p>
+    <p>
+      RivalsPulse is an independent project and is not affiliated with NetEase, Marvel or
+      Overwolf.
+    </p>
+    <p>
+      Read the <a routerLink="/privacy/app">desktop app's privacy policy</a>, the full policy for the
+      app as it is built to work at launch.
+    </p>
+  </section>
+</div>

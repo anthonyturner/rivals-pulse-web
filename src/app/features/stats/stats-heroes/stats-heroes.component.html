@@ -1,0 +1,95 @@
+<app-community-heroes-tab />
+
+<section class="all-heroes" aria-labelledby="stats-heroes-all">
+  <div class="all-heroes__head">
+    <div class="all-heroes__text">
+      <h2 id="stats-heroes-all" class="all-heroes__title">Every hero</h2>
+      <p class="all-heroes__lede">
+        @if (layout() === 'tiers') {
+          Heroes ranked by win rate in matches RivalsPulse players recorded, all ranks together. A hero is
+          placed in a tier once it has enough recorded appearances, so the list fills in as players play.
+        } @else {
+          Win rates, pick rates and ban availability in matches RivalsPulse players recorded, all ranks
+          together.
+        }
+        <a routerLink="/how-we-count">How we count</a>
+      </p>
+    </div>
+
+    <nav class="view-toggle" aria-label="Hero stats layout">
+      @for (link of viewLinks; track link.id) {
+        <a
+          class="view-toggle__option"
+          routerLink="."
+          [queryParams]="link.query"
+          queryParamsHandling="merge"
+          [attr.aria-current]="layout() === link.id ? 'true' : null"
+        >
+          {{ link.label }}
+        </a>
+      }
+    </nav>
+  </div>
+
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+  @if (showSeasonPicker() || showModePicker() || meta()) {
+    <div class="toolbar">
+      @if (showModePicker()) {
+        <app-filter-select
+          label="Mode"
+          [options]="modeChoices()"
+          [value]="selectedMode()"
+          (valueChange)="chooseMode($event)"
+        />
+      }
+      @if (showSeasonPicker()) {
+        <app-filter-select
+          label="Season"
+          [options]="seasonChoices()"
+          [value]="selectedSeason()"
+          (valueChange)="chooseSeason($event)"
+        />
+      }
+      @if (meta()) {
+        <p class="meta">{{ meta() }}</p>
+      }
+    </div>
+  }
+
+  @if (failed()) {
+    <app-state-panel kind="error" heading="Hero stats could not be loaded" [headingLevel]="3" [announce]="false">
+      <p>The numbers are unavailable right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (loading()) {
+    <app-state-panel kind="loading" heading="Loading hero stats" [headingLevel]="3" [announce]="false">
+      <p>Fetching the latest counted matches.</p>
+    </app-state-panel>
+  } @else {
+    @if (shown(); as view) {
+      @if (view.modeCaveat; as caveat) {
+        <app-notice>{{ caveat }}</app-notice>
+      }
+
+      @if (view.fallbackNotice; as notice) {
+        <app-notice>{{ notice }}</app-notice>
+      }
+    }
+
+    @if (tableView(); as view) {
+      <app-hero-table [view]="view" />
+    }
+
+    @if (tierView(); as view) {
+      <app-hero-tiers [view]="view" />
+    }
+
+    <p class="method-note">
+      RivalsPulse has no rank breakdown, so every figure covers all ranks together. Quick Match and
+      Competitive are counted together unless you pick a single mode. A game is one hero on the
+      scoreboard of one match, so a hero on both teams of one match is counted twice. Pick rate is hero
+      appearances divided by the matches with a result and can exceed 100%. Matches without a win or a
+      loss, and matches where the game did not say which mode they were, are left out.
+    </p>
+  }
+</section>

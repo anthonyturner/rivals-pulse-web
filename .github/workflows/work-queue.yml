@@ -1,0 +1,61 @@
+name: Sync Work Queue board
+
+# Derives every card's Status, Iteration and Agent on the "Rivals Pulse Work Queue" board (GitHub user
+# Project 2) from the open issues of both Rivals Pulse repositories. The board is a
+# computed view (overlay ADR-0024); nobody writes to it by hand. An issue event syncs
+# only that issue's card. The scheduled sweep covers pull request state, new agent signatures
+# (a comment fires no event, so a new signature reaches the board on the next sweep) and the
+# overlay repository, which carries no workflow of its own.
+# Every agent session shares this token's GraphQL budget, so a full sweep runs only on the
+# schedule, never per event. There is deliberately no pull_request trigger, so the token
+# never meets pull request code.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+  issues:
+    types: [opened, labeled, unlabeled, reopened]
+
+permissions:
+  contents: read
+
+# One group per issue, so rapid events on the same issue (a bulk relabel) cancel one
+# another while they wait out the debounce and only the last one syncs. Events on
+# different issues do not cancel each other. Sweeps queue behind a running sweep
+# instead of cancelling it.
+concurrency:
+  group: work-queue-${{ github.event_name == 'issues' && github.event.issue.number || 'sweep' }}
+  cancel-in-progress: ${{ github.event_name == 'issues' }}
+
+jobs:
+  sync:
+    name: Sync board
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # User-owned projects reject GITHUB_TOKEN and fine-grained tokens, so this is
+    # a classic personal access token with the repo and project scopes.
+    env:
+      GH_TOKEN: ${{ secrets.WORK_QUEUE_TOKEN }}
+
+    steps:
+      - name: Wait out a burst of events
+        # Skipped rather than failed until the maintainer creates the secret.
+        if: env.GH_TOKEN != '' && github.event_name == 'issues'
+        run: sleep 60
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync the issue
+        if: env.GH_TOKEN != '' && github.event_name == 'issues'
+        env:
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        run: node scripts/work-queue-sync.mjs --apply --issue "$ISSUE_NODE_ID"
+
+      - name: Sync every open issue
+        if: env.GH_TOKEN != '' && github.event_name != 'issues'
+        run: node scripts/work-queue-sync.mjs --apply
+
+      - name: Explain the skipped sync
+        if: env.GH_TOKEN == ''
+        run: echo "::notice title=Work Queue sync skipped::The WORK_QUEUE_TOKEN secret is not set. Add a classic personal access token with the repo and project scopes to enable the sync."

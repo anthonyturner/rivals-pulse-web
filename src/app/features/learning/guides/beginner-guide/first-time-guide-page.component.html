@@ -1,0 +1,71 @@
+<article class="field-guide page-container" aria-labelledby="first-time-title">
+  <nav class="field-guide__back" aria-label="Breadcrumb">
+    <a routerLink="/hero-guides">Guides</a>
+    <span aria-hidden="true"> / </span>
+    <span aria-current="page">First-time guide</span>
+  </nav>
+  <header class="field-guide__header">
+    <div class="field-guide__heading">
+      <span class="field-guide__label">Getting started</span>
+      <h1 id="first-time-title">How to play Marvel Rivals when hero shooters are new to you.</h1>
+      <p class="field-guide__lede">
+        Learn what the game asks of your role, how a team fight develops and the decisions that make
+        your first matches easier to follow.
+      </p>
+      <p class="field-guide__framing">
+        Prefer to learn by doing? Try the
+        <a routerLink="/beginner-interactive-guide">interactive version</a>, or
+        <a routerLink="/media-tutorials">continue learning</a> with the media tutorials.
+      </p>
+    </div>
+    <img class="field-guide__portrait" appHeroImageFallback src="/images/heroes/captain-america.png" alt="" width="112" height="112" />
+  </header>
+
+  <div class="field-guide__layout">
+    <aside class="field-guide__rail"><app-guide-chapters [chapters]="chapters" /></aside>
+    <div class="field-guide__body">
+      <section id="five-rules" class="field-guide__chapter" aria-labelledby="five-rules-title">
+        <h2 id="five-rules-title">Five rules to start with</h2>
+        <p>Use these reminders to orient yourself. The chapters below explain the decisions behind each one.</p>
+        <ol class="first-time-checks">
+          @for (rule of quickRules; track rule) { <li>{{ rule }}</li> }
+        </ol>
+      </section>
+      @for (section of sections; track section.id) {
+        <section [id]="section.id" class="field-guide__chapter" [attr.aria-labelledby]="section.id + '-title'">
+          <span class="field-guide__number" aria-hidden="true">{{ $index + 1 }}</span>
+          <h2 [id]="section.id + '-title'">{{ section.title }}</h2>
+          @for (paragraph of section.paragraphs; track $index) { <p>{{ paragraph }}</p> }
+          @if (section.steps; as steps) {
+            <ol class="first-time-checks">
+              @for (step of steps; track step) { <li>{{ step }}</li> }
+            </ol>
+          }
+        </section>
+      }
+      <section id="worked-example" class="field-guide__example" aria-labelledby="first-match-example-title">
+        <span class="field-guide__label">Worked example · hypothetical practice</span>
+        <h2 id="first-match-example-title">The objective is visible, but your team is not ready.</h2>
+        <p>
+          Imagine respawning while two teammates are still returning and the enemy controls the next
+          doorway. Running straight through to touch the objective would create another isolated
+          fight. If the round is not about to end, use nearby cover and wait for an entry the team can support.
+        </p>
+        <p>
+          Once teammates are ready, contribute your role's job to that shared pressure. After a win,
+          take objective progress and a useful position for the next fight. This practice example
+          connects grouping, cover and timing; an urgent round-ending contest can change the decision.
+        </p>
+      </section>
+      <section id="next-match" class="field-guide__practice" aria-labelledby="first-match-focus-title">
+        <h2 id="first-match-focus-title">Try this next match</h2>
+        <p>
+          Before each fight, find one teammate who can help and one piece of cover you can return to.
+          Afterwards, review a single death: were either of those missing before you committed?
+          Keep that one cue for the following match rather than trying to fix everything at once.
+        </p>
+        <p><a routerLink="/hero-guides">Choose your next guide</a></p>
+      </section>
+    </div>
+  </div>
+</article>

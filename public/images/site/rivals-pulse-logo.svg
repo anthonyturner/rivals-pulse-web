@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">RivalsPulse</title>
+  <!-- Your team's gold pulse meets the enemy's periwinkle pulse at an orchid spark, in the desktop theme's colours (the overlay's app-icon.svg); npm run icons renders favicon.ico and apple-touch-icon.png from it. -->
+  <defs>
+    <filter id="spark-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="256" height="256" fill="#141828"/>
+  <polyline points="8,140 40,140 56,112 72,170 92,84 110,140 120,140" fill="none" stroke="#e8c547"
+            stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="248,140 216,140 200,168 184,110 164,196 146,140 136,140" fill="none" stroke="#7b7bff"
+            stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M128 104 L136 132 L162 140 L136 148 L128 176 L120 148 L94 140 L120 132 Z" fill="#e070ff"
+        filter="url(#spark-glow)"/>
+</svg>

@@ -1,0 +1,480 @@
+:host {
+  display: block;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A hero's role sets one colour for its card and its filter chip (the shared mapping in `styles.css`): the fill, the edge and the dot. `--hero-role-ink` is the same role used as text. Multi-Role has no tint there, so it is muted. */
+[data-role='multi-role'] {
+  --hero-role-color: var(--text-muted);
+  --hero-role-ink: var(--text-muted);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+.search-field {
+  flex: 0 0 260px;
+}
+.search-field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--type-small);
+}
+.search-field input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.view-toggle {
+  margin-left: auto;
+}
+.chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: var(--type-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+.chip:hover,
+.chip[aria-pressed='true'] {
+  border-color: var(--accent-line);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+/* A role's chip keeps its own tint: a dot and edge at rest, a wash when hovered, a stronger one when chosen. */
+.chip[data-role]::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--hero-role-color);
+  content: '';
+}
+.chip[data-role] {
+  border-color: color-mix(in srgb, var(--hero-role-color) 45%, transparent);
+}
+.chip[data-role]:hover {
+  border-color: var(--hero-role-color);
+  background: color-mix(in srgb, var(--hero-role-color) 14%, var(--surface));
+  color: var(--hero-role-ink);
+}
+.chip[data-role][aria-pressed='true'] {
+  border-color: var(--hero-role-color);
+  background: color-mix(in srgb, var(--hero-role-color) 26%, var(--surface));
+  color: var(--hero-role-ink);
+  box-shadow: inset 0 0 0 1px var(--hero-role-color);
+}
+.chip--clear {
+  border-color: var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+.count {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.search-field input:focus-visible,
+.chip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The default tile is art-led: the portrait across the top, the name and role beneath. */
+.hero-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-role-color, var(--accent)) 16%, var(--bg-panel)),
+    var(--bg-panel) 70%
+  );
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+.hero-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+.hero-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.hero-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-card {
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .hero-card:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* The mark that the card is the chosen hero. In the art-led tile it sits on the portrait. */
+.hero-card.selected::after {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg-panel);
+  color: var(--accent-ink);
+  font-size: var(--type-caption);
+  font-weight: 800;
+  line-height: 1;
+  content: '\2713' / '';
+}
+.hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border-radius: 11px 11px 0 0;
+  border-bottom: 3px solid var(--hero-role-color, var(--border));
+  object-fit: cover;
+  object-position: top center;
+  background: var(--surface);
+}
+.hero-card-copy {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-width: 0;
+  padding: 10px 12px 12px;
+}
+.hero-card-name {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--type-small);
+  font-weight: 800;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.hero-card--placeholder {
+  min-height: 190px;
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-card--placeholder {
+    animation: placeholder-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes placeholder-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--hero-role-color, var(--accent)) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hero-role-color, var(--accent)) 14%, var(--bg-elevated));
+  color: var(--hero-role-ink, var(--accent-strong));
+  font-size: var(--type-caption);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.role-pill::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--hero-role-color, var(--accent));
+  content: '';
+}
+
+.archetype-label {
+  color: var(--accent-strong);
+  font-size: var(--type-caption);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.hero-card-summary {
+  color: var(--text-muted);
+  font-size: var(--type-small);
+}
+
+.empty-state {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text-soft);
+}
+.empty-state p {
+  margin: 0;
+}
+
+/* Rows: the portrait beside the name, role, summary and archetype. */
+@media (min-width: 561px) {
+  .hero-grid {
+    grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  }
+  .hero-grid--rows {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+  }
+  .hero-grid--rows .hero-card {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    min-height: 96px;
+    padding: 12px;
+  }
+  .hero-grid--rows .hero-card.selected::after {
+    top: 8px;
+    right: 8px;
+  }
+  .hero-grid--rows .hero-image {
+    width: 72px;
+    height: 72px;
+    aspect-ratio: auto;
+    border: 2px solid var(--hero-role-color, var(--border));
+    border-radius: 10px;
+  }
+  .hero-grid--rows .hero-card-copy {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px 8px;
+    align-items: center;
+    padding: 0;
+  }
+  .hero-grid--rows .hero-card-name {
+    display: block;
+    -webkit-line-clamp: unset;
+  }
+  .hero-grid--rows .hero-card-summary,
+  .hero-grid--rows .archetype-label {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hero-grid--rows .hero-card--placeholder {
+    min-height: 96px;
+  }
+}
+
+@media (max-width: 920px) {
+  .search-field {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .chip {
+    min-height: 40px;
+  }
+  .view-toggle {
+    display: none;
+  }
+  .hero-card-copy {
+    padding: 8px 10px 10px;
+  }
+  .hero-card-summary,
+  .archetype-label {
+    display: none;
+  }
+}
+
+/* Roster layout: the hero list that goes with a hero's detail. These rules come last so they win over the grid's narrow-width ones. */
+
+/* Below 920px, a one-row portrait strip with no controls of its own: filters are changed on /heroes. `not all and (min-width: 920px)` is the exact complement of the column block below, so no width gets both or neither. */
+@media not all and (min-width: 920px) {
+  :host([layout='roster']) {
+    margin-bottom: 8px;
+  }
+  :host([layout='roster']) .toolbar {
+    display: none;
+  }
+  :host([layout='roster']) .hero-grid {
+    display: flex;
+    gap: 8px;
+    /* Room for the focus ring and the selected hero's check, which overhangs the card's corner and the scroll box would otherwise clip. */
+    padding: 10px 10px 6px;
+    overflow-x: auto;
+  }
+  :host([layout='roster']) .hero-grid > li {
+    flex: none;
+    width: 72px;
+  }
+  :host([layout='roster']) .hero-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    align-content: start;
+    justify-items: center;
+    min-height: 0;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  :host([layout='roster']) .hero-card.selected::after {
+    top: -6px;
+    right: -6px;
+  }
+  :host([layout='roster']) .hero-card--placeholder {
+    min-height: 84px;
+  }
+  :host([layout='roster']) .hero-image {
+    width: 48px;
+    height: 48px;
+    aspect-ratio: auto;
+    border: 2px solid var(--hero-role-color, var(--border));
+    border-radius: 10px;
+  }
+  :host([layout='roster']) .hero-card-copy {
+    justify-items: center;
+    width: 100%;
+    padding: 0;
+  }
+  :host([layout='roster']) .hero-card-name {
+    font-size: var(--type-caption);
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  :host([layout='roster']) .role-pill {
+    display: none;
+  }
+}
+
+/* From 920px, a column beside the detail: search, role filters and count on top, one compact row per hero below. */
+@media (min-width: 920px) {
+  :host([layout='roster']) {
+    position: sticky;
+    top: calc(var(--nav-height) + 16px);
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    min-height: 0;
+    max-height: calc(100dvh - var(--nav-height) - 32px);
+  }
+  :host([layout='roster']) .hero-browser {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+  :host([layout='roster']) .toolbar {
+    flex: none;
+  }
+  :host([layout='roster']) .search-field {
+    flex-basis: 100%;
+  }
+  :host([layout='roster']) .chip {
+    padding: 0 10px;
+  }
+  :host([layout='roster']) .hero-grid {
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    min-height: 0;
+    /* Room for the focus ring and the selected hero's outline, which the scroll box would otherwise clip. */
+    padding: 6px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  :host([layout='roster']) .hero-card {
+    grid-template-columns: var(--hero-thumb) minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    height: auto;
+    min-height: 58px;
+    padding: 8px;
+  }
+  :host([layout='roster']) .hero-card--placeholder {
+    min-height: 58px;
+  }
+  :host([layout='roster']) .hero-image {
+    width: var(--hero-thumb);
+    height: var(--hero-thumb);
+    aspect-ratio: auto;
+    border: 2px solid var(--hero-role-color, var(--border));
+    border-radius: 8px;
+  }
+  :host([layout='roster']) .hero-card-copy {
+    padding: 0;
+  }
+  :host([layout='roster']) .hero-card.selected {
+    grid-template-columns: var(--hero-thumb) minmax(0, 1fr) auto;
+  }
+  /* The check sits in the row's own third column, so it can never cover a long name. */
+  :host([layout='roster']) .hero-card.selected::after {
+    position: static;
+  }
+}

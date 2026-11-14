@@ -1,0 +1,141 @@
+# Hero kit Mobility
+
+Mobility is the one build signal that cannot be measured from matches, because
+the game feed has no position or movement data. It is a fixed value worked out
+from each hero's published kit, and it is labelled Hero kit.
+
+The table is [hero-kit-mobility.table.json](../src/app/features/heroes/hero-kit-mobility.table.json)
+and the formula is [hero-kit-mobility.ts](../src/app/features/heroes/hero-kit-mobility.ts).
+
+## The website does not use the formula yet
+
+`publishableHeroKitMobilityScores()` returns nothing until every hero can be
+scored, so `heroKitMobilityValue()` gives today's hand-set Mobility values until
+then, and switches to the formula by itself once the table is complete. Mixing
+the two scales would put heroes side by side on numbers that mean different
+things. The hand-set list has no value for Cyclops, Gorr, Jubilee or The Hood,
+so they read "No value yet" rather than a guess. The formula's scores run lower
+than the hand-set values, so expect the numbers to drop on the switch.
+
+## Rules for the table
+
+- **Never guess.** A value the source does not print stays `null`. Do not work
+  one out from other figures: speed times duration gives a ceiling, not a
+  distance.
+- **Record the source.** Every value keeps the text as printed (`raw`), where it
+  is printed (`field`) and which source it came from (`source`). The spec checks
+  official values against the saved copy of the official pages, so a typo fails
+  the tests.
+- **Only the hero's own movement.** Projectile speed, attack range and boosts
+  given to allies do not count, and the spec rejects those labels.
+- **A distance is how far the hero travels.** A dash to a chosen target uses its
+  largest target range, and a cable the hero rides to its end uses its length.
+  A swing's webbing length is the rope, not how far the swing goes, so it stays
+  empty. Where a page prints a range, the table uses the top of it.
+- **Only the hero's regular kit.** Ultimates, team-up abilities and normal
+  attacks are left out. So is movement that only happens after hitting or catching
+  an enemy, and movement from a shop purchase, such as Black Cat's relics bought
+  with Fortune. Abilities paid for from a meter stay in, such as energy costs and
+  Thor's Thorforce, and so does a boost from a meter that fills in play, such as
+  Mister Fantastic's Elastic Strength. Movement to something the hero placed, such
+  as Loki's swap with his illusion, also stays in. A hero's `excluded` list names
+  the abilities this rules out, and any other left out, with the reason.
+
+### Sources
+
+The official hero pages come first. They are read by the repository's own
+scraper, `scripts/official-heroes-source.mjs`. The spec checks values against the
+saved copy in `data/turso-cutover/106`, which has no per-hero links, so the spec
+checks only the shape of each `sourceUrl`. The rest of the table's sources are
+listed in its `sources` block.
+
+- **A speed of `600`.** Eleven kit pages print base speed as a bare `600` with no
+  unit. The Version 20250411 balance post raises Hulk and Thor "from 600 to 650",
+  and their kit pages list 6.5 m/s, so `600` is 6 m/s. Those rows carry that post
+  in `unitSource`.
+- **Storm's flight.** Her official page does not state it, so it comes from the
+  wiki text in `data/seeds/heroes.mock.json`. It is the only value in the table
+  from a secondary source.
+- **Labels that are wrong on the official page.** Several pages list a distance
+  under "Dash Duration", such as `8m`. The value is kept with its printed label
+  and a note, because the unit shows what it is.
+
+## The formula
+
+```text
+score = 1 + base + burst + sustained + flight + jumps, rounded, from 1 to 10
+```
+
+| Part | Worked out as | Most points |
+| --- | --- | --- |
+| Base | 2 per m/s of base speed above the normal 6 m/s | no cap |
+| Burst | Metres per second of cooldown, added across dashes, leaps and teleports | 4 |
+| Sustained | (Fastest flight, glide, wall-run or speed boost, minus base speed) divided by 3 | 3 |
+| Flight | 3 if flying is how the hero normally moves, 1 if an ability flies | 3 |
+| Jumps | 0.25 per extra jump, counting each jump where a row gives several | no cap |
+
+Why it has this shape:
+
+- **Burst uses distance over cooldown** because that is how much ground the
+  abilities cover over time. A charge's recharge time stands in for the cooldown.
+- **Burst is capped** because a short cooldown would otherwise decide the whole
+  score. Cyber-Bond alone would reach 10 points.
+- **Sustained uses only the fastest option** because a hero moves one way at a
+  time. How long it can be kept up is not counted, because several kits publish
+  an energy cost rather than a duration.
+- **Flight is scored apart from speed.** Iron Man and Storm move at a normal
+  speed and have few dashes, so a speed-only formula would rank them too low.
+- **Extra jumps count a flat amount** because the kit pages print no height for
+  them, and they do help.
+
+These weights are a judgement call, made to be simple and to read sensibly
+against the game. The numbers they use are sourced; the weights are not. Change
+them here and in the code together.
+
+### What a hero needs before they get a score
+
+| Kind | Needs |
+| --- | --- |
+| Every hero | Base speed |
+| `burst` | Distance and cooldown. Speed is recorded where published, but not scored. |
+| `sustained` | Speed. Cooldown is recorded where published, but not scored. |
+| `extra-jump` | Nothing |
+
+## What is still missing
+
+`heroKitMobilityCoverage()` gives the live count. As of 2026-11-04, 39 of 54
+heroes can be scored. These 15 cannot, because the sources checked do not print
+the value:
+
+| Hero | Missing |
+| --- | --- |
+| Angela | Wingblade Ascent: cooldown |
+| Black Cat | STEALTHY CATWALK: speed |
+| Black Widow | WIDOW'S BITE SLAM: distance |
+| Blade | Daywalker Dash: cooldown |
+| Devil Dinosaur | Savage Predation: distance |
+| Elsa Bloodstone | RUTHLESS PURSUIT: distance; HELIX ADVANCE: distance |
+| Hulk | Incredible Leap: distance and cooldown |
+| Human Torch | Flaming Meteor: distance |
+| Moon Knight | Moonlight Hook: distance |
+| Rogue | Chrono Kick Combo: speed |
+| Spider-Man | Web-Swing: distance |
+| Star-Lord | Stellar Shift: distance |
+| Thor | Storm Surge: cooldown |
+| Venom | Venom Swing: distance |
+| Wolverine | Feral Leap: distance |
+
+Moon Knight's page does give a "Maximum Distance", but as `21.5m/s`, which is a
+speed unit, beside a 25m hook length, so how far he travels is unclear and neither
+was used. Thor's page gives a Thorforce cost rather than a
+cooldown. Rogue's Chrono Kick Combo is undecided until checked in game: if her
+flight only follows a landed hit, the rule above moves it to `excluded`.
+
+Checked on 2026-11-04: the official hero pages, web searches of the official
+balance posts and of guide sites. The search results held none of these values.
+The live wiki and a Steam stats guide refused automated fetches, so neither was
+read, and either may hold some of them.
+
+Measuring them in the game's practice range is the likely way to fill these.
+Record such a value with its own entry in `sources`, saying who measured it, how
+and on which game version.

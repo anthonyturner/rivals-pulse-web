@@ -1,0 +1,23 @@
+<app-home-band
+  tone="light"
+  headAlign="center"
+  heading="Get RivalsPulse"
+  headingId="home-closing-title"
+  lede="The RivalsPulse app records your matches and counts them toward the stats on this site. The site is free to browse without it."
+>
+  <div class="closing">
+    <app-get-app-button />
+
+    <ul class="links">
+      @if (discordUrl(); as url) {
+        <li>
+          <a class="link" [href]="url" target="_blank" rel="noopener noreferrer">
+            Join the Discord<span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
+        </li>
+      }
+      <li><a class="link" routerLink="/stats">Browse the stats</a></li>
+      <li><a class="link" routerLink="/how-we-count">How we count</a></li>
+    </ul>
+  </div>
+</app-home-band>

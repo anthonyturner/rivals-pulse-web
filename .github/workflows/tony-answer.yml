@@ -1,0 +1,44 @@
+name: Record Tony's answer
+
+# Tony answers a Needs Tony item by commenting on its issue. This swaps `needs-tony` for
+# `tony-answered` and reacts to the comment, so the card leaves the Needs Tony column and the
+# team lead can find the answered item. It never merges, pushes or runs anything from the
+# comment: the text is matched against fixed words by scripts/tony-answer.mjs and is passed
+# in the event file, never interpolated into a command.
+# See docs/agent-workflows/tony-answers.md.
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+# One answer at a time per issue, none dropped.
+concurrency:
+  group: tony-answer-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: Record the answer
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Agents comment as the owner too, so the script also reads the comment for an agent's signature.
+    if: >-
+      github.event.comment.user.type == 'User' &&
+      github.event.comment.user.login == github.repository_owner &&
+      contains(github.event.issue.labels.*.name, 'needs-tony')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Record the answer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/tony-answer.mjs --apply

@@ -1,0 +1,63 @@
+app-state-panel {
+  --state-panel-radius: 12px;
+}
+
+/* One card holds the headline figures, with the heartbeat line behind them, and the half-season rows under them. */
+.strip {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--secondary) 14%, var(--bg-panel)), var(--bg-panel) 75%);
+  box-shadow: var(--shadow-soft);
+}
+
+/* The line fills this box only, so it never runs under the table. */
+.strip__figures {
+  position: relative;
+  isolation: isolate;
+  padding-block: 8px;
+}
+
+.strip__tiles {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 16px 12px;
+  margin: 0;
+}
+
+.strip__tile {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.strip__tile dt {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.strip__tile dd {
+  margin: 0;
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.strip__title {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.seasons {
+  max-width: 40rem;
+}

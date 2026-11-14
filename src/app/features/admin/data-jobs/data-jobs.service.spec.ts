@@ -1,0 +1,82 @@
+import { DataJobsService } from './data-jobs.service';
+
+function answer(status: number, body?: unknown): jasmine.Spy<typeof fetch> {
+  return spyOn(globalThis, 'fetch').and.resolveTo(new Response(body === undefined ? null : JSON.stringify(body), { status }));
+}
+
+describe('DataJobsService', () => {
+  const service = new DataJobsService();
+
+  it('reads the jobs', async () => {
+    const fetched = answer(200, { jobs: [{ job: 'home-news', lastScheduled: null, lastManual: null, wait: null }] });
+
+    expect(await service.read()).toEqual({
+      status: 'ready',
+      jobs: [{ job: 'home-news', lastScheduled: null, lastManual: null, wait: null }],
+    });
+    expect(fetched).toHaveBeenCalledOnceWith('/api/admin/data-jobs');
+  });
+
+  it('reports the jobs as unavailable on a refusal or an answer it does not recognise', async () => {
+    answer(403, { error: 'no' });
+    expect(await service.read()).toEqual({ status: 'unavailable' });
+
+    (globalThis.fetch as jasmine.Spy<typeof fetch>).and.resolveTo(
+      new Response(JSON.stringify({ jobs: 'nope' }), { status: 200 }),
+    );
+    expect(await service.read()).toEqual({ status: 'unavailable' });
+
+    (globalThis.fetch as jasmine.Spy<typeof fetch>).and.rejectWith(new TypeError('offline'));
+    expect(await service.read()).toEqual({ status: 'unavailable' });
+  });
+
+  it('posts only the job key and reads back how the run ended', async () => {
+    const fetched = answer(200, {
+      run: {
+        job: 'home-news',
+        outcome: 'succeeded',
+        recorded: true,
+        detail: { result: 'news-synced', cards: 4 },
+      },
+    });
+
+    const result = await service.run('home-news');
+
+    expect(result.status).toBe('finished');
+    expect(fetched.calls.mostRecent().args[0]).toBe('/api/admin/data-jobs-run');
+    expect(fetched.calls.mostRecent().args[1]).toEqual(
+      jasmine.objectContaining({ method: 'POST', body: JSON.stringify({ job: 'home-news' }) }),
+    );
+  });
+
+  it('reads a 400, 401 or 403 as a refusal, so the job did not start', async () => {
+    const fetched = answer(400, { error: 'no' });
+
+    for (const status of [400, 401, 403]) {
+      fetched.and.resolveTo(new Response(JSON.stringify({ error: 'no' }), { status }));
+
+      expect(await service.run('home-news')).toEqual({ status: 'refused' });
+    }
+  });
+
+  it('reads a 409 as a job that did not start', async () => {
+    answer(409, { error: 'This job ran a moment ago.', reason: 'cooldown', retryAt: '2026-11-04T10:01:00.000Z' });
+
+    expect(await service.run('home-news')).toEqual({
+      status: 'busy',
+      busy: { error: 'This job ran a moment ago.', reason: 'cooldown', retryAt: '2026-11-04T10:01:00.000Z' },
+    });
+  });
+
+  it('never reports a run it cannot read as one that ran', async () => {
+    const fetched = answer(500, { error: 'Something went wrong.' });
+
+    expect(await service.run('home-news')).toEqual({ status: 'unknown' });
+
+    fetched.and.resolveTo(new Response(JSON.stringify({ run: { job: 'home-news' } }), { status: 200 }));
+    expect(await service.run('home-news')).toEqual({ status: 'unknown' });
+
+    fetched.and.rejectWith(new TypeError('offline'));
+    expect(await service.run('home-news')).toEqual({ status: 'unknown' });
+  });
+});

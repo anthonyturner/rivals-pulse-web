@@ -1,0 +1,106 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { StrategistGuidesPageComponent } from './strategist-guides-page.component';
+import { STRATEGIST_GUIDES, STRATEGIST_PLAYLIST_URL } from './strategist-guides.data';
+
+describe('StrategistGuidesPageComponent', () => {
+  let fixture: ComponentFixture<StrategistGuidesPageComponent>;
+  let element: HTMLElement;
+
+  const count = () => element.querySelector('[role="status"]')?.textContent?.trim();
+  const names = () => Array.from(element.querySelectorAll('app-guide-card a'), (link) => link.textContent?.trim());
+
+  async function settle(): Promise<void> {
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  async function search(term: string): Promise<void> {
+    const input = element.querySelector('input') as HTMLInputElement;
+    input.value = term;
+    input.dispatchEvent(new Event('input'));
+    await settle();
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
+    fixture = TestBed.createComponent(StrategistGuidesPageComponent);
+    fixture.detectChanges();
+    element = fixture.nativeElement;
+  });
+
+  it('opens with the plain page header, then a lead tile of key art', () => {
+    expect(element.querySelector('app-page-header h1')?.textContent?.trim()).toBe('Strategist guides');
+    expect(element.querySelector('.hub-header')).toBeNull();
+
+    const tile = element.querySelector('app-hub-tile') as HTMLElement;
+    const art = tile.querySelector('img.art__image') as HTMLImageElement;
+
+    expect(tile.classList).toContain('featured');
+    expect(art.getAttribute('src')).toBe('/images/site/banners/strategist-guides-banner.webp');
+    expect(art.getAttribute('alt')).toBe('');
+    expect(art.hasAttribute('loading')).toBeFalse();
+  });
+
+  it('puts the playlist and techniques links in the lead tile, outside the hidden preview', () => {
+    const tile = element.querySelector('app-hub-tile') as HTMLElement;
+    const playlist = tile.querySelector('a[target="_blank"]') as HTMLAnchorElement;
+    const techniques = tile.querySelector('a[href="/techniques"]');
+
+    expect(playlist.getAttribute('href')).toBe(STRATEGIST_PLAYLIST_URL);
+    expect(playlist.getAttribute('rel')).toContain('noopener');
+    expect(playlist.textContent).toContain('Watch the full playlist');
+    expect(playlist.querySelector('.visually-hidden')?.textContent).toContain('opens YouTube in a new tab');
+    expect(techniques?.textContent?.trim()).toBe('Review all techniques');
+    expect(tile.querySelector('[aria-hidden="true"] a')).toBeNull();
+  });
+
+  it('lists every guide once, each under its own link name', () => {
+    expect(count()).toBe('10 guides');
+    expect(names().length).toBe(STRATEGIST_GUIDES.length);
+    expect(new Set(names()).size).toBe(STRATEGIST_GUIDES.length);
+  });
+
+  it('labels the search input without showing the label', () => {
+    expect(element.querySelector('label.guide-search .visually-hidden')?.textContent?.trim()).toBe('Search guides');
+  });
+
+  it('says how many of the guides match a search', async () => {
+    await search('dive');
+
+    expect(count()).toMatch(/^\d+ of 10 guides$/);
+    expect(names().length).toBeLessThan(10);
+  });
+
+  it('shows the empty state, 0 of 10 and a way out when nothing matches', async () => {
+    await search('zzzz no such guide');
+
+    expect(count()).toBe('0 of 10 guides');
+    expect(element.querySelector('app-state-panel h2')?.textContent?.trim()).toBe('No guides match');
+    expect(element.querySelector('app-guide-card')).toBeNull();
+
+    (element.querySelector('app-state-panel button') as HTMLButtonElement).click();
+    await settle();
+
+    expect(count()).toBe('10 guides');
+    expect((element.querySelector('input') as HTMLInputElement).value).toBe('');
+    expect(document.activeElement).toBe(element.querySelector('input'));
+  });
+
+  it('narrows the list by category', async () => {
+    const select = element.querySelector('select') as HTMLSelectElement;
+    select.value = 'Rocket Raccoon';
+    select.dispatchEvent(new Event('change'));
+    await settle();
+
+    expect(count()).toBe('3 of 10 guides');
+  });
+
+  it('leaves the main landmark to the shell and lists the guides', () => {
+    expect(element.querySelector('main')).toBeNull();
+    expect(element.querySelector('h1')).not.toBeNull();
+    expect(element.querySelector('app-guide-card')).not.toBeNull();
+  });
+});

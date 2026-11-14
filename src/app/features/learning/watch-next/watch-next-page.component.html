@@ -1,0 +1,105 @@
+<section class="quiz-page page-container page-container--wide">
+  <header class="page-header">
+    <div>
+      <h1>Find the next lesson for your current problem.</h1>
+      <p class="lede">
+        Answer three quick questions and get a short watch list plus one drill to run after the
+        videos.
+      </p>
+    </div>
+
+    <div class="header-stat" aria-label="Quiz recommendation count">
+      <span>3</span>
+      <small>Videos</small>
+      <span>1</span>
+      <small>Drill</small>
+    </div>
+  </header>
+
+  <div class="quiz-layout">
+    <section class="quiz-panel" aria-label="Recommendation quiz">
+      <article class="question-card">
+        <span>Question 1</span>
+        <h2>What role are you focused on?</h2>
+        <div class="option-grid">
+          @for (role of roles; track role) {
+            <button
+              type="button"
+              [class.active]="selectedRole() === role"
+              (click)="selectRole(role)"
+            >
+              {{ role }}
+            </button>
+          }
+        </div>
+      </article>
+
+      <article class="question-card">
+        <span>Question 2</span>
+        <h2>What feels like the biggest blocker?</h2>
+        <div class="option-grid">
+          @for (problem of problems; track problem) {
+            <button
+              type="button"
+              [class.active]="selectedProblem() === problem"
+              (click)="selectProblem(problem)"
+            >
+              {{ problem }}
+            </button>
+          }
+        </div>
+      </article>
+
+      <article class="question-card">
+        <span>Question 3</span>
+        <h2>What format do you want right now?</h2>
+        <div class="option-grid">
+          @for (format of formats; track format) {
+            <button
+              type="button"
+              [class.active]="selectedFormat() === format"
+              (click)="selectFormat(format)"
+            >
+              {{ format }}
+            </button>
+          }
+        </div>
+      </article>
+    </section>
+
+    <aside class="answer-panel" aria-label="Recommended practice drill">
+      <h2>{{ practiceRecommendation().title }}</h2>
+      <strong>{{ practiceRecommendation().cue }}</strong>
+      <p>{{ practiceRecommendation().drill }}</p>
+      <div>
+        <span>Review</span>
+        <p>{{ practiceRecommendation().review }}</p>
+      </div>
+    </aside>
+  </div>
+
+  <section class="results" aria-label="Recommended videos">
+    <div class="section-heading">
+      <h2>Start with these three</h2>
+    </div>
+
+    <div class="result-grid">
+      @for (item of rankedRecommendations(); track item.title; let index = $index) {
+        <article class="result-card">
+          <div class="result-rank">{{ index + 1 }}</div>
+          <img [src]="item.image" [alt]="item.title + ' hero image'" loading="lazy" />
+          <div class="result-body">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.reason }}</p>
+            <div class="tag-list">
+              @for (tag of item.tags; track tag) {
+                <span>{{ tag }}</span>
+              }
+            </div>
+            <a [href]="item.url" target="_blank" rel="noopener">Watch lesson</a>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+</section>

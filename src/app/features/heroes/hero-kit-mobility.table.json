@@ -1,0 +1,1354 @@
+{
+  "sources": {
+    "official-kit": {
+      "label": "Official hero pages on marvelrivals.com",
+      "url": "https://www.marvelrivals.com/heroes/index.html",
+      "checkedOn": "2026-11-04",
+      "note": "Each hero row gives its own page in sourceUrl. The spec checks values against the saved copy in data/turso-cutover/106, last changed 2026-10-30; the live pages were compared with it on the date above."
+    },
+    "balance-20250411": {
+      "label": "Marvel Rivals Version 20250411 Balance Post",
+      "url": "https://www.marvelrivals.com/balancepost/20250401/41667_1223995.html",
+      "checkedOn": "2026-11-04",
+      "note": "Raises Hulk and Thor from 600 to 650, and their kit pages list 6.5 m/s, so a bare 600 on a kit page means 6 m/s."
+    },
+    "wiki-snapshot": {
+      "label": "Marvel Rivals Wiki text held in data/seeds/heroes.mock.json",
+      "url": "https://marvelrivals.fandom.com/wiki/Storm",
+      "checkedOn": "not re-checked: the wiki refused automated fetches on 2026-11-04",
+      "note": "Secondary source: the official Storm page does not state her flight."
+    }
+  },
+  "heroes": [
+    {
+      "heroId": "adam-warlock",
+      "name": "Adam Warlock",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195670.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"ADAM WARLOCK > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Karmic Revival",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":4,"unit":"bonus m/s","raw":"4m/s","source":"official-kit","field":"Karmic Revival > Movement Boost"},
+          "cooldown": null,
+          "flight": {"value":true,"raw":"entering a flying state","source":"official-kit","field":"Karmic Revival > description"},
+          "note": "The official page files his flying ability under this name."
+        }
+      ],
+      "excluded": [
+        {"ability":"Regenerative Cocoon","reason":"Moves only while dead, before rebirth."},
+        {"ability":"Soul Bond","reason":"He can hover during it, with no published movement."}
+      ]
+    },
+    {
+      "heroId": "angela",
+      "name": "Angela",
+      "sourceUrl": "https://www.marvelrivals.com/20250911/41360_1258873.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"ANGELA > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Seraphic Soar",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":10,"unit":"m/s","raw":"10m/s","source":"official-kit","field":"Seraphic Soar > Glide Speed"},
+          "cooldown": null,
+          "flight": {"value":true,"raw":"Continuous flight","source":"official-kit","field":"Seraphic Soar > description"}
+        },
+        {
+          "ability": "Assassin's Charge",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":18,"unit":"m/s","raw":"18 m/s","source":"official-kit","field":"Assassin's Charge > Dash State Speed"},
+          "cooldown": {"value":4,"raw":"4s","source":"official-kit","field":"Assassin's Charge > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Divine Judgement",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":35,"unit":"bonus %","raw":"35%","source":"official-kit","field":"Divine Judgement > Movement Boost (Self)"},
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Divine Judgement > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Wingblade Ascent",
+          "kind": "burst",
+          "distance": {"value":8,"raw":"8m","source":"official-kit","field":"Wingblade Ascent > Ascent Height"},
+          "speed": null,
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "black-cat",
+      "name": "Black Cat",
+      "sourceUrl": "https://www.marvelrivals.com/20260416/41360_1296480.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"Black Cat > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "CAT'S CRADLE",
+          "kind": "burst",
+          "distance": {"value":15,"raw":"15m","source":"official-kit","field":"CAT'S CRADLE > Maximum Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":8,"raw":"1 charges, with each charge taking 8s to recharge","source":"official-kit","field":"CAT'S CRADLE > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "THIEVING GRACE",
+          "kind": "extra-jump",
+          "distance": null,
+          "speed": null,
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "STEALTHY CATWALK",
+          "kind": "sustained",
+          "distance": null,
+          "speed": null,
+          "cooldown": null,
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"PHANTOM PURSUIT","reason":"She flashes back to her starting position, so she ends up no farther on."},
+        {"ability":"HELM OF HADES","reason":"Bought with Fortune, so not always available."},
+        {"ability":"RING OF ZONA","reason":"Bought with Fortune, and the portal is shared with her team."}
+      ]
+    },
+    {
+      "heroId": "black-panther",
+      "name": "Black Panther",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195677.html",
+      "baseSpeed": {"value":7,"raw":"7m/s","source":"official-kit","field":"BLACK PANTHER > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Spirit Rend",
+          "kind": "burst",
+          "distance": {"value":15,"raw":"15m","source":"official-kit","field":"Spirit Rend > Maximum Distance"},
+          "speed": {"value":50,"unit":"m/s","raw":"50m/s","source":"official-kit","field":"Spirit Rend > Average Speed"},
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Spirit Rend > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Spinning Kick",
+          "kind": "burst",
+          "distance": {"value":16,"raw":"16m","source":"official-kit","field":"Spinning Kick > Maximum Distance"},
+          "speed": {"value":15,"unit":"m/s","raw":"15m/s","source":"official-kit","field":"Spinning Kick > Average Speed"},
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"Spinning Kick > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Subtle Step",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":10,"unit":"m/s","raw":"10m/s","source":"official-kit","field":"Subtle Step > Wall-Crawling Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "black-widow",
+      "name": "Black Widow",
+      "sourceUrl": "https://www.marvelrivals.com/20241204/41360_1198106.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"Black Widow > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "WIDOW'S BITE SLAM",
+          "kind": "burst",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"WIDOW'S BITE SLAM > Cooldown"},
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"EDGE DANCER","reason":"The 12m flying kick needs the first hit to land."}
+      ]
+    },
+    {
+      "heroId": "blade",
+      "name": "Blade",
+      "sourceUrl": "https://www.marvelrivals.com/20250808/41360_1252733.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"BLADE > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Daywalker Dash",
+          "kind": "burst",
+          "distance": {"value":15,"raw":"15m","source":"official-kit","field":"Daywalker Dash > Dash Distance"},
+          "speed": null,
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "Bloodline Awakening",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":1.5,"unit":"bonus m/s","raw":"1.5 m/s","source":"official-kit","field":"Bloodline Awakening > Movement Speed Boost"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "captain-america",
+      "name": "Captain America",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195652.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"CAPTAIN AMERICA > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Leading Dash",
+          "kind": "sustained",
+          "distance": {"value":5,"raw":"5m","source":"official-kit","field":"Leading Dash > Fearless Leap Height"},
+          "speed": {"value":33.4,"unit":"bonus %","raw":"33.40%","source":"official-kit","field":"Leading Dash > Movement Boost"},
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "Super-Soldier Slam",
+          "kind": "burst",
+          "distance": {"value":20,"raw":"20m (horizontal)","source":"official-kit","field":"Super-Soldier Slam > Maximum Distance"},
+          "speed": null,
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Super-Soldier Slam > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Liberty Rush",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"Liberty Rush > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Liberty Rush > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "cloak-and-dagger",
+      "name": "Cloak & Dagger",
+      "sourceUrl": "https://www.marvelrivals.com/20241204/41360_1198095.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"Cloak > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [],
+      "excluded": [
+        {"ability":"Dark Teleportation","reason":"Boosts allies and does not move the hero; the boost size is not published."}
+      ]
+    },
+    {
+      "heroId": "cyclops",
+      "name": "Cyclops",
+      "sourceUrl": "https://www.marvelrivals.com/20260611/41360_1303977.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"Cyclops > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Propulsion Burst",
+          "kind": "burst",
+          "distance": {"value":22,"raw":"Minimum 11m, maximum 22m","source":"official-kit","field":"Propulsion Burst > Dash Duration"},
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Propulsion Burst > Cooldown"},
+          "flight": null,
+          "note": "The official page lists this distance under \"Dash Duration\"."
+        },
+        {
+          "ability": "Optic Ascent",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"Optic Ascent > Dash Duration"},
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Optic Ascent > Cooldown"},
+          "flight": null,
+          "note": "The official page lists this distance under \"Dash Duration\"."
+        },
+        {
+          "ability": "Optic Ascent",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":35,"unit":"bonus %","raw":"35% for 2s","source":"official-kit","field":"Optic Ascent > Movement Boost"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Optic Ascent > Cooldown"},
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"Kinetic Hover","reason":"Slow fall with no published horizontal speed."}
+      ]
+    },
+    {
+      "heroId": "daredevil",
+      "name": "Daredevil",
+      "sourceUrl": "https://www.marvelrivals.com/20251009/41360_1263889.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"DAREDEVIL > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Sonic Pursuit",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"Sonic Pursuit > Dash Select Range"},
+          "speed": {"value":100,"unit":"m/s","raw":"100m/s","source":"official-kit","field":"Sonic Pursuit > Max Dash Speed"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Sonic Pursuit > Dash Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Sonic Pursuit",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":2.1,"unit":"bonus m/s","raw":"2.1m/s. Falloff begins at 10m away from the target, decreasing to 0.9m/s at 40m from the target","source":"official-kit","field":"Sonic Pursuit > Movement Boost"},
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "BLIND ASCENT",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":10,"unit":"m/s","raw":"10 m/s","source":"official-kit","field":"BLIND ASCENT > Wall-Crawling Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"DEVIL'S LATCH","reason":"Moves him only after the line hits a target."}
+      ]
+    },
+    {
+      "heroId": "deadpool",
+      "name": "Deadpool",
+      "sourceUrl": "https://www.marvelrivals.com/20260115/41360_1281973.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"DEADPOOL > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "BUNNY BOUNCE",
+          "kind": "burst",
+          "distance": {"value":16,"raw":"16m","source":"official-kit","field":"BUNNY BOUNCE > Maximum Jump Distance"},
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"BUNNY BOUNCE > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "HAZARDOUS HIJINKS - VANGUARD",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"Up to 12m","source":"official-kit","field":"HAZARDOUS HIJINKS - VANGUARD > Dash Duration"},
+          "speed": null,
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"HAZARDOUS HIJINKS - VANGUARD > Cooldown"},
+          "flight": null,
+          "note": "The official page lists this distance under \"Dash Duration\"."
+        }
+      ],
+      "note": "Vanguard kit, the role the official page files him under. His other kits share the same base speed."
+    },
+    {
+      "heroId": "devil-dinosaur",
+      "name": "Devil Dinosaur",
+      "sourceUrl": "https://www.marvelrivals.com/20260514/41360_1300391.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"DEVIL DINOSAUR > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Savage Predation",
+          "kind": "burst",
+          "distance": null,
+          "speed": {"value":15,"unit":"m/s","raw":"15m/s","source":"official-kit","field":"Savage Predation > Dashing Speed"},
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Savage Predation > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "doctor-strange",
+      "name": "Doctor Strange",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195649.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"DOCTOR STRANGE > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Cloak of Levitation",
+          "kind": "burst",
+          "distance": {"value":8,"raw":"8m","source":"official-kit","field":"Cloak of Levitation > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Cloak of Levitation > Cooldown"},
+          "flight": {"value":true,"raw":"sustained flight","source":"official-kit","field":"Cloak of Levitation > description"}
+        }
+      ],
+      "excluded": [
+        {"ability":"Pentagram of Farallah","reason":"Portal open to all units; distance depends on placement."}
+      ]
+    },
+    {
+      "heroId": "elsa-bloodstone",
+      "name": "Elsa Bloodstone",
+      "sourceUrl": "https://www.marvelrivals.com/20260212/41360_1286981.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"ELSA BLOODSTONE > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "RUTHLESS PURSUIT",
+          "kind": "burst",
+          "distance": null,
+          "speed": {"value":40,"unit":"m/s","raw":"40m/s","source":"official-kit","field":"RUTHLESS PURSUIT > Max Dash Speed"},
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"RUTHLESS PURSUIT > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "HELIX ADVANCE",
+          "kind": "burst",
+          "distance": null,
+          "speed": {"value":27.5,"unit":"m/s","raw":"27.5m/s","source":"official-kit","field":"HELIX ADVANCE > Max Dash Speed"},
+          "cooldown": {"value":11,"raw":"11s","source":"official-kit","field":"HELIX ADVANCE > Cooldown"},
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"SMOKY SNARE","reason":"Dash only reaches an enemy caught in her trap."},
+        {"ability":"LIVING BULLET","reason":"The speed boost comes only from hitting marked targets."}
+      ]
+    },
+    {
+      "heroId": "emma-frost",
+      "name": "Emma Frost",
+      "sourceUrl": "https://www.marvelrivals.com/20250408/41360_1225547.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"Emma Frost > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "CARBON CRUSH",
+          "kind": "burst",
+          "distance": {"value":8.5,"raw":"8.5m","source":"official-kit","field":"CARBON CRUSH > Maximum Distance"},
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"CARBON CRUSH > Cooldown"},
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"CRYSTAL KICK","reason":"The page prints only how far enemies are knocked back, not how far she moves."}
+      ]
+    },
+    {
+      "heroId": "gambit",
+      "name": "Gambit",
+      "sourceUrl": "https://www.marvelrivals.com/20251114/41360_1270998.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"Gambit > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Cajun Charge",
+          "kind": "burst",
+          "distance": {"value":8,"raw":"8m","source":"official-kit","field":"Cajun Charge > Dash Duration"},
+          "speed": null,
+          "cooldown": {"value":12.5,"raw":"2 charges, with each charge taking 12.5s to recharge.","source":"official-kit","field":"Cajun Charge > Cooldown"},
+          "flight": null,
+          "note": "The official page lists this distance under \"Dash Duration\"."
+        },
+        {
+          "ability": "Bayou Bash",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"Bayou Bash > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":8,"raw":"2 charges, with each charge taking 8s to recharge","source":"official-kit","field":"Bayou Bash > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "gorr-the-god-butcher",
+      "name": "Gorr The God Butcher",
+      "sourceUrl": "https://www.marvelrivals.com/20260911/41360_1313617.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"Gorr the God Butcher > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Shadow Harvest",
+          "kind": "burst",
+          "distance": {"value":22,"raw":"22m","source":"official-kit","field":"Shadow Harvest > Maximum Select Distance"},
+          "speed": null,
+          "cooldown": {"value":3,"raw":"3s","source":"official-kit","field":"Shadow Harvest > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Living Abyss",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":10,"unit":"bonus m/s","raw":"10m/s","source":"official-kit","field":"Living Abyss > Movement Boost"},
+          "cooldown": {"value":13,"raw":"13s","source":"official-kit","field":"Living Abyss > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "groot",
+      "name": "Groot",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195653.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"GROOT > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": []
+    },
+    {
+      "heroId": "hawkeye",
+      "name": "Hawkeye",
+      "sourceUrl": "https://www.marvelrivals.com/20241124/41360_1195753.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"HAWKEYE > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Skyward Leap",
+          "kind": "extra-jump",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Skyward Leap > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "hela",
+      "name": "Hela",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195676.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"HELA > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Astral Flock",
+          "kind": "burst",
+          "distance": {"value":18,"raw":"18m","source":"official-kit","field":"Astral Flock > Dash Distance"},
+          "speed": {"value":15,"unit":"m/s","raw":"15 m/s","source":"official-kit","field":"Astral Flock > Dash Speed"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Astral Flock > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Hel's Descent",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":6,"unit":"m/s","raw":"6 m/s","source":"official-kit","field":"Hel's Descent > Horizontal Movement Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "hulk",
+      "name": "Hulk",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195678.html",
+      "baseSpeed": {"value":6.5,"raw":"6.5m/s","source":"official-kit","field":"Hero Hulk > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Incredible Leap",
+          "kind": "burst",
+          "distance": null,
+          "speed": {"value":25,"unit":"m/s","raw":"25m/s","source":"official-kit","field":"Incredible Leap > Speed At Maximum Charge Time"},
+          "cooldown": null,
+          "flight": null
+        }
+      ],
+      "note": "Hero Hulk, the form he fights in. Bruce Banner is 6 m/s; Monster Hulk is an ultimate."
+    },
+    {
+      "heroId": "human-torch",
+      "name": "Human Torch",
+      "sourceUrl": "https://www.marvelrivals.com/20250220/41360_1213050.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"Human Torch > Movement Speed"},
+      "movementModeFlight": {"value":true,"raw":"Flight","source":"official-kit","field":"Base stats > Movement Mode"},
+      "abilities": [
+        {
+          "ability": "Plasma Body",
+          "kind": "sustained",
+          "distance": {"value":10,"raw":"10m","source":"official-kit","field":"Plasma Body > Maximum Distance"},
+          "speed": {"value":2.5,"unit":"bonus m/s","raw":"2.5m/s","source":"official-kit","field":"Plasma Body > Movement Boost"},
+          "cooldown": {"value":8,"raw":"2 charges, with each charge taking 8s to recharge","source":"official-kit","field":"Plasma Body > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Flaming Meteor",
+          "kind": "burst",
+          "distance": null,
+          "speed": {"value":80,"unit":"m/s","raw":"80m/s","source":"official-kit","field":"Flaming Meteor > Max Dash Speed"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Flaming Meteor > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "invisible-woman",
+      "name": "Invisible Woman",
+      "sourceUrl": "https://www.marvelrivals.com/20250108/41360_1205353.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"INVISIBLE WOMAN > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Veiled Step",
+          "kind": "extra-jump",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Veiled Step > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "iron-fist",
+      "name": "Iron Fist",
+      "sourceUrl": "https://www.marvelrivals.com/20241201/41360_1197227.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"IRON FIST > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "K'un-Lun Kick",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"K'un-Lun Kick > Maximum Dash Distance"},
+          "speed": {"value":40,"unit":"m/s","raw":"40 m/s","source":"official-kit","field":"K'un-Lun Kick > Dashing Speed"},
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"K'un-Lun Kick > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Crane Leap",
+          "kind": "extra-jump",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":1,"raw":"3 charges, with each charge taking 1s to recharge","source":"official-kit","field":"Crane Leap > Cooldown"},
+          "flight": null,
+          "jumps": {"value":3,"raw":"up to three consecutive jumps","source":"official-kit","field":"Crane Leap > description"}
+        },
+        {
+          "ability": "Wall Runner",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":9,"unit":"m/s","raw":"9 m/s","source":"official-kit","field":"Wall Runner > Wall-Crawling Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "iron-man",
+      "name": "Iron Man",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195687.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"IRON MAN > Movement Speed"},
+      "movementModeFlight": {"value":true,"raw":"Flight","source":"official-kit","field":"Base stats > Movement Mode"},
+      "abilities": [
+        {
+          "ability": "Hyper-Velocity",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":100,"unit":"bonus %","raw":"100%","source":"official-kit","field":"Hyper-Velocity > Movement Boost"},
+          "cooldown": null,
+          "flight": {"value":true,"raw":"swift forward flight","source":"official-kit","field":"Hyper-Velocity > description"}
+        }
+      ],
+      "excluded": [
+        {"ability":"Hyper-Velocity (Armor Overdrive)","reason":"The same 100% boost, so it adds no extra speed."}
+      ]
+    },
+    {
+      "heroId": "jeff-the-land-shark",
+      "name": "Jeff The Land Shark",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195674.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"JEFF THE LAND SHARK > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Hide and Seek",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":60,"unit":"bonus %","raw":"60%","source":"official-kit","field":"Hide and Seek > Movement Boost"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "jubilee",
+      "name": "Jubilee",
+      "sourceUrl": "https://www.marvelrivals.com/20260707/41360_1306826.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"JUBILEE > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Sparking Sprint",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":40,"unit":"bonus %","raw":"40%","source":"official-kit","field":"Sparking Sprint > Speed Boost Multiplier"},
+          "cooldown": {"value":4,"raw":"4s","source":"official-kit","field":"Sparking Sprint > Cooldown"},
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"Dazzling Detonation","reason":"The boost goes to allies."}
+      ]
+    },
+    {
+      "heroId": "loki",
+      "name": "Loki",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195662.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"LOKI > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Devious Exchange",
+          "kind": "burst",
+          "distance": {"value":30,"raw":"30m","source":"official-kit","field":"Devious Exchange > Maximum Distance"},
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Devious Exchange > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "luna-snow",
+      "name": "Luna Snow",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195671.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"LUNA SNOW > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Smooth Skate",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":9.6,"unit":"m/s","raw":"9.6m/s","source":"official-kit","field":"Smooth Skate > Skating Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "magik",
+      "name": "Magik",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195682.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"MAGIK > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Stepping Discs",
+          "kind": "burst",
+          "distance": {"value":10,"raw":"10m","source":"official-kit","field":"Stepping Discs > Maximum Distance"},
+          "speed": {"value":12,"unit":"m/s","raw":"12m/s","source":"official-kit","field":"Stepping Discs > Average Speed"},
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Stepping Discs > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Umbral Incursion",
+          "kind": "burst",
+          "distance": {"value":16,"raw":"16m","source":"official-kit","field":"Umbral Incursion > Maximum Distance"},
+          "speed": {"value":46,"unit":"m/s","raw":"46m/s","source":"official-kit","field":"Umbral Incursion > Average Speed"},
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"Umbral Incursion > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "magneto",
+      "name": "Magneto",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195655.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"MAGNETO > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Magnetic Descent",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":6,"unit":"m/s","raw":"6m/s","source":"official-kit","field":"Magnetic Descent > Horizontal Movement Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "mantis",
+      "name": "Mantis",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195661.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"MANTIS > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Nature's Favor",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":7.5,"unit":"m/s","raw":"7.5m/s","source":"official-kit","field":"Nature's Favor > Out-Of-Combat Movement Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "mister-fantastic",
+      "name": "Mister Fantastic",
+      "sourceUrl": "https://www.marvelrivals.com/20250108/41360_1205352.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"MISTER FANTASTIC > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Flexible Elongation",
+          "kind": "burst",
+          "distance": {"value":15,"raw":"15m","source":"official-kit","field":"Flexible Elongation > Maximum Select Distance"},
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Flexible Elongation > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Elastic Strength",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":20,"unit":"bonus %","raw":"20%","source":"official-kit","field":"Elastic Strength > Movement Boost"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "moon-knight",
+      "name": "Moon Knight",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195685.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"MOON KNIGHT > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Moonlight Hook",
+          "kind": "burst",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Moonlight Hook > Cooldown"},
+          "flight": null,
+          "note": "Distance left empty: the page gives \"Maximum Distance\" as 21.5m/s, a speed unit, beside a 25m hook length, so how far he travels is unclear."
+        },
+        {
+          "ability": "Night Glider",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":8.7,"unit":"m/s","raw":"8.7m/s","source":"official-kit","field":"Night Glider > Horizontal Movement Speed"},
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "Rising Leap",
+          "kind": "extra-jump",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Rising Leap > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "namor",
+      "name": "Namor",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195686.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"NAMOR > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Blessing of the Deep",
+          "kind": "burst",
+          "distance": {"value":7,"raw":"7m","source":"official-kit","field":"Blessing of the Deep > Vertical Moving Distance"},
+          "speed": null,
+          "cooldown": {"value":20,"raw":"20s","source":"official-kit","field":"Blessing of the Deep > Cooldown"},
+          "flight": {"value":true,"raw":"flying upwards","source":"official-kit","field":"Blessing of the Deep > description"}
+        }
+      ]
+    },
+    {
+      "heroId": "peni-parker",
+      "name": "Peni Parker",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195656.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"PENI PARKER > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Cyber-Bond",
+          "kind": "burst",
+          "distance": {"value":30,"raw":"30m","source":"official-kit","field":"Cyber-Bond > Maximum Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":3,"raw":"3s","source":"official-kit","field":"Cyber-Bond > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Wall Crawl",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":7.2,"unit":"m/s","raw":"7.2m/s","source":"official-kit","field":"Wall Crawl > Wall-Crawling Speed"},
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "Cyber-Web Snare",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":25,"unit":"bonus %","raw":"While trapped in the Cyber-Web, Peni Parker receives 25 healing per second. Any excess healing is converted into Bonus Health, up to a maximum of 150 Health, and grants a 25% Movement Boost","source":"official-kit","field":"Cyber-Web Snare > Special Effect 2"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "phoenix",
+      "name": "Phoenix",
+      "sourceUrl": "https://www.marvelrivals.com/20250710/41360_1246363.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"Phoenix > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Dark Ascent",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":50,"unit":"bonus %","raw":"Enter a state of free flight within the duration. Gain a 50% Movement Boost","source":"official-kit","field":"Dark Ascent > Special Effect"},
+          "cooldown": null,
+          "flight": {"value":true,"raw":"state of free flight","source":"official-kit","field":"Dark Ascent > description"}
+        },
+        {
+          "ability": "Telepathic Illusion",
+          "kind": "burst",
+          "distance": {"value":8,"raw":"8m","source":"official-kit","field":"Telepathic Illusion > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Telepathic Illusion > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "psylocke",
+      "name": "Psylocke",
+      "sourceUrl": "https://www.marvelrivals.com/20241124/41360_1195754.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"Psylocke > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Psi-Blade Dash",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"Psi-Blade Dash > Maximum Distance"},
+          "speed": {"value":43,"unit":"m/s","raw":"43 m/s","source":"official-kit","field":"Psi-Blade Dash > Average Speed"},
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Psi-Blade Dash > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Psychic Stealth",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":50,"unit":"bonus %","raw":"50%","source":"official-kit","field":"Psychic Stealth > Movement Boost"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Psychic Stealth > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "rocket-raccoon",
+      "name": "Rocket Raccoon",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195663.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"ROCKET RACCOON > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Jetpack Dash",
+          "kind": "burst",
+          "distance": {"value":8,"raw":"8m","source":"official-kit","field":"Jetpack Dash > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":10,"raw":"2 charges, with each charge taking 10s to recharge","source":"official-kit","field":"Jetpack Dash > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Wild Crawl",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":8,"unit":"m/s","raw":"8m/s","source":"official-kit","field":"Wild Crawl > Wall-Crawling Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"Flying Ace","reason":"Slow fall with no published horizontal speed."}
+      ]
+    },
+    {
+      "heroId": "rogue",
+      "name": "Rogue",
+      "sourceUrl": "https://www.marvelrivals.com/20251212/41360_1276333.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"ROGUE > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Southern Brawl",
+          "kind": "burst",
+          "distance": {"value":8,"raw":"8m","source":"official-kit","field":"Southern Brawl > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Southern Brawl > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Fatal Attraction",
+          "kind": "burst",
+          "distance": {"value":10,"raw":"10m","source":"official-kit","field":"Fatal Attraction > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Fatal Attraction > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Ability Absorption",
+          "kind": "burst",
+          "distance": {"value":10,"raw":"10m","source":"official-kit","field":"Ability Absorption > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":25,"raw":"25s","source":"official-kit","field":"Ability Absorption > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Chrono Kick Combo",
+          "kind": "sustained",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Chrono Kick Combo > Cooldown"},
+          "flight": {"value":true,"raw":"entering flight","source":"official-kit","field":"Chrono Kick Combo > description"},
+          "note": "Undecided until checked in game: the flight may follow only a landed hit, which would move this to excluded."
+        }
+      ]
+    },
+    {
+      "heroId": "scarlet-witch",
+      "name": "Scarlet Witch",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195684.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"SCARLET WITCH > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Mystic Projection",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":50,"unit":"bonus %","raw":"50%","source":"official-kit","field":"Mystic Projection > Movement Boost"},
+          "cooldown": {"value":12,"raw":"12s per charge","source":"official-kit","field":"Mystic Projection > Recharge Speed"},
+          "flight": {"value":true,"raw":"free-flight","source":"official-kit","field":"Mystic Projection > description"}
+        },
+        {
+          "ability": "Telekinesis",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":6,"unit":"m/s","raw":"6 m/s","source":"official-kit","field":"Telekinesis > Horizontal Movement Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "spider-man",
+      "name": "Spider-Man",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195680.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"SPIDER-MAN > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Web-Swing",
+          "kind": "burst",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s per charge","source":"official-kit","field":"Web-Swing > Recharge Speed"},
+          "flight": null,
+          "note": "Distance left empty: the page prints a 30m webbing length, which is the rope and not how far a swing travels."
+        },
+        {
+          "ability": "Wall Crawl",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":9,"unit":"m/s","raw":"9 m/s","source":"official-kit","field":"Wall Crawl > Sprinting Speed"},
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "Thwip and Flip",
+          "kind": "extra-jump",
+          "distance": null,
+          "speed": null,
+          "cooldown": null,
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"Get Over Here!","reason":"Moves him only when the target carries a Spider-Tracer."}
+      ]
+    },
+    {
+      "heroId": "squirrel-girl",
+      "name": "Squirrel Girl",
+      "sourceUrl": "https://www.marvelrivals.com/20241205/41360_1198132.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"SQUIRREL GIRL > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Tail Bounce",
+          "kind": "burst",
+          "distance": {"value":9,"raw":"9m","source":"official-kit","field":"Tail Bounce > Jump Height"},
+          "speed": null,
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"Tail Bounce > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "star-lord",
+      "name": "Star-Lord",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195683.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"STAR-LORD > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Rocket Propulsion",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":100,"unit":"bonus %","raw":"100%","source":"official-kit","field":"Rocket Propulsion > Movement Boost"},
+          "cooldown": null,
+          "flight": {"value":true,"raw":"soar forward","source":"official-kit","field":"Rocket Propulsion > description"}
+        },
+        {
+          "ability": "Stellar Shift",
+          "kind": "burst",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":5,"raw":"5s per charge","source":"official-kit","field":"Stellar Shift > Recharge Speed"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "storm",
+      "name": "Storm",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195675.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"STORM > Movement Speed"},
+      "movementModeFlight": {"value":true,"raw":"Constant free-flight","source":"wiki-snapshot","field":"Hero overview"},
+      "abilities": [
+        {
+          "ability": "Weather Control",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":16,"unit":"bonus %","raw":"16%","source":"official-kit","field":"Weather Control > Movement Boost (Self)"},
+          "cooldown": null,
+          "flight": null
+        },
+        {
+          "ability": "Goddess Boost",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":40,"unit":"bonus %","raw":"40%","source":"official-kit","field":"Goddess Boost > Movement Boost (Self)"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Goddess Boost > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "the-hood",
+      "name": "The Hood",
+      "sourceUrl": "https://www.marvelrivals.com/20260807/41360_1310474.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"The Hood > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Void Walk",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":40,"unit":"bonus %","raw":"40% during the Ability, decaying to 0% over 2s after it ends","source":"official-kit","field":"Void Walk > Movement Boost"},
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"Void Walk > Cooldown"},
+          "flight": {"value":true,"raw":"free-flight","source":"official-kit","field":"Void Walk > description"}
+        }
+      ]
+    },
+    {
+      "heroId": "the-punisher",
+      "name": "The Punisher",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195673.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"THE PUNISHER > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Vantage Connection",
+          "kind": "burst",
+          "distance": {"value":35,"raw":"5m - 35m","source":"official-kit","field":"Vantage Connection > Cable Length"},
+          "speed": {"value":25,"unit":"m/s","raw":"25 m/s","source":"official-kit","field":"Vantage Connection > Dash Speed"},
+          "cooldown": {"value":20,"raw":"20s","source":"official-kit","field":"Vantage Connection > Cooldown"},
+          "flight": null,
+          "note": "He rides the cable to its end, so its length is how far he travels."
+        },
+        {
+          "ability": "Scourge Grenade",
+          "kind": "burst",
+          "distance": {"value":9,"raw":"9m","source":"official-kit","field":"Scourge Grenade > Backward Jump Distance"},
+          "speed": null,
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"Scourge Grenade > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "the-thing",
+      "name": "The Thing",
+      "sourceUrl": "https://www.marvelrivals.com/20250220/41360_1213067.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"THE THING > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Yancy Street Charge",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":100,"unit":"bonus %","raw":"100%","source":"official-kit","field":"Yancy Street Charge > Movement Boost"},
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Yancy Street Charge > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Embattled Leap",
+          "kind": "burst",
+          "distance": {"value":20,"raw":"20m","source":"official-kit","field":"Embattled Leap > Maximum Distance"},
+          "speed": null,
+          "cooldown": {"value":10,"raw":"Basic Cooldown 3s, with a charge of 10s per use","source":"official-kit","field":"Embattled Leap > Cooldown"},
+          "flight": null
+        }
+      ],
+      "excluded": [
+        {"ability":"Battle Blitz","reason":"Shares its cooldown with Embattled Leap, so it adds no extra movement."},
+        {"ability":"Stone Haymaker","reason":"The 3m forward step is part of a punch, not a way to travel."}
+      ]
+    },
+    {
+      "heroId": "thor",
+      "name": "Thor",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195657.html",
+      "baseSpeed": {"value":6.5,"raw":"6.5 m/s","source":"official-kit","field":"Thor > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Storm Surge",
+          "kind": "burst",
+          "distance": {"value":20,"raw":"No charge: 10m; Full charge: 20m. When carrying an enemy, the ranges are 6m with no charge and 13m with full","source":"official-kit","field":"Storm Surge > Dash Distance"},
+          "speed": null,
+          "cooldown": null,
+          "flight": null,
+          "note": "Full-charge distance. The official page gives no cooldown; it costs 1 Thorforce."
+        }
+      ]
+    },
+    {
+      "heroId": "ultron",
+      "name": "Ultron",
+      "sourceUrl": "https://www.marvelrivals.com/20250529/41360_1237549.html",
+      "baseSpeed": {"value":6,"raw":"6m/s","source":"official-kit","field":"Ultron > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "DYNAMIC FLIGHT",
+          "kind": "burst",
+          "distance": {"value":12,"raw":"12m","source":"official-kit","field":"DYNAMIC FLIGHT > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"DYNAMIC FLIGHT > Cooldown"},
+          "flight": {"value":true,"raw":"Fly quickly","source":"official-kit","field":"DYNAMIC FLIGHT > description"}
+        },
+        {
+          "ability": "DYNAMIC FLIGHT",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":40,"unit":"bonus %","raw":"40%","source":"official-kit","field":"DYNAMIC FLIGHT > Movement Boost"},
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"DYNAMIC FLIGHT > Cooldown"},
+          "flight": {"value":true,"raw":"Fly quickly","source":"official-kit","field":"DYNAMIC FLIGHT > description"}
+        }
+      ]
+    },
+    {
+      "heroId": "venom",
+      "name": "Venom",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195654.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"VENOM > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Frenzied Arrival",
+          "kind": "burst",
+          "distance": {"value":40,"raw":"40m","source":"official-kit","field":"Frenzied Arrival > Maximum Distance"},
+          "speed": null,
+          "cooldown": {"value":8,"raw":"8s","source":"official-kit","field":"Frenzied Arrival > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Venom Swing",
+          "kind": "burst",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Venom Swing > Cooldown"},
+          "flight": null,
+          "note": "Distance left empty: the page prints a 30m webbing length, which is the rope and not how far a swing travels."
+        },
+        {
+          "ability": "Alien Biology",
+          "kind": "sustained",
+          "distance": null,
+          "speed": {"value":9,"unit":"m/s","raw":"9 m/s","source":"official-kit","field":"Alien Biology > Sprinting Speed"},
+          "cooldown": null,
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "white-fox",
+      "name": "White Fox",
+      "sourceUrl": "https://www.marvelrivals.com/20260320/41360_1292187.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"White Fox > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Predatory Pounce",
+          "kind": "burst",
+          "distance": {"value":10,"raw":"10m","source":"official-kit","field":"Predatory Pounce > Dash Duration"},
+          "speed": null,
+          "cooldown": {"value":6,"raw":"6s","source":"official-kit","field":"Predatory Pounce > Cooldown"},
+          "flight": null,
+          "note": "First dash, listed under \"Dash Duration\". The 15m second dash needs a hit."
+        },
+        {
+          "ability": "SPIRIT SANCTUARY",
+          "kind": "burst",
+          "distance": {"value":30,"raw":"30m","source":"official-kit","field":"SPIRIT SANCTUARY > Maximum Distance"},
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"SPIRIT SANCTUARY > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "winter-soldier",
+      "name": "Winter Soldier",
+      "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195681.html",
+      "baseSpeed": {"value":6,"raw":"6 m/s","source":"official-kit","field":"WINTER SOLDIER > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Trooper's Fist",
+          "kind": "burst",
+          "distance": {"value":9,"raw":"9m","source":"official-kit","field":"Trooper's Fist > Maximum Distance"},
+          "speed": {"value":30,"unit":"m/s","raw":"30 m/s","source":"official-kit","field":"Trooper's Fist > Average Speed"},
+          "cooldown": {"value":10,"raw":"10s","source":"official-kit","field":"Trooper's Fist > Cooldown"},
+          "flight": null
+        }
+      ]
+    },
+    {
+      "heroId": "wolverine",
+      "name": "Wolverine",
+      "sourceUrl": "https://www.marvelrivals.com/20241204/41360_1198101.html",
+      "baseSpeed": {"value":7,"raw":"7m/s","source":"official-kit","field":"Wolverine > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "Vicious Rampage",
+          "kind": "burst",
+          "distance": {"value":7.5,"raw":"7.5m","source":"official-kit","field":"Vicious Rampage > Maximum Distance"},
+          "speed": {"value":44,"unit":"m/s","raw":"44m/s","source":"official-kit","field":"Vicious Rampage > Average Speed"},
+          "cooldown": {"value":3,"raw":"3s","source":"official-kit","field":"Vicious Rampage > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "Feral Leap",
+          "kind": "burst",
+          "distance": null,
+          "speed": null,
+          "cooldown": {"value":12,"raw":"12s","source":"official-kit","field":"Feral Leap > Cooldown"},
+          "flight": null
+        }
+      ]
+    }
+  ]
+}

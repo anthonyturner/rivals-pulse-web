@@ -1,0 +1,29 @@
+:host {
+  display: grid;
+  gap: 12px;
+}
+
+/* The loading, failure and empty panels share the tiles' 12px corners. */
+app-state-panel {
+  --state-panel-radius: 12px;
+}
+
+.tab-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.tab-title {
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.footnote {
+  max-width: 70ch;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}

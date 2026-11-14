@@ -1,0 +1,138 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+
+:host(:hover) {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host {
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  :host(:hover) {
+    transform: translateY(-3px);
+  }
+}
+
+.copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 12px 16px 16px;
+}
+
+.chip {
+  align-self: flex-start;
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.description {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.topics {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin: auto 0 0;
+  padding-top: 8px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* The lead card: a dark panel that stays dark in both themes, so it reads with the ink tokens. */
+:host(.featured) {
+  border-color: var(--ink-line);
+  background: var(--ink);
+}
+
+:host(.featured) .title {
+  font-size: var(--type-title);
+}
+
+:host(.featured) .title,
+:host(.featured) .description {
+  color: var(--on-ink);
+}
+
+:host(.featured) .description {
+  display: block;
+  font-size: 1rem;
+}
+
+:host(.featured) .topics {
+  color: var(--on-ink-muted);
+}
+
+:host(.featured) .link {
+  color: var(--ink-accent);
+}
+
+:host(.featured) .link:focus-visible {
+  outline-color: var(--ink-focus);
+}
+
+/* On a wide screen the lead card lays the video beside its text. */
+@media (min-width: 860px) {
+  :host(.featured) {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: stretch;
+  }
+
+  :host(.featured) app-youtube-player {
+    align-self: start;
+  }
+
+  :host(.featured) .copy {
+    justify-content: center;
+    padding: 24px;
+  }
+
+  :host(.featured) .links {
+    margin-top: 12px;
+  }
+}

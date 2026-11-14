@@ -1,0 +1,50 @@
+:host {
+  display: block;
+}
+
+.closing {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0;
+  font-size: 0.94rem;
+  list-style: none;
+}
+
+.link {
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  color: var(--text);
+}
+
+.link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .closing {
+    justify-items: stretch;
+  }
+}
