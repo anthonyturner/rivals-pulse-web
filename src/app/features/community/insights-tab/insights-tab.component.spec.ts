@@ -95,4 +95,16 @@ describe('InsightsTabComponent', () => {
     expect(host.textContent).toContain('30 minutes without a match');
     expect(host.textContent).not.toContain('NaN');
   });
+
+  it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush(ready);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(host.querySelector('.stat-how > summary')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'How these are counted for when the community plays',
+    );
+  });
 });
