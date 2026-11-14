@@ -1234,38 +1234,30 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Presence creates value',
         paragraphs: [
-          'The short guide argues that value does not only come from kills.',
-          'Your presence alone can create pressure.',
-          'If you hold an angle, the enemy has to respect it.',
-          'If you threaten a flank, the enemy has to respect it.',
-          'If you are alive, the enemy has to account for you.',
-          'The moment you die, they do not have to think about you anymore.',
-          'This is why survival discipline matters so much.',
+          'A kill is one way to change a fight, but an enemy who has to respect your angle is already making a different decision. A live threat on the flank can hold attention or close off a route even before it secures a final blow. Once you die, the enemy no longer has to account for that threat; survival is part of the pressure, not a separate concern.',
         ],
       },
       {
         title: 'Survive, reset, and re-enter',
         paragraphs: [
-          'Good players will spend resources to survive instead of dying for a fragile play.',
-          'They disengage when the fight turns bad.',
-          'They reset instead of continuing a losing trade.',
-          'They grab health packs when that is the fastest safe recovery path.',
-          'They re-enter later with cooldowns and health restored.',
-          'Cooldowns come back faster than dying and walking back from spawn.',
-          'The art of staying alive is one of the ways you carry games without always needing the final blow.',
+          'When an angle stops being favorable, spend what you need to leave rather than trading your life for a fragile attempt. Recover behind cover, through your Strategists, or at a health pack when that is the fastest safe route. Returning with health and cooldowns gives the enemy a problem again; dying removes your presence for the trip back from spawn.',
         ],
       },
       {
         title: 'Quick pressure checklist',
         paragraphs: [
-          'Before committing, ask whether your presence is already forcing respect.',
-          'Do not trade your life if simply staying alive keeps an angle closed.',
-          'Use disengage tools before the enemy turns your pressure into a death.',
-          'Reset through cover, a health pack, or your Strategists.',
-          'Re-enter once cooldowns return and the enemy has to account for you again.',
+          'Before committing further, ask whether being alive here is already forcing a useful reaction. If it is, protect that value. Use your disengage before the enemy collapses on you, then return when your resources make another attempt possible. The goal is sustained respect for your position, not staying in the same place until someone kills you.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: keep an angle alive',
+      paragraphs: [
+        'Imagine you are threatening a side route while your team fights in front. An enemy turns to watch you, but finishing a kill would require leaving cover. Instead, you recover at a nearby health pack and return with your cooldowns.',
+        'You have not earned a guaranteed elimination. You have kept the threat available without giving the enemy a death that lets them forget the angle. Judge the play by whether your presence still demands attention, not only by the final-hit count.',
+      ],
+    },
+    practiceFocus: 'For one match, notice what the enemy does because you are alive on an angle. Review one death and ask whether a safe reset would have kept that pressure available.',
     ultimates: [],
   },
   {
@@ -1286,59 +1278,46 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Damage is not the whole job',
         paragraphs: [
-          'The guide argues that Duelists are not valuable only because they deal damage.',
-          'A Duelist should apply pressure past the tank and disrupt the flow of the fight.',
-          'High damage numbers can still lose games if they do not control space, force attention, or create picks.',
-          'Pressure means forcing the enemy team to deal with you.',
-          'When pressure is real, supports turn around, tanks lose space, DPS lose off-angles, and the fight starts to fracture.',
-          'Sometimes the value is not a kill. Sometimes it is forcing ultimates, cooldowns, healing resources, or attention away from your team.',
+          'A Duelist needs to make the enemy deal with a threat, not simply add damage to the scoreboard. Pressure becomes useful when it changes the fight: a support turns away, a tank gives up space, or an enemy Duelist loses an angle. Those reactions can create an opening for your team even when you do not get the kill yourself.',
+          'Look beyond the tank when the frontline exchange is going nowhere. Forcing a defensive ability, a support ultimate, healing resources or attention can disrupt the enemy formation. Damage matters when it helps produce that change; a large total does not establish that it did.',
         ],
       },
       {
         title: 'Why damage stats lie',
         paragraphs: [
-          'Shooting the tank all game can create impressive damage stats while changing very little about the fight.',
-          'Predictable damage into a healed tank is often easy for the enemy to absorb.',
-          'There is a time to shoot tanks, but if nobody is moving and the fight is stuck on main, you usually need to disrupt somewhere else.',
-          'Pressure from an off-angle forces movement because enemies feel threatened from more than one direction.',
-          'When enemies move, backpedal, or turn around, they are more likely to make mistakes your team can punish.',
-          'Final blows and fight wins come from making the enemy uncomfortable, not from damage padding.',
+          'Repeatedly shooting a tank who is receiving reliable healing can produce impressive numbers while leaving the fight unchanged. There are still good reasons to shoot a tank. The warning is about continuing the same predictable exchange when nobody moves and your team cannot advance.',
+          'A threat from another direction changes that calculation. Enemies who must turn, move backward or leave a useful position have more decisions to make and more opportunities to make a mistake. Look for those changes rather than treating extra damage into a stable target as proof of progress.',
         ],
       },
       {
         title: 'Off-angles create the pressure',
         paragraphs: [
-          'The easiest Duelist pressure often comes from side angles, high ground, or the enemy backline.',
-          'Instead of stacking with your whole team, attack from a different direction so the enemy has two problems at once.',
-          'If they ignore you, you may get free kills.',
-          'If they turn toward you, your team gets attention value and more room to play.',
-          'Off-angles work because most players cannot track every direction during a main fight.',
-          'The timing still matters: if someone is already contesting you, reset instead of building habits around lucky escapes.',
+          'An off-angle is a second direction of attack: a side lane, high ground or a route toward the backline while your team threatens from the front. If enemies ignore it, an elimination may become available. If they turn to contest it, that attention can give your teammates more room.',
+          'The angle is not automatically safe because it is different. Wait for enemy attention to be divided, and notice when a defender is already watching you. Reset a contested attempt instead of teaching yourself that an occasional lucky escape makes the same entry reliable.',
         ],
       },
       {
         title: 'Pressure needs life discipline',
         paragraphs: [
-          'When taking disruptive angles, you must still play your life.',
-          'Know where health packs are before you enter.',
-          'Have an escape plan every time you pressure an angle.',
-          'If a defender contests you or the situation stops being favorable, reset and re-enter later.',
-          'Good Duelists wait for chaos before committing because divided enemy attention makes pressure safer and more lethal.',
-          'Sometimes you only test an angle, force a reaction, and leave.',
-          'Sometimes the enemy team is scattered enough that you can hard commit.',
+          'Plan the recovery before taking the angle. Know the nearby health pack, the cover that breaks enemy sightlines and the route you can use to leave. When a defender contests you or the situation becomes unfavorable, use that plan while it is still available.',
+          'Sometimes the right play is a brief test that forces a reaction and ends with a reset. A scattered enemy team may offer a longer commitment, but you still need to read the fight as it changes. Waiting for the main fight to divide attention is usually a better starting point than demanding a solo opening.',
         ],
       },
       {
         title: 'Main pressure still counts',
         paragraphs: [
-          'The lesson is not that every Duelist must flank every fight.',
-          'Some Duelists can play main well and create pressure with their team.',
-          'Even from main, the job is not mindless tank farming.',
-          'The job is finding the right targets, disrupting the frontline, punishing exposed squishies, and helping space move forward.',
-          'Whether you flank, off-angle, play near your tank, or push main, the goal stays the same: create pressure, force attention, and punish mistakes.',
+          'This is not a requirement to flank every fight. A Duelist can create useful pressure near their tank or through the main lane by threatening exposed targets, disrupting the frontline and helping the team take ground. Choose the position that creates a problem the enemy must answer, rather than farming the nearest tank from whichever route you took.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: change a stalled frontline trade',
+      paragraphs: [
+        'Your team is repeatedly damaging the enemy tank without gaining ground. You have a side route with cover and a known health pack, and the main fight has drawn enemy attention. Try a short angle that threatens a support rather than repeating the same exchange.',
+        'If the support or a defender turns toward you, recognize the attention you have drawn and assess your exit. You do not have to chase a kill to justify the angle. If the route is already contested, reset; if playing near your tank offers the better threat, create pressure there instead.',
+      ],
+    },
+    practiceFocus: 'In your next match, judge one attack by the reaction it forced: movement, attention or a defensive resource. Review whether you left once that useful pressure became an unsafe chase.',
     ultimates: [],
   },
   {
@@ -1359,47 +1338,39 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Most Duelist deaths are overstays',
         paragraphs: [
-          'The guide says many Duelist deaths are not about mechanics. They happen because players do not know when to leave.',
-          'Players keep fighting because they assume someone will die, then they become the player who dies.',
-          'A fight can start well and still flip against you.',
-          'Once the fight flips, forcing more value can turn a good play into a lost trade.',
-          'Overextending by only a little can be enough for the enemy to punish you.',
-          'Good players keep evaluating whether the current fight is still good for them.',
+          'A fight can begin in your favor and stop being yours before the next elimination. The mistake is continuing because the first few seconds worked, or because one more shot might finish someone. A small overextension can turn a useful opening into a death and a lost trade.',
+          'Keep reassessing the current fight rather than defending the decision that started it. Better mechanics cannot make every overstay worthwhile. Knowing when to leave reduces the preventable deaths that erase otherwise good pressure.',
         ],
       },
       {
         title: 'Signs it is time to leave',
         paragraphs: [
-          'Leave if the kill is not guaranteed and you are risking your life to finish it.',
-          'Leave when too much attention is on you and multiple enemies are shooting you at once.',
-          'Leave when unexpected threats appear, including cooldowns, abilities, ultimates, or a defender getting the jump on you.',
-          'If three people are focused on you, the fight is probably no longer favorable.',
-          'Sometimes the strongest outplay is already being out of the way.',
-          'You will still die sometimes, but the goal is to reduce preventable deaths.',
+          'Reconsider a chase when the kill is uncertain and finishing it now risks your life. Multiple enemies turning their fire toward you, a defender arriving unexpectedly, or a new ability or ultimate can all change the decision. If three players are focusing you, do not assume the original opportunity still exists.',
+          'Sometimes the useful outplay is leaving before the dangerous part lands. You will still die sometimes; the aim is to act on a worsening situation instead of waiting for certainty after escape has become impossible.',
         ],
       },
       {
         title: 'Disengage does not mean run forever',
         paragraphs: [
-          'Disengaging means resetting the fight, not abandoning all pressure.',
-          'Health packs let Duelists recover without forcing supports to shift focus.',
-          'Every Duelist who flanks or takes off-angles should learn health pack locations.',
-          'Natural cover is another reset tool because breaking line of sight for a few seconds can remove pressure.',
-          'Cover is especially important for characters without strong mobility.',
-          'Abilities help, but positioning and awareness should come first. Mobility is the emergency card, not the whole plan.',
+          'A disengage is a reset that can keep your pressure in the fight. Health packs let you recover without pulling your Strategists away from other work, so learn their locations on routes you use to flank or take angles. Breaking sightlines with natural cover can buy the same kind of breathing room.',
+          'This is especially important on a hero without strong mobility. Positioning and awareness should do the routine work of keeping an exit available; a movement ability is an emergency option, not a substitute for that plan.',
         ],
       },
       {
         title: 'Reset and re-enter',
         paragraphs: [
-          'A good disengage gives you a better entry into the same fight.',
-          'Back up, stabilize, and return once the timing improves.',
-          'Surviving keeps pressure on the map and gives you another chance to create value.',
-          'Some fights require multiple micro-disengages: reset position, avoid an ability, then re-enter when the timing works.',
-          'Great Duelists are not only good at fighting. They are good at knowing when the fight is over for them.',
+          'Back up, stabilize and look for a better entry rather than treating a retreat as the end of your contribution. Some fights require several small resets: leave a position, avoid an ability, then return when attention or resources change. Surviving preserves the chance to create value again, provided you re-enter when a useful opportunity actually appears.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: leave after the first pick',
+      paragraphs: [
+        'You secure one elimination and follow a second low-health enemy. A defender arrives, another enemy turns toward you, and the escape is becoming harder. The first pick does not make the next chase safe. Break sightlines and recover rather than spending everything to force another finish.',
+        'Once you are stable, reassess the same fight from a better position. Re-enter if an opening appears; do not stay away forever simply because the first attempt ended. The decision is about the current threat, not whether the earlier play was successful.',
+      ],
+    },
+    practiceFocus: 'Review the moments immediately after your first elimination in the next match. Identify one changed threat and whether you reset before your exit disappeared.',
     ultimates: [],
   },
   {
@@ -1420,56 +1391,45 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Priority changes mid-fight',
         paragraphs: [
-          'The guide says your target priority is often not wrong. It is outdated because the fight changed.',
-          'High-elo Duelists are not locked onto one target all fight.',
-          'They adapt in real time as the fight changes.',
-          'Target priority means choosing who gives your role the most value in that moment.',
-          'It is not always supports, not always tanks, and not always the Duelist pressuring your team.',
-          'The correct target is whatever is stopping your team from winning the fight right now.',
+          'A target choice can become outdated without having been wrong when you made it. The enemy who mattered at the start may no longer be the one stopping your team from winning. Keep reading the fight instead of staying attached to a support, tank or Duelist simply because that was the original plan.',
+          'Priority is the target that offers your role the most useful contribution now. There is no fixed order that always places supports first, tanks last or the opposing Duelist above everything else.',
         ],
       },
       {
         title: 'Shoot the problem, not just the visible target',
         paragraphs: [
-          'A major mistake is shooting what is directly in front of you instead of what is causing the problem.',
-          'If a tank is forward but cannot keep themselves alive without supports, the supports may become the priority.',
-          'If a flanker is living in your backline, that flanker may become the priority.',
-          'If a Duelist is uncontested and receiving constant healing, solving that support line may matter more than shooting the tank.',
-          'If an enemy tank is taking too much space and your team cannot move, that tank may become the immediate problem.',
+          'Ask what is keeping the enemy position working. A forward tank who depends on an exposed support line may be less useful to shoot than the support. An uncontested Duelist receiving constant healing may present the same question. However, a tank taking so much space that your team cannot move can be the immediate problem itself.',
+          'The answer can also be behind you. A flanker disrupting your backline may matter more than an enemy visible directly ahead. Seeing a target is useful information, but it does not by itself explain why that target should get your attention.',
         ],
       },
       {
         title: 'Do not force priority through bad timing',
         paragraphs: [
-          'Knowing the priority does not mean you can force it immediately.',
-          'If someone peels you or contests your angle, reset and come back when the opportunity appears.',
-          'You can keep a priority in mind while temporarily fighting a different target.',
-          'Sometimes a teammate ultimate breaks enemy space and suddenly gives you access to a backline target you could not reach before.',
-          'Sometimes the best value is cycling through whoever is actually hittable until your preferred target appears again.',
-          'Strong Duelists stay locked onto the fight itself, not a single target name.',
+          'Identifying a valuable target does not create safe access to it. If a defender peels you away or contests your angle, reset instead of forcing the same route. Keep the preferred target in mind while taking useful shots at someone you can actually reach.',
+          'A teammate ultimate may later break the enemy position and create access that did not exist before. Until then, cycle through reachable threats and watch for the opening. Stay committed to solving the fight, not to a single name.',
         ],
       },
       {
         title: 'Peel can be the priority',
         paragraphs: [
-          'Sometimes the biggest problem is not in the enemy backline. It is on your supports.',
-          'If an enemy dives your Strategists, peeling them can become the correct priority.',
-          'The guide frames target priority as solving the problem in front of your team.',
-          'You may not get a flashy kill, but protecting the support line can keep the fight playable.',
-          'If the situation turns unfavorable while peeling, reset instead of feeding into the same problem.',
+          'Peeling means helping a teammate who is under attack. When a diver reaches your Strategists, protecting that support line can be the action that keeps the whole fight playable. It need not produce a flashy kill to be the correct priority. Reassess while helping, and reset if the peel itself becomes an unfavorable trade.',
         ],
       },
       {
         title: 'Three questions for every fight',
         paragraphs: [
-          'Ask: what is the biggest problem right now?',
-          'Ask: can I actually reach that problem safely?',
-          'Ask: if I cannot reach it, what target gives me the most value instead?',
-          'Target priority is developed through repetition until the game starts to slow down.',
-          'The goal is to scan, adapt, and react in real time instead of memorizing one static target order.',
+          'Build the habit around three questions: what is the biggest problem now, can I reach it safely, and what useful target is available if I cannot? Repeating that scan develops a changing target plan. Memorizing one target order does not.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: the priority moves behind you',
+      paragraphs: [
+        'You are looking for an angle on an enemy support when a flanker reaches your own Strategists. The planned target still has value, but the immediate problem has changed. Turn to help protect the backline if you can do so without giving away your own life.',
+        'After the danger eases, scan again. You may regain the route to the support, or a different reachable target may now offer more value. Do not force the old plan through a defender just because it was correct a few seconds earlier.',
+      ],
+    },
+    practiceFocus: 'During your next match, name the biggest problem and whether you can reach it before committing. In one replayed fight, find the moment that answer changed and check whether your target changed with it.',
     ultimates: [],
   },
   {
@@ -1490,22 +1450,23 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Why off-angles work',
         paragraphs: [
-          'Off-angles make the enemy fight your team in front while also reacting to you from the side, high ground, or backline.',
-          'If nobody contests you, you may get free kills.',
-          'If they do contest you, you still pull attention away from the main fight.',
-          'Attention split creates hesitation, missed reactions, and positioning mistakes.',
+          'An off-angle gives the enemy a second direction to handle while your team threatens from the front. A side route, high ground or a backline position can create that split. Ignoring you may expose a kill; turning to contest you draws attention away from the main fight. Either way, divided attention can create mistakes your team can use.',
         ],
       },
       {
         title: 'Play your life on the angle',
         paragraphs: [
-          'Taking an off-angle does not mean feeding.',
-          'Know the nearest health pack before committing.',
-          'Have an escape plan every time you enter.',
-          'If the enemy starts collapsing on you, reset and keep the pressure available for the next window.',
+          'The angle is not permission to feed. Know a health pack route and an escape before entering. If enemies begin collapsing on you, reset rather than spending your life to keep the same spot. Staying alive lets you apply pressure again when the next window opens.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: one defender turns',
+      paragraphs: [
+        'You take a side angle as your team fights in front. One defender turns toward you. That response is already part of the angle\'s value; it does not oblige you to win a duel. If more enemies collapse on the position, leave through the exit you planned and recover before trying again.',
+      ],
+    },
+    practiceFocus: 'Choose an exit and a health pack before your next off-angle. Review whether you left when the enemy response grew instead of waiting until escape was no longer available.',
     ultimates: [],
   },
   {
@@ -1526,22 +1487,23 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Predictable damage is easy to heal',
         paragraphs: [
-          'Standing behind your tank all game makes your damage predictable.',
-          'Predictable damage is easier for supports to heal through.',
-          'DPS pressure is not only about raw numbers. It is about making enemy decisions harder.',
-          'An off-angle can force support abilities, attention, ultimates, and cooldowns even without a kill.',
+          'Damage from the same place behind your tank is predictable and easier for supports to heal through. A second angle can make the enemy spend attention, abilities or an ultimate instead. The useful measure is the decision you forced, not just how much damage the scoreboard recorded.',
         ],
       },
       {
         title: 'Take the value and reset',
         paragraphs: [
-          'The guide warns that greed kills more DPS players than the enemy team does.',
-          'Take the angle, force the cooldowns, and reset.',
-          'If kills appear during that pressure, take them, but do not give yourself up for extra damage.',
-          'Grab health packs and re-enter when a new opportunity appears.',
+          'Once you have forced a reaction, do not give it back through greed. Take an elimination if the opening is there, but do not trade your life for extra damage. Recover at a health pack when appropriate and return for another opportunity rather than demanding that one angle win the entire fight.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: a cooldown is enough value',
+      paragraphs: [
+        'From a second angle, you pressure an enemy into spending a defensive ability. Chasing through their teammates would now put you at risk. Take the resource you forced, reset through your recovery route and look for the next opening. The pressure mattered even if this attempt did not end in a kill.',
+      ],
+    },
+    practiceFocus: 'In one match, notice a defensive resource your angle forces. Check the next few seconds in replay: did you keep that advantage, or give the enemy a trade by staying for more damage?',
     ultimates: [],
   },
   {
@@ -1562,22 +1524,23 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Leave when the fight flips',
         paragraphs: [
-          'If the fight stops being favorable, the Duelist job is to reset.',
-          'A low enemy is not always worth chasing if you can die too.',
-          'Getting one kill does not mean you should overstay.',
-          'Sometimes the smartest play is abandoning the fight entirely because the cards are no longer in your favor.',
+          'Keep asking whether the fight is still favorable. A low-health enemy is not a reason to chase if you may die for the finish, and one secured kill does not justify staying indefinitely. When the answer changes, abandon the risky trade rather than forcing more value from a fight that has turned against you.',
         ],
       },
       {
         title: 'Health packs are your third support',
         paragraphs: [
-          'Health packs let you reset without draining your Strategists.',
-          'Learn health pack routes on maps where you flank or off-angle.',
-          'Disengaging can mean backing up briefly, recovering, and re-entering from a stronger position.',
-          'The point is to take the next fight on your terms.',
+          'A reset can be brief: break sightlines with cover, recover at a health pack and re-enter from a stronger position. Learn those recovery routes wherever you flank so every retreat does not demand your Strategists\' attention. The point is to take the next exchange on better terms, not to give up all pressure.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: stop the second chase',
+      paragraphs: [
+        'After one elimination, you see another low-health opponent moving toward their team. Your own health is low too. Leave the chase, use cover to reach a known health pack and reassess. The first kill remains useful without turning the second attempt into a trade.',
+      ],
+    },
+    practiceFocus: 'After each elimination in the next match, reassess before chasing. Review one time you reset and ask whether it gave you a safer next exchange.',
     ultimates: [],
   },
   {
@@ -1598,21 +1561,23 @@ export const HERO_GUIDES: HeroGuide[] = [
       {
         title: 'Priority is not fixed',
         paragraphs: [
-          'If shooting the tank is not moving the fight, change your angle and find the target that matters.',
-          'A support may become the priority if they are keeping the frontline alive.',
-          'A backline DPS may become the priority if they are controlling your team.',
-          'Sometimes whoever falls into your line of sight is the right temporary target because they are available now.',
+          'If shooting the tank is not changing the fight, look for the problem keeping the enemy position strong. That might be a support sustaining the frontline or a backline Duelist controlling your team. It can also be a different target who becomes reachable in the moment; availability matters alongside the preferred plan.',
         ],
       },
       {
         title: 'Solve the fight in front of you',
         paragraphs: [
-          'The guide summarizes target priority as solving the problem in front of you.',
-          'Do not chase a theoretical perfect target if the fight gives you a better immediate option.',
-          'Recognize the shift mid-fight and act before the opportunity disappears.',
+          'Do not ignore useful pressure while waiting for a theoretically perfect target. Change your angle, shoot what can help now and watch for the next shift. Target priority is a continuing decision about the current fight, not a promise to keep chasing the same hero.',
         ],
       },
     ],
+    workedExample: {
+      title: 'Hypothetical: use the target you can reach',
+      paragraphs: [
+        'You want to pressure a support, but your current angle only gives a safe shot at an exposed enemy Duelist. Take the useful opportunity instead of walking into danger to satisfy the original plan. Reassess as positions change; the support may become available later, or another problem may take priority.',
+      ],
+    },
+    practiceFocus: 'Review one fight where you kept chasing the same target. Find a reachable threat you could have pressured instead, and identify what information would have changed your decision.',
     ultimates: [],
   },
 ];
