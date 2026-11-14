@@ -1,5 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { PositioningGuideComponent } from './positioning-guide.component';
 import type { PositioningGuide } from './positioning-guide.types';
@@ -14,7 +15,7 @@ const GUIDE: PositioningGuide = {
     rows: [{ label: 'Row', nodes: [{ text: 'One', key: true }, { text: 'Two' }] }],
   },
   checklist: [{ label: 'Check', detail: 'Is it checked?' }],
-  sections: [{ title: 'Idea', summary: 'Summary.', points: ['First', 'Second'] }],
+  sections: [{ title: 'Idea', paragraphs: ['First explanation.', 'Second explanation.'] }],
   notesTitle: 'Notes',
   notes: [{ label: 'Role', detail: 'Do this.' }],
   drills: [{ label: 'Drill', detail: 'Practise.' }],
@@ -22,6 +23,8 @@ const GUIDE: PositioningGuide = {
     { label: '1:36', detail: 'First topic.' },
     { label: '1:03:30', detail: 'Last topic.' },
   ],
+  workedExample: { title: 'Hypothetical: a position', paragraphs: ['Make the decision.'] },
+  practiceFocus: 'Review one decision.',
 };
 
 describe('PositioningGuideComponent', () => {
@@ -29,7 +32,7 @@ describe('PositioningGuideComponent', () => {
   let element: HTMLElement;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
     fixture = TestBed.createComponent(PositioningGuideComponent);
     fixture.componentRef.setInput('guide', GUIDE);
     fixture.detectChanges();
@@ -57,5 +60,31 @@ describe('PositioningGuideComponent', () => {
 
   it('has no live region', () => {
     expect(element.querySelectorAll('[aria-live], [role="status"], [role="alert"]').length).toBe(0);
+  });
+
+  it('reads as an article and gives every chapter link a matching target', () => {
+    expect(element.querySelector('.guide-tile, .guide-bullets, .guide-grid')).toBeNull();
+    expect(element.querySelector('#chapter-1')?.textContent).toContain('First explanation.');
+    expect(element.querySelector('#worked-example')?.textContent).toContain('Hypothetical:');
+    expect(element.querySelector('#next-match')?.textContent).toContain('Review one decision.');
+    for (const link of Array.from(element.querySelectorAll<HTMLAnchorElement>('app-guide-chapters a'))) {
+      const id = new URL(link.href).hash.slice(1);
+      expect(element.querySelector(`[id="${id}"]`)).withContext(id).not.toBeNull();
+    }
+    expect(element.querySelector('details.chapters--mobile')?.hasAttribute('open')).toBeFalse();
+  });
+
+  it('updates the reading content and source moments when its guide input changes', () => {
+    fixture.componentRef.setInput('guide', {
+      ...GUIDE,
+      title: 'Another lesson',
+      sections: [{ title: 'Changed idea', paragraphs: ['Changed explanation.'] }],
+      sourceUrl: 'https://www.youtube.com/watch?v=changed',
+      timestamps: [{ label: '2:00', detail: 'Changed topic.' }],
+    });
+    fixture.detectChanges();
+    expect(element.querySelector('h1')?.textContent).toBe('Another lesson');
+    expect(element.querySelector('#chapter-1')?.textContent).toContain('Changed explanation.');
+    expect(element.querySelector('.timeline a')?.getAttribute('href')).toBe('https://www.youtube.com/watch?v=changed&t=120s');
   });
 });

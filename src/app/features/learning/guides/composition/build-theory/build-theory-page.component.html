@@ -1,65 +1,63 @@
-<div class="guide-article page-container">
-  <header class="guide-header">
-    <nav class="guide-nav" aria-label="Breadcrumb">
-      <a class="guide-link" routerLink="/hero-guides">Guides</a>
-      <span aria-hidden="true">/</span>
-      <span aria-current="page">Build theory</span>
-    </nav>
-    <app-eyebrow>Composition</app-eyebrow>
-    <h1>Utility builds and how they differ from damage, sustain, mobility, and ultimate plans.</h1>
-    <p class="guide-lede">
-      Marvel Rivals does not ask you to buy items mid-match. A build is the way you shape a hero
-      around their strongest fight pattern: which cooldowns you protect, which angles you take, what
-      your team plays around, and how you turn one advantage into a won fight.
-    </p>
+<div class="field-guide page-container">
+  <header class="field-guide__header">
+    <div class="field-guide__heading">
+      <nav class="field-guide__back" aria-label="Breadcrumb">
+        <a routerLink="/hero-guides">Guides</a><span aria-hidden="true"> / </span><span aria-current="page">Build theory</span>
+      </nav>
+      <app-eyebrow>Composition</app-eyebrow>
+      <h1>Utility builds and how they differ from damage, sustain, mobility, and ultimate plans.</h1>
+      <p class="field-guide__lede">A build is the fight pattern you choose to support: the tools you reserve, the ground you take and the opening your team intends to use. Marvel Rivals does not ask you to buy items mid-match.</p>
+    </div>
   </header>
 
-  <app-notice>
-    <strong>Utility wins by changing choices.</strong> Protect the key tool, force the bad path, then
-    let your team cash out.
-  </app-notice>
+  <div class="field-guide__layout">
+    <aside class="field-guide__rail"><app-guide-chapters [chapters]="chapters" /></aside>
+    <article class="field-guide__body">
+      <section class="field-guide__chapter" id="choose-the-plan">
+        <h2>Choose what the team will play around.</h2>
+        <p>Start with the problem in the fight. If an enemy ability decides every engage, saving the tool that answers it may matter more than adding damage. If the team cannot finish a vulnerable target, the useful plan may instead be focused burst. The category describes how you intend to win the exchange, not a score assigned to your hero.</p>
+        <p>A utility plan asks which enemy option you can remove. Damage asks how to finish a target; sustain asks how to survive the response; mobility asks where the exchange should happen; an ultimate plan asks how to prepare the decisive cast. These aims help explain different priorities without requiring every fight to fit only one pattern.</p>
+      </section>
 
-  <section class="guide-section">
-    <h2>Utility builds are about control, not raw output.</h2>
-    <p class="guide-text">
-      A damage build asks how quickly you can threaten a target. A sustain build asks how long your
-      team can survive pressure. A mobility build asks where the fight should happen. An ultimate
-      build asks how to create the fight-winning cast. A utility build asks what tool removes the
-      enemy's best option.
-    </p>
-    <ul class="guide-grid">
-      @for (build of buildTypes; track build.name) {
-        <li class="guide-tile">
-          <div class="guide-tile-head">
-            <img appHeroImageFallback [src]="build.image" alt="" width="40" height="40" loading="lazy" />
-            <h3>{{ build.name }}</h3>
-          </div>
-          <p class="guide-text">{{ build.summary }}</p>
-          <p class="guide-text"><strong>Priority:</strong> {{ build.priority }}</p>
-          <p class="guide-text"><strong>Example:</strong> {{ build.example }}</p>
-        </li>
-      }
-    </ul>
-  </section>
+      <section class="field-guide__chapter" id="compare-the-plans">
+        <h2>Compare five approaches.</h2>
+        <p>Read each approach through its priority and example. The important difference is the decision it protects, rather than which hero portrait appears beside it.</p>
+        @for (build of buildTypes; track build.name) {
+          <section class="comparison">
+            <h3><img appHeroImageFallback [src]="build.image" alt="" width="40" height="40" loading="lazy" />{{ build.name }}</h3>
+            @for (paragraph of build.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
+          </section>
+        }
+      </section>
 
-  <section class="guide-section">
-    <h2>How to recognize a real utility build.</h2>
-    <ul class="guide-grid">
-      @for (signal of utilitySignals; track signal.label) {
-        <li class="guide-tile">
-          <h3>{{ signal.label }}</h3>
-          <p class="guide-text">{{ signal.copy }}</p>
-        </li>
-      }
-    </ul>
-  </section>
+      <section class="field-guide__chapter" id="utility-sequence">
+        <h2>Recognize a real utility plan.</h2>
+        <p>Utility wins by changing choices. Work backward from the threat, decide which answer must remain available, then identify the event that makes it worth spending. An exit keeps that answer from becoming an unfavorable trade immediately afterward.</p>
+        <dl class="signals">
+          @for (signal of utilitySignals; track signal.label) {
+            <dt>{{ signal.label }}</dt><dd>{{ signal.copy }}</dd>
+          }
+        </dl>
+      </section>
 
-  <section class="guide-section">
-    <h2>Four questions before you call something a build.</h2>
-    <ol class="guide-steps">
-      @for (question of decisionQuestions; track question) {
-        <li>{{ question }}</li>
-      }
-    </ol>
-  </section>
+      <section class="field-guide__chapter" id="decision-check">
+        <h2>Four questions before calling it a plan.</h2>
+        <p>A useful plan explains timing and follow-up. Use this short check before committing the resource your team is relying on.</p>
+        <ol class="decision-questions">
+          @for (question of decisionQuestions; track question) { <li>{{ question }}</li> }
+        </ol>
+      </section>
+
+      <section class="field-guide__example" id="worked-example">
+        <span class="field-guide__label">Worked example</span><h2>Hypothetical: reserve the answer to a dive.</h2>
+        <p>Your team is losing its supports when an enemy dives, even though you have a defensive tool that can help. A utility plan starts by keeping that answer for the dive rather than spending it during harmless pressure.</p>
+        <p>Call the trigger to your team, use the protection when the threat arrives, and keep an exit after the trade. If teammates cannot follow up or the ability does not answer the actual threat, reassess the plan instead of assuming that holding a cooldown is useful by itself.</p>
+      </section>
+
+      <section class="field-guide__practice" id="next-match">
+        <h2>Try this next match</h2><p>Choose one important tool and name what you are saving it for. Review one fight afterward: was it available at the relevant moment, could your team use the result, and did you have a safe next move?</p>
+      </section>
+      <p class="field-guide__back"><a routerLink="/hero-guides">Back to Guides</a></p>
+    </article>
+  </div>
 </div>

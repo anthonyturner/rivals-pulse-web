@@ -79,6 +79,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- Power positions, strategic cover, build theory and triple-support counterplay now read as connected field lessons, with chapter navigation, practical examples and focused practice while retaining diagrams, source moments and execution checklists ([#848](https://github.com/anthonyturner/rivals-pulse-web/pull/848)).
 - Read Captain America, Jubilee and Tankpool as connected Field guide lessons, with preserved ability and matchup advice, worked examples and a focused next-match practice plan ([#847](https://github.com/anthonyturner/rivals-pulse-web/pull/847)).
 - Read the seven long fundamentals guides as connected lessons, with worked examples and one-match practice focuses, while keeping their original sources and limitations ([#846](https://github.com/anthonyturner/rivals-pulse-web/pull/846)).
 - Eight short fundamentals guides now explain pressure, disengaging and target priority as connected lessons, with clearly labelled practice examples and one focus for the next match ([#845](https://github.com/anthonyturner/rivals-pulse-web/pull/845)).
