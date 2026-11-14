@@ -140,6 +140,7 @@ describe('the data job endpoints', () => {
       readMediaDefaults: unused,
       setMediaDefaults: unused,
       readOwnDashboard: unused,
+      readOwnHeroProgressMatches: unused,
       isAdmin: async () => isAdmin,
       beginDataJob: async () => {
         started.push('begin');
