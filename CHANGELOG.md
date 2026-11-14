@@ -8,6 +8,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Added
+
+- Nightcrawler has his official portrait and an initial Season 11 guide with linked article sources; current official hero pages can supply his Strategist role and abilities again ([#853](https://github.com/anthonyturner/rivals-pulse-web/pull/853)).
+
 ### Security
 
 - The desktop app can now read its own match history, and a looked-up player's kills, deaths and assists, through the player's verified Overwolf sign-in instead of the public key built into the app. Released app versions still read with that key, which lets anyone who takes it out of the app read every uploaded match history; the privacy page now says so, and that read is removed once the app versions in use have moved. It needs `supabase db push` and a deploy of the two new functions ([#688](https://github.com/anthonyturner/rivals-pulse-web/pull/688)).
