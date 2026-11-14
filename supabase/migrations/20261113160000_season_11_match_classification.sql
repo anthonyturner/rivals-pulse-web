@@ -221,8 +221,9 @@ begin
 end
 $$;
 
-revoke all on function public.match_half_season_at(timestamptz), public.normalize_match_half_season(),
-  public.normalize_tracked_match_half_season(), public.repair_season_11_matches(text, timestamptz, integer)
-  from public, anon, authenticated;
-grant execute on function public.match_half_season_at(timestamptz), public.repair_season_11_matches(text, timestamptz, integer)
-  to service_role;
+revoke all on function public.match_half_season_at(timestamptz) from public, anon, authenticated;
+revoke all on function public.normalize_match_half_season() from public, anon, authenticated;
+revoke all on function public.normalize_tracked_match_half_season() from public, anon, authenticated;
+revoke all on function public.repair_season_11_matches(text, timestamptz, integer) from public, anon, authenticated;
+grant execute on function public.match_half_season_at(timestamptz) to service_role;
+grant execute on function public.repair_season_11_matches(text, timestamptz, integer) to service_role;
