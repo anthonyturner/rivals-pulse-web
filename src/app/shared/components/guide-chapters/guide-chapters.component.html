@@ -1,0 +1,19 @@
+<nav class="chapters chapters--desktop" aria-label="Guide chapters">
+  <p class="chapters__label">On this page</p>
+  <ol>
+    @for (chapter of chapters(); track chapter.id) {
+      <li><a [routerLink]="[]" [fragment]="chapter.id">{{ chapter.title }}</a></li>
+    }
+  </ol>
+</nav>
+
+<details class="chapters chapters--mobile">
+  <summary>On this page</summary>
+  <nav aria-label="Guide chapters">
+    <ol>
+      @for (chapter of chapters(); track chapter.id) {
+        <li><a [routerLink]="[]" [fragment]="chapter.id">{{ chapter.title }}</a></li>
+      }
+    </ol>
+  </nav>
+</details>
