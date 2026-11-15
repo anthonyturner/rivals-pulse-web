@@ -128,7 +128,7 @@ begin
       if line_first_win then
         chain_first_win_at := line.played_at;
       end if;
-      chain_counted_at := line.played_at;
+      chain_counted_at := greatest(chain_counted_at, line.played_at);
       froze_a_line := true;
 
       for credit in

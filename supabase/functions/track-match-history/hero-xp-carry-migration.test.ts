@@ -124,7 +124,7 @@ describe('the freeze', () => {
       freeze,
       /and \(chain_counted_at is null\s+or public\.hero_xp_epoch_ms\(p\.played_at\) > public\.hero_xp_epoch_ms\(chain_counted_at\)\)/,
     );
-    assert.match(freeze, /chain_counted_at := line\.played_at;/);
+    assert.match(freeze, /chain_counted_at := greatest\(chain_counted_at, line\.played_at\);/);
   });
 
   it('stores no match, uid or name', () => {
