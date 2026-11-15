@@ -852,6 +852,43 @@
       ]
     },
     {
+      "heroId": "nightcrawler",
+      "name": "Nightcrawler",
+      "sourceUrl": "https://www.marvelrivals.com/heroes/2mpwiwa9ct6hn/index.html",
+      "baseSpeed": {"value":6,"unitSource":"balance-20250411","raw":"600","source":"official-kit","field":"Nightcrawler > Movement Speed"},
+      "movementModeFlight": null,
+      "abilities": [
+        {
+          "ability": "SWIFT INTERVENTION",
+          "kind": "burst",
+          "distance": {"value":20,"raw":"20m","source":"official-kit","field":"SWIFT INTERVENTION > Maximum Targeting Range"},
+          "speed": null,
+          "cooldown": {"value":12,"raw":"2 charges, with each charge taking 12s to recharge.","source":"official-kit","field":"SWIFT INTERVENTION > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "SMOKE SHIFT",
+          "kind": "burst",
+          "distance": {"value":10,"raw":"10m","source":"official-kit","field":"SMOKE SHIFT > Dash Distance"},
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"SMOKE SHIFT > Cooldown"},
+          "flight": null
+        },
+        {
+          "ability": "TANDEM TELEPORT",
+          "kind": "burst",
+          "distance": {"value":25,"raw":"25m","source":"official-kit","field":"TANDEM TELEPORT > Maximum Teleport Distance"},
+          "speed": null,
+          "cooldown": {"value":15,"raw":"15s","source":"official-kit","field":"TANDEM TELEPORT > Cooldown"},
+          "flight": null,
+          "note": "An ally has to accept the invitation first."
+        }
+      ],
+      "excluded": [
+        {"ability":"CRAWLER CLING","reason":"He can cling to walls and crawl, with no published speed."}
+      ]
+    },
+    {
       "heroId": "peni-parker",
       "name": "Peni Parker",
       "sourceUrl": "https://www.marvelrivals.com/20241123/41360_1195656.html",

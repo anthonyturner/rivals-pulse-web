@@ -6523,6 +6523,144 @@
    ]
   },
   {
+   "heroId": "nightcrawler",
+   "name": "Nightcrawler",
+   "abilities": [
+    {
+     "ability": "FORGED BRIMSTONE",
+     "type": "Normal Attack",
+     "keys": [
+      "mouse-left"
+     ],
+     "slot": null,
+     "cooldown": null,
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "type",
+      "raw": "Normal Attack"
+     }
+    },
+    {
+     "ability": "THREE-SWORD STYLE",
+     "type": "Ability",
+     "keys": [
+      "mouse-right"
+     ],
+     "slot": null,
+     "cooldown": null,
+     "tag": "Damage",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "damage"
+     }
+    },
+    {
+     "ability": "SWIFT INTERVENTION",
+     "type": "Ability",
+     "keys": [
+      "shift"
+     ],
+     "slot": "ability_1",
+     "cooldown": null,
+     "tag": "Mobility",
+     "evidence": {
+      "source": "hero-kit-mobility",
+      "field": "abilities",
+      "raw": "SWIFT INTERVENTION"
+     }
+    },
+    {
+     "ability": "SMOKE SHIFT",
+     "type": "Ability",
+     "keys": [
+      "E"
+     ],
+     "slot": "ability_2",
+     "cooldown": {
+      "value": 15,
+      "raw": "15s"
+     },
+     "tag": "Mobility",
+     "evidence": {
+      "source": "hero-kit-mobility",
+      "field": "abilities",
+      "raw": "SMOKE SHIFT"
+     }
+    },
+    {
+     "ability": "TANDEM TELEPORT",
+     "type": "Ability",
+     "keys": [
+      "F"
+     ],
+     "slot": "ability_3",
+     "cooldown": {
+      "value": 15,
+      "raw": "15s"
+     },
+     "tag": "Mobility",
+     "evidence": {
+      "source": "hero-kit-mobility",
+      "field": "abilities",
+      "raw": "TANDEM TELEPORT"
+     }
+    },
+    {
+     "ability": "CRAWLER CLING",
+     "type": "Passive",
+     "keys": [
+      "passive"
+     ],
+     "slot": null,
+     "cooldown": null,
+     "tag": "Mobility",
+     "evidence": {
+      "source": "official-kit",
+      "field": "description",
+      "raw": "Jump"
+     }
+    },
+    {
+     "ability": "PHASING FINALE",
+     "type": "Ultimate",
+     "keys": [
+      "Q"
+     ],
+     "slot": "ultimate",
+     "cooldown": null,
+     "tag": null,
+     "reason": "More than one tag: Sustain (description: Healing); Mobility (description: teleport); Utility (description: Boost)"
+    },
+    {
+     "ability": "PROTECTIVE SIBLINGS",
+     "type": "Team-Up Ability",
+     "keys": [
+      "C"
+     ],
+     "slot": "team_up_0",
+     "cooldown": {
+      "value": 15,
+      "raw": "15s"
+     },
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damaging); Sustain (description: healing); Utility (description: Slow)"
+    },
+    {
+     "ability": "DEMON DISCIPLE",
+     "type": "Team-Up Ability",
+     "keys": [
+      "passive"
+     ],
+     "slot": null,
+     "cooldown": null,
+     "tag": null,
+     "reason": "More than one tag: Damage (description: damages); Sustain (description: heals); Mobility (description: Teleport)"
+    }
+   ]
+  },
+  {
    "heroId": "peni-parker",
    "name": "Peni Parker",
    "abilities": [
