@@ -4,6 +4,9 @@ const officialHomeUrl = 'https://www.marvelrivals.com/index.html';
 export async function scrapeOfficialHeroes() {
   const indexHtml = await fetchText(officialHeroesUrl);
   const heroCards = parseHeroCards(indexHtml);
+  if (heroCards.length === 0) {
+    throw new Error('Official hero index contains no hero cards.');
+  }
   // The hero index no longer ships portraits, so they are read from the hero
   // list on the official home page, which still carries one per hero.
   const portraits = heroCards.some((card) => !card.imageUrl)
@@ -28,15 +31,16 @@ export async function scrapeOfficialHeroes() {
 
 export function parseHeroCards(html) {
   const cards = [];
-  const anchorPattern = /<a\b([^>]*\bdata-url="[^"]+"[^>]*)>([\s\S]*?)<\/a>/gi;
+  const anchorPattern = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
   let match;
 
   while ((match = anchorPattern.exec(html))) {
     const attrs = parseAttributes(match[1]);
     const name = cleanText(attrs['data-name'] || attrs.title);
-    const url = absoluteUrl(attrs['data-url']);
+    const href = attrs['data-url'] || attrs.href;
+    const url = href ? new URL(href, officialHeroesUrl) : undefined;
 
-    if (!name || !url) {
+    if (!name || !url || url.origin !== new URL(officialHeroesUrl).origin || !/^\/heroes\/[^/]+\/index\.html$/.test(url.pathname)) {
       continue;
     }
 
@@ -44,13 +48,22 @@ export function parseHeroCards(html) {
       id: attrs['data-id'],
       name: titleCaseName(name),
       role: normalizeRole(attrs['data-tag']),
-      url,
+      url: url.href,
       slug: slugify(name),
       imageUrl: firstImage(match[2]),
     });
   }
 
   return uniqueBy(cards, (card) => card.id || card.slug);
+}
+
+export function selectOfficialHeroes(heroes, heroId) {
+  if (heroId === undefined) return heroes;
+  const selected = heroes.filter((hero) => hero.id === heroId);
+  if (selected.length !== 1) {
+    throw new Error(`Expected one official hero for ${heroId}; found ${selected.length}.`);
+  }
+  return selected;
 }
 
 export function parseHeroPortraits(html) {
@@ -72,6 +85,9 @@ export function parseHeroPortraits(html) {
 }
 
 export function parseOfficialHeroArticle(card, html) {
+  if (html.includes('window.__HERO_DATA__')) {
+    return parseStructuredHeroArticle(card, html);
+  }
   const content = extractByClass(html, 'art-inner-content') || html;
   const table = extractByClass(content, 'table-imgs');
   const rows = table ? extractElements(table, 'tr') : [];
@@ -122,12 +138,18 @@ export function parseOfficialHeroArticle(card, html) {
     });
   }
 
+  const rawRole = cleanText(extractByClass(content, 'p3')) || card.role;
+  if (!/^(vanguard|duelist|strategist|multi-role)$/i.test(rawRole ?? '') ||
+      baseStats.length === 0 || abilities.length === 0) {
+    throw new Error(`Invalid official hero kit for ${card.name}.`);
+  }
+
   return {
     id: slugify(card.name),
     officialId: card.id,
     name: titleCaseName(cleanText(extractByClass(content, 'p1')) || card.name),
     subtitle: cleanText(extractByClass(content, 'p2')),
-    role: normalizeRole(cleanText(extractByClass(content, 'p3')) || card.role),
+    role: normalizeRole(rawRole),
     summary: cleanText(extractByClass(content, 'p4')),
     lore: cleanText(extractByClass(content, 'd1')),
     sourceUrl: card.url,
@@ -137,6 +159,108 @@ export function parseOfficialHeroArticle(card, html) {
     baseStatKits: compactBaseStatKits(baseStatKits),
     abilities: mergeDuplicateOfficialAbilities(abilities),
   };
+}
+
+function parseStructuredHeroArticle(card, html) {
+  const script = html.match(/window\.__HERO_DATA__\s*=\s*([\s\S]*?)<\/script>/i);
+  let data;
+  try {
+    data = JSON.parse(script?.[1].trim().replace(/;\s*$/, '') ?? '');
+  } catch {
+    throw new Error(`Invalid official hero JSON for ${card.name}.`);
+  }
+
+  const fail = () => { throw new Error(`Invalid official hero kit for ${card.name}.`); };
+  if (!isRecord(data) || !nonemptyString(data.nickname) || !Array.isArray(data.jobs) || data.jobs.length === 0 ||
+      !Array.isArray(data.variants) || data.variants.length === 0 || !Array.isArray(data.skills) ||
+      !Array.isArray(data.teamups)) {
+    fail();
+  }
+  const roles = [...new Set(data.jobs.map((job) => {
+    if (!nonemptyString(job) || !/^(vanguard|duelist|strategist)$/i.test(job)) fail();
+    return normalizeRole(job);
+  }))];
+  const baseStatKits = data.variants.map((variant) => {
+    if (!isRecord(variant) || !nonemptyString(variant.name) || !Number.isInteger(variant.jobType) ||
+        !roleFromIndex(variant.jobType)) fail();
+    const stats = structuredStats(variant.stats, fail);
+    if (stats.length === 0) fail();
+    return { role: roleFromIndex(variant.jobType), label: titleCaseName(variant.name), stats };
+  });
+  const abilities = [];
+  for (const skill of data.skills) {
+    if (!isRecord(skill) || !nonemptyString(skill.type)) fail();
+    if (skill.type === 'unused') continue;
+    if (!['normal', 'ability'].includes(skill.type) || !nonemptyString(skill.name) ||
+        !nonemptyString(skill.description) || !nonemptyString(skill.key)) fail();
+    const technicalDetails = [
+      { label: 'Key', value: skill.key },
+      ...structuredStats(skill.stats, fail),
+    ];
+    abilities.push({
+      name: cleanText(skill.name),
+      type: officialAbilityType(skill.type === 'normal' ? 1 : 2, technicalDetails),
+      description: cleanText(skill.description),
+      technicalDetails,
+      iconUrl: nonemptyString(skill.icon) ? absoluteUrl(skill.icon) : '',
+      source: 'official',
+    });
+  }
+  if (abilities.length === 0) fail();
+  for (const teamup of data.teamups) {
+    if (!isRecord(teamup) || !nonemptyString(teamup.name) || !Array.isArray(teamup.tiers) || teamup.tiers.length === 0) fail();
+    for (const tier of teamup.tiers) {
+      if (!isRecord(tier) || !nonemptyString(tier.description)) fail();
+      abilities.push({
+        name: cleanText(teamup.name),
+        type: 'Team-Up Ability',
+        description: cleanText(tier.description),
+        technicalDetails: [
+          ...(nonemptyString(teamup.key) ? [{ label: 'Key', value: teamup.key }] : []),
+          ...structuredStats(tier.stats, fail),
+        ],
+        iconUrl: nonemptyString(tier.icon) ? absoluteUrl(tier.icon) : '',
+        source: 'official',
+      });
+    }
+  }
+
+  return {
+    id: slugify(data.nickname),
+    officialId: card.id,
+    name: titleCaseName(data.nickname),
+    subtitle: nonemptyString(data.realName) ? titleCaseName(data.realName) : '',
+    role: roles.length > 1 ? 'Multi-Role' : roles[0],
+    summary: cleanText(extractByClass(html, 'hero-desc')),
+    lore: cleanText(extractByClass(html, 'hero-lore')),
+    sourceUrl: card.url,
+    listImageUrl: card.imageUrl,
+    articleImageUrls: allImages(html),
+    baseStats: uniqueStats(baseStatKits.flatMap((kit) => kit.stats)),
+    baseStatKits: compactBaseStatKits(baseStatKits),
+    abilities: mergeDuplicateOfficialAbilities(abilities),
+  };
+}
+
+function structuredStats(stats, fail) {
+  if (!Array.isArray(stats)) fail();
+  return stats.map((stat) => {
+    if (!isRecord(stat) || !nonemptyString(stat.label) ||
+        (typeof stat.value !== 'string' && typeof stat.value !== 'number') ||
+        (stat.unit !== undefined && typeof stat.unit !== 'string')) fail();
+    return {
+      label: toTitleCase(cleanText(stat.label)),
+      value: cleanText(`${stat.value}${stat.unit ? ` ${stat.unit}` : ''}`),
+    };
+  });
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function nonemptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 export function stableOfficialPayload(payload) {
@@ -411,6 +535,10 @@ function decodeHtml(value = '') {
 function normalizeRole(value = '') {
   const normalized = cleanText(value).toUpperCase();
 
+  if (normalized === 'MULTI-ROLE') {
+    return 'Multi-Role';
+  }
+
   if (normalized.includes('VANGUARD')) {
     return 'Vanguard';
   }
@@ -423,7 +551,7 @@ function normalizeRole(value = '') {
     return 'Duelist';
   }
 
-  return 'Duelist';
+  return undefined;
 }
 
 function titleCaseName(value = '') {

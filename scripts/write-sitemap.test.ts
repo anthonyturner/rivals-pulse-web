@@ -59,6 +59,7 @@ describe('sitemap.xml', () => {
     assert.ok(locations.every((location) => location.startsWith(`${SITE_ORIGIN}/`)));
     assert.ok(locations.includes(`${SITE_ORIGIN}/heroes/new-hero`));
     assert.ok(locations.includes(`${SITE_ORIGIN}/hero-guides/captain-america`));
+    assert.ok(locations.includes(`${SITE_ORIGIN}/hero-guides/nightcrawler`));
     assert.ok(locations.includes(`${SITE_ORIGIN}/faq`));
   });
 
