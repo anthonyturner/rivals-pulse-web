@@ -32,8 +32,12 @@
 --    previous counted match. Gaps are end to end, in whole milliseconds.
 --  * Matches go in order of end time, a tie broken by the line's id read as text, as the website does.
 --
--- A match that reaches the purge after the chain has moved past it (a late upload for a half-season that was
--- already frozen) still earns its base and time XP; it cannot earn a bonus, and the chain never moves back.
+-- THE FREEZE IS IDEMPOTENT. It adds to the totals and never rebuilds them, so it counts only lines that ended
+-- after the account's stored `last_counted_at`, whether or not the purge deletes them straight afterwards:
+-- calling it twice, or on its own, counts nothing twice. A line that ends at or before that time is never frozen
+-- (a late upload for a half-season that was already frozen; uploads older than 7 days are refused, so in practice
+-- there is none). Lines tied with the time on end time are all in the batch that set it, because the same end time
+-- means the same half-season and so the same retention, so comparing end times alone neither skips nor repeats one.
 
 create table if not exists public.hero_xp_carry_overs (
   user_id uuid not null references public.player_links (user_id) on delete cascade,
@@ -108,6 +112,8 @@ begin
         and p.uid = own.player_uid
         and p.play_mode_id in (0, 1)
         and public.participants_past_retention(p.half_season, p.played_at)
+        and (chain_counted_at is null
+             or public.hero_xp_epoch_ms(p.played_at) > public.hero_xp_epoch_ms(chain_counted_at))
       order by public.hero_xp_epoch_ms(p.played_at), p.id::text collate "C"
     loop
       line_rested := chain_counted_at is not null
@@ -122,7 +128,7 @@ begin
       if line_first_win then
         chain_first_win_at := line.played_at;
       end if;
-      chain_counted_at := greatest(chain_counted_at, line.played_at);
+      chain_counted_at := line.played_at;
       froze_a_line := true;
 
       for credit in
@@ -325,7 +331,9 @@ $$;
 
 -- Postgres grants EXECUTE to everyone on a new function, and Supabase's default privileges give
 -- service_role its own grant too, so it is named here. The freeze and the time helper are for the purge
--- (the service role and the scheduler) only; the reader is for signed-in accounts only.
+-- (the service role and the scheduler) only; the reader is for signed-in accounts only. The freeze keeps the
+-- service role's EXECUTE because the purge runs with its caller's rights and the upload sweep calls the purge
+-- as the service role; it is safe to call on its own because it is idempotent.
 revoke execute on function public.hero_xp_epoch_ms(timestamptz) from public, anon, authenticated;
 revoke execute on function public.freeze_hero_xp_carry_overs() from public, anon, authenticated;
 revoke execute on function public.purge_expired_participants() from public, anon, authenticated;

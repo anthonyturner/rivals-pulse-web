@@ -9,7 +9,7 @@ import { columnsOf, createdFunctions, createdTables, escapeRegExp, MIGRATIONS, r
  * played), who can reach it, and that the purge freezes before it deletes. The numbers the freeze gives are held to
  * the TypeScript by `scripts/hero-xp-carry.test.ts` and `supabase/checks/hero_xp_carry_overs.sql`.
  */
-const CARRY = '20261115100000_hero_xp_carry_overs.sql';
+const CARRY = '20261115130000_hero_xp_carry_overs.sql';
 const EARLIER_PURGE = '20261108190000_hero_switch_in_aggregates.sql';
 const EARLIER_READ = '20261114100000_hero_progress_matches.sql';
 const READER = 'public.read_own_hero_progress_matches()';
@@ -119,8 +119,12 @@ describe('the freeze', () => {
     assert.match(freeze, /order by public\.hero_xp_epoch_ms\(p\.played_at\), p\.id::text collate "C"/);
   });
 
-  it('never moves the bonus chains back, so the table\'s order check cannot fail the purge', () => {
-    assert.match(freeze, /chain_counted_at := greatest\(chain_counted_at, line\.played_at\)/);
+  it('counts only lines after the stored last counted time, so a second call counts nothing twice', () => {
+    assert.match(
+      freeze,
+      /and \(chain_counted_at is null\s+or public\.hero_xp_epoch_ms\(p\.played_at\) > public\.hero_xp_epoch_ms\(chain_counted_at\)\)/,
+    );
+    assert.match(freeze, /chain_counted_at := line\.played_at;/);
   });
 
   it('stores no match, uid or name', () => {

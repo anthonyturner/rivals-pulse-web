@@ -126,6 +126,6 @@ describe('the purge after the hero timelines migration', () => {
   it('is only restated later by the switch-in and hero XP migrations, which each add a freeze and nothing else', () => {
     const later = readdirSync(MIGRATIONS)
       .filter(name => name > TIMELINES && withoutComments(read(name)).includes('function public.purge_expired_participants('));
-    assert.deepEqual(later, ['20261108190000_hero_switch_in_aggregates.sql', '20261115100000_hero_xp_carry_overs.sql']);
+    assert.deepEqual(later, ['20261108190000_hero_switch_in_aggregates.sql', '20261115130000_hero_xp_carry_overs.sql']);
   });
 });

@@ -1,4 +1,4 @@
--- Checks the hero XP freeze of 20261115100000_hero_xp_carry_overs.sql (issue 868): the purge works out the XP of
+-- Checks the hero XP freeze of 20261115130000_hero_xp_carry_overs.sql (issue 868): the purge works out the XP of
 -- the matches it deletes with the same rules as `src/server/hero-progress/`, keeps only an account's per-hero totals
 -- and the two times its bonus chains stood at, freezes before it deletes in the one transaction, and the owner's read
 -- hands back the totals beside the matches still held. It changes nothing (it ends in a rollback), although it runs the
@@ -66,10 +66,12 @@ declare
   account_b uuid := gen_random_uuid();
   account_c uuid := gen_random_uuid();
   account_d uuid := gen_random_uuid();
+  account_e uuid := gen_random_uuid();
   claims_a text;
   claims_b text;
   claims_c text;
   claims_d text;
+  claims_e text;
   line jsonb;
   figure jsonb;
   expected jsonb := fixture -> 'expected';
@@ -84,23 +86,29 @@ begin
     (account_a, 'xp-check-a@example.invalid'),
     (account_b, 'xp-check-b@example.invalid'),
     (account_c, 'xp-check-c@example.invalid'),
-    (account_d, 'xp-check-d@example.invalid');
+    (account_d, 'xp-check-d@example.invalid'),
+    (account_e, 'xp-check-e@example.invalid');
 
   claims_a := json_build_object('sub', account_a, 'role', 'authenticated')::text;
   claims_b := json_build_object('sub', account_b, 'role', 'authenticated')::text;
   claims_c := json_build_object('sub', account_c, 'role', 'authenticated')::text;
   claims_d := json_build_object('sub', account_d, 'role', 'authenticated')::text;
+  claims_e := json_build_object('sub', account_e, 'role', 'authenticated')::text;
 
   -- Two half-seasons of the script's own, long before any real one.
   insert into public.half_seasons (half_season, starts_at)
   values (900.0, cutoff - interval '60 days'), (901.0, cutoff - interval '40 days');
 
-  -- A, B and C are linked; D is not. C has no line, so nothing is frozen for it.
+  -- A, B, C and E are linked; D is not. E has no line, so nothing is frozen for it. C already has a stored chain (its
+  -- first win 25 hours and its last counted match 90 minutes before the cut-off), as an earlier purge would have left it.
   insert into public.player_links (user_id, recorder_id, player_uid, player_name)
   values
     (account_a, 'xp-rec-a', 'xp-uid-a', 'Xavier'),
     (account_b, 'xp-rec-b', 'xp-uid-b', 'Xena'),
-    (account_c, 'xp-rec-c', 'xp-uid-c', 'Xiu');
+    (account_c, 'xp-rec-c', 'xp-uid-c', 'Xiu'),
+    (account_e, 'xp-rec-e', 'xp-uid-e', 'Xeno');
+  insert into public.hero_xp_carry_chains (user_id, last_bonus_win_at, last_counted_at)
+  values (account_c, cutoff - interval '25 hours', cutoff - interval '90 minutes');
 
   -- A's own lines, exactly as the fixture says.
   for line in select l from jsonb_array_elements(fixture -> 'matches') l loop
@@ -134,9 +142,15 @@ begin
     (9100000001, 'xp-d1', 901.0, cutoff - interval '5 days', 'xp-uid-a', 'Xavier', 1, 1011, true, 1, 'xp-rec-other'),
     (9100000002, 'xp-d2', 901.0, cutoff - interval '5 days', 'xp-uid-mate', 'Mate', 1, 1011, true, 1, 'xp-rec-a'),
     (9100000003, 'xp-b1', 901.0, cutoff - interval '10 days', 'xp-uid-b', 'Xena', 1, null, false, 1, 'xp-rec-b'),
-    (9100000004, 'xp-z1', 901.0, cutoff - interval '10 days', 'xp-uid-z', 'Zed', 1, 1011, true, 1, 'xp-rec-z');
+    (9100000004, 'xp-z1', 901.0, cutoff - interval '10 days', 'xp-uid-z', 'Zed', 1, 1011, true, 1, 'xp-rec-z'),
+    -- C: one line before its stored chain (never frozen again), then two after it. The first is 24 hours after its
+    -- last first win (a first win) and 30 minutes after its last counted match (not rested); the second a loss.
+    (9100000020, 'xp-c0', 901.0, cutoff - interval '2 hours', 'xp-uid-c', 'Xiu', 1, 1011, true, 1, 'xp-rec-c'),
+    (9100000021, 'xp-c1', 901.0, cutoff - interval '1 hour', 'xp-uid-c', 'Xiu', 1, 1011, true, 1, 'xp-rec-c'),
+    (9100000022, 'xp-c2', 901.0, cutoff - interval '30 minutes', 'xp-uid-c', 'Xiu', 1, 1031, false, 1, 'xp-rec-c');
   insert into public.participant_hero_figures (participant_id, hero_id, seconds)
-  values (9100000001, 1011, 900), (9100000002, 1011, 900), (9100000003, 1031, 90), (9100000004, 1011, 900);
+  values (9100000001, 1011, 900), (9100000002, 1011, 900), (9100000003, 1031, 90), (9100000004, 1011, 900),
+         (9100000020, 1011, 600), (9100000021, 1011, 60), (9100000022, 1031, 60);
 
   select count(*) into mismatches from public.participants where recorded_by = 'xp-rec-a' and uid = 'xp-uid-a';
   if mismatches <> jsonb_array_length(fixture -> 'matches') then
@@ -151,10 +165,24 @@ begin
   end if;
   raise notice 'ok: the purge freezes the hero XP before its first delete';
 
+  -- Freezing is idempotent: twice before anything is deleted gives the totals once, so a call that is not followed by
+  -- the delete cannot double a total. The purge below freezes a third time and must still give the fixture's totals.
+  perform public.freeze_hero_xp_carry_overs();
+  select sum(base_xp * 1000000 + time_xp * 1000 + bonus_xp), count(*) into before_total, mismatches
+  from public.hero_xp_carry_overs where user_id = account_a;
+  perform public.freeze_hero_xp_carry_overs();
+  if (select sum(base_xp * 1000000 + time_xp * 1000 + bonus_xp) from public.hero_xp_carry_overs where user_id = account_a) <> before_total
+     or (select count(*) from public.hero_xp_carry_overs where user_id = account_a) <> mismatches
+     or before_total <> (select sum(((e ->> 'baseXp')::bigint) * 1000000 + ((e ->> 'timeXp')::bigint) * 1000 + (e ->> 'bonusXp')::bigint)
+                         from jsonb_array_elements(expected -> 'carryOvers') e) then
+    raise exception 'check failed: freezing twice before the delete did not give the totals once';
+  end if;
+  raise notice 'ok: freezing twice before any delete counts each match once';
+
   -- The real purge, once, in this transaction.
   perform public.purge_expired_participants();
 
-  if exists (select 1 from public.participants where played_at < cutoff and recorded_by in ('xp-rec-a', 'xp-rec-b', 'xp-rec-z', 'xp-rec-other')) then
+  if exists (select 1 from public.participants where played_at < cutoff and recorded_by in ('xp-rec-a', 'xp-rec-b', 'xp-rec-c', 'xp-rec-z', 'xp-rec-other')) then
     raise exception 'check failed: the purge left a line past retention behind';
   end if;
   select array_agg(p.id::text order by p.played_at, p.id) into kept_keys
@@ -197,7 +225,7 @@ begin
   raise notice 'ok: the last first win and the last counted match are kept for the chains to continue from';
 
   -- Another recorder's line with A's uid, a teammate's line and an unlinked player's line reach nobody; B gets its own.
-  if exists (select 1 from public.hero_xp_carry_overs o where o.user_id not in (account_a, account_b)) then
+  if exists (select 1 from public.hero_xp_carry_overs o where o.user_id not in (account_a, account_b, account_c)) then
     raise exception 'check failed: totals were frozen for an account that had no line';
   end if;
   if (select jsonb_agg(jsonb_build_object('h', o.half_season, 'i', o.hero_id, 'b', o.base_xp, 't', o.time_xp, 'x', o.bonus_xp))
@@ -208,6 +236,20 @@ begin
     raise exception 'check failed: account B did not freeze exactly its own line';
   end if;
   raise notice 'ok: only an account''s own lines are frozen for it, and an account with none has nothing';
+
+  -- C continued from its stored chain: its line before the stored last counted match was not frozen, its first line
+  -- earned the first win (24 hours on) and no rested bonus (30 minutes on), and its chain moved to its last line.
+  if (select jsonb_agg(jsonb_build_object('h', o.half_season, 'i', o.hero_id, 'b', o.base_xp, 't', o.time_xp, 'x', o.bonus_xp)
+                       order by o.hero_id)
+      from public.hero_xp_carry_overs o where o.user_id = account_c)
+       is distinct from jsonb_build_array(jsonb_build_object('h', 901.0, 'i', 1011, 'b', 150, 't', 10, 'x', 150),
+                                          jsonb_build_object('h', 901.0, 'i', 1031, 'b', 100, 't', 10, 'x', 0))
+     or (select c.last_bonus_win_at from public.hero_xp_carry_chains c where c.user_id = account_c) is distinct from cutoff - interval '1 hour'
+     or (select c.last_counted_at from public.hero_xp_carry_chains c where c.user_id = account_c) is distinct from cutoff - interval '30 minutes' then
+    raise exception 'check failed: account C did not continue from its stored chain (%)',
+      (select jsonb_agg(to_jsonb(o) - 'user_id') from public.hero_xp_carry_overs o where o.user_id = account_c);
+  end if;
+  raise notice 'ok: a freeze continues from the stored chain and skips what it already counted';
 
   -- Only the account and per-hero totals are kept; the tables are closed to everyone but the service role.
   if (select array_agg(column_name::text order by column_name) from information_schema.columns
@@ -272,7 +314,7 @@ begin
     raise exception 'check failed: account B did not receive exactly its own totals (%)', answer -> 'carry';
   end if;
 
-  perform set_config('request.jwt.claims', claims_c, true);
+  perform set_config('request.jwt.claims', claims_e, true);
   set local role authenticated;
   answer := public.read_own_hero_progress_matches();
   reset role;
@@ -290,22 +332,29 @@ begin
   end if;
   raise notice 'ok: each account reads only its own totals, and no link reads none';
 
-  -- A line that reaches the purge after the chains moved past it counts its base and time XP, and the chains never move back.
+  -- A line that ends before the stored last counted match is not frozen (a late upload for a half-season already
+  -- frozen), however often the freeze runs; a line after it is frozen once, and the chain moves on.
   insert into public.participants
     (id, fingerprint, half_season, played_at, uid, name, team, hero_id, is_win, play_mode_id, recorded_by)
-  values (9100000010, 'xp-late', 900.0, cutoff - interval '45 days', 'xp-uid-a', 'Xavier', 1, 1011, true, 1, 'xp-rec-a');
-  insert into public.participant_hero_figures (participant_id, hero_id, seconds) values (9100000010, 1011, 120);
+  values (9100000010, 'xp-late', 900.0, cutoff - interval '45 days', 'xp-uid-a', 'Xavier', 1, 1011, true, 1, 'xp-rec-a'),
+         (9100000011, 'xp-newer', 901.0, cutoff - interval '30 minutes', 'xp-uid-a', 'Xavier', 1, 1011, true, 1, 'xp-rec-a');
+  insert into public.participant_hero_figures (participant_id, hero_id, seconds) values (9100000010, 1011, 120), (9100000011, 1011, 600);
+  perform public.freeze_hero_xp_carry_overs();
   perform public.freeze_hero_xp_carry_overs();
   if (select o.base_xp * 1000000 + o.time_xp * 1000 + o.bonus_xp from public.hero_xp_carry_overs o
       where o.user_id = account_a and o.half_season = 900.0 and o.hero_id = 1011)
-       is distinct from (250 + 150) * 1000000 + (140 + 20) * 1000 + 150
+       is distinct from 250 * 1000000 + 140 * 1000 + 150
+     or (select o.base_xp * 1000000 + o.time_xp * 1000 + o.bonus_xp from public.hero_xp_carry_overs o
+         where o.user_id = account_a and o.half_season = 901.0 and o.hero_id = 1011)
+          is distinct from (450 + 150) * 1000000 + (410 + 100) * 1000 + 400
      or (select c.last_counted_at from public.hero_xp_carry_chains c where c.user_id = account_a)
-          is distinct from cutoff + (expected ->> 'lastCountedOffsetMs')::bigint * interval '1 millisecond'
+          is distinct from cutoff - interval '30 minutes'
      or (select c.last_bonus_win_at from public.hero_xp_carry_chains c where c.user_id = account_a)
           is distinct from cutoff + (expected ->> 'lastBonusWinOffsetMs')::bigint * interval '1 millisecond' then
-    raise exception 'check failed: a late match did not count its base and time XP with the chains left where they were';
+    raise exception 'check failed: a later freeze did not pick up only the newer match (%)',
+      (select jsonb_agg(to_jsonb(o) - 'user_id') from public.hero_xp_carry_overs o where o.user_id = account_a);
   end if;
-  raise notice 'ok: a late match is counted and never moves the chains back';
+  raise notice 'ok: a later freeze counts only matches newer than the last it counted, once';
 
   -- Unlinking (the link row going) takes the frozen totals with it, and so does forgetting the player.
   delete from public.player_links where user_id = account_b;

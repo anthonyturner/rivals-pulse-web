@@ -246,6 +246,6 @@ describe('the purge after the switch-in migration', () => {
   it('is only restated later by the hero XP migration, which adds a freeze and nothing else', () => {
     const later = readdirSync(MIGRATIONS)
       .filter(name => name > SWITCH_INS && withoutComments(read(name)).includes('function public.purge_expired_participants('));
-    assert.deepEqual(later, ['20261115100000_hero_xp_carry_overs.sql']);
+    assert.deepEqual(later, ['20261115130000_hero_xp_carry_overs.sql']);
   });
 });
