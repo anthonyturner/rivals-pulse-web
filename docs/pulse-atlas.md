@@ -603,7 +603,7 @@ from nothing else. It is **one file** for the half-season shown, listed in the m
   "mode": "all",
   "definition": { "specialistMinShare": 0.5, "specialistMinHeroMatches": 10, "flexMaxTopShare": 0.25, "flexMinHeroes": 5, "flexMinMatches": 20 },
   "minimumMatches": 50,
-  "minimumPlayers": 5,
+  "minimumPlayers": 2,
   "currentSeasonId": 21,
   "season": { "id": 21, "label": "Season 10.5" },
   "heroes": [
@@ -632,8 +632,9 @@ from nothing else. It is **one file** for the half-season shown, listed in the m
   bucket. Counted matches are Quick Match and Competitive matches with a win or a loss, so `mode` is `all`, the
   blend of `hero-stats.json`.
 - **A hero is `ready` only when both buckets pass**: each at `minimumMatches` (50) matches, from at least
-  `minimumPlayers` (5) different players and 2 different recorders, applied in the database. Two people are too few,
-  since either could subtract their own record. A ready hero carries a `specialist` and a `flex` bucket; any other
+  `minimumPlayers` (2) different players and 2 different recorders, applied in the database. Two people are a
+  pre-launch testing value, to be reviewed before public launch (issue 873): either could subtract their own record
+  from the total. A ready hero carries a `specialist` and a `flex` bucket; any other
   hero is `not-enough-data` and carries no figure and **no progress count**, because a count of how close a bucket
   is would let a reader work out who is in it. The file lists every hero with a counted match in the half-season,
   ordered by `heroId`; a hero with none has no entry. `minimumPlayers` is the second key with the word "player"
@@ -649,7 +650,7 @@ from nothing else. It is **one file** for the half-season shown, listed in the m
   [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and refuses a file, season,
   hero or bucket with any other, a key naming something private, a figure on a hero that is not ready, a ready hero
   without both buckets, a rate off the scale, a `matchesBand` that is not one of the four steps, a `minimumMatches`
-  below 50 or a `minimumPlayers` below 5 (the site's own rule, held apart from what the API reports), and a status
+  below 50 or a `minimumPlayers` below 2 (the site's own rule, held apart from what the API reports), and a status
   that disagrees with the heroes. It holds no player-level data: no names, uids, teams, matches or per-match rows.
 - **It never holds up the feed**, by the same rule as `community-stats`: a failure keeps the last published file, or
   leaves the file out if there is none. The source is `/api/hero-specialists`, and the envelope's `source` is

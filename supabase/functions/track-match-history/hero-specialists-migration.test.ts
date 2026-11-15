@@ -11,6 +11,7 @@ import { createdFunctions, createdTables, escapeRegExp, read, withoutComments } 
  */
 const MIGRATION = '20261111120000_hero_specialists.sql';
 const SPEED_MIGRATION = '20261111190000_hero_specialists_speed.sql';
+const GATE_MIGRATION = '20261115120000_hero_specialists_two_people.sql';
 const READER = 'public.read_hero_specialists()';
 const RULES = [
   'hero_specialist_min_share_percent',
@@ -25,10 +26,15 @@ const RULES = [
 
 const sql = withoutComments(read(MIGRATION));
 const speedSql = withoutComments(read(SPEED_MIGRATION));
+const gateSql = withoutComments(read(GATE_MIGRATION));
 const readerStart = speedSql.indexOf(`create or replace function ${READER}`);
 const reader = speedSql.slice(readerStart, speedSql.indexOf('$$;', speedSql.indexOf('as $$', readerStart)));
+/** The value a rule helper has in force: the last migration to define it wins, as it does in the database. */
 const ruleValue = (name: string): string | undefined =>
-  sql.match(new RegExp(`function public\\.${name}\\(\\) returns integer[\\s\\S]*?as \\$\\$ select (\\d+) \\$\\$`))?.[1];
+  [sql, gateSql]
+    .map((migration) => migration.match(new RegExp(`function public\\.${name}\\(\\) returns integer[\\s\\S]*?as \\$\\$ select (\\d+) \\$\\$`))?.[1])
+    .filter((value) => value !== undefined)
+    .pop();
 
 describe('the hero specialists migration', () => {
   it('stores nothing: it only creates functions', () => {
@@ -41,6 +47,15 @@ describe('the hero specialists migration', () => {
     assert.deepEqual(createdTables(speedSql), []);
     assert.doesNotMatch(speedSql, /create table|alter table|\binsert\b|\bupdate\b|\bdelete\b|\bdrop\b|cron\.schedule/i);
     assert.deepEqual(createdFunctions(speedSql), [READER]);
+  });
+
+  it('restates only the people gate as 2, with the same signature and revoke (issue 871)', () => {
+    assert.deepEqual(createdTables(gateSql), []);
+    assert.doesNotMatch(gateSql, /create table|alter table|\binsert\b|\bupdate\b|\bdelete\b|\bdrop\b|cron\.schedule|\bgrant\b/i);
+    assert.deepEqual(createdFunctions(gateSql), ['public.hero_specialist_min_players()']);
+    assert.match(gateSql, /returns integer\s+language sql\s+immutable\s+set search_path = ''\s+as \$\$ select 2 \$\$;/);
+    assert.match(gateSql, /revoke execute on function public\.hero_specialist_min_players\(\) from public, anon, authenticated;/);
+    assert.equal(ruleValue('hero_specialist_min_players'), '2');
   });
 
   it('keeps the reader fast: one read of participants, and no step joined back onto the lines', () => {

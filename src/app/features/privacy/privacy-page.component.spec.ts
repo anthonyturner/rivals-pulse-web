@@ -190,7 +190,7 @@ describe('PrivacyPageComponent', () => {
     expect(text).toContain('never stores which group a player is in');
     expect(text).toContain('Players who are neither are left out');
     expect(text).not.toContain('keeps nothing per player');
-    expect(text).toContain('at least 5 players, 2 uploading players and 50 matches');
+    expect(text).toContain('at least 2 players, 2 uploading players and 50 matches');
     expect(text).toContain('A line with no player id is left out');
   });
 
