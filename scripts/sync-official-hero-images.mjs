@@ -82,9 +82,9 @@ async function findRenderUrl(urls) {
 
 /** Reads a transparent PNG's dimensions from its header, without downloading the image. */
 async function pngSize(url) {
-  const response = await fetch(url, { headers: { ...requestHeaders, range: 'bytes=0-25' } });
+  const response = await fetch(url, { headers: { ...requestHeaders, range: 'bytes=0-25' } }).catch(() => null);
 
-  if (!response.ok) {
+  if (!response?.ok) {
     return null;
   }
 

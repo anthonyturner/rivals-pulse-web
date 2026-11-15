@@ -3,12 +3,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildHeroPlaystyle } from './playstyle-utils.mjs';
-import { deleteHero, getHero, saveHero } from '../src/server/heroes/catalog/index.ts';
+import { deleteHero, getHero, listHeroNames, saveHero } from '../src/server/heroes/catalog/index.ts';
 import { finishSyncRun, getExternalSourcePayload, saveExternalSource, startSyncRun } from '../src/server/sync/index.ts';
 import { getSupabaseClient } from './supabase-client.mjs';
 import {
   diffOfficialPayloads,
   scrapeOfficialHeroes,
+  resolveStoredHeroId,
   selectOfficialHeroes,
   stableOfficialPayload,
 } from './official-heroes-source.mjs';
@@ -55,8 +56,9 @@ async function runOnce() {
     const statusMessage = `Official heroes: ${diff.added.length} added, ${diff.changed.length} changed, ${diff.removed.length} removed.`;
 
     if (!checkOnly) {
+      const storedIds = new Set((await listHeroNames(db)).keys());
       for (const officialHero of selectedHeroes) {
-        await saveOfficialHero(db, officialHero);
+        await saveOfficialHero(db, { ...officialHero, id: resolveStoredHeroId(storedIds, officialHero.id) });
       }
     }
 

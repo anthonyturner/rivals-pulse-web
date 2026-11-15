@@ -1,7 +1,7 @@
 ﻿import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { parseHeroCards, parseOfficialHeroArticle, scrapeOfficialHeroes, selectOfficialHeroes } from './official-heroes-source.mjs';
+import { parseHeroCards, parseOfficialHeroArticle, resolveStoredHeroId, scrapeOfficialHeroes, selectOfficialHeroes } from './official-heroes-source.mjs';
 
 const card = {
   id: '2mpwiwa9ct6hn', name: 'Nightcrawler', slug: 'nightcrawler',
@@ -122,4 +122,33 @@ test('legacy table-based hero articles retain ability parsing', () => {
   const [unknownRoleCard] = parseHeroCards('<a href="/heroes/luna/index.html" data-name="LUNA SNOW">Luna</a>');
   assert.throws(() => parseOfficialHeroArticle(unknownRoleCard, html.replace('<p class="p3">STRATEGIST</p>', '')), /official hero/i);
   assert.equal(parseOfficialHeroArticle(card, html.replace('STRATEGIST', 'Multi-Role')).role, 'Multi-Role');
+});
+
+test('an ampersand in the official nickname gives the id the catalog already uses', () => {
+  const data = currentData();
+  data.nickname = 'CLOAK&DAGGER';
+  const hero = parseOfficialHeroArticle({ ...card, name: 'Cloak & Dagger' }, currentHtml(data));
+  assert.equal(hero.id, 'cloak-and-dagger');
+  assert.equal(hero.name, 'Cloak & Dagger');
+});
+
+test('article images resolve from the versioned asset folder and leave out inline data images', () => {
+  const html = `${currentHtml()}
+    <img src="data:image/svg+xml;charset=utf-8,%3Csvg%3E">
+    <img src="../../img/heroes/abc/card-image_1.png">
+    <img src="/pc/gw/20261012144108/img/heroes/abc/render.png">`;
+  const hero = parseOfficialHeroArticle(card, html.replace('<div class="hero-lore">', '<i>/pc/gw/20261012144108/x</i><div class="hero-lore">'));
+  assert.deepEqual(hero.articleImageUrls, [
+    'https://www.marvelrivals.com/pc/gw/20261012144108/img/heroes/abc/card-image_1.png',
+    'https://www.marvelrivals.com/pc/gw/20261012144108/img/heroes/abc/render.png',
+  ]);
+});
+
+test('a stored hero whose id differs only by punctuation is reused, never duplicated', () => {
+  const stored = new Set(['cloak-and-dagger', 'the-thing', 'adam-warlock']);
+  assert.equal(resolveStoredHeroId(stored, 'cloakanddagger'), 'cloak-and-dagger');
+  assert.equal(resolveStoredHeroId(stored, 'thething'), 'the-thing');
+  assert.equal(resolveStoredHeroId(stored, 'adam-warlock'), 'adam-warlock');
+  assert.equal(resolveStoredHeroId(stored, 'nightcrawler'), 'nightcrawler');
+  assert.throws(() => resolveStoredHeroId(new Set(['a-b', 'ab']), 'a--b'), /several stored heroes/);
 });

@@ -57,6 +57,21 @@ export function parseHeroCards(html) {
   return uniqueBy(cards, (card) => card.id || card.slug);
 }
 
+/**
+ * The id of the hero already stored for an official id, or the official id itself when none is. Two ids
+ * that differ only by punctuation ("cloak-and-dagger" and "cloakanddagger") are the same hero, so the
+ * stored one wins and a roster sync can never add a near-duplicate beside it.
+ */
+export function resolveStoredHeroId(storedIds, officialId) {
+  if (storedIds.has(officialId)) return officialId;
+  const squash = (id) => id.replace(/[^a-z0-9]/g, '');
+  const near = [...storedIds].filter((id) => squash(id) === squash(officialId));
+  if (near.length > 1) {
+    throw new Error(`Official hero ${officialId} matches several stored heroes: ${near.join(', ')}.`);
+  }
+  return near[0] ?? officialId;
+}
+
 export function selectOfficialHeroes(heroes, heroId) {
   if (heroId === undefined) return heroes;
   const selected = heroes.filter((hero) => hero.id === heroId);
@@ -154,7 +169,7 @@ export function parseOfficialHeroArticle(card, html) {
     lore: cleanText(extractByClass(content, 'd1')),
     sourceUrl: card.url,
     listImageUrl: card.imageUrl,
-    articleImageUrls: allImages(html),
+    articleImageUrls: allImages(html, card.url),
     baseStats: uniqueStats(baseStats),
     baseStatKits: compactBaseStatKits(baseStatKits),
     abilities: mergeDuplicateOfficialAbilities(abilities),
@@ -235,7 +250,7 @@ function parseStructuredHeroArticle(card, html) {
     lore: cleanText(extractByClass(html, 'hero-lore')),
     sourceUrl: card.url,
     listImageUrl: card.imageUrl,
-    articleImageUrls: allImages(html),
+    articleImageUrls: allImages(html, card.url),
     baseStats: uniqueStats(baseStatKits.flatMap((kit) => kit.stats)),
     baseStatKits: compactBaseStatKits(baseStatKits),
     abilities: mergeDuplicateOfficialAbilities(abilities),
@@ -488,10 +503,15 @@ function firstImage(html = '') {
   return match ? absoluteUrl(decodeHtml(match[1])) : '';
 }
 
-function allImages(html = '') {
+// A page's relative image paths ("../../img/...") count from the versioned asset folder the page's own
+// files live in ("/pc/gw/<version>/"), not from the page address, which has no such folder.
+function allImages(html = '', pageUrl = officialHeroesUrl) {
+  const version = html.match(/\/pc\/gw\/\d+\//)?.[0];
+  const base = new URL(version ? `${version}heroes/page/` : '', pageUrl);
   const urls = [...html.matchAll(/<img\b[^>]*\bsrc=["']([^"']+)["']/gi)]
-    .map((match) => absoluteUrl(decodeHtml(match[1])))
-    .filter(Boolean);
+    .map((match) => decodeHtml(match[1]))
+    .filter((value) => value && !value.startsWith('data:'))
+    .map((value) => new URL(value, base).href);
 
   return [...new Set(urls)];
 }
@@ -577,7 +597,7 @@ function titleCaseName(value = '') {
 function slugify(value) {
   return cleanText(value)
     .toLowerCase()
-    .replace(/&/g, 'and')
+    .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
