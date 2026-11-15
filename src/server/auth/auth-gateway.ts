@@ -5,6 +5,7 @@ import { beginResultOf, dataJobStatusesOf, type BeginDataJobResult } from '../..
 import type { SessionTokens } from './auth-cookies.ts';
 import type { OwnDashboardLine, OwnFigureLine } from '../account/own-dashboard.ts';
 import type { UploadedMatch } from '../hero-progress/hero-progress.ts';
+import { NO_HERO_XP_CARRY, type HeroXpCarry, type HeroXpCarryOver } from '../hero-progress/hero-xp-carry.ts';
 
 /** What the account page shows. It never carries the user's id. */
 interface Account {
@@ -36,7 +37,7 @@ export type OwnDashboardRead =
   | { linked: false }
   | { linked: true; player: LinkedPlayer; truncated: boolean; lines: OwnDashboardLine[] };
 
-export type OwnHeroProgressRead = { linked: false } | { linked: true; matches: UploadedMatch[] };
+export type OwnHeroProgressRead = { linked: false } | { linked: true; matches: UploadedMatch[]; carry: HeroXpCarry };
 
 /**
  * Everything the account routes need from Supabase Auth, so the routes can be tested without a
@@ -681,17 +682,55 @@ function dashboardLineOf(raw: unknown): OwnDashboardLine | undefined {
 }
 
 function heroProgressReadOf(answer: unknown): OwnHeroProgressRead {
-  const read = answer as { linked?: unknown; matches?: unknown } | null;
+  const read = answer as { linked?: unknown; matches?: unknown; carry?: unknown } | null;
 
   if (read?.linked === false) {
     return { linked: false };
   }
 
   if (read?.linked === true && Array.isArray(read.matches)) {
-    return { linked: true, matches: read.matches.flatMap((match) => uploadedMatchOf(match) ?? []) };
+    return { linked: true, matches: read.matches.flatMap((match) => uploadedMatchOf(match) ?? []), carry: heroXpCarryOf(read.carry) };
   }
 
   throw new AuthUnavailableError('Supabase answered read_own_hero_progress_matches with an unknown shape');
+}
+
+/** What the purge froze for the account. A function that predates it answers no `carry`, which is nothing frozen. */
+function heroXpCarryOf(raw: unknown): HeroXpCarry {
+  const carry = raw as Record<string, unknown> | null;
+
+  if (!carry || typeof carry !== 'object') {
+    return NO_HERO_XP_CARRY;
+  }
+
+  return {
+    overs: Array.isArray(carry['heroes']) ? carry['heroes'].flatMap((over) => heroXpCarryOverOf(over) ?? []) : [],
+    lastBonusWinAt: millisecondsOf(carry['lastBonusWinAt']),
+    lastCountedAt: millisecondsOf(carry['lastCountedAt']),
+  };
+}
+
+/** A total with no readable hero or half-season cannot be given to a hero, so it is dropped; a missing amount is nothing earned. */
+function heroXpCarryOverOf(raw: unknown): HeroXpCarryOver | undefined {
+  const over = raw as Record<string, unknown> | null;
+  const halfSeason = numberOrNull(over?.['halfSeason']);
+  const heroId = numberOrNull(over?.['heroId']);
+
+  return halfSeason === null || heroId === null
+    ? undefined
+    : {
+        halfSeason,
+        heroId,
+        baseXp: numberOrNull(over?.['baseXp']) ?? 0,
+        timeXp: numberOrNull(over?.['timeXp']) ?? 0,
+        bonusXp: numberOrNull(over?.['bonusXp']) ?? 0,
+      };
+}
+
+function millisecondsOf(value: unknown): number | null {
+  const milliseconds = typeof value === 'string' ? Date.parse(value) : Number.NaN;
+
+  return Number.isNaN(milliseconds) ? null : milliseconds;
 }
 
 /** A match with no key or no end time cannot be placed in the run of matches the bonuses follow, so it is dropped. */

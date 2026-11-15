@@ -742,6 +742,61 @@ describe('createSupabaseAuthGateway', () => {
             figures: [{ heroId: 1011, seconds: 600, damage: 9000, healing: null, blocked: 0 }],
           },
         ],
+        carry: { overs: [], lastBonusWinAt: null, lastCountedAt: null },
+      });
+    });
+
+    it('reads the frozen XP of purged matches, with the two chain times in milliseconds', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          matches: [],
+          carry: {
+            lastBonusWinAt: '2026-10-30T18:00:00+00:00',
+            lastCountedAt: '2026-10-30T20:00:00.123456+00:00',
+            heroes: [{ halfSeason: 10, heroId: 1011, baseXp: 300, timeXp: 200, bonusXp: 250 }],
+          },
+        },
+      });
+
+      expect(await result).toEqual({
+        linked: true,
+        matches: [],
+        carry: {
+          overs: [{ halfSeason: 10, heroId: 1011, baseXp: 300, timeXp: 200, bonusXp: 250 }],
+          lastBonusWinAt: Date.parse('2026-10-30T18:00:00+00:00'),
+          lastCountedAt: Date.parse('2026-10-30T20:00:00.123+00:00'),
+        },
+      });
+    });
+
+    it('reads no carry as nothing frozen, so a function that predates it still works', async () => {
+      for (const carry of [undefined, null, 'none']) {
+        const answer = await read({ status: 200, body: { linked: true, matches: [], carry } }).result;
+
+        expect(answer).toEqual({ linked: true, matches: [], carry: { overs: [], lastBonusWinAt: null, lastCountedAt: null } });
+      }
+    });
+
+    it('drops a frozen total with no hero or half-season, reads a missing amount as 0 and an unreadable time as none', async () => {
+      const { result } = read({
+        status: 200,
+        body: {
+          linked: true,
+          matches: [],
+          carry: {
+            lastBonusWinAt: 'yesterday',
+            lastCountedAt: 42,
+            heroes: [{ halfSeason: 10, baseXp: 100 }, { heroId: 1011, baseXp: 100 }, null, { halfSeason: 10, heroId: 1031, baseXp: 100, timeXp: 'ten' }],
+          },
+        },
+      });
+
+      expect(await result).toEqual({
+        linked: true,
+        matches: [],
+        carry: { overs: [{ halfSeason: 10, heroId: 1031, baseXp: 100, timeXp: 0, bonusXp: 0 }], lastBonusWinAt: null, lastCountedAt: null },
       });
     });
 

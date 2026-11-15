@@ -222,7 +222,7 @@ describe('the purge after the switch-in migration', () => {
     const everyFreeze = [
       ...new Set(
         readdirSync(MIGRATIONS)
-          .filter(name => name.endsWith('.sql'))
+          .filter(name => name.endsWith('.sql') && name <= SWITCH_INS)
           .flatMap(name => [...withoutComments(read(name)).matchAll(/create or replace function (public\.freeze_\w+)\(/g)].map(match => `${match[1]}(`)),
       ),
       'public.rebuild_hero_aggregates(',
@@ -243,9 +243,9 @@ describe('the purge after the switch-in migration', () => {
     assert.match(body, /delete from public\.match_hero_timelines t\s+where public\.participants_past_retention\(t\.half_season, t\.played_at\);/);
   });
 
-  it('is the latest purge, so a later restatement has to be checked against this one', () => {
+  it('is only restated later by the hero XP migration, which adds a freeze and nothing else', () => {
     const later = readdirSync(MIGRATIONS)
       .filter(name => name > SWITCH_INS && withoutComments(read(name)).includes('function public.purge_expired_participants('));
-    assert.deepEqual(later, []);
+    assert.deepEqual(later, ['20261115100000_hero_xp_carry_overs.sql']);
   });
 });

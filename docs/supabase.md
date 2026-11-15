@@ -120,6 +120,7 @@ repo's build. This is a move, not a redesign.
 | `20261111120000_hero_specialists.sql` | `read_hero_specialists()` (service role only, read-only) and eight rule helpers (`hero_specialist_min_share_percent()` and its siblings): per hero, the pooled record of the players who mostly play it against the players who play many heroes, worked out from `participants` on every call (issue 819). Additive: no table is touched and nothing is stored. Check with `supabase/checks/hero_specialists.sql`. |
 | `20261111190000_hero_specialists_speed.sql` | Restates `read_hero_specialists()` (same signature, grants and answer) so it reads in about 0.1 s instead of 36 s: one read of `participants` with window functions in place of joins the planner mis-sized (issue 826). Additive: only the reader is replaced, nothing is stored. |
 | `20261114100000_hero_progress_matches.sql` | `read_own_hero_progress_matches()` (signed-in accounts only, no parameters, read-only): every match the caller's own link can prove is its own, with end time, mode, half-season, result, the hero on the line and the time on each hero, for the hero levels (issue 863). Nothing is stored. Not pushed until Tony says yes |
+| `20261115100000_hero_xp_carry_overs.sql` | `hero_xp_carry_overs` and `hero_xp_carry_chains` (an account's frozen hero XP and where its bonus chains stood, service role only), `freeze_hero_xp_carry_overs()` and the helper `hero_xp_epoch_ms`, `purge_expired_participants` restated to call the freeze before its first delete, `forget_player` restated to delete the frozen totals of a forgotten player, and `read_own_hero_progress_matches()` restated to add them to its answer (issue 868). Additive: same signatures and grants. Check with `supabase/checks/hero_xp_carry_overs.sql`. Pushed after QA approves the pull request and before the merge |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -1187,11 +1188,54 @@ The answer is `{ "linked": false }` or `{ "linked": true, "matches": [...] }`, o
 - The website reads it through `readOwnHeroProgressMatches` on the auth gateway, which turns `playedAt` into
   milliseconds and drops a match with no key or no readable time. `heroProgressTracks` in
   `src/server/hero-progress/` works the levels out. See [ADR-0008](decisions/0008-give-each-stat-one-read-and-one-home.md), Decision 7.
-- **Depth.** `participants` is purged after at most six months, so an all-time level is every match still held,
-  not every match ever played. `tracked_matches` reaches further back but has no time on each hero (only the
+- **Depth.** `participants` is purged after at most six months, so the matches it still holds are only the last
+  two half-seasons or so. The XP of the matches already purged is kept as frozen totals (below), so an all-time
+  level never falls. `tracked_matches` reaches further back but has no time on each hero (only the
   hero's name at the end), which is why it is not the source.
 - The migration waits for an explicit yes before `npx supabase db push`; until it is applied the read answers
   as unavailable. Nothing calls it from a page yet, so no route exists to answer 503.
+
+### Frozen hero XP (issue 868)
+
+`20261115100000_hero_xp_carry_overs.sql` stops an all-time hero level falling when the purge deletes old matches.
+`purge_expired_participants()` calls `freeze_hero_xp_carry_overs()` (**any later migration that restates the purge
+must keep calling it, and every other freeze**) before its first delete, in the same transaction, and asks the same
+`participants_past_retention` which lines are going, so the freeze and the delete cannot disagree. For every
+account with a link it works out the XP of the counted lines about to go (Quick Match and Competitive; the
+account's own lines only, `recorded_by` and `uid` both from the link) and adds it to two tables, both closed to
+everyone but the service role:
+
+- `hero_xp_carry_overs (user_id, half_season, hero_id, base_xp, time_xp, bonus_xp)`: the XP from playing and winning,
+  from the minutes, and from the first-win and rested bonuses, per account, half-season and **game hero id** (the
+  database holds no hero catalogue; the website maps the id to a hero key on read, and one id is one key).
+- `hero_xp_carry_chains (user_id, last_bonus_win_at, last_counted_at)`: where the two bonus chains stood after the last
+  frozen match, so the next match's first-win and rested bonuses carry on across the purge as in the app.
+
+Nothing else is kept: no match, uid, name, fingerprint or recorder. Both tables reference `player_links (user_id)`
+with `on delete cascade`, so **unlinking, relinking or deleting the account deletes them**, and `forget_player`
+deletes the totals of any link naming the player. A relink to the same player therefore starts again from the
+matches still held.
+
+- **The rules are copied into the SQL on purpose.** The purge is a database job and cannot call TypeScript, and
+  storing per-match inputs would still need the first-win chain worked out in SQL and keep more than totals. So the
+  XP amounts, the 30-second rule, the cap, both gaps (20 and 2 hours, end to end, in whole milliseconds) and the
+  play order (end time, then the line id read as text) exist in `src/server/hero-progress/` and in the freeze, and a
+  change to one is made in the other in step. Parity is enforced by one fixture in
+  `supabase/checks/hero_xp_carry_overs.sql`: the check runs the SQL on it, `scripts/hero-xp-carry.test.ts` (in CI)
+  runs the TypeScript on the same text, and both must reach the expected totals and chain times in it.
+- **The read.** `read_own_hero_progress_matches()` also returns `carry` for a linked account: `lastBonusWinAt`,
+  `lastCountedAt` (`null` while nothing is frozen) and `heroes`, one `{halfSeason, heroId, baseXp, timeXp, bonusXp}`
+  per frozen total. `heroProgress` adds the totals to the matches still held, and continues the bonus chains from
+  the two times, so the all-time level is the same before and after a purge. The season track stays per half-season
+  and holds only the matches still held: a frozen total has its bonuses worked out over the whole run, not inside one
+  season, so it is not shown as a season track.
+- **A late line.** A line that reaches the purge after its half-season was frozen still counts its base and time XP
+  but earns no bonus, and the chains never move back.
+- **Not recoverable.** Matches purged before this migration is applied are gone; the freeze starts with the next
+  purge (at the time of writing, half-season 10.5 goes when 11.5 starts).
+- Check it after `db push` with `npx supabase db query --linked -f supabase/checks/hero_xp_carry_overs.sql`
+  (it rolls back, runs the real purge in its transaction, and fails with `"_tag":"Error"` in the output, which can
+  still exit 0).
 
 ### The app's own calls about its link (issues 320 and 343)
 

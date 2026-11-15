@@ -6,12 +6,15 @@ import {
   heroProgress,
   heroProgressTracks,
   heroStarsForLevel,
+  heroXpCredits,
   heroTierForLevel,
   progressForXp,
   type HeroFigure,
   type HeroProgress,
   type UploadedMatch,
 } from './hero-progress';
+import { matchXpBonuses } from './hero-xp-bonuses';
+import { NO_HERO_XP_CARRY, type HeroXpCarry, type HeroXpCarryOver } from './hero-xp-carry';
 
 const HOUR = 60 * 60 * 1000;
 const BASE_TIME = 1_753_600_000_000;
@@ -420,5 +423,109 @@ describe('hero-progress', () => {
       expect(tiers.has('Elite')).toBeTrue();
       expect(Object.keys(parity.accounts[0].expected.allTime)).toContain('deadpool:Duelist');
     });
+  });
+});
+
+describe('the carry-over of purged matches', () => {
+  const byId = (gameId: number): string => String(gameId);
+  const COUNTED = [QUICK, COMPETITIVE];
+
+  /** What the purge's SQL keeps of the matches it deletes: per half-season and hero id the three parts of XP, and where the bonus chains stood. */
+  function freeze(deleted: readonly UploadedMatch[]): HeroXpCarry {
+    const totals = new Map<string, HeroXpCarryOver>();
+    for (const credit of heroXpCredits(deleted, byId)) {
+      const key = `${credit.halfSeason}:${credit.key}`;
+      const total = totals.get(key) ?? { halfSeason: credit.halfSeason ?? 0, heroId: Number(credit.key), baseXp: 0, timeXp: 0, bonusXp: 0 };
+      totals.set(key, { ...total, baseXp: total.baseXp + credit.baseXp, timeXp: total.timeXp + credit.timeXp, bonusXp: total.bonusXp + credit.bonusXp });
+    }
+    const counted = deleted.filter(({ playModeId }) => playModeId !== null && COUNTED.includes(playModeId));
+    const bonuses = matchXpBonuses(counted.map(({ matchKey, endedAt, isWin }) => ({ matchKey, endedAt, won: isWin === true })));
+    const times = (list: readonly UploadedMatch[]) => (list.length ? Math.max(...list.map(({ endedAt }) => endedAt)) : null);
+
+    return {
+      overs: [...totals.values()],
+      lastBonusWinAt: times(counted.filter(({ matchKey }) => bonuses.get(matchKey)?.firstWin)),
+      lastCountedAt: times(counted),
+    };
+  }
+  const xpByKey = (progress: ReadonlyMap<string, HeroProgress>) => Object.fromEntries([...progress].map(([key, { xp }]) => [key, xp]));
+
+  it('adds the frozen XP of a hero to the matches still held, in the same all-time level', () => {
+    const carry: HeroXpCarry = { overs: [{ halfSeason: 9, heroId: HULK, baseXp: 300, timeXp: 200, bonusXp: 250 }], lastBonusWinAt: null, lastCountedAt: null };
+
+    expect(heroProgress([hulkMatch()], undefined, undefined, carry).get('hulk')?.xp).toBe(750 + 400);
+    expect(heroProgress([], undefined, undefined, carry).get('hulk')?.xp).toBe(750);
+  });
+
+  it('adds the frozen XP of every half-season to the one hero, and gives nothing to a game id with no hero key', () => {
+    const carry: HeroXpCarry = {
+      overs: [
+        { halfSeason: 9, heroId: HULK, baseXp: 100, timeXp: 0, bonusXp: 0 },
+        { halfSeason: 10, heroId: HULK, baseXp: 200, timeXp: 20, bonusXp: 100 },
+        { halfSeason: 10, heroId: 9_999, baseXp: 100, timeXp: 0, bonusXp: 0 },
+      ],
+      lastBonusWinAt: null,
+      lastCountedAt: null,
+    };
+    const progress = heroProgress([], undefined, undefined, carry);
+
+    expect(progress.get('hulk')?.xp).toBe(420);
+    expect(progress.size).toBe(1);
+  });
+
+  it('continues the bonus chains: a match soon after the last frozen one is neither rested nor a first win', () => {
+    const carry: HeroXpCarry = { overs: [], lastBonusWinAt: BASE_TIME - 5 * HOUR, lastCountedAt: BASE_TIME - HOUR };
+
+    expect(heroProgress([hulkMatch()], undefined, undefined, carry).get('hulk')?.xp).toBe(250);
+    expect(heroProgress([hulkMatch()]).get('hulk')?.xp).toBe(250 + 150);
+  });
+
+  it('gives the rested and first-win bonuses at the boundary across the purge, exactly as inside the history', () => {
+    const carry = (lastBonusWinAt: number, lastCountedAt: number): HeroXpCarry => ({ overs: [], lastBonusWinAt, lastCountedAt });
+    const xp = (matchCarry: HeroXpCarry) => heroProgress([hulkMatch({ isWin: false })], undefined, undefined, matchCarry).get('hulk')?.xp;
+
+    expect(xp(carry(BASE_TIME - 30 * HOUR, BASE_TIME - 2 * HOUR))).toBe(200 + 100);
+    expect(xp(carry(BASE_TIME - 30 * HOUR, BASE_TIME - 2 * HOUR + 1))).toBe(200);
+
+    const win = (matchCarry: HeroXpCarry) => heroProgress([hulkMatch({ isWin: true })], undefined, undefined, matchCarry).get('hulk')?.xp;
+
+    expect(win(carry(BASE_TIME - 20 * HOUR, BASE_TIME - HOUR))).toBe(250 + 150);
+    expect(win(carry(BASE_TIME - 20 * HOUR + 1, BASE_TIME - HOUR))).toBe(250);
+  });
+
+  it('treats a frozen last match as the previous one even when no first win was frozen', () => {
+    const carry: HeroXpCarry = { overs: [], lastBonusWinAt: null, lastCountedAt: BASE_TIME - 3 * HOUR };
+
+    expect(heroProgress([hulkMatch({ isWin: false })], undefined, undefined, carry).get('hulk')?.xp).toBe(200 + 100);
+    expect(heroProgress([hulkMatch({ isWin: true })], undefined, undefined, carry).get('hulk')?.xp).toBe(250 + 150 + 100);
+  });
+
+  it('does not change the season track, which holds only the matches still held and works its bonuses out inside the season', () => {
+    const carry: HeroXpCarry = { overs: [{ halfSeason: 10, heroId: HULK, baseXp: 900, timeXp: 0, bonusXp: 0 }], lastBonusWinAt: BASE_TIME - HOUR, lastCountedAt: BASE_TIME - HOUR };
+    const tracks = heroProgressTracks([hulkMatch()], undefined, carry);
+
+    expect(tracks.byHalfSeason.get(10)?.get('hulk')?.xp).toBe(250 + 150);
+    expect(tracks.allTime.get('hulk')?.xp).toBe(900 + 250);
+  });
+
+  it('is the same as no carry when nothing was frozen', () => {
+    const matches = [hulkMatch({ matchKey: 'a' }), hulkMatch({ matchKey: 'b', endedAt: BASE_TIME + HOUR })];
+
+    expect(xpByKey(heroProgress(matches, undefined, undefined, NO_HERO_XP_CARRY))).toEqual(xpByKey(heroProgress(matches)));
+  });
+
+  describe('a purge at any point in a history leaves every level where it was', () => {
+    for (const account of parity.accounts) {
+      it(account.name, () => {
+        const matches = [...(account.matches as unknown as UploadedMatch[])].sort((first, second) => first.endedAt - second.endedAt || (first.matchKey < second.matchKey ? -1 : 1));
+        const whole = xpByKey(heroProgress(matches, undefined, byId));
+
+        for (let cut = 0; cut <= matches.length; cut++) {
+          const afterPurge = heroProgress(matches.slice(cut), undefined, byId, freeze(matches.slice(0, cut)));
+
+          expect(xpByKey(afterPurge)).withContext(`purged the first ${cut} of ${matches.length}`).toEqual(whole);
+        }
+      });
+    }
   });
 });
