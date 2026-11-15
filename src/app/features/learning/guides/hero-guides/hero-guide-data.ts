@@ -30,7 +30,7 @@ export const HERO_GUIDES: HeroGuide[] = [
     sections: [
       {
         title: 'Start a move with somewhere safe to return',
-        points: [
+        paragraphs: [
           'The MarvelRivals.gg guide recommends beginning Smoke Shift from cover or high ground rather than the middle of an exposed fight.',
           'The official kit says Smoke Shift marks your starting point; its third activation returns you to that mark.',
           'Check the return location before committing. A return marker does not make exposed ground safe.',
@@ -38,7 +38,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Keep healing ahead of an unsupported chase',
-        points: [
+        paragraphs: [
           'Madian Shodi warns that aggressive play must not replace your responsibility to heal teammates.',
           'Forged Brimstone can heal allies and damage enemies. Swift Intervention moves you to an ally and provides healing.',
           'Learn what each movement button does: Tandem Teleport requires an ally to accept an invitation before it brings them back to your original location.',
@@ -46,7 +46,7 @@ export const HERO_GUIDES: HeroGuide[] = [
       },
       {
         title: 'Agree the follow-up before spending your ultimate',
-        points: [
+        paragraphs: [
           'The article recommends coordinating Phasing Finale with teammates who have an ultimate ready, rather than pulling enemies together without follow-up.',
           'The official description separates the allied teleport from a second cast that slashes enemies in the Smoke Domain and pulls them to you.',
           'Explain the destination and follow-up before moving the team so allies can prepare their next action.',
