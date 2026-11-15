@@ -23,6 +23,8 @@ export const NOT_ADMIN_FUNCTIONS: readonly string[] = [
   'public.set_records_opt_in',
   // The media defaults (issue 705): any signed-in account sets its own hero video and sound defaults. It names no account and touches only the caller's row.
   'public.set_media_defaults',
+  // The hero levels read (issue 863): any linked player reads their own matches for their own levels. It takes no parameters, finds the caller's link through auth.uid() and returns nothing about anyone else, like read_own_dashboard.
+  'public.read_own_hero_progress_matches',
 ];
 
 const IS_ADMIN = 'public.is_admin';

@@ -30,7 +30,7 @@ describe('FirstTimeGuidePageComponent', () => {
 
   it('points the lede links at released pages only', () => {
     const element = fixture.nativeElement as HTMLElement;
-    const targets = Array.from(element.querySelectorAll('.guide-header p a')).map((link) =>
+    const targets = Array.from(element.querySelectorAll('.field-guide__header p a')).map((link) =>
       link.getAttribute('href'),
     );
 
@@ -45,18 +45,51 @@ describe('FirstTimeGuidePageComponent', () => {
     expect(element.querySelectorAll('h1').length).toBe(1);
     expect(crumbs?.querySelector('a')?.getAttribute('href')).toBe('/hero-guides');
     expect(crumbs?.querySelector('[aria-current="page"]')?.textContent?.trim()).toBe('First-time guide');
-    expect(element.querySelector('img.guide-portrait')?.getAttribute('alt')).toBe('');
+    expect(element.querySelector('img.field-guide__portrait')?.getAttribute('alt')).toBe('');
   });
 
-  it('lists the five rules as steps and every section flat, with the first match plan as steps', () => {
+  it('reads as prose chapters while keeping the genuine rules and first-match sequence as lists', () => {
     const element = fixture.nativeElement as HTMLElement;
-    const rules = element.querySelectorAll('.guide-tile ol.guide-steps li');
-    const sections = element.querySelectorAll('section.guide-section');
+    const rules = element.querySelectorAll('#five-rules ol li');
+    const sections = element.querySelectorAll('section.field-guide__chapter:not(#five-rules)');
 
     expect(rules.length).toBe(component.quickRules.length);
     expect(sections.length).toBe(component.sections.length);
-    expect(element.querySelectorAll('section.guide-section ul.guide-bullets').length).toBe(sections.length - 1);
-    expect(element.querySelectorAll('section.guide-section ol.guide-steps').length).toBe(1);
-    expect(element.querySelector('section.guide-section:has(ol.guide-steps) h2')?.textContent).toBe('Your first match plan');
+    expect(element.querySelector('.guide-tile, .guide-bullets')).toBeNull();
+    expect(element.querySelectorAll('#first-match-plan ol li').length).toBe(4);
+    expect(element.querySelector('#first-match-plan h2')?.textContent).toBe('Your first match plan');
+    expect(element.querySelector('#worked-example')?.textContent).toContain('hypothetical practice');
+    expect(element.querySelector('#next-match')?.textContent).toContain('one teammate');
+  });
+
+  it('gives every chapter link a matching destination', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('app-guide-chapters a'));
+
+    expect(links.length).toBeGreaterThan(component.sections.length);
+    for (const link of links) {
+      const fragment = new URL(link.href).hash.slice(1);
+      expect(element.querySelector(`[id="${fragment}"]`)).withContext(fragment).not.toBeNull();
+    }
+  });
+
+  it('contains its article at narrow and desktop column widths in both themes', () => {
+    const element = fixture.nativeElement as HTMLElement;
+    const previousTheme = document.documentElement.dataset['theme'];
+    element.style.display = 'block';
+
+    try {
+      for (const theme of ['light', 'dark']) {
+        document.documentElement.dataset['theme'] = theme;
+        for (const width of [320, 390, 884, 970]) {
+          element.style.width = `${width}px`;
+          const article = element.querySelector('article') as HTMLElement;
+          expect(article.scrollWidth).withContext(`${theme}, ${width}px`).toBeLessThanOrEqual(article.clientWidth + 1);
+        }
+      }
+    } finally {
+      if (previousTheme === undefined) delete document.documentElement.dataset['theme'];
+      else document.documentElement.dataset['theme'] = previousTheme;
+    }
   });
 });

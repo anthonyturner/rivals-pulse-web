@@ -76,6 +76,14 @@ describe('StatsMapsComponent', () => {
     expect(text()).not.toMatch(/NaN|undefined|null/);
   });
 
+  it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
+    await answer(READY);
+
+    expect(element().querySelector('.stat-how > summary')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'How these are counted for win rate by map',
+    );
+  });
+
   it('is a page with content, with an ad slot and an index entry, once a map has a rate', async () => {
     await answer(READY);
 

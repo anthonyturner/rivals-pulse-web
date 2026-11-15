@@ -15,9 +15,13 @@ declare
   stored record;
   read_back record;
 begin
-  if exists (select 1 from public.participants where half_season in (997, 998)) then
+  if exists (select 1 from public.participants where half_season in (997, 998))
+     or exists (select 1 from public.half_seasons where half_season in (997, 998)) then
     raise exception 'test half-seasons already exist';
   end if;
+  -- The participants trigger sets half_season from played_at and public.half_seasons. This start sits after every
+  -- real half-season and a month before the fixture's matches, so they stay in 997 (998 gets no row: its one match is two years old, before every real half-season, so it keeps its own).
+  insert into public.half_seasons (half_season, starts_at) values (997, '2997-01-01T00:00:00Z');
 
   -- Matches 1 to 10 each hold the same three switches. Team 1 (heroes 1011, 1014, 1015) won matches 1
   -- to 6 and lost 7 to 10; two players recorded them (matches 1 to 6 the first, 7 to 10 the second).
@@ -32,7 +36,7 @@ begin
   -- Matches 16 to 24 are nine decided matches of one more switch (1017 against 1033), recorded by
   -- three different players: under 10 matches, so the reader must never return them.
   for n in 1..24 loop
-    played := now() - make_interval(hours => n);
+    played := '2997-02-01T00:00:00Z'::timestamptz - make_interval(hours => n);
     recorder := case
       when n between 16 and 24 then 'tst-nine-' || (n % 3)
       when n between 7 and 14 then 'tst-switch-b'
@@ -183,13 +187,20 @@ declare
   timeline_recorder text;
   stored record;
 begin
-  if exists (select 1 from public.participants where half_season in (995, 996)) then
+  if exists (select 1 from public.participants where half_season in (995, 996))
+     or exists (select 1 from public.half_seasons where half_season in (995, 996)) then
     raise exception 'test half-seasons already exist';
   end if;
+  -- The participants trigger sets half_season from played_at and public.half_seasons, so each half-season starts in
+  -- the far future (year 2000 plus its number) and its matches are played a month after that start.
+  insert into public.half_seasons (half_season, starts_at)
+  select t.s, '2000-01-01T00:00:00Z'::timestamptz + make_interval(years => t.s::integer)
+  from unnest(array[995, 996]::numeric[]) as t(s);
 
   foreach hs in array array[996, 995]::numeric[] loop
     for n in 1..10 loop
-      played := now() - make_interval(hours => n);
+      played := '2000-01-01T00:00:00Z'::timestamptz + make_interval(years => hs::integer) + interval '1 month'
+                - make_interval(hours => n);
       board_recorder := case when hs = 996 then 'tst-rec-board' else 'tst-rec-board-' || (n % 2) end;
       timeline_recorder := case
         when hs = 995 then 'tst-rec-timeline-c'
@@ -281,12 +292,16 @@ declare
   played timestamptz;
   stored record;
 begin
-  if exists (select 1 from public.participants where half_season = 994) then
+  if exists (select 1 from public.participants where half_season = 994)
+     or exists (select 1 from public.half_seasons where half_season = 994) then
     raise exception 'test half-season already exists';
   end if;
+  -- The participants trigger sets half_season from played_at and public.half_seasons. This start sits after every
+  -- real half-season and a month before the fixture's matches, so they stay in 994.
+  insert into public.half_seasons (half_season, starts_at) values (994, '2994-01-01T00:00:00Z');
 
   for n in 1..10 loop
-    played := now() - make_interval(hours => n);
+    played := '2994-02-01T00:00:00Z'::timestamptz - make_interval(hours => n);
 
     perform public.record_match_participants('tst-form-' || n, 994, played, 'tst-form-' || (n % 2),
       jsonb_build_array(

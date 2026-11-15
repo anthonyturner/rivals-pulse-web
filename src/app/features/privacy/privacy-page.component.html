@@ -227,11 +227,11 @@
       <li>
         <strong>Specialist and flex win rates.</strong> For each hero the site can compare the
         win rate of players who mostly play it with the win rate of players who play many heroes.
-        The database sorts players into those two groups, by the player id on their scoreboard
-        lines, while it works out the numbers, and keeps nothing per player. Only each group's win
-        rate on a hero and a rough match count (50+, 100+, 250+ or 500+) are published, for a
-        hero once each group has at least 5 players, 2 uploading players and 50 matches. A line
-        with no player id is left out.
+        The database works out which group a player is in, by the player id on their scoreboard
+        lines, each time it builds the numbers, and never stores which group a player is in.
+        Players who are neither are left out. Only each group's win rate on a hero and a rough
+        match count (50+, 100+, 250+ or 500+) are published, for a hero once each group has at
+        least 2 players, 2 uploading players and 50 matches. A line with no player id is left out.
       </li>
     </ul>
   </section>
@@ -311,6 +311,14 @@
       <li>
         Before a half-season's lines are deleted, its totals are saved as anonymous counts that
         hold no name, id or match. Those counts are what the community pages keep showing.
+      </li>
+      <li>
+        If you have linked your player to a website account, the experience points behind your hero levels
+        are also saved before your scoreboard lines are deleted, so your levels never fall: a total for each hero
+        in each half-season, and the times of your last first win and last match so the bonuses carry on.
+        They hold no name, id or match, belong to your account link, and are deleted when you unlink or
+        link again (even to the same player), or delete your account, or when your scoreboard lines are deleted at
+        your request.
       </li>
       <li>
         A player who does not use the app can ask for their scoreboard lines to be deleted and

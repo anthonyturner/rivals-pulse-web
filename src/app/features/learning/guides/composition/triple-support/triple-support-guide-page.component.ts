@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../../shared/components/eyebrow/eyebrow.component';
+import { GuideChaptersComponent } from '../../../../../shared/components/guide-chapters/guide-chapters.component';
+import type { GuideChapter } from '../../../../../shared/components/guide-chapters/guide-chapters.types';
 
 interface HeroPick {
   name: string;
@@ -9,17 +12,19 @@ interface HeroPick {
 }
 
 interface CounterPlan {
+  id: string;
   title: string;
   summary: string;
+  context: string;
   steps: string[];
   heroes: HeroPick[];
 }
 
 @Component({
   selector: 'app-triple-support-guide-page',
-  imports: [EyebrowComponent],
+  imports: [EyebrowComponent, GuideChaptersComponent, RouterLink],
   templateUrl: './triple-support-guide-page.component.html',
-  styleUrls: ['../../../../../shared/styles/guide-article.css', './triple-support-guide-page.component.css'],
+  styleUrls: ['../../../../../shared/styles/field-guide.css', './triple-support-guide-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TripleSupportGuidePageComponent {
@@ -54,18 +59,13 @@ export class TripleSupportGuidePageComponent {
     },
   ];
 
-  readonly weaknesses = [
-    'Less offensive tempo',
-    'One frontline must do too many jobs',
-    'Vulnerable before ultimates are online',
-    'Depends on formation and sightlines',
-  ];
-
   readonly plans: CounterPlan[] = [
     {
+      id: 'dive-one-support',
       title: 'Dive one support together',
       summary:
         'Triple support can erase scattered poke, but it struggles when several threats arrive on the same target at the same time.',
+      context: 'Staging from more than one direction makes the single Vanguard choose which entrance to cover. The target call only becomes useful when teammates are ready to arrive together. An early fight may catch the composition before several defensive ultimates are available, but a solo dive still gives the healers time to answer it. Treat a pick or a forced ultimate as a reason to reassess and take space, not permission to remain in the backline indefinitely.',
       steps: [
         'Stage from more than one angle so the single Vanguard cannot mark every entry.',
         'Call one Strategist by name and commit together; split damage gives three healers time to recover.',
@@ -81,9 +81,11 @@ export class TripleSupportGuidePageComponent {
       ],
     },
     {
+      id: 'burst-the-window',
       title: 'Burst through the healing window',
       summary:
         'Healing only matters when a target survives long enough to receive it. Layer control and damage into one short conversion window.',
+      context: 'The useful sequence is control followed by damage that arrives before the target can stabilize. Groot can help group the backline or separate a frontline target from healing, but the control needs prompt follow-up. Track defensive ultimates rather than sending every offensive resource into the first answer. A later window, as protection ends, may be worth more than adding another ultimate to an already defended target.',
       steps: [
         'Track defensive support ultimates and avoid spending every offensive ultimate into the first one.',
         'Use Groot control to group the backline or wall the Vanguard away from healing sightlines.',
@@ -98,9 +100,11 @@ export class TripleSupportGuidePageComponent {
       ],
     },
     {
+      id: 'break-the-formation',
       title: 'Break the formation',
       summary:
         'The comp depends on overlapping range, protection, and healing. Move one piece out of the formation and the numbers stop working together.',
+      context: 'A displaced tank or support may lose the sightlines that make the formation durable. Use corners and walls to create that separation, then help the team use the space it opens. A smaller ultimate can sometimes draw a more valuable defensive response and leave a better re-engage, but the follow-up still needs coordination. Take ground decisively when the composition gives up offensive pressure rather than spending the whole opening on another unfocused damage trade.',
       steps: [
         'Displace the Vanguard away from the supports, or pull a support out of the healing triangle.',
         'Fight around walls and corners that interrupt line of sight between the frontline and backline.',
@@ -129,5 +133,15 @@ export class TripleSupportGuidePageComponent {
     'Stacking every offensive ultimate into the first defensive response.',
     'Ignoring the objective and letting the defensive composition win through time.',
     'Treating high healing numbers as proof the composition cannot be broken.',
+  ];
+
+  readonly chapters: readonly GuideChapter[] = [
+    { id: 'read-the-comp', title: 'Read the formation' },
+    ...this.plans.map(({ id, title }) => ({ id, title })),
+    { id: 'fight-checks', title: 'Four engagement checks' },
+    { id: 'traps', title: 'Avoid the common traps' },
+    { id: 'worked-example', title: 'Worked example' },
+    { id: 'next-match', title: 'Try this next match' },
+    { id: 'sources', title: 'Source and limitations' },
   ];
 }

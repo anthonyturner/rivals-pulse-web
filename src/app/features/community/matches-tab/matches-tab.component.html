@@ -11,12 +11,10 @@
   @if (current.kind === 'ready') {
     <div class="stat-intro">
       <p class="stat-note">{{ current.sample }}</p>
+      <p class="stat-note">While few players upload, these totals can come from one player.</p>
       <details class="stat-how">
-        <summary>How these are counted</summary>
-        <p class="stat-note">
-          Each match is counted once however many players recorded it. While few players upload, these totals can come
-          from one player.
-        </p>
+        <summary>How these are counted<span class="visually-hidden"> for community matches</span></summary>
+        <p class="stat-note">Each match is counted once however many players recorded it.</p>
         <p class="stat-note">
           Win rate by map: Competitive and Quick Match together, from the side of the player who recorded each match. A map with few matches is pulled toward the average of the maps that show (50% while fewer than five show), so a short run of wins does not put it first.
         </p>

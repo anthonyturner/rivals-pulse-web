@@ -117,7 +117,10 @@ repo's build. This is a move, not a redesign.
 | `20261109100000_backfill_tracked_match_recorders.sql` | `backfill_tracked_match_recorders()` (service role only, adds `tracked_match_recorders` rows only) and one call of it: ties matches uploaded before the recorder table to the single recorder of their player, so `read_own_tracked_matches` returns them (issue 697) |
 | `20261109140000_game_counts.sql` | `read_game_counts()` (service role only, read-only): the matches and different players in `participants`, in total and per half-season, for the Game Stats page (issue 381). Additive: no table is touched. Check with `supabase/checks/game_counts.sql` |
 | `20261109160000_drop_steam_game_stat_snapshots.sql` | Drops `game_stat_snapshots`, `game_stat_snapshot_games` and `record_game_stat_snapshot`, deletes the `sync_runs` rows for the `game-stats` key, and restates `data_job_cooldown()` and `admin_data_jobs_status()` without `game-stats` (issue 743) |
-| `20261111120000_hero_specialists.sql` | `read_hero_specialists()` (service role only, read-only) and eight rule helpers (`hero_specialist_min_share_percent()` and its siblings): per hero, the pooled record of the players who mostly play it against the players who play many heroes, worked out from `participants` on every call (issue 819). Additive: no table is touched and nothing is stored. Check with `supabase/checks/hero_specialists.sql`. **Awaiting approval: not yet pushed to production** |
+| `20261111120000_hero_specialists.sql` | `read_hero_specialists()` (service role only, read-only) and eight rule helpers (`hero_specialist_min_share_percent()` and its siblings): per hero, the pooled record of the players who mostly play it against the players who play many heroes, worked out from `participants` on every call (issue 819). Additive: no table is touched and nothing is stored. Check with `supabase/checks/hero_specialists.sql`. |
+| `20261111190000_hero_specialists_speed.sql` | Restates `read_hero_specialists()` (same signature, grants and answer) so it reads in about 0.1 s instead of 36 s: one read of `participants` with window functions in place of joins the planner mis-sized (issue 826). Additive: only the reader is replaced, nothing is stored. |
+| `20261114100000_hero_progress_matches.sql` | `read_own_hero_progress_matches()` (signed-in accounts only, no parameters, read-only): every match the caller's own link can prove is its own, with end time, mode, half-season, result, the hero on the line and the time on each hero, for the hero levels (issue 863). Nothing is stored. Not pushed until Tony says yes |
+| `20261115130000_hero_xp_carry_overs.sql` | `hero_xp_carry_overs` and `hero_xp_carry_chains` (an account's frozen hero XP and where its bonus chains stood, service role only), `freeze_hero_xp_carry_overs()` and the helper `hero_xp_epoch_ms`, `purge_expired_participants` restated to call the freeze before its first delete, `forget_player` restated to delete the frozen totals of a forgotten player, and `read_own_hero_progress_matches()` restated to add them to its answer (issue 868). Additive: same signatures and grants. Check with `supabase/checks/hero_xp_carry_overs.sql`. Pushed after QA approves the pull request and before the merge |
 
 Build signals temporarily use their own 10-match, one-player rule in `20261106170000_solo_hero_build_signals.sql`. Only `read_community_hero_scores` changes; no rebuild is needed. Check with `supabase/checks/solo_hero_build_signals.sql` after applying. Restore the original reader through a new migration when solo testing ends.
 
@@ -728,12 +731,15 @@ purge shows up at once and no per-player row ever exists (ADR-0006, decision 3).
   - **flex**: the most played hero under 25%, at least 5 heroes and at least 20 matches; the flex bucket of H
     holds their matches on H;
   - everyone else, the middle, is in neither bucket: someone with 40% on a hero is not a specialist and not flex.
-- **The gate.** A bucket of H is shown only with at least `hero_specialist_min_players()` (5) people,
+- **The gate.** A bucket of H is shown only with at least `hero_specialist_min_players()` (2) people,
   `hero_specialist_min_recorders()` (2) recorders (the one whose upload stored each match) and
   `hero_specialist_min_bucket_matches()` (50) matches, and a hero comes back only when both its buckets are shown.
-  Two people are too few, since either could subtract their own record from the total. A hero below the gate is
-  absent: no count of how close it is, and no count of people or recorders, ever leaves the database. The 5 people
-  already imply 50 specialist matches (each needs 10), so the match gate binds on the flex side.
+  The 2 people are a pre-launch testing value (issue 871, migration `20261115120000_hero_specialists_two_people.sql`;
+  it was 5 until then), in line with the other community panels and to be reviewed before public launch (issue 873).
+  With so few people, either could subtract their own record from the total and read the other's. A hero below the
+  gate is absent: no count of how close it is, and no count of people or recorders, ever leaves the database. The
+  match gate now binds on both sides: two specialists need 25 matches each, since a specialist's 10 matches on the
+  hero only add up to 20.
 - **The answer** is one jsonb list, `[{ half_season, hero_id, specialist_matches, specialist_wins, flex_matches,
   flex_wins }]`, for every half-season still held in `participants`, so PostgREST's row limit never cuts it short.
   The website picks the current half-season and falls back to the previous one while no hero passes.
@@ -745,15 +751,23 @@ purge shows up at once and no per-player row ever exists (ADR-0006, decision 3).
   siblings, `HERO_SPECIALISTS_MIN_PLAYERS`, `HERO_SPECIALISTS_MIN_RECORDERS`, `HERO_SPECIALISTS_MIN_MATCHES`), which
   `supabase/functions/track-match-history/hero-specialists-migration.test.ts` compares with the migration. Pulse
   Atlas publishes it as the optional `hero-specialists.json` ([pulse-atlas.md](pulse-atlas.md)).
+- **Why it is written with windows (issue 826).** The first version joined its steps back together on person and
+  hero. Postgres guessed one row for the `distinct on` over a join and planned a nested loop that re-read every
+  person-and-hero group for each line: 36 s on 9,536 lines. The reader now reads `participants` once, takes a
+  match's mode and recorder from a window over the match, a person's totals from a window over their hero rows,
+  and carries the recorders behind a group as a list on the person's hero row. Keep it free of joins between those
+  steps, and time any change with `explain (analyze, buffers)` on production data (read-only): a regression there
+  is invisible on the fixture check.
 - **Volume at launch** (read-only count on 2026-11-11, before the migration): of 4,335 players with a counted match in
   Season 10.5, 2 had 20 or more counted matches and 1 had 40 or more; no player was flex and one was a specialist
   (on one hero). Expect "not enough data" for every hero until far more matches are recorded.
 - **Run the check** after `supabase db push`:
   `npx supabase db query --linked -f supabase/checks/hero_specialists.sql` (fixtures in half-season 993, rolled back).
-  It proves the specialist and flex rule, the excluded middle, each gate (4 specialists, one recorder behind the
-  specialists, one behind the flex players, 45 flex matches), that people with no uid are left out, that matches with
-  no result or in Arcade are not counted, that Deadpool's role forms are one hero, the exact counts, the fields of the
-  answer and the grants.
+  It needs both specialist migrations applied (its first step refuses to run against another gate). It proves the
+  specialist and flex rule, the excluded middle, each gate (two people with two recorders and 50 matches are shown;
+  one specialist, one flex person, one recorder behind the specialists, one behind the flex players and 44 flex
+  matches each hide the hero), that people with no uid are left out, that matches with no result or in Arcade are not
+  counted, that Deadpool's role forms are one hero, the exact counts, the fields of the answer and the grants.
 
 ## Backfilling participants from stored matches
 
@@ -1163,6 +1177,77 @@ service key is involved.
   `npx supabase db query --linked -f supabase/checks/dashboard.sql`. Run it after `db push`. The migration is
   pushed by hand before the pull request merges, after the player-links migration it depends on; until then the
   route answers 503.
+
+### Reading a linked player's hero levels (issue 863)
+
+`read_own_hero_progress_matches()` (`20261114100000_hero_progress_matches.sql`) is the second door to a player's
+own history, beside `read_own_dashboard()`, and has the same posture: no parameters, definer with an empty
+`search_path`, granted to `authenticated` only, the link found through `auth.uid()`, and only the lines where
+`recorded_by = link.recorder_id AND uid = link.player_uid`. It differs in two ways. It has no row cap, because a
+level needs every match and a cut-off history would lower it. And it returns what the level rules read, not
+what a dashboard shows: for each match `matchKey` (the line's own id, never a roster fingerprint), `playedAt`,
+`halfSeason`, `playModeId`, `isWin`, `heroId` and `figures` (`heroId`, `seconds`, `damage`, `healing`, `blocked`).
+The answer is `{ "linked": false }` or `{ "linked": true, "matches": [...] }`, oldest first.
+
+- The website reads it through `readOwnHeroProgressMatches` on the auth gateway, which turns `playedAt` into
+  milliseconds and drops a match with no key or no readable time. `heroProgressTracks` in
+  `src/server/hero-progress/` works the levels out. See [ADR-0008](decisions/0008-give-each-stat-one-read-and-one-home.md), Decision 7.
+- **Depth.** `participants` is purged after at most six months, so the matches it still holds are only the last
+  two half-seasons or so. The XP of the matches already purged is kept as frozen totals (below), so an all-time
+  level never falls. `tracked_matches` reaches further back but has no time on each hero (only the
+  hero's name at the end), which is why it is not the source.
+- The migration waits for an explicit yes before `npx supabase db push`; until it is applied the read answers
+  as unavailable. Nothing calls it from a page yet, so no route exists to answer 503.
+
+### Frozen hero XP (issue 868)
+
+`20261115130000_hero_xp_carry_overs.sql` stops an all-time hero level falling when the purge deletes old matches.
+`purge_expired_participants()` calls `freeze_hero_xp_carry_overs()` (**any later migration that restates the purge
+must keep calling it, and every other freeze**) before its first delete, in the same transaction, and asks the same
+`participants_past_retention` which lines are going, so the freeze and the delete cannot disagree. For every
+account with a link it works out the XP of the counted lines about to go (Quick Match and Competitive; the
+account's own lines only, `recorded_by` and `uid` both from the link) and adds it to two tables, both closed to
+everyone but the service role:
+
+- `hero_xp_carry_overs (user_id, half_season, hero_id, base_xp, time_xp, bonus_xp)`: the XP from playing and winning,
+  from the minutes, and from the first-win and rested bonuses, per account, half-season and **game hero id** (the
+  database holds no hero catalogue; the website maps the id to a hero key on read, and one id is one key).
+- `hero_xp_carry_chains (user_id, last_bonus_win_at, last_counted_at)`: where the two bonus chains stood after the last
+  frozen match, so the next match's first-win and rested bonuses carry on across the purge as in the app.
+
+Nothing else is kept: no match, uid, name, fingerprint or recorder. Both tables reference `player_links (user_id)`
+with `on delete cascade`, so **unlinking, relinking or deleting the account deletes them**, and `forget_player`
+deletes the totals of any link naming the player. A relink to the same player therefore starts again from the
+matches still held.
+
+- **The rules are copied into the SQL on purpose.** The purge is a database job and cannot call TypeScript, and
+  storing per-match inputs would still need the first-win chain worked out in SQL and keep more than totals. So the
+  XP amounts, the 30-second rule, the cap, both gaps (20 and 2 hours, end to end, in whole milliseconds) and the
+  play order (end time, then the line id read as text) exist in `src/server/hero-progress/` and in the freeze, and a
+  change to one is made in the other in step. Parity is enforced by one fixture in
+  `supabase/checks/hero_xp_carry_overs.sql`: the check runs the SQL on it, `scripts/hero-xp-carry.test.ts` (in CI)
+  runs the TypeScript on the same text, and both must reach the expected totals and chain times in it.
+- **The read.** `read_own_hero_progress_matches()` also returns `carry` for a linked account: `lastBonusWinAt`,
+  `lastCountedAt` (`null` while nothing is frozen) and `heroes`, one `{halfSeason, heroId, baseXp, timeXp, bonusXp}`
+  per frozen total. `heroProgress` adds the totals to the matches still held, and continues the bonus chains from
+  the two times, so the all-time level is the same before and after a purge. The season track stays per half-season
+  and holds only the matches still held: a frozen total has its bonuses worked out over the whole run, not inside one
+  season, so it is not shown as a season track.
+- **The freeze is idempotent.** It adds to the totals and never rebuilds them, so it counts only lines that ended
+  after the account's stored `last_counted_at`: calling it twice, or on its own, counts nothing twice. Lines tied on end
+  time with that time were all counted in the batch that set it (the same end time is the same half-season and so the
+  same retention), so comparing end times alone neither skips nor repeats one. Its `EXECUTE` stays with the service role
+  because `purge_expired_participants()` runs with the caller's rights and the upload sweep calls it as the service role.
+- **A late line.** A line that ends at or before the stored `last_counted_at` when it reaches the purge (an upload for a
+  half-season that was already frozen) is not frozen: it is deleted with its XP uncounted. Uploads older than 7 days are
+  refused, so in practice there is none.
+- `forget_player` by name deletes the totals of every link whose display name matches, as it deletes every matching
+  `participants` row.
+- **Not recoverable.** Matches purged before this migration is applied are gone; the freeze starts with the next
+  purge (at the time of writing, half-season 10.5 goes when 11.5 starts).
+- Check it after `db push` with `npx supabase db query --linked -f supabase/checks/hero_xp_carry_overs.sql`
+  (it rolls back, runs the real purge in its transaction, and fails with `"_tag":"Error"` in the output, which can
+  still exit 0).
 
 ### The app's own calls about its link (issues 320 and 343)
 

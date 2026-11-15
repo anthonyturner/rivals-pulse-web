@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, signal, viewC
 import { RouterLink } from '@angular/router';
 
 import { FilterOption, FilterSelectComponent } from '../../../../shared/components/filter-select/filter-select.component';
+import { GuideChaptersComponent } from '../../../../shared/components/guide-chapters/guide-chapters.component';
+import type { GuideChapter } from '../../../../shared/components/guide-chapters/guide-chapters.types';
 import { StatePanelComponent } from '../../../../shared/components/state-panel/state-panel.component';
 import { TechniqueTile, TechniqueTileComponent } from './technique-tile/technique-tile.component';
 import {
@@ -16,12 +18,20 @@ const ALL_CATEGORIES = 'All';
 
 @Component({
   selector: 'app-techniques-page',
-  imports: [FilterSelectComponent, RouterLink, StatePanelComponent, TechniqueTileComponent],
+  imports: [FilterSelectComponent, GuideChaptersComponent, RouterLink, StatePanelComponent, TechniqueTileComponent],
   templateUrl: './techniques-page.component.html',
-  styleUrls: ['../../../../shared/styles/guide-article.css', './techniques-page.component.css'],
+  styleUrls: ['../../../../shared/styles/guide-article.css', '../../../../shared/styles/field-guide.css', './techniques-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TechniquesPageComponent {
+  readonly chapters: readonly GuideChapter[] = [
+    { id: 'choose-a-focus', title: 'Choose a focus' },
+    { id: 'technique-library', title: 'Technique lessons' },
+    { id: 'fight-flow', title: 'How a fight flows' },
+    { id: 'hero-workshops', title: 'Hero workshops' },
+    { id: 'role-coverage', title: 'Workbook coverage' },
+    { id: 'next-match', title: 'Review one decision' },
+  ];
   readonly categoryOptions: readonly FilterOption[] = [
     { value: ALL_CATEGORIES, label: ALL_CATEGORIES },
     ...TECHNIQUE_CATEGORIES.map((category) => ({ value: category, label: category })),

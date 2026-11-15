@@ -110,6 +110,12 @@ describe('GameStatsComponent', () => {
     ]);
   });
 
+  it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
+    const element = await open(live);
+
+    expect(text(element, '.stat-how > summary')).toEqual(['How these are counted for matches and players']);
+  });
+
   it('names where the numbers come from and shows nothing from outside the app', async () => {
     const element = await open(live);
 

@@ -443,11 +443,9 @@ function parseOfficialNewsCards(html: string): NewsItem[] {
     const title = cleanText(extractByClass(body, 'title') || extractByClass(body, 'til'));
     const description = cleanText(extractByClass(body, 'desc'));
 
-    if (!title || seenTitles.has(title)) {
+    if (!title) {
       continue;
     }
-
-    seenTitles.add(title);
 
     cards.push({
       label: labelForOfficialNews(title),
@@ -462,7 +460,26 @@ function parseOfficialNewsCards(html: string): NewsItem[] {
     });
   }
 
-  return cards;
+  return cards
+    .sort((first, second) => {
+      const firstTime = officialPublicationTime(first.publishedAt);
+      const secondTime = officialPublicationTime(second.publishedAt);
+      return firstTime === secondTime ? 0 : firstTime > secondTime ? -1 : 1;
+    })
+    .filter((item) => {
+      if (seenTitles.has(item.title)) return false;
+      seenTitles.add(item.title);
+      return true;
+    });
+}
+
+function officialPublicationTime(value: string | undefined): number {
+  if (!value || !/^\d{4}\/\d{2}\/\d{2}$/.test(value)) return Number.NEGATIVE_INFINITY;
+  const date = new Date(`${value.replaceAll('/', '-')}T00:00:00Z`);
+  if (!Number.isFinite(date.getTime())) return Number.NEGATIVE_INFINITY;
+  return date.toISOString().slice(0, 10) === value.replaceAll('/', '-')
+    ? date.getTime()
+    : Number.NEGATIVE_INFINITY;
 }
 
 function parseSeasonEvents(html: string): SeasonHighlight[] {
@@ -559,12 +576,12 @@ function toSeasonUpdate(item: NewsItem): SeasonUpdate {
 }
 
 function formatOfficialDate(value: string | undefined): string {
-  const match = value?.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  const publishedTime = officialPublicationTime(value);
 
-  if (!match) return value ?? 'Recently';
+  if (!Number.isFinite(publishedTime)) return value ?? 'Recently';
 
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' })
-    .format(new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`));
+    .format(new Date(publishedTime));
 }
 
 function parseLatestOfficialHero(html: string): { name: string; imageUrl?: string } | undefined {

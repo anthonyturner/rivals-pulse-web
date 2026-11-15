@@ -27,8 +27,11 @@ export const FLEX_MIN_HEROES = 5;
 /** ...and have at least this many counted matches. */
 export const FLEX_MIN_MATCHES = 20;
 
-/** Different players each bucket of a hero needs. Two are too few: either could subtract their own record. */
-export const HERO_SPECIALISTS_MIN_PLAYERS = 5;
+/**
+ * Different players each bucket of a hero needs. Two for pre-launch testing on two accounts, to be reviewed before
+ * public launch (issue 873): with two, either person could subtract their own record from the total.
+ */
+export const HERO_SPECIALISTS_MIN_PLAYERS = 2;
 /** Different recorders behind each bucket. Applied by the database only; no count of them is returned. */
 export const HERO_SPECIALISTS_MIN_RECORDERS = 2;
 /** Matches each bucket of a hero needs. */

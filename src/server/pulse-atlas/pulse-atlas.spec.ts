@@ -221,7 +221,7 @@ function heroSpecialistsData(overrides: Record<string, unknown> = {}): Record<st
     mode: 'all',
     definition: DEFINITION,
     minimumMatches: 50,
-    minimumPlayers: 5,
+    minimumPlayers: 2,
     currentSeasonId: 21,
     season: { id: 21, label: 'Season 10.5' },
     heroes: [THIN_SPECIALIST_HERO, READY_SPECIALIST_HERO],
@@ -2722,8 +2722,8 @@ describe('the hero-specialists dataset', () => {
 
   it('refuses a minimum below the site\'s own rule, so a lowered answer cannot publish a thin bucket', () => {
     expect(buildWith(heroSpecialistsData({ minimumMatches: 10 }))).toThrowError(/minimumMatches must be a whole number of at least 50/);
-    expect(buildWith(heroSpecialistsData({ minimumPlayers: 2 }))).toThrowError(/minimumPlayers must be a whole number of at least 5/);
-    expect(buildWith(heroSpecialistsData({ minimumPlayers: '5' }))).toThrowError(/minimumPlayers must be a whole number of at least 5/);
+    expect(buildWith(heroSpecialistsData({ minimumPlayers: 1 }))).toThrowError(/minimumPlayers must be a whole number of at least 2/);
+    expect(buildWith(heroSpecialistsData({ minimumPlayers: '2' }))).toThrowError(/minimumPlayers must be a whole number of at least 2/);
   });
 
   it('refuses a key outside the allow-list, in the file, the definition, the season, a hero and a bucket', () => {
@@ -2769,7 +2769,7 @@ describe('assembleHeroSpecialists', () => {
     status: 'ready',
     definition: DEFINITION,
     minimumMatches: 50,
-    minimumPlayers: 5,
+    minimumPlayers: 2,
     halfSeason: { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null },
     inPlaceOf: null,
     heroes: [
@@ -2846,7 +2846,7 @@ describe('resolveHeroSpecialists', () => {
     status: 'ready',
     definition: DEFINITION,
     minimumMatches: 50,
-    minimumPlayers: 5,
+    minimumPlayers: 2,
     halfSeason: { id: 10.5, label: 'Season 10.5' },
     inPlaceOf: null,
     heroes: [

@@ -24,6 +24,12 @@ describe('stat labels', () => {
     expect(matchesCountedLabel(1, 'Season 10.5')).toBe('Match counted · Season 10.5');
   });
 
+  it('has a short form of the matches counted label that keeps the scope and the singular', () => {
+    expect(matchesCountedLabel(484, 'Season 10.5', 'short')).toBe('Matches · Season 10.5');
+    expect(matchesCountedLabel(781, 'all seasons', 'short')).toBe('Matches · all seasons');
+    expect(matchesCountedLabel(1, 'all seasons', 'short')).toBe('Match · all seasons');
+  });
+
   it('never calls the matches with a result "matches counted"', () => {
     expect(decidedMatchesLabel(393)).toBe('393 matches with a result');
     expect(decidedMatchesLabel(1)).toBe('1 match with a result');

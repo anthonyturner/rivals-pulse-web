@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.first-time-checks {
+  margin: 16px 0 0;
+  padding-left: 24px;
+}
+
+.first-time-checks li + li {
+  margin-top: 10px;
+}

@@ -35,9 +35,13 @@ begin
   if m <= 4 then
     raise exception 'this check needs a minimum above 4 teams';
   end if;
-  if exists (select 1 from public.participants where half_season = 995) then
+  if exists (select 1 from public.participants where half_season = 995)
+     or exists (select 1 from public.half_seasons where half_season = 995) then
     raise exception 'test half-season already exists';
   end if;
+  -- The participants trigger sets half_season from played_at and public.half_seasons. This start sits after every
+  -- real half-season and before the fixture's matches (a month before them), so they stay in 995.
+  insert into public.half_seasons (half_season, starts_at) values (995, '2995-01-01T00:00:00Z');
 
   -- Competitive matches, one recorder, team 1 against a team 2 that is 1-2-3 unless noted (1 Vanguard,
   -- 2 Duelists, 3 Strategists). With the minimum m, a_end = m - 3:
@@ -74,12 +78,12 @@ begin
     first_players := coalesce(first_players, players);
 
     perform public.record_match_participants(
-      'tst-lineup-' || n, 995, now() - make_interval(hours => n), 'tst-recorder', players, 1::smallint, null);
+      'tst-lineup-' || n, 995, '2995-02-01T00:00:00Z'::timestamptz - make_interval(hours => n), 'tst-recorder', players, 1::smallint, null);
   end loop;
 
   -- The same first match recorded again by someone else: dropped whole, so counted once.
   dropped := public.record_match_participants(
-    'tst-lineup-1', 995, now() - interval '59 minutes', 'tst-other-recorder', first_players, 1::smallint, null);
+    'tst-lineup-1', 995, '2995-02-01T00:00:00Z'::timestamptz - interval '59 minutes', 'tst-other-recorder', first_players, 1::smallint, null);
   if dropped <> 0 then
     raise exception 'the second upload of a match must be dropped';
   end if;

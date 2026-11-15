@@ -164,11 +164,54 @@ describe('BeginnerGuidePageComponent', () => {
     radios()[0].click();
     await settle();
 
-    (element.querySelector('.guide-tile > .guide-button') as HTMLButtonElement).click();
+    (element.querySelector('.practice-plan > .guide-button') as HTMLButtonElement).click();
     await settle();
 
     expect(component.answeredCount()).toBe(0);
     expect(radios().every((radio) => !radio.checked)).toBeTrue();
     expect(element.querySelector('progress')?.value).toBe(0);
+  });
+
+  it('keeps all four scenarios usable in the reading layout and relocks practice on reset', async () => {
+    expect(element.querySelector('.guide-tile, .guide-grid')).toBeNull();
+    expect(element.querySelector('.lesson-explanation')?.textContent).toContain('contribution the current fight needs');
+
+    for (let index = 0; index < component.modules.length; index++) {
+      const step = element.querySelectorAll<HTMLButtonElement>('.module-step')[index];
+      step.click();
+      await settle();
+      radios()[0].click();
+      await settle();
+      expect(element.querySelector('.feedback')?.textContent).toContain('Quality: strong');
+    }
+
+    expect(element.querySelector('progress')?.value).toBe(4);
+    expect(element.querySelector('.plan')?.textContent).toContain(component.recommendedPlan().setup);
+    (element.querySelector('.practice-plan > .guide-button') as HTMLButtonElement).click();
+    await settle();
+    expect(element.querySelector('progress')?.value).toBe(0);
+    expect(element.querySelector('.plan')).toBeNull();
+    expect(element.textContent).toContain('Finish the scenarios to unlock');
+  });
+
+  it('contains lesson controls and the unlocked plan at narrow and desktop column widths in both themes', async () => {
+    for (const module of component.modules) component.selectAnswer(module.id, module.scenario.choices[0].id);
+    await settle();
+    const previousTheme = document.documentElement.dataset['theme'];
+    element.style.display = 'block';
+
+    try {
+      for (const theme of ['light', 'dark']) {
+        document.documentElement.dataset['theme'] = theme;
+        for (const width of [320, 390, 884, 970]) {
+          element.style.width = `${width}px`;
+          const article = element.querySelector('article') as HTMLElement;
+          expect(article.scrollWidth).withContext(`${theme}, ${width}px`).toBeLessThanOrEqual(article.clientWidth + 1);
+        }
+      }
+    } finally {
+      if (previousTheme === undefined) delete document.documentElement.dataset['theme'];
+      else document.documentElement.dataset['theme'] = previousTheme;
+    }
   });
 });

@@ -13,7 +13,7 @@ export class StrategicCoverPageComponent {
   readonly guide: PositioningGuide = {
     title: 'Strategic Cover Usage',
     lede:
-      'Cover masterclass notes: be hard to hit and make enemies easy to hit.',
+      'Use a corner to control what the enemy can see, then choose the smallest useful window to shoot. Good cover protects a decision, not just a place to stand.',
     sourceLabel: 'Watch tutorial',
     sourceUrl: 'https://youtu.be/rqxP_tKV2vc?si=9K2auPgj1OXjaD2y',
     diagram: {
@@ -54,50 +54,37 @@ export class StrategicCoverPageComponent {
     sections: [
       {
         title: 'Minimize Your Hitbox',
-        summary:
-          'Cover is not just something you stand near. You use it to take body away from the enemy.',
-        points: [
-          'Do not peek far away from cover: the more space between you and the cover edge, the more of your body is exposed.',
-          'Back up or shift until the enemy mostly sees your head or a small slice of your model.',
-          'Horizontal cover can hide your lower body; vertical cover can let you shoulder-peek and trade small windows.',
+        paragraphs: [
+          'The useful question is how much of your character the enemy can see. Being near a wall does not help enough if you step far away from its edge to shoot. Adjust your position so the corner hides most of your body and leaves only the part needed for the shot exposed.',
+          'Different shapes protect different parts of you. Horizontal cover may hide your lower body; a vertical edge can let you shoulder-peek through a short window. Use the shape in front of you rather than assuming every piece of cover offers the same peek.',
         ],
       },
       {
         title: 'Maximize Enemy Hitbox',
-        summary:
-          'Good cover usage is not only defensive.',
-        points: [
-          'Shift left or right until you can see more of the enemy behind their corner. Even one extra shot opportunity matters when they are trying to hide.',
-          'Keep your own cover and choose the angle that makes their escape path worse while still giving you a quick way out.',
+        paragraphs: [
+          'Your position also changes how much of the enemy is available to shoot. A small left or right adjustment can reveal more of someone hiding behind a corner and create an opportunity you did not have from the original angle.',
+          'Keep the defensive half of that trade. A wider view is useful when your own cover and quick exit remain available; do not turn a small improvement in target exposure into a position you cannot leave.',
         ],
       },
       {
         title: 'Deal With One Angle at a Time',
-        summary:
-          'If you are only shooting one target, do not expose yourself to three angles.',
-        points: [
-          'Use nearby walls, boxes, stairs, or height changes to block the angles you are not currently fighting.',
-          'Move around cover based on the target you want to shoot: one position for C, another for D, another for a side angle.',
-          'Your goal is not perfect safety: it is the least exposure possible while still creating pressure.',
+        paragraphs: [
+          'If you are shooting one opponent, avoid giving several others the same chance to shoot you. Walls, boxes, stairs and height changes can remove the sightlines you are not currently fighting. Move around the cover as your chosen target changes instead of expecting one position to answer every angle.',
+          'This is a trade between pressure and exposure, not a promise of perfect safety. Choose the least exposure that still lets you make a useful threat, then reassess when another enemy gains a line on you.',
         ],
       },
       {
         title: 'Scout Before You Shoot',
-        summary:
-          'Burst heroes and long-range heroes gain the most from scouting first.',
-        points: [
-          'Scout first, then peek and shoot. Do not stand in the open waiting for a target to appear: if the enemy sees you early, they can move away before your shot matters.',
-          'Charging or preparing behind cover makes your peek harder to react to.',
-          'Mechanics improve when positioning reduces surprise movement and gives you predictable targets.',
+        paragraphs: [
+          'Use cover to learn where the shot will be before exposing yourself to take it. Waiting in the open warns enemies early and gives them time to move. This matters especially for burst and long-range heroes whose useful window may be short.',
+          'Prepare or charge behind cover when the ability allows it, then peek with a target in mind. That preparation makes the entry less obvious and reduces the surprise movement your aim has to solve. The position helps the mechanics by making the next moment more predictable.',
         ],
       },
       {
         title: 'Peek Parallel to Cover',
-        summary:
-          'Peeking forward into the enemy makes you easy to hit.',
-        points: [
-          'Move parallel to the cover edge instead: peek out, shoot, return. Sideways movement is harder to track.',
-          'Good corners improve crosshair placement, and knowing your cover route prevents panic movement when pressured.',
+        paragraphs: [
+          'Moving toward the enemy during the peek gives them a predictable path to track. Move sideways along the cover edge instead: expose the useful window, shoot, and return. The corner supplies a repeatable place for your crosshair and an escape you already understand.',
+          'Practise that return as part of the shot. When pressure arrives, a known cover route is more reliable than inventing a movement response in the open.',
         ],
       },
     ],
@@ -144,5 +131,13 @@ export class StrategicCoverPageComponent {
       { label: '6:31', detail: 'Scouting from cover.' },
       { label: '8:00', detail: 'Peeking parallel, corner mechanics.' },
     ],
+    workedExample: {
+      title: 'Hypothetical: change the angle, keep the exit',
+      paragraphs: [
+        'An opponent is hiding behind a corner while a second enemy watches the open lane. Shift around your own cover until the first target becomes visible without exposing yourself to both threats. Scout, prepare the shot if needed, peek sideways, and return.',
+        'If the adjustment reveals too much of your body or removes the return path, it is not automatically better. The point is to improve the available shot while keeping the cover that makes the exchange manageable.',
+      ],
+    },
+    practiceFocus: 'For one match, identify the angle your cover blocks before taking each duel. Review one death for a wide peek, a forward peek or a missing return route, then practise that same corner in a custom game.',
   };
 }

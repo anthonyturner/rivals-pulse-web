@@ -14,9 +14,13 @@ declare
   read_back record;
   other_team constant integer[] := array[1022, 1024, 1026, 1027, 1029, 1030];
 begin
-  if exists (select 1 from public.participants where half_season = 996) then
+  if exists (select 1 from public.participants where half_season = 996)
+     or exists (select 1 from public.half_seasons where half_season = 996) then
     raise exception 'test half-season already exists';
   end if;
+  -- The participants trigger sets half_season from played_at and public.half_seasons. This start sits after every
+  -- real half-season and before the fixture's matches (a month before them), so they stay in 996.
+  insert into public.half_seasons (half_season, starts_at) values (996, '2996-01-01T00:00:00Z');
 
   -- Ten matches where team 1 ran Mantis (1020), Luna Snow (1031) and Rocket Raccoon (1023) with three
   -- non-Strategists (team 1 lost the first six and won the other four), then four matches that must never become that trio:
@@ -55,12 +59,12 @@ begin
     first_players := coalesce(first_players, players);
 
     perform public.record_match_participants(
-      'tst-trio-' || fx.n, 996, now() - make_interval(hours => fx.n), 'tst-recorder', players, 1::smallint, null);
+      'tst-trio-' || fx.n, 996, '2996-02-01T00:00:00Z'::timestamptz - make_interval(hours => fx.n), 'tst-recorder', players, 1::smallint, null);
   end loop;
 
   -- The same first match recorded again by someone else: dropped whole, so counted once.
   dropped := public.record_match_participants(
-    'tst-trio-1', 996, now() - interval '59 minutes', 'tst-other-recorder', first_players, 1::smallint, null);
+    'tst-trio-1', 996, '2996-02-01T00:00:00Z'::timestamptz - interval '59 minutes', 'tst-other-recorder', first_players, 1::smallint, null);
   if dropped <> 0 then
     raise exception 'the second upload of a match must be dropped';
   end if;

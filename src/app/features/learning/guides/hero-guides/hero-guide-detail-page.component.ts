@@ -4,14 +4,16 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { EyebrowComponent } from '../../../../shared/components/eyebrow/eyebrow.component';
+import { GuideChaptersComponent } from '../../../../shared/components/guide-chapters/guide-chapters.component';
+import type { GuideChapter } from '../../../../shared/components/guide-chapters/guide-chapters.types';
 import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-image-fallback.directive';
 import { findHeroGuide } from './hero-guide-data';
 
 @Component({
   selector: 'app-hero-guide-detail-page',
-  imports: [EyebrowComponent, HeroImageFallbackDirective, RouterLink],
+  imports: [EyebrowComponent, GuideChaptersComponent, HeroImageFallbackDirective, RouterLink],
   templateUrl: './hero-guide-detail-page.component.html',
-  styleUrls: ['../../../../shared/styles/guide-article.css', './hero-guide-detail-page.component.css'],
+  styleUrls: ['../../../../shared/styles/field-guide.css', './hero-guide-detail-page.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeroGuideDetailPageComponent {
@@ -19,6 +21,24 @@ export class HeroGuideDetailPageComponent {
   private readonly routeParams = toSignal(inject(ActivatedRoute).paramMap, { requireSync: true });
 
   readonly guide = computed(() => findHeroGuide(this.routeParams().get('heroId')));
+
+  readonly sections = computed(() => this.guide()?.sections.map((section, index) => ({
+    ...section,
+    id: `chapter-${index + 1}`,
+    number: String(index + 1).padStart(2, '0'),
+  })) ?? []);
+
+  readonly chapters = computed<readonly GuideChapter[]>(() => {
+    const guide = this.guide();
+    const chapters: GuideChapter[] = this.sections().map(({ id, title }) => ({ id, title }));
+
+    if (guide?.workedExample) chapters.push({ id: 'worked-example', title: 'Worked example' });
+    if (guide?.practiceFocus) chapters.push({ id: 'next-match', title: 'Try this next match' });
+    if (guide && guide.ultimates.length > 0) chapters.push({ id: 'ultimates', title: 'Ultimates and matchups' });
+    chapters.push({ id: 'sources', title: 'Sources and further reading' });
+
+    return chapters;
+  });
 
   readonly sourceEmbedUrl = computed(() => this.youtubeEmbedUrl(this.guide()?.sourceUrl));
 

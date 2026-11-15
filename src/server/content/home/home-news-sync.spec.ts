@@ -10,6 +10,70 @@ function hangingFetch(): typeof fetch {
 }
 
 describe('syncHomeNews', () => {
+  function newsCard(title: string, date: string, path: string): string {
+    return `<a href="/${path}"><div class="title">${title}</div><div class="date">${date}</div></a>`;
+  }
+
+  it('selects the newest season, patch and balance posts ahead of an older promotional carousel', async () => {
+    const html = `<div class="newsCms">
+      ${newsCard('Promotional collection', '2026/11/04', 'promotion')}
+      ${newsCard('Version 20261105 Patch Notes', '2026/11/04', 'old-patch')}
+      ${newsCard('Season 10: Old story', '2026/10/09', 'old-season')}
+      ${newsCard('Version 20261009 Balance Post', '2026/10/08', 'old-balance')}
+      ${newsCard('Season 11: Doomsday // Dev Vision', '2026/11/12', 'new-season')}
+      ${newsCard('Version 20261113 Patch Notes - Season 11 Arrives', '2026/11/11', 'new-patch')}
+      ${newsCard('Version 20261113 Balance Post', '2026/11/10', 'new-balance')}
+      <div class="news-tab">`;
+    const fetchSpy = spyOn(globalThis, 'fetch').and.callFake(async (input) => {
+      const url = String(input);
+      return new Response(url.endsWith('index.html') ? html
+        : url.endsWith('new-patch') ? '<h3>New Event: Season launch</h3><p>Event missions unlock rewards during the event.</p>'
+        : '<div class="video_ctn" data-movieurl="/season11.mp4" data-name="Season 11 update">');
+    });
+    const { client } = fakeSupabaseClient(() => ({ data: { id: 7 } }));
+
+    const result = await syncHomeNews(client);
+
+    expect(result.seasonUpdates.map((item) => item.title)).toEqual([
+      'Season 11: Doomsday // Dev Vision',
+      'Version 20261113 Patch Notes - Season 11 Arrives',
+      'Version 20261113 Balance Post',
+    ]);
+    expect(result.latestNews[0].videoUrl).toBe('https://www.marvelrivals.com/season11.mp4');
+    expect(result.latestNews[1].description).toContain('Season launch');
+    expect(result.latestTuning?.sourceUrl).toBe('https://www.marvelrivals.com/new-balance');
+    expect(result.battlePass.currentSeason).toBe('Season 11');
+    expect(fetchSpy.calls.allArgs().map(([url]) => String(url))).toEqual([
+      'https://www.marvelrivals.com/index.html',
+      'https://www.marvelrivals.com/new-patch',
+      'https://www.marvelrivals.com/new-season',
+    ]);
+  });
+
+  it('prefers the newest dated duplicate and leaves invalid or missing dates in stable order after dated news', async () => {
+    const html = `<div class="newsCms">
+      ${newsCard('Repeated announcement', '', 'undated-copy')}
+      ${newsCard('Invalid month', '2026/13/01', 'invalid-month')}
+      ${newsCard('Undated first', '', 'undated-first')}
+      ${newsCard('Invalid calendar date', '2026/02/31', 'invalid')}
+      ${newsCard('Repeated announcement', '2026/11/01', 'older-copy')}
+      ${newsCard('Repeated announcement', '2026/11/12', 'newest-copy')}
+      ${newsCard('Same-day announcement', '2026/11/12', 'same-day')}
+      <div class="news-tab">`;
+    spyOn(globalThis, 'fetch').and.resolveTo(new Response(html));
+    const { client } = fakeSupabaseClient(() => ({ data: { id: 7 } }));
+
+    const result = await syncHomeNews(client);
+
+    expect(result.latestNews.map((item) => item.sourceUrl)).toEqual([
+      'https://www.marvelrivals.com/newest-copy',
+      'https://www.marvelrivals.com/same-day',
+      'https://www.marvelrivals.com/invalid-month',
+      'https://www.marvelrivals.com/undated-first',
+    ]);
+    expect(result.seasonUpdates[2].date).toBe('2026/13/01');
+  });
+
   it('fails the run when the official site does not answer in time, and saves nothing', async () => {
     spyOn(globalThis, 'fetch').and.callFake(hangingFetch());
     const { client, calls } = fakeSupabaseClient(() => ({ data: { id: 7 } }));
