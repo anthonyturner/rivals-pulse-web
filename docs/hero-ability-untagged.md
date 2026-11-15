@@ -3,8 +3,8 @@
 Written by `scripts/build-hero-ability-tags.mjs`; do not edit by hand. The rules are in
 [hero-build-scores.md](hero-build-scores.md).
 
-The official pages could not decide a tag for 220 of 614 abilities, so none of them counts toward Utility.
-46 of them are on a key the overlay does not count, such as Left Click, Space or a passive. The 174 below are on a key it counts.
+The official pages could not decide a tag for 223 of 623 abilities, so none of them counts toward Utility.
+47 of them are on a key the overlay does not count, such as Left Click, Space or a passive. The 176 below are on a key it counts.
 
 | Hero | Slot | Ability | Why |
 | --- | --- | --- | --- |
@@ -129,6 +129,8 @@ The official pages could not decide a tag for 220 of 614 abilities, so none of t
 | Moon Knight | team_up_0 | LUMINOUS MOON | More than one tag: Sustain (description: Healing); Mobility (description: dash) |
 | Namor | team_up_0 | GAMMA MONSTRO | More than one tag: Damage (description: damages); Sustain (description: barrier); Utility (description: Boost) |
 | Namor | team_up_0 | CHILLING CHARISMA | More than one tag: Damage (description: damages); Utility (description: Pushes) |
+| Nightcrawler | ultimate | PHASING FINALE | More than one tag: Sustain (description: Healing); Mobility (description: teleport); Utility (description: Boost) |
+| Nightcrawler | team_up_0 | PROTECTIVE SIBLINGS | More than one tag: Damage (description: damaging); Sustain (description: healing); Utility (description: Slow) |
 | Peni Parker | ability_1 | Bionic Spider-Nest | More than one tag: Sustain (description: Healing); Utility (description: Boost) |
 | Peni Parker | team_up_0 | VIBRANIUM MECH | More than one tag: Damage (description: DamageBoost); Sustain (description: Shield) |
 | Phoenix | ultimate | Endsong Inferno | More than one tag: Damage (description: damage); Sustain (description: shields); Mobility (description: Soar) |

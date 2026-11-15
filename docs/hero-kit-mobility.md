@@ -13,7 +13,7 @@ and the formula is [hero-kit-mobility.ts](../src/app/features/heroes/hero-kit-mo
 scored, so `heroKitMobilityValue()` gives today's hand-set Mobility values until
 then, and switches to the formula by itself once the table is complete. Mixing
 the two scales would put heroes side by side on numbers that mean different
-things. The hand-set list has no value for Cyclops, Gorr, Jubilee or The Hood,
+things. The hand-set list has no value for Cyclops, Gorr, Jubilee, Nightcrawler or The Hood,
 so they read "No value yet" rather than a guess. The formula's scores run lower
 than the hand-set values, so expect the numbers to drop on the switch.
 
@@ -103,7 +103,7 @@ them here and in the code together.
 
 ## What is still missing
 
-`heroKitMobilityCoverage()` gives the live count. As of 2026-11-04, 39 of 54
+`heroKitMobilityCoverage()` gives the live count. As of 2026-11-15, 40 of 55
 heroes can be scored. These 15 cannot, because the sources checked do not print
 the value:
 

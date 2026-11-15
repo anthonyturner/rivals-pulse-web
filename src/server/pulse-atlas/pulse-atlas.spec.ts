@@ -1451,7 +1451,7 @@ describe('hero-styles validation', () => {
   it('keeps the curated file sound: unique slugs and whole weights summing to 100', () => {
     const heroIds = curatedHeroStyles.map((style) => style.heroId);
 
-    expect(curatedHeroStyles.length).toBe(54);
+    expect(curatedHeroStyles.length).toBe(55);
     expect(findHeroStyleProblems(curatedHeroStyles, heroIds)).toEqual({ errors: [], warnings: [] });
   });
 });

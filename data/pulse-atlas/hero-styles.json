@@ -34,6 +34,7 @@
   { "heroId": "mister-fantastic", "poke": 5, "dive": 30, "brawl": 65 },
   { "heroId": "moon-knight", "poke": 65, "dive": 10, "brawl": 25 },
   { "heroId": "namor", "poke": 65, "dive": 5, "brawl": 30 },
+  { "heroId": "nightcrawler", "poke": 20, "dive": 40, "brawl": 40 },
   { "heroId": "peni-parker", "poke": 10, "dive": 10, "brawl": 80 },
   { "heroId": "phoenix", "poke": 45, "dive": 20, "brawl": 35 },
   { "heroId": "psylocke", "poke": 15, "dive": 60, "brawl": 25 },
