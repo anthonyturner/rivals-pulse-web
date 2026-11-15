@@ -1,6 +1,6 @@
 # RivalsPulse Privacy Policy
 
-**Last updated: 11 November 2026**
+**Last updated: 15 November 2026**
 
 RivalsPulse is an Overwolf app for the game Marvel Rivals. It shows you a
 desktop window and in-game widgets built from what happens in your
@@ -376,9 +376,11 @@ game shows it; it is never stored or shared.
 **Hero statistics anyone can see.** The heroes banned in each match you record
 are sent to our database with that match (section 5). We pool them with the
 matches every other RivalsPulse user records into **ban rates** (how often each
-hero is banned) and publish those as public hero statistics, for example in the
-RivalsPulse tier list. A ban rate is a count per hero. It never says who played
-in a match, who recorded it, or which team banned the hero.
+hero is banned) and publish those as public hero statistics, for example on the
+Community tab of the Heroes screen. A ban rate is a count per hero. It never says
+who played in a match, who recorded it, or which team banned the hero. The
+**meta tier** beside each hero there (S to F) is worked out from the hero's pooled
+win rate alone, so it too says nothing about any player.
 
 In the same way, your figures and use counts on each hero are pooled with every
 other user's into **hero averages**, such as damage per minute, and scores worked
@@ -409,7 +411,7 @@ and at least 10 matches on it. A **flex** player's most-played hero is under a
 quarter of their matches, and they have played at least 5 heroes and at least 20
 matches. Players who are neither are left out. Only each group's win rate on a hero and a rough match band (50+, 100+,
 250+ or 500+ matches) are published, never an exact count. A hero is shown only
-once each group has at least 5 players, 2 players who uploaded matches and 50
+once each group has at least 2 players, 2 players who uploaded matches and 50
 matches. A line with no player ID is left out. The published figures name no
 player and say nothing of who recorded the match.
 
