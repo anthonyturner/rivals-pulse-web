@@ -102,7 +102,7 @@ describe('HeroGuidesPageComponent', () => {
     await search('  DOCTOR    STRANGE  ');
 
     expect(paths()).toEqual(['/hero-guides/doctor-strange']);
-    expect(status()).toBe('1 of 36 guides');
+    expect(status()).toBe('1 of 37 guides');
     expect(headings()).toEqual(['Hero guides']);
     expect(cards()[0].textContent).toContain('Vanguard');
   });
@@ -112,7 +112,7 @@ describe('HeroGuidesPageComponent', () => {
     await search('ground   high');
 
     expect(paths()).toEqual(['/power-positions']);
-    expect(status()).toBe('1 of 36 guides');
+    expect(status()).toBe('1 of 37 guides');
   });
 
   it('searches explicit strategist hero focus and punctuation variants', async () => {
@@ -126,7 +126,7 @@ describe('HeroGuidesPageComponent', () => {
     const options = Array.from(select('Hero')?.options ?? [], (option) => option.textContent);
 
     expect(options).toEqual([
-      'All heroes', 'Captain America', 'Cloak & Dagger', 'Deadpool', 'Doctor Strange', 'Jubilee', 'Luna Snow', 'Rocket Raccoon',
+      'All heroes', 'Captain America', 'Cloak & Dagger', 'Deadpool', 'Doctor Strange', 'Jubilee', 'Luna Snow', 'Nightcrawler', 'Rocket Raccoon',
     ]);
     expect(options).not.toContain('All Strategists');
     expect(options).not.toContain('Hawkeye');
@@ -150,20 +150,20 @@ describe('HeroGuidesPageComponent', () => {
     await search('dealing damage');
 
     expect(paths()).toEqual(['/strategist-guides/rocket-guide-part-2-damage']);
-    expect(status()).toBe('1 of 36 guides');
+    expect(status()).toBe('1 of 37 guides');
     expect(headings()).toEqual(['Strategist lessons']);
     expect(select('Hero')?.options.length).toBe(allHeroOptions);
 
     await choose('Category', 'Hero guides');
     expect(paths()).toEqual([]);
-    expect(status()).toBe('0 of 36 guides');
+    expect(status()).toBe('0 of 37 guides');
   });
 
   it('counts filtered categories without duplicating live announcements', async () => {
     await choose('Category', 'Strategist lessons');
 
     expect(paths().length).toBe(STRATEGIST_GUIDES.length);
-    expect(status()).toBe('10 of 36 guides');
+    expect(status()).toBe('10 of 37 guides');
     expect(element.querySelectorAll('[role="status"], [aria-live]').length).toBe(1);
     expect(select('Category')?.options.length).toBe(GUIDE_CATEGORIES.length + 1);
   });
@@ -174,7 +174,7 @@ describe('HeroGuidesPageComponent', () => {
     await search('no such guide');
 
     expect(paths().length).toBe(0);
-    expect(status()).toBe('0 of 36 guides');
+    expect(status()).toBe('0 of 37 guides');
     expect(element.querySelector('app-state-panel h2')?.textContent).toBe('No guides match');
     expect(element.querySelector('app-state-panel')?.textContent).toContain('clear the filters above');
     expect(element.querySelectorAll('[role="status"], [aria-live]').length).toBe(1);
@@ -183,8 +183,8 @@ describe('HeroGuidesPageComponent', () => {
     clear()?.click();
     await settle();
 
-    expect(status()).toBe('36 guides');
-    expect(paths().length).toBe(36);
+    expect(status()).toBe('37 guides');
+    expect(paths().length).toBe(37);
     expect(input()?.value).toBe('');
     expect(select('Category')?.value).toBe('');
     expect(select('Hero')?.value).toBe('');

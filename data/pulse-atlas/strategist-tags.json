@@ -9,7 +9,6 @@
   { "heroId": "loki", "tag": "healer" },
   { "heroId": "luna-snow", "tag": "healer" },
   { "heroId": "mantis", "tag": "utility" },
-  { "heroId": "nightcrawler", "tag": "healer" },
   { "heroId": "rocket-raccoon", "tag": "healer" },
   { "heroId": "ultron", "tag": "utility" },
   { "heroId": "white-fox", "tag": "healer" }

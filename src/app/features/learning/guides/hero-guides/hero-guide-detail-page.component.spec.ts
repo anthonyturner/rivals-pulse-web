@@ -129,7 +129,7 @@ describe('HeroGuideDetailPageComponent', () => {
     await open('nightcrawler');
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Nightcrawler');
-    const sources = Array.from(element.querySelectorAll<HTMLAnchorElement>('.article-sources a'));
+    const sources = Array.from(element.querySelectorAll<HTMLAnchorElement>('.field-guide__source-list a'));
     expect(sources.map((link) => link.hostname)).toEqual(['marvelrivals.gg', 'www.marvelrivals.com']);
     expect(element.textContent).toContain('Early Season 11');
     expect(element.querySelector('iframe')).toBeNull();
