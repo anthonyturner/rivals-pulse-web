@@ -731,12 +731,15 @@ purge shows up at once and no per-player row ever exists (ADR-0006, decision 3).
   - **flex**: the most played hero under 25%, at least 5 heroes and at least 20 matches; the flex bucket of H
     holds their matches on H;
   - everyone else, the middle, is in neither bucket: someone with 40% on a hero is not a specialist and not flex.
-- **The gate.** A bucket of H is shown only with at least `hero_specialist_min_players()` (5) people,
+- **The gate.** A bucket of H is shown only with at least `hero_specialist_min_players()` (2) people,
   `hero_specialist_min_recorders()` (2) recorders (the one whose upload stored each match) and
   `hero_specialist_min_bucket_matches()` (50) matches, and a hero comes back only when both its buckets are shown.
-  Two people are too few, since either could subtract their own record from the total. A hero below the gate is
-  absent: no count of how close it is, and no count of people or recorders, ever leaves the database. The 5 people
-  already imply 50 specialist matches (each needs 10), so the match gate binds on the flex side.
+  The 2 people are a pre-launch testing value (issue 871, migration `20261115120000_hero_specialists_two_people.sql`;
+  it was 5 until then), in line with the other community panels and to be reviewed before public launch (issue 873).
+  With so few people, either could subtract their own record from the total and read the other's. A hero below the
+  gate is absent: no count of how close it is, and no count of people or recorders, ever leaves the database. The
+  match gate now binds on both sides: two specialists need 25 matches each, since a specialist's 10 matches on the
+  hero only add up to 20.
 - **The answer** is one jsonb list, `[{ half_season, hero_id, specialist_matches, specialist_wins, flex_matches,
   flex_wins }]`, for every half-season still held in `participants`, so PostgREST's row limit never cuts it short.
   The website picks the current half-season and falls back to the previous one while no hero passes.
@@ -760,10 +763,11 @@ purge shows up at once and no per-player row ever exists (ADR-0006, decision 3).
   (on one hero). Expect "not enough data" for every hero until far more matches are recorded.
 - **Run the check** after `supabase db push`:
   `npx supabase db query --linked -f supabase/checks/hero_specialists.sql` (fixtures in half-season 993, rolled back).
-  It proves the specialist and flex rule, the excluded middle, each gate (4 specialists, one recorder behind the
-  specialists, one behind the flex players, 45 flex matches), that people with no uid are left out, that matches with
-  no result or in Arcade are not counted, that Deadpool's role forms are one hero, the exact counts, the fields of the
-  answer and the grants.
+  It needs both specialist migrations applied (its first step refuses to run against another gate). It proves the
+  specialist and flex rule, the excluded middle, each gate (two people with two recorders and 50 matches are shown;
+  one specialist, one flex person, one recorder behind the specialists, one behind the flex players and 44 flex
+  matches each hide the hero), that people with no uid are left out, that matches with no result or in Arcade are not
+  counted, that Deadpool's role forms are one hero, the exact counts, the fields of the answer and the grants.
 
 ## Backfilling participants from stored matches
 
