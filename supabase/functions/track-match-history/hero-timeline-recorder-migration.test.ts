@@ -56,7 +56,7 @@ describe('the timeline recorder migration', () => {
 
   it('does not touch the purge, so every freeze is still called first', () => {
     assert.doesNotMatch(sql, /purge_expired_participants/);
-    assert.equal(latestDefiner('purge_expired_participants'), SWITCH_INS);
+    assert.notEqual(latestDefiner('purge_expired_participants'), RECORDER);
   });
 
   it('is the latest definition of the writer, and of the fill until the hero forms migration (issue 667) restates it', () => {

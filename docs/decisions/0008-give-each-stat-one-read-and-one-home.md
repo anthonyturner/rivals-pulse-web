@@ -8,7 +8,10 @@
   rate by map moved to the Maps tab, shrunk, with the Overview keeping a short
   list. Amended on 2026-11-14 by issue 863: hero levels, tiers and XP bonuses
   are added to the table and as Decision 7, derived on read; the board that
-  shows them is separate work.
+  shows them is separate work. Amended on 2026-11-15 by issue 868: Decision 7
+  keeps a frozen per-hero XP total for matches the purge deletes, so an
+  all-time level never falls (Tony decided on 2026-11-14 that the data is
+  always saved, never cleared).
 - **Date:** 2026-11-11
 - **Deciders:** Anthony (maintainer). The Stats hub design was approved on
   2026-11-11 on issue 779.
@@ -19,7 +22,7 @@
   source). Pull requests 194 (issue 172) and 509 (issue 449), which set the
   match volume band. Issue 773 (community maps). Overlay repo `anthonyturner/rivals_pulse`: issue 1643 (no enemy
   ultimate status). Builds on [ADR-0006](0006-publish-opted-in-player-names-on-pulse-records.md)
-  for Pulse Records. Issues 813 and 863 (hero levels, tiers and XP bonuses),
+  for Pulse Records. Issues 813, 863 and 868 (hero levels, tiers and XP bonuses, and their frozen XP),
   and overlay pull requests `ebc239ba` (tiers) and `5038e469` (XP bonuses).
 
 ## In plain words
@@ -93,7 +96,7 @@ tab is under `/stats`.
 | Records (best single matches) | `getPulseRecords` | `read_pulse_records()` | `GET /api/records` | none | Records (`/stats/records`) |
 | Matches counted, and players counted | `getGameCounts` (`matchesCountedIn` picks a half-season) | `read_game_counts()` | `GET /api/game-stats`; also `matchesCounted` in `GET /api/community/matches` | none | Overview |
 | Matches with a result | `getHeroStats` (`matchesCounted`) | `read_hero_stats()` | `GET /api/hero-stats` | `decidedMatches` in `hero-stats.json`; `matchesCounted` in each `tier-list` rank | Heroes (the "N matches with a result" label) |
-| Hero levels, tiers, stars and XP of one signed-in account, all-time and per half-season (Decision 7) | `heroProgressTracks`, over the matches `readOwnHeroProgressMatches` (on the auth gateway) returns | `read_own_hero_progress_matches()` (signed-in accounts only, no parameters, keyed on the session's own link; stores nothing) | none yet | none | none yet: the hero levels board is the follow-up under issue 813, labelled "from uploaded matches" |
+| Hero levels, tiers, stars and XP of one signed-in account, all-time and per half-season (Decision 7) | `heroProgressTracks`, over the matches `readOwnHeroProgressMatches` (on the auth gateway) returns | `read_own_hero_progress_matches()` (signed-in accounts only, no parameters, keyed on the session's own link; reads the account's frozen XP totals beside its matches, and stores nothing itself) | none yet | none | none yet: the hero levels board is the follow-up under issue 813, labelled "from uploaded matches" |
 
 The readers live in `src/server/heroes/` (`stats`, `pairs`, `matchups`,
 `lineups`, `trios`, `switch-ins`), `src/server/community/` (`extended`,
@@ -199,16 +202,43 @@ overlay gives for the same matches.
   counted match ended) follow the account's whole run of counted matches, by
   `played_at`, and go to every hero played in the match. A half-season track
   works them out among that season's matches alone; 10 and 10.5 are separate.
-- **On read, not scheduled.** Nothing is stored, so the same matches always
-  give the same levels, as in the app. Both bonuses depend on the whole run in
-  order, so stored totals would have to be rebuilt whenever a match is added or
-  purged anyway.
+- **On read, not scheduled.** A level is never stored: the same matches and the
+  same frozen totals always give the same levels, as in the app. Both bonuses
+  depend on the whole run in order, so a total for matches still held would have
+  to be rebuilt whenever a match is added anyway.
+- **Frozen when the purge deletes, so a level never falls.** Before
+  `purge_expired_participants()` deletes a counted match of a linked account, it
+  works out that match's XP and adds it to `hero_xp_carry_overs`: per account,
+  half-season and game hero id, the XP from playing and winning (`base_xp`), the
+  minutes (`time_xp`) and the bonuses (`bonus_xp`). It also keeps where the two
+  bonus chains stood (`hero_xp_carry_chains`: the end of the last first win and of
+  the last counted match), so the first-win and rested bonuses carry on across
+  the purge. The all-time level is the frozen totals plus the matches still held,
+  with the chains continued from the two times. No match, uid, name or recorder
+  is kept, the tables belong to the player link (unlinking, relinking or deleting
+  the account deletes them, and so does `forget_player`), and the privacy page says
+  so. The season track stays per half-season and holds only the matches still
+  held, because a frozen total has its bonuses worked out over the whole run and
+  would not equal a track worked out inside one season.
+- **The freeze is SQL, the rules stay one set, and parity is tested.** The purge
+  is a database job and cannot call TypeScript. The other design, freezing each
+  match's inputs in aggregate for TypeScript to do the sums, still needs the
+  first-win chain worked out in SQL before the rows go, and keeps more than
+  totals, so it would copy the rules into SQL as well. The amounts, the 30-second
+  rule, the minute cap, both gaps and the play order are therefore copied into
+  `freeze_hero_xp_carry_overs`, and one fixture holds the two to the same numbers:
+  `supabase/checks/hero_xp_carry_overs.sql` runs the SQL on it against the database,
+  and `scripts/hero-xp-carry.test.ts` runs `src/server/hero-progress/` on the same
+  text in CI. A change to a number is made in the overlay, the TypeScript and the
+  SQL in step. The frozen total is keyed by the game hero id, not the website's hero
+  key, because the database holds no catalogue; the site maps it on read.
 - **From uploaded matches, so they can differ from a player's own tiers.** The
   board says "from uploaded matches". The honest differences are: only the
-  matches `participants` still holds count (the half-season after a match's own
-  has ended, or six months, about the last two half-seasons), so an all-time
-  level is every match still held, and a level can fall when a half-season is
-  purged; a match another recorder uploaded first is not the account's; the
+  matches `participants` still holds, and the XP of those purged since the freeze
+  began, count; matches purged before the freeze began (half-season 10.0 at the
+  time of writing) are gone and cannot be recovered; a match another recorder
+  uploaded first is not the account's; a relink starts again from the matches
+  still held; the
   overlay counts a stay under 30 seconds when the hero got any kills, deaths,
   assists, damage, healing or damage blocked, but the website has no per-hero
   kills, deaths or assists and can use only damage, healing and damage blocked;
@@ -248,10 +278,9 @@ overlay gives for the same matches.
   read cheap. Rejected for now: the bonuses make every total depend on the run
   of matches before it, the overlay stores nothing, and a stored level would
   drift from the rules the day one of them changes. If the read proves heavy
-  for a player with thousands of matches, a cache comes before a table. A small
-  per-player, per-half-season XP carry-over, frozen when the half-season is
-  purged, is the option that would keep all-time levels from falling; it waits
-  for Tony's decision.
+  for a player with thousands of matches, a cache comes before a table. The one
+  thing stored is the small frozen XP of matches the purge has deleted (issue
+  868, in Decision 7), which is not a level and is never rebuilt.
 
 ## Consequences
 
@@ -300,6 +329,9 @@ A reviewer checks, for a change that touches a community figure:
   `win-rate-prior.ts` names the matching overlay change in the pull request.
 - No new field, copy or tool mentions enemy ultimate status.
 - A change to an XP amount, a gap, a tier or a level step names the matching
-  overlay change in the pull request, and `hero-progress.parity.json` and the
-  copied specs still pass. Nothing reads a level, a tier or XP from a request:
+  overlay change in the pull request, is made in `freeze_hero_xp_carry_overs` as
+  well, and `hero-progress.parity.json`, the copied specs and the freeze fixture
+  (`supabase/checks/hero_xp_carry_overs.sql` and `scripts/hero-xp-carry.test.ts`)
+  still pass. A later migration that restates `purge_expired_participants` keeps
+  calling the freeze before its first delete. Nothing reads a level, a tier or XP from a request:
   the read takes no parameters and the rules take only matches.

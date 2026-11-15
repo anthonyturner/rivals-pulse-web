@@ -1,6 +1,7 @@
 import { heroGameIdEntries, type HeroGameIdEntry } from '../heroes/catalog/hero-game-ids.ts';
 import { PLAY_MODE_IDS } from '../../contracts/play-modes.ts';
 import { matchXpBonuses, type MatchXpBonus } from './hero-xp-bonuses.ts';
+import { NO_HERO_XP_CARRY, carriedXp, chainSeedMatches, type HeroXpCarry } from './hero-xp-carry.ts';
 
 /**
  * Hero levels, tiers and stars worked out from a player's uploaded matches, with the desktop app's rules.
@@ -8,10 +9,11 @@ import { matchXpBonuses, type MatchXpBonus } from './hero-xp-bonuses.ts';
  * The XP amounts, the level curve, `HERO_TIERS`, `heroTierForLevel` and `heroStarsForLevel` are the overlay's
  * `hero-progress.ts` (overlay `70b5bfce`), copied as they are apart from the doc comments, and `hero-xp-bonuses.ts`
  * beside it is the overlay's file as it is (overlay `5038e469`). A change to a number, a tier or a bonus is made
- * in both repositories in step, and the boundary specs here and there must pass unchanged. Only `heroProgress` differs: it reads the website's upload rows where the overlay reads its local match records,
+ * in both repositories in step, and in `freeze_hero_xp_carry_overs` (the purge's SQL copy of the XP and bonus rules), and the boundary specs here and there must pass unchanged. Only `heroProgress` and what it is built from (`heroXpCredits`) differ: they read the website's upload rows where the overlay reads its local match records,
  * so its inputs are described under `UploadedMatch`.
  *
- * Nothing is stored and no level is ever read from a client: the same matches always give the same levels.
+ * No level is stored and none is ever read from a client: the same matches and the same carry-over always give the same
+ * levels. Matches the retention purge has deleted live on only as the totals in a `HeroXpCarry` (see `hero-xp-carry.ts`).
  */
 
 /** XP for playing a hero in a counted match, whatever the time or result. */
@@ -172,16 +174,51 @@ function creditsFor(match: UploadedMatch, resolveKey: HeroKeyResolver): Map<Hero
   return credits;
 }
 
+/** What one match gave one hero, in the three parts the purge freezes. */
+export interface HeroXpCredit {
+  readonly matchKey: string;
+  readonly halfSeason: number | null;
+  readonly key: HeroKey;
+  /** The flat amount for playing, and the win bonus. */
+  readonly baseXp: number;
+  /** Ten for each full minute on the hero, up to the cap. */
+  readonly timeXp: number;
+  /** What the match earned as a first win or after a break. */
+  readonly bonusXp: number;
+}
+
 /** XP one counted match gives the hero: a flat amount, minutes on the hero (capped), a win bonus and what the match earned as a first win or after a break. */
-function xpForMatch({ isWin, seconds, matchKey }: MatchCredit, bonuses: ReadonlyMap<string, MatchXpBonus>): number {
+function xpPartsForMatch({ isWin, seconds, matchKey }: MatchCredit, bonuses: ReadonlyMap<string, MatchXpBonus>): Pick<HeroXpCredit, 'baseXp' | 'timeXp' | 'bonusXp'> {
   const minutes = Math.floor(Math.min(Math.max(seconds, 0), XP_MINUTES_CAP * 60) / 60);
-  return XP_PER_MATCH + XP_PER_MINUTE * minutes + (isWin ? XP_PER_WIN : 0) + (bonuses.get(matchKey)?.xp ?? 0);
+  return { baseXp: XP_PER_MATCH + (isWin ? XP_PER_WIN : 0), timeXp: XP_PER_MINUTE * minutes, bonusXp: bonuses.get(matchKey)?.xp ?? 0 };
+}
+
+const isCounted = ({ playModeId }: UploadedMatch): boolean => playModeId !== null && COUNTED_PLAY_MODE_IDS.includes(playModeId);
+
+/**
+ * What every counted match gave every hero it credits. The first-win and rested bonuses follow the run of counted
+ * matches, which `carry` continues: they start from where the purge left the chains instead of from nothing.
+ * The purge's SQL does this same work on the rows it is about to delete, and the fixture in
+ * `supabase/checks/hero_xp_carry_overs.sql` holds the two to the same numbers.
+ */
+export function heroXpCredits(
+  matches: readonly UploadedMatch[],
+  resolveKey: HeroKeyResolver = siteHeroKey,
+  carry: HeroXpCarry = NO_HERO_XP_CARRY,
+): HeroXpCredit[] {
+  const counted = matches.filter(isCounted);
+  const bonuses = matchXpBonuses([...chainSeedMatches(carry), ...counted.map(({ matchKey, endedAt, isWin }) => ({ matchKey, endedAt, won: isWin === true }))]);
+  return counted.flatMap(match =>
+    [...creditsFor(match, resolveKey)].map(([key, credit]) => ({ matchKey: match.matchKey, halfSeason: match.halfSeason, key, ...xpPartsForMatch(credit, bonuses) })),
+  );
 }
 
 /**
- * Each hero's progress from the account's matches in every season. With `halfSeason`, only that season's matches
- * count and the bonuses are worked out among them alone: the season track starts from nothing each season while the
- * all-time levels never reset. A hero with no counted match has no entry.
+ * Each hero's progress from the account's matches in every season, with the XP of matches since purged (`carry`). With
+ * `halfSeason`, only that season's matches count and the bonuses are worked out among them alone: the season track
+ * starts from nothing each season while the all-time levels never reset, and it holds only matches still held, because
+ * a frozen total has its bonuses worked out over the whole run, not inside the season. A hero with no counted match
+ * has no entry.
  *
  * The first-win and rested bonuses follow the account's whole run of counted matches, not one hero's, and every
  * hero played in the match gets the bonus, as with a win.
@@ -190,16 +227,17 @@ export function heroProgress(
   matches: readonly UploadedMatch[],
   halfSeason?: number,
   resolveKey: HeroKeyResolver = siteHeroKey,
+  carry: HeroXpCarry = NO_HERO_XP_CARRY,
 ): ReadonlyMap<HeroKey, HeroProgress> {
-  const counted = matches.filter(
-    match => match.playModeId !== null && COUNTED_PLAY_MODE_IDS.includes(match.playModeId) && (halfSeason === undefined || match.halfSeason === halfSeason),
+  const allTime = halfSeason === undefined;
+  const credits = heroXpCredits(
+    allTime ? matches : matches.filter(match => match.halfSeason === halfSeason),
+    resolveKey,
+    allTime ? carry : NO_HERO_XP_CARRY,
   );
-  const bonuses = matchXpBonuses(counted.map(({ matchKey, endedAt, isWin }) => ({ matchKey, endedAt, won: isWin === true })));
-  const xp = new Map<HeroKey, number>();
-  for (const match of counted) {
-    for (const [key, credit] of creditsFor(match, resolveKey)) {
-      xp.set(key, (xp.get(key) ?? 0) + xpForMatch(credit, bonuses));
-    }
+  const xp = new Map(allTime ? carriedXp(carry, resolveKey) : []);
+  for (const { key, baseXp, timeXp, bonusXp } of credits) {
+    xp.set(key, (xp.get(key) ?? 0) + baseXp + timeXp + bonusXp);
   }
   return new Map([...xp].map(([key, total]) => [key, progressForXp(total)]));
 }
@@ -210,10 +248,14 @@ export interface HeroProgressTracks {
   readonly byHalfSeason: ReadonlyMap<number, ReadonlyMap<HeroKey, HeroProgress>>;
 }
 
-export function heroProgressTracks(matches: readonly UploadedMatch[], resolveKey: HeroKeyResolver = siteHeroKey): HeroProgressTracks {
+export function heroProgressTracks(
+  matches: readonly UploadedMatch[],
+  resolveKey: HeroKeyResolver = siteHeroKey,
+  carry: HeroXpCarry = NO_HERO_XP_CARRY,
+): HeroProgressTracks {
   const halfSeasons = new Set(matches.flatMap(({ halfSeason }) => (halfSeason === null ? [] : [halfSeason])));
   return {
-    allTime: heroProgress(matches, undefined, resolveKey),
+    allTime: heroProgress(matches, undefined, resolveKey, carry),
     byHalfSeason: new Map(
       [...halfSeasons]
         .sort((first, second) => second - first)
