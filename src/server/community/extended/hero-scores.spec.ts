@@ -60,7 +60,7 @@ function ability(gameHeroId: number, slot: string, parts: Partial<HeroScoreAbili
   };
 }
 
-const UTILITY_SLOT: HeroAbilitySlot = { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 10 };
+const UTILITY_SLOT: HeroAbilitySlot = { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 10, shortestCooldownSeconds: 10 };
 
 function derive(
   source: Partial<HeroScoresSource>,
@@ -307,9 +307,9 @@ describe('deriveHeroScores', () => {
     it('does not let a damage ability, an untagged one or one with no plain cooldown raise it', () => {
       const slots: HeroAbilitySlot[] = [
         UTILITY_SLOT,
-        { slot: 'ability_1', ability: 'Blast', alsoIncludes: [], tag: 'Damage', cooldownSeconds: 2 },
-        { slot: 'ability_2', ability: 'Unknown', alsoIncludes: [], tag: null, cooldownSeconds: 2 },
-        { slot: 'ability_3', ability: 'Charges', alsoIncludes: [], tag: 'Utility', cooldownSeconds: null },
+        { slot: 'ability_1', ability: 'Blast', alsoIncludes: [], tag: 'Damage', cooldownSeconds: 2, shortestCooldownSeconds: 2 },
+        { slot: 'ability_2', ability: 'Unknown', alsoIncludes: [], tag: null, cooldownSeconds: 2, shortestCooldownSeconds: 2 },
+        { slot: 'ability_3', ability: 'Charges', alsoIncludes: [], tag: 'Utility', cooldownSeconds: null, shortestCooldownSeconds: null },
       ];
       const { scores } = derive(
         {
@@ -327,7 +327,7 @@ describe('deriveHeroScores', () => {
     });
 
     it('says a hero has nothing to measure rather than scoring it low', () => {
-      const { scores } = derive({ abilities: [ability(1, 'ability_1')] }, [{ slot: 'ability_1', ability: 'Blast', alsoIncludes: [], tag: 'Damage', cooldownSeconds: 8 }]);
+      const { scores } = derive({ abilities: [ability(1, 'ability_1')] }, [{ slot: 'ability_1', ability: 'Blast', alsoIncludes: [], tag: 'Damage', cooldownSeconds: 8, shortestCooldownSeconds: 8 }]);
 
       expect(heroOf(scores.heroes, 'a').utility).toEqual(jasmine.objectContaining({ status: 'no-measurable-ability', score: null, matches: 0, contributors: null }));
     });
@@ -336,8 +336,8 @@ describe('deriveHeroScores', () => {
   it('lists per-ability figures only for a slot that passes the rule on its own, and never tags the ultimate', () => {
     const slots: HeroAbilitySlot[] = [
       UTILITY_SLOT,
-      { slot: 'ability_1', ability: 'Blast', alsoIncludes: [], tag: 'Damage', cooldownSeconds: 8 },
-      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: 'Damage', cooldownSeconds: null },
+      { slot: 'ability_1', ability: 'Blast', alsoIncludes: [], tag: 'Damage', cooldownSeconds: 8, shortestCooldownSeconds: 8 },
+      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: 'Damage', cooldownSeconds: null, shortestCooldownSeconds: null },
     ];
     const { scores } = derive(
       {
@@ -351,8 +351,8 @@ describe('deriveHeroScores', () => {
     );
 
     expect(heroOf(scores.heroes, 'a').abilities).toEqual([
-      { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', usesPerTenMinutes: 20, takedownsPerUse: 0.5, matches: 20 },
-      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: null, usesPerTenMinutes: 20, takedownsPerUse: 0.5, matches: 20 },
+      { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 10, usesPerTenMinutes: 20, takedownsPerUse: 0.5, matches: 20 },
+      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: null, cooldownSeconds: null, usesPerTenMinutes: 20, takedownsPerUse: 0.5, matches: 20 },
     ]);
   });
 

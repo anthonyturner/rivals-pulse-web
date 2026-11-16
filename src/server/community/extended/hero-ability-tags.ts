@@ -30,6 +30,11 @@ export interface HeroAbilitySlot {
   tag: AbilityTag | null;
   /** The plain cooldown its base abilities share (its team-ups', when it has none); null otherwise. */
   cooldownSeconds: number | null;
+  /**
+   * The shortest plain cooldown among every ability on the slot, team-ups included; null when none prints
+   * one. A count cannot say which ability it was, so this is the fastest the slot can be used again.
+   */
+  shortestCooldownSeconds: number | null;
 }
 
 // A JSON import widens string unions to string; the spec checks every row of this table.
@@ -46,6 +51,7 @@ function slotOf(slot: string, rows: readonly HeroAbilityTagRow[]): HeroAbilitySl
   const agreed = <T>(valueOf: (row: HeroAbilityTagRow) => T): T | null =>
     new Set(deciding.map(valueOf)).size === 1 ? valueOf(deciding[0]) : null;
   const ability = agreed((row) => row.ability);
+  const cooldowns = rows.flatMap((row) => (row.cooldown === null ? [] : [row.cooldown.value]));
 
   return {
     slot,
@@ -53,6 +59,7 @@ function slotOf(slot: string, rows: readonly HeroAbilityTagRow[]): HeroAbilitySl
     alsoIncludes: [...new Set(rows.map((row) => row.ability))].filter((name) => name !== ability),
     tag: agreed((row) => row.tag),
     cooldownSeconds: agreed((row) => row.cooldown?.value ?? null),
+    shortestCooldownSeconds: cooldowns.length === 0 ? null : Math.min(...cooldowns),
   };
 }
 

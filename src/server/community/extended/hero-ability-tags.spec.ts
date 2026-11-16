@@ -160,7 +160,7 @@ describe('heroAbilitySlots', () => {
 
   it('gives a slot with one ability that ability, tag and cooldown', () => {
     expect(slotsOf(row('Stun', 'ability_0', 'Utility', 10))).toEqual([
-      { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 10 },
+      { slot: 'ability_0', ability: 'Stun', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 10, shortestCooldownSeconds: 10 },
     ]);
   });
 
@@ -173,38 +173,43 @@ describe('heroAbilitySlots', () => {
         row('PSIONIC VORTEX', 'ability_2', null, 6, 'Team-Up Ability'),
       ),
     ).toEqual([
-      { slot: 'ability_2', ability: 'Maelstrom of Madness', alsoIncludes: ['PSIONIC VORTEX', 'GAMMA MAELSTROM'], tag: 'Damage', cooldownSeconds: 6 },
+      { slot: 'ability_2', ability: 'Maelstrom of Madness', alsoIncludes: ['PSIONIC VORTEX', 'GAMMA MAELSTROM'], tag: 'Damage', cooldownSeconds: 6, shortestCooldownSeconds: 6 },
     ]);
   });
 
   it('takes the base ultimate on the ultimate slot over a team-up sharing its key', () => {
     expect(slotsOf(row('Big One', 'ultimate', 'Damage', null, 'Ultimate'), row('Duo Strike', 'ultimate', 'Utility', 30, 'Team-Up Ability'))).toEqual([
-      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: 'Damage', cooldownSeconds: null },
+      { slot: 'ultimate', ability: 'Big One', alsoIncludes: ['Duo Strike'], tag: 'Damage', cooldownSeconds: null, shortestCooldownSeconds: 30 },
     ]);
   });
 
   it('keeps the tag and cooldown when two base abilities on the slot agree, but names no one ability', () => {
     expect(slotsOf(row('Stun', 'ability_0', 'Utility', 10), row('Upgraded Stun', 'ability_0', 'Utility', 10))).toEqual([
-      { slot: 'ability_0', ability: null, alsoIncludes: ['Stun', 'Upgraded Stun'], tag: 'Utility', cooldownSeconds: 10 },
+      { slot: 'ability_0', ability: null, alsoIncludes: ['Stun', 'Upgraded Stun'], tag: 'Utility', cooldownSeconds: 10, shortestCooldownSeconds: 10 },
     ]);
   });
 
   it('leaves a slot of two base abilities untagged when they disagree, since a count cannot say which one it was', () => {
     expect(slotsOf(row('Stun', 'ability_1', 'Utility', 10), row('Blast', 'ability_1', 'Damage', 12), row('Duo', 'ability_1', null, 12, 'Team-Up Ability'))).toEqual([
-      { slot: 'ability_1', ability: null, alsoIncludes: ['Stun', 'Blast', 'Duo'], tag: null, cooldownSeconds: null },
+      { slot: 'ability_1', ability: null, alsoIncludes: ['Stun', 'Blast', 'Duo'], tag: null, cooldownSeconds: null, shortestCooldownSeconds: 10 },
     ]);
   });
 
   it('names a slot of two same-named base abilities even when a team-up shares the key', () => {
     expect(slotsOf(row('Gamma Burst', 'ability_2', 'Damage', 8), row('Gamma Burst', 'ability_2', 'Damage', 8), row('Duo', 'ability_2', 'Utility', 20, 'Team-Up Ability'))).toEqual([
-      { slot: 'ability_2', ability: 'Gamma Burst', alsoIncludes: ['Duo'], tag: 'Damage', cooldownSeconds: 8 },
+      { slot: 'ability_2', ability: 'Gamma Burst', alsoIncludes: ['Duo'], tag: 'Damage', cooldownSeconds: 8, shortestCooldownSeconds: 8 },
     ]);
   });
 
   it('judges a slot of team-ups alone by all of them together', () => {
     expect(slotsOf(row('Duo', 'team_up_0', 'Utility', 10, 'Team-Up Ability'), row('Trio', 'team_up_0', 'Damage', 10, 'Team-Up Ability'))).toEqual([
-      { slot: 'team_up_0', ability: null, alsoIncludes: ['Duo', 'Trio'], tag: null, cooldownSeconds: 10 },
+      { slot: 'team_up_0', ability: null, alsoIncludes: ['Duo', 'Trio'], tag: null, cooldownSeconds: 10, shortestCooldownSeconds: 10 },
     ]);
+  });
+
+  it('takes the shortest plain cooldown on a slot whose abilities disagree, and none when none prints one', () => {
+    expect(slotsOf(row('Stun', 'ability_1', 'Utility', 10), row('Blast', 'ability_1', 'Damage', 12), row('Charges', 'ability_1', null, null))?.[0].shortestCooldownSeconds).toBe(10);
+    expect(slotsOf(row('Charges', 'ability_2', 'Utility', null))?.[0].shortestCooldownSeconds).toBeNull();
   });
 
   it('has no slot for an ability on a key the overlay does not count', () => {
@@ -220,6 +225,11 @@ describe('the bundled slots', () => {
       alsoIncludes: ['PSIONIC VORTEX', 'GAMMA MAELSTROM'],
       tag: 'Damage',
       cooldownSeconds: 6,
+      shortestCooldownSeconds: 6,
     });
+  });
+
+  it("gives Doctor Strange's Pentagram of Farallah its 180 second cooldown", () => {
+    expect(heroAbilitySlots().get('doctor-strange')?.find((slot) => slot.slot === 'ability_3')?.shortestCooldownSeconds).toBe(180);
   });
 });
