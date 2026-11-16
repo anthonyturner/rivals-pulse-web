@@ -48,6 +48,11 @@ export interface HeroScoreAbility {
   alsoIncludes: string[];
   /** Null when untagged or, for the ultimate, not tagged at all. */
   tag: 'Utility' | 'Damage' | 'Mobility' | 'Sustain' | null;
+  /**
+   * Seconds for one charge to recharge, from the official hero page. With several abilities on the slot, the
+   * shortest. Null when none has a plain cooldown (energy, ammo, Life Orbs, Iron Ring charges).
+   */
+  cooldownSeconds: number | null;
   usesPerTenMinutes: number;
   /** Kills and assists soon after a use, per use. Null when the app did not count them. */
   takedownsPerUse: number | null;

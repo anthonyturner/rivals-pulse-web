@@ -317,6 +317,7 @@ function abilitiesOf(rows: readonly HeroScoreAbilityRow[], slots: readonly HeroA
         ability: slot.ability,
         alsoIncludes: slot.alsoIncludes,
         tag: slot.slot === ULTIMATE_SLOT ? null : slot.tag,
+        cooldownSeconds: slot.shortestCooldownSeconds,
         usesPerTenMinutes: rounded(uses),
         takedownsPerUse: takedowns === null ? null : rounded(takedowns),
         matches: sumOf(ready, (row) => row.lines),

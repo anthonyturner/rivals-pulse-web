@@ -1,4 +1,4 @@
-import type { CommunityHeroScores, HeroScores, HeroScoreStat } from '../../../../contracts/hero-scores.model';
+import type { CommunityHeroScores, HeroScoreAbility, HeroScores, HeroScoreStat } from '../../../../contracts/hero-scores.model';
 import {
   heroAbilityUseRows,
   heroBuildSignals,
@@ -45,8 +45,8 @@ const hela: HeroScores = {
   ultimate: scored(8, { usesPerTenMinutes: 1.6, takedownsPerUse: 2.1 }, 'estimated'),
   utility: scored(4, { useOfAvailable: 0.62, takedownsPerUse: 0.38 }, 'estimated'),
   abilities: [
-    { slot: 'ability_2', ability: 'Soul Drainer', alsoIncludes: [], tag: 'Utility', usesPerTenMinutes: 31, takedownsPerUse: 0.38, matches: 42 },
-    { slot: 'team_up_0', ability: null, alsoIncludes: [], tag: null, usesPerTenMinutes: 2.5, takedownsPerUse: null, matches: 12 },
+    { slot: 'ability_2', ability: 'Soul Drainer', alsoIncludes: [], tag: 'Utility', cooldownSeconds: 12, usesPerTenMinutes: 31, takedownsPerUse: 0.38, matches: 42 },
+    { slot: 'team_up_0', ability: null, alsoIncludes: [], tag: null, cooldownSeconds: null, usesPerTenMinutes: 2.5, takedownsPerUse: null, matches: 12 },
   ],
 };
 
@@ -305,13 +305,13 @@ describe('teamBuildSignals', () => {
 describe('heroAbilityUseRows', () => {
   it('names the key and the ability, and says when several share a key or takedowns were not counted', () => {
     expect(heroAbilityUseRows('hela', answer([hela]))).toEqual([
-      { slot: 'ability_2', keyLabel: 'E', ability: 'Soul Drainer', type: 'Utility', uses: '31.0', takedowns: '0.38', matches: '42' },
+      { slot: 'ability_2', keyLabel: 'E', ability: 'Soul Drainer', type: 'Utility', uses: '3.10 / min', takedowns: '0.38', matches: '42' },
       {
         slot: 'team_up_0',
         keyLabel: 'C',
         ability: 'Several abilities on this key',
         type: 'Not tagged',
-        uses: '2.5',
+        uses: '0.25 / min',
         takedowns: 'Not recorded',
         matches: '12',
       },
@@ -319,9 +319,37 @@ describe('heroAbilityUseRows', () => {
   });
 
   it('calls the ultimate slot an ultimate, though the feed sends it no tag', () => {
-    const ultimate = { ...hela, abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', alsoIncludes: [], tag: null, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }] };
+    const ultimate = { ...hela, abilities: [{ slot: 'ultimate', ability: 'Goddess of Death', alsoIncludes: [], tag: null, cooldownSeconds: 60, usesPerTenMinutes: 1.6, takedownsPerUse: 2.1, matches: 42 }] };
 
     expect(heroAbilityUseRows('hela', answer([ultimate]))[0].type).toBe('Ultimate');
+  });
+
+  it('reads an ultimate and a cooldown of 60 seconds or more per 10 minutes, and the rest per minute', () => {
+    const ability = (slot: string, cooldownSeconds: number | null, usesPerTenMinutes: number) => ({
+      slot,
+      ability: slot,
+      alsoIncludes: [],
+      tag: null,
+      cooldownSeconds,
+      usesPerTenMinutes,
+      takedownsPerUse: null,
+      matches: 10,
+    });
+    const hero = { ...hela, abilities: [ability('ultimate', 60, 1.6), ability('ability_3', 180, 2.25), ability('ability_1', 59, 12), ability('ability_2', null, 30)] };
+
+    expect(heroAbilityUseRows('hela', answer([hero])).map(({ slot, uses }) => [slot, uses])).toEqual([
+      ['ability_1', '1.20 / min'],
+      ['ability_2', '3.00 / min'],
+      ['ultimate', '1.6 / 10 min'],
+      ['ability_3', '2.3 / 10 min'],
+    ]);
+  });
+
+  it('reads an ability per minute when the score file has no cooldown for it', () => {
+    const { cooldownSeconds: _omitted, ...withoutCooldown } = hela.abilities[0];
+    const hero = { ...hela, abilities: [withoutCooldown as HeroScoreAbility] };
+
+    expect(heroAbilityUseRows('hela', answer([hero]))[0].uses).toBe('3.10 / min');
   });
 
   it('is empty for a hero with no entry, or no answer', () => {

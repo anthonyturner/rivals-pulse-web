@@ -439,7 +439,7 @@ shown, listed in the manifest:
       "sustain": { "status": "ranking-too-small", "score": null, "label": "measured", "matches": 42, "contributors": null, "oneContributorAboveHalf": null, "measures": { "healingPerMinute": 0, "blockedPerMinute": 412.5, "sustainPerMinute": 412.5 } },
       "ultimate": { "status": "collecting", "score": null, "label": "estimated", "matches": 5, "contributors": 1, "oneContributorAboveHalf": false, "measures": null },
       "utility": { "status": "no-measurable-ability", "score": null, "label": "estimated", "matches": 0, "contributors": null, "oneContributorAboveHalf": null, "measures": null },
-      "abilities": [{ "slot": "ability_1", "ability": "Bionic Spider-Nest", "alsoIncludes": [], "tag": null, "usesPerTenMinutes": 12.5, "takedownsPerUse": 0.4, "matches": 42 }]
+      "abilities": [{ "slot": "ability_1", "ability": "Bionic Spider-Nest", "alsoIncludes": [], "tag": null, "cooldownSeconds": 15, "usesPerTenMinutes": 12.5, "takedownsPerUse": 0.4, "matches": 42 }]
     }
   ]
 }
@@ -487,6 +487,14 @@ shown, listed in the manifest:
   a reader that does not know the key ignores it, so `schemaVersion` stays 1. `tag`
   is the one its base abilities share (or, with no base ability, the one its
   team-ups share), null when untagged or they disagree and, for `ultimate`, always.
+  `cooldownSeconds` is how long one charge takes to recharge, from the official page:
+  the shortest plain cooldown among the slot's abilities (`alsoIncludes` and team-ups
+  included), or null when none prints one (energy, ammo, Life Orbs, Iron Ring
+  charges). It is not the slot cooldown the Utility score uses, which needs every
+  base ability to agree. Like `alsoIncludes` it is additive, so an answer or file
+  from before it existed has none and still passes, and `schemaVersion` stays 1. The
+  overlay uses it to show an ability's use per minute, and an ultimate or a cooldown
+  of 60 seconds or more per 10 minutes.
 - **The season** works as in `community-stats`, including `inPlaceOfSeasonId`.
 - **Only these keys are published.** The generator allows exactly the keys above
   (`readHeroScores` in [src/server/pulse-atlas/pulse-atlas.ts](../src/server/pulse-atlas/pulse-atlas.ts)) and

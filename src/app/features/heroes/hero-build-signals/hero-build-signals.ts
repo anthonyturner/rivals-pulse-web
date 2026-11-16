@@ -1,5 +1,6 @@
 import type {
   CommunityHeroScores,
+  HeroScoreAbility,
   HeroScores,
   HeroScoreStat,
 } from '../../../../contracts/hero-scores.model';
@@ -219,19 +220,38 @@ export function teamBuildSignals(
   });
 }
 
-/** The hero's per-ability use, one row per slot that passes the rule on its own. */
+/** An ability this slow is counted per 10 minutes, like an ultimate; a faster one reads better per minute. */
+const PER_TEN_MINUTES_COOLDOWN_SECONDS = 60;
+
+function usesLabel(ability: HeroScoreAbility, perTenMinutes: boolean): string {
+  return perTenMinutes ? `${ability.usesPerTenMinutes.toFixed(1)} / 10 min` : `${(ability.usesPerTenMinutes / 10).toFixed(2)} / min`;
+}
+
+/**
+ * The hero's per-ability use, one row per slot that passes the rule on its own. Ultimates and slow
+ * abilities read per 10 minutes and come last; the rest read per minute. A score file from before
+ * the cooldown existed has none, so its abilities all read per minute.
+ */
 export function heroAbilityUseRows(heroId: string, answer: HeroScoresAnswer): HeroAbilityUseRow[] {
   const entry = answer ? heroEntry(answer, heroId) : undefined;
+  const rows = (entry?.abilities ?? []).map((ability) => {
+    const perTenMinutes = ability.slot === 'ultimate' || (ability.cooldownSeconds ?? 0) >= PER_TEN_MINUTES_COOLDOWN_SECONDS;
 
-  return (entry?.abilities ?? []).map((ability) => ({
-    slot: ability.slot,
-    keyLabel: KEY_LABELS[ability.slot] ?? ability.slot,
-    ability: ability.ability ?? 'Several abilities on this key',
-    type: ability.slot === 'ultimate' ? 'Ultimate' : (ability.tag ?? 'Not tagged'),
-    uses: ability.usesPerTenMinutes.toFixed(1),
-    takedowns: ability.takedownsPerUse === null ? 'Not recorded' : ability.takedownsPerUse.toFixed(2),
-    matches: String(ability.matches),
-  }));
+    return {
+      perTenMinutes,
+      row: {
+        slot: ability.slot,
+        keyLabel: KEY_LABELS[ability.slot] ?? ability.slot,
+        ability: ability.ability ?? 'Several abilities on this key',
+        type: ability.slot === 'ultimate' ? 'Ultimate' : (ability.tag ?? 'Not tagged'),
+        uses: usesLabel(ability, perTenMinutes),
+        takedowns: ability.takedownsPerUse === null ? 'Not recorded' : ability.takedownsPerUse.toFixed(2),
+        matches: String(ability.matches),
+      },
+    };
+  });
+
+  return [...rows.filter(({ perTenMinutes }) => !perTenMinutes), ...rows.filter(({ perTenMinutes }) => perTenMinutes)].map(({ row }) => row);
 }
 
 function sourceOf(type: HeroBuildType): BuildSignalSource {

@@ -152,6 +152,12 @@ so nothing maps to them.
   does not count. Use above 100% of the cooldown is capped, as cooldown cuts allow it.
   A slot is taken as available at its base ability's cooldown for all time played,
   even while a team-up with another cooldown replaces it.
+- **Each ability row also carries its shortest cooldown.** `cooldownSeconds` on an
+  ability row is the shortest plain cooldown among every ability on the slot, team-ups
+  included, or null when none prints one. It is separate from the slot cooldown above,
+  which needs every base ability to agree and is the only one the Utility score uses.
+  Clients use it to show use per minute, and use per 10 minutes for an ultimate or a
+  cooldown of 60 seconds or more.
 
 ## Known limits
 

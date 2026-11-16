@@ -172,7 +172,7 @@ function heroScoresData(overrides: Record<string, unknown> = {}, damage: Record<
         sustain: heroScoreCollecting('measured'),
         ultimate: heroScoreCollecting('estimated'),
         utility: { status: 'no-measurable-ability', score: null, label: 'estimated', matches: 0, contributors: null, oneContributorAboveHalf: null, measures: null },
-        abilities: [{ slot: 'ability_0', ability: 'Hammer Throw', alsoIncludes: ['Vibranium Volley'], tag: 'Damage', usesPerTenMinutes: 12.5, takedownsPerUse: 0.4, matches: 42 }],
+        abilities: [{ slot: 'ability_0', ability: 'Hammer Throw', alsoIncludes: ['Vibranium Volley'], tag: 'Damage', cooldownSeconds: 6, usesPerTenMinutes: 12.5, takedownsPerUse: 0.4, matches: 42 }],
       },
     ],
     ...overrides,
@@ -2254,6 +2254,25 @@ describe('the hero-scores dataset', () => {
     const [{ alsoIncludes: _omitted, ...ability }] = hero['abilities'] as Record<string, unknown>[];
 
     expect(buildWith(heroScoresData({ heroes: [{ ...hero, abilities: [ability] }] }))).not.toThrow();
+  });
+
+  it('may omit cooldownSeconds on an ability, as an answer or file from before it existed does', () => {
+    const hero = (heroScoresData()['heroes'] as Record<string, unknown>[])[0];
+    const [{ cooldownSeconds: _omitted, ...ability }] = hero['abilities'] as Record<string, unknown>[];
+
+    expect(buildWith(heroScoresData({ heroes: [{ ...hero, abilities: [ability] }] }))).not.toThrow();
+  });
+
+  it('allows a null cooldownSeconds and refuses one that is not a positive number', () => {
+    const hero = (heroScoresData()['heroes'] as Record<string, unknown>[])[0];
+    const [ability] = hero['abilities'] as Record<string, unknown>[];
+    const withCooldown = (cooldownSeconds: unknown) => heroScoresData({ heroes: [{ ...hero, abilities: [{ ...ability, cooldownSeconds }] }] });
+
+    expect(buildWith(withCooldown(null))).not.toThrow();
+    expect(buildWith(withCooldown(180))).not.toThrow();
+    expect(buildWith(withCooldown(0))).toThrowError(/cooldownSeconds/);
+    expect(buildWith(withCooldown(-5))).toThrowError(/cooldownSeconds/);
+    expect(buildWith(withCooldown('6'))).toThrowError(/cooldownSeconds/);
   });
 
   it('refuses alsoIncludes that is not a list of ability names', () => {
