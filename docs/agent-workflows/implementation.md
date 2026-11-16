@@ -442,7 +442,9 @@ reaches it.
 3. Update the pull request to the shape of `.github/pull_request_template.md` —
    Summary, Type, Verification, Changelog, Manual testing, Risks, Escalation
    signals — titled
-   with the Conventional Commit subject, with `Closes #<n>` in the body. Replace
+   with the Conventional Commit subject (its words after the prefix in plain
+   language, per **Issue and pull request titles and descriptions** in
+   [../response-style.md](../response-style.md)), with `Closes #<n>` in the body. Replace
    the scaffold body; do not leave a stub. Keep the signature at the top of the
    body ([crew.md](crew.md)).
 4. Report the GitHub issue and pull-request URLs and the branch.
