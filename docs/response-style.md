@@ -53,6 +53,23 @@ dropped.
   and changelog entries and tracking lines keep the format their workflow doc
   gives them.
 
+## Issue and pull request titles and descriptions
+
+A title is the first thing the requester reads in every report, so it has to
+make sense at a glance without decoding.
+
+- **Titles say what changes, in plain words.** Name what changes for the player,
+  or why it matters. Leave out code names, file names, field names and jargon.
+  - Wrong: "Add cooldownSeconds to hero-scores".
+  - Right: "Show ability use per minute on the hero page, with ultimates and long
+    cooldowns per 10 minutes".
+- **Descriptions open with a plain-words summary.** The first lines say what
+  changes and why, before any technical detail. The technical detail follows
+  underneath and is kept.
+- **Commit messages keep the Conventional Commits format.** This rule is for
+  issue and pull-request titles and bodies; commit messages follow
+  [agent-workflows/implementation.md](agent-workflows/implementation.md).
+
 [agent-workflows/refinement.md](agent-workflows/refinement.md) extends these
 rules for the refinement assessment, the one stage whose entire output is its
 reasoning.

@@ -108,7 +108,10 @@ The issue forms in `.github/ISSUE_TEMPLATE/` (`feature.yml`, `bug.yml`,
 `chore.yml`) are this repository's own and ask for fewer sections. An issue an
 agent files uses the full format below.
 
-- Use a sentence-case, imperative title.
+- Use a sentence-case, imperative title written in plain words, per
+  **Issue and pull request titles and descriptions** in
+  [../response-style.md](../response-style.md). Open the body with a short
+  plain-words summary before `Overview`.
 - Include `Overview`, `User story`, `Context`, `Acceptance criteria`,
   `Technical notes`, and `Out of scope` sections, plus `Open questions` when
   refinement left anything open.

@@ -4,7 +4,7 @@
 
 ## Summary
 
-- Describe the change and its purpose.
+- Open with a plain-words summary of what changes and why, then the technical detail (see `docs/response-style.md`).
 
 ## Type
 
