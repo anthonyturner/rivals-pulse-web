@@ -21,9 +21,9 @@ export interface HomeTool {
 }
 
 /**
- * Season-agnostic copy is deliberate: a season name here goes stale the month
- * after it ships, which is how the home page once advertised Season 9 during
- * Season 10. Hotkeys are left out because players rebind them.
+ * Season-agnostic copy is deliberate: a season name in fixed copy goes stale
+ * once the next season ships. Hotkeys are left out because players rebind
+ * them.
  */
 export const HOME_TOOLS: readonly HomeTool[] = [
   {
