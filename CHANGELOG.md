@@ -302,6 +302,6 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 ### Fixed
 
 - How we count no longer says matches with no result are left out of everything: they are left out of win rate, pick rate, appearances and tiers, but KDA and final hits include them ([#228](https://github.com/anthonyturner/rivals-pulse-web/pull/228)).
-- The home page shows the current season again; it had stayed on Season 9 after Season 10 launched ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
+- The home page reads the current season from the newest official headline that names one, instead of stopping at the first ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - Newly released heroes show their official portrait instead of a placeholder ([#38](https://github.com/anthonyturner/rivals-pulse-web/pull/38)).
 - Home page content that loads after the page appears now shows up ([#16](https://github.com/anthonyturner/rivals-pulse-web/pull/16)).
