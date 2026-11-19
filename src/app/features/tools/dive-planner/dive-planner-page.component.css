@@ -1,0 +1,136 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.planner,
+.steps,
+.steps > section {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.planner {
+  padding-block: 16px 32px;
+}
+
+.steps {
+  gap: 16px;
+  align-items: start;
+}
+
+h2 {
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+img {
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.source,
+.detail,
+.lede {
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
+.source,
+.detail {
+  font-size: var(--type-caption);
+}
+
+.lede {
+  font-size: var(--type-small);
+}
+
+.detail {
+  display: block;
+}
+
+.chips,
+.tiles,
+.reads {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips {
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+}
+
+.tiles {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
+
+.pick,
+.chip {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick {
+  display: block;
+  padding: 0;
+  text-decoration: none;
+}
+
+.chip:focus-visible,
+.pick:focus-visible > app-hero-tile {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.pick:focus-visible {
+  outline: none;
+}
+
+.figure {
+  flex: none;
+  font-size: var(--type-small);
+  font-weight: 800;
+}
+
+.chip {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: var(--type-caption);
+  font-weight: 700;
+  text-align: center;
+}
+
+.chip img {
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  border-radius: 6px;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--bg-panel-soft);
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+@media (min-width: 860px) {
+  .steps {
+    grid-template-columns: minmax(300px, 1fr) minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,142 @@
+:host {
+  display: block;
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mode {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mode:hover {
+  border-color: var(--accent-line);
+  background: var(--bg-panel-soft);
+  color: var(--text);
+}
+
+.mode[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.mode:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.roles {
+  display: grid;
+  gap: 12px;
+}
+
+/* A role sets one colour for its card's wash, its edge and its dot (the shared mapping in `styles.css`); `--hero-role-ink` is the same role used as text. */
+.role {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 40%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 16%, var(--bg-panel)),
+    var(--bg-panel) 70%
+  );
+}
+
+.role-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+}
+
+.role-name {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--hero-role-ink, var(--text-muted));
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.role-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hero-role-color, var(--text-muted));
+}
+
+.role-sample,
+.role-empty {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.figures > div {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel-soft);
+}
+
+dt {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+dd {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 561px) and (max-width: 899px) {
+  .figures {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .roles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .modes {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+
+  .mode {
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+}

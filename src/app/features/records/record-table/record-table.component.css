@@ -1,0 +1,104 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--type-small);
+}
+
+th,
+td {
+  padding: 6px 8px;
+  box-shadow: inset 0 1px 0 var(--border);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+thead th {
+  box-shadow: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.place {
+  width: 36px;
+  color: var(--text-soft);
+  text-align: right;
+}
+
+.value {
+  width: 88px;
+  text-align: right;
+}
+
+tbody .value {
+  font-weight: 800;
+}
+
+.hero {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hero img,
+.hero-tile {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.hero-tile {
+  background: var(--surface-2);
+}
+
+.hero-name {
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.name {
+  font-weight: 700;
+}
+
+.anonymous {
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+/* The best line is marked by an edge and a coloured figure, so it does not rely on a fill behind the text. */
+.top .place {
+  box-shadow:
+    inset 3px 0 0 var(--accent),
+    inset 0 1px 0 var(--border);
+}
+
+.top .place,
+.top .value {
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  th,
+  td {
+    padding: 6px 4px;
+  }
+
+  .place {
+    width: 24px;
+  }
+
+  .value {
+    width: 64px;
+  }
+}

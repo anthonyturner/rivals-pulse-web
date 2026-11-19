@@ -1,0 +1,5 @@
+@if (source(); as url) {
+  <img class="player-avatar" [src]="url" alt="" referrerpolicy="no-referrer" (error)="showInitial()" />
+} @else {
+  <span class="player-avatar player-avatar--initial" aria-hidden="true">{{ initial() }}</span>
+}

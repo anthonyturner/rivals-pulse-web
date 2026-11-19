@@ -1,0 +1,26 @@
+@if (hero()) {
+  <section class="hero-detail" aria-label="Selected hero details">
+    <nav class="detail-actions" aria-label="Breadcrumb">
+      @if (origin(); as origin) {
+        <a class="detail-action" [routerLink]="origin.url">
+          <span aria-hidden="true">&larr;</span> {{ origin.label }}
+        </a>
+      }
+      <a class="detail-action" routerLink="/heroes" queryParamsHandling="preserve">
+        @if (!origin()) {
+          <span aria-hidden="true">&larr;</span>
+        }
+        All heroes
+      </a>
+    </nav>
+
+    @for (shown of detailHeroes(); track shown.id) {
+      <div class="detail-main">
+        @if (hasRoleKits()) {
+          <app-hero-role-switcher [hero]="shown" [controller]="controller()"></app-hero-role-switcher>
+        }
+        <app-hero-details [hero]="shown" [controller]="controller()"></app-hero-details>
+      </div>
+    }
+  </section>
+}

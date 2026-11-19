@@ -1,28 +1,79 @@
 {
   "version": 2,
   "buildCommand": "npm run vercel:build",
-  "outputDirectory": "dist/marvel-rivals-coach/browser",
+  "outputDirectory": "dist/rivals-pulse-coach/static",
+  "redirects": [
+    { "source": "/overlay-faq", "destination": "/faq", "permanent": true },
+    { "source": "/overlay-faq/", "destination": "/faq", "permanent": true },
+    { "source": "/community", "destination": "/stats", "permanent": true },
+    { "source": "/community/", "destination": "/stats", "permanent": true },
+    { "source": "/community/heroes", "destination": "/stats/heroes", "permanent": true },
+    { "source": "/community/heroes/", "destination": "/stats/heroes", "permanent": true },
+    { "source": "/community/tier-list", "destination": "/stats/heroes?view=tiers", "permanent": true },
+    { "source": "/community/tier-list/", "destination": "/stats/heroes?view=tiers", "permanent": true },
+    { "source": "/community/matches", "destination": "/stats", "permanent": true },
+    { "source": "/community/matches/", "destination": "/stats", "permanent": true },
+    { "source": "/community/insights", "destination": "/stats", "permanent": true },
+    { "source": "/community/insights/", "destination": "/stats", "permanent": true },
+    { "source": "/community/counters", "destination": "/stats/matchups", "permanent": true },
+    { "source": "/community/counters/", "destination": "/stats/matchups", "permanent": true },
+    { "source": "/community/stats", "destination": "/stats/roles", "permanent": true },
+    { "source": "/community/stats/", "destination": "/stats/roles", "permanent": true },
+    { "source": "/tier-list", "destination": "/stats/heroes?view=tiers", "permanent": true },
+    { "source": "/tier-list/", "destination": "/stats/heroes?view=tiers", "permanent": true },
+    { "source": "/win-rates", "destination": "/stats/heroes", "permanent": true },
+    { "source": "/win-rates/", "destination": "/stats/heroes", "permanent": true },
+    { "source": "/season-9-win-rates", "destination": "/stats/heroes", "permanent": true },
+    { "source": "/season-9-win-rates/", "destination": "/stats/heroes", "permanent": true },
+    { "source": "/game-stats", "destination": "/stats", "permanent": true },
+    { "source": "/game-stats/", "destination": "/stats", "permanent": true },
+    { "source": "/team-comps", "destination": "/stats/team-comps", "permanent": true },
+    { "source": "/team-comps/", "destination": "/stats/team-comps", "permanent": true },
+    { "source": "/records", "destination": "/stats/records", "permanent": true },
+    { "source": "/records/", "destination": "/stats/records", "permanent": true },
+    { "source": "/records/kills", "destination": "/stats/records?category=kills", "permanent": true },
+    { "source": "/records/kills/", "destination": "/stats/records?category=kills", "permanent": true },
+    { "source": "/records/assists", "destination": "/stats/records?category=assists", "permanent": true },
+    { "source": "/records/assists/", "destination": "/stats/records?category=assists", "permanent": true },
+    { "source": "/records/final-hits", "destination": "/stats/records?category=final-hits", "permanent": true },
+    { "source": "/records/final-hits/", "destination": "/stats/records?category=final-hits", "permanent": true },
+    { "source": "/records/damage", "destination": "/stats/records?category=damage", "permanent": true },
+    { "source": "/records/damage/", "destination": "/stats/records?category=damage", "permanent": true },
+    { "source": "/records/healing", "destination": "/stats/records?category=healing", "permanent": true },
+    { "source": "/records/healing/", "destination": "/stats/records?category=healing", "permanent": true },
+    { "source": "/records/damage-blocked", "destination": "/stats/records?category=damage-blocked", "permanent": true },
+    { "source": "/records/damage-blocked/", "destination": "/stats/records?category=damage-blocked", "permanent": true },
+    { "source": "/community/:path*", "destination": "/stats", "permanent": true },
+    { "source": "/win-rates/:path*", "destination": "/stats/heroes", "permanent": true }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/).*)",
-      "destination": "/index.csr.html"
+      "destination": "/api/ssr"
     }
   ],
+  "functions": {
+    "api/admin/data-jobs-run.ts": { "maxDuration": 60 },
+    "api/ssr.mjs": {
+      "maxDuration": 15,
+      "includeFiles": "dist/rivals-pulse-coach/{server/**,browser/index.csr.html}"
+    }
+  },
   "crons": [
     {
       "path": "/api/sync/home-news",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/sync/tier-list",
-      "schedule": "20 */6 * * *"
-    },
-    {
-      "path": "/api/sync/game-stats",
-      "schedule": "10 * * * *"
+      "schedule": "0 3 * * *"
     }
   ],
   "headers": [
+    {
+      "source": "/robots.txt",
+      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [{ "key": "Content-Type", "value": "application/xml; charset=utf-8" }]
+    },
     {
       "source": "/api/glossary",
       "headers": [
@@ -33,14 +84,6 @@
     },
     {
       "source": "/api/heroes",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-      ]
-    },
-    {
-      "source": "/api/tier-list",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },

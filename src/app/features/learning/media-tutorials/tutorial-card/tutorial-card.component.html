@@ -1,0 +1,30 @@
+@let video = tutorial();
+
+<app-youtube-player
+  [videoId]="video.youtubeId"
+  [title]="video.title"
+  [label]="'Play video: ' + video.title"
+  [eager]="featured()"
+  [(started)]="started"
+/>
+
+<div class="copy">
+  @if (featured()) {
+    <app-kind-chip [kind]="video.kind" [label]="video.category" [dark]="true" />
+  }
+  @if (headingLevel() === 2) {
+    <h2 class="title">{{ video.title }}</h2>
+  } @else {
+    <h3 class="title">{{ video.title }}</h3>
+  }
+  <p class="description">{{ video.description }}</p>
+  <p class="topics">{{ video.topics }}</p>
+  <p class="links">
+    <a class="link" [href]="video.sourceUrl" target="_blank" rel="noopener">
+      Watch on YouTube<span class="visually-hidden"> (opens in a new tab)</span>
+    </a>
+    @if (video.guideUrl; as guideUrl) {
+      <a class="link" [routerLink]="guideUrl">Read guide notes</a>
+    }
+  </p>
+</div>

@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.media {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding-block: 16px 32px;
+}
+
+.guide-search,
+app-filter-select {
+  flex: 1 1 150px;
+}
+
+.guide-search {
+  display: grid;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 850;
+}
+
+.group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.group__title {
+  margin: 0;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards > li {
+  min-width: 0;
+}

@@ -1,0 +1,13 @@
+<div class="category page-container page-container--wide">
+  <app-page-header [title]="category.label" [description]="category.description" />
+
+  @if (tiles; as config) {
+    <app-hub-bento [links]="released" [config]="config" />
+  } @else {
+    <ul class="grid">
+      @for (item of released; track item.path) {
+        <li><app-guide-card [title]="item.label" [route]="item.path" [blurb]="item.description" /></li>
+      }
+    </ul>
+  }
+</div>

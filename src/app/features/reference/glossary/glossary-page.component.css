@@ -1,0 +1,123 @@
+.glossary {
+  gap: 16px;
+}
+
+.guide-search {
+  display: grid;
+  gap: 6px;
+}
+
+.guide-search span {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 850;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.letters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.letters a {
+  display: inline-flex;
+  min-width: 32px;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 12px;
+  scroll-margin-top: 16px;
+}
+
+/* A 296px minimum gives three columns beside the 332px sidebar at 1366, which is what keeps 140-odd rows short. */
+.letter > .guide-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 296px), 1fr));
+  gap: 8px;
+  grid-column: 1 / -1;
+  align-items: start;
+}
+
+.guide-tile:hover {
+  border-color: var(--link);
+}
+
+.guide-tile:target {
+  background: var(--bg-panel-soft);
+}
+
+.guide-tile > h3 {
+  margin-bottom: 4px;
+}
+
+/* The button fills the tile's top, padding included, so the whole of it is the target. */
+.toggle {
+  display: flex;
+  width: calc(100% + 32px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -12px -16px -4px;
+  padding: 12px 16px 4px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.toggle:focus-visible {
+  outline-offset: -4px;
+}
+
+.definition:not(.is-open) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.details {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  line-height: 1.5;
+}
+
+.details > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.details > div + div {
+  margin-top: 6px;
+}
+
+.details dt {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.details dd {
+  margin: 0;
+}

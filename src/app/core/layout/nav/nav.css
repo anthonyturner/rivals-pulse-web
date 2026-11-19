@@ -1,0 +1,114 @@
+/* The toggle and the links are flex items of the header itself. */
+:host {
+  display: contents;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link,
+.menu-toggle {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  --player-avatar-size: 24px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: var(--surface);
+}
+
+.nav-link[aria-current] {
+  box-shadow: inset 0 -2px 0 var(--accent-strong);
+}
+
+.nav-account,
+.menu-toggle {
+  border-color: var(--border-strong);
+}
+
+/* Holds the account link's place until the session answers, so the other links do not shift. */
+.nav-pending {
+  visibility: hidden;
+}
+
+.nav-home,
+.menu-toggle {
+  display: none;
+}
+
+/* A long name is cut with an ellipsis rather than pushing the other links off the row. */
+.nav-player-name {
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Below the width in WIDE_NAV_QUERY (nav.ts) the links become a menu under the header. */
+@media (max-width: 919px) {
+  .menu-toggle,
+  .nav-home {
+    display: inline-flex;
+  }
+
+  nav {
+    position: absolute;
+    inset: 100% 0 auto;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    max-height: calc(100dvh - var(--nav-height));
+    padding: 8px max(var(--page-gutter), 12px);
+    overflow-y: auto;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+
+  nav.is-open {
+    display: flex;
+  }
+
+  .menu-toggle,
+  .nav-link {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  /* The ring sits inside each row, where the panel's scrolling cannot clip it. */
+  .nav-link:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .nav-link[aria-current] {
+    background: var(--surface);
+    box-shadow: inset 3px 0 0 var(--accent-strong);
+  }
+
+  .nav-account {
+    margin-top: 8px;
+  }
+
+  app-theme-toggle {
+    --theme-toggle-size: 44px;
+    --theme-toggle-width: 100%;
+    --theme-toggle-justify: flex-start;
+    --theme-toggle-pad: 14px;
+    --theme-toggle-text: inline;
+    margin-top: 8px;
+  }
+}

@@ -1,0 +1,15 @@
+<div class="not-found page-container page-container--narrow">
+  <app-page-header
+    title="Page not found"
+    description="There is no page at this address. It may have moved, or the link has a typo."
+  />
+
+  <section class="guide-tile" aria-labelledby="not-found-links">
+    <h2 id="not-found-links">Try one of these</h2>
+    <ul>
+      @for (link of links; track link.path) {
+        <li><a class="guide-button" [routerLink]="link.path">{{ link.label }}</a></li>
+      }
+    </ul>
+  </section>
+</div>

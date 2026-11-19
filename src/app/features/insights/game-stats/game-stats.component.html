@@ -1,0 +1,69 @@
+@if (view(); as v) {
+  @if (v.status === 'loading') {
+    <app-state-panel kind="loading" heading="Loading game stats" [announce]="false">
+      <p>Fetching the latest counts.</p>
+    </app-state-panel>
+  } @else if (v.status === 'error') {
+    <app-state-panel kind="error" heading="Game stats could not be loaded">
+      <p>The counts are not available right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (v.status === 'empty') {
+    <app-state-panel heading="No matches counted yet">
+      <p>Counts appear here once matches recorded with the RivalsPulse app have been uploaded.</p>
+    </app-state-panel>
+  } @else {
+    <section class="strip" aria-label="Matches and players counted">
+      <div class="strip__figures">
+        <app-heartbeat-line [rate]="beatRate()" />
+        <dl class="strip__tiles">
+          @for (tile of v.tiles; track tile.label) {
+            <div class="strip__tile">
+              <dt>{{ tile.label }}</dt>
+              <dd>{{ tile.value }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      <h2 id="seasons-title" class="strip__title">By half-season</h2>
+      <table class="stat-table seasons" aria-labelledby="seasons-title" aria-describedby="seasons-note">
+        <caption class="visually-hidden">Matches and players seen in each half-season</caption>
+        <colgroup>
+          <col />
+          <col />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Half-season</th>
+            <th scope="col">Matches counted</th>
+            <th scope="col">Players</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of v.rows; track row.label) {
+            <tr>
+              <th scope="row">{{ row.label }}</th>
+              <td>{{ row.matches }}</td>
+              <td>{{ row.players }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3">No half-season has matches yet.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <details class="stat-how">
+        <summary>How these are counted<span class="visually-hidden"> for matches and players</span></summary>
+        <p class="stat-note">{{ v.meta }}</p>
+        <p class="stat-note" id="seasons-note">
+          A match is counted once however many players recorded it, in every mode and whether or not it ended with a win
+          or a loss, so the rows add up to the total. Win rates and tiers use only the matches with a result, so they
+          count fewer. A player is counted once per half-season, so the rows can add up to more players than the total.
+          Only matches the app still holds are counted, which is up to about six months of play.
+        </p>
+      </details>
+    </section>
+  }
+}

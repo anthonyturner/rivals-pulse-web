@@ -1,0 +1,17 @@
+:host { display: block; min-width: 0; }
+.diagram { margin: 24px 0 0; padding-block: 20px; border-block: 1px solid var(--border); }
+.diagram-rows { display: grid; gap: 20px; }
+.row-label { margin-bottom: 8px; font-size: var(--type-small); font-weight: 700; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.flow li { padding: 4px 12px; border: 1px solid var(--border-strong); border-radius: 5px; font-size: var(--type-small); }
+.flow li.key { border-color: var(--accent-line); background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.flow li:not(:last-child)::after { margin-left: 10px; content: '→' / ''; }
+figcaption { margin-top: 14px; color: var(--text-muted); font-size: var(--type-small); line-height: 1.5; }
+.checks { padding-left: 24px; margin-top: 16px; }
+.checks li + li { margin-top: 12px; }
+.notes { margin: 0; }
+.notes dt { margin-top: 20px; color: var(--text); font-weight: 800; }
+.notes dd { margin: 4px 0 0; }
+.timeline { display: grid; gap: 16px; margin: 20px 0 0; padding: 0; list-style: none; }
+.timeline li { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 12px; }
+.timeline a { font-variant-numeric: tabular-nums; }

@@ -1,0 +1,382 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+h3,
+p {
+  margin: 0;
+}
+
+h3 {
+  font-size: var(--type-h3);
+}
+
+app-state-panel,
+.card,
+.building {
+  margin-top: 12px;
+}
+
+.card,
+.building {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+.card {
+  padding: 12px 16px;
+}
+
+.section-heading {
+  display: grid;
+  gap: 4px;
+  padding: 16px 16px 8px;
+}
+
+.section-heading p {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.method-note {
+  margin-top: 16px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--type-small);
+}
+
+th,
+td {
+  padding: 4px 8px;
+  box-shadow: inset 0 1px 0 var(--border);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: left;
+}
+
+thead th {
+  box-shadow: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.col-rank {
+  width: 40px;
+  text-align: right;
+}
+
+.col-role {
+  width: 90px;
+}
+
+.col-rate {
+  width: 130px;
+}
+
+.col-pick,
+.col-ban {
+  width: 100px;
+}
+
+.mobile-label {
+  display: none;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+
+thead button {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-weight: 700;
+}
+
+thead [aria-sort='ascending'] button,
+thead [aria-sort='descending'] button {
+  color: var(--accent-strong);
+}
+
+/* The pickers' labels are --text-muted, 4.2:1 on the page background; --text-soft is 8.3:1. */
+.filters {
+  --text-muted: var(--text-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: end;
+  margin-top: 4px;
+}
+
+.filters app-filter-select {
+  flex: 1 1 190px;
+}
+
+.hero-search {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 200px;
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.hero-search input {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--type-small);
+}
+.hero-search input::placeholder {
+  color: var(--text-soft);
+}
+
+.summary-scope {
+  margin-top: 16px;
+  font-size: var(--type-caption);
+  color: var(--text-soft);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.summary > * {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.summary button {
+  border-color: var(--control-border);
+}
+
+.summary button:hover,
+.summary button[aria-pressed='true'] {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.summary span {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.summary strong {
+  font-size: var(--type-h3);
+}
+
+.reset-filters {
+  padding: 8px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+}
+
+.col-games {
+  width: 104px;
+  text-align: right;
+}
+
+.hero-link {
+  display: grid;
+  grid-template-columns: 28px auto;
+  gap: 0 8px;
+  align-items: center;
+  width: fit-content;
+  line-height: 1.2;
+  color: var(--text);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.hero-link:hover {
+  color: var(--link);
+}
+
+.hero-link img {
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.role-under {
+  display: none;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.rate {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rate strong {
+  flex: none;
+  width: 52px;
+}
+
+/* The win rate is the data; the bar's colour only repeats whether it is above, at or below the 50% line. */
+.bar {
+  position: relative;
+  flex: 1 1 auto;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.bar::after {
+  content: '';
+  position: absolute;
+  inset-block: -2px;
+  left: 50%;
+  width: 2px;
+  background: var(--text-soft);
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--secondary);
+}
+
+[data-tone='above'] .bar-fill {
+  background: var(--win-ink);
+}
+
+[data-tone='below'] .bar-fill {
+  background: var(--danger);
+}
+
+@media (max-width: 560px) {
+  .card {
+    padding: var(--mobile-panel-padding);
+  }
+}
+
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .summary > * {
+    padding: 12px;
+  }
+
+  table,
+  tbody {
+    display: block;
+  }
+
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  thead button {
+    display: none;
+  }
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-block: 12px;
+    border-top: 1px solid var(--border);
+    gap: 12px 8px;
+  }
+
+  .col-hero,
+  .col-games {
+    grid-column: 1 / -1;
+  }
+
+  .mobile-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-soft);
+    font-size: var(--type-caption);
+  }
+  th,
+  td {
+    padding: 0;
+    box-shadow: none;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .col-rank,
+  .col-role {
+    display: none;
+  }
+
+  .col-rate,
+  .col-pick,
+  .col-ban,
+  .col-games {
+    width: auto;
+  }
+
+  .col-games {
+    text-align: left;
+  }
+
+  .col-games .mobile-label {
+    display: inline;
+    margin-right: 8px;
+  }
+
+  /* The role sits under the name, outside the link, in the 14px the link leaves below the name. */
+  .hero-link {
+    align-items: start;
+    min-height: 31px;
+  }
+
+  .role-under {
+    display: block;
+    margin: -14px 0 0 36px;
+    line-height: 14px;
+  }
+
+  .rate {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .bar {
+    flex: none;
+    width: 56px;
+    height: 4px;
+  }
+}

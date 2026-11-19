@@ -1,0 +1,19 @@
+<div class="admin page-container page-container--wide">
+  <h1 class="admin__title">Admin</h1>
+
+  <div class="admin__layout">
+    <nav class="admin__menu" aria-label="Admin pages">
+      <ul class="admin__list">
+        @for (page of pages; track page.path) {
+          <li>
+            <a class="admin__link" [routerLink]="page.path" routerLinkActive="admin__link--active" ariaCurrentWhenActive="page">{{ page.label }}</a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="admin__page">
+      <router-outlet />
+    </div>
+  </div>
+</div>

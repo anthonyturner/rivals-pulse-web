@@ -1,0 +1,137 @@
+:host {
+  display: block;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.site-footer__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr);
+  gap: 32px 48px;
+  padding-block: 40px 32px;
+}
+
+.site-footer__about {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 14px;
+}
+
+.site-footer__tagline {
+  max-width: 36ch;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.site-footer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.site-footer__discord {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-footer__discord:hover {
+  background: var(--surface);
+}
+
+.site-footer__columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 24px;
+}
+
+.site-footer__heading {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: var(--type-small);
+  font-weight: 800;
+}
+
+ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul a {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  color: var(--text-soft);
+  text-decoration: none;
+}
+
+ul a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.site-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+  padding-block: 14px;
+  border-top: 1px solid var(--border);
+  font-size: var(--type-caption);
+}
+
+.site-footer__legal p {
+  margin: 0;
+}
+
+.site-footer__link {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .site-footer__main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .site-footer__main {
+    padding-block: 28px 24px;
+  }
+
+  .site-footer__columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .site-footer__columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

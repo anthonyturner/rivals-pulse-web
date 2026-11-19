@@ -1,0 +1,68 @@
+:host {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.message {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  font-variant-numeric: tabular-nums;
+}
+
+.tile.estimated {
+  border: 1px dashed var(--border-strong);
+}
+
+.tile span {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.waiting {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 6px;
+  font-size: var(--type-caption);
+}
+
+.waiting span {
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
+}
+
+.progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--bg-panel);
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}

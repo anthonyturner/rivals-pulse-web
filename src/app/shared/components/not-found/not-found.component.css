@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.not-found {
+  display: grid;
+  gap: 16px;
+  padding-block: 16px 32px;
+}
+
+ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-button {
+  min-height: 44px;
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.guide-button:hover {
+  border-color: var(--link);
+}

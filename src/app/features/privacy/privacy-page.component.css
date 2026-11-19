@@ -1,0 +1,21 @@
+.privacy-toc p {
+  color: var(--text);
+  font-size: var(--type-small);
+  font-weight: 850;
+}
+
+.privacy-toc ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 4px;
+  padding: 0;
+  font-size: var(--type-small);
+  list-style: none;
+}
+
+.privacy-toc a {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+}

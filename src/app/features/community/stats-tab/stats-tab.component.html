@@ -1,0 +1,57 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Community role benchmarks"
+  subject="role benchmarks"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+  [footnote]="current.kind === 'ready' ? current.sample : null"
+>
+  @if (current.kind === 'ready') {
+    @if (current.modes.length > 0) {
+      <div class="modes" role="group" aria-label="Game mode">
+        @for (mode of current.modes; track mode.id) {
+          <button
+            type="button"
+            class="mode"
+            [attr.aria-pressed]="mode.selected"
+            (click)="selectMode(mode.id)"
+          >
+            {{ mode.label }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (current.caveat; as caveat) {
+      <app-notice>{{ caveat }}</app-notice>
+    }
+
+    <div class="roles">
+      @for (card of current.cards; track card.role) {
+        <article class="role" [attr.data-role]="card.roleKey">
+          <header class="role-header">
+            <h3 class="role-name"><span class="role-dot" aria-hidden="true"></span>{{ card.role }}</h3>
+            <p class="role-sample">{{ card.appearancesLabel }}</p>
+          </header>
+          @if (card.ready) {
+            <dl class="figures">
+              @for (figure of card.figures; track figure.label) {
+                <div>
+                  <dt>{{ figure.label }}</dt>
+                  <dd>{{ figure.value }}</dd>
+                </div>
+              }
+            </dl>
+          } @else {
+            <p class="role-empty">{{ card.message }}</p>
+          }
+        </article>
+      }
+    </div>
+  }
+</app-community-summary>
+
+<app-community-role-figures [modeId]="selectedMode()" />

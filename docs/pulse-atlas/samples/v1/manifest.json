@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T12:00:00.000Z",
+  "files": [
+    {
+      "dataset": "heroes",
+      "path": "pulse-atlas/v1/heroes.json",
+      "sha256": "9984a4be97c978556594eeb765dd4bf096fad1ca104b617c068b909009ef8470",
+      "bytes": 20099
+    },
+    {
+      "dataset": "tier-list",
+      "path": "pulse-atlas/v1/tier-list.json",
+      "sha256": "9457abd97c382d9950a88599f84478a90bb667a7817d0eba33132c9e535e2277",
+      "bytes": 1843
+    },
+    {
+      "dataset": "glossary",
+      "path": "pulse-atlas/v1/glossary.json",
+      "sha256": "5f24cdf51aef691bfc015c75dba5e669dc6bb713f9b06fca31ff820c683a046d",
+      "bytes": 1661
+    },
+    {
+      "dataset": "maps",
+      "path": "pulse-atlas/v1/maps.json",
+      "sha256": "95d3f61f93434fe72d46f3c5462597e7a9d0803fbcb598aefe17cbe1c72b75f3",
+      "bytes": 2156
+    },
+    {
+      "dataset": "hero-styles",
+      "path": "pulse-atlas/v1/hero-styles.json",
+      "sha256": "53ff6d4c746872d5f236bc95d17ca31331cb176e7a12301fb585c60a60171690",
+      "bytes": 220
+    },
+    {
+      "dataset": "strategist-tags",
+      "path": "pulse-atlas/v1/strategist-tags.json",
+      "sha256": "217e26ba38c799a0589f93ddbf49bf573514ff454ea2656ec6c23e5959018f63",
+      "bytes": 154
+    },
+    {
+      "dataset": "hero-stats",
+      "path": "pulse-atlas/v1/hero-stats.json",
+      "sha256": "5d21a0cad165d38df77d57529fb036573bf660f954aaedc3c21b71d988de33b9",
+      "bytes": 829
+    },
+    {
+      "dataset": "community-stats",
+      "path": "pulse-atlas/v1/community-stats.json",
+      "sha256": "b15527d7c4ffa51fda240e5f223f8b183dba5e61bfae94e6b38d8b2c07a51ce5",
+      "bytes": 752
+    },
+    {
+      "dataset": "hero-scores",
+      "path": "pulse-atlas/v1/hero-scores.json",
+      "sha256": "bbe4ece9a7b12d48a72819520bff5392086db0b5ab086c29f29341e1a2e454de",
+      "bytes": 1232
+    },
+    {
+      "dataset": "team-lineups",
+      "path": "pulse-atlas/v1/team-lineups.json",
+      "sha256": "2a9c31d1f868a052587be460d8432641c809bd3099d9021cbac4b4b589996507",
+      "bytes": 552
+    },
+    {
+      "dataset": "hero-specialists",
+      "path": "pulse-atlas/v1/hero-specialists.json",
+      "sha256": "94c03729b47949e140dd149c20ca85eac76c4be132ed7519e4a8abf0b0c50934",
+      "bytes": 1061
+    }
+  ]
+}

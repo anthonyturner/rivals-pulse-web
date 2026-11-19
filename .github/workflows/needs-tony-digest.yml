@@ -1,0 +1,47 @@
+name: Needs Tony digest
+
+# Agents act as Tony's own GitHub account, so the needs-tony labels and questions they add never
+# notify him. Once a day this posts one comment, from github-actions[bot], on the pinned
+# "Needs Tony digest" issue, listing what is waiting on him in both Rivals Pulse repositories.
+# It posts no comment when the inbox is empty. The logic lives in scripts/needs-tony-digest.mjs.
+on:
+  schedule:
+    # 14:00 UTC is 9:00 AM Eastern in winter and 10:00 AM during daylight saving time.
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: needs-tony-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    name: Post digest
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Reads both repositories, the private overlay included. The comment itself is written
+    # with GITHUB_TOKEN, so it comes from the bot and notifies.
+    env:
+      WORK_QUEUE_TOKEN: ${{ secrets.WORK_QUEUE_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/needs-tony-digest.mjs
+          persist-credentials: false
+
+      - name: Post the digest
+        # Skipped rather than failed until the maintainer creates the secret.
+        if: env.WORK_QUEUE_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/needs-tony-digest.mjs
+
+      - name: Explain the skipped digest
+        if: env.WORK_QUEUE_TOKEN == ''
+        run: echo "::notice title=Needs Tony digest skipped::The WORK_QUEUE_TOKEN secret is not set."

@@ -1,0 +1,16 @@
+# Dependabot opens update pull requests on a monthly schedule. Tooling that
+# only runs in development is grouped into one pull request, so routine bumps
+# do not arrive as a flood of small ones.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      development-tooling:
+        dependency-type: development
+    commit-message:
+      prefix: chore
+      include: scope

@@ -1,16 +1,18 @@
-<div class="app-shell">
-  <header class="top-nav">
-    <a class="brand" routerLink="/" aria-label="Marvel Rivals Coach home">
-      <span class="brand-mark" aria-hidden="true">
-        <span class="brand-mark-core">MR</span>
-      </span>
-      <span class="brand-copy">
-        <strong>Marvel Rivals Coach</strong>
-        <small>Draft smarter. Fight cleaner.</small>
-      </span>
-    </a>
-     <app-nav></app-nav>
-  </header>
+<a class="skip-link" href="#main-content" (click)="skipToMain($event)">Skip to main content</a>
 
-  <router-outlet />
+<header class="top-nav" #header>
+  <app-nav-pulse />
+  <app-brand />
+  <app-nav />
+</header>
+
+<div class="app-body" [class.app-body--with-sidebar]="hasSidebar()">
+  <main id="main-content" tabindex="-1" #main>
+    <router-outlet />
+  </main>
+  @if (hasSidebar()) {
+    <app-sidebar class="app-body__sidebar" />
+  }
 </div>
+
+<app-footer />

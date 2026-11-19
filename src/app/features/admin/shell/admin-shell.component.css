@@ -1,0 +1,77 @@
+:host {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin {
+  display: grid;
+  gap: 16px;
+  padding-block: 16px 32px;
+}
+
+.admin__title {
+  font-size: var(--type-page-title);
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.admin__layout {
+  display: grid;
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.admin__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin__link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin__link:hover {
+  background: var(--bg-panel-soft);
+  color: var(--text);
+}
+
+.admin__link--active {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.admin__link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .admin__layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .admin__list {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .admin__link {
+    white-space: nowrap;
+  }
+}

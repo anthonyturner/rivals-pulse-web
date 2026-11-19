@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  scroll-margin-block-start: 1rem;
+}
+
+.hero-videos {
+  padding: 0;
+}
+.hero-videos__heading {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--type-h3);
+  font-weight: 700;
+}
+.hero-videos__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.video-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+app-youtube-player {
+  border-radius: 6px;
+}
+.video-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.video-copy strong {
+  color: var(--text);
+  font-size: var(--type-small);
+}
+.video-copy small {
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.video-copy a,
+.video-all {
+  width: fit-content;
+  color: var(--link);
+  font-size: var(--type-small);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.video-all {
+  display: block;
+  margin-top: 10px;
+}

@@ -1,0 +1,28 @@
+@let current = card();
+
+@switch (current.kind) {
+  @case ('loading') {
+    <p class="message">Loading scores...</p>
+  }
+  @case ('unavailable') {
+    <p class="message">Scores cannot be loaded right now.</p>
+  }
+  @case ('scored') {
+    <ul class="tiles">
+      @for (tile of current.tiles; track tile.type) {
+        <li class="tile" [class.estimated]="tile.source === 'Estimated'" [attr.aria-label]="tile.ariaLabel">
+          <strong aria-hidden="true">{{ tile.valueLabel }}</strong>
+          <span aria-hidden="true">{{ tile.shortLabel }}</span>
+        </li>
+      }
+    </ul>
+    <p class="message">{{ current.sample }}</p>
+  }
+  @case ('waiting') {
+    <div class="waiting">
+      <strong>{{ current.heading }}</strong>
+      <div class="progress" aria-hidden="true"><i [style.width.%]="current.percent"></i></div>
+      <span>{{ current.progress }}</span>
+    </div>
+  }
+}

@@ -1,0 +1,12 @@
+<div class="summary">
+  <ul class="topics">
+    @for (topic of preview.topics; track topic) {
+      <li class="topic">{{ topic }}</li>
+    }
+  </ul>
+  <span class="heroes">
+    @for (hero of preview.heroes; track hero.hero) {
+      <app-preview-portrait [src]="hero.imageUrl" />
+    }
+  </span>
+</div>

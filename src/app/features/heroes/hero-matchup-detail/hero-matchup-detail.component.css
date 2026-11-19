@@ -1,0 +1,114 @@
+.head-to-head {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text);
+  box-shadow: 0 16px 48px var(--shadow-color);
+}
+
+.head-to-head::backdrop {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.head-to-head__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.head-to-head__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.head-to-head h3,
+.head-to-head h4,
+.head-to-head p,
+.head-to-head dl,
+.head-to-head dd {
+  margin: 0;
+}
+
+.head-to-head__header p,
+.head-to-head__caveat,
+.head-to-head dt,
+.head-to-head dd span {
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+}
+
+.head-to-head__close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.head-to-head__sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.head-to-head__side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel-soft);
+}
+
+.head-to-head__identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.head-to-head__identity img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.head-to-head dl {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.head-to-head dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin-top: 2px;
+  font-size: var(--type-small);
+  overflow-wrap: anywhere;
+}
+
+.head-to-head__record strong {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 560px) {
+  .head-to-head__sides {
+    grid-template-columns: 1fr;
+  }
+}

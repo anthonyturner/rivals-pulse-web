@@ -1,0 +1,14 @@
+/* List this in styleUrls and give the disclosure button the chevron class: it points right while aria-expanded is false and down while it is true. */
+.chevron::after {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: solid var(--text);
+  border-width: 0 2px 2px 0;
+  transform: translateX(-3px) rotate(-45deg);
+  content: '';
+}
+
+.chevron[aria-expanded='true']::after {
+  transform: translateY(-3px) rotate(45deg);
+}
