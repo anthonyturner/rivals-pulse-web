@@ -8,6 +8,10 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ## [Unreleased]
 
+### Fixed
+
+- Matches recorded after the Season 11 gameplay boundary can be repaired with their related statistics, and stale client uploads use the recorded date to select the season ([#855](https://github.com/anthonyturner/rivals-pulse-web/pull/855)).
+
 ### Security
 
 - The desktop app can now read its own match history, and a looked-up player's kills, deaths and assists, through the player's verified Overwolf sign-in instead of the public key built into the app. Released app versions still read with that key, which lets anyone who takes it out of the app read every uploaded match history; the privacy page now says so, and that read is removed once the app versions in use have moved. It needs `supabase db push` and a deploy of the two new functions ([#688](https://github.com/anthonyturner/rivals-pulse-web/pull/688)).
