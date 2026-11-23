@@ -14,6 +14,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- Look up "Attrition" in the glossary: winning a fight by wearing the enemy down over time ([#891](https://github.com/anthonyturner/rivals-pulse-web/pull/891)).
 - Nightcrawler's matches now count: the site knows the game's id for him (1068), so the shared hero list the desktop app reads carries it, and his plays join the hero stats, counters, partners and triple-support counts once uploaded ([#878](https://github.com/anthonyturner/rivals-pulse-web/pull/878)).
 - Nightcrawler has his official portrait and an initial Season 11 guide with linked article sources; current official hero pages can supply his Strategist role and abilities again ([#853](https://github.com/anthonyturner/rivals-pulse-web/pull/853)).
 - Find every written guide and interactive course from Guides with hero-name and topic search, hero and category filters, and compact categorized results, including each individual Strategist lesson ([#834](https://github.com/anthonyturner/rivals-pulse-web/pull/834)).
