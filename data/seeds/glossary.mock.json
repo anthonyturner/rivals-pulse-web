@@ -2229,13 +2229,14 @@
     "term": "Attrition",
     "category": "Combat",
     "definition": "Winning a fight or holding space by wearing the enemy down over time, with steady damage and forced cooldowns, instead of one decisive burst.",
-    "coachNote": "Attrition only pays off if your side recovers faster than theirs. If their Strategists keep healing the damage away for free, you are charging their ultimates, so find a pick or an angle instead.",
+    "coachNote": "Attrition only pays off if you wear them down faster than they recover. If their Strategists keep healing the damage away for free, you are charging their ultimates, so find a pick or an angle instead.",
     "example": "Trading steady damage from cover until the enemy Vanguards run out of defensive cooldowns, then pushing in, is winning by attrition.",
     "relatedTerms": [
       "Poke",
       "Sustain",
       "Passive Pressure",
-      "Cooldown Trade"
+      "Cooldown Trade",
+      "Ultimate Charge"
     ],
     "sourceName": "Coach definition for Marvel Rivals team fights",
     "sourceUrl": "/glossary"
