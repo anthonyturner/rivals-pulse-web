@@ -56,7 +56,7 @@
         @if (section.rows.length > 0) {
           <ol class="duos" [attr.aria-labelledby]="section.id" [attr.data-role]="section.roleKey">
             @for (row of section.rows; track row.first.hero + row.second.hero) {
-              <li class="duo" [attr.data-tone]="row.tone" [style.--weight]="row.weight">
+              <li class="duo" [style.--weight]="row.weight">
                 <span class="duo__rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank </span>{{ row.rank }}</span>&ngsp;<span class="duo__heroes">
                   <a class="duo__hero" [routerLink]="['/heroes', row.first.hero]">
                     <img appHeroImageFallback [src]="row.first.imageUrl" alt="" width="56" height="56" loading="lazy" />
