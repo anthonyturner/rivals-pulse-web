@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+import { MeterComponent } from '../../../shared/components/chart/meter/meter.component';
 import { HeroDataService } from '../../heroes/hero-data.service';
 import { CommunityKillsService } from '../../insights/community-kills.service';
 import { KILL_FEED_CAVEAT } from '../../insights/hero-kill-feed';
@@ -13,7 +14,7 @@ import { buildCountersKillFeedView } from './kill-feed-view';
 /** The counters with the clearest edge, from RivalsPulse uploads, or the reason there are none yet. */
 @Component({
   selector: 'app-community-counters-tab',
-  imports: [CommunitySummaryComponent],
+  imports: [CommunitySummaryComponent, MeterComponent],
   templateUrl: './counters-tab.component.html',
   styleUrl: './counters-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

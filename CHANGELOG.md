@@ -86,6 +86,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- The Stats Matchups tab shows each counter matchup as two facing hero portraits ringed in their role colours with a win-rate gauge and a 50% mark between them, and the most-seen kills as the same facing cards, instead of lines of text; the matchup sentence is still each card's tooltip and the page text ([#915](https://github.com/anthonyturner/rivals-pulse-web/pull/915)).
 - The Stats overview shows the game modes as one stacked bar, each mode labelled with its share of the matches and its average match length, instead of a table ([#910](https://github.com/anthonyturner/rivals-pulse-web/pull/910)).
 - The Stats Roles tab now shows each role's damage, healing and damage blocked per minute as bars on a card in the role's colour, scaled so the roles compare, instead of a table; a figure with not enough data yet still says so ([#909](https://github.com/anthonyturner/rivals-pulse-web/pull/909)).
 - The app privacy policy at `/privacy/app` is brought up to date with the desktop app's own, last updated 25 November 2026, and now calls the voice assistant AI Voice Assist (it said Jarvis). It also describes the private Saved players list the app keeps on your computer, says the second screen window can show one ad while you play (the desktop window and the in-game widgets still show none), and no longer lists rank among what the app receives about players ([#894](https://github.com/anthonyturner/rivals-pulse-web/pull/894)).
