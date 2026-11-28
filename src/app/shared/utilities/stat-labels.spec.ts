@@ -5,6 +5,7 @@ import {
   matchesCountedLabel,
   percentLabel,
   placementRequirementLabel,
+  sideOfFifty,
 } from './stat-labels';
 
 describe('stat labels', () => {
@@ -77,5 +78,13 @@ describe('stat labels', () => {
         }),
       ).toBe('10 appearances and 2 players');
     });
+  });
+});
+
+describe('sideOfFifty', () => {
+  it('tells a win rate above 50% from one below it, and exactly 50% is neither', () => {
+    expect(sideOfFifty(50.1)).toBe('above');
+    expect(sideOfFifty(49.9)).toBe('below');
+    expect(sideOfFifty(50)).toBe('even');
   });
 });
