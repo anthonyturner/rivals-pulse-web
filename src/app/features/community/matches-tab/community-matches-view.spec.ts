@@ -91,7 +91,7 @@ describe('buildCommunityMatchesView', () => {
       ),
     );
 
-    expect(view.maps.best).toEqual([{ map: 'Tokyo 2099', winRateLabel: '58%', barPercent: 58 }]);
+    expect(view.maps.best).toEqual([{ map: 'Tokyo 2099', art: null, initials: 'T2', winRateLabel: '58%', barPercent: 58 }]);
     expect(view.maps.all).toEqual(view.maps.best);
     expect(view.maps.worst).toEqual([]);
     expect(view.maps.waitingNote).toBe('Klyntar, Hydra Base.');

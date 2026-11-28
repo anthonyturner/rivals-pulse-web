@@ -34,6 +34,8 @@
 }
 
 .body {
+  /* The height of a tile with a one-line name, so the empty tile that holds its room matches it. */
+  min-height: 9.0625rem;
   display: grid;
   align-content: start;
   justify-items: start;
@@ -45,6 +47,10 @@
   color: var(--tile-role-ink);
   font-size: var(--type-caption);
   font-weight: 800;
+}
+
+.spot--pending {
+  background: var(--surface);
 }
 
 .name {

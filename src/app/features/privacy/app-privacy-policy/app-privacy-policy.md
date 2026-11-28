@@ -1,6 +1,6 @@
 # RivalsPulse Privacy Policy
 
-**Last updated: 15 November 2026**
+**Last updated: 25 November 2026**
 
 RivalsPulse is an Overwolf app for the game Marvel Rivals. It shows you a
 desktop window and in-game widgets built from what happens in your
@@ -66,12 +66,15 @@ data-protection law) and can be reached at the address in section 12.
   the count, and nothing more: it **never shows your opponents' ultimate
   charge** or when they last used it, because NetEase's rules forbid helping
   players predict opponents' ultimates.
+- You can **save players to a private list** on your computer and tag them
+  (Good teammate, Duo partner, Rival, Watch out). It holds only a name, a player
+  ID and the tags, is never uploaded, and stays off our servers (section 2.3).
 - Anyone, including a player who does not use RivalsPulse, can **ask us to
   delete their data** (section 9).
 - RivalsPulse shows **ads through Overwolf**. Overwolf and its partners collect
   data for that, and you can opt out.
 - **Premium is optional.** If you buy it, Tebex and Overwolf take the payment.
-  To check your plan, the app asks Overwolf, and starting Jarvis sends your
+  To check your plan, the app asks Overwolf, and starting AI Voice Assist sends your
   Overwolf session to our server so it can do the same. We **do not store**
   anything about your subscription (section 2.6).
 - We do **not** sell data, and we have no advertising business of our own.
@@ -117,7 +120,6 @@ RivalsPulse information about your match.
 - team, chosen hero, and whether they are alive;
 - kills, deaths and assists;
 - Final Hits (killing blows), which RivalsPulse counts from the kill feed;
-- rank, where the game provides it;
 - the kill feed (who defeated whom) and the match result.
 
 This is the same information the game shows on its own scoreboard, hero-select
@@ -164,7 +166,7 @@ ultimate information about your opponents today. During a match the app counts
 how many times each opponent has used their ultimate, on your computer, from the
 game events. It does not show that count today. The count is cleared when the
 match ends, and is never stored in our database, shared through lookups or sent
-to Jarvis. A future version may show the count, never charge or timing.
+to AI Voice Assist. A future version may show the count, never charge or timing.
 
 RivalsPulse **never shows an opponent's ultimate charge** or when they last used
 their ultimate, and never tries to predict when an opponent will use it next.
@@ -179,10 +181,22 @@ RivalsPulse stores your preferences on your computer: theme, which in-game
 widgets are visible, their size and position, roster size, whether the Match
 preview opens, and your recent player searches.
 
+**Saved players.** RivalsPulse lets you save a player to a list, and give each
+one up to four tags: Good teammate, Duo partner, Rival or Watch out. You choose
+who to save; the app never saves anyone for you, and it does not save bots or
+yourself. The list holds each saved player's in-game name, player ID, tags and
+the time you saved them, up to 100 players. It stays **on your own computer**,
+is never sent to us or anyone else, and is separate from the matches we upload
+(a saved player's tags are not part of any match). During your own live match
+you can still save, tag and remove players, but opening a saved player shows no
+history until the match ends (section 1). Remove one player, or clear the list,
+from the Saved players panel on the Match History screen.
+
 You can also save a **backup file** of your recorded matches and these
 settings (Settings, "Back up and restore"). RivalsPulse writes it only where
 you choose and never sends it anywhere. It holds the player names and IDs from
-your scoreboards, so treat it as personal data (section 7).
+your scoreboards and your Saved players list with its tags, so treat it as
+personal data (section 7).
 
 **Upload my matches.** Settings has an **Upload my matches** switch under
 **Privacy**. It is **on by default**, because the community statistics and your
@@ -208,27 +222,27 @@ back on. Turning the switch off does **not** delete what was already uploaded;
 section 9 says how to ask for that. Overwolf's own privacy settings (section 6)
 are separate and cover Overwolf's data, not this upload.
 
-### 2.4 The Jarvis voice assistant (off unless you turn it on)
+### 2.4 AI Voice Assist, the voice assistant (off unless you turn it on)
 
-RivalsPulse includes an optional voice assistant called Jarvis. It is **off by
+RivalsPulse includes an optional voice assistant called AI Voice Assist. It is **off by
 default**. If you switch it on:
 
 - while a conversation is open, your **microphone audio** is sent to
   **ElevenLabs**, the company that runs the voice and language service behind
-  Jarvis;
-- Jarvis can **start a conversation by itself**, for example to sum up a match
+  AI Voice Assist;
+- AI Voice Assist can **start a conversation by itself**, for example to sum up a match
   when it ends, or to point out players you have met in earlier matches. That
   opens the microphone too, just as when you start one;
-- so Jarvis can answer questions about your match, the app also sends it your
+- so AI Voice Assist can answer questions about your match, the app also sends it your
   own match figures and other players' **scoreboard lines only** (never their
   damage, healing, accuracy, damage blocked or ultimate charge);
 - to stop the service being abused, our server records the **IP address** (the
   network address of your internet connection) that started each conversation.
-  Records older than an hour are deleted the next time anyone starts a Jarvis
+  Records older than an hour are deleted the next time anyone starts an AI Voice Assist
   conversation, so one can last longer than an hour if nobody does.
 
 ElevenLabs handles that audio and text under
-[its own privacy policy](https://elevenlabs.io/privacy-policy). Turning Jarvis
+[its own privacy policy](https://elevenlabs.io/privacy-policy). Turning AI Voice Assist
 off stops all of this.
 
 ### 2.5 What we do **not** collect
@@ -239,14 +253,14 @@ off stops all of this.
 - We do not read your keystrokes, your files, your browsing, or any program
   other than Marvel Rivals.
 - We do not record your screen or your voice chat. The microphone is used only
-  by Jarvis, only while you have it switched on and a conversation is open,
-  including one Jarvis starts by itself.
+  by AI Voice Assist, only while you have it switched on and a conversation is open,
+  including one AI Voice Assist starts by itself.
 - We have no analytics or tracking service of our own.
 
 ### 2.6 Premium (optional)
 
 Premium is a paid plan. It removes the ads in the desktop app and lets you use
-Jarvis. Everything else in RivalsPulse stays free. **Until Premium is switched
+AI Voice Assist. Everything else in RivalsPulse stays free. **Until Premium is switched
 on in the app, nothing in this section happens.**
 
 [TO BE CONFIRMED against a live Overwolf session before Premium launches: the
@@ -267,11 +281,11 @@ The saved answer stays on your computer until the next check overwrites it, you
 uninstall RivalsPulse, or you clear the app's cache in the Overwolf client
 (section 7).
 
-**Starting Jarvis.** While Premium is switched on, starting Jarvis sends your
+**Starting AI Voice Assist.** While Premium is switched on, starting AI Voice Assist sends your
 Overwolf sign-in token to our server with the request for a voice conversation.
 Our server checks the token with Overwolf, then asks Overwolf whether you hold
-a plan, and allows or refuses the request. If Overwolf cannot be reached, Jarvis
-does not start, even for subscribers. If you are signed out of Overwolf, Jarvis
+a plan, and allows or refuses the request. If Overwolf cannot be reached, AI Voice Assist
+does not start, even for subscribers. If you are signed out of Overwolf, AI Voice Assist
 cannot start either. The IP address record in section 2.4 is made before this
 check, so it also covers a request that is refused.
 
@@ -304,6 +318,11 @@ current half-season. During a user's own
 live match, from the start of hero select until it ends, the app does not look
 up another player or show their match history or profile. Other users cannot
 see who recorded a match, and nobody can download the whole database.
+
+**A private list on a user's computer.** A RivalsPulse user can also save your
+name and player ID to a list on their own computer and tag it (for example
+"Good teammate" or "Watch out"). That list is never sent to us, so it is not in
+our database and we cannot see it, change it or delete it.
 
 **Pulse Records, a public page on our website.** If one of those lines holds one
 of the highest single-match kills, assists or Final Hits, it can be shown on the
@@ -459,7 +478,7 @@ it does reach out, these are the only places it goes.
 | --- | --- | --- |
 | **Supabase** (our database host) | Scoreboard lines of the players in your matches (name, player ID, team, hero, kills, deaths, assists and Final Hits), match details, banned heroes, the kill feed counted by hero (no player names), every player's heroes in order with the second of each pick (a team, hero IDs and seconds, no player names or IDs), and your own damage dealt, healing, damage blocked, time, and ability and ultimate use counts (with the kills and assists soon after each use) on each hero, plus your Overwolf sign-in token (checked, not stored) and a one-way code made from your Overwolf username, stored on each line you record | To store matches and let users look players up, to work out the public ban rates and hero averages, and to build the public Pulse Records page on our website from the stored lines (section 4) |
 | **Overwolf** | See sections 2.6 and 6. For Premium, your Overwolf sign-in token, from your computer and from our server | Running the app, advertising, and checking whether you hold a Premium plan |
-| **ElevenLabs** | Your voice, your match figures and others' scoreboard lines, only while Jarvis is on | The Jarvis voice assistant (section 2.4) |
+| **ElevenLabs** | Your voice, your match figures and others' scoreboard lines, only while AI Voice Assist is on | AI Voice Assist, the voice assistant (section 2.4) |
 | **Tebex** (Premium payments, through Overwolf) | Nothing from us. If you buy Premium, you give Tebex your payment details at checkout | Taking payment (section 2.6) |
 | **Marvel Rivals Coach** (our companion website) | Nothing about you | The hero list, tier list and in-app glossary |
 
@@ -478,12 +497,20 @@ page.
 
 It also shows one ad in the **Match preview**, a small window in the game that
 shows the map and your own results on it before a match's first round. That window opens when a match
-starts and closes when the first round starts, so **no ad is ever shown during
-play, and none appears in any other in-game widget**. You can turn the Match
+starts and closes when the first round starts, so **the Match preview never shows
+an ad during play, and no other in-game widget shows one**. You can turn the Match
 preview off in Settings, or close it for one match with its close button.
 
+The desktop window shows no ad while a match is being played. The **second screen
+window**, which is off until you turn it on in Settings, opens the Live Match page in
+a window of its own on a monitor the game is not on, and it can show one ad in its
+side panel **while you play**. It shows that ad only while it is on a monitor the game
+is not on, and not when it cannot tell which monitor either is on. If you drag it onto
+the game's monitor, or across it, the ad is removed within a few seconds, not at the
+moment of the drag. It shows no ad to a Premium member.
+
 We do not run our own ad network and we do not choose which ads you see.
-If you hold Premium, the desktop app shows no ads (section 2.6); the ad in the Match preview stays.
+If you hold Premium, the desktop window and the second screen window show no ads (section 2.6); the ad in the Match preview stays.
 
 To serve those ads, Overwolf and its advertising partners collect data about
 you, which may include your device and IP address, an advertising identifier,
@@ -509,8 +536,8 @@ They apply to Overwolf's advertising data, not to the matches RivalsPulse upload
 ### On your computer
 
 Your matches, including your own detailed figures and the scoreboard lines you
-saw, your settings and your recent searches are stored in the app's local
-storage inside the Overwolf client. They stay until you delete them.
+saw, your settings, your recent searches and your Saved players list are
+stored in the app's local storage inside the Overwolf client. They stay until you delete them.
 Uninstalling RivalsPulse, or clearing the app's cache in the Overwolf client,
 removes them, but **not a backup file** you saved (see below). This includes the saved answer to "do I have Premium?" described in
 section 2.6, which the app keeps for every player until the next check
@@ -521,7 +548,8 @@ Overwolf last confirmed it.
 
 If you use "Back up" in Settings, RivalsPulse writes your recorded matches and
 settings to a file in the folder you pick. That file holds the scoreboard lines
-of those matches, including other players' names and IDs. It is **not** stored
+of those matches, including other players' names and IDs, and your Saved players
+list with its tags. It is **not** stored
 inside the app, so uninstalling RivalsPulse or clearing its cache does **not**
 remove it, and it stays until you delete it. We never receive it. The file
 leaves your computer only if you move or share it yourself. It does not hold
@@ -547,8 +575,8 @@ Matches are stored in a **Supabase** database run for RivalsPulse, hosted in
   pooled from every user's matches and published as public hero statistics
   (section 4). They hold no player names or IDs, so they are not personal data
   and may be kept longer.
-- **Jarvis IP addresses** older than an hour are deleted the next time anyone
-  starts a Jarvis conversation (section 2.4).
+- **AI Voice Assist IP addresses** older than an hour are deleted the next time anyone
+  starts an AI Voice Assist conversation (section 2.4).
 - **Subscriptions:** nothing about your subscription is stored in the database
   (section 2.6).
 
@@ -579,11 +607,11 @@ Where the UK GDPR or EU GDPR (data-protection law) applies, we rely on:
   blocked. It is off until you switch on "Show me in Pulse Records", and you can
   withdraw it at any time by switching it off, unlinking or deleting your website
   account.
-- **Consent** for the Jarvis voice assistant, which is off until you turn it on.
+- **Consent** for the voice assistant, which is off until you turn it on.
 - **Consent** for advertising, collected and managed through Overwolf's consent
   system.
 - **Providing what you paid for** for the Premium plan check. It is the only
-  way to tell whether to remove ads or let Jarvis start.
+  way to tell whether to remove ads or let AI Voice Assist start.
 
 ---
 

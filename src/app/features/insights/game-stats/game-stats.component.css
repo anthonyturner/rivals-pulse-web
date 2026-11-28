@@ -76,15 +76,6 @@ app-state-panel {
   gap: 12px;
 }
 
-/* Holds the heroes' room while their numbers load, so the card does not jump when they arrive. */
-.spots__pending {
-  display: block;
-  aspect-ratio: 3 / 4;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-
 @container (min-width: 640px) {
   .bento--heroes {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
