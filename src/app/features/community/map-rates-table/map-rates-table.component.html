@@ -18,7 +18,16 @@
     }
     @for (row of rows(); track row.map) {
       <tr>
-        <th scope="row">{{ row.map }}</th>
+        <th scope="row">
+          <span class="map-cell">
+            @if (row.art; as src) {
+              <img class="map-art" [src]="src" alt="" width="320" height="180" loading="lazy" decoding="async" />
+            } @else {
+              <span class="map-art map-art--initials" aria-hidden="true">{{ row.initials }}</span>
+            }
+            <span class="map-cell__name">{{ row.map }}</span>
+          </span>
+        </th>
         <td>
           <div class="stat-meter">
             <span class="stat-meter__value">{{ row.winRateLabel }}</span>

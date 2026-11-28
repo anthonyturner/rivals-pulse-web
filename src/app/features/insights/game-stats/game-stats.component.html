@@ -41,8 +41,8 @@
         }
         @case ('loading') {
           <div class="spots" aria-hidden="true">
-            <span class="spots__pending"></span>
-            <span class="spots__pending"></span>
+            <app-hero-spotlight />
+            <app-hero-spotlight />
           </div>
         }
       }
@@ -54,6 +54,7 @@
           rowHeader="Half-season"
           [lanes]="seasonLanes"
           [columns]="v.seasons"
+          describedBy="seasons-note"
           [showValues]="v.showSeasonValues"
         />
       } @else {

@@ -59,25 +59,7 @@ app-state-panel {
 }
 
 .spots {
-  container-type: inline-size;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-}
-
-/* Holds the heroes' room while their numbers load, so the card does not jump when they arrive. */
-.spots__pending {
-  display: block;
-  aspect-ratio: 3 / 4;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-
-/* Once each tile is wide enough to lay its portrait at the side (see the hero tile), the empty tile is as short as that one. */
-@container (min-width: 41rem) {
-  .spots__pending {
-    aspect-ratio: auto;
-    height: 9.5rem;
-  }
 }
