@@ -1,0 +1,19 @@
+@if (hero(); as leader) {
+  <a class="spot" [routerLink]="['/heroes', leader.hero]" [attr.data-role]="roleKey()">
+    <img class="art" appHeroImageFallback [src]="leader.imageUrl" alt="" width="320" height="320" loading="eager" />
+    <span class="body">
+      <span class="heading">{{ heading() }}</span>&ngsp;<span class="name">{{ leader.name }}</span>&ngsp;<span class="figure"><strong>{{ leader.figure }}</strong>&ngsp;{{ figureLabel() }}</span>
+      @if (leader.sample) {
+        &ngsp;<span class="sample">{{ leader.sample }}</span>
+      }
+      @if (leader.role; as role) {
+        &ngsp;<app-hero-role-chip [role]="role" />
+      }
+    </span>
+  </a>
+} @else {
+  <span class="spot spot--pending" aria-hidden="true">
+    <span class="art"></span>
+    <span class="body"></span>
+  </span>
+}

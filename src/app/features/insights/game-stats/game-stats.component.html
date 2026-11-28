@@ -1,0 +1,80 @@
+@if (view(); as v) {
+  @if (v.status === 'loading') {
+    <app-state-panel kind="loading" heading="Loading game stats" [announce]="false">
+      <p>Fetching the latest counts.</p>
+    </app-state-panel>
+  } @else if (v.status === 'error') {
+    <app-state-panel kind="error" heading="Game stats could not be loaded">
+      <p>The counts are not available right now. Try again in a few minutes.</p>
+    </app-state-panel>
+  } @else if (v.status === 'empty') {
+    <app-state-panel heading="No matches counted yet">
+      <p>Counts appear here once matches recorded with the RivalsPulse app have been uploaded.</p>
+    </app-state-panel>
+  } @else {
+    @let heroes = spotlights();
+
+    <section class="strip" aria-label="Matches and players counted">
+      <div class="strip__figures">
+        <app-heartbeat-line [rate]="beatRate()" />
+        <dl class="strip__tiles">
+          @for (tile of v.tiles; track tile.label) {
+            <div class="strip__tile">
+              <dt>{{ tile.label }}</dt>
+              <dd>{{ tile.value }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      @switch (heroes.kind) {
+        @case ('ready') {
+          <div class="spots">
+            @for (spotlight of heroes.spotlights; track spotlight.heading) {
+              <app-hero-spotlight
+                [heading]="spotlight.heading"
+                [hero]="spotlight.hero"
+                [figureLabel]="spotlight.figureLabel"
+              />
+            }
+          </div>
+        }
+        @case ('loading') {
+          <div class="spots" aria-hidden="true">
+            <app-hero-spotlight />
+            <app-hero-spotlight />
+          </div>
+        }
+      }
+
+      <h2 id="seasons-title" class="strip__title">By half-season</h2>
+      @if (v.seasons.length > 0) {
+        <app-column-chart
+          caption="Matches and players seen in each half-season"
+          rowHeader="Half-season"
+          [lanes]="seasonLanes"
+          [columns]="v.seasons"
+          describedBy="seasons-note"
+          [showValues]="v.showSeasonValues"
+        />
+      } @else {
+        <p class="stat-note">No half-season has matches yet.</p>
+      }
+      <details class="stat-how">
+        <summary>How these are counted<span class="visually-hidden"> for matches and players</span></summary>
+        <p class="stat-note">{{ v.meta }}</p>
+        <p class="stat-note" id="seasons-note">
+          A match is counted once however many players recorded it, in every mode and whether or not it ended with a win
+          or a loss, so the half-seasons add up to the total. Win rates and tiers use only the matches with a result, so
+          they count fewer. A player is counted once per half-season, so the half-seasons can add up to more players than
+          the total. Only matches the app still holds are counted, which is up to about six months of play.
+        </p>
+        <p class="stat-note">
+          The most picked hero and the hero with the highest win rate come from the matches with a result in Quick Match
+          and Competitive, among the heroes with enough games to be placed. Each bar chart is scaled to its own largest
+          figure.
+        </p>
+      </details>
+    </section>
+  }
+}

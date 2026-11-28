@@ -1,0 +1,68 @@
+<section class="hero-switch-ins" [attr.aria-labelledby]="'hero-switch-ins-title-' + heroId()">
+  <div class="hero-switch-ins__heading">
+    <h3 [id]="'hero-switch-ins-title-' + heroId()">Switch-ins</h3>
+    <p>How often a team wins after a player switches to or against {{ heroName() }}</p>
+  </div>
+
+  <div class="hero-switch-ins__result" role="status" aria-live="polite">
+    @let current = view();
+
+    @if (current.kind === 'loading') {
+    <p class="hero-switch-ins__message">Loading RivalsPulse hero switches...</p>
+    } @else if (current.kind === 'unavailable') {
+    <p class="hero-switch-ins__message">
+      RivalsPulse hero switches cannot be loaded right now. The rest of this page is not affected.
+    </p>
+    } @else if (current.kind === 'not-enough-data') {
+    <div class="hero-switch-ins__empty">
+      <p class="hero-switch-ins__message">{{ current.summary }}</p>
+    </div>
+    } @else {
+    @if (current.halfSeasonLabel) {
+    <p class="hero-switch-ins__scope">Half-season: {{ current.halfSeasonLabel }}</p>
+    }
+    @if (current.notice) {
+    <p class="hero-switch-ins__notice"><strong>Previous half-season.</strong> {{ current.notice }}</p>
+    }
+
+    <div class="hero-switch-ins__groups">
+      <section [attr.aria-labelledby]="'hero-switch-ins-to-' + heroId()">
+        <h4 [id]="'hero-switch-ins-to-' + heroId()">Players who switched to {{ heroName() }}</h4>
+        <ul class="hero-switch-ins__rows">
+          @for (row of current.switchedTo; track row.hero.id) {
+          <li class="hero-switch-ins__row">
+            <img [src]="row.hero.imageUrl" alt="" />
+            <span class="hero-switch-ins__name"><span class="hero-switch-ins__against">against</span> {{ row.hero.name }}</span>
+            <strong>{{ row.winRate }}</strong>
+            <small>{{ row.sample }}. {{ row.overall }}.</small>
+          </li>
+          } @empty {
+          <li class="hero-switch-ins__none">No one has switched to {{ heroName() }} often enough yet.</li>
+          }
+        </ul>
+      </section>
+
+      <section [attr.aria-labelledby]="'hero-switch-ins-against-' + heroId()">
+        <h4 [id]="'hero-switch-ins-against-' + heroId()">Heroes players switch to against {{ heroName() }}</h4>
+        <ul class="hero-switch-ins__rows">
+          @for (row of current.switchedAgainst; track row.hero.id) {
+          <li class="hero-switch-ins__row">
+            <img [src]="row.hero.imageUrl" alt="" />
+            <span class="hero-switch-ins__name">{{ row.hero.name }}</span>
+            <strong>{{ row.winRate }}</strong>
+            <small>{{ row.sample }}. {{ row.overall }}.</small>
+          </li>
+          } @empty {
+          <li class="hero-switch-ins__none">No one has switched to a hero against {{ heroName() }} often enough yet.</li>
+          }
+        </ul>
+      </section>
+    </div>
+    <p class="hero-switch-ins__sample">
+      A switch is a hero change after a player's first pick. It counts once for each enemy hero on the field at that
+      moment, and the win rate is how often the switching team went on to win. Players tend to switch when they are
+      losing, so these rates run lower than a hero's overall record: read them beside it.
+    </p>
+    }
+  </div>
+</section>

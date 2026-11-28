@@ -1,0 +1,133 @@
+<div class="guide-article glossary page-container page-container--wide">
+  <app-page-header
+    title="Terms that make callouts clearer."
+    description="Wiki-backed gameplay language and coach notes for positioning, roles, Team-Ups, and fight planning."
+  />
+
+  <div class="guide-toolbar" role="search" aria-label="Glossary">
+    <label class="guide-search">
+      <span>Search glossary</span>
+      <input
+        #search
+        type="search"
+        placeholder="Term, definition, or related concept"
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </label>
+    <app-filter-select
+      label="Category"
+      [options]="categoryOptions()"
+      [value]="category()"
+      (valueChange)="category.set($event)"
+    />
+  </div>
+
+  <div class="status">
+    <p class="guide-count" role="status">{{ status() }}</p>
+    @if (filtersActive() && !noMatches()) {
+      <button type="button" class="guide-button" (click)="clearFilters()">Clear filters</button>
+    }
+  </div>
+
+  @if (unknownFragment()) {
+    <app-notice>That term is not in the glossary.</app-notice>
+  }
+
+  @if (loadState() === 'error') {
+    <app-state-panel kind="error" [announce]="false">
+      Check your connection, then try again.
+      <button type="button" class="guide-button" (click)="load()">Try again</button>
+    </app-state-panel>
+  } @else if (noMatches()) {
+    <app-state-panel [announce]="false">
+      Try fewer letters or a different spelling, or look in all categories.
+      <button type="button" class="guide-button" (click)="clearFilters()">Clear search and filters</button>
+    </app-state-panel>
+  }
+
+  @if (showLetters()) {
+    <nav id="letters" aria-label="Jump to a letter">
+      <ul class="letters">
+        @for (group of groups(); track group.id) {
+          <li>
+            <a class="guide-link" routerLink="." [fragment]="group.id" [attr.aria-label]="group.jumpLabel" (click)="reveal(group.id)">
+              {{ group.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+  }
+
+  @for (group of groups(); track group.id) {
+    <div class="guide-section letter">
+      <h2 [id]="group.id" tabindex="-1">{{ group.label }}</h2>
+      @if (showLetters()) {
+        <a class="guide-link" routerLink="." fragment="letters" (click)="reveal('letters')">Back to A–Z</a>
+      }
+      <ul class="guide-grid">
+        @for (row of group.rows; track row.id) {
+          <li class="guide-tile" [id]="row.id">
+            <h3>
+              <button
+                type="button"
+                class="toggle chevron"
+                [id]="row.buttonId"
+                [attr.aria-expanded]="open()[row.id] ? 'true' : 'false'"
+                [attr.aria-controls]="row.panelId"
+                (click)="toggle(row.id)"
+              >
+                <span>{{ row.term }}</span>
+              </button>
+            </h3>
+            <p class="guide-text definition" [class.is-open]="open()[row.id]">{{ row.definition }}</p>
+            <dl class="details" [id]="row.panelId" [hidden]="!open()[row.id]">
+              <div>
+                <dt>Coach note</dt>
+                <dd>{{ row.coachNote }}</dd>
+              </div>
+              <div>
+                <dt>Example</dt>
+                <dd>{{ row.example }}</dd>
+              </div>
+              @if (row.related.length > 0) {
+                <div>
+                  <dt>See also</dt>
+                  <dd>
+                    @for (related of row.related; track related.name; let last = $last) {
+                      @if (related.id; as relatedId) {
+                        <a class="guide-link" routerLink="." [fragment]="relatedId" (click)="reveal(relatedId)">{{ related.name }}</a>
+                      } @else {
+                        {{ related.name }}
+                      }
+                      @if (!last) {
+                        ·
+                      }
+                    }
+                  </dd>
+                </div>
+              }
+              <div>
+                <dt>Category</dt>
+                <dd>{{ row.categoryLabel }}</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  @if (row.sourceUrl) {
+                    <a class="guide-link" [href]="row.sourceUrl" target="_blank" rel="noopener">
+                      {{ row.sourceName }}<span class="visually-hidden"> (opens in a new tab)</span>
+                    </a>
+                  } @else {
+                    {{ row.sourceName }}
+                  }
+                </dd>
+              </div>
+            </dl>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>

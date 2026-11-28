@@ -1,0 +1,145 @@
+:host {
+  display: block;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.cta {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+  border: 1px solid var(--ink-control-border);
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  font-weight: 820;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cta-ghost {
+  background: color-mix(in srgb, var(--ink) 46%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.cta-ghost:hover {
+  border-color: var(--ink-accent);
+  background: color-mix(in srgb, var(--ink) 74%, transparent);
+}
+
+.cta:focus-visible,
+.how-we-count:focus-visible {
+  outline: 3px solid var(--ink-focus);
+  outline-offset: 3px;
+}
+
+.platform-note {
+  margin: 12px 0 0;
+  color: var(--on-ink);
+  font-size: 0.8125rem;
+}
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ink-line);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  margin: 0;
+}
+
+/* The figure reads first and the label under it; the markup keeps the label first for screen readers. */
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  min-width: 120px;
+}
+
+.stat__value {
+  margin: 0;
+  color: var(--on-ink);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Full-strength ink: the hero's video or currents move behind it, and the muted tone dips below AA. Its smaller size marks it as pending. */
+.stat.is-pending .stat__value {
+  font-size: 1.125rem;
+  line-height: calc(1.75rem * 1.15);
+}
+
+.stat__label {
+  color: var(--on-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.how-we-count {
+  color: var(--on-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.how-we-count:hover {
+  color: var(--ink-accent);
+}
+
+.skeleton {
+  display: block;
+  width: 120px;
+  height: calc(1.75rem * 1.15);
+  border-radius: 6px;
+  background: var(--ink-line);
+}
+
+@media (max-width: 720px) {
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .cta {
+    width: 100%;
+  }
+
+  .stats {
+    gap: 16px 24px;
+  }
+
+  .stat {
+    min-width: 0;
+  }
+
+  .stat__value {
+    font-size: 1.375rem;
+  }
+
+  .stat.is-pending .stat__value {
+    font-size: 1rem;
+    line-height: calc(1.375rem * 1.15);
+  }
+}
+
+app-get-app-button {
+  --get-app-focus: var(--ink-focus);
+}

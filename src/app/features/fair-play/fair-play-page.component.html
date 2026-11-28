@@ -1,0 +1,162 @@
+<div class="reading fair-play page-container page-container--narrow">
+  <app-page-header
+    title="Fair play and privacy: what RivalsPulse shows about other players"
+    description="What the RivalsPulse app does and does not show you about the other players in a match, what it stores about them, and the game policies it is built around."
+  />
+
+  <section class="reading-section" id="summary" aria-labelledby="summary-title">
+    <h2 id="summary-title">The short version</h2>
+    <ul>
+      <li>
+        <strong>The RivalsPulse app is not released yet.</strong> It is in development testing and is
+        not on Overwolf. This page describes how the app is designed to work at launch.
+      </li>
+      <li>
+        RivalsPulse is built around the published policies for Marvel Rivals tools. It will not show
+        you another player's damage or healing, it will never show an opponent's ultimate charge or
+        timing, and it will never predict an opponent's ultimate.
+      </li>
+      <li>
+        It will <strong>store information about other players</strong>. Every match the app uploads
+        will keep the scoreboard line of each human player in it, including players who never
+        installed the app, and an anonymous record of the heroes each player switched to. Any
+        RivalsPulse app user will be able to look a player up from the scoreboard lines.
+      </li>
+      <li>
+        There is no opt-out from being viewable by other RivalsPulse users yet; see
+        <a href="#opt-out">Opting out</a>.
+      </li>
+      <li>
+        This page is a plain summary. The <a routerLink="/privacy">privacy notes</a> are the full
+        account of what the app will upload, what is published and what is kept, and for how long.
+      </li>
+    </ul>
+  </section>
+
+  <section class="reading-section" id="not-shown" aria-labelledby="not-shown-title">
+    <h2 id="not-shown-title">What RivalsPulse does not show</h2>
+    <ul>
+      <li>
+        <strong>Other players' damage, healing, accuracy or damage blocked.</strong> The app will
+        never show you, store or share another player's damage, healing, accuracy or damage blocked.
+        It keeps only your own.
+      </li>
+      <li>
+        <strong>An opponent's ultimate charge, or when they last used their ultimate.</strong> The
+        most the overlay is allowed to show about an opponent's ultimate is a count of how many times
+        they have used it in the match you are playing. Today it shows nothing about it. It will never
+        show their charge or timing, and no feature of the app predicts when an opponent will use it.
+      </li>
+      <li>
+        <strong>Advice on which hero to ban.</strong> RivalsPulse's rule is that ban information is
+        shown only as ban rates, how often each hero is banned across recorded matches, and that the
+        app never suggests which hero to ban. This website shows no ban figures today.
+      </li>
+      <li>
+        <strong>Another player's scoreboard history or profile, during your own live match.</strong>
+        At launch, during your own live match, the app doesn't look up or show another player's
+        scoreboard history or profile.
+      </li>
+      <li>
+        <strong>One player's own figures, as theirs, apart from Pulse Records.</strong> The figures an
+        app user records about their own play will be published on this website as averages per hero,
+        never as one player's numbers and never with who contributed. The exception is Pulse Records,
+        described below.
+      </li>
+    </ul>
+  </section>
+
+  <section class="reading-section" id="collected" aria-labelledby="collected-title">
+    <h2 id="collected-title">What it does collect and show</h2>
+    <ul>
+      <li>
+        <strong>A scoreboard line for every human player in a match you record, on both
+        teams.</strong> That is their in-game name, player id, team, hero, kills, deaths, assists,
+        final hits, and whether their side won or lost. These lines will be stored on our server, and
+        any RivalsPulse app user will be able to look a player up from them. That includes players
+        who never installed the app.
+      </li>
+      <li>
+        <strong>An anonymous hero timeline for every player.</strong> For the players on each team,
+        the app will upload the heroes they played in order and the second each pick happened, with
+        no player id and no name. It will be stored under the same match as that match's scoreboard lines,
+        so it can in practice be linked back to a scoreboard line: someone reading both can tell
+        which player made which hero switches, and when.
+      </li>
+      <li>
+        <strong>The recording player's own figures.</strong> The player using the app will also
+        upload their own damage, healing, damage blocked, time on each hero, and how often they used
+        each ability and their ultimate, with the kills and assists soon after each use. These will be
+        published on this website as averages per hero, apart from Pulse Records below, and a hero is
+        held back until enough different players have contributed. While few players upload at first, an
+        average can still mostly reflect one player's games.
+      </li>
+      <li>
+        <strong>Map win rates, on this website.</strong> The Stats Maps tab publishes how often the
+        uploading players won on each map, Quick Match and Competitive together, as a whole percentage.
+        Each match counts once, from the recording player's side only. It never shows an opponent's
+        result, a name, a match or a date, and a map with too few matches is only named, never counted.
+        It is a record of past results, not live advice about the match you are in.
+      </li>
+      <li>
+        <strong>Pulse Records, on this website.</strong>
+        <a routerLink="/privacy" fragment="pulse-records">Pulse Records</a> publishes the highest
+        single-match figures, and it already does so today from matches played on development builds
+        of the app. A player's own damage, healing and damage blocked appear beside their
+        name only if they linked an account and switched their name on. Other players' kills, assists
+        and final hits appear too, as &quot;Anonymous&quot; with no name or id, including players who
+        never installed the app and never agreed to it.
+      </li>
+      <li>
+        <strong>Live, on your own overlay only.</strong> During a match the overlay will show your
+        teammates' ultimate charge on your own screen. The most it is allowed to show about an
+        opponent's ultimate is a count of their uses, which today it does not show. Neither is stored
+        or sent anywhere.
+      </li>
+    </ul>
+    <p>
+      At launch, uploads will be on by default. A player can turn them off in the app's Settings,
+      under Privacy; while they are off, the app uploads nothing and matches still save on that
+      player's own PC. The other players in a match will not be asked. How long lines are kept, and how a player who does not use the app can ask
+      for theirs to be deleted, are in the <a routerLink="/privacy">privacy notes</a>.
+    </p>
+  </section>
+
+  <section class="reading-section" id="opt-out" aria-labelledby="opt-out-title">
+    <h2 id="opt-out-title">Opting out</h2>
+    <p>
+      <strong>An opt-out does not exist yet.</strong> A player cannot yet stop other RivalsPulse users
+      from viewing their match history. One is planned, enforced on our server, and this page will
+      change when it is built.
+    </p>
+  </section>
+
+  <section class="reading-section" id="policies" aria-labelledby="policies-title">
+    <h2 id="policies-title">The policies behind this</h2>
+    <p>
+      Overwolf's page for Marvel Rivals has a
+      <a [href]="gameComplianceUrl" rel="noopener" target="_blank">Game compliance</a> section (last
+      checked on 10 November 2026). It says that NetEase's game compliance policy &quot;prevents
+      giving users confidential information like damage and healing statistics, selectively ban
+      heroes, and predict opponents' ultimate abilities&quot;, and that Overwolf's own app policy
+      forbids giving players any kind of advantage. The rules above are drawn from those policies.
+    </p>
+    <ul>
+      <li>
+        That is Overwolf's summary of NetEase's policy, not NetEase's full text, and policies can
+        change. If they do, this page will change with them.
+      </li>
+      <li>
+        Publishing per-hero averages from players' own figures is our reading of that summary, and we
+        have not asked Overwolf or NetEase to confirm it. No lawyer has reviewed this page.
+      </li>
+      <li>
+        Policies can change, and what the game allows is NetEase's decision. The
+        <a routerLink="/faq" fragment="ban-risk">FAQ</a> explains what our answer on bans rests on.
+      </li>
+      <li>
+        RivalsPulse is an independent project and is not affiliated with NetEase, Marvel or Overwolf.
+      </li>
+    </ul>
+  </section>
+</div>

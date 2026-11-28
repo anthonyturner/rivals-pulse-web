@@ -1,0 +1,19 @@
+@if (view(); as preview) {
+  <div class="counters">
+    <div class="group">
+      <app-preview-portrait class="enemy" [src]="preview.enemy.imageUrl" />
+      <span class="label">Enemy</span>
+    </div>
+    <div class="group group--counters">
+      <ul class="answers">
+        @for (counter of preview.counters; track counter.hero.hero) {
+          <li class="answer">
+            <app-preview-portrait [src]="counter.hero.imageUrl" />
+            <span class="pill">{{ counter.winRate }}</span>
+          </li>
+        }
+      </ul>
+      <span class="label">Counters</span>
+    </div>
+  </div>
+}

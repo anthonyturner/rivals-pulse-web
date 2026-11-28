@@ -2,39 +2,266 @@
   box-sizing: border-box;
 }
 
+/*
+ * The Aurora palette, the same values as the desktop app's styles-desktop-theme.scss. Dark is the
+ * base; the light block overrides only what differs and inherits the rest. Components never read
+ * --aurora-* directly: they use the role tokens below. `npm run test:theme` rejects a pair under its
+ * contrast threshold in either theme, so edit values here and run it.
+ */
 :root {
+  color-scheme: dark;
+
+  --aurora-canvas: #090b14;
+  --aurora-surface: #10131f;
+  --aurora-panel: #141828;
+  --aurora-panel-soft: #191e32;
+  --aurora-panel-raised: #20263d;
+  --aurora-row-alt: #151a2b;
+  --aurora-input-bg: #0c0f1a;
+
+  --aurora-border: #1f2436;
+  --aurora-border-strong: #2c3350;
+  --aurora-control-border: #6a7199;
+  --aurora-text: #eceefe;
+  --aurora-muted: #8d93b3;
+  --aurora-faint: #656c92;
+
+  --aurora-accent: #ffdf00;
+  --aurora-accent-ink: #ffdf00;
+  --aurora-accent-soft: rgba(255, 223, 0, 0.11);
+  --aurora-accent-line: rgba(255, 223, 0, 0.55);
+  --aurora-secondary: #7b7bff;
+  --aurora-secondary-ink: #a9a9ff;
+  --aurora-secondary-soft: rgba(123, 123, 255, 0.16);
+  --aurora-tertiary: #e070ff;
+  --aurora-tertiary-ink: #e48bff;
+  --aurora-tertiary-soft: rgba(224, 112, 255, 0.16);
+  --aurora-gradient: linear-gradient(90deg, var(--aurora-accent), var(--aurora-secondary), var(--aurora-tertiary));
+  --aurora-win: #2e9e37;
+  --aurora-win-ink: #5fd06a;
+  --aurora-win-soft: rgba(46, 158, 55, 0.2);
+  --aurora-loss: #e6594c;
+  --aurora-loss-ink: #ff8a7e;
+  --aurora-loss-soft: rgba(230, 89, 76, 0.16);
+
+  --aurora-link: var(--aurora-secondary);
+  --aurora-link-ink: var(--aurora-secondary-ink);
+  --aurora-link-soft: var(--aurora-secondary-soft);
+  --aurora-success: var(--aurora-win);
+  --aurora-success-ink: var(--aurora-win-ink);
+  --aurora-success-soft: var(--aurora-win-soft);
+  --aurora-danger: var(--aurora-loss);
+  --aurora-danger-ink: var(--aurora-loss-ink);
+  --aurora-danger-soft: var(--aurora-loss-soft);
+  --aurora-role-vanguard: var(--aurora-secondary);
+  --aurora-role-vanguard-ink: var(--aurora-secondary-ink);
+  --aurora-role-vanguard-soft: var(--aurora-secondary-soft);
+  --aurora-role-duelist: var(--aurora-tertiary);
+  --aurora-role-duelist-ink: var(--aurora-tertiary-ink);
+  --aurora-role-duelist-soft: var(--aurora-tertiary-soft);
+  --aurora-role-strategist: var(--aurora-accent);
+  --aurora-role-strategist-ink: var(--aurora-accent-ink);
+  --aurora-role-strategist-soft: var(--aurora-accent-soft);
+  --aurora-ally: var(--aurora-secondary-soft);
+  --aurora-enemy: var(--aurora-danger-soft);
+
+  --aurora-on-accent: #1a1600;
+  --aurora-on-outcome: #05201a;
+  --aurora-focus: var(--aurora-secondary);
+  --aurora-hover: rgba(255, 223, 0, 0.08);
+  /* How much of the circuit behind the top bar shows through. Light is lower: the brand word and the active-link underline are dark gold on a pale bar, and a stronger pulse would drop them below contrast. */
+  --aurora-nav-pulse-opacity: 0.35;
+  /* How much of the heartbeat line behind the Stats headline numbers shows through. Light is fainter: gold on a pale panel reads far stronger than yellow on a dark one. */
+  --aurora-heartbeat-opacity: 0.32;
+  --aurora-shadow-color: rgba(3, 4, 12, 0.55);
+  --aurora-card-shadow: 0 12px 30px var(--aurora-shadow-color);
+  --aurora-soft-shadow: 0 8px 22px rgba(3, 4, 12, 0.4);
+
+  /* Turns an all-black icon image white on a dark page; the light theme leaves it black. */
+  --icon-filter: invert(1);
+}
+
+:root[data-theme='light'] {
   color-scheme: light;
+
+  --aurora-canvas: #f3f3fa;
+  --aurora-surface: #ffffff;
+  --aurora-panel: #fbfbff;
+  --aurora-panel-soft: #f0f0f9;
+  --aurora-panel-raised: #e9eaf6;
+  --aurora-row-alt: #f7f7fc;
+  --aurora-input-bg: #f0f1f9;
+
+  --aurora-border: #e0e1ef;
+  --aurora-border-strong: #cbcde4;
+  --aurora-control-border: #7a80a6;
+  --aurora-text: #151735;
+  --aurora-muted: #61668a;
+  --aurora-faint: #8087ad;
+
+  --aurora-accent: #b38600;
+  --aurora-accent-ink: #7f5f00;
+  --aurora-accent-soft: rgba(179, 134, 0, 0.12);
+  --aurora-accent-line: rgba(179, 134, 0, 0.5);
+  --aurora-secondary: #5b55e6;
+  --aurora-secondary-ink: #4a44d4;
+  --aurora-secondary-soft: rgba(91, 85, 230, 0.1);
+  --aurora-tertiary: #b44fd6;
+  --aurora-tertiary-ink: #9a34bd;
+  --aurora-tertiary-soft: rgba(180, 79, 214, 0.1);
+  --aurora-win-ink: #1f7a29;
+  --aurora-win-soft: rgba(46, 158, 55, 0.12);
+  --aurora-loss-ink: #b8392d;
+  --aurora-loss-soft: rgba(230, 89, 76, 0.1);
+
+  --aurora-hover: rgba(179, 134, 0, 0.07);
+  --aurora-nav-pulse-opacity: 0.18;
+  --aurora-heartbeat-opacity: 0.18;
+  --aurora-shadow-color: rgba(21, 23, 53, 0.16);
+  --aurora-soft-shadow: 0 8px 22px rgba(21, 23, 53, 0.1);
+
+  --icon-filter: none;
+}
+
+:root {
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --bg: #ebebeb;;
-  --bg-elevated: #ffffff;
-  --bg-panel: #ffffff;
-  --bg-panel-soft: #eaf7fb;
-  --surface: #eef3f8;
-  --surface-2: #dfe8f1;
-  --surface-3: #ccd9e6;
-  --border: rgba(22, 52, 78, 0.14);
-  --border-strong: rgba(15, 92, 122, 0.28);
-  --text: #102033;
-  --text-muted: #5f7186;
-  --text-soft: #30455c;
-  --text-faint: #8998a8;
-  --accent: #e0a900;
-  --accent-strong: #9a6a00;
-  --accent-ink: #101927;
-  --danger: #d93d5c;
-  --blue: #147fb5;
-  --teal: #039f9f;
-  --purple: #7257c8;
-  --focus-ring: rgba(3, 159, 159, 0.2);
-  --shadow-soft: 0 18px 45px rgba(17, 35, 57, 0.12);
+
+  /* Role tokens: what components use. Each names a job, never a hue. "-ink" is a role as text, "-soft" its tint behind content, "-line" its border. */
+  --bg: var(--aurora-canvas);
+  --bg-elevated: var(--aurora-surface);
+  --bg-panel: var(--aurora-panel);
+  --bg-panel-soft: var(--aurora-panel-soft);
+  --surface: var(--aurora-panel-soft);
+  --surface-2: var(--aurora-panel-raised);
+  --border: var(--aurora-border);
+  --border-strong: var(--aurora-border-strong);
+  --control-border: var(--aurora-control-border);
+  --text: var(--aurora-text);
+  --text-muted: var(--aurora-muted);
+  --text-soft: var(--aurora-text);
+  --text-faint: var(--aurora-faint);
+  --accent: var(--aurora-accent);
+  --accent-strong: var(--aurora-accent-ink);
+  --accent-soft: var(--aurora-accent-soft);
+  --accent-line: var(--aurora-accent-line);
+  /* Text on a filled accent, win or loss. */
+  --accent-ink: var(--aurora-on-accent);
+  --secondary: var(--aurora-secondary);
+  --secondary-ink: var(--aurora-secondary-ink);
+  --secondary-soft: var(--aurora-secondary-soft);
+  --tertiary: var(--aurora-tertiary);
+  --tertiary-ink: var(--aurora-tertiary-ink);
+  --tertiary-soft: var(--aurora-tertiary-soft);
+  --win: var(--aurora-win);
+  --win-ink: var(--aurora-win-ink);
+  --win-soft: var(--aurora-win-soft);
+  --loss: var(--aurora-loss);
+  --loss-ink: var(--aurora-loss-ink);
+  --loss-soft: var(--aurora-loss-soft);
+  --danger: var(--aurora-danger);
+  --danger-ink: var(--aurora-danger-ink);
+  --danger-soft: var(--aurora-danger-soft);
+  --role-vanguard: var(--aurora-role-vanguard);
+  --role-duelist: var(--aurora-role-duelist);
+  --role-strategist: var(--aurora-role-strategist);
+  --role-vanguard-ink: var(--aurora-role-vanguard-ink);
+  --role-duelist-ink: var(--aurora-role-duelist-ink);
+  --role-strategist-ink: var(--aurora-role-strategist-ink);
+  --link: var(--aurora-link-ink);
+  --focus: var(--aurora-focus);
+  --focus-ring: var(--aurora-secondary-soft);
+  --hover: var(--aurora-hover);
+  --shadow-color: var(--aurora-shadow-color);
+  --shadow-soft: var(--aurora-card-shadow);
+  --eyebrow: var(--aurora-accent-ink);
+
+  /* Bands that stay dark in both themes (the home hero over its photo, the news band and the trust block): the Aurora dark values, fixed. `npm run test:theme` holds them equal to the dark palette. */
+  --ink: #090b14;
+  --ink-raised: #141828;
+  --ink-line: #2c3350;
+  --ink-control-border: #6a7199;
+  --on-ink: #eceefe;
+  --on-ink-muted: #8d93b3;
+  --ink-accent: #ffdf00;
+  --on-ink-accent: #1a1600;
+  --ink-focus: #7b7bff;
+  --ink-secondary: #7b7bff;
+  --ink-tertiary: #e070ff;
+}
+
+/* The one role-to-colour mapping. An element with a role's `data-role` gets `--hero-role-color` (the fill, edge and dot) and `--hero-role-ink` (the same role as text) for the Heroes grid, the art-led hero tile and the Community role cards to read. A role with no entry here, such as Multi-Role, leaves both unset, so each reader picks its own fallback. */
+[data-role='vanguard'] {
+  --hero-role-color: var(--role-vanguard);
+  --hero-role-ink: var(--role-vanguard-ink);
+}
+
+[data-role='duelist'] {
+  --hero-role-color: var(--role-duelist);
+  --hero-role-ink: var(--role-duelist-ink);
+}
+
+[data-role='strategist'] {
+  --hero-role-color: var(--role-strategist);
+  --hero-role-ink: var(--role-strategist-ink);
+}
+
+:root {
+  /* Type scale, chosen by a heading's visual role rather than its tag. At 1366px: the home hero 60px, a page title 40px, a section heading 32px, a card or panel heading 18px. */
+  --type-hero: clamp(2.25rem, 4.4vw, 3.75rem);
+  --type-page-title: clamp(1.75rem, 3vw, 2.5rem);
+  --type-h2: clamp(1.5rem, 2.4vw, 2rem);
+  --type-h3: 1.125rem;
+  /* Text sizes below the headings: a panel title, supporting text, and the smallest size any text may take. */
+  --type-title: 1.5rem;
+  --type-small: 0.875rem;
+  --type-caption: 0.75rem;
   --mobile-page-gutter: 8px;
   --mobile-panel-padding: 12px;
+  /* Container widths for .page-container, as content widths (the gutter sits outside them). */
+  --container-narrow: 768px;
+  --container: 1120px;
+  --container-wide: 1220px;
+  --page-gutter: 32px;
+  /* The one size for a hero portrait in a list, tile or chip; large art (detail headers, guide portraits) keeps its own. */
+  --hero-thumb: 40px;
+  --nav-height: 56px;
+  /* The circuit behind the top bar; the nav's text is contrast-tested against it in both themes (scripts/theme-contrast.mjs). */
+  --nav-pulse-opacity: var(--aurora-nav-pulse-opacity);
+  --heartbeat-opacity: var(--aurora-heartbeat-opacity);
+  /* Where the columns start under a page's header, for a page that fills the sidebar: the header's 36px of padding and gap plus its title and one-line lede. The sidebar uses it to start level with the page. */
+  --columns-top: calc(36px + 1.1 * var(--type-h2) + 1.4 * var(--type-small));
+}
+
+@media (max-width: 560px) {
+  :root {
+    --page-gutter: var(--mobile-page-gutter);
+    --hero-thumb: 36px;
+  }
 }
 
 html,
 body {
   min-height: 100%;
   margin: 0;
+}
+
+/* Keeps focus scrolling and `scrollIntoView` targets clear of the sticky header. The shell sets the router's own fragment scrolling offset. */
+html {
+  scroll-padding-top: var(--nav-height);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The home page's minimized video tab sits fixed at the bottom edge; this lets the footer scroll clear of it. */
+:root {
+  --floating-video-tab-height: 32px;
+}
+
+html.has-minimized-video body {
+  padding-bottom: var(--floating-video-tab-height);
 }
 
 body {
@@ -50,12 +277,12 @@ body {
 
 .tag-list .hero-matchup-chip {
   display: grid;
-  width: 46px;
+  width: var(--hero-thumb);
   aspect-ratio: 1;
   place-items: center;
   padding: 0;
-  border-radius: 8px;
-  background: rgba(255, 248, 203, 0.82);
+  border-radius: 6px;
+  background: var(--bg-panel-soft);
   cursor: help;
 }
 
@@ -67,17 +294,17 @@ body {
 }
 
 .hero-matchup-chip.icon-chip {
-  border: 1px solid rgba(138, 98, 0, 0.22);
-  background: rgba(255, 248, 203, 0.9);
+  border: 1px solid var(--border-strong);
+  background: var(--accent-soft);
   color: var(--accent-strong);
   font-size: 1rem;
 }
 
 .ability-text-link {
   padding: 1px 5px;
-  border: 1px solid rgba(3, 159, 159, 0.18);
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
-  background: rgba(232, 247, 251, 0.82);
+  background: var(--accent-soft);
   color: var(--accent-strong);
   font-weight: 700;
   text-decoration: none;
@@ -86,39 +313,21 @@ body {
 }
 
 .ability-text-link:hover {
-  border-color: rgba(3, 159, 159, 0.34);
-  background: rgba(255, 248, 203, 0.92);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
   color: var(--text);
 }
 
 .combat-highlight {
   display: inline;
   padding: 1px 5px;
-  border: 1px solid rgba(3, 159, 159, 0.18);
+  border: 1px solid var(--border-strong);
   border-radius: 5px;
-  background: rgba(232, 247, 251, 0.82);
+  background: var(--accent-soft);
   color: var(--accent-strong);
   font-weight: 700;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-}
-
-.damage-highlight {
-  border-color: rgba(3, 159, 159, 0.18);
-  background: rgba(232, 247, 251, 0.82);
-  color: var(--accent-strong);
-}
-
-.healing-highlight {
-  border-color: rgba(3, 159, 159, 0.18);
-  background: rgba(232, 247, 251, 0.82);
-  color: var(--accent-strong);
-}
-
-.utility-highlight {
-  border-color: rgba(3, 159, 159, 0.18);
-  background: rgba(232, 247, 251, 0.82);
-  color: var(--accent-strong);
 }
 
 button,
@@ -133,44 +342,27 @@ p {
   margin-block: 0;
 }
 
-.score-low {
-  --score-color: #d93d5c;
-  --score-text: #9f1f38;
+/* Text for assistive technology only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.score-mid {
-  --score-color: #e0a900;
-  --score-text: #7a5200;
+/* The width is the content width, so the element takes no side padding of its own: padding would be taken off a second time. */
+.page-container {
+  --container-max: var(--container);
+  width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+  margin-inline: auto;
 }
 
-.score-high {
-  --score-color: #16a05d;
-  --score-text: #0f6f43;
+.page-container--narrow {
+  --container-max: var(--container-narrow);
 }
 
-.score-low span,
-.score-low strong,
-.score-mid span,
-.score-mid strong,
-.score-high span,
-.score-high strong {
-  color: var(--score-text);
-}
-
-meter::-webkit-meter-bar {
-  border: 0;
-  border-radius: 999px;
-  background: rgba(16, 32, 51, 0.12);
-}
-
-meter::-webkit-meter-optimum-value,
-meter::-webkit-meter-suboptimum-value,
-meter::-webkit-meter-even-less-good-value {
-  border-radius: 999px;
-  background: var(--score-color, #e0a900);
-}
-
-meter::-moz-meter-bar {
-  border-radius: 999px;
-  background: var(--score-color, #e0a900);
+.page-container--wide {
+  --container-max: var(--container-wide);
 }

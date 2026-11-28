@@ -1,0 +1,64 @@
+:host {
+  display: block;
+  margin-top: 24px;
+}
+
+.role-figures__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+
+/* Wider gap than the benchmark cards: the bars need the room. The wash, edge, name and dot are the shared role card. */
+.role-figures__card {
+  gap: 12px;
+}
+
+.role-figures__bars {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.role-figures__bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.role-figures__label {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.role-figures__value {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* A figure that is not shown yet says so in words, quietly, over an empty track. */
+.role-figures__value.role-figures__none {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 700;
+}
+
+.role-figures__meter {
+  --meter-fill: var(--hero-role-color, var(--text-muted));
+  --meter-height: 10px;
+
+  grid-column: 1 / -1;
+}
+
+.role-figures__note {
+  max-width: 70ch;
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}

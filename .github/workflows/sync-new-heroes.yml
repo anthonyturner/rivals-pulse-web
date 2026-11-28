@@ -1,0 +1,160 @@
+name: Sync new heroes
+
+# A new hero ships with roughly every season. The hero roster lives in Supabase and
+# is served by /api/heroes, so syncing it here puts a new hero on the hero page
+# without a deploy. Portraits are repository files, so those arrive as a pull
+# request instead.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: 'Report roster changes without writing to the database'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-new-heroes
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync official hero roster
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync hero roster into Supabase
+        id: roster
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CHECK_ONLY: ${{ inputs.check_only }}
+        run: |
+          set -o pipefail
+          if [ "${CHECK_ONLY}" = "true" ]; then
+            npm run check:official-heroes | tee roster.log
+          else
+            npm run sync:official-heroes | tee roster.log
+          fi
+          {
+            echo "added=$(sed -n 's/^Added: //p' roster.log | head -1)"
+            echo "summary<<SUMMARY"
+            grep -E '^(Official heroes:|Added:|Changed:|Removed:)' roster.log || true
+            echo "SUMMARY"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download portraits for new heroes
+        if: inputs.check_only != true
+        run: npm run sync:official-hero-images
+
+      - name: Detect new portrait files
+        id: portraits
+        run: |
+          if [ -n "$(git status --porcelain -- public/images/heroes)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update the pull request with the new portraits
+        if: steps.portraits.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ADDED: ${{ steps.roster.outputs.added }}
+          SUMMARY: ${{ steps.roster.outputs.summary }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          BRANCH_PREFIX: chore/new-hero-portraits-
+          PR_TITLE: 'chore(heroes): portraits for newly released heroes'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # Only portraits master lacks reach this step, because the download
+          # step skips files that already exist. They are committed once, here.
+          work="portraits-${GITHUB_RUN_ID}"
+          git checkout -b "$work"
+          git add public/images/heroes
+          git commit -m 'chore(heroes): add portraits for newly released heroes'
+
+          # The open portrait pull request is found by its branch name. A title
+          # search cannot be trusted here: GitHub reads the colon and brackets in
+          # a conventional-commit title as search syntax and matches nothing, which
+          # let a new pull request open every night.
+          existing=$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&per_page=100" --paginate \
+            --jq ".[] | select(.head.repo.full_name == \"${GITHUB_REPOSITORY}\" and (.head.ref | startswith(\"${BRANCH_PREFIX}\"))) | .head.ref" \
+            | sed -n 1p)
+
+          if [ -n "$existing" ]; then
+            # Add the portraits to the open pull request's branch as a new commit,
+            # so nothing is force-pushed and no second pull request is opened.
+            git fetch origin "$existing"
+            git checkout -B "$existing" "origin/$existing"
+            git checkout "$work" -- public/images/heroes
+            if git diff --cached --quiet; then
+              echo "The open portrait pull request on ${existing} already carries these portraits."
+            else
+              git commit -m 'chore(heroes): add portraits for newly released heroes'
+              git push origin "$existing"
+              echo "Updated the open portrait pull request on ${existing}."
+            fi
+            # The steps after this one read the repository's source, so leave the
+            # checkout on the default branch's code rather than the older PR branch.
+            git checkout --quiet "$work"
+            exit 0
+          fi
+
+          branch="${BRANCH_PREFIX}${GITHUB_RUN_ID}"
+          git branch -m "$work" "$branch"
+          git push --set-upstream origin "$branch"
+
+          cat > pr-body.md <<BODY
+          Automated by \`.github/workflows/sync-new-heroes.yml\`.
+
+          The hero roster in Supabase is already updated, so the new hero is live on
+          the hero page. This pull request only carries the portrait files, which
+          are repository assets.
+
+          \`\`\`
+          ${SUMMARY}
+          \`\`\`
+
+          Still curated by hand for **${ADDED:-the new hero}**:
+
+          - [ ] \`src/app/features/heroes/hero-gameplay-archetypes.ts\` - archetype label and notes
+          - [ ] \`src/app/features/learning/guides/hero-guides/hero-guide-data.ts\` - hero guide entry
+          - [ ] \`data/pulse-atlas/hero-game-ids.json\` - the hero's game id
+          - [ ] \`data/pulse-atlas/strategist-tags.json\` - a \`healer\` or \`utility\` tag, if the hero is a Strategist
+          - [ ] \`hero_game_roles\` - a row in a new migration with the hero's game id and role (triple-support counts)
+          BODY
+
+          gh pr create --draft --base "$BASE_BRANCH" --head "$branch" --title "$PR_TITLE" --body-file pr-body.md
+
+      - name: Report roster changes
+        if: always() && steps.roster.outputs.summary != ''
+        env:
+          SUMMARY: ${{ steps.roster.outputs.summary }}
+        run: echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check hero_game_roles against the roster
+        if: ${{ !cancelled() }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run check:hero-game-roles

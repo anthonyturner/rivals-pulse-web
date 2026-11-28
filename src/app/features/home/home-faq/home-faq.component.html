@@ -1,0 +1,18 @@
+<app-home-band
+  tone="light"
+  headAlign="center"
+  heading="Frequently asked questions"
+  headingId="home-faq-title"
+>
+  <div class="faq">
+    @for (item of items; track item.id) {
+      <details class="item" [attr.open]="$first ? '' : null">
+        <summary class="question">{{ item.question }}</summary>
+        <p class="answer">{{ item.answer }}</p>
+        <a class="more" [routerLink]="item.more.path" [fragment]="item.more.fragment">
+          {{ item.more.label }}
+        </a>
+      </details>
+    }
+  </div>
+</app-home-band>

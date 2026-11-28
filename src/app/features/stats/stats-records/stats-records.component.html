@@ -1,0 +1,39 @@
+<p class="intro">
+  Each list holds one line per uploading player, and appears once enough different players have a record for it.
+  <a routerLink="/how-we-count">How we count</a>
+</p>
+
+<div class="toolbar">
+  <app-filter-select label="List" [options]="options" [value]="selectedValue()" (valueChange)="choose($event)" />
+</div>
+
+<app-records-body [state]="state" [shown]="shown()">
+  <ng-template appRecordsContent let-view>
+    @if (view.since; as since) {
+      <p class="meta">Matches since {{ since }}</p>
+    }
+
+    <div class="boards" [class.boards--single]="single()">
+      @for (board of boards(); track board.page.key) {
+        <section class="board" [attr.aria-labelledby]="board.headingId">
+          <h2 [id]="board.headingId">{{ board.page.title }}</h2>
+          @if (board.shown) {
+            <app-record-table [rows]="board.rows" [labelledBy]="board.headingId" [valueLabel]="board.page.title" />
+            @if (!single()) {
+              <a class="more" routerLink="." [queryParams]="board.openQuery">
+                See the full list<span class="visually-hidden"> for {{ board.page.title }}</span>
+              </a>
+            }
+          } @else {
+            <p class="thin">Not enough data yet.</p>
+          }
+        </section>
+      }
+    </div>
+  </ng-template>
+
+  <p>
+    Records appear once enough players have uploaded matches. A list is shown from
+    {{ minimumRows }} different uploading players, so that one account cannot set every record.
+  </p>
+</app-records-body>

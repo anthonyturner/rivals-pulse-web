@@ -1,0 +1,124 @@
+:host {
+  display: block;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+/* A role sets one colour for the wash, the ring and the edge (the shared mapping in `styles.css`); the role chip reads the same two properties. */
+.spot {
+  --tile-role-color: var(--hero-role-color, var(--accent));
+  --tile-role-ink: var(--hero-role-ink, var(--accent-strong));
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tile-role-color) 40%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--tile-role-color) 22%, var(--bg-panel)),
+    var(--bg-panel) 85%
+  );
+  color: var(--text);
+  text-decoration: none;
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-bottom: 2px solid color-mix(in srgb, var(--tile-role-color) 70%, transparent);
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.body {
+  /* The height of a stacked tile with a one-line name, so the empty tile that holds its room matches it; the wide tile is held by the `.spot` minimum height below. */
+  min-height: 9.0625rem;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 2px;
+  padding: 10px 12px 12px;
+}
+
+.heading {
+  color: var(--tile-role-ink);
+  font-size: var(--type-caption);
+  font-weight: 800;
+}
+
+.spot--pending {
+  background: var(--surface);
+}
+
+.name {
+  font-size: var(--type-h3);
+  font-weight: 850;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.figure {
+  font-size: var(--type-small);
+}
+
+.figure strong {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+}
+
+.sample {
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+app-hero-role-chip {
+  margin-top: 6px;
+}
+
+/* In a tile wide enough for it the portrait moves to the side, so a tile in a wide row stays a short card instead of a square the width of the row. */
+@container (min-width: 20rem) {
+  .spot {
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    grid-template-rows: none;
+    min-height: 9.5rem;
+  }
+
+  .art {
+    height: 100%;
+    aspect-ratio: auto;
+    border-right: 2px solid color-mix(in srgb, var(--tile-role-color) 70%, transparent);
+    border-bottom: 0;
+  }
+
+  .body {
+    align-content: center;
+    padding: 12px 16px;
+  }
+}
+
+.spot:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.spot:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spot {
+    transition:
+      transform 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .spot:hover {
+    transform: translateY(-3px);
+  }
+}

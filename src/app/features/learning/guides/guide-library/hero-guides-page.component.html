@@ -1,0 +1,63 @@
+<div class="library page-container page-container--wide">
+  <app-page-header title="Guides" description="Find a hero playbook or learn a specific part of the game." />
+
+  <div class="filters">
+    <label class="search">
+      <span>Search guides</span>
+      <input
+        #search
+        type="search"
+        placeholder="Doctor Strange, Rocket, positioning..."
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </label>
+    <div class="filters__choices">
+      <app-filter-select
+        label="Category"
+        [options]="categoryOptions"
+        [value]="category()"
+        (valueChange)="category.set($event)"
+      />
+      <app-filter-select
+        label="Hero"
+        [options]="heroOptions"
+        [value]="hero()"
+        (valueChange)="hero.set($event)"
+      />
+      <button type="button" class="clear" [disabled]="!filtersActive()" (click)="clearFilters()">Clear filters</button>
+    </div>
+  </div>
+
+  <p class="count" role="status">{{ status() }}</p>
+
+  @for (section of sections(); track section.category) {
+    <section class="group" [attr.aria-label]="section.category">
+      <h2>{{ section.category }}</h2>
+      <ul class="cards">
+        @for (guide of section.guides; track guide.path) {
+          <li>
+            <app-guide-card
+              [title]="guide.title"
+              [route]="guide.path"
+              [imageUrl]="guide.imageUrl"
+              [caption]="guide.caption"
+              [blurb]="guide.blurb"
+              [headingLevel]="3"
+            />
+          </li>
+        }
+      </ul>
+    </section>
+  } @empty {
+    <app-state-panel heading="No guides match" [announce]="false">
+      <p>Try another hero or topic, or clear the filters above.</p>
+    </app-state-panel>
+  }
+
+  <nav class="related" aria-label="Related resources">
+    <a routerLink="/strategist-guides">Strategist overview</a>
+    <a routerLink="/resources">Resources</a>
+    <a routerLink="/stats/heroes">Hero stats</a>
+  </nav>
+</div>

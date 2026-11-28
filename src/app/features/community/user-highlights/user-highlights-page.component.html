@@ -1,0 +1,91 @@
+<div class="guide-article page-container">
+  <app-page-header
+    title="User highlights"
+    description="Player-submitted Marvel Rivals moments, broken down into positioning, timing and one takeaway for your next match."
+  />
+
+  <section class="clip" aria-labelledby="clip-title">
+    <div class="clip-player">
+      <video
+        controls
+        playsinline
+        preload="metadata"
+        [poster]="example.posterUrl"
+        [attr.aria-label]="example.player + ' playing ' + example.hero"
+      >
+        <source [src]="example.videoUrl" type="video/mp4" />
+        Your browser does not support embedded video playback.
+      </video>
+      <p class="clip-source">
+        <span class="guide-caption">Hosted by the official Marvel Rivals highlight service</span>
+        <a class="guide-link" [href]="example.shareUrl" target="_blank" rel="noopener noreferrer">
+          Open original highlight<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      </p>
+    </div>
+
+    <div class="clip-summary guide-tile">
+      <h2 id="clip-title">{{ example.title }}</h2>
+      <app-hero-tile [name]="example.hero" [imageUrl]="example.heroImage">
+        <span class="guide-caption">Played by {{ example.player }}</span>
+      </app-hero-tile>
+      <p class="guide-caption">{{ example.duration }} · four eliminations</p>
+      <p class="guide-text">
+        This clip works because the engagement has shape: an elevated approach, a vertical target
+        chase, and a decisive return to the grouped objective fight. The finish is the reward; the
+        changing angles are what create it.
+      </p>
+      <p class="guide-caption">Topics: {{ topics }}</p>
+    </div>
+  </section>
+
+  <div class="review">
+    <section class="guide-section">
+      <h2>How the play develops</h2>
+      <p class="guide-caption">
+        Times are approximate, read from sampled frames. This timeline is the text version of the
+        clip.
+      </p>
+      <ol class="timeline">
+        @for (moment of timeline; track moment.time) {
+          <li>
+            <span>{{ moment.time }}</span>
+            <div>
+              <strong>{{ moment.title }}</strong>
+              <p class="guide-text">{{ moment.note }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <section class="guide-section takeaways">
+      <h2>Takeaways</h2>
+      @for (takeaway of takeaways; track takeaway.title) {
+        <div class="guide-tile">
+          <h3>{{ takeaway.title }}</h3>
+          <p class="guide-text">{{ takeaway.body }}</p>
+        </div>
+      }
+    </section>
+  </div>
+
+  <section class="guide-section">
+    <h2>Share a moment for review</h2>
+    <div class="guide-tile submit">
+      <p class="guide-text">
+        Use a public Marvel Rivals highlight link and include the hero, what you were trying to do,
+        and the decision you want reviewed. Only submit clips you have permission to share.
+      </p>
+      <ol class="guide-steps">
+        <li><span class="guide-text">Generate a share link in Marvel Rivals.</span></li>
+        <li>
+          <span class="guide-text">Remove social tracking parameters such as <code>fbclid</code>.</span>
+        </li>
+        <li>
+          <span class="guide-text">Describe the moment you want the film room to examine.</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+</div>

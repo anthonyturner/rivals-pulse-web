@@ -18,7 +18,7 @@ area:api:
       - any-glob-to-any-file:
           - api/**
           - src/server.ts
-          - src/content-database.ts
+          - src/server/**
 
 area:database:
   - changed-files:

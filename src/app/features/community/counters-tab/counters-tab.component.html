@@ -1,0 +1,66 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="Counter matchups"
+  subject="counter matchups"
+  [summary]="current.kind === 'not-enough-data' ? current.summary : ''"
+  [halfSeasonLabel]="current.kind === 'ready' ? current.halfSeasonLabel : null"
+  [notice]="current.kind === 'ready' ? current.notice : null"
+  [footnote]="current.kind === 'ready' ? current.footnote : null"
+  [link]="link"
+>
+  @if (current.kind === 'ready') {
+    <ol class="records">
+      @for (record of current.records; track record.key) {
+        <li [attr.title]="record.description">
+          <div class="versus">
+            <span class="side side--first" [attr.data-role]="record.winner.roleKey">
+              <img [src]="record.winner.imageUrl" alt="" width="56" height="56" loading="lazy" (error)="onImageError($event)" />
+              <span class="name">{{ record.winner.name }}</span>
+            </span>&ngsp;<span class="verb">does better than usual against</span>&ngsp;<span class="side side--second" [attr.data-role]="record.loser.roleKey">
+              <img [src]="record.loser.imageUrl" alt="" width="56" height="56" loading="lazy" (error)="onImageError($event)" />
+              <span class="name">{{ record.loser.name }}</span>
+            </span>&ngsp;<span class="figure">{{ record.winRate }}</span>&ngsp;<app-meter
+              class="gauge"
+              [tone]="record.tone"
+              [value]="record.winRateValue"
+              [guide]="50"
+            />&ngsp;<span class="foot">{{ record.edge }} · {{ record.sample }}</span>
+          </div>
+        </li>
+      }
+    </ol>
+  }
+</app-community-summary>
+
+@let killFeed = killFeedView();
+
+<app-community-summary
+  class="kill-feed"
+  [kind]="killFeed.kind"
+  heading="Community kill feed: most seen kills"
+  subject="community kill-feed counters"
+  [summary]="killFeed.kind === 'not-enough-data' ? killFeed.summary : ''"
+  [halfSeasonLabel]="killFeed.kind === 'ready' ? killFeed.halfSeasonLabel : null"
+  [notice]="killFeed.kind === 'ready' ? killFeed.notice : null"
+  [footnote]="killFeed.kind === 'ready' ? killFeedFootnote : null"
+>
+  @if (killFeed.kind === 'ready') {
+    <ol class="records">
+      @for (pair of killFeed.pairs; track pair.key) {
+        <li [attr.title]="pair.description">
+          <div class="versus">
+            <span class="side side--first" [attr.data-role]="pair.killer.roleKey">
+              <img [src]="pair.killer.imageUrl" alt="" width="56" height="56" loading="lazy" (error)="onImageError($event)" />
+              <span class="name">{{ pair.killer.name }}</span>
+            </span>&ngsp;<span class="verb">was seen killing</span>&ngsp;<span class="side side--second" [attr.data-role]="pair.victim.roleKey">
+              <img [src]="pair.victim.imageUrl" alt="" width="56" height="56" loading="lazy" (error)="onImageError($event)" />
+              <span class="name">{{ pair.victim.name }}</span>
+            </span>&ngsp;<span class="figure figure--band">{{ pair.band }}</span>
+          </div>
+        </li>
+      }
+    </ol>
+  }
+</app-community-summary>

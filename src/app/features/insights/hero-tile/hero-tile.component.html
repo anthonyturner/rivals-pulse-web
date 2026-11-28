@@ -1,0 +1,12 @@
+<img appHeroImageFallback [src]="imageUrl()" alt="" width="40" height="40" loading="lazy" />
+<span class="head">
+  <span class="hero-name">
+    @if (heroId(); as id) {
+      <a class="name-link" [routerLink]="['/heroes', id]">{{ name() }}</a>
+    } @else {
+      {{ name() }}
+    }
+  </span>
+  <ng-content select="[tileFigure]" />
+</span>
+<div class="details"><ng-content /></div>

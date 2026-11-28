@@ -1,0 +1,114 @@
+:host {
+  display: block;
+}
+
+.signals {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.signal-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.source {
+  padding: 1px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+/* Estimated reads differently without colour: a dashed badge, italic text and a hatched bar. */
+.estimated .source {
+  border-style: dashed;
+  font-style: italic;
+}
+
+.value {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.value.no-number {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+.bar {
+  --signal-fill: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 72%, var(--accent-ink)),
+    var(--accent)
+  );
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-panel);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--signal-fill);
+}
+
+.estimated .bar {
+  border-style: dashed;
+}
+
+.estimated .score-track i {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 5px, var(--bg-panel) 5px 9px),
+    var(--signal-fill);
+}
+
+.figures {
+  font-size: var(--type-small);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  color: var(--text-muted);
+  font-size: var(--type-small);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.out-of,
+.collection-label {
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 400;
+}
+
+.empty-track {
+  border-style: dashed;
+}
+
+.collection-track {
+  height: 6px;
+}

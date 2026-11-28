@@ -1,0 +1,9 @@
+<header class="page-header">
+  <h1>{{ title() }}</h1>
+  @if (description().trim()) {
+    <p class="description">{{ description() }}</p>
+  }
+  <div class="description description--projected">
+    <ng-content select="[lede]" />
+  </div>
+</header>

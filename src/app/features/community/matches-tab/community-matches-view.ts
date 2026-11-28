@@ -1,0 +1,141 @@
+import type { CommunityMatches } from '../../../../contracts/community-matches.model';
+import { buildMapsView, type CommunityMapsView } from './community-maps-view';
+import type { StackedBarPart } from '../../../shared/components/chart/stacked-bar/stacked-bar.component';
+import { dayLabel } from '../../../shared/utilities/day-label';
+import { countLabel, halfSeasonFallbackNotice, wholePercentLabel } from '../../../shared/utilities/stat-labels';
+import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
+
+export interface CommunityDayRowView {
+  day: string;
+  shareLabel: string;
+  /** This day's share against the busiest day's, 0 to 100. */
+  barPercent: number;
+}
+
+/** A section of rows, or the sentence that says why it has none yet. Never both blank. */
+export interface CommunitySectionView<Row> {
+  rows: Row[];
+  note: string | null;
+}
+
+export type CommunityMatchesView =
+  | { kind: 'loading' }
+  | { kind: 'unavailable' }
+  | { kind: 'not-enough-data'; halfSeasonLabel: string | null; summary: string }
+  | CommunityMatchesReady;
+
+export interface CommunityMatchesReady {
+  kind: 'ready';
+  halfSeasonLabel: string | null;
+  /** The shared fallback sentence, set when the previous half-season stands in for the current one. */
+  notice: string | null;
+  /** How many matches the figures cover, in a few words; the rest of how they are counted is the page's to say. */
+  sample: string;
+  maps: CommunityMapsView;
+  modeMix: { parts: StackedBarPart[]; note: string | null };
+  averageLength: { label: string | null; note: string | null };
+  perDay: CommunitySectionView<CommunityDayRowView>;
+}
+
+/**
+ * What the Matches tab shows. `undefined` means the answer has not arrived and `null` that it could
+ * not be read; neither is "not enough data", which is a real answer. The answer carries no exact
+ * count, so no label here can show one.
+ */
+export function buildCommunityMatchesView(data: CommunityMatches | null | undefined): CommunityMatchesView {
+  if (data === undefined) {
+    return { kind: 'loading' };
+  }
+
+  if (data === null) {
+    return { kind: 'unavailable' };
+  }
+
+  const { overviewMatches, lengthMatches } = data.minimums;
+  const halfSeasonLabel = data.halfSeason?.label ?? null;
+
+  if (data.status === 'not-enough-data') {
+    return {
+      kind: 'not-enough-data',
+      halfSeasonLabel,
+      summary: `${halfSeasonLabel ? `${halfSeasonLabel} does not have enough data yet.` : 'No matches are counted yet.'} ${COMMUNITY_EMPTY_RULE}`,
+    };
+  }
+
+  const busiestDay = Math.max(1, ...(data.perDay ?? []).map((day) => day.share));
+  const season = halfSeasonLabel ?? 'this half-season';
+
+  return {
+    kind: 'ready',
+    halfSeasonLabel,
+    notice: data.inPlaceOf ? halfSeasonFallbackNotice(data.inPlaceOf.label, halfSeasonLabel) : null,
+    sample: `${data.matchesCounted === null ? 'Matches' : countLabel(data.matchesCounted, 'match', 'matches')} in ${season}`,
+    maps: buildMapsView(data),
+    modeMix: {
+      parts: (data.modeMix ?? []).map((share) => ({
+        label: share.mode,
+        value: share.share,
+        valueLabel: wholePercentLabel(share.share),
+        detail:
+          share.averageLengthMinutes === null
+            ? 'Average length: not enough data yet'
+            : `Average length: ${minutesLabel(share.averageLengthMinutes)}`,
+      })),
+      note:
+        data.modeMix === null || data.modeMix.length === 0
+          ? `Not enough data yet. The mix appears at ${overviewMatches} matches.`
+          : null,
+    },
+    averageLength:
+      data.averageLengthMinutes === null
+        ? {
+            label: null,
+            note: `Not enough data yet. An average needs ${lengthMatches} matches with a known length.`,
+          }
+        : { label: minutesLabel(data.averageLengthMinutes), note: null },
+    perDay: {
+      rows: (data.perDay ?? []).map((day) => ({
+        day: dayLabel(day.day),
+        shareLabel: wholePercentLabel(day.share),
+        barPercent: (day.share / busiestDay) * 100,
+      })),
+      note:
+        data.perDay === null || data.perDay.length === 0
+          ? `Not enough data yet. A day is listed once it has ${overviewMatches} matches.`
+          : null,
+    },
+  };
+}
+
+/** The latest day is still filling up, so the pace is read from the full days before it. */
+const RECENT_DAYS = 3;
+
+/**
+ * About how many matches players upload a day lately: the average share of the season's matches over
+ * the last few full days. Only the shares and the matches counted are read, so it is a rough pace, which is
+ * all a heartbeat needs. Null when the answer lists no day or counts no matches.
+ */
+export function recentMatchesPerDay(data: CommunityMatches): number | null {
+  const days = data.perDay ?? [];
+  const fullDays = days.length > RECENT_DAYS ? days.slice(-RECENT_DAYS - 1, -1) : days;
+
+  if (data.matchesCounted === null || fullDays.length === 0) {
+    return null;
+  }
+
+  const share = fullDays.reduce((sum, day) => sum + day.share, 0) / fullDays.length;
+
+  return (data.matchesCounted * share) / 100;
+}
+
+/** Whole minutes as `12 min` or `1 h 5 min`. */
+export function minutesLabel(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+
+  if (hours === 0) {
+    return `${rest} min`;
+  }
+
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}

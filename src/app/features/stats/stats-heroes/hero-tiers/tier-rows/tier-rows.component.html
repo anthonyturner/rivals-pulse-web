@@ -1,0 +1,39 @@
+<ol class="tiers" [class.raised]="raised()">
+  @for (tier of tiers(); track tier.name) {
+    <li class="tier-row tier-{{ tier.name }}">
+      <ng-template #label>
+        <span class="visually-hidden">Tier </span>
+        <span class="tier-letter">{{ tier.name }}</span>
+        <span class="visually-hidden">, </span>
+        <span class="tier-count">
+          {{ tier.heroes.length }}<span class="tier-unit visually-hidden">{{ tier.heroes.length === 1 ? ' hero' : ' heroes' }}</span>
+        </span>
+      </ng-template>
+      @if (headingLevel() === 3) {
+        <h3 class="tier-label"><ng-container [ngTemplateOutlet]="label" /></h3>
+      } @else {
+        <h2 class="tier-label"><ng-container [ngTemplateOutlet]="label" /></h2>
+      }
+
+      <ul class="hero-grid">
+        @for (hero of tier.heroes; track hero.hero) {
+          <li>
+            <app-hero-tile [artLed]="artLed()" [role]="hero.role" [name]="hero.name" [imageUrl]="hero.imageUrl" [heroId]="linkHeroes() ? hero.hero : null">
+              <span class="hero-figures">
+                <span class="hero-rate"><span class="visually-hidden">, win rate </span>{{ hero.winRateLabel }}</span>
+                <span class="hero-caption">
+                  <span class="hero-pick"
+                    ><span class="visually-hidden">, pick rate </span>{{ hero.pickRateLabel }}<span aria-hidden="true"> pick &middot; </span></span
+                  ><span class="visually-hidden">, </span>{{ hero.appearancesLabel }} games
+                </span>
+              </span>
+              @if (showRoles() && hero.role; as role) {
+                <app-hero-role-chip class="hero-role" [role]="role" />
+              }
+            </app-hero-tile>
+          </li>
+        }
+      </ul>
+    </li>
+  }
+</ol>

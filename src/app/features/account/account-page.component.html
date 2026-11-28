@@ -1,0 +1,225 @@
+<div class="account page-container page-container--narrow">
+  <app-page-header
+    title="Your account"
+    description="What RivalsPulse holds about your sign-in. Only you see this page. Your in-game name can appear on the public Pulse Records page only if you choose that."
+  />
+
+  @if (account(); as details) {
+    <p class="visually-hidden" role="status">{{ announcement() }}</p>
+
+    <section class="panel" aria-labelledby="account-details-title">
+      <h2 id="account-details-title">Sign-in details</h2>
+      <dl class="details">
+        <div>
+          <dt>Signed in with</dt>
+          <dd>{{ method() }}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ details.email ?? 'None shared with us' }}</dd>
+        </div>
+        <div>
+          <dt>Account created</dt>
+          <dd>{{ details.createdAt | date: 'longDate' }}</dd>
+        </div>
+      </dl>
+      <div class="actions">
+        <button class="guide-button" type="button" (click)="signOut()">Sign out</button>
+        <a class="guide-link" routerLink="/privacy" fragment="accounts">What the account stores</a>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="account-link-title">
+      <h2 id="account-link-title" #linkHeading tabindex="-1">Link the desktop app</h2>
+      @if (player(); as linked) {
+        <p class="player">
+          <app-player-avatar [name]="linked.name" [avatarUrl]="linked.avatarUrl" />
+          <span>
+            Linked to <strong>{{ linked.name }}</strong>
+          </span>
+        </p>
+        <p>
+          Your in-game name and Overwolf avatar show here and in the site header, to you only.
+          Your name goes on the public Pulse Records page only if you choose that, and your avatar
+          never does. Unlinking removes the link. To link a different player, get a new code from the desktop
+          app on that account.
+        </p>
+        @if (unlinkError(); as message) {
+          <app-state-panel kind="error" [announce]="false">{{ message }}</app-state-panel>
+        }
+        <div class="actions">
+          <button class="guide-button" type="button" (click)="unlinkPlayer()">
+            @if (unlinking()) {
+              Unlinking…
+            } @else {
+              Unlink
+            }
+          </button>
+        </div>
+      } @else {
+        <p>
+          Open the RivalsPulse desktop app, ask it for a link code, and type the code here. A code
+          works once and for ten minutes. Linking shows your in-game name and Overwolf avatar here
+          and in the site header, to you only. Linking publishes nothing: your name goes on the
+          public Pulse Records page only if you choose that.
+        </p>
+        <form [attr.aria-busy]="linking() ? 'true' : null" (submit)="linkPlayer($event)">
+          <label for="link-code">Link code</label>
+          <div class="row">
+            <input
+              id="link-code"
+              type="text"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="16"
+              placeholder="XXXX-XXXX"
+              [value]="linkCode()"
+              [readOnly]="linking()"
+              [attr.aria-invalid]="linkError() ? 'true' : null"
+              [attr.aria-describedby]="linkError() ? 'link-code-error' : null"
+              (input)="onLinkCodeInput($event)"
+            />
+            <button class="guide-button guide-button--primary" type="submit" [disabled]="!canLink()">
+              @if (linking()) {
+                Linking…
+              } @else {
+                Link
+              }
+            </button>
+          </div>
+          @if (linkError(); as message) {
+            <app-state-panel id="link-code-error" kind="error" [announce]="false">{{ message }}</app-state-panel>
+          }
+        </form>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="account-records-title">
+      <h2 id="account-records-title" #recordsHeading tabindex="-1">Pulse Records</h2>
+      <p id="records-opt-in-about">
+        Pulse Records is a public page of the best single-match figures from matches the desktop app
+        uploaded. It is off until you switch it on, and you can switch it off at any time. Read
+        <a class="guide-link" routerLink="/privacy" fragment="pulse-records">what Pulse Records publishes</a>
+        first, including about lines from players who did not agree.
+      </p>
+      @if (recordsOptInKnown()) {
+        <div class="choice">
+          <input
+            id="records-opt-in"
+            type="checkbox"
+            [checked]="recordsOptIn()"
+            [disabled]="recordsOptInDisabled()"
+            [attr.aria-busy]="recordsOptInSaving() ? 'true' : null"
+            aria-describedby="records-opt-in-help"
+            (change)="onRecordsOptInChange($event)"
+          />
+          <label for="records-opt-in">Show me in Pulse Records</label>
+        </div>
+        <p id="records-opt-in-help" class="hint">
+          @if (player()) {
+            Your in-game name, as stored with your link, appears beside the entries from matches your
+            own desktop app uploaded. Your avatar never does. Switching it off takes your name and
+            those entries off the page within a few minutes. Unlinking the desktop app, or linking a
+            different player, switches it off again.
+          } @else {
+            Link the desktop app above to turn this on. Until then your name is not shown.
+          }
+        </p>
+      } @else if (recordsOptInLoadFailed()) {
+        <div class="actions">
+          <button class="guide-button" type="button" (click)="retryRecordsOptIn()">Try again</button>
+        </div>
+      } @else {
+        <p class="hint">Loading your setting…</p>
+      }
+      @if (recordsOptInError(); as message) {
+        <app-state-panel kind="error" [announce]="false">{{ message }}</app-state-panel>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="account-media-title">
+      <h2 id="account-media-title">Video and sound</h2>
+      <p>
+        How hero pages and the home page open for you on any browser you sign in on. A switch on a
+        page changes it for that visit only, and these settings come back on your next visit.
+      </p>
+      @if (mediaDefaults(); as saved) {
+        <div class="choice">
+          <input
+            id="hero-video-default"
+            type="checkbox"
+            [checked]="saved.heroVideo"
+            [attr.aria-busy]="mediaDefaultsSaving() ? 'true' : null"
+            aria-describedby="hero-video-default-help"
+            (change)="onMediaDefaultChange('heroVideo', $event)"
+          />
+          <label for="hero-video-default">Hero page gameplay video</label>
+        </div>
+        <p id="hero-video-default-help" class="hint">
+          Hero pages open on the hero's gameplay video instead of the portrait art.
+          @if (reducedMotion()) {
+            Your device asks for less motion, so the video never starts by itself, whatever this says.
+            You can still switch it on from a hero page.
+          }
+        </p>
+        <div class="choice">
+          <input
+            id="sound-default"
+            type="checkbox"
+            [checked]="saved.sound"
+            [attr.aria-busy]="mediaDefaultsSaving() ? 'true' : null"
+            aria-describedby="sound-default-help"
+            (change)="onMediaDefaultChange('sound', $event)"
+          />
+          <label for="sound-default">Gameplay video sound</label>
+        </div>
+        <p id="sound-default-help" class="hint">
+          The gameplay video and the home page banner start with sound. Browsers only allow sound after
+          you have pressed or tapped something on the page, so until then they can start muted.
+        </p>
+      } @else {
+        <p class="hint">Your video and sound settings could not be loaded. Reload the page to try again.</p>
+      }
+      @if (mediaDefaultsError(); as message) {
+        <app-state-panel kind="error" [announce]="false">{{ message }}</app-state-panel>
+      }
+    </section>
+
+    <section class="panel" aria-labelledby="account-delete-title">
+      <h2 id="account-delete-title">Delete your account</h2>
+      <p>
+        Deleting needs a sign-in from the last ten minutes; if yours is older you will be asked to
+        sign in again first. Forgetting the matches the desktop app uploaded is not available yet.
+      </p>
+      <form [attr.aria-busy]="deleting() ? 'true' : null" (submit)="deleteAccount($event)">
+        <label for="delete-confirmation">
+          Type <strong>{{ confirmationPhrase }}</strong> to confirm
+        </label>
+        <div class="row">
+          <input
+            id="delete-confirmation"
+            type="text"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            [value]="confirmation()"
+            [readOnly]="deleting()"
+            [attr.aria-describedby]="deleteError() ? 'delete-error' : null"
+            (input)="onConfirmationInput($event)"
+          />
+          <button class="guide-button danger" type="submit" [disabled]="!confirmed()">
+            @if (deleting()) {
+              Deleting…
+            } @else {
+              Delete my account
+            }
+          </button>
+        </div>
+        @if (deleteError(); as message) {
+          <app-state-panel id="delete-error" kind="error" [announce]="false">{{ message }}</app-state-panel>
+        }
+      </form>
+    </section>
+  }
+</div>

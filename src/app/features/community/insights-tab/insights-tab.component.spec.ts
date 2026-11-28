@@ -1,0 +1,140 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import type { CommunityInsights } from '../../../../contracts/community-insights.model';
+import { InsightsTabComponent } from './insights-tab.component';
+
+const ready: CommunityInsights = {
+  status: 'ready',
+  timeZone: 'UTC',
+  sessionGapMinutes: 30,
+  minimumMatches: 10,
+  dimensions: [
+    {
+      id: 'weekday',
+      title: 'Day of the week',
+      buckets: [
+        { label: 'Monday', status: 'ready', share: 100, winRate: 55 },
+        { label: 'Tuesday', status: 'not-enough-data', share: null, winRate: null },
+      ],
+    },
+  ],
+};
+
+describe('InsightsTabComponent', () => {
+  let http: HttpTestingController;
+
+  function render() {
+    const fixture = TestBed.createComponent(InsightsTabComponent);
+    fixture.detectChanges();
+
+    return { fixture, host: fixture.nativeElement as HTMLElement };
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    spyOn(console, 'error');
+  });
+
+  afterEach(() => http.verify());
+
+  it('says it is loading before the answer arrives', () => {
+    const { host } = render();
+
+    expect(host.textContent).toContain('Loading');
+    http.expectOne('/api/community/insights');
+  });
+
+  it('shows the designed empty state when there is not enough data', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush({ ...ready, status: 'not-enough-data', dimensions: [] });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(host.textContent).toContain('Totals appear once enough matches have been uploaded');
+    expect(host.querySelector('table, app-column-chart')).toBeNull();
+  });
+
+  it('says it cannot be loaded, not that there is no data, when the request fails', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush('down', { status: 500, statusText: 'Server Error' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(host.textContent).toContain('could not be loaded');
+    expect(host.textContent).not.toContain('not enough data yet');
+  });
+
+  it('charts the shown buckets and prints every figure, with the words for a hidden one, in a hidden table', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush(ready);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const rows = Array.from(host.querySelectorAll('app-column-chart tbody tr')).map((row) =>
+      Array.from(row.querySelectorAll('th, td'))
+        .map((cell) => cell.textContent?.trim())
+        .join(' | '),
+    );
+    expect(host.querySelector('app-column-chart table')?.classList).toContain('visually-hidden');
+    expect(host.querySelector('app-column-chart .plot')?.getAttribute('aria-hidden')).toBe('true');
+    expect(host.querySelector('app-column-chart caption')?.textContent).toBe('Day of the week: share of matches and win rate');
+    expect(rows).toEqual(['Monday | 100% | 55%', 'Tuesday | Not enough data yet | Not enough data yet']);
+    expect(host.textContent).toContain('All days and times are UTC.');
+    expect(host.textContent).toContain('30 minutes without a match');
+    expect(host.textContent).not.toContain('NaN');
+  });
+
+  it('shows a dash for a bucket with no figure and says what it means, so the state is not only in the hidden table', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush(ready);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(Array.from(host.querySelectorAll('.plot .none'), (dash) => dash.getAttribute('title'))).toEqual([
+      'Tuesday: Share of matches Not enough data yet',
+      'Tuesday: Win rate Not enough data yet',
+    ]);
+    expect(host.querySelector('.empty-key')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('– not enough data yet, or too few results for a win rate');
+  });
+
+  it('opens every panel', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush({
+      ...ready,
+      dimensions: [ready.dimensions[0], { ...ready.dimensions[0], id: 'time-of-day', title: 'Time of day' }],
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(Array.from(host.querySelectorAll('details.stat-panel'), (panel) => (panel as HTMLDetailsElement).open)).toEqual([true, true]);
+  });
+
+  it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush(ready);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(host.querySelector('.stat-how > summary')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'How these are counted for when the community plays',
+    );
+  });
+});

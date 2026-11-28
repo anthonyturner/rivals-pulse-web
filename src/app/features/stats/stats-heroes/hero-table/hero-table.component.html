@@ -1,0 +1,125 @@
+@let v = view();
+
+<p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+
+@if (v.state === 'full' || v.state === 'partial') {
+  <div class="filters">
+    <label class="hero-search">
+      <span>Search heroes</span>
+      <input type="search" [value]="search()" (input)="searchHeroes($event)" placeholder="Hero name" />
+    </label>
+    <app-filter-select label="Role" [options]="roleChoices()" [value]="role()" (valueChange)="chooseRole($event)" />
+    <app-filter-select label="Sort" [options]="sortChoices" [value]="sort()" (valueChange)="chooseSort($event)" />
+  </div>
+  <p class="summary-scope">Summary for these filters, among heroes with {{ v.placementLabel }}.</p>
+  <div class="summary" aria-label="Hero stats summary">
+    <button type="button" (click)="chooseSort('win-desc')" [attr.aria-pressed]="sort() === 'win-desc'">
+      <span>Highest win rate</span>
+      @if (leaders().win; as hero) {
+        <strong>{{ hero.name }}</strong><span>{{ hero.winRateLabel }}</span>
+      } @else { <strong>No qualified heroes</strong> }
+    </button>
+    <button type="button" (click)="chooseSort('pick-desc')" [attr.aria-pressed]="sort() === 'pick-desc'">
+      <span>Most picked</span>
+      @if (leaders().pick; as hero) {
+        <strong>{{ hero.name }}</strong><span>{{ hero.pickRateLabel }}</span>
+      } @else { <strong>No pick figures available</strong> }
+    </button>
+    <div class="ban-summary"><span>Ban data</span><strong>Not collected</strong><span>Ban rates are unavailable.</span></div>
+  </div>
+  @if (rows().length === 0 && buildingRows().length === 0 && (search() || role())) {
+    <app-state-panel heading="No heroes match these filters" [headingLevel]="3">
+      <p>Try another hero name or role.</p>
+      <button type="button" class="reset-filters" (click)="resetFilters()">Clear filters</button>
+    </app-state-panel>
+  }
+}
+
+@switch (v.state) {
+  @case ('empty') {
+    <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}" [headingLevel]="3">
+      <p>
+        No matches with a result {{ v.scopeLabel }} yet. Win rates appear here as RivalsPulse
+        players record matches, once a hero has {{ v.placementLabel }}.
+      </p>
+    </app-state-panel>
+  }
+  @case ('partial') {
+    <app-state-panel heading="Not enough data yet {{ v.scopeLabel }}" [headingLevel]="3">
+      <p>
+        {{ v.decidedMatchesLabel }} {{ v.scopeLabel }} so far, but no hero has reached
+        {{ v.placementLabel }}. A hero's win rate appears once it has.
+      </p>
+    </app-state-panel>
+  }
+  @case ('full') {
+    @if (rows().length > 0) {
+      <div class="card">
+        <h3 id="rates-title">Heroes · {{ orderLabel() }}</h3>
+        <table role="table" aria-labelledby="rates-title" aria-describedby="ban-note">
+          <thead role="rowgroup">
+            <tr role="row">
+              <th role="columnheader" scope="col" class="col-rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank</span></th>
+              <th role="columnheader" scope="col">Hero</th>
+              <th role="columnheader" scope="col" class="col-role">Role</th>
+              <th role="columnheader" scope="col" class="col-rate" aria-label="Win rate" [attr.aria-sort]="winSort()">
+                <button type="button" (click)="sortColumn('win')">Win rate<span aria-hidden="true"> {{ winSort() === 'descending' ? '↓' : winSort() === 'ascending' ? '↑' : '↕' }}</span></button>
+              </th>
+              <th role="columnheader" scope="col" class="col-pick" aria-label="Pick rate" [attr.aria-sort]="pickSort()">
+                <button type="button" (click)="sortColumn('pick')">Pick rate<span aria-hidden="true"> {{ pickSort() === 'descending' ? '↓' : pickSort() === 'ascending' ? '↑' : '↕' }}</span></button>
+              </th>
+              <th role="columnheader" scope="col" class="col-ban">Ban rate</th>
+              <th role="columnheader" scope="col" class="col-games">Wins / games</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            @for (row of rows(); track row.hero) {
+              <tr role="row">
+                <td role="cell" class="col-rank">{{ row.rank }}</td>
+                <th role="rowheader" scope="row" class="col-hero">
+                  <a class="hero-link" [routerLink]="['/heroes', row.hero]">
+                    <img appHeroImageFallback [src]="row.imageUrl" alt="" width="28" height="28" loading="lazy" />
+                    <span class="hero-name">{{ row.name }}</span>
+                  </a>
+                  @if (row.role) {
+                    <span class="role-under">{{ row.role }}</span>
+                  }
+                </th>
+                <td role="cell" class="col-role">{{ row.role }}</td>
+                <td role="cell" class="col-rate">
+                  <span class="mobile-label" aria-hidden="true">Win rate</span>
+                  <div class="rate" [attr.data-tone]="row.tone">
+                    <strong>{{ row.winRateLabel }}</strong>
+                    <span class="bar" aria-hidden="true">
+                      <span class="bar-fill" [style.width.%]="row.barPercent"></span>
+                    </span>
+                  </div>
+                </td>
+                <td role="cell" class="col-pick"><span class="mobile-label" aria-hidden="true">Pick rate</span><strong>{{ row.pickRateLabel }}</strong></td>
+                <td role="cell" class="col-ban"><span class="mobile-label" aria-hidden="true">Ban rate</span><span>Not collected</span></td>
+                <td role="cell" class="col-games">
+                  <span class="mobile-label" aria-hidden="true">Wins / games</span>
+                  <span class="visually-hidden">{{ row.winsGamesSpoken }}</span>
+                  <span aria-hidden="true">{{ row.winsGamesLabel }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}
+
+@if ((v.state === 'full' || v.state === 'partial') && buildingRows().length > 0) {
+  <section class="building" aria-labelledby="building-title">
+    <div class="section-heading">
+      <h3 id="building-title">Progress toward a win rate</h3>
+      <p>Building sample. Heroes need {{ v.placementLabel }} before win and pick rates appear. Ban rates are not collected.</p>
+    </div>
+
+    <app-hero-progress-list [rows]="buildingRows()" />
+  </section>
+}
+
+<p class="method-note" id="ban-note">Ban rates are not collected yet. Missing ban data does not mean a 0% ban rate.</p>

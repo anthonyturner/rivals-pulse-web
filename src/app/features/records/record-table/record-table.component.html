@@ -1,0 +1,36 @@
+<table [attr.aria-labelledby]="labelledBy()">
+  <thead>
+    <tr>
+      <th scope="col" class="place"><span aria-hidden="true">#</span><span class="visually-hidden">Place</span></th>
+      <th scope="col">Hero</th>
+      <th scope="col">Player</th>
+      <th scope="col" class="value">{{ valueLabel() }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track row.place) {
+      <tr [class.top]="row.place === 1">
+        <td class="place">{{ row.place }}</td>
+        <td>
+          <div class="hero">
+            @if (row.hero; as hero) {
+              <img appHeroImageFallback [src]="hero.imageUrl" alt="" width="28" height="28" loading="lazy" />
+              <span class="hero-name">{{ hero.name }}</span>
+            } @else {
+              <span class="hero-tile" aria-hidden="true"></span>
+              <span class="hero-name">Unknown hero</span>
+            }
+          </div>
+        </td>
+        <th scope="row" class="player">
+          @if (row.player; as name) {
+            <span class="name">{{ name }}</span>
+          } @else {
+            <span class="anonymous">Anonymous</span>
+          }
+        </th>
+        <td class="value">{{ row.value }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

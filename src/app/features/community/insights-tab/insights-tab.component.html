@@ -1,0 +1,42 @@
+@let current = view();
+
+<app-community-summary
+  [kind]="current.kind"
+  heading="When the community plays and wins"
+  subject="when the community plays"
+  [summary]="summary"
+>
+  @if (current.kind === 'ready') {
+    <details class="stat-how">
+      <summary>How these are counted<span class="visually-hidden"> for when the community plays</span></summary>
+      <p class="stat-note">{{ current.note }}</p>
+    </details>
+
+    <div class="stat-grid stat-grid--thirds">
+      @for (dimension of current.dimensions; track dimension.id) {
+        <details class="stat-panel" open>
+          <summary class="stat-panel__summary">
+            <h3 class="stat-panel__title">{{ dimension.title }}</h3>
+          </summary>
+          <div class="stat-panel__body">
+            @if (dimension.columns.length > 0) {
+              <app-column-chart
+                [caption]="dimension.caption"
+                rowHeader="When"
+                emptyLabel="Not enough data yet"
+                emptyKey="not enough data yet, or too few results for a win rate"
+                [lanes]="dimension.lanes"
+                [columns]="dimension.columns"
+                [showValues]="dimension.showValues"
+              />
+            } @else {
+              <p class="stat-note">Not enough data yet.</p>
+            }
+          </div>
+        </details>
+      } @empty {
+        <p class="stat-note">Not enough data yet.</p>
+      }
+    </div>
+  }
+</app-community-summary>

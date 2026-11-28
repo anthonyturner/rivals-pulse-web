@@ -1,0 +1,11 @@
+<dl class="figures">
+  @for (figure of figures(); track figure.label) {
+    <div class="figure">
+      <dt class="label">{{ figure.label }}</dt>
+      <dd class="value" [class.value--missing]="!figure.counted">{{ figure.value }}</dd>
+      @if (figure.detail; as detail) {
+        <dd class="detail">{{ detail }}</dd>
+      }
+    </div>
+  }
+</dl>

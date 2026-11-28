@@ -1,0 +1,81 @@
+@if (guide(); as currentGuide) {
+  <article class="field-guide page-container" aria-labelledby="strategist-title">
+    <header class="field-guide__header">
+      <div class="field-guide__heading">
+        <nav class="field-guide__back" aria-label="Breadcrumb">
+          <a routerLink="/hero-guides">Guides</a><span aria-hidden="true"> / </span>
+          <a routerLink="/strategist-guides">Strategist guides</a><span aria-hidden="true"> / </span>
+          <span aria-current="page">{{ currentGuide.shortTitle }}</span>
+        </nav>
+        <app-eyebrow>{{ currentGuide.category }} &middot; {{ currentGuide.duration }} &middot; {{ currentGuide.heroFocus }}</app-eyebrow>
+        <h1 id="strategist-title">{{ currentGuide.title }}</h1>
+        <p class="field-guide__lede">{{ currentGuide.summary }}</p>
+        <div class="field-guide__framing"><p><strong>What you will learn.</strong> {{ currentGuide.outcome }}</p></div>
+        <p class="field-guide__source-credit"><a [href]="videoUrl()" target="_blank" rel="noopener">Open source video<span class="visually-hidden"> (opens YouTube in a new tab)</span></a></p>
+      </div>
+      <img class="field-guide__portrait" appHeroImageFallback [src]="currentGuide.heroImage" alt="" width="112" height="112" />
+    </header>
+    <div class="era"><app-notice><strong>Source-era note.</strong> {{ currentGuide.sourceEra }}</app-notice></div>
+    <div class="field-guide__layout">
+      <aside class="field-guide__rail"><app-guide-chapters [chapters]="chapters()" /></aside>
+      <div class="field-guide__body">
+        @if (article(); as lesson) {
+          <p class="opening">{{ lesson.introduction }}</p>
+        }
+        @for (principle of principles(); track principle.id) {
+          <section class="field-guide__chapter" [id]="principle.id" tabindex="-1">
+            <span class="field-guide__number" aria-hidden="true">{{ principle.number }}</span>
+            <h2>{{ principle.title }}</h2><p>{{ principle.body }}</p>
+          </section>
+        }
+        <section id="decisions" class="field-guide__chapter" tabindex="-1">
+          <h2>Read the situation, choose the action</h2>
+          <p>Use these as decisions to revisit during the fight. If the situation changes, change the action with it.</p>
+          <table class="rules" role="table">
+            <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">When</th><th role="columnheader" scope="col">Do</th></tr></thead>
+            <tbody role="rowgroup">
+              @for (rule of currentGuide.decisionRules; track rule.when) {
+                <tr role="row"><th role="rowheader" scope="row" data-label="When">{{ rule.when }}</th><td role="cell" data-label="Do">{{ rule.action }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </section>
+        @if (article(); as lesson) {
+          <section id="worked-example" class="field-guide__example" tabindex="-1">
+            <span class="field-guide__label">Worked example</span><h2>{{ lesson.exampleTitle }}</h2>
+            @for (paragraph of lesson.example; track $index) { <p>{{ paragraph }}</p> }
+          </section>
+        }
+        <section id="practice" class="field-guide__practice" tabindex="-1">
+          <h2>Turn it into a habit</h2>
+          @if (article(); as lesson) { <p>{{ lesson.practice }}</p> }
+          @for (drill of currentGuide.drills; track drill.title) {
+            <h3>{{ drill.title }}</h3><p>{{ drill.instructions }}</p><p class="success"><strong>Success check:</strong> {{ drill.success }}</p>
+          }
+        </section>
+        <section id="moments" class="field-guide__source" tabindex="-1">
+          <h2>Return to the source moments</h2>
+          <p>These links use the original video's verified checkpoints. Examples above are practice scenarios, not additional events attributed to the video.</p>
+          <ul class="checkpoints">
+            @for (checkpoint of checkpoints(); track checkpoint.time) {
+              <li><a class="checkpoint" [href]="checkpoint.url" target="_blank" rel="noopener"><time>{{ checkpoint.time }}</time><span><strong>{{ checkpoint.label }}</strong><span class="note">{{ checkpoint.note }}</span></span><span class="visually-hidden"> (opens YouTube in a new tab)</span></a></li>
+            }
+          </ul>
+          @if (embedUrl(); as source) {
+            <details><summary>Watch source video</summary><div class="field-guide__video"><iframe [src]="source" [title]="currentGuide.title" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></details>
+          }
+        </section>
+        <section id="review" class="field-guide__chapter" tabindex="-1">
+          <h2>Questions for your next replay</h2>
+          <ol class="guide-steps">@for (question of currentGuide.reviewQuestions; track question) { <li>{{ question }}</li> }</ol>
+        </section>
+        @if (relatedGuides().length > 0) {
+          <section class="field-guide__chapter"><h2>Keep learning</h2><ul class="related-guides">
+            @for (related of relatedGuides(); track related.id) { <li><app-guide-card [headingLevel]="3" [title]="related.title" [route]="related.route" [imageUrl]="related.imageUrl" [caption]="related.caption" /></li> }
+          </ul></section>
+        }
+        <p><a routerLink="/hero-guides">Back to Guides</a></p>
+      </div>
+    </div>
+  </article>
+}

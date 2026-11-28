@@ -1,0 +1,44 @@
+<header class="tab-header">
+  <h2 class="tab-title">{{ heading() }}</h2>
+  @if (halfSeasonLabel(); as label) {
+    <app-kind-chip class="tab-scope" kind="tertiary" [label]="label" />
+  }
+</header>
+
+@switch (kind()) {
+  @case ('loading') {
+    <app-state-panel kind="loading" [heading]="loadingHeading()" [headingLevel]="3">
+      <p>Fetching the latest counted matches.</p>
+    </app-state-panel>
+  }
+  @case ('unavailable') {
+    <app-state-panel kind="error" [heading]="unavailableHeading()" [headingLevel]="3">
+      <p>The numbers are unavailable right now. Try again in a few minutes. The rest of this page is not affected.</p>
+    </app-state-panel>
+  }
+  @case ('not-enough-data') {
+    <app-state-panel>
+      <p>{{ summary() }}</p>
+      @if (link(); as full) {
+        <a class="pill-link" [routerLink]="full.path" [queryParams]="full.queryParams">{{ full.label }}</a>
+      }
+    </app-state-panel>
+  }
+  @case ('ready') {
+    @if (notice(); as text) {
+      <app-notice><strong>Previous half-season.</strong> {{ text }}</app-notice>
+    }
+
+    <ng-content />
+
+    @if (footnote(); as text) {
+      <p class="footnote">{{ text }}</p>
+    }
+
+    @if (link(); as full) {
+      <p class="pill-links">
+        <a class="pill-link" [routerLink]="full.path">{{ full.label }}</a>
+      </p>
+    }
+  }
+}

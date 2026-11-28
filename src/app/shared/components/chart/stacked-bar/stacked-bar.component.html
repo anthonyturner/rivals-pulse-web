@@ -1,0 +1,18 @@
+<div class="bar" aria-hidden="true">
+  @for (part of view(); track $index) {
+    @if (part.width > 0) {
+      <span class="part" [class]="'part s' + part.series" [style.width.%]="part.width" [attr.title]="part.title"></span>
+    }
+  }
+</div>
+<ul class="legend">
+  @for (part of view(); track $index) {
+    <li class="item">
+      <span class="swatch" [class]="'swatch s' + part.series" aria-hidden="true"></span>
+      <span class="name">{{ part.label }}</span>&ngsp;<span class="figure">{{ part.valueLabel }}</span>
+      @if (part.detail) {
+        &ngsp;<span class="detail">{{ part.detail }}</span>
+      }
+    </li>
+  }
+</ul>

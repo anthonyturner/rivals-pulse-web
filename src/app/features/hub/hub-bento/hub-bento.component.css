@@ -1,0 +1,68 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.bento {
+  display: grid;
+  grid-auto-rows: minmax(140px, auto);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cell {
+  grid-column: span 2;
+  min-width: 0;
+}
+
+.cell[data-size='feature'] {
+  grid-column: span 4;
+  grid-row: span 2;
+}
+
+.cell[data-size='tall'] {
+  grid-row: span 2;
+}
+
+.cell[data-size='half'] {
+  grid-column: span 3;
+}
+
+.cell[data-size='wide'] {
+  grid-column: 1 / -1;
+}
+
+/* Two columns: the big tiles take a full row, and the small ones sit side by side. */
+@media (max-width: 860px) {
+  .bento {
+    grid-auto-rows: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cell,
+  .cell[data-size='feature'],
+  .cell[data-size='tall'],
+  .cell[data-size='half'],
+  .cell[data-size='wide'],
+  .cell[data-size='note'] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .cell[data-size='third'] {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cell[data-size='third'] {
+    grid-column: 1 / -1;
+  }
+}

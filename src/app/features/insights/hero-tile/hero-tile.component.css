@@ -1,0 +1,150 @@
+:host {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--hero-thumb) minmax(0, 1fr);
+  gap: 0 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+}
+
+:host(.selectable:hover) {
+  border-color: var(--border-strong);
+  background: var(--bg-panel-soft);
+}
+
+:host(.selected) {
+  border-color: var(--accent);
+  background: var(--bg-panel-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+img {
+  grid-row: 1 / span 2;
+  width: var(--hero-thumb);
+  height: var(--hero-thumb);
+  border-radius: 6px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.details {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.hero-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--type-small);
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name-link {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.name-link:hover {
+  color: var(--link);
+}
+
+/* The link covers the whole tile, so the ring does too. */
+.name-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+}
+
+.name-link:focus-visible {
+  outline: none;
+}
+
+.name-link:focus-visible::after {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  :host {
+    padding: 6px;
+  }
+
+  .hero-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* The art-led tile of the redesigned pages. A role sets one colour for the wash, the ring and the edge. */
+:host(.art-led) {
+  --tile-role-color: var(--hero-role-color, var(--accent));
+  --tile-role-ink: var(--hero-role-ink, var(--accent-strong));
+
+  box-sizing: border-box;
+  height: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--tile-role-color) 16%, var(--bg-panel)),
+    var(--bg-panel) 75%
+  );
+}
+
+:host(.art-led) img {
+  box-sizing: border-box;
+  border: 2px solid color-mix(in srgb, var(--tile-role-color) 70%, transparent);
+  border-radius: 10px;
+}
+
+:host(.art-led.linked:hover) {
+  border-color: var(--border-strong);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--tile-role-color) 24%, var(--bg-panel)),
+    var(--bg-panel) 75%
+  );
+  box-shadow: var(--shadow-soft);
+}
+
+:host(.art-led) .name-link::after {
+  border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host(.art-led.linked) {
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  :host(.art-led.linked:hover) {
+    transform: translateY(-3px);
+  }
+}
+
+@media (max-width: 560px) {
+  :host(.art-led) {
+    padding: 8px;
+  }
+}

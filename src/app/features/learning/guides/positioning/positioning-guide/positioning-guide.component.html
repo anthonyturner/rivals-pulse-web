@@ -1,0 +1,99 @@
+<div class="field-guide page-container">
+  <header class="field-guide__header">
+    <div class="field-guide__heading">
+      <p class="field-guide__back"><a routerLink="/hero-guides">Back to Guides</a></p>
+      <app-eyebrow>Positioning</app-eyebrow>
+      <h1>{{ guide().title }}</h1>
+      <p class="field-guide__lede">{{ guide().lede }}</p>
+      <p class="field-guide__source-credit">
+        Source:
+        <a [href]="guide().sourceUrl" target="_blank" rel="noopener noreferrer">
+          {{ guide().sourceLabel }}<span class="visually-hidden"> (opens YouTube in a new tab)</span>
+        </a>
+      </p>
+    </div>
+  </header>
+
+  <div class="field-guide__layout">
+    <aside class="field-guide__rail"><app-guide-chapters [chapters]="chapters()" /></aside>
+    <article class="field-guide__body">
+      @for (section of sections(); track section.id) {
+        <section class="field-guide__chapter" [id]="section.id">
+          <span class="field-guide__number" aria-hidden="true">{{ section.number }}</span>
+          <h2>{{ section.title }}</h2>
+          @for (paragraph of section.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
+          @if ($first) {
+            <figure class="diagram">
+              <div class="diagram-rows" aria-hidden="true">
+                @for (row of guide().diagram.rows; track $index) {
+                  <div>
+                    @if (row.label) { <p class="row-label">{{ row.label }}</p> }
+                    <ol class="flow">
+                      @for (node of row.nodes; track node.text) {
+                        <li [class.key]="node.key">{{ node.text }}</li>
+                      }
+                    </ol>
+                  </div>
+                }
+              </div>
+              <figcaption>{{ guide().diagram.caption }}</figcaption>
+            </figure>
+          }
+        </section>
+      }
+
+      <section class="field-guide__chapter" id="position-test">
+        <h2>Five-question test</h2>
+        <p>Use these checks together before committing. A position is useful when its pressure, information and recovery choices fit the fight your team is playing.</p>
+        <ol class="checks">
+          @for (item of guide().checklist; track item.label) {
+            <li><strong>{{ item.label }}.</strong> {{ item.detail }}</li>
+          }
+        </ol>
+      </section>
+
+      <section class="field-guide__chapter" id="role-notes">
+        <h2>{{ guide().notesTitle }}</h2>
+        <dl class="notes">
+          @for (note of guide().notes; track note.label) {
+            <dt>{{ note.label }}</dt><dd>{{ note.detail }}</dd>
+          }
+        </dl>
+      </section>
+
+      <section class="field-guide__chapter" id="practice-drills">
+        <h2>Practice drills</h2>
+        <p>Choose one exercise at a time. Test it in a match or practice setting, then use the replay to check the decision rather than judging only the result.</p>
+        @for (drill of guide().drills; track drill.label) {
+          <h3>{{ drill.label }}</h3><p>{{ drill.detail }}</p>
+        }
+      </section>
+
+      <section class="field-guide__example" id="worked-example">
+        <span class="field-guide__label">Worked example</span>
+        <h2>{{ guide().workedExample.title }}</h2>
+        @for (paragraph of guide().workedExample.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
+      </section>
+
+      <section class="field-guide__practice" id="next-match">
+        <h2>Try this next match</h2><p>{{ guide().practiceFocus }}</p>
+      </section>
+
+      <section class="field-guide__source" id="sources">
+        <h2>Source moments</h2>
+        <p>These links open the original source at the recorded discussion times. Apply the positioning decisions to the routes, abilities and team setup in your own match.</p>
+        <ul class="timeline">
+          @for (timestamp of timestamps(); track timestamp.label) {
+            <li>
+              <a [href]="timestamp.url" [attr.aria-describedby]="'stamp-' + $index" target="_blank" rel="noopener noreferrer">
+                {{ timestamp.label }}<span class="visually-hidden"> (opens YouTube in a new tab)</span>
+              </a>
+              <span [id]="'stamp-' + $index">{{ timestamp.detail }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+      <p class="field-guide__back"><a routerLink="/hero-guides">Back to Guides</a></p>
+    </article>
+  </div>
+</div>

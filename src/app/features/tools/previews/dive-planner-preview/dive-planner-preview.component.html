@@ -1,0 +1,23 @@
+@if (view(); as preview) {
+  <div class="dive">
+    <div class="group">
+      <span class="label">Enemy</span>
+      <ul class="heroes heroes--enemy">
+        @for (hero of preview.threats; track hero.hero) {
+          <li><app-preview-portrait [src]="hero.imageUrl" /></li>
+        }
+      </ul>
+    </div>
+    <svg class="arrow" viewBox="0 0 24 24" width="20" height="20" focusable="false">
+      <path d="M12 4v13m0 0-5-5m5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <div class="group">
+      <span class="label">Answer</span>
+      <ul class="heroes heroes--answer">
+        @for (hero of preview.answers; track hero.hero) {
+          <li><app-preview-portrait [src]="hero.imageUrl" /></li>
+        }
+      </ul>
+    </div>
+  </div>
+}

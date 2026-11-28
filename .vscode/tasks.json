@@ -3,9 +3,19 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Install dependencies",
+      "type": "shell",
+      "command": "npm ci",
+      "problemMatcher": [],
+      "inAgents": true,
+      "runOptions": { "runOn": "worktreeCreated" }
+    },
+    {
+      "label": "Start dev server",
       "type": "npm",
       "script": "start",
       "isBackground": true,
+      "inAgents": true,
       "problemMatcher": {
         "owner": "typescript",
         "pattern": "$tsc",
@@ -20,6 +30,7 @@
         }
       }
     },
+
     {
       "type": "npm",
       "script": "test",

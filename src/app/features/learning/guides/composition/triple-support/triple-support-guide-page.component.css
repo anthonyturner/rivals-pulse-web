@@ -1,0 +1,9 @@
+:host { display: block; min-width: 0; }
+.hero-options { margin: 18px 0 0; }
+.hero-options dt { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: var(--text); font-weight: 800; }
+.hero-options img { flex-shrink: 0; border-radius: 5px; object-fit: cover; }
+.hero-options dd { margin: 6px 0 0; }
+.plan-steps, .fight-checks, .traps { padding-left: 24px; margin-top: 16px; }
+.plan-steps li + li, .fight-checks li + li, .traps li + li { margin-top: 12px; }
+.plan-heroes { margin-top: 24px; }
+.plan-heroes summary { color: var(--link); text-decoration: underline; text-underline-offset: 3px; font-size: var(--type-small); font-weight: 700; cursor: pointer; }

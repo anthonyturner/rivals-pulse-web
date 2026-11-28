@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.page-header {
+  display: grid;
+  gap: 4px;
+  padding-block: 8px 12px;
+}
+
+h1,
+.description {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  color: var(--text);
+  font-size: var(--type-page-title);
+  line-height: 1.1;
+  font-weight: 850;
+}
+
+.description {
+  max-width: 70ch;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  line-height: 1.4;
+}
+
+.description--projected {
+  display: grid;
+  gap: 4px;
+}
+
+.description--projected:empty {
+  display: none;
+}

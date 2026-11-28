@@ -1,0 +1,138 @@
+@if (guide(); as guide) {
+  <article class="field-guide page-container" aria-labelledby="guide-title">
+    <p class="field-guide__back"><a routerLink="/hero-guides">Back to Guides</a></p>
+
+    <header class="field-guide__header">
+      <div class="field-guide__heading">
+        <app-eyebrow>{{ guide.role }} guide</app-eyebrow>
+        <h1 id="guide-title">{{ guide.heroName }}</h1>
+        <p class="field-guide__lede">{{ guide.summary }}</p>
+        <div class="field-guide__framing">
+          <p><strong>Your job.</strong> {{ guide.poolJob }}</p>
+          <p>{{ guide.pickWhen }}</p>
+        </div>
+        <p class="field-guide__source-credit">
+          Source:
+          @if (guide.sourceUrl) {
+            <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">
+              {{ guide.sourceLabel }}<span class="visually-hidden"> (opens YouTube in a new tab)</span>
+            </a>
+          } @else {
+            {{ guide.sourceLabel }}
+          }
+        </p>
+        @if (guide.sourceUrl) {
+          <p class="field-guide__caveat">
+            The examples follow the source review. Hero kits and balance may differ from the current
+            game; use the decision process and check current ability values in-game.
+          </p>
+        }
+      </div>
+      <img class="field-guide__portrait" appHeroImageFallback [src]="guide.image" alt="" width="112" height="112" />
+    </header>
+
+    <div class="field-guide__layout">
+      <aside class="field-guide__rail">
+        <app-guide-chapters [chapters]="chapters()" />
+      </aside>
+
+      <div class="field-guide__body">
+        @for (section of sections(); track section.id) {
+          <section class="field-guide__chapter" [id]="section.id" tabindex="-1" [attr.aria-labelledby]="section.id + '-title'">
+            <span class="field-guide__number" aria-hidden="true">{{ section.number }}</span>
+            <h2 [id]="section.id + '-title'">{{ section.title }}</h2>
+            @for (paragraph of section.paragraphs; track $index) {
+              <p>{{ paragraph }}</p>
+            }
+          </section>
+        }
+
+        @if (guide.workedExample; as example) {
+          <section id="worked-example" class="field-guide__example" tabindex="-1" aria-labelledby="worked-example-title">
+            <span class="field-guide__label">Worked example</span>
+            <h2 id="worked-example-title">{{ example.title }}</h2>
+            @for (paragraph of example.paragraphs; track $index) {
+              <p>{{ paragraph }}</p>
+            }
+            @if (example.sourceUrl) {
+              <p class="field-guide__moment">
+                <a [href]="example.sourceUrl" target="_blank" rel="noopener noreferrer">
+                  Watch this source moment<span class="visually-hidden"> (opens YouTube in a new tab)</span>
+                </a>
+              </p>
+            }
+          </section>
+        }
+
+        @if (guide.practiceFocus; as practice) {
+          <section id="next-match" class="field-guide__practice" tabindex="-1" aria-labelledby="next-match-title">
+            <h2 id="next-match-title">Try this next match</h2>
+            <p>{{ practice }}</p>
+          </section>
+        }
+
+        @if (guide.ultimates.length > 0) {
+          <section id="ultimates" class="field-guide__chapter" tabindex="-1" aria-labelledby="ultimates-title">
+            <h2 id="ultimates-title">Ultimates and matchups</h2>
+            @for (ultimate of guide.ultimates; track ultimate.name) {
+              <h3>{{ ultimate.name }}</h3>
+              <p>{{ ultimate.plan }}</p>
+              <dl class="field-guide__matchups">
+                @if (ultimate.goodAgainst.length > 0) {
+                  <dt>Good against</dt>
+                  <dd>{{ ultimate.goodAgainst.join(', ') }}</dd>
+                }
+                @if (ultimate.avoidInto.length > 0) {
+                  <dt>Be careful into</dt>
+                  <dd>{{ ultimate.avoidInto.join(', ') }}</dd>
+                }
+              </dl>
+            }
+          </section>
+        }
+
+        <section id="sources" class="field-guide__source" tabindex="-1" aria-labelledby="sources-title">
+          <h2 id="sources-title">Sources and further reading</h2>
+          @if (guide.sourceUrl) {
+            <p>
+              This lesson is written in our own words from
+              <a [href]="guide.sourceUrl" target="_blank" rel="noopener noreferrer">
+                {{ guide.sourceLabel }}<span class="visually-hidden"> (opens YouTube in a new tab)</span>
+              </a>.
+            </p>
+          } @else {
+            <p>{{ guide.sourceLabel }}</p>
+          }
+          @if (sourceEmbedUrl(); as embedUrl) {
+            <details>
+              <summary>Watch source video</summary>
+              <div class="field-guide__video">
+                <iframe
+                  [src]="embedUrl"
+                  [title]="guide.heroName + ' guide video'"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </details>
+          }
+          @if (guide.articleSources; as articles) {
+            <p>Claims credited to a site are that site's advice, not RivalsPulse data.</p>
+            <ul class="field-guide__source-list">
+              @for (article of articles; track article.url) {
+                <li>
+                  <a [href]="article.url" target="_blank" rel="noopener noreferrer">
+                    {{ article.label }}<span class="visually-hidden"> (opens in a new tab)</span>
+                  </a>.
+                  {{ article.note }}
+                </li>
+              }
+            </ul>
+          }
+          <p><a routerLink="/hero-guides">Back to Guides</a></p>
+        </section>
+      </div>
+    </div>
+  </article>
+}
