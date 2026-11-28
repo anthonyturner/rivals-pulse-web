@@ -6,6 +6,8 @@ import {
   halfSeasonFallbackNotice,
   percentLabel,
   placementRequirementLabel,
+  sideOfFifty,
+  type RateSide,
 } from '../../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../../../insights/half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../../../insights/hero-identity';
@@ -19,7 +21,7 @@ export interface WinRateRowView extends HeroCellView {
   pickRateLabel: string;
   /** Where the bar's fill ends, as a share of its width. */
   barPercent: number;
-  tone: 'above' | 'even' | 'below';
+  tone: RateSide;
   appearances: number;
   /** "11 / 14": wins, then games. */
   winsGamesLabel: string;
@@ -157,7 +159,7 @@ function rankedRow(
     pickRate: Number.isFinite(hero.pickRate) && hero.pickRate >= 0 ? hero.pickRate : null,
     pickRateLabel: Number.isFinite(hero.pickRate) && hero.pickRate >= 0 ? percentLabel(hero.pickRate) : 'Not available',
     barPercent: Math.min(100, Math.max(0, hero.winRate)),
-    tone: hero.winRate > 50 ? 'above' : hero.winRate < 50 ? 'below' : 'even',
+    tone: sideOfFifty(hero.winRate),
     appearances: hero.appearances,
     winsGamesLabel: `${hero.wins} / ${hero.appearances}`,
     winsGamesSpoken: `${wins} in ${games}`,

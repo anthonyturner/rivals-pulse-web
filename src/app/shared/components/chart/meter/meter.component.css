@@ -6,6 +6,18 @@
   min-width: 0;
 }
 
+:host([data-tone='above']) {
+  --meter-fill: var(--win-ink);
+}
+
+:host([data-tone='below']) {
+  --meter-fill: var(--loss-ink);
+}
+
+:host([data-tone='even']) {
+  --meter-fill: var(--text-soft);
+}
+
 .track {
   position: relative;
   display: block;
