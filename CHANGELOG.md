@@ -86,6 +86,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Changed
 
+- On the Stats overview, the four counted-matches figures take the full width of the card again, as they did before the hero tiles arrived, and the hero picked most and the hero with the highest win rate sit side by side in a row of their own below them, each a short card with its portrait at the side, still linking to its hero page ([#921](https://github.com/anthonyturner/rivals-pulse-web/pull/921)).
 - The Stats Matchups tab shows each counter matchup as two facing hero portraits ringed in their role colours with a win-rate gauge and a 50% mark between them, and the most-seen kills as the same facing cards, instead of lines of text; the matchup sentence is still each card's tooltip and the page text ([#915](https://github.com/anthonyturner/rivals-pulse-web/pull/915)).
 - The Stats overview shows the game modes as one stacked bar, each mode labelled with its share of the matches and its average match length, instead of a table ([#910](https://github.com/anthonyturner/rivals-pulse-web/pull/910)).
 - The Stats Roles tab now shows each role's damage, healing and damage blocked per minute as bars on a card in the role's colour, scaled so the roles compare, instead of a table; a figure with not enough data yet still says so ([#909](https://github.com/anthonyturner/rivals-pulse-web/pull/909)).
