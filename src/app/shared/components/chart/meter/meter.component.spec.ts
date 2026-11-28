@@ -9,6 +9,8 @@ import { MeterComponent } from './meter.component';
     <app-meter id="plain" [value]="30" />
     <app-meter id="guided" [value]="60" [min]="40" [max]="80" [guide]="50" />
     <app-meter id="over" [value]="250" />
+    <app-meter id="above" [value]="60" tone="above" />
+    <app-meter id="below" [value]="40" tone="below" />
   `,
 })
 class HostComponent {}
@@ -40,5 +42,14 @@ describe('MeterComponent', () => {
 
   it('is hidden from assistive technology', () => {
     expect(element.querySelector('#plain')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('takes its fill colour from the side of 50% it is given, and keeps the one set by its owner when it has none', () => {
+    const fillColour = (id: string): string => getComputedStyle(element.querySelector(`#${id} .fill`) as HTMLElement).backgroundColor;
+
+    expect(element.querySelector('#plain')?.hasAttribute('data-tone')).toBeFalse();
+    expect(element.querySelector('#above')?.getAttribute('data-tone')).toBe('above');
+    expect(fillColour('above')).not.toBe(fillColour('below'));
+    expect(fillColour('above')).not.toBe(fillColour('plain'));
   });
 });

@@ -1,5 +1,13 @@
 import type { HeroStats } from '../../../contracts/hero-stats.model';
 
+/** Which side of an even 50% a win rate is on. */
+export type RateSide = 'above' | 'even' | 'below';
+
+/** The one rule every win rate chart, gauge and bar uses to tell a rate above 50% from one below it, so they can never disagree. */
+export function sideOfFifty(winRate: number): RateSide {
+  return winRate > 50 ? 'above' : winRate < 50 ? 'below' : 'even';
+}
+
 /** A percentage to one decimal place, such as `54.2%`. */
 export function percentLabel(value: number): string {
   return `${value.toFixed(1)}%`;
