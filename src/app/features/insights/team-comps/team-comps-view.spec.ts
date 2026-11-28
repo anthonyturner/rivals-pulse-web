@@ -142,10 +142,10 @@ describe('buildTeamCompsView role pairs', () => {
   it('always lists the three roles in order, each with its heading', () => {
     const view = buildTeamCompsView(synergiesOf([]), identities);
 
-    expect(view.rolePairs.map(({ role, heading, id }) => [role, heading, id])).toEqual([
-      ['Vanguard', 'Vanguard duos', 'pairs-vanguard'],
-      ['Duelist', 'Duelist duos', 'pairs-duelist'],
-      ['Strategist', 'Strategist duos', 'pairs-strategist'],
+    expect(view.rolePairs.map(({ role, roleKey, heading, id }) => [role, roleKey, heading, id])).toEqual([
+      ['Vanguard', 'vanguard', 'Vanguard duos', 'pairs-vanguard'],
+      ['Duelist', 'duelist', 'Duelist duos', 'pairs-duelist'],
+      ['Strategist', 'strategist', 'Strategist duos', 'pairs-strategist'],
     ]);
   });
 
@@ -161,6 +161,20 @@ describe('buildTeamCompsView role pairs', () => {
     expect(first.rank).toBe(1);
     expect([second.winRateLabel, third.winRateLabel]).toEqual(['100.0%', '40.0%']);
     expect(second.matches).toBe(5);
+  });
+
+  it('gives each tile its matches label, the win rate as a number, its side of 50% and its weight', () => {
+    const view = buildTeamCompsView(synergiesOf([synergy('hulk', 'thor', 9, 12), synergy('hulk', 'venom', 3, 6)]), identities);
+    const [first, second] = view.rolePairs[0].rows;
+
+    expect([first.matchesLabel, first.winRate, first.tone, first.weight]).toEqual(['12 matches together', 75, 'above', 1]);
+    expect([second.matchesLabel, second.winRate, second.tone, second.weight]).toEqual(['6 matches together', 50, 'even', 0.5]);
+  });
+
+  it('says "1 match together" for a pair of one match', () => {
+    const view = buildTeamCompsView(synergiesOf([synergy('hulk', 'thor', 1, 1)]), identities);
+
+    expect(view.rolePairs[0].rows[0].matchesLabel).toBe('1 match together');
   });
 
   it('breaks a tie by matches together and then by hero id', () => {

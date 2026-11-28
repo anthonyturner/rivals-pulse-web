@@ -2,7 +2,7 @@ import type { HeroSynergies, HeroSynergy } from '../../../../contracts/hero-syne
 import type { TeamLineups } from '../../../../contracts/team-lineups.model';
 import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice, percentLabel, sideOfFifty, type RateSide } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 import { buildLineupsView, lineupsMethodNote, type LineupsView } from './lineups-view';
@@ -23,11 +23,21 @@ export interface RolePairRowView {
   first: HeroCellView;
   second: HeroCellView;
   matches: number;
+  /** "12 matches together". */
+  matchesLabel: string;
   winRateLabel: string;
+  /** The plain win rate as a number, 0 to 100, for the gauge. */
+  winRate: number;
+  /** Which side of 50% the win rate is on, so the gauge can be coloured; the 50% mark says the same. */
+  tone: RateSide;
+  /** Matches together against the most of any listed pair of the role, 0 to 1: how much weight the tile carries. */
+  weight: number;
 }
 
 export interface RolePairSectionView {
   role: PairRole;
+  /** The role as a style key, such as `vanguard`. */
+  roleKey: string;
   /** The heading's id, which the section's table is labelled by. */
   id: string;
   /** "Vanguard duos". */
@@ -118,6 +128,7 @@ export function buildTeamCompsView(
 export function rolePairsOf(synergies: HeroSynergies, identities: HeroIdentities): RolePairSectionView[] {
   return PAIR_ROLES.map((role) => ({
     role,
+    roleKey: role.toLowerCase(),
     id: `pairs-${role.toLowerCase()}`,
     heading: `${role} duos`,
     rows: rolePairRows(role, synergies.synergies, identities),
@@ -125,7 +136,7 @@ export function rolePairsOf(synergies: HeroSynergies, identities: HeroIdentities
 }
 
 function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identities: HeroIdentities): RolePairRowView[] {
-  return synergies
+  const listed = synergies
     .filter(
       (pair) =>
         Number.isFinite(pair.winRate) &&
@@ -139,14 +150,20 @@ function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identit
         a.hero.localeCompare(b.hero) ||
         a.ally.localeCompare(b.ally),
     )
-    .slice(0, PAIRS_PER_ROLE)
-    .map((pair, index) => ({
-      rank: index + 1,
-      first: pairHeroCell(pair.hero, pair.heroRole, identities),
-      second: pairHeroCell(pair.ally, pair.allyRole, identities),
-      matches: pair.matches,
-      winRateLabel: percentLabel(pair.winRate),
-    }));
+    .slice(0, PAIRS_PER_ROLE);
+  const most = Math.max(1, ...listed.map((pair) => pair.matches));
+
+  return listed.map((pair, index) => ({
+    rank: index + 1,
+    first: pairHeroCell(pair.hero, pair.heroRole, identities),
+    second: pairHeroCell(pair.ally, pair.allyRole, identities),
+    matches: pair.matches,
+    matchesLabel: `${countLabel(pair.matches, 'match', 'matches')} together`,
+    winRateLabel: percentLabel(pair.winRate),
+    winRate: pair.winRate,
+    tone: sideOfFifty(pair.winRate),
+    weight: pair.matches / most,
+  }));
 }
 
 /** The role a hero was played in: the form's, or the roster's for a hero with one role. */
