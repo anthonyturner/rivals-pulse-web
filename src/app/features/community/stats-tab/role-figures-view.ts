@@ -1,14 +1,31 @@
-import type { CommunityFigures, CommunityPerMinute } from '../../../../contracts/community-figures.model';
+import type { CommunityFigures, CommunityPerMinute, CommunityRoleFigures } from '../../../../contracts/community-figures.model';
 import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { DEFAULT_MODE_ID } from '../../../shared/utilities/play-modes';
 import { countLabel, halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 
-export interface RoleFigureRow {
-  role: string;
-  damage: string;
-  healing: string;
-  blocked: string;
+/** One figure of a role: its label, the number as text, and how long its bar is. */
+export interface RoleFigureBar {
+  label: string;
+  /** The figure with thousands separators, or "Not enough data". */
+  value: string;
+  /** The figure against the largest role's figure of the same kind, 0 to 100; null when the figure is not shown, so there is no bar to draw. */
+  percent: number | null;
 }
+
+/** One role's card: its three per-minute figures. */
+export interface RoleFigureCard {
+  role: string;
+  /** The role as a style key, such as `vanguard`. */
+  roleKey: string;
+  bars: RoleFigureBar[];
+}
+
+/** The figures a card carries, in order. */
+const FIGURES: readonly { key: keyof CommunityPerMinute; label: string }[] = [
+  { key: 'damage', label: 'Damage' },
+  { key: 'healing', label: 'Healing' },
+  { key: 'blocked', label: 'Damage blocked' },
+];
 
 export type RoleFiguresView =
   | { kind: 'loading' }
@@ -19,7 +36,7 @@ export type RoleFiguresView =
       halfSeasonLabel: string | null;
       /** The shared fallback sentence, set when the previous half-season stands in for the current one. */
       notice: string | null;
-      rows: RoleFigureRow[];
+      cards: RoleFigureCard[];
       note: string;
     };
 
@@ -76,12 +93,34 @@ export function buildRoleFiguresView(
     halfSeasonLabel,
     notice:
       figures.inPlaceOf === null ? null : halfSeasonFallbackNotice(figures.inPlaceOf.label, halfSeasonLabel),
-    rows: mode.roles.map((entry) => ({
-      role: entry.role,
-      damage: perMinuteLabel(entry.damage),
-      healing: perMinuteLabel(entry.healing),
-      blocked: perMinuteLabel(entry.blocked),
-    })),
+    cards: roleCards(mode.roles),
     note: NOTE,
   };
+}
+
+/** A figure that is shown, or null: a missing or non-finite one has no bar and is never read as zero. */
+function shown(value: number | null): number | null {
+  return value !== null && Number.isFinite(value) ? value : null;
+}
+
+/** Each figure is scaled to the largest role's, so the cards compare the roles on that figure and not one figure against another. */
+function roleCards(roles: readonly CommunityRoleFigures[]): RoleFigureCard[] {
+  const largest = new Map(
+    FIGURES.map(({ key }) => [key, Math.max(0, ...roles.map((entry) => shown(entry[key]) ?? 0))]),
+  );
+
+  return roles.map((entry) => ({
+    role: entry.role,
+    roleKey: entry.role.toLowerCase(),
+    bars: FIGURES.map(({ key, label }) => {
+      const value = shown(entry[key]);
+      const most = largest.get(key) ?? 0;
+
+      return {
+        label,
+        value: perMinuteLabel(entry[key]),
+        percent: value === null ? null : most > 0 ? (value / most) * 100 : 0,
+      };
+    }),
+  }));
 }
