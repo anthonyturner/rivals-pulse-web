@@ -1,6 +1,7 @@
 import type { CommunityKills } from '../../../../contracts/community-kills.model';
 import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
 import { heroCell, type HeroIdentities } from '../../insights/hero-identity';
+import { roleKeyOf } from './counters-tab-view';
 import { killPairMinimum, killPairSentence, killsBandLabel, topKillPairs } from '../../insights/hero-kill-feed';
 
 /** Pairs listed: a summary, not the whole kill feed. */
@@ -10,6 +11,8 @@ interface PairHero {
   hero: string;
   name: string;
   imageUrl: string;
+  /** The hero role as a style key, such as `vanguard`, or null when the roster does not know it. */
+  roleKey: string | null;
 }
 
 export interface KillPairView {
@@ -71,8 +74,8 @@ export function buildCountersKillFeedView(
 
       return {
         key: `${pair.killer}>${pair.victim}`,
-        killer: { hero: killer.hero, name: killer.name, imageUrl: killer.imageUrl },
-        victim: { hero: victim.hero, name: victim.name, imageUrl: victim.imageUrl },
+        killer: { hero: killer.hero, name: killer.name, imageUrl: killer.imageUrl, roleKey: roleKeyOf(killer.role) },
+        victim: { hero: victim.hero, name: victim.name, imageUrl: victim.imageUrl, roleKey: roleKeyOf(victim.role) },
         band: killsBandLabel(pair.killsBand),
         description: killPairSentence(pair, killer.name, victim.name),
       };

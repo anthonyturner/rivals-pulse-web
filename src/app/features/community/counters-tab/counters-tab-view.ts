@@ -18,6 +18,8 @@ interface RecordHero {
   hero: string;
   name: string;
   imageUrl: string;
+  /** The hero role as a style key, such as `vanguard`, or null when the roster does not know it. */
+  roleKey: string | null;
 }
 
 export interface CounterRecordView {
@@ -25,6 +27,10 @@ export interface CounterRecordView {
   winner: RecordHero;
   loser: RecordHero;
   winRate: string;
+  /** The win rate as a number, 0 to 100, for the gauge. */
+  winRateValue: number;
+  /** Which side of 50% the win rate is on, so the gauge can be coloured; the 50% mark says the same. */
+  tone: 'above' | 'even' | 'below';
   /** How far the record sits above the hero's usual win rate, such as "+3.3 pts vs usual". */
   edge: string;
   sample: string;
@@ -87,13 +93,20 @@ export function buildCountersTabView(
 
       return {
         key: `${record.hero}>${record.enemy}`,
-        winner: { hero: winner.hero, name: winner.name, imageUrl: winner.imageUrl },
-        loser: { hero: loser.hero, name: loser.name, imageUrl: loser.imageUrl },
+        winner: { hero: winner.hero, name: winner.name, imageUrl: winner.imageUrl, roleKey: roleKeyOf(winner.role) },
+        loser: { hero: loser.hero, name: loser.name, imageUrl: loser.imageUrl, roleKey: roleKeyOf(loser.role) },
         winRate: recordWinRateLabel(record),
+        winRateValue: record.winRate,
+        tone: record.winRate > 50 ? 'above' : record.winRate < 50 ? 'below' : 'even',
         edge: recordEdgeLabel(record),
         sample: recordSampleLabel(record),
         description: recordSentence(record, winner.name, loser.name),
       };
     }),
   };
+}
+
+/** The role as a style key; null for a hero with no role, so nothing is tinted by a guess. */
+export function roleKeyOf(role: string | null): string | null {
+  return role?.trim().toLowerCase() || null;
 }
