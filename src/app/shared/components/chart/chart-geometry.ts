@@ -49,12 +49,15 @@ export function axisValues(min: number, max: number, step: number): number[] {
 }
 
 /**
- * The widths, as percentages that add up to 100, of the segments of a bar whose parts are `values`. A
- * part that is negative or not a number counts as nothing, and no parts at all give no segments.
+ * The widths, as percentages of the bar, of the segments whose parts are `values`. A part that is
+ * negative or not a number counts as nothing. The bar stands for `whole` when given and the parts add
+ * up to no more than it (so shares that cover only some of the matches leave the rest of the bar
+ * empty); otherwise it stands for the sum of the parts. No parts at all give no segments.
  */
-export function segmentWidths(values: readonly number[]): number[] {
+export function segmentWidths(values: readonly number[], whole?: number): number[] {
   const parts = values.map((value) => (Number.isFinite(value) && value > 0 ? value : 0));
   const total = parts.reduce((sum, part) => sum + part, 0);
+  const bar = whole !== undefined && whole >= total ? whole : total;
 
-  return total === 0 ? [] : parts.map((part) => (part / total) * 100);
+  return bar === 0 ? [] : parts.map((part) => (part / bar) * 100);
 }
