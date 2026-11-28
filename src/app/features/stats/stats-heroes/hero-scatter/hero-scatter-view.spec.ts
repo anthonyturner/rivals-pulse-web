@@ -37,7 +37,7 @@ describe('buildHeroScatterView', () => {
         y: 55,
         role: 'Duelist',
         link: ['/heroes', 'hulk'],
-        figures: ['12.5%', '55.0%', '22 wins in 40 games'],
+        figures: ['12.5%', '55.0%', 'Duelist', '22 wins in 40 games'],
         description: 'Hulk: 55.0% win rate, 12.5% pick rate, 22 wins in 40 games',
       }),
     ]);

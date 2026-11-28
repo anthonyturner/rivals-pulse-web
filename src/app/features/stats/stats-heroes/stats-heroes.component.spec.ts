@@ -302,7 +302,7 @@ describe('StatsHeroesComponent', () => {
       );
 
       expect(page.querySelector('app-scatter-chart .area')?.getAttribute('aria-hidden')).toBe('true');
-      expect(rows.sort()).toEqual(['Hela | 10.0% | 45.0% | 9 wins in 20 games', 'Storm | 10.0% | 66.7% | 8 wins in 12 games']);
+      expect(rows.sort()).toEqual(['Hela | 10.0% | 45.0% | Vanguard | 9 wins in 20 games', 'Storm | 10.0% | 66.7% | Duelist | 8 wins in 12 games']);
     });
 
     it('is left out while no hero has enough games, and when the numbers cannot be loaded', async () => {

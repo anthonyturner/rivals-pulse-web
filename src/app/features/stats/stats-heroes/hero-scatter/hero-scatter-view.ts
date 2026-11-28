@@ -7,7 +7,7 @@ import type {
 import type { WinRateRowView } from '../hero-table/win-rates-view';
 
 /** The headings of the hidden table's columns after pick rate and win rate, in the order of each point's figures. */
-export const HERO_SCATTER_COLUMNS: readonly string[] = ['Record'];
+export const HERO_SCATTER_COLUMNS: readonly string[] = ['Role', 'Record'];
 
 /** The roles whose ring colour the chart's key names. */
 export const HERO_SCATTER_ROLES: readonly string[] = ['Vanguard', 'Duelist', 'Strategist'];
@@ -73,7 +73,7 @@ export function buildHeroScatterView(ranked: readonly WinRateRowView[]): HeroSca
         imageUrl: row.imageUrl,
         role: row.role,
         link: ['/heroes', row.hero],
-        figures: [row.pickRateLabel, row.winRateLabel, row.winsGamesSpoken],
+        figures: [row.pickRateLabel, row.winRateLabel, row.role ?? 'No role', row.winsGamesSpoken],
         description: `${row.name}: ${row.winRateLabel} win rate, ${row.pickRateLabel} pick rate, ${row.winsGamesSpoken}`,
       })),
   };
