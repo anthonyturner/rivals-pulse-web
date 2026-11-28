@@ -11,21 +11,29 @@
         <span class="key"><span class="key-line"></span>{{ guide.label }}</span>
       }
     </p>
-    <div class="lane" [style.height.px]="lane.height">
+    <div class="lane" [class.lane--dots]="!lane.isBars" [style.height.px]="lane.height">
       @if (lane.guide; as guide) {
-        <span class="guide" [style.bottom.%]="guide.position"></span>
+        <span class="guide" [style.--position]="guide.fraction"></span>
       }
       @for (cell of lane.cells; track $index) {
         <span class="cell">
-          @if (cell !== null) {
+          @if (cell.mark) {
             @if (lane.isBars) {
-              <span class="bar" [class]="'bar ' + lane.tone" [style.height.%]="cell.position" [attr.title]="cell.title"></span>
+              <span class="bar" [class]="'bar ' + lane.tone" [style.height.%]="cell.fraction * 100" [attr.title]="cell.title"></span>
             } @else {
-              <span class="dot" [class]="'dot ' + cell.side" [style.bottom.%]="cell.position" [attr.title]="cell.title"></span>
+              <span class="dot" [class]="'dot ' + cell.side" [style.--position]="cell.fraction" [attr.title]="cell.title"></span>
             }
             @if (showValues()) {
-              <span class="value" [class.value--above]="!lane.isBars && cell.side !== 'below'" [class.value--below]="!lane.isBars && cell.side === 'below'" [style.bottom.%]="cell.position">{{ cell.valueLabel }}</span>
+              <span
+                class="value"
+                [class.value--above]="!lane.isBars && cell.side !== 'below'"
+                [class.value--below]="!lane.isBars && cell.side === 'below'"
+                [style.--position]="cell.fraction"
+                >{{ cell.valueLabel }}</span
+              >
             }
+          } @else {
+            <span class="none" [attr.title]="cell.title">–</span>
           }
         </span>
       }
@@ -37,6 +45,10 @@
     }
   </p>
 </div>
+
+@if (chart.hasEmpty && emptyKey(); as key) {
+  <p class="empty-key" aria-hidden="true"><span class="none">–</span> {{ key }}</p>
+}
 
 <table class="visually-hidden">
   <caption>{{ caption() }}</caption>

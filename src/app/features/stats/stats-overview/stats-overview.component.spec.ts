@@ -184,11 +184,11 @@ describe('StatsOverviewComponent', () => {
     expect(element.textContent).not.toContain('Klyntar');
   });
 
-  it('opens only the first insights panel, so the page stays short', async () => {
+  it('opens every insights panel, so no chart has to be opened by hand', async () => {
     const element = await open(1440);
     const panels = Array.from(element.querySelectorAll('app-community-insights-tab details.stat-panel')) as HTMLDetailsElement[];
 
-    expect(panels.map((panel) => panel.open)).toEqual([true, false]);
+    expect(panels.map((panel) => panel.open)).toEqual([true, true]);
   });
 
   it('links the map teaser to the Maps tab and offers the pages about these numbers', async () => {

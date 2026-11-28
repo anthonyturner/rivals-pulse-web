@@ -99,6 +99,33 @@ describe('InsightsTabComponent', () => {
     expect(host.textContent).not.toContain('NaN');
   });
 
+  it('shows a dash for a bucket with no figure and says what it means, so the state is not only in the hidden table', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush(ready);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(Array.from(host.querySelectorAll('.plot .none'), (dash) => dash.getAttribute('title'))).toEqual([
+      'Tuesday: Share of matches Not enough data yet',
+      'Tuesday: Win rate Not enough data yet',
+    ]);
+    expect(host.querySelector('.empty-key')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('– not enough data yet, or too few results for a win rate');
+  });
+
+  it('opens every panel', async () => {
+    const { fixture, host } = render();
+
+    http.expectOne('/api/community/insights').flush({
+      ...ready,
+      dimensions: [ready.dimensions[0], { ...ready.dimensions[0], id: 'time-of-day', title: 'Time of day' }],
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(Array.from(host.querySelectorAll('details.stat-panel'), (panel) => (panel as HTMLDetailsElement).open)).toEqual([true, true]);
+  });
+
   it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
     const { fixture, host } = render();
 

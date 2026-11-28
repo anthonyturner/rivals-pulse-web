@@ -14,7 +14,7 @@
 
     <div class="stat-grid stat-grid--thirds">
       @for (dimension of current.dimensions; track dimension.id) {
-        <details class="stat-panel" [attr.open]="$first ? '' : null">
+        <details class="stat-panel" open>
           <summary class="stat-panel__summary">
             <h3 class="stat-panel__title">{{ dimension.title }}</h3>
           </summary>
@@ -24,6 +24,7 @@
                 [caption]="dimension.caption"
                 rowHeader="When"
                 emptyLabel="Not enough data yet"
+                emptyKey="not enough data yet, or too few results for a win rate"
                 [lanes]="dimension.lanes"
                 [columns]="dimension.columns"
                 [showValues]="dimension.showValues"
