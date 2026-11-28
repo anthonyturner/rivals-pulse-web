@@ -66,6 +66,8 @@ export class ColumnChartComponent {
   readonly columns = input.required<readonly ChartColumn[]>();
   /** What the table says for a column with no figure in a lane. */
   readonly emptyLabel = input('Not enough data');
+  /** Whether each mark prints its figure above itself. Turn it off for a chart too crowded to fit them; the tooltips and the table keep them. */
+  readonly showValues = input(true);
 
   protected readonly view = computed(() => {
     const lanes = this.lanes();

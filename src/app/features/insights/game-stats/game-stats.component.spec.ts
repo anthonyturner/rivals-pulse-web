@@ -6,6 +6,8 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import type { GameCounts } from '../../../../contracts/game-counts.model';
+import { heroOf } from '../hero-matchup.fixtures';
+import { statsHero, statsOf } from '../hero-stats.fixtures';
 import { GameStatsComponent } from './game-stats.component';
 import { isGameCounts } from './game-stats.service';
 
@@ -18,6 +20,12 @@ const live: GameCounts = {
     { halfSeason: 10, matches: 297, players: 3165 },
   ],
 };
+
+const HERO_STATS = statsOf([
+  { name: 'S', heroes: [statsHero('storm', 40, 26, 13.4, 'S')] },
+  { name: 'B', heroes: [statsHero('hela', 30, 15, 20.1)] },
+]);
+const ROSTER = [heroOf('storm', 'Storm', 'Duelist'), heroOf('hela', 'Hela', 'Duelist')];
 
 describe('GameStatsComponent', () => {
   let http: HttpTestingController;
@@ -37,20 +45,25 @@ describe('GameStatsComponent', () => {
 
   afterEach(() => http.verify());
 
-  /** Opens the page and answers its request, or leaves it waiting when `answer` is `'pending'`. */
-  async function open(answer: unknown): Promise<HTMLElement> {
-    const harness = await RouterTestingHarness.create();
-
-    await harness.navigateByUrl('/game-stats');
-
-    const request = http.expectOne('/api/game-stats');
-
+  /** Answers a request, fails it when `answer` is `'failure'`, or leaves it waiting when it is `'pending'`. */
+  function reply(request: ReturnType<HttpTestingController['expectOne']>, answer: unknown): void {
     if (answer === 'failure') {
       request.flush('down', { status: 500, statusText: 'Server Error' });
     } else if (answer !== 'pending') {
       request.flush(answer as object);
     }
+  }
 
+  /** Opens the page and answers its requests: the counts, then the hero numbers and the roster behind the two leading heroes. */
+  async function open(answer: unknown, heroes: { stats?: unknown; roster?: unknown } = {}): Promise<HTMLElement> {
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/game-stats');
+
+    reply(http.expectOne('/api/game-stats'), answer);
+    reply(http.expectOne('/api/hero-stats'), heroes.stats ?? HERO_STATS);
+    reply(http.expectOne('/api/heroes'), heroes.roster ?? ROSTER);
+    await harness.fixture.whenStable();
     harness.detectChanges();
 
     const element = harness.routeNativeElement as HTMLElement;
@@ -75,7 +88,7 @@ describe('GameStatsComponent', () => {
   it('shows the totals as one strip of figures over a heartbeat line, each named by what it counts', async () => {
     const element = await open(live);
 
-    expect(element.querySelector('app-hub-tile, img')).toBeNull();
+    expect(element.querySelector('app-hub-tile')).toBeNull();
     expect(element.querySelector('.strip app-heartbeat-line[aria-hidden="true"]')).not.toBeNull();
     expect(text(element, '.strip__tile dt')).toEqual([
       'Matches · all seasons',
@@ -86,18 +99,14 @@ describe('GameStatsComponent', () => {
     expect(text(element, '.strip__tile dd')).toEqual(['733', '436', '7,674', 'Sep 20, 2026']);
   });
 
-  it('draws one table of half-seasons with a caption, a note and a scope on every header', async () => {
+  it('charts matches and players per half-season, oldest first, with every figure in a hidden table', async () => {
     const element = await open(live);
-    const table = element.querySelector('table') as HTMLTableElement;
+    const table = element.querySelector('app-column-chart table') as HTMLTableElement;
 
     expect(element.querySelectorAll('table').length).toBe(1);
+    expect(table.classList).toContain('visually-hidden');
+    expect(element.querySelector('app-column-chart .plot')?.getAttribute('aria-hidden')).toBe('true');
     expect(table.querySelector('caption')?.textContent).toContain('Matches and players seen in each half-season');
-    expect(element.querySelector(`#${table.getAttribute('aria-describedby')}`)?.textContent).toContain(
-      'A player is counted once per half-season',
-    );
-    expect(element.querySelector(`#${table.getAttribute('aria-describedby')}`)?.textContent).toContain(
-      'A match is counted once however many players recorded it',
-    );
     expect(Array.from(table.querySelectorAll('th')).every((header) => header.getAttribute('scope') !== null)).toBeTrue();
     expect(text(table, 'thead th')).toEqual(['Half-season', 'Matches counted', 'Players']);
     expect(
@@ -105,10 +114,53 @@ describe('GameStatsComponent', () => {
         Array.from(row.children).map((cell) => cell.textContent?.trim()),
       ),
     ).toEqual([
-      ['Season 10.5', '436', '4,546'],
       ['Season 10', '297', '3,165'],
+      ['Season 10.5', '436', '4,546'],
     ]);
   });
+
+  it('keeps the note on how matches and players are counted', async () => {
+    const element = await open(live);
+    const note = element.querySelector('#seasons-note');
+
+    expect(note?.textContent).toContain('A player is counted once per half-season');
+    expect(note?.textContent).toContain('A match is counted once however many players recorded it');
+  });
+
+  it('sets the hero picked most and the hero that wins most beside the figures, each linking to its hero page', async () => {
+    const element = await open(live);
+    const spotlights = Array.from(element.querySelectorAll<HTMLAnchorElement>('app-hero-spotlight a'));
+
+    expect(spotlights.map((link) => link.getAttribute('href'))).toEqual(['/heroes/hela', '/heroes/storm']);
+    expect(spotlights.map((link) => link.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Most picked Hela 20.1% pick rate 30 games Duelist',
+      'Highest win rate Storm 65.0% win rate 40 games Duelist',
+    ]);
+    expect(spotlights.every((link) => link.querySelector('img')?.getAttribute('alt') === '')).toBeTrue();
+  });
+
+  it('holds the heroes room, as hidden blocks with no link, while their numbers load', async () => {
+    const element = await open(live, { stats: 'pending' });
+
+    expect(element.querySelectorAll('.spots[aria-hidden="true"] .spots__pending').length).toBe(2);
+    expect(element.querySelector('app-hero-spotlight')).toBeNull();
+    expect(text(element, '.strip__tile dt')).toContain('Players');
+  });
+
+  const WITHOUT_HEROES: [string, unknown][] = [
+    ['has no hero with enough games yet', statsOf([])],
+    ['cannot be read', 'failure'],
+  ];
+
+  for (const [name, stats] of WITHOUT_HEROES) {
+    it(`draws only the figures when the hero numbers ${name}`, async () => {
+      const element = await open(live, { stats });
+
+      expect(element.querySelector('.spots')).toBeNull();
+      expect(element.querySelector('.bento--heroes')).toBeNull();
+      expect(text(element, '.strip__tile dd')).toContain('7,674');
+    });
+  }
 
   it('names its "How these are counted" disclosure for what it explains, for screen readers', async () => {
     const element = await open(live);
@@ -120,7 +172,7 @@ describe('GameStatsComponent', () => {
     const element = await open(live);
 
     expect(text(element, '.stat-how .stat-note')[0]).toBe('Counted from RivalsPulse overlay uploads: what the app has recorded, not everyone who plays Marvel Rivals.');
-    expect(element.querySelector('a')).toBeNull();
+    expect(Array.from(element.querySelectorAll('a')).every((link) => link.getAttribute('href')?.startsWith('/heroes/'))).toBeTrue();
     expect(element.textContent).not.toMatch(/steam|netease|wikipedia|milestone/i);
   });
 
