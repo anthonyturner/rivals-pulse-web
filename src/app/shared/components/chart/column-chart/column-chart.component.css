@@ -29,6 +29,10 @@
   font-weight: 700;
 }
 
+.note {
+  font-weight: 400;
+}
+
 .key {
   display: inline-flex;
   gap: 6px;
@@ -41,9 +45,17 @@
   border-top: 2px dashed var(--text-muted);
 }
 
-/* The top margin holds the value above the tallest mark. */
+/*
+ * The top margin holds the value above the tallest mark. Marks are placed by `--position`, 0 to 1 of
+ * the lane. A dot keeps `--clearance` free above and below, enough for its figure on either side, in em
+ * so it follows the figure's font size and never touches the axis at a larger browser font.
+ */
 .lane {
+  --position: 0;
+  --clearance: 2.2em;
+
   position: relative;
+  font-size: var(--type-caption);
   display: grid;
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: 0 4px;
@@ -54,6 +66,7 @@
 .guide {
   position: absolute;
   right: 0;
+  bottom: calc(var(--position) * 100%);
   left: 0;
   z-index: 1;
   border-top: 2px dashed var(--text-muted);
@@ -87,6 +100,7 @@
 
 .dot {
   position: absolute;
+  bottom: calc(var(--position) * 100%);
   left: 50%;
   z-index: 2;
   width: 12px;
@@ -109,10 +123,11 @@
 .value {
   position: absolute;
   right: 0;
+  bottom: calc(var(--position) * 100%);
   left: 0;
   z-index: 2;
   padding-bottom: 3px;
-  font-size: var(--type-caption);
+  font-size: 1em;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 1.2;
@@ -122,12 +137,46 @@
 
 /* A dot's value goes on the side away from the guide, so it never sits on the dashed line. */
 .value--above {
-  padding-bottom: 9px;
+  padding-bottom: 0.75em;
 }
 
 .value--below {
   padding: 0;
-  transform: translateY(calc(100% + 9px));
+  transform: translateY(calc(100% + 0.75em));
+}
+
+.lane--dots .guide,
+.lane--dots .dot,
+.lane--dots .value {
+  bottom: calc(var(--clearance) + (100% - 2 * var(--clearance)) * var(--position));
+}
+
+/* A column with no figure in this lane: a quiet dash where the mark would be, explained by the key under the chart. */
+.none {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  color: var(--text-soft);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Low in the lane, so the dash never lies on a guide line drawn through the middle. */
+.lane--dots .none {
+  bottom: 12%;
+}
+
+.empty-key {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+}
+
+.empty-key .none {
+  position: static;
+  display: inline;
 }
 
 .axis {
