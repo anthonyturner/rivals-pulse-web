@@ -1,0 +1,30 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.track {
+  position: relative;
+  display: block;
+  height: var(--meter-height, 8px);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--meter-fill, var(--accent-strong));
+}
+
+.guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+  box-shadow: 0 0 0 1px var(--bg-panel);
+}

@@ -1,0 +1,81 @@
+@let chart = view();
+
+<p class="axis-title">{{ yAxis().title }}</p>
+<div class="scatter">
+  <div class="y-ticks" aria-hidden="true">
+    <div class="inner">
+      @for (tick of chart.yTicks; track tick.label) {
+        <span class="tick" [style.bottom.%]="tick.position">{{ tick.label }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="area" aria-hidden="true">
+    <div class="inner">
+      @for (tick of chart.yTicks; track tick.label) {
+        <span class="grid-line grid-line--across" [style.bottom.%]="tick.position"></span>
+      }
+      @for (tick of chart.xTicks; track tick.label) {
+        <span class="grid-line grid-line--up" [style.left.%]="tick.position"></span>
+      }
+      @for (guide of chart.guides; track guide.label) {
+        @if (guide.isHorizontal) {
+          <span class="guide guide--across" [style.bottom.%]="guide.position">
+            <span class="guide-label">{{ guide.label }}</span>
+          </span>
+        } @else {
+          <span class="guide guide--up" [style.left.%]="guide.position">
+            <span class="guide-label">{{ guide.label }}</span>
+          </span>
+        }
+      }
+      @for (dot of chart.dots; track dot.id) {
+        <a
+          class="dot"
+          tabindex="-1"
+          [routerLink]="dot.link"
+          [attr.data-role]="dot.roleKey"
+          [attr.data-name]="dot.label"
+          [attr.title]="dot.description"
+          [style.left.%]="dot.left"
+          [style.bottom.%]="dot.bottom"
+        >
+          <img appHeroImageFallback [src]="dot.imageUrl" alt="" width="28" height="28" loading="lazy" />
+        </a>
+      }
+    </div>
+  </div>
+
+  <div class="x-ticks" aria-hidden="true">
+    <div class="inner">
+      @for (tick of chart.xTicks; track tick.label) {
+        <span class="tick" [style.left.%]="tick.position">{{ tick.label }}</span>
+      }
+    </div>
+  </div>
+</div>
+<p class="axis-title axis-title--x">{{ xAxis().title }}</p>
+
+<table class="visually-hidden">
+  <caption>{{ caption() }}</caption>
+  <thead>
+    <tr>
+      <th scope="col">{{ rowHeader() }}</th>
+      <th scope="col">{{ xAxis().title }}</th>
+      <th scope="col">{{ yAxis().title }}</th>
+      @for (heading of columns(); track heading) {
+        <th scope="col">{{ heading }}</th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @for (dot of chart.dots; track dot.id) {
+      <tr>
+        <th scope="row">{{ dot.label }}</th>
+        @for (figure of dot.figures; track $index) {
+          <td>{{ figure }}</td>
+        }
+      </tr>
+    }
+  </tbody>
+</table>

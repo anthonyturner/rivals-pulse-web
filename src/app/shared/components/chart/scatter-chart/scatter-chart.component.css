@@ -1,0 +1,191 @@
+:host {
+  --dot-size: 28px;
+  --inset: 16px;
+
+  display: block;
+  min-width: 0;
+}
+
+.axis-title {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.axis-title--x {
+  text-align: right;
+}
+
+.scatter {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: var(--scatter-height, 340px) 22px;
+  margin-block: 6px;
+}
+
+.y-ticks,
+.area,
+.x-ticks {
+  position: relative;
+}
+
+/* Every layer places its marks inside the same inset box, so a tick label sits level with its line. */
+.inner {
+  position: absolute;
+}
+
+.area .inner {
+  inset: var(--inset);
+}
+
+.y-ticks .inner {
+  inset: var(--inset) 0;
+}
+
+.x-ticks {
+  grid-column: 2;
+}
+
+.x-ticks .inner {
+  inset: 0 var(--inset);
+}
+
+.area {
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+
+.tick {
+  position: absolute;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.y-ticks .tick {
+  right: 6px;
+  transform: translateY(50%);
+}
+
+.x-ticks .tick {
+  top: 4px;
+  transform: translateX(-50%);
+}
+
+.grid-line {
+  position: absolute;
+  background: var(--border);
+}
+
+.grid-line--across {
+  right: 0;
+  left: 0;
+  height: 1px;
+}
+
+.grid-line--up {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.guide {
+  position: absolute;
+  z-index: 1;
+  border: 0 dashed var(--text-muted);
+  pointer-events: none;
+}
+
+.guide--across {
+  right: 0;
+  left: 0;
+  border-top-width: 2px;
+}
+
+.guide--up {
+  top: 0;
+  bottom: 0;
+  border-left-width: 2px;
+}
+
+.guide-label {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  padding-inline: 4px;
+  border-radius: 4px;
+  background: var(--bg-panel);
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  white-space: nowrap;
+}
+
+.guide--up .guide-label {
+  top: 0;
+  right: auto;
+  bottom: auto;
+  left: 4px;
+}
+
+.dot {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  /* The position is the dot centre, so the dot is pulled back by half its size. */
+  margin: 0 0 calc(var(--dot-size) / -2) calc(var(--dot-size) / -2);
+  border: 2px solid var(--hero-role-color, var(--text-muted));
+  border-radius: 50%;
+  background: var(--surface-2);
+  box-sizing: border-box;
+}
+
+.dot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.dot:hover {
+  z-index: 4;
+}
+
+.dot::after {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  display: none;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  content: attr(data-name);
+  font-size: var(--type-caption);
+  font-weight: 700;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.dot:hover::after {
+  display: block;
+}
+
+@media (max-width: 560px) {
+  :host {
+    --dot-size: 22px;
+    --inset: 12px;
+  }
+
+  .scatter {
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: var(--scatter-height, 300px) 22px;
+  }
+}
