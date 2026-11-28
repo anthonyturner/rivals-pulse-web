@@ -1,7 +1,7 @@
 /**
  * The in-game art for each map, as the desktop app (anthonyturner/rivals_pulse) bundles it. `names` are the
  * spellings that app's `map-catalog.json` lists for the map, plus the short names `data/pulse-atlas/seed-maps.json`
- * uses, which are what the community answers carry. The pictures in `public/images/maps/` are those images
+ * uses, which are what the community answers carry. A social hub with no matches, Times Square, has no entry. The pictures in `public/images/maps/` are those images
  * cropped to 16:9 and resized to 320 pixels wide.
  */
 interface MapArt {
@@ -41,7 +41,6 @@ const MAP_ART: readonly MapArt[] = [
   { image: 'lower-manhattan', names: ['Lower Manhattan'] },
   { image: 'museum-of-contemplation', names: ['Museum of Contemplation'] },
   { image: 'ninomaru', names: ['Ninomaru'] },
-  { image: 'times-square', names: ['Times Square'] },
   { image: 'tokyo-2099-shin-shibuya', names: ['Shin-Shibuya', 'Tokyo 2099: Shin-Shibuya'] },
   { image: 'tokyo-2099-spider-islands', names: ['Spider-Islands', 'Tokyo 2099: Spider-Islands'] },
   {
@@ -57,7 +56,7 @@ const MAP_ART: readonly MapArt[] = [
   },
 ];
 
-/** Case, spacing and apostrophe style never decide a match: the database spells "Birnin t'challa" in lower case. */
+/** Case, spacing and apostrophe style never decide a match, so a spelling that differs only in letters still finds its picture. */
 function nameKey(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
@@ -74,6 +73,7 @@ export function mapArtPath(mapName: string): string | null {
 /** One or two capitals that stand in for a map with no art, such as "CP" for "Central Park". */
 export function mapInitials(mapName: string): string {
   return mapName
+    .replace(/['‘’]/g, '')
     .split(/[^A-Za-z0-9]+/)
     .filter((word) => word.length > 0 && word.toLowerCase() !== 'of')
     .slice(0, 2)

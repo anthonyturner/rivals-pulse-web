@@ -27,6 +27,7 @@ describe('map art', () => {
   it('stands in for a missing picture with the first letters of the first two words', () => {
     expect(mapInitials('Digital Duel Grounds')).toBe('DD');
     expect(mapInitials('Museum of Contemplation')).toBe('MC');
+    expect(mapInitials("Hell's Heaven")).toBe('HH');
     expect(mapInitials('Jeffland')).toBe('J');
     expect(mapInitials('')).toBe('');
   });

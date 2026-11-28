@@ -29,6 +29,5 @@ test('no picture in public/images/maps is left without a map that uses it', () =
   const used = new Set(seedMaps.map((map) => mapArtPath(map.name)).filter(Boolean));
   const stray = readdirSync(mapImages).filter((file) => !used.has(`/images/maps/${file}`));
 
-  // Times Square is a social hub with no match, so no seed map names it.
-  assert.deepEqual(stray, ['times-square.webp']);
+  assert.deepEqual(stray, []);
 });
