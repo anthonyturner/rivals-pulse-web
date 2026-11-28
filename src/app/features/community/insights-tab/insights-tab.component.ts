@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+import { ColumnChartComponent } from '../../../shared/components/chart/column-chart/column-chart.component';
 import { COMMUNITY_EMPTY_RULE, CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { CommunityInsightsService } from './community-insights.service';
 import { buildInsightsTabView } from './insights-tab-view';
@@ -8,7 +9,7 @@ import { buildInsightsTabView } from './insights-tab-view';
 /** When the community plays and wins, or the designed "not enough data yet" state. */
 @Component({
   selector: 'app-community-insights-tab',
-  imports: [CommunitySummaryComponent],
+  imports: [ColumnChartComponent, CommunitySummaryComponent],
   templateUrl: './insights-tab.component.html',
   styleUrls: ['../../../shared/styles/stat-panels.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

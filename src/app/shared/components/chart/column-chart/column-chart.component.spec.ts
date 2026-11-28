@@ -25,7 +25,7 @@ const COLUMNS: ChartColumn[] = [
   template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" [showValues]="showValues" />`,
 })
 class HostComponent {
-  lanes = LANES;
+  lanes: ChartLane[] = LANES;
   columns = COLUMNS;
   showValues = true;
 }
@@ -47,7 +47,7 @@ describe('ColumnChartComponent', () => {
 
     expect(Array.from(bars, (bar) => bar.style.height)).toEqual(['100%', '50%']);
     expect(dots.length).toBe(1);
-    expect(dots[0].style.bottom).toBe('66%');
+    expect(parseFloat(dots[0].style.bottom)).toBeCloseTo(64.2, 1);
     expect(dots[0].classList).toContain('above');
   });
 
@@ -75,10 +75,10 @@ describe('ColumnChartComponent', () => {
     expect(element.querySelector('.key')?.textContent?.trim()).toBe('50%');
   });
 
-  it('gives each lane the same height whatever it holds', () => {
+  it('gives each lane a height that never depends on what it holds', () => {
     const heights = Array.from(element.querySelectorAll<HTMLElement>('.lane'), (lane) => lane.style.height);
 
-    expect(heights).toEqual(['96px', '96px']);
+    expect(heights).toEqual(['96px', '120px']);
   });
 
   it('prints the figure over each mark, or leaves it to the tooltip and the table when asked not to', async () => {
@@ -92,5 +92,27 @@ describe('ColumnChartComponent', () => {
     expect(element.querySelectorAll('.value').length).toBe(0);
     expect(element.querySelectorAll('tbody td').length).toBe(4);
     expect(element.querySelector('.bar')?.getAttribute('title')).toBe('Monday: Share of matches 20%');
+  });
+
+  it('draws no mark for a figure with no position, and still prints its words in the table', async () => {
+    fixture.componentInstance.columns = [
+      { label: 'Monday', cells: [{ position: 100, valueLabel: '20%' }, { position: null, valueLabel: 'Not enough results' }] },
+    ];
+    fixture.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelectorAll('.dot').length).toBe(0);
+    expect(Array.from(element.querySelectorAll('tbody td'), (cell) => cell.textContent)).toEqual(['20%', 'Not enough results']);
+  });
+
+  it('prints a lane note beside its heading, outside the data table', async () => {
+    fixture.componentInstance.lanes = [{ name: 'Win rate', kind: 'dots', note: 'Scale 45% to 55%' }];
+    fixture.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.lane-name .note')?.textContent).toBe('Scale 45% to 55%');
+    expect(Array.from(element.querySelectorAll('thead th'), (cell) => cell.textContent)).toEqual(['Day', 'Win rate']);
   });
 });

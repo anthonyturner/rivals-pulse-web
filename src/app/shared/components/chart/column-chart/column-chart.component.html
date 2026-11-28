@@ -4,6 +4,9 @@
   @for (lane of chart.lanes; track lane.name) {
     <p class="lane-name">
       {{ lane.name }}
+      @if (lane.note) {
+        <span class="note">{{ lane.note }}</span>
+      }
       @if (lane.guide; as guide) {
         <span class="key"><span class="key-line"></span>{{ guide.label }}</span>
       }

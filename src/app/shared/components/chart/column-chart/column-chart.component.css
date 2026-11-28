@@ -29,6 +29,10 @@
   font-weight: 700;
 }
 
+.note {
+  font-weight: 400;
+}
+
 .key {
   display: inline-flex;
   gap: 6px;
