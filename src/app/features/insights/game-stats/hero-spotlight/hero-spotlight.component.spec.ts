@@ -55,4 +55,28 @@ describe('HeroSpotlightComponent', () => {
     expect(link.querySelector('app-hero-role-chip')).toBeNull();
     expect(link.querySelector('.sample')).toBeNull();
   });
+
+  it('sets the portrait beside the words when the tile is wide, so a tile in a wide row stays short', () => {
+    const host = element.querySelector('#role') as HTMLElement;
+
+    host.style.width = '480px';
+
+    const art = (host.querySelector('.art') as HTMLElement).getBoundingClientRect();
+    const body = (host.querySelector('.body') as HTMLElement).getBoundingClientRect();
+    const tile = (host.querySelector('.spot') as HTMLElement).getBoundingClientRect();
+
+    expect(art.right).toBeLessThanOrEqual(body.left);
+    expect(tile.height).toBeLessThan(tile.width / 2);
+  });
+
+  it('stacks the portrait over the words when the tile is narrow', () => {
+    const host = element.querySelector('#role') as HTMLElement;
+
+    host.style.width = '170px';
+
+    const art = (host.querySelector('.art') as HTMLElement).getBoundingClientRect();
+    const body = (host.querySelector('.body') as HTMLElement).getBoundingClientRect();
+
+    expect(art.bottom).toBeLessThanOrEqual(body.top);
+  });
 });

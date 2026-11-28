@@ -1,6 +1,7 @@
 :host {
   display: block;
   min-width: 0;
+  container-type: inline-size;
 }
 
 /* A role sets one colour for the wash, the ring and the edge (the shared mapping in `styles.css`); the role chip reads the same two properties. */
@@ -71,6 +72,27 @@
 
 app-hero-role-chip {
   margin-top: 6px;
+}
+
+/* In a tile wide enough for it the portrait moves to the side, so a tile in a wide row stays a short card instead of a square the width of the row. */
+@container (min-width: 20rem) {
+  .spot {
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    grid-template-rows: none;
+    min-height: 9.5rem;
+  }
+
+  .art {
+    height: 100%;
+    aspect-ratio: auto;
+    border-right: 2px solid color-mix(in srgb, var(--tile-role-color) 70%, transparent);
+    border-bottom: 0;
+  }
+
+  .body {
+    align-content: center;
+    padding: 12px 16px;
+  }
 }
 
 .spot:hover {

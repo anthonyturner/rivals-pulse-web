@@ -15,39 +15,37 @@
     @let heroes = spotlights();
 
     <section class="strip" aria-label="Matches and players counted">
-      <div class="bento" [class.bento--heroes]="heroes.kind !== 'none'">
-        <div class="strip__figures">
-          <app-heartbeat-line [rate]="beatRate()" />
-          <dl class="strip__tiles">
-            @for (tile of v.tiles; track tile.label) {
-              <div class="strip__tile">
-                <dt>{{ tile.label }}</dt>
-                <dd>{{ tile.value }}</dd>
-              </div>
-            }
-          </dl>
-        </div>
-
-        @switch (heroes.kind) {
-          @case ('ready') {
-            <div class="spots">
-              @for (spotlight of heroes.spotlights; track spotlight.heading) {
-                <app-hero-spotlight
-                  [heading]="spotlight.heading"
-                  [hero]="spotlight.hero"
-                  [figureLabel]="spotlight.figureLabel"
-                />
-              }
+      <div class="strip__figures">
+        <app-heartbeat-line [rate]="beatRate()" />
+        <dl class="strip__tiles">
+          @for (tile of v.tiles; track tile.label) {
+            <div class="strip__tile">
+              <dt>{{ tile.label }}</dt>
+              <dd>{{ tile.value }}</dd>
             </div>
           }
-          @case ('loading') {
-            <div class="spots" aria-hidden="true">
-              <span class="spots__pending"></span>
-              <span class="spots__pending"></span>
-            </div>
-          }
-        }
+        </dl>
       </div>
+
+      @switch (heroes.kind) {
+        @case ('ready') {
+          <div class="spots">
+            @for (spotlight of heroes.spotlights; track spotlight.heading) {
+              <app-hero-spotlight
+                [heading]="spotlight.heading"
+                [hero]="spotlight.hero"
+                [figureLabel]="spotlight.figureLabel"
+              />
+            }
+          </div>
+        }
+        @case ('loading') {
+          <div class="spots" aria-hidden="true">
+            <span class="spots__pending"></span>
+            <span class="spots__pending"></span>
+          </div>
+        }
+      }
 
       <h2 id="seasons-title" class="strip__title">By half-season</h2>
       @if (v.seasons.length > 0) {
