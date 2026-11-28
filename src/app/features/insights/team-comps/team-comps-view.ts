@@ -23,7 +23,15 @@ export interface RolePairRowView {
   first: HeroCellView;
   second: HeroCellView;
   matches: number;
+  /** "12 matches together". */
+  matchesLabel: string;
   winRateLabel: string;
+  /** The plain win rate as a number, 0 to 100, for the gauge. */
+  winRate: number;
+  /** Which side of 50% the win rate is on, so the gauge can be coloured; the 50% mark says the same. */
+  tone: 'above' | 'even' | 'below';
+  /** Matches together against the most of any listed pair of the role, 0 to 1: how much weight the tile carries. */
+  weight: number;
 }
 
 export interface RolePairSectionView {
@@ -125,7 +133,7 @@ export function rolePairsOf(synergies: HeroSynergies, identities: HeroIdentities
 }
 
 function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identities: HeroIdentities): RolePairRowView[] {
-  return synergies
+  const listed = synergies
     .filter(
       (pair) =>
         Number.isFinite(pair.winRate) &&
@@ -139,14 +147,20 @@ function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identit
         a.hero.localeCompare(b.hero) ||
         a.ally.localeCompare(b.ally),
     )
-    .slice(0, PAIRS_PER_ROLE)
-    .map((pair, index) => ({
-      rank: index + 1,
-      first: pairHeroCell(pair.hero, pair.heroRole, identities),
-      second: pairHeroCell(pair.ally, pair.allyRole, identities),
-      matches: pair.matches,
-      winRateLabel: percentLabel(pair.winRate),
-    }));
+    .slice(0, PAIRS_PER_ROLE);
+  const most = Math.max(1, ...listed.map((pair) => pair.matches));
+
+  return listed.map((pair, index) => ({
+    rank: index + 1,
+    first: pairHeroCell(pair.hero, pair.heroRole, identities),
+    second: pairHeroCell(pair.ally, pair.allyRole, identities),
+    matches: pair.matches,
+    matchesLabel: `${countLabel(pair.matches, 'match', 'matches')} together`,
+    winRateLabel: percentLabel(pair.winRate),
+    winRate: pair.winRate,
+    tone: pair.winRate > 50 ? 'above' : pair.winRate < 50 ? 'below' : 'even',
+    weight: pair.matches / most,
+  }));
 }
 
 /** The role a hero was played in: the form's, or the roster's for a hero with one role. */

@@ -103,17 +103,6 @@ thead th {
   color: var(--text-soft);
 }
 
-.pair {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  align-items: center;
-}
-
-.plus {
-  color: var(--text-soft);
-}
-
 .hero-link {
   display: inline-flex;
   gap: 8px;
@@ -133,6 +122,135 @@ thead th {
   flex: none;
   border-radius: 6px;
   object-fit: cover;
+}
+
+.duos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A tile's weight is how many matches stand behind it: the heavier the pair, the larger its portraits. */
+.duo {
+  --weight: 0;
+  --portrait: calc(40px + 16px * var(--weight));
+
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'rank rate'
+    'heroes heroes'
+    'gauge gauge'
+    'matches matches';
+  gap: 0 8px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 40%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 14%, var(--bg-panel)),
+    var(--bg-panel) 75%
+  );
+}
+
+.duo__rank {
+  grid-area: rank;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.duo__rate {
+  grid-area: rate;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  text-align: right;
+}
+
+.duo__rate strong {
+  color: var(--text);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+}
+
+.duo__heroes {
+  display: flex;
+  grid-area: heroes;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: center;
+  margin-block: 8px;
+}
+
+.duo__hero {
+  display: grid;
+  flex: 1 1 0;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.duo__hero:hover .duo__name {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.duo__hero img {
+  width: var(--portrait);
+  height: var(--portrait);
+  border: 2px solid var(--hero-role-color, var(--border-strong));
+  border-radius: 12px;
+  box-sizing: border-box;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.duo__name {
+  font-size: var(--type-small);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.duo__plus {
+  align-self: center;
+  color: var(--text-soft);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+/* The fill runs to the win rate and the tick is an even 50%. */
+.duo__gauge {
+  --meter-fill: var(--win-ink);
+  --meter-height: 10px;
+
+  grid-area: gauge;
+}
+
+.duo__gauge[data-tone='below'] {
+  --meter-fill: var(--loss-ink);
+}
+
+.duo__gauge[data-tone='even'] {
+  --meter-fill: var(--text-soft);
+}
+
+.duo__matches {
+  grid-area: matches;
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  text-align: center;
 }
 
 .empty {
