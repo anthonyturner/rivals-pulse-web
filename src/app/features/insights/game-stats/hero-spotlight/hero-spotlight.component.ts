@@ -5,7 +5,11 @@ import { HeroImageFallbackDirective } from '../../../../shared/directives/hero-i
 import type { CommunityHeroRow } from '../../../community/community-hero-list/community-hero-list.component';
 import { HeroRoleChipComponent } from '../../hero-role-chip/hero-role-chip.component';
 
-/** One hero set large: its portrait, the figure that put it here and what that figure rests on. The whole tile opens the hero page. */
+/**
+ * One hero set large: its portrait, the figure that put it here and what that figure rests on. The
+ * whole tile opens the hero page. With no hero it draws an empty tile of the same size, so the page
+ * does not jump when the hero numbers arrive.
+ */
 @Component({
   selector: 'app-hero-spotlight',
   imports: [HeroImageFallbackDirective, HeroRoleChipComponent, RouterLink],
@@ -15,11 +19,12 @@ import { HeroRoleChipComponent } from '../../hero-role-chip/hero-role-chip.compo
 })
 export class HeroSpotlightComponent {
   /** What the hero leads, such as "Most picked". */
-  readonly heading = input.required<string>();
-  readonly hero = input.required<CommunityHeroRow>();
+  readonly heading = input('');
+  /** Null while the hero numbers are still on their way. */
+  readonly hero = input<CommunityHeroRow | null>(null);
   /** Names the figure, such as "pick rate", for the words beside it. */
-  readonly figureLabel = input.required<string>();
+  readonly figureLabel = input('');
 
   /** The role as a style key, or null when the hero has no role, so nothing is tinted by a guess. */
-  protected readonly roleKey = computed(() => this.hero().role?.trim().toLowerCase() || null);
+  protected readonly roleKey = computed(() => this.hero()?.role?.trim().toLowerCase() || null);
 }

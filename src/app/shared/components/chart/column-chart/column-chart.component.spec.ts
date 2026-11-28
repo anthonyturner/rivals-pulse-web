@@ -22,13 +22,14 @@ const COLUMNS: ChartColumn[] = [
 
 @Component({
   imports: [ColumnChartComponent],
-  template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" [showValues]="showValues" [emptyKey]="emptyKey" />`,
+  template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" [showValues]="showValues" [emptyKey]="emptyKey" [describedBy]="describedBy" />`,
 })
 class HostComponent {
   lanes: ChartLane[] = LANES;
   columns = COLUMNS;
   showValues = true;
   emptyKey: string | null = null;
+  describedBy: string | null = 'how-counted';
 }
 
 describe('ColumnChartComponent', () => {
@@ -155,5 +156,16 @@ describe('ColumnChartComponent', () => {
 
     expect(element.querySelector('.lane-name .note')?.textContent).toBe('Scale 45% to 55%');
     expect(Array.from(element.querySelectorAll('thead th'), (cell) => cell.textContent)).toEqual(['Day', 'Win rate']);
+  });
+
+  it('points its table at the note that explains the figures, when it is given one', async () => {
+    expect(element.querySelector('table')?.getAttribute('aria-describedby')).toBe('how-counted');
+
+    fixture.componentInstance.describedBy = null;
+    fixture.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelector('table')?.hasAttribute('aria-describedby')).toBeFalse();
   });
 });

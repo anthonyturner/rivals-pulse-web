@@ -50,7 +50,7 @@
   <p class="empty-key" aria-hidden="true"><span class="none">–</span> {{ key }}</p>
 }
 
-<table class="visually-hidden">
+<table class="visually-hidden" [attr.aria-describedby]="describedBy()">
   <caption>{{ caption() }}</caption>
   <thead>
     <tr>

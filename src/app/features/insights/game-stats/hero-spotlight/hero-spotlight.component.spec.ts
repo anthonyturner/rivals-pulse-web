@@ -19,6 +19,7 @@ const HULK: CommunityHeroRow = {
   template: `
     <app-hero-spotlight id="role" heading="Most picked" [hero]="hero" figureLabel="pick rate" />
     <app-hero-spotlight id="bare" heading="Highest win rate" [hero]="bare" figureLabel="win rate" />
+    <app-hero-spotlight id="pending" />
   `,
 })
 class HostComponent {
@@ -54,5 +55,25 @@ describe('HeroSpotlightComponent', () => {
     expect(link.hasAttribute('data-role')).toBeFalse();
     expect(link.querySelector('app-hero-role-chip')).toBeNull();
     expect(link.querySelector('.sample')).toBeNull();
+  });
+
+  it('loads its portrait at once, as the largest thing above the fold', () => {
+    expect(element.querySelector('#role img')?.getAttribute('loading')).toBe('eager');
+  });
+
+  it('draws an empty tile, hidden from assistive technology and with no link, while there is no hero', () => {
+    const pending = element.querySelector('#pending') as HTMLElement;
+
+    expect(pending.querySelector('a')).toBeNull();
+    expect(pending.querySelector('.spot--pending')?.getAttribute('aria-hidden')).toBe('true');
+    expect(pending.textContent?.trim()).toBe('');
+  });
+
+  it('is as tall as a real tile, so the page does not jump when the hero arrives', () => {
+    const real = (element.querySelector('#role .spot') as HTMLElement).getBoundingClientRect();
+    const empty = (element.querySelector('#pending .spot') as HTMLElement).getBoundingClientRect();
+
+    expect(empty.height).toBeGreaterThan(0);
+    expect(Math.abs(empty.height - real.height)).toBeLessThanOrEqual(1);
   });
 });

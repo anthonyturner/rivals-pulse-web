@@ -37,9 +37,18 @@ describe('buildMapsView', () => {
     expect(view.all.map((row) => row.map)).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
     expect(view.best.map((row) => row.map)).toEqual(['A', 'B', 'C']);
     expect(view.worst.map((row) => row.map)).toEqual(['G', 'F', 'E']);
-    expect(view.all[0]).toEqual({ map: 'A', winRateLabel: '70%', barPercent: 70 });
+    expect(view.all[0]).toEqual({ map: 'A', art: null, initials: 'A', winRateLabel: '70%', barPercent: 70 });
     expect(view.allLabel).toBe('All 7 maps');
     expect(view.note).toBeNull();
+  });
+
+  it('gives a map the site has art for its picture and a map without art its initials', () => {
+    const view = buildMapsView(
+      matches({ maps: [{ map: 'Central Park', winRate: 55 }, { map: 'Digital Duel Grounds', winRate: 45 }] }),
+    );
+
+    expect(view.all[0]).toEqual(jasmine.objectContaining({ art: '/images/maps/empire-of-eternal-night-central-park.webp' }));
+    expect(view.all[1]).toEqual(jasmine.objectContaining({ art: null, initials: 'DD' }));
   });
 
   it('never lists a map in both the best and the worst', () => {

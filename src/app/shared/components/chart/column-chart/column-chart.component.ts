@@ -72,6 +72,8 @@ export class ColumnChartComponent {
   readonly emptyKey = input<string | null>(null);
   /** Whether each mark prints its figure above itself. Turn it off for a chart too crowded to fit them; the tooltips and the table keep them. */
   readonly showValues = input(true);
+  /** The id of an element that explains how the figures are counted; the data table points at it so a screen reader reads it with the numbers. */
+  readonly describedBy = input<string | null>(null);
 
   protected readonly view = computed(() => {
     const lanes = this.lanes();
