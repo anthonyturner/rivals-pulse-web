@@ -107,6 +107,56 @@
   text-align: right;
 }
 
+/* The chart sits in a card like the table below it. */
+.scatter {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px 16px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--tertiary) 12%, var(--bg-panel)), var(--bg-panel) 60%);
+}
+
+.scatter__title {
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.scatter__lede {
+  max-width: 62ch;
+  color: var(--text-soft);
+  font-size: var(--type-small);
+}
+
+/* The ring colours, named: a role sets one colour (the shared mapping in `styles.css`). */
+.scatter__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scatter__role {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.scatter__swatch {
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 2px solid var(--hero-role-color, var(--text-muted));
+  border-radius: 50%;
+}
+
 app-state-panel,
 app-notice,
 app-hero-table,
