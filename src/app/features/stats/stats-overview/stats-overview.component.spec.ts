@@ -10,6 +10,8 @@ import type { CommunityMatches } from '../../../../contracts/community-matches.m
 import type { GameCounts } from '../../../../contracts/game-counts.model';
 import { heartbeatRate } from '../../../core/circuit/heartbeat-line';
 import { HeartbeatLineComponent } from '../../../shared/components/heartbeat-line/heartbeat-line.component';
+import { heroOf } from '../../insights/hero-matchup.fixtures';
+import { statsHero, statsOf } from '../../insights/hero-stats.fixtures';
 import { StatsOverviewComponent } from './stats-overview.component';
 
 const SEASON = { id: 10.5, label: 'Season 10.5', startsAt: '2026-10-09T09:00:00Z', endsAt: null };
@@ -74,6 +76,11 @@ const INSIGHTS: CommunityInsights = {
   ],
 };
 
+const HERO_STATS = statsOf([
+  { name: 'S', heroes: [statsHero('storm', 40, 26, 13.4, 'S')] },
+  { name: 'B', heroes: [statsHero('hela', 30, 15, 20.1)] },
+]);
+
 describe('StatsOverviewComponent', () => {
   let fixture: ComponentFixture<StatsOverviewComponent>;
   let http: HttpTestingController;
@@ -91,6 +98,8 @@ describe('StatsOverviewComponent', () => {
     http.expectOne('/api/game-stats').flush(answers.counts === undefined ? COUNTS : answers.counts);
     http.expectOne('/api/community/matches').flush(answers.matches === undefined ? MATCHES : answers.matches);
     http.expectOne('/api/community/insights').flush(answers.insights === undefined ? INSIGHTS : answers.insights);
+    http.expectOne('/api/hero-stats').flush(HERO_STATS);
+    http.expectOne('/api/heroes').flush([heroOf('storm', 'Storm', 'Duelist'), heroOf('hela', 'Hela', 'Duelist')]);
     await fixture.whenStable();
     fixture.detectChanges();
 
