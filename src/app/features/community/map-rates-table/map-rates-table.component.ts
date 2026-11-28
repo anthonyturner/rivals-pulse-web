@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import type { CommunityMapRowView } from '../matches-tab/community-maps-view';
 
-/** A list of maps with each one's win rate and a bar, as the Overview's short list and the Maps tab's lists show them. */
+/** A list of maps with each one's picture, win rate and a bar, as the Overview's short list and the Maps tab's lists show them. */
 @Component({
   selector: 'app-map-rates-table',
   templateUrl: './map-rates-table.component.html',
-  styleUrls: ['../../../shared/styles/stat-panels.css'],
+  styleUrls: ['../../../shared/styles/stat-panels.css', './map-rates-table.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MapRatesTableComponent {

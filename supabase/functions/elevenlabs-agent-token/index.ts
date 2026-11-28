@@ -1,5 +1,6 @@
 /**
- * Mints a short-lived ElevenLabs conversation token for the Pulsa voice assistant (issue 499).
+ * Mints a short-lived ElevenLabs conversation token for AI Voice Assist, the voice assistant
+ * (issue 499).
  *
  * This function exists for one reason: the app ships to players as a packed `.opk`, so anything
  * embedded in it is readable by anyone who installs it. An ElevenLabs API key in the client would
@@ -26,8 +27,9 @@
  * `verify_jwt` is deliberately `false` in `supabase/config.toml` and must stay that way. The
  * project uses the newer publishable key (`sb_publishable_…`), which is not a JWT, and the
  * platform's JWT check only understands the legacy JWT keys -- turning it on rejects the app's own
- * requests and silences Pulsa for every player. Supabase's guidance for these keys is to leave
- * the platform check off and authorize in the function, which is what the rate limit below does.
+ * requests and silences AI Voice Assist for every player. Supabase's guidance for these keys is to
+ * leave the platform check off and authorize in the function, which is what the rate limit below
+ * does.
  *
  * The limit bounds the cost of a caller; it does not identify one. The other bound is the agent's
  * own maximum conversation duration, set in the ElevenLabs dashboard, which no caller can bypass.
@@ -42,9 +44,9 @@ import { checkPremiumGate } from '../_shared/premium-gate.ts';
 /**
  * Tokens one IP address may mint per `TOKEN_WINDOW_MS`.
  *
- * Each token is one Pulsa session -- a hotkey press, or the match-end wrap-up. A player uses a
- * handful an hour; 30 leaves room for a few players sharing one household address without letting
- * a script open sessions without end.
+ * Each token is one AI Voice Assist session -- a hotkey press, or the match-end wrap-up. A player
+ * uses a handful an hour; 30 leaves room for a few players sharing one household address without
+ * letting a script open sessions without end.
  */
 const TOKEN_LIMIT = 30;
 const TOKEN_WINDOW_MS = 60 * 60 * 1000;
@@ -106,7 +108,7 @@ Deno.serve(async request => {
     return json({ token: body.token });
   } catch (error) {
     // Never log the error object itself: it can carry the request headers, and those carry the key.
-    console.error(`Pulsa token minting failed: ${getErrorMessage(error)}`);
+    console.error(`AI Voice Assist token minting failed: ${getErrorMessage(error)}`);
     return json({ error: 'Could not mint a conversation token' }, 500);
   }
 });
@@ -139,9 +141,9 @@ type RateLimitDecision = { allowed: true } | { allowed: false; retryAfterSeconds
  * Records this token request and says whether the caller is still under `TOKEN_LIMIT`.
  *
  * **Fails open.** If the table cannot be read or written, the token is minted anyway and the
- * failure is logged. The alternative silences Pulsa for every player whenever the database
- * hiccups -- or whenever this function is deployed before its migration, which is the order a
- * rushed rollout goes in. The cost of failing open is an unbounded window only while the
+ * failure is logged. The alternative silences AI Voice Assist for every player whenever the
+ * database hiccups -- or whenever this function is deployed before its migration, which is the
+ * order a rushed rollout goes in. The cost of failing open is an unbounded window only while the
  * database is failing, and the agent's server-side duration cap still holds throughout.
  *
  * Count-then-insert is not atomic, so a burst of concurrent requests can pass a few over the
@@ -183,11 +185,15 @@ async function checkRateLimit(ip: string): Promise<RateLimitDecision> {
       .from('voice_ai_token_requests')
       .delete()
       .lt('requested_at', windowStart);
-    if (pruneError) console.error(`Pulsa token rate-limit prune failed: ${getErrorMessage(pruneError)}`);
+    if (pruneError) {
+      console.error(`AI Voice Assist token rate-limit prune failed: ${getErrorMessage(pruneError)}`);
+    }
 
     return { allowed: true };
   } catch (error) {
-    console.error(`Pulsa token rate limit unavailable, minting anyway: ${getErrorMessage(error)}`);
+    console.error(
+      `AI Voice Assist token rate limit unavailable, minting anyway: ${getErrorMessage(error)}`,
+    );
     return { allowed: true };
   }
 }

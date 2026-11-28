@@ -22,12 +22,13 @@ const COLUMNS: ChartColumn[] = [
 
 @Component({
   imports: [ColumnChartComponent],
-  template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" [showValues]="showValues" />`,
+  template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" [showValues]="showValues" [describedBy]="describedBy" />`,
 })
 class HostComponent {
   lanes = LANES;
   columns = COLUMNS;
   showValues = true;
+  describedBy: string | null = 'how-counted';
 }
 
 describe('ColumnChartComponent', () => {
@@ -92,5 +93,16 @@ describe('ColumnChartComponent', () => {
     expect(element.querySelectorAll('.value').length).toBe(0);
     expect(element.querySelectorAll('tbody td').length).toBe(4);
     expect(element.querySelector('.bar')?.getAttribute('title')).toBe('Monday: Share of matches 20%');
+  });
+
+  it('points its table at the note that explains the figures, when it is given one', async () => {
+    expect(element.querySelector('table')?.getAttribute('aria-describedby')).toBe('how-counted');
+
+    fixture.componentInstance.describedBy = null;
+    fixture.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelector('table')?.hasAttribute('aria-describedby')).toBeFalse();
   });
 });
