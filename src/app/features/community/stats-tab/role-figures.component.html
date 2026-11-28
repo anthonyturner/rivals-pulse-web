@@ -9,28 +9,26 @@
   [notice]="current.kind === 'ready' ? current.notice : null"
 >
   @if (current.kind === 'ready') {
-    <div class="role-figures__scroll">
-      <table class="role-figures__table">
-        <caption class="role-figures__caption">Per minute played, by role</caption>
-        <thead>
-          <tr>
-            <th scope="col">Role</th>
-            <th scope="col">Damage</th>
-            <th scope="col">Healing</th>
-            <th scope="col">Damage blocked</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of current.rows; track row.role) {
-            <tr>
-              <th scope="row">{{ row.role }}</th>
-              <td>{{ row.damage }}</td>
-              <td>{{ row.healing }}</td>
-              <td>{{ row.blocked }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="role-figures__cards">
+      @for (card of current.cards; track card.role) {
+        <article class="role-card role-figures__card" [attr.data-role]="card.roleKey" [attr.aria-labelledby]="'role-figures-' + card.roleKey">
+          <h3 class="role-card__name" [id]="'role-figures-' + card.roleKey">
+            <span class="role-card__dot" aria-hidden="true"></span>{{ card.role }}
+          </h3>
+          <ul class="role-figures__bars">
+            @for (bar of card.bars; track bar.label) {
+              <li class="role-figures__bar">
+                <span class="role-figures__label">{{ bar.label }}</span>&ngsp;<span
+                  class="role-figures__value"
+                  [class.role-figures__none]="bar.percent === null"
+                  >{{ bar.value }}</span
+                >
+                <app-meter class="role-figures__meter" [value]="bar.percent ?? 0" />
+              </li>
+            }
+          </ul>
+        </article>
+      }
     </div>
     <p class="role-figures__note">{{ current.note }}</p>
   }

@@ -3,54 +3,61 @@
   margin-top: 24px;
 }
 
-.role-figures__scroll {
-  overflow-x: auto;
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
+.role-figures__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
 }
 
-.role-figures__table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--bg-panel);
-  color: var(--text);
+/* Wider gap than the benchmark cards: the bars need the room. The wash, edge, name and dot are the shared role card. */
+.role-figures__card {
+  gap: 12px;
 }
 
-.role-figures__table tbody tr:last-child th,
-.role-figures__table tbody tr:last-child td {
-  border-bottom: 0;
+.role-figures__bars {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.role-figures__table th,
-.role-figures__table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
+.role-figures__bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
 }
 
-.role-figures__table thead th {
-  background: var(--bg-panel-soft);
+.role-figures__label {
   color: var(--text-soft);
-  font-size: 0.85rem;
+  font-size: var(--type-small);
 }
 
-.role-figures__table td {
-  font-size: 1.1rem;
+.role-figures__value {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 800;
+  line-height: 1.3;
 }
 
-.role-figures__caption {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+/* A figure that is not shown yet says so in words, quietly, over an empty track. */
+.role-figures__value.role-figures__none {
+  color: var(--text-soft);
+  font-size: var(--type-small);
+  font-weight: 700;
+}
+
+.role-figures__meter {
+  --meter-fill: var(--hero-role-color, var(--text-muted));
+  --meter-height: 10px;
+
+  grid-column: 1 / -1;
 }
 
 .role-figures__note {
   max-width: 70ch;
-  margin: 0;
+  margin: 12px 0 0;
   color: var(--text-muted);
   font-size: 0.9rem;
   line-height: 1.5;
