@@ -1,4 +1,5 @@
 :host {
+  --scatter-height: 340px;
   --dot-size: 28px;
   --inset: 16px;
 
@@ -20,7 +21,7 @@
 .scatter {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
-  grid-template-rows: var(--scatter-height, 340px) 22px;
+  grid-template-rows: var(--scatter-height) 22px;
   margin-block: 6px;
 }
 
@@ -180,12 +181,12 @@
 
 @media (max-width: 560px) {
   :host {
+    --scatter-height: 300px;
     --dot-size: 22px;
     --inset: 12px;
   }
 
   .scatter {
     grid-template-columns: 38px minmax(0, 1fr);
-    grid-template-rows: var(--scatter-height, 300px) 22px;
   }
 }

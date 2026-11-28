@@ -1,4 +1,7 @@
 :host {
+  --meter-fill: var(--accent-strong);
+  --meter-height: 8px;
+
   display: block;
   min-width: 0;
 }
@@ -6,7 +9,7 @@
 .track {
   position: relative;
   display: block;
-  height: var(--meter-height, 8px);
+  height: var(--meter-height);
   overflow: hidden;
   border-radius: 999px;
   background: var(--surface-2);
@@ -16,7 +19,7 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--meter-fill, var(--accent-strong));
+  background: var(--meter-fill);
 }
 
 .guide {

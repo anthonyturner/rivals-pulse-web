@@ -1,4 +1,6 @@
 :host {
+  --columns: 1;
+
   display: block;
   min-width: 0;
 }
@@ -6,7 +8,7 @@
 /* Every lane and the axis share the same columns, so a mark sits over its label. */
 .plot {
   display: grid;
-  grid-template-columns: repeat(var(--columns, 1), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: 0 4px;
 }
 
@@ -43,7 +45,7 @@
 .lane {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--columns, 1), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: 0 4px;
   margin-top: 18px;
   border-bottom: 1px solid var(--border-strong);
@@ -128,7 +130,7 @@
 
 .axis {
   display: grid;
-  grid-template-columns: repeat(var(--columns, 1), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: 0 4px;
   margin-top: 4px;
   color: var(--text-soft);
