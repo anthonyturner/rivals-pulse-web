@@ -106,7 +106,7 @@ describe('StatsTabComponent', () => {
   it("shows each role's figures for the blended modes first", async () => {
     await answer(READY);
 
-    const names = Array.from(host().querySelectorAll('.role h3')).map((heading) => heading.textContent?.trim());
+    const names = Array.from(host().querySelectorAll('.roles .role-card h3')).map((heading) => heading.textContent?.trim());
 
     expect(names).toEqual(['Vanguard', 'Duelist', 'Strategist']);
     expect(text()).toContain('54.2%');
@@ -119,7 +119,7 @@ describe('StatsTabComponent', () => {
   it('tints each role card by its role', async () => {
     await answer(READY);
 
-    const roles = Array.from(host().querySelectorAll('.role')).map((card) => card.getAttribute('data-role'));
+    const roles = Array.from(host().querySelectorAll('.roles .role-card')).map((card) => card.getAttribute('data-role'));
 
     expect(roles).toEqual(['vanguard', 'duelist', 'strategist']);
   });
@@ -184,7 +184,7 @@ describe('StatsTabComponent', () => {
     const figuresPanel = (): HTMLElement => host().querySelector('app-community-role-figures') as HTMLElement;
     const text = (node: Element): string => (node.textContent ?? '').replace(/\s+/g, ' ').trim();
     const cards = (): string[] =>
-      Array.from(figuresPanel().querySelectorAll('.role-figures__card')).map((card) =>
+      Array.from(figuresPanel().querySelectorAll('.role-card')).map((card) =>
         [text(card.querySelector('h3') as Element), ...Array.from(card.querySelectorAll('li'), text)].join(' '),
       );
 
@@ -215,11 +215,11 @@ describe('StatsTabComponent', () => {
     it('shows its own designed empty state, naming the minimum, while the role benchmarks are ready', async () => {
       await answer(READY, 200, emptyFigures());
 
-      expect(host().querySelectorAll('.role').length).toBe(3);
+      expect(host().querySelectorAll('.roles .role-card').length).toBe(3);
       expect(figuresPanel().querySelector('app-state-panel')).toBeTruthy();
       expect(figuresPanel().textContent).toContain('Not enough data yet');
       expect(figuresPanel().textContent).toContain('50 lines');
-      expect(figuresPanel().querySelector('.role-figures__card')).toBeNull();
+      expect(figuresPanel().querySelector('.role-card')).toBeNull();
     });
 
     it('shows its empty state under the role benchmarks empty state, each with its own minimum', async () => {
@@ -231,7 +231,7 @@ describe('StatsTabComponent', () => {
     it('says only itself cannot be loaded when its request fails', async () => {
       await answer(READY, 200, 'down');
 
-      expect(host().querySelectorAll('.role').length).toBe(3);
+      expect(host().querySelectorAll('.roles .role-card').length).toBe(3);
       expect(figuresPanel().textContent).toContain('could not be loaded');
     });
   });

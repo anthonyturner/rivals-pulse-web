@@ -12,7 +12,7 @@ import { buildRoleFiguresView } from './role-figures-view';
   selector: 'app-community-role-figures',
   imports: [CommunitySummaryComponent, MeterComponent],
   templateUrl: './role-figures.component.html',
-  styleUrl: './role-figures.component.css',
+  styleUrls: ['../../../shared/styles/role-card.css', './role-figures.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoleFiguresComponent {

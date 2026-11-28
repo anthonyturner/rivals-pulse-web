@@ -9,37 +9,9 @@
   gap: 12px;
 }
 
-/* A role sets one colour for the card wash, its edge, the dot and the bars (the shared mapping in `styles.css`); `--hero-role-ink` is the same role used as text. */
+/* Wider gap than the benchmark cards: the bars need the room. The wash, edge, name and dot are the shared role card. */
 .role-figures__card {
-  display: grid;
-  align-content: start;
   gap: 12px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 40%, var(--border));
-  border-radius: 12px;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 16%, var(--bg-panel)),
-    var(--bg-panel) 70%
-  );
-}
-
-.role-figures__name {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  color: var(--hero-role-ink, var(--text-muted));
-  font-size: var(--type-h3);
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.role-figures__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--hero-role-color, var(--text-muted));
 }
 
 .role-figures__bars {
