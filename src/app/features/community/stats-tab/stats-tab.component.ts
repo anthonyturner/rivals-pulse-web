@@ -14,7 +14,7 @@ import { RoleStatsService } from './role-stats.service';
   selector: 'app-community-stats-tab',
   imports: [CommunitySummaryComponent, NoticeComponent, RoleFiguresComponent],
   templateUrl: './stats-tab.component.html',
-  styleUrl: './stats-tab.component.css',
+  styleUrls: ['../../../shared/styles/role-card.css', './stats-tab.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsTabComponent {

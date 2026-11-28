@@ -1,0 +1,38 @@
+/*
+ * The role card the Community role benchmarks and the per-minute figures share: a card washed in the
+ * hero role's colour, with the role's name and dot. A role sets one colour for the wash, the edge and the
+ * dot (the shared mapping in `styles.css`); `--hero-role-ink` is the same role used as text. A component
+ * that lists this file in `styleUrls` puts `role-card` on the card, `role-card__name` on its heading and
+ * `role-card__dot` on the dot inside it.
+ */
+.role-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 40%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hero-role-color, var(--text-muted)) 16%, var(--bg-panel)),
+    var(--bg-panel) 70%
+  );
+}
+
+.role-card__name {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--hero-role-ink, var(--text-muted));
+  font-size: var(--type-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.role-card__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hero-role-color, var(--text-muted));
+}

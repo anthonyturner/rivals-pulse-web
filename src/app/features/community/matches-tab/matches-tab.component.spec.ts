@@ -79,6 +79,17 @@ describe('MatchesTabComponent', () => {
     expect(headings()).toEqual(['Community matches']);
   });
 
+  it('shows the mode mix as one stacked bar with each mode share and average length as text', async () => {
+    await answer(READY);
+
+    const root = fixture.nativeElement as HTMLElement;
+    const items = Array.from(root.querySelectorAll('app-stacked-bar .item'), (item) => item.textContent?.replace(/\s+/g, ' ').trim());
+
+    expect(root.querySelector('app-stacked-bar .bar')?.getAttribute('aria-hidden')).toBe('true');
+    expect(root.querySelector('#matches-modes-title')?.closest('section')?.querySelector('table')).toBeNull();
+    expect(items).toEqual(['Quick Match 100% Average length: 10 min']);
+  });
+
   it('shows the four sections with the figures', async () => {
     await answer(READY);
 
