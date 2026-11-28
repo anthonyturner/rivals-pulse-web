@@ -1,7 +1,6 @@
 import type { CommunityKills } from '../../../../contracts/community-kills.model';
 import { halfSeasonFallbackNotice } from '../../../shared/utilities/stat-labels';
-import { heroCell, type HeroIdentities } from '../../insights/hero-identity';
-import { roleKeyOf } from './counters-tab-view';
+import { heroCell, roleKeyOf, type HeroIdentities } from '../../insights/hero-identity';
 import { killPairMinimum, killPairSentence, killsBandLabel, topKillPairs } from '../../insights/hero-kill-feed';
 
 /** Pairs listed: a summary, not the whole kill feed. */

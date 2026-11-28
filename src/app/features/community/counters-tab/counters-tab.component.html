@@ -23,7 +23,7 @@
               <span class="name">{{ record.loser.name }}</span>
             </span>&ngsp;<span class="figure">{{ record.winRate }}</span>&ngsp;<app-meter
               class="gauge"
-              [attr.data-tone]="record.tone"
+              [tone]="record.tone"
               [value]="record.winRateValue"
               [guide]="50"
             />&ngsp;<span class="foot">{{ record.edge }} · {{ record.sample }}</span>
@@ -50,7 +50,7 @@
     <ol class="records">
       @for (pair of killFeed.pairs; track pair.key) {
         <li [attr.title]="pair.description">
-          <div class="versus versus--plain">
+          <div class="versus">
             <span class="side side--first" [attr.data-role]="pair.killer.roleKey">
               <img [src]="pair.killer.imageUrl" alt="" width="56" height="56" loading="lazy" (error)="onImageError($event)" />
               <span class="name">{{ pair.killer.name }}</span>

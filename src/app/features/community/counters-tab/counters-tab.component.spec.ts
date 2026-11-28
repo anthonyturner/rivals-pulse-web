@@ -114,7 +114,7 @@ describe('CountersTabComponent', () => {
       const rows = Array.from(killFeedPanel().querySelectorAll('li')).map((row) => row.textContent?.replace(/\s+/g, ' ').trim());
 
       expect(rows).toEqual(['Storm was seen killing Hulk 100+ seen kills', 'Thor was seen killing Storm 25+ seen kills']);
-      expect(killFeedPanel().querySelectorAll('.versus--plain').length).toBe(2);
+      expect(killFeedPanel().querySelectorAll('.versus').length).toBe(2);
       expect(killFeedPanel().querySelector('app-meter')).toBeNull();
       expect(killFeedPanel().textContent).toContain('A separate measure from the matchup records');
       expect(killFeedPanel().textContent).toContain('miss kills that player did not see');

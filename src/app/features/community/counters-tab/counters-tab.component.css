@@ -14,7 +14,6 @@
   min-width: 0;
 }
 
-/* Two heroes facing each other: who comes out ahead on the left, who they are against on the right, the figure between them. */
 .versus {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
@@ -87,21 +86,11 @@ img {
   font-size: 1.125rem;
 }
 
-/* The fill runs to the win rate and the tick is an even 50%. */
 .gauge {
-  --meter-fill: var(--win-ink);
   --meter-height: 10px;
 
   grid-area: gauge;
   margin-top: 10px;
-}
-
-.gauge[data-tone='below'] {
-  --meter-fill: var(--loss-ink);
-}
-
-.gauge[data-tone='even'] {
-  --meter-fill: var(--text-soft);
 }
 
 .foot {
