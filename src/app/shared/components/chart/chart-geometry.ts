@@ -58,3 +58,20 @@ export function segmentWidths(values: readonly number[]): number[] {
 
   return total === 0 ? [] : parts.map((part) => (part / total) * 100);
 }
+
+/** The tick spacing for a span: the smallest of 1, 2, 5, 10, 20, 50 ... that gives no more than `maxTicks` intervals. */
+export function tickStep(span: number, maxTicks: number): number {
+  if (!Number.isFinite(span) || span <= 0 || maxTicks <= 0) {
+    return 1;
+  }
+
+  for (let magnitude = 0.1; ; magnitude *= 10) {
+    for (const multiple of [1, 2, 5]) {
+      const step = multiple * magnitude;
+
+      if (span / step <= maxTicks) {
+        return step;
+      }
+    }
+  }
+}

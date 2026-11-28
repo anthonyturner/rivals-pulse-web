@@ -76,6 +76,32 @@
       }
     }
 
+    @if (scatter(); as chart) {
+      <section class="scatter" aria-labelledby="stats-heroes-scatter">
+        <h3 id="stats-heroes-scatter" class="scatter__title">Win rate against pick rate</h3>
+        <p class="scatter__lede">
+          Every hero with enough games, as its portrait. Heroes higher up win more, heroes further right are
+          picked more, and the dashed line is a 50% win rate. The ring is the hero's role.
+        </p>
+        <ul class="scatter__legend">
+          @for (role of scatterRoles; track role) {
+            <li class="scatter__role" [attr.data-role]="role.toLowerCase()">
+              <span class="scatter__swatch" aria-hidden="true"></span>{{ role }}
+            </li>
+          }
+        </ul>
+        <app-scatter-chart
+          caption="Win rate and pick rate of every hero with enough games"
+          rowHeader="Hero"
+          [xAxis]="chart.xAxis"
+          [yAxis]="chart.yAxis"
+          [columns]="scatterColumns"
+          [guides]="chart.guides"
+          [points]="chart.points"
+        />
+      </section>
+    }
+
     @if (tableView(); as view) {
       <app-hero-table [view]="view" />
     }
