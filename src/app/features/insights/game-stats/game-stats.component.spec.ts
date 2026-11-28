@@ -119,9 +119,10 @@ describe('GameStatsComponent', () => {
     ]);
   });
 
-  it('keeps the note on how matches and players are counted', async () => {
+  it('points the hidden table at the note on how matches and players are counted', async () => {
     const element = await open(live);
-    const note = element.querySelector('#seasons-note');
+    const table = element.querySelector('app-column-chart table') as HTMLTableElement;
+    const note = element.querySelector(`#${table.getAttribute('aria-describedby')}`);
 
     expect(note?.textContent).toContain('A player is counted once per half-season');
     expect(note?.textContent).toContain('A match is counted once however many players recorded it');
@@ -142,8 +143,8 @@ describe('GameStatsComponent', () => {
   it('holds the heroes room, as hidden blocks with no link, while their numbers load', async () => {
     const element = await open(live, { stats: 'pending' });
 
-    expect(element.querySelectorAll('.spots[aria-hidden="true"] .spots__pending').length).toBe(2);
-    expect(element.querySelector('app-hero-spotlight')).toBeNull();
+    expect(element.querySelectorAll('.spots[aria-hidden="true"] .spot--pending[aria-hidden="true"]').length).toBe(2);
+    expect(element.querySelector('app-hero-spotlight a')).toBeNull();
     expect(text(element, '.strip__tile dt')).toContain('Players');
   });
 
