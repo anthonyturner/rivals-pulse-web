@@ -57,6 +57,30 @@ describe('HeroSpotlightComponent', () => {
     expect(link.querySelector('.sample')).toBeNull();
   });
 
+  it('sets the portrait beside the words when the tile is wide, so a tile in a wide row stays short', () => {
+    const host = element.querySelector('#role') as HTMLElement;
+
+    host.style.width = '480px';
+
+    const art = (host.querySelector('.art') as HTMLElement).getBoundingClientRect();
+    const body = (host.querySelector('.body') as HTMLElement).getBoundingClientRect();
+    const tile = (host.querySelector('.spot') as HTMLElement).getBoundingClientRect();
+
+    expect(art.right).toBeLessThanOrEqual(body.left);
+    expect(tile.height).toBeLessThan(tile.width / 2);
+  });
+
+  it('stacks the portrait over the words when the tile is narrow', () => {
+    const host = element.querySelector('#role') as HTMLElement;
+
+    host.style.width = '170px';
+
+    const art = (host.querySelector('.art') as HTMLElement).getBoundingClientRect();
+    const body = (host.querySelector('.body') as HTMLElement).getBoundingClientRect();
+
+    expect(art.bottom).toBeLessThanOrEqual(body.top);
+  });
+
   it('loads its portrait at once, as the largest thing above the fold', () => {
     expect(element.querySelector('#role img')?.getAttribute('loading')).toBe('eager');
   });
@@ -69,11 +93,22 @@ describe('HeroSpotlightComponent', () => {
     expect(pending.textContent?.trim()).toBe('');
   });
 
-  it('is as tall as a real tile, so the page does not jump when the hero arrives', () => {
-    const real = (element.querySelector('#role .spot') as HTMLElement).getBoundingClientRect();
-    const empty = (element.querySelector('#pending .spot') as HTMLElement).getBoundingClientRect();
+  for (const [layout, width] of [
+    ['stacked, in a narrow tile', '170px'],
+    ['with the portrait at the side, in a wide tile', '480px'],
+  ]) {
+    it(`is as tall as a real tile ${layout}, so the page does not jump when the hero arrives`, () => {
+      const real = element.querySelector('#role') as HTMLElement;
+      const empty = element.querySelector('#pending') as HTMLElement;
 
-    expect(empty.height).toBeGreaterThan(0);
-    expect(Math.abs(empty.height - real.height)).toBeLessThanOrEqual(1);
-  });
+      real.style.width = width;
+      empty.style.width = width;
+
+      const realHeight = (real.querySelector('.spot') as HTMLElement).getBoundingClientRect().height;
+      const emptyHeight = (empty.querySelector('.spot') as HTMLElement).getBoundingClientRect().height;
+
+      expect(emptyHeight).toBeGreaterThan(0);
+      expect(Math.abs(emptyHeight - realHeight)).toBeLessThanOrEqual(1);
+    });
+  }
 });

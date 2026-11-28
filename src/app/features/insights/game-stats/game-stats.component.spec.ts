@@ -128,7 +128,7 @@ describe('GameStatsComponent', () => {
     expect(note?.textContent).toContain('A match is counted once however many players recorded it');
   });
 
-  it('sets the hero picked most and the hero that wins most beside the figures, each linking to its hero page', async () => {
+  it('sets the hero picked most and the hero that wins most in a row of their own, each linking to its hero page', async () => {
     const element = await open(live);
     const spotlights = Array.from(element.querySelectorAll<HTMLAnchorElement>('app-hero-spotlight a'));
 
@@ -138,6 +138,17 @@ describe('GameStatsComponent', () => {
       'Highest win rate Storm 65.0% win rate 40 games Duelist',
     ]);
     expect(spotlights.every((link) => link.querySelector('img')?.getAttribute('alt') === '')).toBeTrue();
+  });
+
+  it('keeps the four figures in a row of their own and puts the hero tiles in the row below', async () => {
+    const element = await open(live);
+    const figures = element.querySelector('.strip__figures') as HTMLElement;
+    const spots = element.querySelector('.spots') as HTMLElement;
+
+    expect(figures.contains(spots)).toBeFalse();
+    expect(figures.querySelectorAll('.strip__tile').length).toBe(4);
+    expect(spots.querySelectorAll('app-hero-spotlight').length).toBe(2);
+    expect(figures.compareDocumentPosition(spots) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('holds the heroes room, as hidden blocks with no link, while their numbers load', async () => {
@@ -158,7 +169,6 @@ describe('GameStatsComponent', () => {
       const element = await open(live, { stats });
 
       expect(element.querySelector('.spots')).toBeNull();
-      expect(element.querySelector('.bento--heroes')).toBeNull();
       expect(text(element, '.strip__tile dd')).toContain('7,674');
     });
   }
