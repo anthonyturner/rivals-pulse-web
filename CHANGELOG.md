@@ -14,6 +14,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- The Stats Heroes tab opens with a chart of every hero's win rate against its pick rate: each hero is its portrait, ringed in its role colour, with a dashed 50% line, and links to its hero page. It shows the same heroes, mode and half-season as the table and tier list below it, and its figures are in a hidden table for screen readers ([#914](https://github.com/anthonyturner/rivals-pulse-web/pull/914)).
 - The Stats overview now opens with the hero picked most and the hero with the highest win rate as large portrait tiles beside the matches and players counted, each linking to its hero page, and shows matches and players per half-season as a chart instead of a table (the figures are still there for screen readers) ([#908](https://github.com/anthonyturner/rivals-pulse-web/pull/908)).
 - Look up "Attrition" in the glossary: winning a fight by wearing the enemy down over time ([#891](https://github.com/anthonyturner/rivals-pulse-web/pull/891)).
 - Nightcrawler's matches now count: the site knows the game's id for him (1068), so the shared hero list the desktop app reads carries it, and his plays join the hero stats, counters, partners and triple-support counts once uploaded ([#878](https://github.com/anthonyturner/rivals-pulse-web/pull/878)).
