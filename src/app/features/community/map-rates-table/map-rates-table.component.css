@@ -1,0 +1,55 @@
+/*
+ * The table's own width decides the picture's size: the Overview's three-across panels leave a map's name
+ * only about 90px beside a 72px picture, so a narrow table gets a 44px picture and a wider label column.
+ */
+.stat-table col:first-child {
+  width: 66%;
+}
+
+.map-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Whole words wrap; a word is broken only when it is wider than the room it has. */
+.map-cell__name {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* 16:9, the shape of the art, so the row keeps its height before the picture has loaded. The height attribute is only a hint for that ratio. */
+.map-art {
+  flex: none;
+  width: 44px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.map-art--initials {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+@container (min-width: 360px) {
+  .stat-table col:first-child {
+    width: 60%;
+  }
+
+  .map-cell {
+    gap: 10px;
+  }
+
+  .map-art {
+    width: 72px;
+    border-radius: 6px;
+  }
+}
