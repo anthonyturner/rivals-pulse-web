@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 
+import { StackedBarComponent } from '../../../shared/components/chart/stacked-bar/stacked-bar.component';
 import { MapRatesTableComponent } from '../map-rates-table/map-rates-table.component';
 import { CommunitySummaryComponent } from '../community-summary/community-summary.component';
 import { CommunityMatchesService } from './community-matches.service';
@@ -12,7 +13,7 @@ const WHAT_THE_TAB_SHOWS = 'Win rate by map, mode mix, average length and matche
 /** The community's match totals: anonymous, counted once per match, never anyone's own matches. */
 @Component({
   selector: 'app-community-matches-tab',
-  imports: [CommunitySummaryComponent, MapRatesTableComponent, RouterLink],
+  imports: [CommunitySummaryComponent, MapRatesTableComponent, RouterLink, StackedBarComponent],
   templateUrl: './matches-tab.component.html',
   styleUrls: ['../../../shared/styles/stat-panels.css', './matches-tab.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

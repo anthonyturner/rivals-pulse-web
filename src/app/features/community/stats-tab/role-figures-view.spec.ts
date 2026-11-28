@@ -28,18 +28,39 @@ describe('buildRoleFiguresView', () => {
     expect(buildRoleFiguresView(null, 'all')).toEqual({ kind: 'unavailable' });
   });
 
-  it('is a row per role, with a missing figure said in words and never as a zero', () => {
+  it('is a card per role, with a missing figure said in words and never as a zero', () => {
     const view = buildRoleFiguresView(READY, 'all');
+    const figures = view.kind === 'ready' ? view.cards.map((card) => [card.role, card.bars.map((bar) => bar.value)]) : [];
 
     expect(view.kind).toBe('ready');
-    expect(view.kind === 'ready' && view.rows).toEqual([
-      { role: 'Vanguard', damage: '1,234', healing: '0', blocked: '4,821' },
-      { role: 'Duelist', damage: '987', healing: 'Not enough data', blocked: 'Not enough data' },
-      { role: 'Strategist', damage: 'Not enough data', healing: '640', blocked: 'Not enough data' },
+    expect(figures).toEqual([
+      ['Vanguard', ['1,234', '0', '4,821']],
+      ['Duelist', ['987', 'Not enough data', 'Not enough data']],
+      ['Strategist', ['Not enough data', '640', 'Not enough data']],
     ]);
+    expect(view.kind === 'ready' && view.cards.map((card) => card.roleKey)).toEqual(['vanguard', 'duelist', 'strategist']);
+    expect(view.kind === 'ready' && view.cards[0].bars.map((bar) => bar.label)).toEqual(['Damage', 'Healing', 'Damage blocked']);
     expect(view.kind === 'ready' && view.halfSeasonLabel).toBe('Season 10.5');
     expect(view.kind === 'ready' && view.notice).toBeNull();
     expect(view.kind === 'ready' && view.note).toContain('describes those players, not everyone in a lobby');
+  });
+
+  it('scales each figure to the largest role, so the cards compare roles and a missing figure has no bar', () => {
+    const view = buildRoleFiguresView(READY, 'all');
+    const percents = view.kind === 'ready' ? view.cards.map((card) => card.bars.map((bar) => bar.percent)) : [];
+
+    expect(percents[0]?.[0]).toBe(100);
+    expect(percents[1]?.[0]).toBeCloseTo((987 / 1234) * 100);
+    expect(percents[0]).toEqual([100, 0, 100]);
+    expect(percents[1]).toEqual([jasmine.any(Number), null, null]);
+    expect(percents[2]).toEqual([null, 100, null]);
+  });
+
+  it('gives a figure that every role reports as zero an empty bar, never NaN', () => {
+    const zero = figuresOf({ Vanguard: { damage: 0 }, Duelist: { damage: 0 }, Strategist: { damage: 0 } }, [heroFigures('hela', { damage: 1 })]);
+    const view = buildRoleFiguresView(zero, 'all');
+
+    expect(view.kind === 'ready' && view.cards.map((card) => card.bars[0].percent)).toEqual([0, 0, 0]);
   });
 
   it('is the designed empty state, naming the line and player minimums, when nothing clears them', () => {
@@ -69,8 +90,8 @@ describe('buildRoleFiguresView', () => {
     const chosen = buildRoleFiguresView(competitive, 'competitive');
     const unknown = buildRoleFiguresView(READY, 'unknown-mode' as never);
 
-    expect(chosen.kind === 'ready' && chosen.rows[0].damage).toBe('1,500');
-    expect(unknown.kind === 'ready' && unknown.rows[0].damage).toBe('1,234');
+    expect(chosen.kind === 'ready' && chosen.cards[0].bars[0].value).toBe('1,500');
+    expect(unknown.kind === 'ready' && unknown.cards[0].bars[0].value).toBe('1,234');
   });
 
   it('says the previous half-season stands in', () => {
@@ -82,7 +103,7 @@ describe('buildRoleFiguresView', () => {
 
   it('prints no NaN, undefined or null', () => {
     const view = buildRoleFiguresView(READY, 'all');
-    const text = view.kind === 'ready' ? JSON.stringify(view.rows) : '';
+    const text = view.kind === 'ready' ? JSON.stringify(view.cards.map((card) => card.bars.map((bar) => [bar.label, bar.value]))) : '';
 
     expect(text).not.toBe('');
     expect(text).not.toMatch(/NaN|undefined|null/);
