@@ -6,6 +6,7 @@ import { BehaviorSubject, forkJoin, switchMap, tap } from 'rxjs';
 import type { HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import type { HeroSynergies } from '../../../../contracts/hero-synergies.model';
 import { contentState, reportContentState } from '../../../core/seo/thin-content';
+import { MeterComponent } from '../../../shared/components/chart/meter/meter.component';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
@@ -33,6 +34,7 @@ interface TeamCompsRequest {
   imports: [
     FilterSelectComponent,
     HeroImageFallbackDirective,
+    MeterComponent,
     NoticeComponent,
     RouterLink,
     StatePanelComponent,

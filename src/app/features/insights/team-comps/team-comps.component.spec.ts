@@ -127,28 +127,54 @@ describe('TeamCompsComponent', () => {
     http.expectOne('/api/team-lineups');
   });
 
-  it('draws one table per role with its pairs, matches together and win rate', async () => {
+  it('draws one list of duo tiles per role, each with its pair, win rate and matches together', async () => {
     const element = await open(
       synergiesOf([synergy('hulk', 'thor', 9, 12), synergy('hela', 'storm', 6, 20), synergy('hulk', 'storm', 12, 12)]),
     );
 
     expect(text(element, '.card h3')).toEqual(['Vanguard duos', 'Duelist duos', 'Strategist duos']);
 
-    const tables = element.querySelectorAll('table');
+    const lists = element.querySelectorAll('.duos');
 
-    expect(tables.length).toBe(2);
-    expect(text(tables[0] as HTMLElement, 'tbody th a')).toEqual(['Hulk', 'Thor']);
-    expect(text(tables[0] as HTMLElement, 'tbody th .visually-hidden')).toEqual(['and']);
-    expect(text(tables[0] as HTMLElement, 'tbody td.col-matches')).toEqual(['12']);
-    expect(text(tables[0] as HTMLElement, 'tbody td.col-rate')).toEqual(['75.0%']);
-    expect(text(tables[1] as HTMLElement, 'tbody td.col-rate')).toEqual(['30.0%']);
-    expect(tables[0].getAttribute('aria-labelledby')).toBe('pairs-vanguard');
+    expect(lists.length).toBe(2);
+    expect(text(lists[0] as HTMLElement, '.duo__name')).toEqual(['Hulk', 'Thor']);
+    expect(text(lists[0] as HTMLElement, '.duo .visually-hidden')).toEqual(['Rank', 'and']);
+    expect(text(lists[0] as HTMLElement, '.duo__matches')).toEqual(['12 matches together']);
+    expect(text(lists[0] as HTMLElement, '.duo__rate strong')).toEqual(['75.0%']);
+    expect(text(lists[1] as HTMLElement, '.duo__rate strong')).toEqual(['30.0%']);
+    expect(text(lists[0] as HTMLElement, '.duo__rank')).toEqual(['#Rank 1']);
+    expect(lists[0].getAttribute('aria-labelledby')).toBe('pairs-vanguard');
+    expect(lists[0].getAttribute('data-role')).toBe('vanguard');
     expect(element.querySelector('#pairs-vanguard')?.textContent).toBe('Vanguard duos');
+    expect(element.querySelector('table')).toBeNull();
+  });
+
+  it('reads each tile as one sentence of figures: rank, the pair, win rate, matches together', async () => {
+    const element = await open(synergiesOf([synergy('hulk', 'thor', 9, 12)]));
+
+    expect(text(element, '.duo')).toEqual(['#Rank 1 Hulk + and Thor 75.0% win rate 12 matches together']);
+  });
+
+  it('draws a gauge to the win rate with the 50% tick, hidden from assistive technology, coloured by which side of 50% it is on', async () => {
+    const element = await open(synergiesOf([synergy('mantis', 'loki', 9, 12), synergy('mantis', 'luna-snow', 4, 12)]));
+    const gauges = Array.from(element.querySelectorAll('.duo__gauge'));
+
+    expect(gauges.map((gauge) => gauge.getAttribute('aria-hidden'))).toEqual(['true', 'true']);
+    expect(gauges.map((gauge) => gauge.getAttribute('data-tone'))).toEqual(['above', 'below']);
+    expect(gauges.map((gauge) => (gauge.querySelector('.fill') as HTMLElement).style.width)).toEqual(['75%', '33.3333%']);
+    expect(gauges[0].querySelector('.guide')).not.toBeNull();
+  });
+
+  it('weighs a tile by its matches against the heaviest pair of the role', async () => {
+    const element = await open(synergiesOf([synergy('mantis', 'loki', 9, 12), synergy('mantis', 'luna-snow', 6, 24)]));
+    const weights = Array.from(element.querySelectorAll<HTMLElement>('.duo'), (tile) => parseFloat(tile.style.getPropertyValue('--weight')));
+
+    expect(weights).toEqual([0.5, 1]);
   });
 
   it('links each hero of a pair to its page, reachable from the keyboard', async () => {
     const element = await open(synergiesOf([synergy('hulk', 'thor', 9, 12)]));
-    const links = Array.from(element.querySelectorAll('tbody th a'));
+    const links = Array.from(element.querySelectorAll('.duo a'));
 
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/heroes/hulk', '/heroes/thor']);
     expect(links.every((link) => link.getAttribute('tabindex') === null)).toBeTrue();
@@ -280,7 +306,7 @@ describe('TeamCompsComponent', () => {
     it('says the triple supports could not be loaded without hiding the duos', async () => {
       const element = await open(PAIRS, ROSTER, 'failure');
 
-      expect(element.querySelectorAll('section')[0].querySelector('table')).not.toBeNull();
+      expect(element.querySelectorAll('section')[0].querySelector('.duos')).not.toBeNull();
       expect(text(element, 'app-state-panel h3')[0]).toBe('Triple supports could not be loaded');
       expect(element.textContent).not.toContain('Team comps could not be loaded');
     });
@@ -387,7 +413,7 @@ describe('TeamCompsComponent', () => {
       const element = await open(PAIRS, ROSTER, triosOf([]), 'failure');
       const sections = element.querySelectorAll('section');
 
-      expect(sections[0].querySelector('table')).not.toBeNull();
+      expect(sections[0].querySelector('.duos')).not.toBeNull();
       expect(text(sections[2] as HTMLElement, 'app-state-panel h3')).toEqual(['Line-ups could not be loaded']);
       expect(element.textContent).not.toContain('Team comps could not be loaded');
       expect(element.querySelector('.method-note')?.textContent).not.toContain('Line-up pick rates');
@@ -447,7 +473,7 @@ describe('TeamCompsComponent', () => {
         '?mode=quick-match',
       );
 
-      expect(text(picked, 'tbody td.col-rate')).toEqual(['25.0%']);
+      expect(text(picked, '.duo__rate strong')).toEqual(['25.0%']);
       expect((picked.querySelectorAll('.toolbar select')[0] as HTMLSelectElement).value).toBe('quick-match');
       expect(picked.querySelector('[aria-live="polite"]')?.textContent).toBe(
         'Team comps updated in Quick Match for Season 10.5',
@@ -496,13 +522,13 @@ describe('TeamCompsComponent', () => {
         ]),
         roster,
       );
-      const tables = element.querySelectorAll('table');
+      const lists = element.querySelectorAll('.duos');
 
-      expect(tables.length).toBe(2);
-      expect(text(tables[0] as HTMLElement, 'tbody th .hero-name')).toEqual(['Hulk', 'Deadpool (Vanguard)']);
-      expect(text(tables[1] as HTMLElement, 'tbody th .hero-name')).toEqual(['Loki', 'Deadpool (Strategist)']);
+      expect(lists.length).toBe(2);
+      expect(text(lists[0] as HTMLElement, '.duo__name')).toEqual(['Hulk', 'Deadpool (Vanguard)']);
+      expect(text(lists[1] as HTMLElement, '.duo__name')).toEqual(['Loki', 'Deadpool (Strategist)']);
       expect(
-        Array.from(tables[1].querySelectorAll('tbody th a')).map((link) => link.getAttribute('href')),
+        Array.from(lists[1].querySelectorAll('.duo a')).map((link) => link.getAttribute('href')),
       ).toEqual(['/heroes/loki', '/heroes/deadpool']);
     });
 
