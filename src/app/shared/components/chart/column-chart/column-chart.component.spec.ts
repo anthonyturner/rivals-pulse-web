@@ -1,5 +1,5 @@
 import { Component, provideZonelessChangeDetection } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ColumnChartComponent, type ChartColumn, type ChartLane } from './column-chart.component';
 
@@ -22,19 +22,21 @@ const COLUMNS: ChartColumn[] = [
 
 @Component({
   imports: [ColumnChartComponent],
-  template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" />`,
+  template: `<app-column-chart caption="Matches by day" rowHeader="Day" [lanes]="lanes" [columns]="columns" [showValues]="showValues" />`,
 })
 class HostComponent {
   lanes = LANES;
   columns = COLUMNS;
+  showValues = true;
 }
 
 describe('ColumnChartComponent', () => {
   let element: HTMLElement;
+  let fixture: ComponentFixture<HostComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
-    const fixture = TestBed.createComponent(HostComponent);
+    fixture = TestBed.createComponent(HostComponent);
     element = fixture.nativeElement;
     fixture.detectChanges();
   });
@@ -77,5 +79,18 @@ describe('ColumnChartComponent', () => {
     const heights = Array.from(element.querySelectorAll<HTMLElement>('.lane'), (lane) => lane.style.height);
 
     expect(heights).toEqual(['96px', '96px']);
+  });
+
+  it('prints the figure over each mark, or leaves it to the tooltip and the table when asked not to', async () => {
+    expect(Array.from(element.querySelectorAll('.value'), (value) => value.textContent)).toEqual(['20%', '10%', '55%']);
+
+    fixture.componentInstance.showValues = false;
+    fixture.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelectorAll('.value').length).toBe(0);
+    expect(element.querySelectorAll('tbody td').length).toBe(4);
+    expect(element.querySelector('.bar')?.getAttribute('title')).toBe('Monday: Share of matches 20%');
   });
 });

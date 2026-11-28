@@ -1,4 +1,6 @@
 import type { GameCounts } from '../../../../contracts/game-counts.model';
+import type { ChartColumn, ChartLane } from '../../../shared/components/chart/column-chart/column-chart.component';
+import { positionOf } from '../../../shared/components/chart/chart-geometry';
 import { matchesCountedLabel } from '../../../shared/utilities/stat-labels';
 
 /** One of the headline figures. */
@@ -7,12 +9,14 @@ export interface StatTileView {
   value: string;
 }
 
-/** One half-season's row in the table. */
-export interface HalfSeasonRowView {
-  label: string;
-  matches: string;
-  players: string;
-}
+/** The lanes of the half-season trend: matches counted, then players. */
+export const HALF_SEASON_LANES: readonly ChartLane[] = [
+  { name: 'Matches counted', kind: 'bars', tone: 'primary' },
+  { name: 'Players', kind: 'bars', tone: 'secondary' },
+];
+
+/** More half-seasons than this are too many to print a figure over each bar; the tooltips and the table still carry them. */
+const HALF_SEASON_VALUES_LIMIT = 8;
 
 /**
  * What the page draws, in the order it is known: `loading` until the request answers, `error` when
@@ -22,7 +26,7 @@ export type GameStatsView =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'empty' }
-  | { status: 'ready'; meta: string; tiles: StatTileView[]; rows: HalfSeasonRowView[] };
+  | { status: 'ready'; meta: string; tiles: StatTileView[]; seasons: ChartColumn[]; showSeasonValues: boolean };
 
 const numbers = new Intl.NumberFormat('en-US');
 const days = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
@@ -59,12 +63,23 @@ export function buildGameStatsView(counts: GameCounts | null | undefined): GameS
       { label: 'Players', value: numbers.format(counts.players) },
       ...(since === null ? [] : [{ label: 'Earliest match', value: since }]),
     ],
-    rows: counts.halfSeasons.map((season) => ({
-      label: seasonLabel(season.halfSeason),
-      matches: numbers.format(season.matches),
-      players: numbers.format(season.players),
-    })),
+    seasons: halfSeasonColumns(counts),
+    showSeasonValues: counts.halfSeasons.length <= HALF_SEASON_VALUES_LIMIT,
   };
+}
+
+/** Oldest first, so the chart reads left to right in time; each lane is scaled to its own largest figure. */
+function halfSeasonColumns(counts: GameCounts): ChartColumn[] {
+  const mostMatches = Math.max(...counts.halfSeasons.map((season) => season.matches));
+  const mostPlayers = Math.max(...counts.halfSeasons.map((season) => season.players));
+
+  return [...counts.halfSeasons].reverse().map((season) => ({
+    label: seasonLabel(season.halfSeason),
+    cells: [
+      { position: positionOf(season.matches, 0, mostMatches), valueLabel: numbers.format(season.matches) },
+      { position: positionOf(season.players, 0, mostPlayers), valueLabel: numbers.format(season.players) },
+    ],
+  }));
 }
 
 function seasonLabel(halfSeason: number): string {

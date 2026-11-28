@@ -20,7 +20,9 @@
             } @else {
               <span class="dot" [class]="'dot ' + cell.side" [style.bottom.%]="cell.position" [attr.title]="cell.title"></span>
             }
-            <span class="value" [class.value--above]="!lane.isBars && cell.side !== 'below'" [class.value--below]="!lane.isBars && cell.side === 'below'" [style.bottom.%]="cell.position">{{ cell.valueLabel }}</span>
+            @if (showValues()) {
+              <span class="value" [class.value--above]="!lane.isBars && cell.side !== 'below'" [class.value--below]="!lane.isBars && cell.side === 'below'" [style.bottom.%]="cell.position">{{ cell.valueLabel }}</span>
+            }
           }
         </span>
       }

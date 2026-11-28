@@ -38,12 +38,37 @@ describe('buildGameStatsView', () => {
     );
   });
 
-  it('names each half-season a season and keeps the answer newest first', () => {
+  it('names each half-season a season and charts them oldest first, so the chart reads forward in time', () => {
     const view = buildGameStatsView(COUNTS);
 
-    expect(view.status === 'ready' && view.rows).toEqual([
-      { label: 'Season 10.5', matches: '900', players: '40,000' },
-      { label: 'Season 10', matches: '334', players: '20,000' },
+    expect(view.status === 'ready' && view.seasons.map((season) => [season.label, season.cells.map((cell) => cell?.valueLabel)])).toEqual([
+      ['Season 10', ['334', '20,000']],
+      ['Season 10.5', ['900', '40,000']],
+    ]);
+  });
+
+  it('scales matches and players each to their own largest half-season', () => {
+    const view = buildGameStatsView(COUNTS);
+    const positions = view.status === 'ready' ? view.seasons.map((season) => season.cells.map((cell) => cell?.position)) : [];
+
+    expect(positions[1]).toEqual([100, 100]);
+    expect(positions[0]?.[0]).toBeCloseTo((334 / 900) * 100);
+    expect(positions[0]?.[1]).toBeCloseTo(50);
+  });
+
+  it('prints a figure over each bar only while the half-seasons are few enough to fit them', () => {
+    const many = Array.from({ length: 9 }, (_, index) => ({ halfSeason: 10 + index / 2, matches: 10, players: 5 }));
+
+    expect(buildGameStatsView(COUNTS)).toEqual(jasmine.objectContaining({ showSeasonValues: true }));
+    expect(buildGameStatsView({ ...COUNTS, halfSeasons: many })).toEqual(jasmine.objectContaining({ showSeasonValues: false }));
+  });
+
+  it('keeps a half-season with no matches on the chart as an empty bar, never NaN', () => {
+    const view = buildGameStatsView({ ...COUNTS, matches: 5, halfSeasons: [{ halfSeason: 10, matches: 0, players: 0 }] });
+
+    expect(view.status === 'ready' && view.seasons[0].cells).toEqual([
+      { position: 0, valueLabel: '0' },
+      { position: 0, valueLabel: '0' },
     ]);
   });
 

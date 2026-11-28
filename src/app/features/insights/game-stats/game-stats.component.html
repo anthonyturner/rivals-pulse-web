@@ -12,56 +12,68 @@
       <p>Counts appear here once matches recorded with the RivalsPulse app have been uploaded.</p>
     </app-state-panel>
   } @else {
+    @let heroes = spotlights();
+
     <section class="strip" aria-label="Matches and players counted">
-      <div class="strip__figures">
-        <app-heartbeat-line [rate]="beatRate()" />
-        <dl class="strip__tiles">
-          @for (tile of v.tiles; track tile.label) {
-            <div class="strip__tile">
-              <dt>{{ tile.label }}</dt>
-              <dd>{{ tile.value }}</dd>
+      <div class="bento" [class.bento--heroes]="heroes.kind !== 'none'">
+        <div class="strip__figures">
+          <app-heartbeat-line [rate]="beatRate()" />
+          <dl class="strip__tiles">
+            @for (tile of v.tiles; track tile.label) {
+              <div class="strip__tile">
+                <dt>{{ tile.label }}</dt>
+                <dd>{{ tile.value }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+
+        @switch (heroes.kind) {
+          @case ('ready') {
+            <div class="spots">
+              @for (spotlight of heroes.spotlights; track spotlight.heading) {
+                <app-hero-spotlight
+                  [heading]="spotlight.heading"
+                  [hero]="spotlight.hero"
+                  [figureLabel]="spotlight.figureLabel"
+                />
+              }
             </div>
           }
-        </dl>
+          @case ('loading') {
+            <div class="spots" aria-hidden="true">
+              <span class="spots__pending"></span>
+              <span class="spots__pending"></span>
+            </div>
+          }
+        }
       </div>
 
       <h2 id="seasons-title" class="strip__title">By half-season</h2>
-      <table class="stat-table seasons" aria-labelledby="seasons-title" aria-describedby="seasons-note">
-        <caption class="visually-hidden">Matches and players seen in each half-season</caption>
-        <colgroup>
-          <col />
-          <col />
-          <col />
-        </colgroup>
-        <thead>
-          <tr>
-            <th scope="col">Half-season</th>
-            <th scope="col">Matches counted</th>
-            <th scope="col">Players</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of v.rows; track row.label) {
-            <tr>
-              <th scope="row">{{ row.label }}</th>
-              <td>{{ row.matches }}</td>
-              <td>{{ row.players }}</td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="3">No half-season has matches yet.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      @if (v.seasons.length > 0) {
+        <app-column-chart
+          caption="Matches and players seen in each half-season"
+          rowHeader="Half-season"
+          [lanes]="seasonLanes"
+          [columns]="v.seasons"
+          [showValues]="v.showSeasonValues"
+        />
+      } @else {
+        <p class="stat-note">No half-season has matches yet.</p>
+      }
       <details class="stat-how">
         <summary>How these are counted<span class="visually-hidden"> for matches and players</span></summary>
         <p class="stat-note">{{ v.meta }}</p>
         <p class="stat-note" id="seasons-note">
           A match is counted once however many players recorded it, in every mode and whether or not it ended with a win
-          or a loss, so the rows add up to the total. Win rates and tiers use only the matches with a result, so they
-          count fewer. A player is counted once per half-season, so the rows can add up to more players than the total.
-          Only matches the app still holds are counted, which is up to about six months of play.
+          or a loss, so the half-seasons add up to the total. Win rates and tiers use only the matches with a result, so
+          they count fewer. A player is counted once per half-season, so the half-seasons can add up to more players than
+          the total. Only matches the app still holds are counted, which is up to about six months of play.
+        </p>
+        <p class="stat-note">
+          The most picked hero and the hero with the highest win rate come from the matches with a result in Quick Match
+          and Competitive, among the heroes with enough games to be placed. Each bar chart is scaled to its own largest
+          figure.
         </p>
       </details>
     </section>
