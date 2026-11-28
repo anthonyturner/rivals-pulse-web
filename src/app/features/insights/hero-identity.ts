@@ -43,3 +43,8 @@ function titleCase(slug: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
+
+/** A hero role as a style key, such as `vanguard`; null for a hero with no role, so nothing is tinted by a guess. */
+export function roleKeyOf(role: string | null): string | null {
+  return role?.trim().toLowerCase() || null;
+}

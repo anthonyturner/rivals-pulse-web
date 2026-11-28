@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
+import type { RateSide } from '../../../utilities/stat-labels';
+
 /** Which side of its guide line a dot is on. It picks the dot's colour, and the position says the same, so colour is never the only signal. */
-export type ChartSide = 'above' | 'below' | 'even';
+export type ChartSide = RateSide;
 
 /** The series colours a lane can take. */
 export type ChartTone = 'primary' | 'secondary' | 'tertiary';

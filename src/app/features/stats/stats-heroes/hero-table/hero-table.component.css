@@ -273,7 +273,7 @@ thead [aria-sort='descending'] button {
 }
 
 [data-tone='below'] .bar-fill {
-  background: var(--danger);
+  background: var(--loss-ink);
 }
 
 @media (max-width: 560px) {
