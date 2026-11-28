@@ -1,0 +1,146 @@
+:host {
+  --columns: 1;
+
+  display: block;
+  min-width: 0;
+}
+
+/* Every lane and the axis share the same columns, so a mark sits over its label. */
+.plot {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 0 4px;
+}
+
+.lane-name,
+.axis,
+.lane {
+  grid-column: 1 / -1;
+}
+
+.lane-name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  align-items: baseline;
+  margin-top: 8px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.key {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 400;
+}
+
+.key-line {
+  width: 16px;
+  border-top: 2px dashed var(--text-muted);
+}
+
+/* The top margin holds the value above the tallest mark. */
+.lane {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 0 4px;
+  margin-top: 18px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.guide {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  border-top: 2px dashed var(--text-muted);
+  pointer-events: none;
+}
+
+.cell {
+  position: relative;
+  min-width: 0;
+}
+
+.bar {
+  position: absolute;
+  right: 18%;
+  bottom: 0;
+  left: 18%;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent-strong);
+}
+
+.bar.secondary {
+  background: var(--secondary);
+}
+
+.bar.tertiary {
+  background: var(--tertiary);
+}
+
+.dot {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  margin: 0 0 -6px -6px;
+  border: 2px solid var(--bg-panel);
+  border-radius: 50%;
+  background: var(--text-soft);
+  box-sizing: border-box;
+}
+
+.dot.above {
+  background: var(--win-ink);
+}
+
+.dot.below {
+  background: var(--loss-ink);
+}
+
+.value {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  padding-bottom: 3px;
+  font-size: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* A dot's value goes on the side away from the guide, so it never sits on the dashed line. */
+.value--above {
+  padding-bottom: 9px;
+}
+
+.value--below {
+  padding: 0;
+  transform: translateY(calc(100% + 9px));
+}
+
+.axis {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 0 4px;
+  margin-top: 4px;
+  color: var(--text-soft);
+  font-size: var(--type-caption);
+  text-align: center;
+}
+
+.axis > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
