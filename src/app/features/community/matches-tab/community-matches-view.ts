@@ -1,16 +1,9 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
 import { buildMapsView, type CommunityMapsView } from './community-maps-view';
+import type { StackedBarPart } from '../../../shared/components/chart/stacked-bar/stacked-bar.component';
 import { dayLabel } from '../../../shared/utilities/day-label';
 import { countLabel, halfSeasonFallbackNotice, wholePercentLabel } from '../../../shared/utilities/stat-labels';
 import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
-
-export interface CommunityModeRowView {
-  mode: string;
-  shareLabel: string;
-  /** Null when too few of the mode's matches carried a length. */
-  lengthLabel: string | null;
-  barPercent: number;
-}
 
 export interface CommunityDayRowView {
   day: string;
@@ -39,7 +32,7 @@ export interface CommunityMatchesReady {
   /** How many matches the figures cover, in a few words; the rest of how they are counted is the page's to say. */
   sample: string;
   maps: CommunityMapsView;
-  modeMix: CommunitySectionView<CommunityModeRowView>;
+  modeMix: { parts: StackedBarPart[]; note: string | null };
   averageLength: { label: string | null; note: string | null };
   perDay: CommunitySectionView<CommunityDayRowView>;
 }
@@ -79,11 +72,14 @@ export function buildCommunityMatchesView(data: CommunityMatches | null | undefi
     sample: `${data.matchesCounted === null ? 'Matches' : countLabel(data.matchesCounted, 'match', 'matches')} in ${season}`,
     maps: buildMapsView(data),
     modeMix: {
-      rows: (data.modeMix ?? []).map((share) => ({
-        mode: share.mode,
-        shareLabel: wholePercentLabel(share.share),
-        lengthLabel: share.averageLengthMinutes === null ? null : minutesLabel(share.averageLengthMinutes),
-        barPercent: share.share,
+      parts: (data.modeMix ?? []).map((share) => ({
+        label: share.mode,
+        value: share.share,
+        valueLabel: wholePercentLabel(share.share),
+        detail:
+          share.averageLengthMinutes === null
+            ? 'Average length: not enough data yet'
+            : `Average length: ${minutesLabel(share.averageLengthMinutes)}`,
       })),
       note:
         data.modeMix === null || data.modeMix.length === 0
