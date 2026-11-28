@@ -166,7 +166,7 @@ describe('StatsOverviewComponent', () => {
       'Sep 20, 2026',
     ]);
     expect(Array.from(element.querySelectorAll('app-community-matches-tab .stat-table tbody th[scope="row"]')).map((row) => row.textContent?.trim()))
-      .toEqual(['Yggdrasill path', "Birnin t'challa", 'Hall of Djalia', 'Spider-islands', 'Midtown', 'Lower Manhattan', 'Quick Match', 'Competitive']);
+      .toEqual(['Yggdrasill path', "Birnin t'challa", 'Hall of Djalia', 'Spider-islands', 'Midtown', 'Lower Manhattan']);
   });
 
   it('keeps every map one link away: a single All N maps link to the Maps tab, not a second list', async () => {

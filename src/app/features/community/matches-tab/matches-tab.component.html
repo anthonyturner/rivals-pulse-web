@@ -64,38 +64,8 @@
         @if (current.averageLength.note) {
           <p class="stat-note">{{ current.averageLength.note }}</p>
         }
-        @if (current.modeMix.rows.length > 0) {
-          <table class="stat-table">
-            <caption class="visually-hidden">Each game mode's share of the matches, with its average length</caption>
-            <colgroup>
-              <col />
-              <col />
-              <col />
-            </colgroup>
-            <thead>
-              <tr>
-                <th scope="col">Mode</th>
-                <th scope="col">Share</th>
-                <th scope="col">Length</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of current.modeMix.rows; track row.mode) {
-                <tr>
-                  <th scope="row">{{ row.mode }}</th>
-                  <td>
-                    <div class="stat-meter">
-                      <span class="stat-meter__value">{{ row.shareLabel }}</span>
-                      <span class="stat-meter__bar" aria-hidden="true">
-                        <span class="stat-meter__fill" [style.width.%]="row.barPercent"></span>
-                      </span>
-                    </div>
-                  </td>
-                  <td>{{ row.lengthLabel ?? 'Not enough data yet' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        @if (current.modeMix.parts.length > 0) {
+          <app-stacked-bar [parts]="current.modeMix.parts" />
         }
         @if (current.modeMix.note) {
           <p class="stat-note">{{ current.modeMix.note }}</p>

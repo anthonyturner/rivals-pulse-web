@@ -148,9 +148,9 @@ describe('buildCommunityMatchesView', () => {
       ),
     );
 
-    expect(view.modeMix.rows).toEqual([
-      { mode: 'Quick Match', shareLabel: '75%', lengthLabel: '10 min', barPercent: 75 },
-      { mode: 'Competitive', shareLabel: '25%', lengthLabel: null, barPercent: 25 },
+    expect(view.modeMix.parts).toEqual([
+      { label: 'Quick Match', value: 75, valueLabel: '75%', detail: 'Average length: 10 min' },
+      { label: 'Competitive', value: 25, valueLabel: '25%', detail: 'Average length: not enough data yet' },
     ]);
     expect(view.modeMix.note).toBeNull();
   });
@@ -158,7 +158,7 @@ describe('buildCommunityMatchesView', () => {
   it('has a note, not a blank panel, for every section without figures', () => {
     const view = ready(buildCommunityMatchesView(matches({ maps: [{ map: 'Tokyo 2099', winRate: 50 }] })));
 
-    expect(view.modeMix.rows).toEqual([]);
+    expect(view.modeMix.parts).toEqual([]);
     expect(view.modeMix.note).toBe('Not enough data yet. The mix appears at 10 matches.');
     expect(view.averageLength.label).toBeNull();
     expect(view.averageLength.note).toBe(
