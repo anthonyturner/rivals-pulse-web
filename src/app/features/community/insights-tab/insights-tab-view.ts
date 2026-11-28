@@ -1,6 +1,7 @@
 import type { CommunityInsights, CommunityInsightsBucket, CommunityInsightsDimension } from '../../../../contracts/community-insights.model';
+import { sideOfFifty } from '../../../shared/utilities/stat-labels';
 import { axisWindow, positionOf } from '../../../shared/components/chart/chart-geometry';
-import type { ChartColumn, ChartLane, ChartSide } from '../../../shared/components/chart/column-chart/column-chart.component';
+import type { ChartColumn, ChartLane } from '../../../shared/components/chart/column-chart/column-chart.component';
 
 export interface InsightsDimensionView {
   id: string;
@@ -109,10 +110,6 @@ function dimensionView(dimension: CommunityInsightsDimension): InsightsDimension
 
 function isShown(bucket: CommunityInsightsBucket): bucket is CommunityInsightsBucket & { status: 'ready'; share: number } {
   return bucket.status === 'ready' && bucket.share !== null;
-}
-
-function sideOfFifty(winRate: number): ChartSide {
-  return winRate > 50 ? 'above' : winRate < 50 ? 'below' : 'even';
 }
 
 /** What the axis shows under a narrow column: "Mon", "00-04" for a four-hour block, "4+" for the fourth match or later. The full label stays in the tooltip and the table. */
