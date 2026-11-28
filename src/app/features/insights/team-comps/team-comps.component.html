@@ -54,7 +54,7 @@
       <div class="card">
         <h3 [id]="section.id">{{ section.heading }}</h3>
         @if (section.rows.length > 0) {
-          <ol class="duos" [attr.aria-labelledby]="section.id" [attr.data-role]="section.role.toLowerCase()">
+          <ol class="duos" [attr.aria-labelledby]="section.id" [attr.data-role]="section.roleKey">
             @for (row of section.rows; track row.first.hero + row.second.hero) {
               <li class="duo" [attr.data-tone]="row.tone" [style.--weight]="row.weight">
                 <span class="duo__rank"><span aria-hidden="true">#</span><span class="visually-hidden">Rank </span>{{ row.rank }}</span>&ngsp;<span class="duo__heroes">
@@ -67,7 +67,7 @@
                   </a>
                 </span>&ngsp;<span class="duo__rate"><strong>{{ row.winRateLabel }}</strong>&ngsp;win rate</span>&ngsp;<app-meter
                   class="duo__gauge"
-                  [attr.data-tone]="row.tone"
+                  [tone]="row.tone"
                   [value]="row.winRate"
                   [guide]="50"
                 />&ngsp;<span class="duo__matches">{{ row.matchesLabel }}</span>

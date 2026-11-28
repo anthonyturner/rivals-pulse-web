@@ -142,10 +142,10 @@ describe('buildTeamCompsView role pairs', () => {
   it('always lists the three roles in order, each with its heading', () => {
     const view = buildTeamCompsView(synergiesOf([]), identities);
 
-    expect(view.rolePairs.map(({ role, heading, id }) => [role, heading, id])).toEqual([
-      ['Vanguard', 'Vanguard duos', 'pairs-vanguard'],
-      ['Duelist', 'Duelist duos', 'pairs-duelist'],
-      ['Strategist', 'Strategist duos', 'pairs-strategist'],
+    expect(view.rolePairs.map(({ role, roleKey, heading, id }) => [role, roleKey, heading, id])).toEqual([
+      ['Vanguard', 'vanguard', 'Vanguard duos', 'pairs-vanguard'],
+      ['Duelist', 'duelist', 'Duelist duos', 'pairs-duelist'],
+      ['Strategist', 'strategist', 'Strategist duos', 'pairs-strategist'],
     ]);
   });
 

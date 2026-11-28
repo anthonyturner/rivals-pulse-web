@@ -2,7 +2,7 @@ import type { HeroSynergies, HeroSynergy } from '../../../../contracts/hero-syne
 import type { TeamLineups } from '../../../../contracts/team-lineups.model';
 import type { TripleSupportTrios } from '../../../../contracts/triple-support-trios.model';
 import { modeCaveat, modeLabelOf, nonDefaultModeLabel, scopeLabel } from '../../../shared/utilities/play-modes';
-import { countLabel, halfSeasonFallbackNotice, percentLabel } from '../../../shared/utilities/stat-labels';
+import { countLabel, halfSeasonFallbackNotice, percentLabel, sideOfFifty, type RateSide } from '../../../shared/utilities/stat-labels';
 import { seasonView, type SeasonView } from '../half-season-view';
 import { heroCell, type HeroCellView, type HeroIdentities } from '../hero-identity';
 import { buildLineupsView, lineupsMethodNote, type LineupsView } from './lineups-view';
@@ -29,13 +29,15 @@ export interface RolePairRowView {
   /** The plain win rate as a number, 0 to 100, for the gauge. */
   winRate: number;
   /** Which side of 50% the win rate is on, so the gauge can be coloured; the 50% mark says the same. */
-  tone: 'above' | 'even' | 'below';
+  tone: RateSide;
   /** Matches together against the most of any listed pair of the role, 0 to 1: how much weight the tile carries. */
   weight: number;
 }
 
 export interface RolePairSectionView {
   role: PairRole;
+  /** The role as a style key, such as `vanguard`. */
+  roleKey: string;
   /** The heading's id, which the section's table is labelled by. */
   id: string;
   /** "Vanguard duos". */
@@ -126,6 +128,7 @@ export function buildTeamCompsView(
 export function rolePairsOf(synergies: HeroSynergies, identities: HeroIdentities): RolePairSectionView[] {
   return PAIR_ROLES.map((role) => ({
     role,
+    roleKey: role.toLowerCase(),
     id: `pairs-${role.toLowerCase()}`,
     heading: `${role} duos`,
     rows: rolePairRows(role, synergies.synergies, identities),
@@ -158,7 +161,7 @@ function rolePairRows(role: PairRole, synergies: readonly HeroSynergy[], identit
     matchesLabel: `${countLabel(pair.matches, 'match', 'matches')} together`,
     winRateLabel: percentLabel(pair.winRate),
     winRate: pair.winRate,
-    tone: pair.winRate > 50 ? 'above' : pair.winRate < 50 ? 'below' : 'even',
+    tone: sideOfFifty(pair.winRate),
     weight: pair.matches / most,
   }));
 }

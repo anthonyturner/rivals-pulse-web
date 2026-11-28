@@ -39,11 +39,6 @@ thead th {
   font-weight: 700;
 }
 
-.col-rank {
-  width: 40px;
-  text-align: right;
-}
-
 .col-matches {
   width: 132px;
   text-align: right;
@@ -229,20 +224,10 @@ thead th {
   font-weight: 800;
 }
 
-/* The fill runs to the win rate and the tick is an even 50%. */
 .duo__gauge {
-  --meter-fill: var(--win-ink);
   --meter-height: 10px;
 
   grid-area: gauge;
-}
-
-.duo__gauge[data-tone='below'] {
-  --meter-fill: var(--loss-ink);
-}
-
-.duo__gauge[data-tone='even'] {
-  --meter-fill: var(--text-soft);
 }
 
 .duo__matches {
@@ -263,10 +248,6 @@ thead th {
   th,
   td {
     padding: 3px 4px;
-  }
-
-  .col-rank {
-    display: none;
   }
 
   .col-matches {
