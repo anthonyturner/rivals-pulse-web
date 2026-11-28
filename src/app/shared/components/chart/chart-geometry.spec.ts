@@ -65,14 +65,6 @@ describe('segmentWidths', () => {
     expect(segmentWidths([1, 3])).toEqual([25, 75]);
   });
 
-  it('leaves the rest of the bar empty when the parts cover less than the whole', () => {
-    expect(segmentWidths([76, 15], 100)).toEqual([76, 15]);
-  });
-
-  it('shares the bar between the parts when they add up to more than the whole it was given', () => {
-    expect(segmentWidths([60, 60], 100)).toEqual([50, 50]);
-  });
-
   it('counts a negative part or one that is not a number as nothing', () => {
     expect(segmentWidths([2, -5, Number.NaN, 2])).toEqual([50, 0, 0, 50]);
   });

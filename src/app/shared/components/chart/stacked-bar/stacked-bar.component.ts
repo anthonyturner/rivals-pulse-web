@@ -26,15 +26,10 @@ export interface StackedBarPart {
 })
 export class StackedBarComponent {
   readonly parts = input.required<readonly StackedBarPart[]>();
-  /** What the whole bar stands for, such as 100 for shares of the matches, so parts that cover less leave the rest empty. Defaults to the sum of the parts. */
-  readonly whole = input<number | undefined>(undefined);
 
   protected readonly view = computed(() => {
     const parts = this.parts();
-    const widths = segmentWidths(
-      parts.map((part) => part.value),
-      this.whole(),
-    );
+    const widths = segmentWidths(parts.map((part) => part.value));
 
     return parts.map((part, index) => ({
       ...part,

@@ -65,7 +65,7 @@
           <p class="stat-note">{{ current.averageLength.note }}</p>
         }
         @if (current.modeMix.parts.length > 0) {
-          <app-stacked-bar [parts]="current.modeMix.parts" [whole]="100" />
+          <app-stacked-bar [parts]="current.modeMix.parts" />
         }
         @if (current.modeMix.note) {
           <p class="stat-note">{{ current.modeMix.note }}</p>
