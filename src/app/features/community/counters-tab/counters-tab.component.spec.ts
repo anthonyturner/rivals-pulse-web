@@ -69,6 +69,29 @@ describe('CountersTabComponent', () => {
     expect(Array.from(matchupsPanel().querySelectorAll('a')).map((anchor) => anchor.getAttribute('href'))).toContain('/counters');
   });
 
+  it('draws each matchup as two facing portraits with a win-rate gauge and the 50% mark', async () => {
+    await answer(READY);
+
+    const cards = Array.from(matchupsPanel().querySelectorAll('.versus'));
+    const first = cards[0];
+
+    expect(cards.length).toBe(2);
+    expect(Array.from(first.querySelectorAll('.side .name'), (name) => name.textContent)).toEqual(['Storm', 'Thor']);
+    expect(Array.from(first.querySelectorAll('.side img'), (image) => image.getAttribute('alt'))).toEqual(['', '']);
+    expect(first.querySelector('.side--first')?.getAttribute('data-role')).toBe('duelist');
+    expect(first.querySelector('.side--second')?.getAttribute('data-role')).toBe('vanguard');
+    expect(first.querySelector('app-meter')?.getAttribute('aria-hidden')).toBe('true');
+    expect(parseFloat((first.querySelector('app-meter .fill') as HTMLElement).style.width)).toBeCloseTo(91.67, 1);
+    expect(first.querySelector('app-meter .guide')).not.toBeNull();
+    expect(first.querySelector('app-meter')?.getAttribute('data-tone')).toBe('above');
+  });
+
+  it('keeps the matchup sentence as the card tooltip', async () => {
+    await answer(READY);
+
+    expect(matchupsPanel().querySelector('li')?.getAttribute('title')).toBe('Storm won 11 of 12 against Thor (91.7%) in 12 matches.');
+  });
+
   it('shows the designed empty state, with the minimum named, when no pairing has enough matches', async () => {
     await answer(matchupsOf([]));
 
@@ -91,6 +114,8 @@ describe('CountersTabComponent', () => {
       const rows = Array.from(killFeedPanel().querySelectorAll('li')).map((row) => row.textContent?.replace(/\s+/g, ' ').trim());
 
       expect(rows).toEqual(['Storm was seen killing Hulk 100+ seen kills', 'Thor was seen killing Storm 25+ seen kills']);
+      expect(killFeedPanel().querySelectorAll('.versus').length).toBe(2);
+      expect(killFeedPanel().querySelector('app-meter')).toBeNull();
       expect(killFeedPanel().textContent).toContain('A separate measure from the matchup records');
       expect(killFeedPanel().textContent).toContain('miss kills that player did not see');
       expect(killFeedPanel().textContent).not.toMatch(/NaN|undefined|null/);

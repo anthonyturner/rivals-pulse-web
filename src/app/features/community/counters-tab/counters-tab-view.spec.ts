@@ -32,13 +32,33 @@ describe('buildCountersTabView', () => {
     expect(view.records.map((record) => record.key)).toEqual(['storm>thor', 'hulk>thor']);
     expect(view.records[1]).toEqual({
       key: 'hulk>thor',
-      winner: { hero: 'hulk', name: 'Hulk', imageUrl: '/images/heroes/hulk.png' },
-      loser: { hero: 'thor', name: 'Thor', imageUrl: '/images/heroes/thor.png' },
+      winner: { hero: 'hulk', name: 'Hulk', imageUrl: '/images/heroes/hulk.png', roleKey: 'vanguard' },
+      loser: { hero: 'thor', name: 'Thor', imageUrl: '/images/heroes/thor.png', roleKey: 'vanguard' },
       winRate: '75.0%',
+      winRateValue: 75,
+      tone: 'above',
       edge: '+13.6 pts vs usual',
       sample: '12 matches',
       description: 'Hulk won 9 of 12 against Thor (75.0%) in 12 matches.',
     });
+  });
+
+  it('says which side of 50% each record is on, and a record at exactly 50% is neither', () => {
+    const view = buildCountersTabView(
+      matchupsOf([matchup('hulk', 'thor', 6, 12, { isCounter: true }), matchup('storm', 'thor', 11, 12), matchup('thor', 'storm', 3, 12, { isCounter: true })]),
+      identities,
+    );
+
+    expect(view.kind === 'ready' && view.records.map((record) => [record.winRateValue, record.tone])).toEqual(
+      jasmine.arrayContaining([[50, 'even'], [25, 'below'], [(11 / 12) * 100, 'above']]),
+    );
+  });
+
+  it('tints no hero the roster lacks, and says which side of 50% a record is on', () => {
+    const view = buildCountersTabView(READY, identities);
+
+    expect(view.kind === 'ready' && view.records[0].winner.roleKey).toBeNull();
+    expect(view.kind === 'ready' && view.records.every((record) => record.tone === 'above')).toBeTrue();
   });
 
   it('draws a hero the roster lacks under its spelled-out id instead of dropping the record', () => {

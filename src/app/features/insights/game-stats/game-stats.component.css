@@ -2,7 +2,7 @@ app-state-panel {
   --state-panel-radius: 12px;
 }
 
-/* One card holds the headline figures, with the heartbeat line behind them, the two leading heroes beside them, and the half-season chart under them. */
+/* One card holds the headline figures across its full width, with the heartbeat line behind them, the two leading heroes in a row of their own under them, and the half-season chart under those. */
 .strip {
   display: grid;
   gap: 12px;
@@ -13,13 +13,7 @@ app-state-panel {
   box-shadow: var(--shadow-soft);
 }
 
-/* The figures and the hero tiles: stacked on a narrow card, side by side once the card has room for both. */
-.bento {
-  display: grid;
-  gap: 16px;
-}
-
-/* The line fills this box only, so it never runs under the chart or the hero tiles. */
+/* The line fills this box only, so it never runs under the hero tiles or the chart. */
 .strip__figures {
   position: relative;
   isolation: isolate;
@@ -64,21 +58,8 @@ app-state-panel {
   line-height: 1.2;
 }
 
-/* The tiles sit in two columns so the four figures stay a block beside the heroes. */
-.bento--heroes .strip__tiles {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: center;
-}
-
 .spots {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-}
-
-@container (min-width: 640px) {
-  .bento--heroes {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    align-items: stretch;
-  }
 }
