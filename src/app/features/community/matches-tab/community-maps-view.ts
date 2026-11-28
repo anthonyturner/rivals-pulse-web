@@ -1,9 +1,13 @@
 import type { CommunityMatches } from '../../../../contracts/community-matches.model';
+import { mapArtPath, mapInitials } from '../../../shared/utilities/map-art';
 import { halfSeasonFallbackNotice, wholePercentLabel } from '../../../shared/utilities/stat-labels';
 import { COMMUNITY_EMPTY_RULE } from '../community-summary/community-summary.component';
 
 export interface CommunityMapRowView {
   map: string;
+  /** The map's in-game picture; null for a map the site has no art for, which shows `initials` instead. */
+  art: string | null;
+  initials: string;
   winRateLabel: string;
   /** The win rate, 0 to 100, as the width of its bar. */
   barPercent: number;
@@ -48,6 +52,8 @@ export function buildMapsView(data: CommunityMatches): CommunityMapsView {
   const all = data.maps
     .map((record): CommunityMapRowView => ({
       map: record.map,
+      art: mapArtPath(record.map),
+      initials: mapInitials(record.map),
       winRateLabel: wholePercentLabel(record.winRate),
       barPercent: record.winRate,
     }))

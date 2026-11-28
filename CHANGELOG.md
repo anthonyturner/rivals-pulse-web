@@ -14,6 +14,7 @@ How to add an entry: [docs/changelog.md](docs/changelog.md).
 
 ### Added
 
+- Every map in the Stats win rate by map lists now shows its in-game picture beside its name, on the Overview and the Maps tab; a map with no picture shows its initials ([#896](https://github.com/anthonyturner/rivals-pulse-web/pull/896)).
 - Look up "Attrition" in the glossary: winning a fight by wearing the enemy down over time ([#891](https://github.com/anthonyturner/rivals-pulse-web/pull/891)).
 - Nightcrawler's matches now count: the site knows the game's id for him (1068), so the shared hero list the desktop app reads carries it, and his plays join the hero stats, counters, partners and triple-support counts once uploaded ([#878](https://github.com/anthonyturner/rivals-pulse-web/pull/878)).
 - Nightcrawler has his official portrait and an initial Season 11 guide with linked article sources; current official hero pages can supply his Strategist role and abilities again ([#853](https://github.com/anthonyturner/rivals-pulse-web/pull/853)).

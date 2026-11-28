@@ -1,0 +1,35 @@
+/* The picture needs room beside the name, so the map column is wider than the shared table gives a label. */
+.stat-table col:first-child {
+  width: 60%;
+}
+
+.map-cell {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.map-cell__name {
+  min-width: 0;
+}
+
+/* 16:9, the shape of the art, so the row keeps its height before the picture has loaded. The height attribute is only a hint for that ratio. */
+.map-art {
+  flex: none;
+  width: 72px;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.map-art--initials {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: var(--type-caption);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
