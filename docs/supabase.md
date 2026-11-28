@@ -322,9 +322,9 @@ Premium is dormant until configured, on both sides. The order matters:
 1. Deploy `elevenlabs-agent-token` with `TEBEX_STORE_PUBLIC_TOKEN` still unset.
    Nothing changes for anyone.
 2. Release the overlay with the store's public token, package-to-perk map and
-   package to sell set. The overlay now gates Pulsa and sends the Overwolf
+   package to sell set. The overlay now gates AI Voice Assist and sends the Overwolf
    session; the function still accepts everyone.
-3. Set `TEBEX_STORE_PUBLIC_TOKEN` last. Setting it before step 2 stops Pulsa
+3. Set `TEBEX_STORE_PUBLIC_TOKEN` last. Setting it before step 2 stops AI Voice Assist
    for every player. Set `PREMIUM_PULSA_PACKAGE_IDS` with it if only some
    packages should count.
 

@@ -61,9 +61,9 @@ describe('HowItWorksComponent', () => {
     );
   });
 
-  it('makes no claim about autostart, hotkeys, ranks or Pulsa', () => {
+  it('makes no claim about autostart, hotkeys, ranks, Pulsa or AI Voice Assist', () => {
     expect(text(element.querySelector('ol.steps'))).not.toMatch(
-      /pulsa|hotkey|alt\s*\+|ctrl|autostart|starts with|\branks?\b|premium|free/i,
+      /pulsa|ai voice assist|hotkey|alt\s*\+|ctrl|autostart|starts with|\branks?\b|premium|free/i,
     );
   });
 });

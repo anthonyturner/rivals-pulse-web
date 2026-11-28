@@ -14,7 +14,8 @@ export interface PremiumGateInput {
 }
 
 /**
- * Decides whether a caller may have a Pulsa token: a verified Overwolf session with a paid plan.
+ * Decides whether a caller may have an AI Voice Assist token: a verified Overwolf session with a
+ * paid plan.
  * Dormant (always allowed) until `TEBEX_STORE_PUBLIC_TOKEN` is set; see docs/supabase-prod-checklist.md.
  * Fails closed on every doubt, deliberately unlike the token rate limiter, which fails open.
  */
@@ -43,6 +44,6 @@ export async function checkPremiumGate(input: PremiumGateInput): Promise<Premium
 
 /** A refusal is logged as status and message only, never the session token. */
 function refuse(status: number, error: string): PremiumGateDecision {
-  console.warn(`Pulsa premium gate refused (${status}): ${error}`);
+  console.warn(`AI Voice Assist premium gate refused (${status}): ${error}`);
   return { allowed: false, status, body: { error } };
 }

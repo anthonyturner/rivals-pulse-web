@@ -140,7 +140,7 @@
   font-weight: 800;
 }
 
-/* The first column holds the label, the others hold figures; every table on the overview uses the same split. */
+/* The first column holds the label, the others hold figures; a table sets its own split when its label needs more room. */
 .stat-table col:first-child {
   width: 44%;
 }
