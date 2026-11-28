@@ -1,4 +1,4 @@
-import { axisValues, axisWindow, positionOf, segmentWidths } from './chart-geometry';
+import { axisValues, axisWindow, positionOf, segmentWidths, tickStep } from './chart-geometry';
 
 describe('positionOf', () => {
   it('places a value as a share of the range', () => {
@@ -72,5 +72,21 @@ describe('segmentWidths', () => {
   it('gives no segments when there is nothing to share', () => {
     expect(segmentWidths([])).toEqual([]);
     expect(segmentWidths([0, 0])).toEqual([]);
+  });
+});
+
+describe('tickStep', () => {
+  it('takes the smallest round step that keeps the ticks to the limit', () => {
+    expect(tickStep(20, 5)).toBe(5);
+    expect(tickStep(30, 6)).toBe(5);
+    expect(tickStep(80, 6)).toBe(20);
+    expect(tickStep(100, 5)).toBe(20);
+    expect(tickStep(4, 8)).toBe(0.5);
+  });
+
+  it('falls back to 1 for a span or limit that gives no ticks', () => {
+    expect(tickStep(0, 5)).toBe(1);
+    expect(tickStep(Number.NaN, 5)).toBe(1);
+    expect(tickStep(10, 0)).toBe(1);
   });
 });

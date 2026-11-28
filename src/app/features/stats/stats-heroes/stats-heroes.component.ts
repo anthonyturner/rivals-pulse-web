@@ -5,6 +5,7 @@ import { distinctUntilChanged, map, Observable, skip, switchMap, tap } from 'rxj
 
 import type { HeroStats, HeroStatsModeId } from '../../../../contracts/hero-stats.model';
 import { contentState, reportContentState } from '../../../core/seo/thin-content';
+import { ScatterChartComponent } from '../../../shared/components/chart/scatter-chart/scatter-chart.component';
 import { FilterSelectComponent } from '../../../shared/components/filter-select/filter-select.component';
 import { NoticeComponent } from '../../../shared/components/notice/notice.component';
 import { StatePanelComponent } from '../../../shared/components/state-panel/state-panel.component';
@@ -23,6 +24,7 @@ import {
   type HeroStatsScope,
   type HeroStatsViewId,
 } from './hero-stats-request';
+import { buildHeroScatterView, HERO_SCATTER_COLUMNS, HERO_SCATTER_ROLES } from './hero-scatter/hero-scatter-view';
 import { HeroTableComponent } from './hero-table/hero-table.component';
 import { buildWinRatesView } from './hero-table/win-rates-view';
 import { HeroTiersComponent } from './hero-tiers/hero-tiers.component';
@@ -60,6 +62,7 @@ const VIEW_LINKS: readonly ViewLink[] = [
     HeroTiersComponent,
     NoticeComponent,
     RouterLink,
+    ScatterChartComponent,
     StatePanelComponent,
   ],
   templateUrl: './stats-heroes.component.html',
@@ -117,16 +120,26 @@ export class StatsHeroesComponent {
   protected readonly loading = computed(() => this.current() === undefined || this.roster() === undefined);
   protected readonly failed = computed(() => this.current()?.stats === null);
   private readonly stats = computed(() => (this.loading() ? null : (this.current()?.stats ?? null)));
-  protected readonly tableView = computed(() => {
+  /** Every hero's record. The table draws it, and the chart above both layouts plots the same rows. */
+  private readonly winRates = computed(() => {
     const stats = this.stats();
 
-    return stats !== null && this.layout() === 'table' ? buildWinRatesView(stats, this.identities()) : null;
+    return stats === null ? null : buildWinRatesView(stats, this.identities());
   });
+  protected readonly tableView = computed(() => (this.layout() === 'table' ? this.winRates() : null));
   protected readonly tierView = computed(() => {
     const stats = this.stats();
 
     return stats !== null && this.layout() === 'tiers' ? buildTierListView(stats, this.identities()) : null;
   });
+  /** The win rate against pick rate chart, for the heroes with enough games; null while there are none. */
+  protected readonly scatter = computed(() => {
+    const rates = this.winRates();
+
+    return rates === null ? null : buildHeroScatterView(rates.ranked);
+  });
+  protected readonly scatterColumns = HERO_SCATTER_COLUMNS;
+  protected readonly scatterRoles = HERO_SCATTER_ROLES;
   /** What both layouts share: the labels, notices and meta line the tab draws around either. */
   protected readonly shown = computed(() => this.tableView() ?? this.tierView());
 

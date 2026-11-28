@@ -257,12 +257,65 @@ describe('StatsHeroesComponent', () => {
     });
   });
 
+  describe('the win rate against pick rate chart', () => {
+    const dots = (page: HTMLElement): string[] =>
+      Array.from(page.querySelectorAll('app-scatter-chart .dot'), (dot) => dot.getAttribute('href') ?? '');
+
+    it('plots every hero the table lists, as a portrait linking to its page, above the table', async () => {
+      const page = await open('/stats/heroes', full);
+      const tableHeroes = Array.from(page.querySelectorAll('app-hero-table .hero-link'), (link) => link.getAttribute('href'));
+
+      expect(dots(page).sort()).toEqual(['/heroes/hela', '/heroes/storm']);
+      expect(tableHeroes.sort()).toEqual(['/heroes/hela', '/heroes/storm']);
+      expect(page.querySelector('app-scatter-chart')?.compareDocumentPosition(page.querySelector('app-hero-table') as Element)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+      expect(page.querySelector('.scatter__title')?.textContent).toBe('Win rate against pick rate');
+    });
+
+    it('draws it above the tier list too, for the same heroes', async () => {
+      const page = await open('/stats/heroes?view=tiers', full);
+
+      expect(dots(page).sort()).toEqual(['/heroes/hela', '/heroes/storm']);
+    });
+
+    it('rings each portrait in its hero role', async () => {
+      const page = await open('/stats/heroes', full);
+      const roles = Array.from(page.querySelectorAll('app-scatter-chart .dot'), (dot) => [dot.getAttribute('data-name'), dot.getAttribute('data-role')]);
+
+      expect(roles.sort()).toEqual([
+        ['Hela', 'vanguard'],
+        ['Storm', 'duelist'],
+      ]);
+    });
+
+    it('names the three role colours in a key under the lede', async () => {
+      const page = await open('/stats/heroes', full);
+
+      expect(Array.from(page.querySelectorAll('.scatter__role'), (role) => role.textContent?.trim())).toEqual(['Vanguard', 'Duelist', 'Strategist']);
+    });
+
+    it('hides the plot from assistive technology and prints each hero with its record in a hidden table', async () => {
+      const page = await open('/stats/heroes', full);
+      const rows = Array.from(page.querySelectorAll('app-scatter-chart tbody tr'), (row) =>
+        Array.from(row.children, (cell) => cell.textContent?.trim()).join(' | '),
+      );
+
+      expect(page.querySelector('app-scatter-chart .area')?.getAttribute('aria-hidden')).toBe('true');
+      expect(rows.sort()).toEqual(['Hela | 10.0% | 45.0% | Vanguard | 9 wins in 20 games', 'Storm | 10.0% | 66.7% | Duelist | 8 wins in 12 games']);
+    });
+
+    it('is left out while no hero has enough games, and when the numbers cannot be loaded', async () => {
+      expect((await open('/stats/heroes', building)).querySelector('app-scatter-chart')).toBeNull();
+    });
+  });
+
   describe('the table layout', () => {
     it('shows the win-rates table, its summary and the meta line', async () => {
       const page = await open('/stats/heroes', full);
 
       expect(text(page, 'tbody .hero-name')).toEqual(['Storm', 'Hela']);
-      expect(text(page, 'h3')[0]).toBe('Heroes · Win rate, highest first');
+      expect(text(page, 'app-hero-table h3')[0]).toBe('Heroes · Win rate, highest first');
       expect(text(page, '.meta')).toEqual([
         'Quick Match and Competitive · Season 10.5 · Started Oct 9, 2026 · 149 matches with a result · Heroes need 10 appearances to be listed · Bars show win rate; the line marks 50%.',
       ]);
